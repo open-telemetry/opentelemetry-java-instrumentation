@@ -11,6 +11,7 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.ThreadContext;
 import org.apache.logging.log4j.core.LogEvent;
@@ -19,6 +20,8 @@ import org.apache.logging.log4j.core.appender.AbstractAppender;
 import org.apache.logging.log4j.core.layout.PatternLayout;
 import org.apache.logging.log4j.core.pattern.PatternFormatter;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class LogPatternTest {
   private static final boolean ENABLED =
@@ -89,6 +92,71 @@ public abstract class LogPatternTest {
       }
     } finally {
       ThreadContext.clearAll();
+      logger.removeAppender(appender);
+      appender.stop();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"%d( %-5p %m%n", "%d( %-5p %m)%n"})
+  void rendersLiteralParenthesesOnOneLine(String pattern) {
+    assertRenderedPattern(
+        pattern,
+        (layout, rendered) -> {
+          assertThat(rendered).endsWith(System.lineSeparator());
+          assertThat(rendered.split("\\R")).hasSize(1);
+          if (ENABLED) {
+            assertThat(rendered)
+                .contains(
+                    "service.name=pattern-service",
+                    TRACE + "=" + Span.current().getSpanContext().getTraceId(),
+                    SPAN + "=" + Span.current().getSpanContext().getSpanId());
+            assertThat(rendered.indexOf(TRACE + "="))
+                .isLessThan(rendered.indexOf("pattern message"));
+          }
+        });
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void rendersColorWrappedMdcWithoutDuplicates(boolean wholeMdc) {
+    String pattern = "%d %cyan{%X" + (wholeMdc ? "" : "{" + TRACE + "}") + "} %m%n";
+    assertRenderedPattern(
+        pattern,
+        (layout, rendered) -> {
+          assertThat(rendered).containsOnlyOnce(Span.current().getSpanContext().getTraceId());
+          if (ENABLED) {
+            assertThat(layout.getConversionPattern()).doesNotContain(TRACE + "=%X{");
+            assertThat(rendered).containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+            if (wholeMdc) {
+              assertThat(layout.getConversionPattern()).isEqualTo(pattern);
+            }
+          }
+        });
+  }
+
+  private void assertRenderedPattern(String pattern, BiConsumer<PatternLayout, String> assertion) {
+    PatternLayout layout = PatternLayout.newBuilder().withPattern(pattern).build();
+    Logger logger = (Logger) LogManager.getLogger("TestLogger");
+    List<String> messages = new ArrayList<>();
+    AbstractAppender appender =
+        new AbstractAppender("pattern-regression", null, layout, true) {
+          @Override
+          public void append(LogEvent event) {
+            messages.add(layout.toSerializable(event));
+          }
+        };
+    appender.start();
+    logger.addAppender(appender);
+    try {
+      testing()
+          .runWithSpan(
+              "log",
+              () -> {
+                logger.info("pattern message");
+                assertion.accept(layout, messages.get(0));
+              });
+    } finally {
       logger.removeAppender(appender);
       appender.stop();
     }

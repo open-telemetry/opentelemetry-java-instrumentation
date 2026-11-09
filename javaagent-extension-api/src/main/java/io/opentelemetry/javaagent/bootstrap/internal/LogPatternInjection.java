@@ -49,7 +49,13 @@ public final class LogPatternInjection {
         if (fields.length() > 0) {
           fields.append(' ');
         }
-        fields.append(key).append("=%X{").append(key).append('}');
+        String option = key;
+        if (framework == Framework.LOGBACK && key.indexOf(',') >= 0) {
+          // Logback splits unquoted options on commas.
+          char quote = key.indexOf('"') >= 0 ? '\'' : '"';
+          option = quote + key + quote;
+        }
+        fields.append(key).append("=%X{").append(option).append('}');
       }
     }
     if (fields.length() == 0) {
@@ -163,7 +169,15 @@ public final class LogPatternInjection {
                 || converter.equals("enc")
                 || converter.equals("encode")
                 || converter.equals("notEmpty")
-                || converter.equals("maxLen"))) {
+                || converter.equals("maxLen")
+                || converter.equals("black")
+                || converter.equals("blue")
+                || converter.equals("cyan")
+                || converter.equals("green")
+                || converter.equals("magenta")
+                || converter.equals("red")
+                || converter.equals("white")
+                || converter.equals("yellow"))) {
           if (contains(pattern.substring(end + 1, close - 1), framework, key)) {
             return true;
           }
@@ -191,10 +205,7 @@ public final class LogPatternInjection {
         break;
       }
     }
-    if (framework != Framework.LOG4J1
-        && framework != Framework.LOG4J1_WITH_MDC_MAP
-        && end < pattern.length()
-        && pattern.charAt(end) == '(') {
+    if (framework == Framework.LOGBACK && end < pattern.length() && pattern.charAt(end) == '(') {
       end = balancedEnd(pattern, end, '(', ')', framework);
     }
     while (end < pattern.length() && pattern.charAt(end) == '{') {

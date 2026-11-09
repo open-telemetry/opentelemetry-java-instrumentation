@@ -52,7 +52,7 @@ class LogPatternTest {
       quoted.setPattern("%d{HH:mm:ss} %X{'" + TRACE + "'} %m%n");
       quoted.start();
       if (ENABLED) {
-        assertThat(quoted.getPattern()).doesNotContain(TRACE + "=%X{" + TRACE + "}");
+        assertThat(quoted.getPattern()).doesNotContain(TRACE + "=%X{");
       }
       String enhanced = layout.getPattern();
       layout.stop();
@@ -79,7 +79,7 @@ class LogPatternTest {
             String text = layout.doLayout(appender.list.get(1));
             if (ENABLED) {
               assertThat(quoted.doLayout(appender.list.get(1)))
-                  .contains(Span.current().getSpanContext().getTraceId());
+                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId());
               assertThat(text)
                   .contains(
                       TRACE + "=" + Span.current().getSpanContext().getTraceId(),

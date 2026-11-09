@@ -6,11 +6,15 @@
 package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.javaagent.bootstrap.internal.LogPatternInjection.Framework;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class LogPatternInjectionTest {
@@ -131,6 +135,50 @@ class LogPatternInjectionTest {
             : "service.name=%X{service.name} span_id=%X{span_id}";
     assertThat(LogPatternInjection.enhance("%d" + suffix, framework, "trace_id", "span_id"))
         .isEqualTo("%d " + fields + suffix);
+  }
+
+  @ParameterizedTest
+  @MethodSource("commaContainingLogbackKeys")
+  void quotesCommaContainingLogbackKeys(String traceKey, String converter) {
+    String enhanced =
+        LogPatternInjection.enhance("%d %m%n", Framework.LOGBACK, traceKey, "span_id");
+    assertThat(enhanced)
+        .isEqualTo(
+            "%d service.name=%X{service.name} "
+                + traceKey
+                + "="
+                + converter
+                + " span_id=%X{span_id} %m%n");
+    assertThat(LogPatternInjection.enhance(enhanced, Framework.LOGBACK, traceKey, "span_id"))
+        .isEqualTo(enhanced);
+  }
+
+  private static Stream<Arguments> commaContainingLogbackKeys() {
+    return Stream.of(
+        argumentSet("comma", "custom,trace", "%X{\"custom,trace\"}"),
+        argumentSet("single quote", "custom,'trace", "%X{\"custom,'trace\"}"),
+        argumentSet("double quote", "custom,\"trace", "%X{'custom,\"trace'}"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"black", "blue", "cyan", "green", "magenta", "red", "white", "yellow"})
+  void recognizesLog4j2ColorWrappedMdc(String color) {
+    String keyed = "%d %" + color + "{%X{trace_id}} %m%n";
+    assertThat(LogPatternInjection.enhance(keyed, Framework.LOG4J2, "trace_id", "span_id"))
+        .isEqualTo(
+            "%d service.name=%X{service.name} span_id=%X{span_id} %"
+                + color
+                + "{%X{trace_id}} %m%n");
+    String wholeMdc = "%d %" + color + "{%X} %m%n";
+    assertThat(LogPatternInjection.enhance(wholeMdc, Framework.LOG4J2, "trace_id", "span_id"))
+        .isEqualTo(wholeMdc);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"%d( %-5p %m%n", "%d( %-5p %m)%n"})
+  void log4j2ParenthesesAreLiteral(String pattern) {
+    assertThat(LogPatternInjection.enhance(pattern, Framework.LOG4J2, "trace_id", "span_id"))
+        .isEqualTo("%d( " + FIELDS + pattern.substring(3));
   }
 
   @Test
