@@ -153,6 +153,33 @@ public abstract class Log4j2Test {
   }
 
   @Test
+  void preservesApplicationSpanAndService() {
+    Logger logger = LogManager.getLogger("TestLogger");
+    ThreadContext.put(getLoggingKey("span_id"), "application-span");
+    ThreadContext.put("service.name", "application-service");
+    try {
+      getInstrumentationExtension().runWithSpan("test", () -> logger.info("application"));
+      logger.info("outside");
+      assertThat(ListAppender.get().getEvents())
+          .satisfiesExactly(
+              event -> {
+                assertThat(event.getContextData().get(getLoggingKey("span_id")))
+                    .isEqualTo("application-span");
+                assertThat(event.getContextData().get("service.name"))
+                    .isEqualTo("application-service");
+              },
+              event -> {
+                assertThat(event.getContextData().get(getLoggingKey("span_id")))
+                    .isEqualTo("application-span");
+                assertThat(event.getContextData().get("service.name"))
+                    .isEqualTo("application-service");
+              });
+    } finally {
+      ThreadContext.clearAll();
+    }
+  }
+
+  @Test
   void testNoOverrideTraceId() {
     Logger logger = LogManager.getLogger("TestLogger");
 

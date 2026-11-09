@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.log4j.contextdata.v2_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static java.util.Collections.singletonList;
+import static java.util.Arrays.asList;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import com.google.auto.service.AutoService;
@@ -38,6 +38,7 @@ public class Log4j27InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ContextDataInjectorFactoryInstrumentation());
+    return asList(
+        new ContextDataInjectorFactoryInstrumentation(), new PatternLayoutInstrumentation());
   }
 }

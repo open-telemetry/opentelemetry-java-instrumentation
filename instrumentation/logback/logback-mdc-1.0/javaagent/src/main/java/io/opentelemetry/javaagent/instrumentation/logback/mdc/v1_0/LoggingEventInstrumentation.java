@@ -25,6 +25,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
+import io.opentelemetry.javaagent.bootstrap.internal.LogPatternInjection;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.HashMap;
@@ -61,7 +62,9 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC) Map<String, String> contextData) {
 
-      if (contextData != null && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
+      if (!LogPatternInjection.isEnabled()
+          && contextData != null
+          && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
         // Assume already instrumented event if traceId is present.
         return contextData;
       }
@@ -79,11 +82,14 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
       SpanContext spanContext = Span.fromContext(context).getSpanContext();
 
       if (spanContext.isValid()) {
-        spanContextData.put(TRACE_ID_KEY, spanContext.getTraceId());
-        spanContextData.put(SPAN_ID_KEY, spanContext.getSpanId());
-        spanContextData.put(TRACE_FLAGS_KEY, spanContext.getTraceFlags().asHex());
+        spanContextData.putIfAbsent(TRACE_ID_KEY, spanContext.getTraceId());
+        spanContextData.putIfAbsent(SPAN_ID_KEY, spanContext.getSpanId());
+        spanContextData.putIfAbsent(TRACE_FLAGS_KEY, spanContext.getTraceFlags().asHex());
       }
-      spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
+      for (Map.Entry<String, String> entry :
+          ConfiguredResourceAttributesHolder.getResourceAttributes().entrySet()) {
+        spanContextData.putIfAbsent(entry.getKey(), entry.getValue());
+      }
 
       if (ADD_BAGGAGE) {
         Baggage baggage = Baggage.fromContext(context);

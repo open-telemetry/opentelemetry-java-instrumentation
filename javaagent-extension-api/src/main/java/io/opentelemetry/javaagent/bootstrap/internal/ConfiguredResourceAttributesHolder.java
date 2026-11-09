@@ -33,6 +33,12 @@ public final class ConfiguredResourceAttributesHolder {
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "common")
             .get("mdc")
             .getScalarList("resource_attributes", String.class, emptyList());
+    if (LogPatternInjection.isEnabled()) {
+      String serviceName = resourceAttribute.get(stringKey("service.name"));
+      if (serviceName != null) {
+        resourceAttributes.put("service.name", serviceName);
+      }
+    }
     for (String key : mdcResourceAttributes) {
       String value = resourceAttribute.get(stringKey(key));
       if (value != null) {
