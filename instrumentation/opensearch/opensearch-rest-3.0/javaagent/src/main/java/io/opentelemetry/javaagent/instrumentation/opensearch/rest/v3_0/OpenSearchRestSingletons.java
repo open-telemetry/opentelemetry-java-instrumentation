@@ -11,11 +11,14 @@ import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.Op
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchRestResponse;
 import javax.annotation.Nullable;
 import org.opensearch.client.Response;
+import org.opensearch.client.ResponseException;
 
 class OpenSearchRestSingletons {
 
   private static final Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter =
-      OpenSearchRestInstrumenterFactory.create("io.opentelemetry.opensearch-rest-3.0");
+      OpenSearchRestInstrumenterFactory.create(
+          "io.opentelemetry.opensearch-rest-3.0",
+          OpenSearchRestSingletons::getStatusCodeFromException);
 
   static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> instrumenter() {
     return instrumenter;
@@ -33,6 +36,15 @@ class OpenSearchRestSingletons {
         return response.getStatusLine().getStatusCode();
       }
     };
+  }
+
+  @Nullable
+  static Integer getStatusCodeFromException(Throwable error) {
+    if (error instanceof ResponseException) {
+      Response response = ((ResponseException) error).getResponse();
+      return response != null ? response.getStatusLine().getStatusCode() : null;
+    }
+    return null;
   }
 
   private OpenSearchRestSingletons() {}

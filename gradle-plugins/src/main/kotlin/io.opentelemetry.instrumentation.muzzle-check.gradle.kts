@@ -231,11 +231,22 @@ val hasRelevantTask = gradle.startParameter.taskNames.any {
     taskName.contains(":muzzle-Assert")
 }
 
-if (hasRelevantTask) {
-  val system = newRepositorySystem()
-  val session = newRepositorySystemSession(system)
+val requestedMuzzleSlice = gradle.startParameter.taskNames.singleOrNull()
+  ?.removePrefix(":")
+  ?.let { Regex("instrumentation:muzzle([1-8])").matchEntire(it)?.groupValues?.get(1)?.toInt() }
 
+if (hasRelevantTask) {
   afterEvaluate {
+    // The instrumentation build assigns slices when the plugin has finished applying.
+    if (requestedMuzzleSlice != null && extensions.extraProperties.has("otelMuzzleSlice")) {
+      val assignedSlice = extensions.extraProperties.get("otelMuzzleSlice")
+      check(assignedSlice is Int && assignedSlice in 1..8) { "Invalid otelMuzzleSlice for $path" }
+      if (assignedSlice != requestedMuzzleSlice) {
+        return@afterEvaluate
+      }
+    }
+    val system = newRepositorySystem()
+    val session = newRepositorySystemSession(system)
     var runAfter = muzzle
 
     // the project repositories need to be retrieved after evaluation, before that the list is just empty

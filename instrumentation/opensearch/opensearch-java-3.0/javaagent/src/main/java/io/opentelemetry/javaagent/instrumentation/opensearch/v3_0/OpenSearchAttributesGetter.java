@@ -42,16 +42,19 @@ final class OpenSearchAttributesGetter
   @Nullable
   public String getErrorType(
       OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
-    if (error instanceof CompletionException) {
-      error = error.getCause();
+    Integer statusCode = getStatusCode(error);
+    if (statusCode != null && (statusCode >= 400 || statusCode < 100)) {
+      return statusCode.toString();
     }
-    if (error instanceof OpenSearchException) {
-      int statusCode = ((OpenSearchException) error).status();
-      if (statusCode >= 400 || statusCode < 100) {
-        return Integer.toString(statusCode);
-      }
-    }
-    return null;
+    return error == null ? null : error.getClass().getName();
+  }
+
+  @Override
+  @Nullable
+  public String getDbResponseStatusCode(
+      OpenSearchRequest request, @Nullable Void response, @Nullable Throwable error) {
+    Integer statusCode = getStatusCode(error);
+    return statusCode != null ? statusCode.toString() : null;
   }
 
   @Override
@@ -66,5 +69,13 @@ final class OpenSearchAttributesGetter
   public Integer getServerPort(OpenSearchRequest request) {
     DbServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
+  }
+
+  @Nullable
+  private static Integer getStatusCode(@Nullable Throwable error) {
+    if (error instanceof CompletionException) {
+      error = error.getCause();
+    }
+    return error instanceof OpenSearchException ? ((OpenSearchException) error).status() : null;
   }
 }

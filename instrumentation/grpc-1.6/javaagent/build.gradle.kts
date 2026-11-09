@@ -31,36 +31,32 @@ dependencies {
   testImplementation(project(":instrumentation:grpc-1.6:testing"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-          // The agent context debug mechanism isn't compatible with the bridge approach which may add a
-          // gRPC context to the root.
-          jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
-          jvmArgs("-Dotel.instrumentation.grpc.client.request-headers.included=some-*-key")
-          jvmArgs("-Dotel.instrumentation.grpc.client.request-headers.excluded=*-excluded-key")
-          jvmArgs("-Dotel.instrumentation.grpc.server.request-headers.included=some-*-key")
-          jvmArgs("-Dotel.instrumentation.grpc.server.request-headers.excluded=*-excluded-key")
-          // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
-          // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
-          jvmArgs("-Djava.net.preferIPv4Stack=true")
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+      // The agent context debug mechanism isn't compatible with the bridge approach which may add a
+      // gRPC context to the root.
+      jvmArgs("-Dotel.javaagent.experimental.thread-propagation-debugger.enabled=false")
+      jvmArgs("-Dotel.instrumentation.grpc.client.request-headers.included=some-*-key")
+      jvmArgs("-Dotel.instrumentation.grpc.client.request-headers.excluded=*-excluded-key")
+      jvmArgs("-Dotel.instrumentation.grpc.server.request-headers.included=some-*-key")
+      jvmArgs("-Dotel.instrumentation.grpc.server.request-headers.excluded=*-excluded-key")
+      // latest dep test occasionally fails because network type is ipv6 instead of the expected ipv4
+      // and peer address is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
+      jvmArgs("-Djava.net.preferIPv4Stack=true")
 
-          // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
-          // breaks the tests
-          classpath = classpath.filter {
-            !it.absolutePath.contains("opentelemetry-grpc-1.6")
-          }
-        }
-        register("Experimental") {
-          telemetryConfig("otel.instrumentation.grpc.experimental-span-attributes", "true")
-        }
-        register("ExceptionSignalLogs") {
-          telemetryConfig("otel.semconv.exception.signal.preview", "logs")
-        }
+      // exclude our grpc library instrumentation, the ContextStorageOverride contained within it
+      // breaks the tests
+      classpath = classpath.filter {
+        !it.absolutePath.contains("opentelemetry-grpc-1.6")
       }
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.grpc.experimental-span-attributes", "true")
+    }
+    register("ExceptionSignalLogs") {
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }

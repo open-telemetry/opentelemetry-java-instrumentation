@@ -22,11 +22,14 @@ import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService;
 import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
+import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -36,6 +39,10 @@ import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import org.apache.dubbo.common.utils.NetUtils;
 import org.apache.dubbo.config.ApplicationConfig;
@@ -44,6 +51,8 @@ import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.ServiceConfig;
 import org.apache.dubbo.config.bootstrap.DubboBootstrap;
+import org.apache.dubbo.rpc.RpcException;
+import org.apache.dubbo.rpc.service.GenericException;
 import org.apache.dubbo.rpc.service.GenericService;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractStringAssert;
@@ -87,11 +96,15 @@ public abstract class AbstractDubboTest {
   }
 
   ServiceConfig<HelloServiceImpl> configureServer() {
+    return configureServer(new HelloServiceImpl());
+  }
+
+  ServiceConfig<HelloServiceImpl> configureServer(HelloServiceImpl implementation) {
     RegistryConfig registerConfig = new RegistryConfig();
     registerConfig.setAddress("N/A");
     ServiceConfig<HelloServiceImpl> service = new ServiceConfig<>();
     service.setInterface(HelloService.class);
-    service.setRef(new HelloServiceImpl());
+    service.setRef(implementation);
     service.setRegistry(registerConfig);
     return service;
   }
@@ -372,6 +385,327 @@ public abstract class AbstractDubboTest {
                                             satisfies(
                                                 SERVER_PORT,
                                                 val -> val.isInstanceOf(Long.class))))));
+  }
+
+  @Test
+  void testRpcExceptionFailure() throws ReflectiveOperationException {
+    assertFailure(
+        new RpcException(RpcException.NETWORK_EXCEPTION), false, RpcException.class.getName());
+  }
+
+  @Test
+  void testAsyncRpcExceptionFailure() throws ReflectiveOperationException {
+    assertFailure(
+        new RpcException(RpcException.TIMEOUT_EXCEPTION), true, RpcException.class.getName());
+  }
+
+  @Test
+  void testOrdinaryExceptionFailure() throws ReflectiveOperationException {
+    assertFailure(
+        new IllegalStateException("expected failure"),
+        false,
+        IllegalStateException.class.getName());
+  }
+
+  @Test
+  void testAsyncClientTransportTimeout()
+      throws ReflectiveOperationException,
+          InterruptedException,
+          ExecutionException,
+          TimeoutException {
+    int port = PortUtils.findOpenPort();
+    protocolConfig.setPort(port);
+
+    CountDownLatch serverCallStarted = new CountDownLatch(1);
+    CountDownLatch continueServerCall = new CountDownLatch(1);
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-timeout-provider"))
+        .service(
+            configureServer(
+                new HelloServiceImpl() {
+                  @Override
+                  public String hello(String hello) {
+                    serverCallStarted.countDown();
+                    try {
+                      continueServerCall.await();
+                    } catch (InterruptedException e) {
+                      Thread.currentThread().interrupt();
+                      throw new IllegalStateException(e);
+                    }
+                    return hello;
+                  }
+                }))
+        .protocol(protocolConfig)
+        .start();
+
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+    ReferenceConfig<HelloService> referenceConfig = configureClient(port);
+    referenceConfig.setTimeout(500);
+    referenceConfig.setRetries(0);
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-test-timeout-consumer"))
+        .reference(referenceConfig)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    GenericService genericService = convertReference(referenceConfig).get();
+    CompletableFuture<Object> response =
+        genericService.$invokeAsync(
+            "hello", new String[] {String.class.getName()}, new Object[] {"hello"});
+
+    String clientErrorType;
+    try {
+      assertThat(serverCallStarted.await(10, SECONDS)).isTrue();
+      Throwable clientError = response.handle((value, error) -> error).get(10, SECONDS);
+      assertThat(clientError).isNotNull();
+      clientError = CauseUnwrapper.unwrap(clientError, e -> e instanceof CompletionException);
+      clientErrorType = clientError.getClass().getName();
+    } finally {
+      continueServerCall.countDown();
+    }
+
+    assertFailureTelemetry(
+        "org.apache.dubbo.rpc.service.GenericService/$invokeAsync", clientErrorType, null);
+  }
+
+  private void assertFailure(RuntimeException failure, boolean asynchronous, String serverErrorType)
+      throws ReflectiveOperationException {
+    int port = PortUtils.findOpenPort();
+    protocolConfig.setPort(port);
+
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-failure-provider"))
+        .service(
+            configureServer(
+                new HelloServiceImpl() {
+                  @Override
+                  public String hello(String hello) {
+                    throw failure;
+                  }
+                }))
+        .protocol(protocolConfig)
+        .start();
+
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+    ReferenceConfig<HelloService> referenceConfig = configureClient(port);
+    referenceConfig.setRetries(0);
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-test-failure-consumer"))
+        .reference(referenceConfig)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    GenericService genericService = convertReference(referenceConfig).get();
+    if (asynchronous) {
+      CompletableFuture<Object> response =
+          genericService.$invokeAsync(
+              "hello", new String[] {String.class.getName()}, new Object[] {"hello"});
+      assertThatThrownBy(response::join).isInstanceOf(CompletionException.class);
+    } else {
+      assertThatThrownBy(
+              () ->
+                  genericService.$invoke(
+                      "hello", new String[] {String.class.getName()}, new Object[] {"hello"}))
+          .isInstanceOf(RuntimeException.class);
+    }
+
+    assertFailureTelemetry(
+        "org.apache.dubbo.rpc.service.GenericService/"
+            + (asynchronous ? "$invokeAsync" : "$invoke"),
+        testLatestDeps()
+            ? "com.alibaba.dubbo.rpc.service.GenericException"
+            : GenericException.class.getName(),
+        serverErrorType);
+  }
+
+  private void assertFailureTelemetry(
+      String clientMethod, String clientErrorType, String serverErrorType) {
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(clientMethod)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(ERROR_TYPE, clientErrorType),
+                                equalTo(stringKey("rpc.status_code"), null)),
+                    span ->
+                        span.hasName(
+                                "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello")
+                            .hasKind(SpanKind.SERVER)
+                            .hasStatus(
+                                serverErrorType != null ? StatusData.error() : StatusData.unset())
+                            .hasAttributesSatisfying(
+                                equalTo(ERROR_TYPE, serverErrorType),
+                                equalTo(stringKey("rpc.status_code"), null))));
+
+    assertErrorMetric(
+        "rpc.server.call.duration",
+        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
+        serverErrorType);
+    assertErrorMetric("rpc.client.call.duration", clientMethod, clientErrorType);
+  }
+
+  @Test
+  void testTripleInternalStatusFailure() throws ReflectiveOperationException {
+    assertTripleStatusFailure("INTERNAL", "INTERNAL");
+  }
+
+  @Test
+  void testTripleUnknownServiceProtocolStatus() throws ReflectiveOperationException {
+    Assumptions.assumeTrue(testLatestDeps(), "Triple protocol requires Dubbo 3.x");
+
+    // Triple rejects the unexported service before invoking the provider filter.
+    ReferenceConfig<MiddleService> referenceConfig =
+        configureTripleClient(new HelloServiceImpl(), MiddleService.class);
+    MiddleService service = referenceConfig.get();
+    assertThatThrownBy(() -> service.hello("hello"))
+        .hasRootCauseExactlyInstanceOf(
+            Class.forName("org.apache.dubbo.rpc.StatusRpcException").asSubclass(Throwable.class));
+
+    String clientMethod =
+        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.MiddleService/hello";
+    Consumer<SpanDataAssert> clientSpanAssert =
+        span ->
+            span.hasName(clientMethod)
+                .hasKind(SpanKind.CLIENT)
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                    equalTo(RPC_METHOD, clientMethod),
+                    equalTo(ERROR_TYPE, "UNIMPLEMENTED"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, protocolConfig.getPort()),
+                    satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                    satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                    satisfies(NETWORK_TYPE, AbstractDubboTest::assertNetworkType),
+                    equalTo(stringKey("rpc.status_code"), null));
+    if (canCaptureUnknownServiceSpans()) {
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      clientSpanAssert,
+                      span ->
+                          span.hasName("dubbo")
+                              .hasKind(SpanKind.SERVER)
+                              .hasParent(trace.getSpan(0))
+                              .hasStatus(StatusData.error())));
+    } else {
+      testing().waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(clientSpanAssert));
+    }
+    assertErrorMetric("rpc.client.call.duration", clientMethod, "UNIMPLEMENTED");
+  }
+
+  @Test
+  void testTripleInvalidArgumentStatus() throws ReflectiveOperationException {
+    assertTripleStatusFailure("INVALID_ARGUMENT", null);
+  }
+
+  private void assertTripleStatusFailure(String statusCode, String serverErrorType)
+      throws ReflectiveOperationException {
+    Assumptions.assumeTrue(testLatestDeps(), "Triple protocol requires Dubbo 3.x");
+
+    RuntimeException failure = tripleStatusException(statusCode);
+    ReferenceConfig<HelloService> referenceConfig =
+        configureTripleClient(
+            new HelloServiceImpl() {
+              @Override
+              public String hello(String hello) {
+                throw failure;
+              }
+            },
+            HelloService.class);
+    HelloService service = referenceConfig.get();
+    assertThatThrownBy(() -> service.hello("hello")).isInstanceOf(RuntimeException.class);
+
+    assertFailureTelemetry(
+        "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello",
+        // STRICT serialization rejects the business exception's TriRpcStatus. Triple sends UNKNOWN
+        // instead, while the original status is still observable in the server filter.
+        "UNKNOWN",
+        serverErrorType);
+  }
+
+  private <T> ReferenceConfig<T> configureTripleClient(
+      HelloServiceImpl implementation, Class<T> serviceClass) throws ReflectiveOperationException {
+    int port = PortUtils.findOpenPort();
+    protocolConfig.setName("tri");
+    protocolConfig.setPort(port);
+
+    DubboBootstrap bootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(bootstrap::destroy);
+    bootstrap
+        .application(new ApplicationConfig("dubbo-test-triple-failure-provider"))
+        .service(configureServer(implementation))
+        .protocol(protocolConfig)
+        .start();
+
+    ReferenceConfig<T> referenceConfig = new ReferenceConfig<>();
+    referenceConfig.setInterface(serviceClass);
+    referenceConfig.setRetries(0);
+    referenceConfig.setUrl("tri://localhost:" + port + "/?timeout=30000");
+    ProtocolConfig consumerProtocolConfig = new ProtocolConfig();
+    consumerProtocolConfig.setRegister(false);
+    DubboBootstrap consumerBootstrap = DubboTestUtil.newDubboBootstrap();
+    cleanup.deferCleanup(consumerBootstrap::destroy);
+    consumerBootstrap
+        .application(new ApplicationConfig("dubbo-test-triple-failure-consumer"))
+        .reference(referenceConfig)
+        .protocol(consumerProtocolConfig)
+        .start();
+
+    return referenceConfig;
+  }
+
+  @SuppressWarnings({"rawtypes", "unchecked"})
+  private static RuntimeException tripleStatusException(String statusCode)
+      throws ReflectiveOperationException {
+    Class<?> codeClass = Class.forName("org.apache.dubbo.rpc.TriRpcStatus$Code");
+    Object code = Enum.valueOf((Class) codeClass, statusCode);
+    Class<?> statusClass = Class.forName("org.apache.dubbo.rpc.TriRpcStatus");
+    Object status = statusClass.getMethod("fromCode", codeClass).invoke(null, code);
+    return (RuntimeException) statusClass.getMethod("asException").invoke(status);
+  }
+
+  private void assertErrorMetric(String metricName, String method, String errorType) {
+    boolean isClient = metricName.equals("rpc.client.call.duration");
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.apache-dubbo-2.7",
+            metric ->
+                metric
+                    .hasName(metricName)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point.hasAttributesSatisfyingExactly(
+                                        equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                                        equalTo(RPC_METHOD, method),
+                                        equalTo(ERROR_TYPE, errorType),
+                                        equalTo(SERVER_ADDRESS, isClient ? "localhost" : null),
+                                        equalTo(
+                                            SERVER_PORT,
+                                            isClient ? (long) protocolConfig.getPort() : null),
+                                        equalTo(stringKey("rpc.status_code"), null)))));
   }
 
   @Test

@@ -9,7 +9,6 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Strings;
 import com.google.common.graph.Graph;
 import com.google.common.graph.GraphBuilder;
 import com.google.common.graph.Graphs;
@@ -47,6 +46,11 @@ import org.objectweb.asm.ClassReader;
  */
 public final class ReferenceCollector {
 
+  private static final Pattern PROVIDER_CLASS_NAME =
+      Pattern.compile(
+          "\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*"
+              + "(\\.\\p{javaJavaIdentifierStart}\\p{javaJavaIdentifierPart}*)*");
+
   private final Map<String, ClassRef> references = new LinkedHashMap<>();
   private final MutableGraph<String> helperSuperClassGraph = GraphBuilder.directed().build();
   private final VirtualFieldMappingsBuilderImpl virtualFieldMappingsBuilder =
@@ -82,11 +86,24 @@ public final class ReferenceCollector {
     List<String> spiImplementations = new ArrayList<>();
     try (InputStream stream = getResourceStream(helperResource.getAgentPath())) {
       BufferedReader reader = new BufferedReader(new InputStreamReader(stream, UTF_8));
-      while (reader.ready()) {
-        String line = reader.readLine();
-        if (!Strings.isNullOrEmpty(line)) {
-          spiImplementations.add(line);
+      String line;
+      while ((line = reader.readLine()) != null) {
+        if (line.isEmpty()) {
+          continue;
         }
+        // Provider names become class-resource paths, so reject path syntax explicitly.
+        if (line.contains("/")
+            || line.contains("\\")
+            || line.contains("..")
+            || !PROVIDER_CLASS_NAME.matcher(line).matches()) {
+          throw new MuzzleCompilationException(
+              "Invalid provider name in resource "
+                  + helperResource.getAgentPath()
+                  + ": '"
+                  + line
+                  + "'");
+        }
+        spiImplementations.add(line);
       }
     } catch (IOException e) {
       throw new IllegalStateException("Error reading resource " + helperResource.getAgentPath(), e);

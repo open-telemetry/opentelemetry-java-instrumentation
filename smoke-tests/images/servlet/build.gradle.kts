@@ -121,27 +121,23 @@ val targets = mapOf(
     ImageTarget(
       listOf("7.0.109"),
       listOf("hotspot", "openj9"),
-      listOf("8"),
-      mapOf("majorVersion" to "7")
+      listOf("8")
     ),
     ImageTarget(
       listOf("8.5.98"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "8")
+      listOf("8", "11", "17", "21", "25", latestJava)
     ),
     ImageTarget(
       listOf("9.0.111"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "9")
+      listOf("8", "11", "17", "21", "25", latestJava)
     ),
     ImageTarget(
       listOf("10.1.48"),
       listOf("hotspot", "openj9"),
       listOf("11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "10"),
-      "servlet-5.0"
+      war = "servlet-5.0"
     ),
   ),
   "tomee" to listOf(
@@ -263,7 +259,8 @@ fun configureImage(
   jdk: String,
   warProject: String,
   args: Map<String, String>,
-  isWindows: Boolean
+  isWindows: Boolean,
+  downloadTask: TaskProvider<Exec>?
 ): String {
   val versionParts = fullVersion.split("@")
   val imageNameWithTag = versionParts[0]
@@ -296,6 +293,9 @@ fun configureImage(
     from("src/main/docker/$server")
     from(warTask.get().archiveFile) {
       rename { "app.war" }
+    }
+    if (downloadTask != null) {
+      from(downloadTask)
     }
   }
 
@@ -406,6 +406,38 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): S
       val supportsWindows = entry.windows
 
       for (version in entry.version) {
+        val downloadTask = if (server == "tomcat") {
+          // Apache archive connections intermittently time out in CI, and Docker's remote ADD
+          // offers no configurable retries. Use curl's bounded retries and share each download
+          // across JDK/VM image variants to reduce requests to the archive.
+          val platformSuffix = if (isWindows) "-windows" else ""
+          val archiveSuffix = if (isWindows) "-windows-x64.zip" else ".tar.gz"
+          val archiveName = if (isWindows) "server.zip" else "server.tgz"
+          val archiveFile = layout.buildDirectory.file("downloads/tomcat-$version$platformSuffix/$archiveName")
+          val url = "https://archive.apache.org/dist/tomcat/tomcat-${version.substringBefore('.')}/v$version/bin/apache-tomcat-$version$archiveSuffix"
+          tasks.register<Exec>("downloadTomcat-$version$platformSuffix") {
+            usesService(gradle.sharedServices.registrations["dockerBuildService"].service)
+            inputs.property("url", url)
+            outputs.file(archiveFile)
+            commandLine(
+              "curl",
+              "--fail",
+              "--location",
+              "--silent",
+              "--show-error",
+              "--retry", "5",
+              "--retry-all-errors",
+              "--retry-max-time", "600",
+              "--connect-timeout", "30",
+              "--max-time", "300",
+              "--remove-on-error",
+              "--output", archiveFile.get().asFile.absolutePath,
+              url
+            )
+          }
+        } else {
+          null
+        }
         for (vm in entry.vm) {
           if (vm == "openj9" && isWindows) {
             // ibm-semeru-runtimes doesn't publish windows images
@@ -413,7 +445,7 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): S
           }
           for (jdk in entry.jdk) {
             if (supportsWindows || !isWindows) {
-              resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows))
+              resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows, downloadTask))
             }
           }
         }

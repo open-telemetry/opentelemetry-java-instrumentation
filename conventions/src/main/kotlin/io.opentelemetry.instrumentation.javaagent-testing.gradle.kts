@@ -43,8 +43,8 @@ dependencies {
   compileOnly("com.google.code.findbugs:annotations")
 }
 
-testing {
-  suites.withType(JvmTestSuite::class).configureEach {
+testing.suites {
+  withType(JvmTestSuite::class).configureEach {
     dependencies {
       implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
     }
@@ -68,7 +68,7 @@ val agentForTesting = configurations.create("agentForTesting") {
 }
 
 dependencies {
-  agentForTesting("io.opentelemetry.javaagent:opentelemetry-agent-for-testing")
+  agentForTesting("io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing")
 }
 
 class JavaagentTestArgumentsProvider(
