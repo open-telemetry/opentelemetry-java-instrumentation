@@ -19,12 +19,13 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.ByteBuffer;
+import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class ServletRequestBodyExtractorTest {
 
@@ -111,16 +112,22 @@ class ServletRequestBodyExtractorTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-          "text/plain; charset=ISO-8859-1",
-          "text/plain;charset=iso-8859-1",
-          "text/plain; charset=iso-8859-1 ",
-          "text/plain; charset=\"ISO-8859-1\"",
-          "text/plain; charset=ISO-8859-1; boundary=x"
-      })
-  void charsetExplicitInContentType(String contentType) {
-    assertThat(getCharsetFromContentTypeHeader(contentType)).isEqualTo(ISO_8859_1);
+  @CsvSource(
+      delimiterString = "|",
+      value = {
+          "text/plain; charset=ISO-8859-1|ISO-8859-1",
+          "text/plain;charset=iso-8859-1|ISO-8859-1",
+          "text/plain; charset=iso-8859-1 |ISO-8859-1",
+          "text/plain; charset=\"ISO-8859-1\"|ISO-8859-1",
+          "text/plain; charset=iso-8859-1; boundary=x|ISO-8859-1",
+          "text/plain; charset=latin1|ISO-8859-1",
+          "text/plain; charset=utf8|UTF-8",
+          "text/plain; charset=UTF-8|UTF-8"
+      }
+  )
+  void charsetDecoding(String contentType, String expectedCharset) {
+    Charset expected = Charset.forName(expectedCharset);
+    assertThat(getCharsetFromContentTypeHeader(contentType)).isEqualTo(expected);
   }
 
   @Test
