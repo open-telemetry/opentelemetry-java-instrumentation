@@ -102,34 +102,30 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       return null;
     }
 
-    // TODO: this conversion part will need to be revisited for optimization
-    // - decoder cache per charset (and normalize them)
-    // - when the data is already utf-8, can we just produce a string attribute without decoding ?
-
     buffer.flip();
     try {
-      // malformed input must be reported, not silently replaced, so that a body that is not valid
-      // text in the expected charset is captured as binary
       CharsetDecoder decoder =
-          getCharset(contentType)
+          getCharsetFromContentTypeHeader(contentType)
               .newDecoder()
               // ignore allows to decode as much as we can and cut of the rest.
               .onMalformedInput(CodingErrorAction.IGNORE)
               .onUnmappableCharacter(CodingErrorAction.IGNORE);
-      // decode a duplicate to keep the buffer content available for the binary fallback
       return decoder.decode(buffer).toString();
     } catch (CharacterCodingException e) {
-      // TODO: create a dedicated Value<ByteBuffer> implementation that avoids doing any copy
-      // we can do that because we know the buffer will not be modified anymore.
       return null;
     }
   }
 
   /** Returns the charset from the content type, or UTF-8 when it is missing or unknown. */
-  private static Charset getCharset(@Nullable String contentType) {
+  // package-protected for testing
+  static Charset getCharsetFromContentTypeHeader(@Nullable String contentType) {
     if (contentType == null) {
       return UTF_8;
     }
+    // TODO: we should be able to optimize this
+    // - cache (bounded) for charset resolution from content type header
+    // - parser charset without regex
+
     Matcher matcher = CHARSET_PATTERN.matcher(contentType);
     if (matcher.find()) {
       try {

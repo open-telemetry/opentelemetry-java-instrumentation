@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.servlet.common.internal;
 
 import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getCharsetFromContentTypeHeader;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getRequestBodyValue;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -26,6 +27,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class ServletRequestBodyExtractorTest {
+
+  private static final byte[] ISO_8859_1_BODY = "café".getBytes(ISO_8859_1);
 
   private final Object request = new Object();
   private final Map<String, Object> requestAttributes = new HashMap<>();
@@ -96,27 +99,33 @@ class ServletRequestBodyExtractorTest {
     assertThat(body).isEqualTo("request-body");
   }
 
-  private static final byte[] ISO_8859_1_BODY = "café".getBytes(ISO_8859_1);
-
   @Test
   void nonUtf8WithoutContentTypeCapturedAsUtf8() {
+    assertThat(getCharsetFromContentTypeHeader(null)).isEqualTo(UTF_8);
     assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null)).isEqualTo("caf");
+  }
+
+  @Test
+  void nonUtf8WithContentTypeWithEncoding() {
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), "text/plain; charset=ISO-8859-1")).isEqualTo("café");
   }
 
   @ParameterizedTest
   @ValueSource(
       strings = {
-        "text/plain; charset=ISO-8859-1",
-        "text/plain;charset=iso-8859-1",
-        "text/plain; charset=\"ISO-8859-1\"",
-        "text/plain; charset=ISO-8859-1; boundary=x"
+          "text/plain; charset=ISO-8859-1",
+          "text/plain;charset=iso-8859-1",
+          "text/plain; charset=iso-8859-1 ",
+          "text/plain; charset=\"ISO-8859-1\"",
+          "text/plain; charset=ISO-8859-1; boundary=x"
       })
-  void nonUtf8WithContentTypeWithEncoding(String contentType) {
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), contentType)).isEqualTo("café");
+  void charsetExplicitInContentType(String contentType) {
+    assertThat(getCharsetFromContentTypeHeader(contentType)).isEqualTo(ISO_8859_1);
   }
 
   @Test
   void unknownCharsetAssumedUtf8() {
+    assertThat(getCharsetFromContentTypeHeader("text/plain; charset=unknown")).isEqualTo(UTF_8);
     assertThat(getRequestBodyValue(bufferOf("café".getBytes(UTF_8)), "text/plain; charset=unknown"))
         .isEqualTo("café");
   }
