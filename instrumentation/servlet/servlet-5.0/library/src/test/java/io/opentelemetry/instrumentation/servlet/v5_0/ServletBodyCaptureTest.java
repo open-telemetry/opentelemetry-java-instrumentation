@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.servlet.v5_0;
 
-import static io.opentelemetry.api.common.AttributeKey.valueKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -15,8 +15,6 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.common.Value;
-import io.opentelemetry.api.common.ValueType;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -30,12 +28,10 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -47,8 +43,8 @@ class ServletBodyCaptureTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   // TODO: to be replaced with semconv incubating attribute when available
-  private static final AttributeKey<Value<?>> BODY_ATTRIBUTE_KEY =
-      valueKey("http.request.body.content");
+  private static final AttributeKey<String> BODY_ATTRIBUTE_KEY =
+      stringKey("http.request.body.content");
 
   @Test
   void capturesRequestBody_default() throws Exception {
@@ -78,36 +74,19 @@ class ServletBodyCaptureTest {
     testCaptureRequestBody(builder, "request");
   }
 
-  @Test
-  @Disabled // not relevant with the current 'parse as utf8' current approach.
-  void capturesRequestBody_binary() throws Exception {
-    // not valid UTF-8, hexadecimal 0001fffe: it can only be captured as bytes
-    byte[] body = {0x00, 0x01, (byte) 0xff, (byte) 0xfe};
-    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setCaptureRequestBodyMaxSize(builder, 32);
-
-    Value<?> value = captureRequestBody(builder, body, "application/octet-stream");
-
-    assertThat(value).isNotNull();
-    assertThat(value.getType()).isEqualTo(ValueType.BYTES);
-    assertThat(value.getValue()).isEqualTo(ByteBuffer.wrap(body));
-  }
-
   private static void testCaptureRequestBody(
       ServletTelemetryBuilder builder, @Nullable String expected) throws Exception {
 
-    Value<?> value = captureRequestBody(builder, "request-body".getBytes(UTF_8), null);
+    String value = captureRequestBody(builder, "request-body".getBytes(UTF_8), null);
     if (expected == null) {
       assertThat(value).isNull();
     } else {
-      assertThat(value).isNotNull();
-      assertThat(value.getType()).isEqualTo(ValueType.STRING);
-      assertThat(value.asString()).isEqualTo(expected);
+      assertThat(value).isEqualTo(expected);
     }
   }
 
   @Nullable
-  private static Value<?> captureRequestBody(
+  private static String captureRequestBody(
       ServletTelemetryBuilder builder, byte[] body, @Nullable String contentType) throws Exception {
     Filter filter = builder.build().createFilter();
 
