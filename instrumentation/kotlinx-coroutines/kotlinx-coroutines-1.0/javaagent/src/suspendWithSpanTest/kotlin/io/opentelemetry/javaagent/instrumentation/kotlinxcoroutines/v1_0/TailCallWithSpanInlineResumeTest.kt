@@ -11,8 +11,10 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -21,6 +23,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.CompletableFuture
+import java.util.concurrent.Executor
+import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
@@ -131,6 +135,59 @@ class TailCallWithSpanInlineResumeTest {
       observed = value
     }
     return observed
+  }
+
+  // A callback that propagates the context it captured is not the runtime restoring it, so the
+  // caller still runs inline before resume returns, even under a same dispatcher withContext.
+  @Test
+  fun `caller resumed without interception by a callback that propagates the context runs before resume returns`() {
+    val expected = callerRanBeforeResumeReturned { unannotatedPropagatingCallback(it) }
+    assertThat(expected).isTrue()
+    assertThat(callerRanBeforeResumeReturned { annotatedPropagatingCallback(it) }).isEqualTo(expected)
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("propagating-callback").hasNoParent() },
+        )
+      },
+    )
+  }
+
+  private fun callerRanBeforeResumeReturned(call: suspend (Executor) -> Int): Boolean {
+    val executor = Executors.newSingleThreadExecutor()
+    try {
+      val callerRan = CompletableFuture<Unit>()
+      val ranBeforeResumeReturned = CompletableFuture<Boolean>()
+      val callback = Executor { command ->
+        executor.execute {
+          command.run()
+          ranBeforeResumeReturned.complete(callerRan.isDone)
+        }
+      }
+      runBlocking(executor.asCoroutineDispatcher() + Context.root().asContextElement()) {
+        withContext(CoroutineName("caller")) {
+          call(callback)
+          callerRan.complete(Unit)
+        }
+      }
+      return ranBeforeResumeReturned.get(10, TimeUnit.SECONDS)
+    } finally {
+      executor.shutdown()
+    }
+  }
+
+  @WithSpan("propagating-callback")
+  private suspend fun annotatedPropagatingCallback(callback: Executor): Int = unannotatedPropagatingCallback(callback)
+
+  private suspend fun unannotatedPropagatingCallback(callback: Executor): Int {
+    val context = Context.current()
+    return suspendCoroutineUninterceptedOrReturn { continuation ->
+      callback.execute {
+        context.makeCurrent().use { continuation.resume(7) }
+      }
+      COROUTINE_SUSPENDED
+    }
   }
 
   @WithSpan("unintercepted")

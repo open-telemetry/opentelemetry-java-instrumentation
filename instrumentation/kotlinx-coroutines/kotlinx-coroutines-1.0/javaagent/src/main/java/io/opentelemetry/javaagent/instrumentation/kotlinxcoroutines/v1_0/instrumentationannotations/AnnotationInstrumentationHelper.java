@@ -212,6 +212,7 @@ public class AnnotationInstrumentationHelper {
     private final Continuation<T> delegate;
     private final CoroutineContext coroutineContext;
     private final ThreadContextElement<Scope> delegateContextElement;
+    private final RuntimeContextMarker runtimeContextMarker = new RuntimeContextMarker();
     private final Context parentContext;
     private final Context spanContext;
     private final Object request;
@@ -221,7 +222,10 @@ public class AnnotationInstrumentationHelper {
         Continuation<T> delegate, Context spanContext, Context parentContext, Object request) {
       this.delegate = delegate;
       this.coroutineContext =
-          delegate.getContext().plus(ContextExtensionsKt.asContextElement(spanContext));
+          delegate
+              .getContext()
+              .plus(ContextExtensionsKt.asContextElement(spanContext))
+              .plus(runtimeContextMarker);
       this.delegateContextElement =
           (ThreadContextElement<Scope>) ContextExtensionsKt.asContextElement(parentContext);
       this.parentContext = parentContext;
@@ -256,10 +260,11 @@ public class AnnotationInstrumentationHelper {
       // thread context in the middle of that task. Under an undispatched withContext the runtime
       // may restore the task's context later, out of order with the switch, so let the caller's
       // dispatcher resume it with its own context instead. Other interceptors do not apply the
-      // caller's context, so they resume it below.
+      // caller's context, and a callback that resumed the callee itself expects the caller to run
+      // before it returns, as without the annotation, so both resume it below.
       CoroutineContext callerContext = delegate.getContext();
       ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
-      if (Context.current() == spanContext
+      if (runtimeContextMarker.isApplied()
           && interceptor instanceof CoroutineDispatcher
           && UndispatchedMarker.mayBeIn(callerContext)) {
         Continuation<T> intercepted = IntrinsicsKt.intercepted(delegate);
