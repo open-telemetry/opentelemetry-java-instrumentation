@@ -138,26 +138,75 @@ class LogPatternInjectionTest {
   }
 
   @ParameterizedTest
-  @MethodSource("commaContainingLogbackKeys")
-  void quotesCommaContainingLogbackKeys(String traceKey, String converter) {
+  @MethodSource("complexLogbackKeys")
+  void preservesComplexLogbackKeys(String traceKey, String label, String option) {
     String enhanced =
         LogPatternInjection.enhance("%d %m%n", Framework.LOGBACK, traceKey, "span_id");
     assertThat(enhanced)
         .isEqualTo(
             "%d service.name=%X{service.name} "
-                + traceKey
-                + "="
-                + converter
-                + " span_id=%X{span_id} %m%n");
+                + label
+                + "=%X{"
+                + option
+                + "} span_id=%X{span_id} %m%n");
     assertThat(LogPatternInjection.enhance(enhanced, Framework.LOGBACK, traceKey, "span_id"))
         .isEqualTo(enhanced);
   }
 
-  private static Stream<Arguments> commaContainingLogbackKeys() {
+  private static Stream<Arguments> complexLogbackKeys() {
     return Stream.of(
-        argumentSet("comma", "custom,trace", "%X{\"custom,trace\"}"),
-        argumentSet("single quote", "custom,'trace", "%X{\"custom,'trace\"}"),
-        argumentSet("double quote", "custom,\"trace", "%X{'custom,\"trace'}"));
+        argumentSet(
+            "comma",
+            "custom,trace",
+            "custom,trace",
+            "otel.pattern-injection.trace.Y3VzdG9tLHRyYWNl"),
+        argumentSet(
+            "single quote",
+            "custom,'trace",
+            "custom,'trace",
+            "otel.pattern-injection.trace.Y3VzdG9tLCd0cmFjZQ"),
+        argumentSet(
+            "double quote",
+            "custom,\"trace",
+            "custom,\"trace",
+            "otel.pattern-injection.trace.Y3VzdG9tLCJ0cmFjZQ"),
+        argumentSet(
+            "both quotes",
+            "custom,'\"trace",
+            "custom,'\"trace",
+            "otel.pattern-injection.trace.Y3VzdG9tLCcidHJhY2U"),
+        argumentSet(
+            "backslashes",
+            "custom,\\trace\\",
+            "custom,\\\\trace\\\\",
+            "otel.pattern-injection.trace.Y3VzdG9tLFx0cmFjZVw"),
+        argumentSet(
+            "literal pattern syntax",
+            "custom,%trace()",
+            "custom,\\%trace\\(\\)",
+            "otel.pattern-injection.trace.Y3VzdG9tLCV0cmFjZSgp"),
+        argumentSet(
+            "native default delimiter",
+            "custom:-trace",
+            "custom:-trace",
+            "otel.pattern-injection.trace.Y3VzdG9tOi10cmFjZQ"),
+        argumentSet(
+            "braces",
+            "custom{trace}",
+            "custom{trace}",
+            "otel.pattern-injection.trace.Y3VzdG9te3RyYWNlfQ"),
+        argumentSet(
+            "whitespace",
+            " custom trace ",
+            " custom trace ",
+            "otel.pattern-injection.trace.IGN1c3RvbSB0cmFjZSA"));
+  }
+
+  @Test
+  void reusesNativeQuotedLogbackKeys() {
+    String pattern = "%d %X{'custom,trace'} %m%n";
+    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK, "custom,trace", "span_id"))
+        .isEqualTo("%d service.name=%X{service.name} span_id=%X{span_id} %X{'custom,trace'} %m%n");
   }
 
   @ParameterizedTest

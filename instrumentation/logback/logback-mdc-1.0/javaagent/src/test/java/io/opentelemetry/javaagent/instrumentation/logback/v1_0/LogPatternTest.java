@@ -42,18 +42,24 @@ class LogPatternTest {
     boolean additive = logger.isAdditive();
     Level level = logger.getLevel();
     ListAppender<ILoggingEvent> appender = new ListAppender<>();
+    PatternLayout layout = new PatternLayout();
+    PatternLayout quoted = new PatternLayout();
+    PatternLayout control = new PatternLayout();
     try {
-      PatternLayout layout = new PatternLayout();
       layout.setContext(context);
       layout.setPattern("%d{yyyy-MM-dd HH:mm:ss} %m%n");
       layout.start();
-      PatternLayout quoted = new PatternLayout();
       quoted.setContext(context);
-      quoted.setPattern("%d{HH:mm:ss} %X{'" + TRACE + "'} %m%n");
+      quoted.setPattern("%d{HH:mm:ss} %X{'quoted,key'} %m%n");
       quoted.start();
-      if (ENABLED) {
-        assertThat(quoted.getPattern()).doesNotContain(TRACE + "=%X{");
-      }
+      control.setContext(context);
+      control.setPattern("%X{otel.pattern-injection.trace.app}");
+      control.start();
+      assertThat(layout.isStarted()).isTrue();
+      assertThat(quoted.isStarted()).isTrue();
+      assertThat(control.isStarted()).isTrue();
+      MDC.put("quoted,key", "quoted-value");
+      MDC.put("otel.pattern-injection.trace.app", "application-placeholder");
       String enhanced = layout.getPattern();
       layout.stop();
       layout.start();
@@ -65,6 +71,9 @@ class LogPatternTest {
       logger.addAppender(appender);
       logger.info("outside");
       String outside = layout.doLayout(appender.list.get(0));
+      assertThat(quoted.doLayout(appender.list.get(0))).containsOnlyOnce("quoted-value");
+      assertThat(control.doLayout(appender.list.get(0)))
+          .containsOnlyOnce("application-placeholder");
       if (ENABLED) {
         assertThat(outside)
             .contains("service.name=pattern-service", TRACE + "= ", SPAN + "= outside");
@@ -94,6 +103,9 @@ class LogPatternTest {
             .contains("service.name=application-service", SPAN + "=application-span");
       }
     } finally {
+      layout.stop();
+      quoted.stop();
+      control.stop();
       MDC.clear();
       logger.detachAppender(appender);
       logger.setAdditive(additive);

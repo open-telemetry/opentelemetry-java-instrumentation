@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import java.util.Base64;
 import javax.annotation.Nullable;
 
 /**
@@ -16,6 +19,9 @@ import javax.annotation.Nullable;
  * at any time.
  */
 public final class LogPatternInjection {
+  private static final String LOGBACK_TRACE_PREFIX = "otel.pattern-injection.trace.";
+  private static final String LOGBACK_SPAN_PREFIX = "otel.pattern-injection.span.";
+  private static final Base64.Encoder logbackKeyEncoder = Base64.getUrlEncoder().withoutPadding();
   private static final boolean ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "logging")
           .get("pattern_injection")
@@ -38,24 +44,38 @@ public final class LogPatternInjection {
   }
 
   @Nullable
+  public static String resolveLogbackMdcKey(@Nullable String key) {
+    if (!ENABLED || key == null) {
+      return key;
+    }
+    String traceKey = AgentCommonConfig.get().getTraceIdKey();
+    if (key.equals(logbackMdcOption(traceKey, 1))) {
+      return traceKey;
+    }
+    String spanKey = AgentCommonConfig.get().getSpanIdKey();
+    if (key.equals(logbackMdcOption(spanKey, 2))) {
+      return spanKey;
+    }
+    return key;
+  }
+
+  @Nullable
   static String enhance(
       @Nullable String pattern, Framework framework, String traceKey, String spanKey) {
     if (pattern == null || pattern.isEmpty()) {
       return pattern;
     }
     StringBuilder fields = new StringBuilder();
-    for (String key : new String[] {"service.name", traceKey, spanKey}) {
-      if (!contains(pattern, framework, key)) {
+    String[] keys = {"service.name", traceKey, spanKey};
+    for (int i = 0; i < keys.length; i++) {
+      String key = keys[i];
+      String option = framework == Framework.LOGBACK ? logbackMdcOption(key, i) : key;
+      if (!contains(pattern, framework, key, option)) {
         if (fields.length() > 0) {
           fields.append(' ');
         }
-        String option = key;
-        if (framework == Framework.LOGBACK && key.indexOf(',') >= 0) {
-          // Logback splits unquoted options on commas.
-          char quote = key.indexOf('"') >= 0 ? '\'' : '"';
-          option = quote + key + quote;
-        }
-        fields.append(key).append("=%X{").append(option).append('}');
+        String label = framework == Framework.LOGBACK ? escapeLogbackLiteral(key) : key;
+        fields.append(label).append("=%X{").append(option).append('}');
       }
     }
     if (fields.length() == 0) {
@@ -95,7 +115,29 @@ public final class LogPatternInjection {
         + pattern.substring(end);
   }
 
-  private static boolean contains(String pattern, Framework framework, String key) {
+  private static String logbackMdcOption(String key, int field) {
+    boolean simple = !key.isEmpty();
+    for (int i = 0; i < key.length(); i++) {
+      char c = key.charAt(i);
+      if (!Character.isLetterOrDigit(c) && c != '_' && c != '.' && c != '-') {
+        simple = false;
+        break;
+      }
+    }
+    if (simple) {
+      return key;
+    }
+    // Native Logback options cannot represent every MDC key, even when quoted.
+    String prefix = field == 1 ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
+    return prefix + logbackKeyEncoder.encodeToString(key.getBytes(UTF_8));
+  }
+
+  private static String escapeLogbackLiteral(String value) {
+    return value.replace("\\", "\\\\").replace("%", "\\%").replace("(", "\\(").replace(")", "\\)");
+  }
+
+  private static boolean contains(
+      String pattern, Framework framework, String key, String mdcOption) {
     for (int i = 0; i < pattern.length(); i++) {
       if (framework == Framework.LOGBACK && pattern.charAt(i) == '\\') {
         i++;
@@ -134,6 +176,9 @@ public final class LogPatternInjection {
           int close = balancedEnd(pattern, end, '{', '}', framework);
           String option = pattern.substring(end + 1, Math.max(end + 1, close - 1));
           if (framework == Framework.LOGBACK) {
+            if (option.equals(mdcOption)) {
+              return true;
+            }
             option = firstLogbackOption(option);
           }
           if (option.equals(key)
@@ -154,7 +199,8 @@ public final class LogPatternInjection {
       // Descend into presentation wrappers, but never interpret option text as converters.
       if (framework == Framework.LOGBACK && end < pattern.length() && pattern.charAt(end) == '(') {
         int close = balancedEnd(pattern, end, '(', ')', framework);
-        if (close > end + 1 && contains(pattern.substring(end + 1, close - 1), framework, key)) {
+        if (close > end + 1
+            && contains(pattern.substring(end + 1, close - 1), framework, key, mdcOption)) {
           return true;
         }
         end = close;
@@ -178,7 +224,7 @@ public final class LogPatternInjection {
                 || converter.equals("red")
                 || converter.equals("white")
                 || converter.equals("yellow"))) {
-          if (contains(pattern.substring(end + 1, close - 1), framework, key)) {
+          if (contains(pattern.substring(end + 1, close - 1), framework, key, mdcOption)) {
             return true;
           }
         }
