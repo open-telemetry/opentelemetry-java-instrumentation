@@ -9,6 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
+import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.FilterAwareProxyFactory;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcSqlCommenterUtil;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.TraceProxyListener;
 import io.r2dbc.proxy.ProxyConnectionFactory;
@@ -45,6 +46,7 @@ public final class R2dbcTelemetry {
       R2dbcSqlCommenterUtil.configure(proxyConfig, sqlCommenter);
     }
     proxyConfig.addListener(new TraceProxyListener(instrumenter, factoryOptions));
+    FilterAwareProxyFactory.configure(proxyConfig);
     return ProxyConnectionFactory.builder(originalFactory, proxyConfig).build();
   }
 }
