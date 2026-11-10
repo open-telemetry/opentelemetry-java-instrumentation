@@ -84,31 +84,33 @@ testing.suites {
       implementation("com.couchbase.client:encryption:${baseVersion("1.0.0").orLatest("1.+")}")
     }
   }
-  withType<JvmTestSuite>().configureEach {
-    executions {
-      configureEach {
-        // required on jdk17
-        jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-        jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
-        jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        if (otelProps.denyUnsafe) {
-          enabled = false
-        }
-      }
 
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
-      }
-      if (name == "version25Test") {
-        register("QuerySanitizationDisabled") {
-          filter {
-            includeTestsMatching("CouchbaseQuerySanitizationTest")
-          }
-          jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
-          systemProperty("testQuerySanitizationEnabled", "false")
-        }
-      }
+  executions("test", "version26Test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
     }
+  }
+  executions("version25Test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.couchbase.emit-experimental-telemetry", "true")
+    }
+    register("QuerySanitizationDisabled") {
+      filter {
+        includeTestsMatching("CouchbaseQuerySanitizationTest")
+      }
+      jvmArgs("-Dotel.instrumentation.couchbase.query-sanitization.enabled=false")
+      systemProperty("testQuerySanitizationEnabled", "false")
+    }
+  }
+}
+
+tasks.withType<Test>().configureEach {
+  // required on jdk17
+  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+  jvmArgs("--add-opens=java.base/java.lang.invoke=ALL-UNNAMED")
+  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+  if (otelProps.denyUnsafe) {
+    enabled = false
   }
 }
 

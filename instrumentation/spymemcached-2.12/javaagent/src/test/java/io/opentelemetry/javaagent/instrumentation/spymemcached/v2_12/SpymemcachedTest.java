@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -225,7 +226,7 @@ class SpymemcachedTest {
     MemcachedClient memcached = getMemcached();
     byte[] value = new byte[2 * 1024 * 1024];
     new Random(0).nextBytes(value);
-    String errorType = testLatestDeps() ? "ERR_2BIG" : OperationException.class.getName();
+    String errorType = testLatestDeps() ? "ERR_2BIG" : "ERR_INTERNAL";
 
     testing.runWithSpan(
         "parent",
@@ -260,6 +261,9 @@ class SpymemcachedTest {
                                 NETWORK_PEER_ADDRESS,
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, memcachedAddress.getPort()),
+                            equalTo(
+                                DB_RESPONSE_STATUS_CODE,
+                                testLatestDeps() ? "ERR_2BIG" : "ERR_INTERNAL"),
                             equalTo(ERROR_TYPE, errorType))));
     assertDurationMetric(
         testing,
@@ -270,6 +274,7 @@ class SpymemcachedTest {
         NETWORK_PEER_PORT,
         SERVER_ADDRESS,
         SERVER_PORT,
+        DB_RESPONSE_STATUS_CODE,
         ERROR_TYPE);
   }
 
@@ -318,6 +323,44 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "get test-get-key-that-doesn't-exist"),
+                            equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
+                            equalTo(
+                                NETWORK_PEER_ADDRESS,
+                                memcachedAddress.getAddress().getHostAddress()),
+                            equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
+                            equalTo(SERVER_PORT, memcachedAddress.getPort()),
+                            equalTo(stringKey("spymemcached.result"), experimental("miss")))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+  }
+
+  @Test
+  void asciiGetMiss() throws Exception {
+    MemcachedClient memcached = getMemcached(emptyMap(), builder -> builder.setProtocol(TEXT));
+    testing.runWithSpan(
+        "parent",
+        () ->
+            assertThat(memcached.asyncGet("test-ascii-get-key-that-doesn't-exist").get()).isNull());
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+                span ->
+                    span.hasName(spanName("get"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, MEMCACHED),
+                            equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(DB_QUERY_TEXT, "get test-ascii-get-key-that-doesn't-exist"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
@@ -423,12 +466,24 @@ class SpymemcachedTest {
                             equalTo(DB_SYSTEM_NAME, MEMCACHED),
                             equalTo(DB_OPERATION_NAME, "get"),
                             equalTo(DB_QUERY_TEXT, "get test-get"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "TIMEDOUT"),
                             equalTo(SERVER_ADDRESS, memcachedAddress.getHostString()),
                             equalTo(
                                 NETWORK_PEER_ADDRESS,
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        DB_RESPONSE_STATUS_CODE,
+        ERROR_TYPE);
   }
 
   @ParameterizedTest
@@ -498,6 +553,15 @@ class SpymemcachedTest {
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -527,6 +591,15 @@ class SpymemcachedTest {
                                 memcachedAddress.getAddress().getHostAddress()),
                             equalTo(NETWORK_PEER_PORT, (long) memcachedAddress.getPort()),
                             equalTo(SERVER_PORT, memcachedAddress.getPort()))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test
@@ -690,6 +763,15 @@ class SpymemcachedTest {
                             equalTo(
                                 booleanKey("spymemcached.command.cancelled"),
                                 experimental(true)))));
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.spymemcached-2.12",
+        DB_SYSTEM_NAME,
+        DB_OPERATION_NAME,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
   }
 
   @Test

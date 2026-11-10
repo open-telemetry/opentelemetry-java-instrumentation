@@ -79,7 +79,6 @@ public final class DbClientMetrics implements OperationListener {
     }
 
     Attributes attributes = state.startAttributes().toBuilder().putAll(endAttributes).build();
-
     duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
   }
 

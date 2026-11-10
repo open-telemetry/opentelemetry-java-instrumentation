@@ -83,20 +83,19 @@ class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class GetMdcCopyAdvice {
 
-    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static Map<String, String> onExit(
+    public static void onExit(
         @Advice.This ExtLogRecord record, @Advice.Return Map<String, String> value) {
 
       if (value.containsKey(AgentCommonConfig.get().getTraceIdKey())
           && value.containsKey(AgentCommonConfig.get().getSpanIdKey())
           && value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
-        return value;
+        return;
       }
 
       SpanContext spanContext = JbossLogManagerHelper.getSpanContext(record);
       if (!spanContext.isValid()) {
-        return value;
+        return;
       }
 
       if (!value.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
@@ -110,7 +109,6 @@ class JbossExtLogRecordInstrumentation implements TypeInstrumentation {
       if (!value.containsKey(AgentCommonConfig.get().getTraceFlagsKey())) {
         value.put(AgentCommonConfig.get().getTraceFlagsKey(), spanContext.getTraceFlags().asHex());
       }
-      return value;
     }
   }
 }
