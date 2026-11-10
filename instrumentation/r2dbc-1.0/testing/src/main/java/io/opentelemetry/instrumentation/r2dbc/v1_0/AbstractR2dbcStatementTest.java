@@ -222,8 +222,8 @@ public abstract class AbstractR2dbcStatementTest {
 
   @Test
   void filteredResultConsumptionFinishesQuerySpan() {
-    ConnectionFactoryOptions options =
-        ConnectionFactoryOptions.parse("r2dbc:h2:mem:///filtered_result_" + UUID.randomUUID());
+    String dbName = "filtered_result_" + UUID.randomUUID();
+    ConnectionFactoryOptions options = ConnectionFactoryOptions.parse("r2dbc:h2:mem:///" + dbName);
     Connection connection =
         Mono.from(createProxyConnectionFactory(options).create()).block(Duration.ofSeconds(10));
     try {
@@ -256,7 +256,7 @@ public abstract class AbstractR2dbcStatementTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
                     span ->
-                        span.hasName("SELECT")
+                        span.hasName(emitStableDatabaseSemconv() ? "SELECT" : "SELECT " + dbName)
                             .hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))));
   }
