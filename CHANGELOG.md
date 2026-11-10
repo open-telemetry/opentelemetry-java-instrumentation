@@ -365,6 +365,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
+  resource, or baggage values.
 - Testing exporters now use delta-preferred metric temporality by default; up-down counters are
   cumulative.
 - Remove the deprecated `ServicePeerAttributesExtractor`,

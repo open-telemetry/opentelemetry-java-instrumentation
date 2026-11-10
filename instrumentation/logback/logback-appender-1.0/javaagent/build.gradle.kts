@@ -42,9 +42,11 @@ dependencies {
     }
   }
 
+  bootstrap(project(":instrumentation:logback:bootstrap"))
   implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+  testInstrumentation(project(":instrumentation:logback:logback-mdc-1.0:javaagent"))
 }
 
 testing.suites {
@@ -107,10 +109,31 @@ testing.suites {
     }
   }
 
+  register<JvmTestSuite>("mdcExportTest") {
+    dependencies {
+      implementation("ch.qos.logback:logback-classic") {
+        version {
+          strictly(baseVersion("1.0.0").orLatest())
+        }
+      }
+      if (!otelProps.testLatestDeps) {
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly("1.7.36")
+          }
+        }
+      }
+    }
+  }
+
   executions("test") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=key?")
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.included=key?")
+    }
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
     }
 
     register("MdcAttributeExclusionsOnly") {
@@ -153,6 +176,10 @@ testing.suites {
         "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*2",
       )
     }
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
+    }
 
     register("StructuredAttributesExcludedAll") {
       filter.includeTestsMatching("*LogbackKeyValuePairSelectorTest")
@@ -164,6 +191,10 @@ testing.suites {
   executions("logstashMarkerTest") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
+    }
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
     }
 
     register("AttributeExclusionsOnly") {
@@ -183,6 +214,10 @@ testing.suites {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
     }
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
+    }
 
     register("AttributeExclusionsOnly") {
       filter.includeTestsMatching("*LogbackLogstashStructuredArgsSelectorTest")
@@ -196,12 +231,28 @@ testing.suites {
       systemProperty("testLogstashStructuredArgsConfiguration", "none")
     }
   }
+  executions("mdcExportTest") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.logback-mdc.add-baggage=true")
+      jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.included=*")
+      jvmArgs("-Dotel.instrumentation.logback-appender.experimental.mdc-attributes.excluded=secret")
+      jvmArgs("-Dotel.service.name=mdc-export-test")
+    }
+
+    register("PatternInjection") {
+      jvmArgs("-Dotel.instrumentation.logging.pattern-injection.enabled=true")
+    }
+
+    register("LoggingKeys") {
+      jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=custom_trace_id")
+      jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=custom_span_id")
+      jvmArgs("-Dotel.instrumentation.common.logging.trace-flags-key=custom_trace_flags")
+    }
+  }
 }
 
 tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
-  jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
   jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-marker-attribute=true")
 }
 
