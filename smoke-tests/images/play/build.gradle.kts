@@ -17,7 +17,7 @@ play {
 }
 
 dependencies {
-  val playVersion = "3.1.0-M9"
+  val playVersion = "3.1.0-M10-70074814-SNAPSHOT"
   val scalaVersion = "2.13"
 
   implementation("org.playframework:play-guice_$scalaVersion:$playVersion")
