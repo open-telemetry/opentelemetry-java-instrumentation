@@ -219,6 +219,35 @@ class DefaultInstrumentationConfigApplierTest {
   }
 
   @Test
+  void applyingGeneralDefaultsToMultipleModelsKeepsValuesIsolated() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults
+        .general()
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", singletonList("Default"));
+
+    OpenTelemetryConfigurationModel first = newModel();
+    defaults.applyToModel(first);
+    getInstrumentation(first)
+        .getGeneral()
+        .getHttp()
+        .getClient()
+        .setRequestCapturedHeaders(singletonList("Changed"));
+
+    OpenTelemetryConfigurationModel second = newModel();
+    defaults.applyToModel(second);
+
+    assertThat(
+            getInstrumentation(second)
+                .getGeneral()
+                .getHttp()
+                .getClient()
+                .getRequestCapturedHeaders())
+        .containsExactly("Default");
+  }
+
+  @Test
   void applyToModelTreatsGeneralNamedJavaInstrumentationAsJava() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("general").setDefault("enabled", true);

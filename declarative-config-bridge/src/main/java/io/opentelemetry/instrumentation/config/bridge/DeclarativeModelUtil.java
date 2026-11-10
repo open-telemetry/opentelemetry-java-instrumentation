@@ -8,6 +8,8 @@ package io.opentelemetry.instrumentation.config.bridge;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -72,6 +74,98 @@ final class DeclarativeModelUtil {
         mergeDefaults(existingValue, defaultValue);
       }
     }
+  }
+
+  /** Sets a leaf in a generated model, creating navigable model nodes as needed. */
+  static void setDefault(Object model, String path, Object value) {
+    String[] segments = path.split("\\.", -1);
+    for (String segment : segments) {
+      if (segment.isEmpty()) {
+        throw new IllegalArgumentException("invalid general instrumentation model path: " + path);
+      }
+    }
+    Object current = model;
+    for (int i = 0; i < segments.length; i++) {
+      ModelProperty property = findProperty(current.getClass(), segments[i]);
+      if (property == null) {
+        throw new IllegalArgumentException("unknown general instrumentation model path: " + path);
+      }
+      boolean leaf = i == segments.length - 1;
+      Class<?> valueType = property.getter.getReturnType();
+      if (leaf) {
+        if (modelMetadata.get(valueType).constructor != null) {
+          throw new IllegalArgumentException(
+              "general instrumentation path is a model node: " + path);
+        }
+        if (!isCompatible(valueType, property.getter.getGenericReturnType(), value)) {
+          throw new IllegalArgumentException(
+              "wrong value type for general instrumentation path "
+                  + path
+                  + ": "
+                  + value.getClass().getSimpleName());
+        }
+        invoke(property.setter, current, value);
+        return;
+      }
+      if (modelMetadata.get(valueType).constructor == null) {
+        throw new IllegalArgumentException(
+            "general instrumentation path is not a model node: " + path);
+      }
+      Object child = invoke(property.getter, current);
+      if (child == null) {
+        child = newModel(valueType);
+        invoke(property.setter, current, child);
+      }
+      current = child;
+    }
+  }
+
+  @Nullable
+  private static ModelProperty findProperty(Class<?> type, String name) {
+    for (ModelProperty property : modelMetadata.get(type).properties) {
+      if (property.name.equals(name)) {
+        return property;
+      }
+    }
+    return null;
+  }
+
+  private static boolean isCompatible(Class<?> type, Type genericType, Object value) {
+    if (value == null) {
+      return !type.isPrimitive();
+    }
+    if (type.isInstance(value)) {
+      if (!(value instanceof List) || !(genericType instanceof ParameterizedType)) {
+        return true;
+      }
+      Type elementType = ((ParameterizedType) genericType).getActualTypeArguments()[0];
+      Class<?> elementClass = rawClass(elementType);
+      if (elementClass == null) {
+        return false;
+      }
+      for (Object item : (List<?>) value) {
+        if (item == null || !elementClass.isInstance(item)) {
+          return false;
+        }
+      }
+      return true;
+    }
+    return (type == boolean.class && value instanceof Boolean)
+        || (type == int.class && value instanceof Integer)
+        || (type == long.class && value instanceof Long)
+        || (type == double.class && value instanceof Double);
+  }
+
+  @Nullable
+  private static Class<?> rawClass(Type type) {
+    if (type instanceof Class) {
+      return (Class<?>) type;
+    }
+    if (type instanceof ParameterizedType) {
+      Type rawType = ((ParameterizedType) type).getRawType();
+      return rawType instanceof Class ? (Class<?>) rawType : null;
+    }
+    return null;
   }
 
   static void forEachLeaf(Object model, BiConsumer<String, Object> consumer) {

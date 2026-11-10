@@ -25,8 +25,8 @@ import javax.annotation.Nullable;
  * <p>Java instrumentation navigation mirrors {@link
  * io.opentelemetry.api.incubator.config.DeclarativeConfigProperties}: read-side uses {@code
  * config.get(name).getString(key)}; write-side uses {@code defaults.get(name).setDefault(key,
- * value)}. General instrumentation defaults use the type-safe declarative configuration model
- * provided to {@link #customizeGeneral(Consumer)}.
+ * value)}. General instrumentation defaults use the explicit {@link #general()} namespace and
+ * support the same navigable API.
  *
  * <p>Usage:
  *
@@ -47,20 +47,23 @@ public final class DefaultInstrumentationConfig {
 
   private final Map<String, Object> defaults;
   private final List<String> path;
+  private final boolean generalNamespace;
   private final Map<String, String> propertyMappings;
   private final GeneralDefaults generalDefaults;
 
   public DefaultInstrumentationConfig() {
-    this(new HashMap<>(), emptyList(), new HashMap<>(), new GeneralDefaults());
+    this(new HashMap<>(), emptyList(), false, new HashMap<>(), new GeneralDefaults());
   }
 
   private DefaultInstrumentationConfig(
       Map<String, Object> defaults,
       List<String> path,
+      boolean generalNamespace,
       Map<String, String> propertyMappings,
       GeneralDefaults generalDefaults) {
     this.defaults = defaults;
     this.path = path;
+    this.generalNamespace = generalNamespace;
     this.propertyMappings = propertyMappings;
     this.generalDefaults = generalDefaults;
   }
@@ -72,7 +75,14 @@ public final class DefaultInstrumentationConfig {
   public DefaultInstrumentationConfig get(String name) {
     List<String> newPath = new ArrayList<>(path);
     newPath.add(name);
-    return new DefaultInstrumentationConfig(defaults, newPath, propertyMappings, generalDefaults);
+    return new DefaultInstrumentationConfig(
+        defaults, newPath, generalNamespace, propertyMappings, generalDefaults);
+  }
+
+  /** Returns the general instrumentation defaults namespace. */
+  public DefaultInstrumentationConfig general() {
+    return new DefaultInstrumentationConfig(
+        defaults, emptyList(), true, propertyMappings, generalDefaults);
   }
 
   /**
@@ -80,7 +90,8 @@ public final class DefaultInstrumentationConfig {
    *
    * <p>Only model properties with a corresponding traditional config property can be used when
    * {@link #toConfigProperties()} is called. Declarative-only properties cause that method to throw
-   * an {@link IllegalArgumentException}.
+   * an {@link IllegalArgumentException}. The typed customizer and navigable API update the same
+   * model; when both are used, the last write to a property takes effect.
    */
   @CanIgnoreReturnValue
   public DefaultInstrumentationConfig customizeGeneral(
@@ -239,6 +250,14 @@ public final class DefaultInstrumentationConfig {
 
   @CanIgnoreReturnValue
   private DefaultInstrumentationConfig setDefaultValue(String key, Object value) {
+    if (generalNamespace) {
+      String generalPath = path.isEmpty() ? key : String.join(".", path) + "." + key;
+      if (generalDefaults.model == null) {
+        generalDefaults.model = new ExperimentalGeneralInstrumentationModel();
+      }
+      DeclarativeModelUtil.setDefault(generalDefaults.model, generalPath, value);
+      return this;
+    }
     if (path.isEmpty()) {
       throw new IllegalArgumentException(
           "defaults must be set below an instrumentation node, e.g. get(\"micrometer\")");

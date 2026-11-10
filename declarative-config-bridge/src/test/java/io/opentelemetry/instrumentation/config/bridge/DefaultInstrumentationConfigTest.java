@@ -13,8 +13,12 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalGeneralInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpClientInstrumentationModel;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalHttpInstrumentationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalInstrumentationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.OpenTelemetryConfigurationModelAccessor;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.util.HashMap;
 import java.util.List;
@@ -308,7 +312,11 @@ class DefaultInstrumentationConfigTest {
   @Test
   void toConfigPropertiesRoundTripsGeneralDefaultThroughBridge() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    setGeneralClientRequestHeaders(defaults, "X-Request-Id");
+    defaults
+        .general()
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", singletonList("X-Request-Id"));
 
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
@@ -321,6 +329,139 @@ class DefaultInstrumentationConfigTest {
                 .get("client")
                 .getScalarList("request_captured_headers", String.class))
         .containsExactly("X-Request-Id");
+  }
+
+  @Test
+  void generalDefaultsApplyToModelAndPreserveUserConfiguration() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults
+        .general()
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", singletonList("Default"));
+    OpenTelemetryConfigurationModel model = new OpenTelemetryConfigurationModel();
+    ExperimentalInstrumentationModel instrumentation = new ExperimentalInstrumentationModel();
+    ExperimentalGeneralInstrumentationModel general = new ExperimentalGeneralInstrumentationModel();
+    general.setHttp(
+        new ExperimentalHttpInstrumentationModel()
+            .setClient(
+                new ExperimentalHttpClientInstrumentationModel()
+                    .setRequestCapturedHeaders(singletonList("User"))));
+    instrumentation.setGeneral(general);
+    OpenTelemetryConfigurationModelAccessor.setInstrumentation(model, instrumentation);
+
+    defaults.applyToModel(model);
+
+    assertThat(instrumentation.getGeneral().getHttp().getClient().getRequestCapturedHeaders())
+        .containsExactly("User");
+  }
+
+  @Test
+  void generalDefaultsRejectUnknownPathAndWrongType() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    assertThatThrownBy(
+            () -> defaults.general().get("http").get("client").setDefault("unknown", true))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("unknown general instrumentation model path");
+    assertThatThrownBy(
+            () ->
+                defaults
+                    .general()
+                    .get("http")
+                    .get("client")
+                    .setDefault("request_captured_headers", true))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("wrong value type for general instrumentation path");
+    assertThatThrownBy(
+            () ->
+                defaults
+                    .general()
+                    .get("http")
+                    .get("client")
+                    .setDefault("request_captured_headers", singletonList(42)))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("wrong value type for general instrumentation path");
+    assertThatThrownBy(
+            () -> defaults.general().setDefault("stability_opt_in_list", singletonList("http")))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("wrong value type for general instrumentation path");
+    assertThatThrownBy(() -> defaults.general().get("http").setDefault("client", true))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("is a model node");
+    assertThatThrownBy(
+            () ->
+                defaults
+                    .general()
+                    .get("http.")
+                    .get("client")
+                    .setDefault("request_captured_headers", singletonList("x")))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("invalid general instrumentation model path");
+  }
+
+  @Test
+  void navigableGeneralDefaultCanReplaceTypedCustomization() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.customizeGeneral(
+        general ->
+            general.setHttp(
+                new ExperimentalHttpInstrumentationModel()
+                    .setClient(
+                        new ExperimentalHttpClientInstrumentationModel()
+                            .setRequestCapturedHeaders(singletonList("Typed")))));
+    defaults
+        .general()
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", singletonList("Navigable"));
+    assertThat(defaults.toConfigProperties())
+        .containsEntry("otel.instrumentation.http.client.capture-request-headers", "Navigable");
+  }
+
+  @Test
+  void typedGeneralCustomizationCanReplaceNavigableDefault() {
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults
+        .general()
+        .get("http")
+        .get("client")
+        .setDefault("request_captured_headers", singletonList("Navigable"));
+    defaults.customizeGeneral(
+        general ->
+            general.setHttp(
+                new ExperimentalHttpInstrumentationModel()
+                    .setClient(
+                        new ExperimentalHttpClientInstrumentationModel()
+                            .setRequestCapturedHeaders(singletonList("Typed")))));
+    assertThat(defaults.toConfigProperties())
+        .containsEntry("otel.instrumentation.http.client.capture-request-headers", "Typed");
+  }
+
+  @Test
+  void generalDefaultsRejectModelLeafPrefixCollisionsInBothOrders() {
+    assertThatThrownBy(
+            () -> {
+              DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+              defaults.general().get("http").setDefault("client", true);
+              defaults
+                  .general()
+                  .get("http")
+                  .get("client")
+                  .setDefault("request_captured_headers", singletonList("x"));
+            })
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(
+            () -> {
+              DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+              defaults
+                  .general()
+                  .get("http")
+                  .get("client")
+                  .setDefault("request_captured_headers", singletonList("x"));
+              defaults.general().get("http").setDefault("client", true);
+            })
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("is a model node");
   }
 
   @Test
