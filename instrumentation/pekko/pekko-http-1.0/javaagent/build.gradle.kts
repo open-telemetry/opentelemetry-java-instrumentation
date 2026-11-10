@@ -65,8 +65,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
-  latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:1.+")
-  latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:1.+")
+  // pekko 2 support has not been backported yet
+  latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:1.+") // documented limitation
+  latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:1.+") // documented limitation
 }
 
 testing {

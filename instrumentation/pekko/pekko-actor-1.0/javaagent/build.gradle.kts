@@ -29,7 +29,8 @@ dependencies {
 
   library("org.apache.pekko:pekko-actor_2.12:1.0.1")
 
-  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:1.+")
+  // pekko 2 support has not been backported yet
+  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:1.+") // documented limitation
 
   testImplementation(project(":instrumentation:executors:testing"))
 }
