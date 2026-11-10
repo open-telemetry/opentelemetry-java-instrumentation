@@ -23,6 +23,8 @@ public final class LogPatternInjection {
   private static final String LOGBACK_SPAN_PREFIX = "otel.pattern-injection.span.";
   private static final String LOG4J2_TRACE_PREFIX = "otel.pattern-injection.log4j2.trace.";
   private static final String LOG4J2_SPAN_PREFIX = "otel.pattern-injection.log4j2.span.";
+  private static final String LOG4J1_TRACE_PREFIX = "otel.pattern-injection.log4j1.trace.";
+  private static final String LOG4J1_SPAN_PREFIX = "otel.pattern-injection.log4j1.span.";
   private static final Base64.Encoder mdcKeyEncoder = Base64.getUrlEncoder().withoutPadding();
   private static final boolean ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "logging")
@@ -79,7 +81,7 @@ public final class LogPatternInjection {
         String label = key;
         if (framework == Framework.LOGBACK) {
           label = escapeLogbackLiteral(key);
-        } else if (framework == Framework.LOG4J2) {
+        } else {
           label = key.replace("%", "%%");
         }
         fields.append(label).append("=%X{").append(option).append('}');
@@ -123,9 +125,6 @@ public final class LogPatternInjection {
   }
 
   private static String mdcOption(String key, int field, Framework framework) {
-    if (framework != Framework.LOGBACK && framework != Framework.LOG4J2) {
-      return key;
-    }
     boolean simple = !key.isEmpty();
     for (int i = 0; i < key.length(); i++) {
       char c = key.charAt(i);
@@ -140,10 +139,16 @@ public final class LogPatternInjection {
     // Native option parsers cannot represent every MDC key. Restore generated options
     // in the native converter after it has parsed them, without adding entries to the MDC map.
     String prefix;
-    if (framework == Framework.LOGBACK) {
-      prefix = field == 1 ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
-    } else {
-      prefix = field == 1 ? LOG4J2_TRACE_PREFIX : LOG4J2_SPAN_PREFIX;
+    switch (framework) {
+      case LOGBACK:
+        prefix = field == 1 ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
+        break;
+      case LOG4J2:
+        prefix = field == 1 ? LOG4J2_TRACE_PREFIX : LOG4J2_SPAN_PREFIX;
+        break;
+      default:
+        prefix = field == 1 ? LOG4J1_TRACE_PREFIX : LOG4J1_SPAN_PREFIX;
+        break;
     }
     return prefix + mdcKeyEncoder.encodeToString(key.getBytes(UTF_8));
   }
@@ -199,11 +204,10 @@ public final class LogPatternInjection {
           }
           if ((option.equals(key) && (framework != Framework.LOG4J2 || option.indexOf(',') <= 0))
               || (framework == Framework.LOGBACK && option.startsWith(key + ":-"))
-              || ((framework == Framework.LOGBACK || framework == Framework.LOG4J2)
-                  && option.isEmpty())) {
+              || (framework == Framework.LOGBACK && option.isEmpty())) {
             return true;
           }
-          if (framework == Framework.LOG4J2) {
+          if (framework == Framework.LOG4J2 && option.indexOf(',') > 0) {
             for (String item : option.split(",")) {
               if (item.trim().equals(key)) {
                 return true;
@@ -231,7 +235,10 @@ public final class LogPatternInjection {
                 || converter.equals("enc")
                 || converter.equals("encode")
                 || converter.equals("notEmpty")
+                || converter.equals("varsNotEmpty")
+                || converter.equals("variablesNotEmpty")
                 || converter.equals("maxLen")
+                || converter.equals("maxLength")
                 || converter.equals("black")
                 || converter.equals("blue")
                 || converter.equals("cyan")

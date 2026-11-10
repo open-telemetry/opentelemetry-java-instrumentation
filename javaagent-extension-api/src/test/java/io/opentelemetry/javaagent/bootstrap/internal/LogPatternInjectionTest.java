@@ -263,6 +263,47 @@ class LogPatternInjectionTest {
   }
 
   @ParameterizedTest
+  @EnumSource(
+      value = Framework.class,
+      names = {"LOG4J1", "LOG4J1_WITH_MDC_MAP"})
+  void preservesComplexLog4j1Keys(Framework framework) {
+    String enhanced =
+        LogPatternInjection.enhance("%d %m%n", framework, "custom}trace", "custom%span");
+    assertThat(enhanced)
+        .isEqualTo(
+            "%d service.name=%X{service.name} "
+                + "custom}trace=%X{otel.pattern-injection.log4j1.trace.Y3VzdG9tfXRyYWNl} "
+                + "custom%%span=%X{otel.pattern-injection.log4j1.span.Y3VzdG9tJXNwYW4} %m%n");
+    assertThat(LogPatternInjection.enhance(enhanced, framework, "custom}trace", "custom%span"))
+        .isEqualTo(enhanced);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {" trace_id ", ",trace_id", ""})
+  void distinguishesLog4j2SingleKeysFromKeyLists(String key) {
+    String pattern = "%d %X{" + key + "} %m%n";
+    assertThat(LogPatternInjection.enhance(pattern, Framework.LOG4J2, "trace_id", "span_id"))
+        .isEqualTo("%d " + FIELDS + " %X{" + key + "} %m%n");
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"maxLen", "maxLength", "notEmpty", "varsNotEmpty", "variablesNotEmpty"})
+  void recognizesLog4j2NativeWrapperAliases(String converter) {
+    String options = converter.startsWith("max") ? "{100}" : "";
+    String keyed = "%d %" + converter + "{%X{trace_id}}" + options + " %m%n";
+    assertThat(LogPatternInjection.enhance(keyed, Framework.LOG4J2, "trace_id", "span_id"))
+        .isEqualTo(
+            "%d service.name=%X{service.name} span_id=%X{span_id} %"
+                + converter
+                + "{%X{trace_id}}"
+                + options
+                + " %m%n");
+    String wholeMdc = "%d %" + converter + "{%X}" + options + " %m%n";
+    assertThat(LogPatternInjection.enhance(wholeMdc, Framework.LOG4J2, "trace_id", "span_id"))
+        .isEqualTo(wholeMdc);
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {"black", "blue", "cyan", "green", "magenta", "red", "white", "yellow"})
   void recognizesLog4j2ColorWrappedMdc(String color) {
     String keyed = "%d %" + color + "{%X{trace_id}} %m%n";

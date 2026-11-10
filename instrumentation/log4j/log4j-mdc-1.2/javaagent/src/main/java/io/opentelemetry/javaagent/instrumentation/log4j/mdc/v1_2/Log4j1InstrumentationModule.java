@@ -31,6 +31,7 @@ public class Log4j1InstrumentationModule extends InstrumentationModule {
     return asList(
         new CategoryInstrumentation(),
         new LoggingEventInstrumentation(),
-        new PatternLayoutInstrumentation());
+        new PatternLayoutInstrumentation(),
+        new MdcPatternConverterInstrumentation());
   }
 }

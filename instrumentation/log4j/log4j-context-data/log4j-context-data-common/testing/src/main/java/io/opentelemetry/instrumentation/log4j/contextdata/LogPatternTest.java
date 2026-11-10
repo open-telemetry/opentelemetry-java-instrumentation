@@ -159,6 +159,41 @@ public abstract class LogPatternTest {
     }
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {" trace_id ", ",trace_id", ""})
+  void preservesNativeSingleMdcKeys(String key) {
+    ThreadContext.put(key, "application-value");
+    try {
+      assertRenderedPattern(
+          "%d %X{" + key + "} %m%n",
+          (layout, rendered) -> {
+            assertThat(rendered).containsOnlyOnce("application-value");
+            if (ENABLED) {
+              assertThat(rendered)
+                  .contains("service.name=pattern-service")
+                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+            }
+          });
+    } finally {
+      ThreadContext.remove(key);
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"maxLen", "maxLength", "notEmpty", "varsNotEmpty", "variablesNotEmpty"})
+  void rendersNativeWrapperAliasesWithoutDuplicates(String converter) {
+    String options = converter.startsWith("max") ? "{100}" : "";
+    assertRenderedPattern(
+        "%d %" + converter + "{%X{" + TRACE + "}}" + options + " %m%n",
+        (layout, rendered) -> {
+          assertThat(rendered).containsOnlyOnce(Span.current().getSpanContext().getTraceId());
+          if (ENABLED) {
+            assertThat(rendered).containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+          }
+        });
+  }
+
   private void assertRenderedPattern(String pattern, BiConsumer<PatternLayout, String> assertion) {
     PatternLayout layout = PatternLayout.newBuilder().withPattern(pattern).build();
     Logger logger = (Logger) LogManager.getLogger("TestLogger");

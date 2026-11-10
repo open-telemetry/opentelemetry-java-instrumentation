@@ -38,6 +38,7 @@ class LogPatternTest {
     if (ENABLED && testLatestDeps()) {
       assertThat(wholeMdc.getConversionPattern()).isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %X %m%n");
     }
+    PatternLayout control = new PatternLayout("%X{otel.pattern-injection.log4j1.trace.app}");
     String pattern = layout.getConversionPattern();
     layout.setConversionPattern(pattern);
     layout.activateOptions();
@@ -73,14 +74,18 @@ class LogPatternTest {
                       SPAN + "=" + Span.current().getSpanContext().getSpanId());
             }
           });
+      MDC.put("otel.pattern-injection.log4j1.trace.app", "application-placeholder");
       MDC.put("service.name", "application-service");
       MDC.put(SPAN, "application-span");
       testing.runWithSpan("override", () -> logger.info("application"));
+      assertThat(control.format(ListAppender.getEvents().get(2)))
+          .containsOnlyOnce("application-placeholder");
       if (ENABLED) {
         assertThat(layout.format(ListAppender.getEvents().get(2)))
             .contains("service.name=application-service", SPAN + "=application-span");
       }
     } finally {
+      MDC.remove("otel.pattern-injection.log4j1.trace.app");
       MDC.remove("service.name");
       MDC.remove(SPAN);
       logger.removeAppender(appender);
