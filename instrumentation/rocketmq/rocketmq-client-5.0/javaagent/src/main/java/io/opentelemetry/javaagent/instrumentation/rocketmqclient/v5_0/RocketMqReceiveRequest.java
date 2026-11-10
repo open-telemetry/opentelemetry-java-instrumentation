@@ -111,6 +111,16 @@ class RocketMqReceiveRequest {
     return getBatchMessageAttributes().messageKeys;
   }
 
+  @Nullable
+  String getMessageLiteTopic() {
+    return getBatchMessageAttributes().messageLiteTopic;
+  }
+
+  @Nullable
+  Long getMessagePriority() {
+    return getBatchMessageAttributes().messagePriority;
+  }
+
   private BatchMessageAttributes getBatchMessageAttributes() {
     BatchMessageAttributes attributes = batchMessageAttributes;
     if (attributes == null) {
@@ -157,6 +167,8 @@ class RocketMqReceiveRequest {
     @Nullable private final String messageGroup;
     @Nullable private final Long messageDeliveryTimestamp;
     @Nullable private final List<String> messageKeys;
+    @Nullable private final String messageLiteTopic;
+    @Nullable private final Long messagePriority;
 
     private BatchMessageAttributes(
         @Nullable String requestDestination, List<MessageView> messages) {
@@ -167,6 +179,8 @@ class RocketMqReceiveRequest {
       messageDeliveryTimestamp =
           commonValue(messages, message -> message.getDeliveryTimestamp().orElse(null));
       messageKeys = commonKeys(messages);
+      messageLiteTopic = commonValue(messages, RocketMqMessageAttributes::getLiteTopic);
+      messagePriority = commonValue(messages, RocketMqMessageAttributes::getPriority);
     }
   }
 }

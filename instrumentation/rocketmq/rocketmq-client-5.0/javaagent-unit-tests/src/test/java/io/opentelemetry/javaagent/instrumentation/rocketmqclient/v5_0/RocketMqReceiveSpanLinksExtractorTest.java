@@ -34,6 +34,8 @@ import java.util.Optional;
 import org.apache.rocketmq.client.apis.message.MessageId;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -121,6 +123,63 @@ class RocketMqReceiveSpanLinksExtractorTest {
         .containsExactly(singletonMap(MESSAGING_MESSAGE_ID, "message-1"));
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void liteTopicBatchAttributes(boolean common) {
+    MessageView first = message("topic", "message-1", "tag", null, null, "key", TRACEPARENT);
+    MessageView second = message("topic", "message-2", "tag", null, null, "key", TRACEPARENT);
+    String secondLiteTopic = common ? "lite-a" : "lite-b";
+    when(first.getLiteTopic()).thenReturn(Optional.of("lite-a"));
+    when(second.getLiteTopic()).thenReturn(Optional.of(secondLiteTopic));
+    RocketMqReceiveRequest request = request(first, second);
+
+    assertThat(batchAttributes(request).get(stringKey("rocketmq.message.lite_topic")))
+        .isEqualTo(common ? "lite-a" : null);
+    assertThat(linkAttributes(request))
+        .containsExactly(
+            common
+                ? Attributes.of(MESSAGING_MESSAGE_ID, "message-1")
+                : Attributes.of(
+                    MESSAGING_MESSAGE_ID,
+                    "message-1",
+                    stringKey("rocketmq.message.lite_topic"),
+                    "lite-a"),
+            common
+                ? Attributes.of(MESSAGING_MESSAGE_ID, "message-2")
+                : Attributes.of(
+                    MESSAGING_MESSAGE_ID,
+                    "message-2",
+                    stringKey("rocketmq.message.lite_topic"),
+                    secondLiteTopic));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void priorityBatchAttributes(boolean common) {
+    MessageView first = message("topic", "message-1", "tag", null, null, "key", TRACEPARENT);
+    MessageView second = message("topic", "message-2", "tag", null, null, "key", TRACEPARENT);
+    int secondPriority = common ? 0 : 7;
+    when(first.getPriority()).thenReturn(Optional.of(0));
+    when(second.getPriority()).thenReturn(Optional.of(secondPriority));
+    RocketMqReceiveRequest request = request(first, second);
+
+    assertThat(batchAttributes(request).get(longKey("rocketmq.message.priority")))
+        .isEqualTo(common ? 0L : null);
+    assertThat(linkAttributes(request))
+        .containsExactly(
+            common
+                ? Attributes.of(MESSAGING_MESSAGE_ID, "message-1")
+                : Attributes.of(
+                    MESSAGING_MESSAGE_ID, "message-1", longKey("rocketmq.message.priority"), 0L),
+            common
+                ? Attributes.of(MESSAGING_MESSAGE_ID, "message-2")
+                : Attributes.of(
+                    MESSAGING_MESSAGE_ID,
+                    "message-2",
+                    longKey("rocketmq.message.priority"),
+                    (long) secondPriority));
+  }
+
   private static RocketMqReceiveRequest request(MessageView... messages) {
     return RocketMqReceiveRequest.create(mock(ReceiveMessageRequest.class), asList(messages));
   }
@@ -130,7 +189,7 @@ class RocketMqReceiveSpanLinksExtractorTest {
       String messageIdValue,
       String tag,
       String group,
-      long deliveryTimestamp,
+      Long deliveryTimestamp,
       String key,
       String traceparent) {
     MessageId messageId = mock(MessageId.class);
@@ -139,8 +198,8 @@ class RocketMqReceiveSpanLinksExtractorTest {
     when(message.getTopic()).thenReturn(topic);
     when(message.getMessageId()).thenReturn(messageId);
     when(message.getTag()).thenReturn(Optional.of(tag));
-    when(message.getMessageGroup()).thenReturn(Optional.of(group));
-    when(message.getDeliveryTimestamp()).thenReturn(Optional.of(deliveryTimestamp));
+    when(message.getMessageGroup()).thenReturn(Optional.ofNullable(group));
+    when(message.getDeliveryTimestamp()).thenReturn(Optional.ofNullable(deliveryTimestamp));
     when(message.getKeys()).thenReturn(singleton(key));
     when(message.getProperties()).thenReturn(singletonMap("traceparent", traceparent));
     return message;

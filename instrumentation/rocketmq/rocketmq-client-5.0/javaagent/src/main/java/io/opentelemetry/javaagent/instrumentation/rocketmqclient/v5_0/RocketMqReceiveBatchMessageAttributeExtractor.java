@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqMessageAttributes.ROCKETMQ_MESSAGE_LITE_TOPIC;
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqMessageAttributes.ROCKETMQ_MESSAGE_PRIORITY;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -29,6 +32,8 @@ class RocketMqReceiveBatchMessageAttributeExtractor
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, RocketMqReceiveRequest request) {
+    attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, request.getMessageLiteTopic());
+    attributes.put(ROCKETMQ_MESSAGE_PRIORITY, request.getMessagePriority());
     attributes.put(ROCKETMQ_MESSAGE_TAG, request.getMessageTag());
     attributes.put(ROCKETMQ_MESSAGE_GROUP, request.getMessageGroup());
     attributes.put(ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, request.getMessageDeliveryTimestamp());

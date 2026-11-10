@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqMessageAttributes.ROCKETMQ_MESSAGE_LITE_TOPIC;
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqMessageAttributes.ROCKETMQ_MESSAGE_PRIORITY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 
@@ -62,6 +64,14 @@ class RocketMqReceiveSpanLinksExtractor implements SpanLinksExtractor<RocketMqRe
       Long deliveryTimestamp = message.getDeliveryTimestamp().orElse(null);
       if (!Objects.equals(deliveryTimestamp, request.getMessageDeliveryTimestamp())) {
         attributes.put(ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp);
+      }
+      String liteTopic = RocketMqMessageAttributes.getLiteTopic(message);
+      if (!Objects.equals(liteTopic, request.getMessageLiteTopic())) {
+        attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, liteTopic);
+      }
+      Long priority = RocketMqMessageAttributes.getPriority(message);
+      if (!Objects.equals(priority, request.getMessagePriority())) {
+        attributes.put(ROCKETMQ_MESSAGE_PRIORITY, priority);
       }
       ArrayList<String> messageKeys = new ArrayList<>(message.getKeys());
       if (request.getMessageKeys() == null
