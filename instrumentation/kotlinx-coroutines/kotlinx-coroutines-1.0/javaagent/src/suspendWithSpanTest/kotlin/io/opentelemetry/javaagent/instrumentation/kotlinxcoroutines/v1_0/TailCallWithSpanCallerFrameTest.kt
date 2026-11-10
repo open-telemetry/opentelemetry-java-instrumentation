@@ -15,8 +15,10 @@ import io.opentelemetry.sdk.trace.data.StatusData
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ThreadContextElement
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.supervisorScope
 import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -216,6 +218,84 @@ class TailCallWithSpanCallerFrameTest {
       }
       return dispatcher.runOnThread { tag.get() to Span.current().spanContext }
     }
+  }
+
+  @Test
+  fun `inner withContext leaves its thread clean when the callee ends in coroutineScope`() {
+    val inner = tracer.spanBuilder("inner").startSpan()
+    try {
+      val expected = threadStateAfterInnerScope(inner) { unannotatedCoroutineScope() }
+      assertThat(expected).containsExactly(null to SpanContext.getInvalid(), null to SpanContext.getInvalid())
+      assertThat(threadStateAfterInnerScope(inner) { annotatedCoroutineScope() }).isEqualTo(expected)
+    } finally {
+      inner.end()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("inner").hasNoParent() },
+          { it.hasName("coroutine-scope").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  @Test
+  fun `inner withContext leaves its thread clean when the callee ends in supervisorScope`() {
+    val inner = tracer.spanBuilder("inner").startSpan()
+    try {
+      val expected = threadStateAfterInnerScope(inner) { unannotatedSupervisorScope() }
+      assertThat(expected).containsExactly(null to SpanContext.getInvalid(), null to SpanContext.getInvalid())
+      assertThat(threadStateAfterInnerScope(inner) { annotatedSupervisorScope() }).isEqualTo(expected)
+    } finally {
+      inner.end()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("inner").hasNoParent() },
+          { it.hasName("supervisor-scope").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  // The thread local state of the code after the inner withContext, and of the thread once
+  // runBlocking returns. Runs on its own thread, so a leak does not reach other tests.
+  private fun threadStateAfterInnerScope(inner: Span, call: suspend () -> Int): List<Pair<String?, SpanContext>> {
+    val executor = Executors.newSingleThreadExecutor()
+    try {
+      return CompletableFuture.supplyAsync({
+        val afterWithContext = runBlocking(Context.root().asContextElement()) {
+          withContext(TagElement("inner") + inner.storeInContext(Context.root()).asContextElement()) {
+            call()
+          }
+          tag.get() to Span.current().spanContext
+        }
+        listOf(afterWithContext, tag.get() to Span.current().spanContext)
+      }, executor).get(10, TimeUnit.SECONDS)
+    } finally {
+      executor.shutdown()
+    }
+  }
+
+  @WithSpan("coroutine-scope")
+  private suspend fun annotatedCoroutineScope() = unannotatedCoroutineScope()
+
+  // the scope's body completes last, so the scope resumes the caller from within the body
+  private suspend fun unannotatedCoroutineScope(): Int = coroutineScope {
+    delay(10)
+    1
+  }
+
+  @WithSpan("supervisor-scope")
+  private suspend fun annotatedSupervisorScope() = unannotatedSupervisorScope()
+
+  private suspend fun unannotatedSupervisorScope(): Int = supervisorScope {
+    delay(10)
+    1
   }
 
   @Test
