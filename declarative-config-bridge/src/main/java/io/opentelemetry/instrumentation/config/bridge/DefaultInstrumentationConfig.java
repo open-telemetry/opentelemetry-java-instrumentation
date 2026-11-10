@@ -153,7 +153,7 @@ public final class DefaultInstrumentationConfig {
   /**
    * Sets a list-valued default. Scalar lists are preserved when applying defaults to the
    * declarative model and serialized as comma-separated values for traditional configuration
-   * properties. The structured {@code common.service_peer_mapping} list is also supported; other
+   * properties. The structured {@code common.server_service_mapping} list is also supported; other
    * structured lists cannot be converted to traditional configuration properties. Empty lists
    * cannot be exported as equivalent traditional configuration defaults and are rejected by {@link
    * #toConfigProperties()}.
@@ -282,8 +282,8 @@ public final class DefaultInstrumentationConfig {
     if (list.isEmpty()) {
       throw new IllegalArgumentException("list default must not be empty: " + declarativePath);
     }
-    if (declarativePath.equals("common.service_peer_mapping")) {
-      return serializeServicePeerMapping(list);
+    if (declarativePath.equals("common.server_service_mapping")) {
+      return serializeServiceMapping(list);
     }
     for (Object item : list) {
       if (item instanceof String) {
@@ -312,37 +312,38 @@ public final class DefaultInstrumentationConfig {
     return list.stream().map(String::valueOf).collect(joining(","));
   }
 
-  private static String serializeServicePeerMapping(List<?> mappings) {
+  private static String serializeServiceMapping(List<?> mappings) {
     return mappings.stream()
         .map(
             mapping -> {
               if (!(mapping instanceof Map)) {
                 throw new IllegalArgumentException(
-                    "common.service_peer_mapping entries must be maps");
+                    "common.server_service_mapping entries must be maps");
               }
               Map<?, ?> fields = (Map<?, ?>) mapping;
-              Object peer = fields.get("peer");
+              Object target = fields.get("target");
               Object serviceName = fields.get("service_name");
-              if (!(peer instanceof String) || !(serviceName instanceof String)) {
+              if (!(target instanceof String) || !(serviceName instanceof String)) {
                 throw new IllegalArgumentException(
-                    "common.service_peer_mapping entries require string peer and service_name fields");
+                    "common.server_service_mapping entries require string target and service_name fields");
               }
-              String peerValue = (String) peer;
-              if (peerValue.indexOf(',') >= 0 || peerValue.indexOf('=') >= 0) {
+              String targetValue = (String) target;
+              if (targetValue.indexOf(',') >= 0 || targetValue.indexOf('=') >= 0) {
                 throw new IllegalArgumentException(
-                    "common.service_peer_mapping peer must not contain ',' or '=': " + peerValue);
+                    "common.server_service_mapping target must not contain ',' or '=': "
+                        + targetValue);
               }
               String serviceNameValue = (String) serviceName;
               if (serviceNameValue.indexOf(',') >= 0) {
                 throw new IllegalArgumentException(
-                    "common.service_peer_mapping service_name must not contain ',': "
+                    "common.server_service_mapping service_name must not contain ',': "
                         + serviceNameValue);
               }
               if (fields.get("service_namespace") != null) {
                 throw new IllegalArgumentException(
-                    "common.service_peer_mapping service_namespace is not supported by traditional configuration");
+                    "common.server_service_mapping service_namespace is not supported by traditional configuration");
               }
-              return peerValue + "=" + serviceNameValue;
+              return targetValue + "=" + serviceNameValue;
             })
         .collect(joining(","));
   }

@@ -18,25 +18,26 @@ import java.util.Set;
 import javax.annotation.Nullable;
 
 /**
- * Bridges the flat config property {@code otel.instrumentation.common.peer-service-mapping} to the
- * declarative config structure at {@code java.common.service_peer_mapping}.
+ * Bridges the flat config property {@code otel.instrumentation.common.server-service-mapping} to
+ * the declarative config structure at {@code java.common.server_service_mapping}.
  *
- * <p>The flat property format is: {@code host=serviceName,host2=serviceName2}
+ * <p>The flat property format is: {@code target1=service_name1,target2=service_name2}, where each
+ * target can be a hostname, IP address, or target including a port or path.
  *
  * <p>The declarative config format is:
  *
  * <pre>
- * service_peer_mapping:
- *   - peer: host
- *     service_name: serviceName
- *   - peer: host2
- *     service_name: serviceName2
+ * server_service_mapping:
+ *   - target: target1
+ *     service_name: service_name1
+ *   - target: target2
+ *     service_name: service_name2
  * </pre>
  *
- * <p>Note: The flat property does not support {@code service_namespace}, so it will always be null
- * when bridging from flat config.
+ * <p>The flat property cannot express {@code service_namespace} or targets containing commas or
+ * equals signs. Use declarative configuration for those cases.
  */
-final class ServicePeerMapping implements DeclarativeConfigProperties {
+final class ServiceMapping implements DeclarativeConfigProperties {
 
   private final Map<String, String> fields;
   private final ComponentLoader componentLoader;
@@ -44,22 +45,22 @@ final class ServicePeerMapping implements DeclarativeConfigProperties {
   @Nullable
   static List<DeclarativeConfigProperties> getList(ConfigProperties configProperties) {
     Map<String, String> map =
-        configProperties.getMap("otel.instrumentation.common.peer-service-mapping");
+        configProperties.getMap("otel.instrumentation.common.server-service-mapping");
     if (map.isEmpty()) {
       return null;
     }
     List<DeclarativeConfigProperties> result = new ArrayList<>();
     for (Map.Entry<String, String> entry : map.entrySet()) {
       Map<String, String> fields = new HashMap<>();
-      fields.put("peer", entry.getKey());
+      fields.put("target", entry.getKey());
       fields.put("service_name", entry.getValue());
       // service_namespace is not supported in flat config, will be null
-      result.add(new ServicePeerMapping(fields, configProperties.getComponentLoader()));
+      result.add(new ServiceMapping(fields, configProperties.getComponentLoader()));
     }
     return result;
   }
 
-  private ServicePeerMapping(Map<String, String> fields, ComponentLoader componentLoader) {
+  private ServiceMapping(Map<String, String> fields, ComponentLoader componentLoader) {
     this.fields = fields;
     this.componentLoader = componentLoader;
   }

@@ -100,10 +100,10 @@ class DefaultInstrumentationConfigApplierTest {
   void applyToModelCopiesListDefaults() {
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
     defaults.get("common").get("http").setDefault("known_methods", asList("GET", "POST"));
-    Map<String, String> servicePeerMapping = new HashMap<>();
-    servicePeerMapping.put("peer", "example.com");
-    servicePeerMapping.put("service_name", "checkout");
-    defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
+    Map<String, String> serviceMapping = new HashMap<>();
+    serviceMapping.put("target", "example.com");
+    serviceMapping.put("service_name", "checkout");
+    defaults.get("common").setDefault("server_service_mapping", singletonList(serviceMapping));
 
     OpenTelemetryConfigurationModel firstModel = newModel();
     DefaultInstrumentationConfig seed = new DefaultInstrumentationConfig();
@@ -120,7 +120,7 @@ class DefaultInstrumentationConfigApplierTest {
     @SuppressWarnings("unchecked")
     Map<String, Object> firstHttp = (Map<String, Object>) firstHttpValue;
     ((List<?>) firstHttp.get("known_methods")).clear();
-    Object firstMappingsValue = firstCommon.get("service_peer_mapping");
+    Object firstMappingsValue = firstCommon.get("server_service_mapping");
     @SuppressWarnings("unchecked")
     List<Map<String, Object>> firstMappings = (List<Map<String, Object>>) firstMappingsValue;
     firstMappings.get(0).put("service_name", "mutated");
@@ -139,12 +139,13 @@ class DefaultInstrumentationConfigApplierTest {
                 .getScalarList("known_methods", String.class))
         .containsExactly("GET", "POST");
     List<DeclarativeConfigProperties> secondMappings =
-        secondConfig.get("java").get("common").getStructuredList("service_peer_mapping");
+        secondConfig.get("java").get("common").getStructuredList("server_service_mapping");
     assertThat(secondMappings).hasSize(1);
     assertThat(secondMappings.get(0).getString("service_name")).isEqualTo("checkout");
     assertThat(defaults.toConfigProperties())
         .containsEntry("otel.instrumentation.http.known-methods", "GET,POST")
-        .containsEntry("otel.instrumentation.common.peer-service-mapping", "example.com=checkout");
+        .containsEntry(
+            "otel.instrumentation.common.server-service-mapping", "example.com=checkout");
   }
 
   @Test

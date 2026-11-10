@@ -153,25 +153,25 @@ class DefaultInstrumentationConfigTest {
   }
 
   @Test
-  void toConfigPropertiesRoundTripsServicePeerMappingThroughBridge() {
-    Map<String, String> servicePeerMapping = new HashMap<>();
-    servicePeerMapping.put("peer", "example.com");
-    servicePeerMapping.put("service_name", "checkout=api");
+  void toConfigPropertiesRoundTripsServiceMappingThroughBridge() {
+    Map<String, String> serviceMapping = new HashMap<>();
+    serviceMapping.put("target", "example.com");
+    serviceMapping.put("service_name", "checkout=api");
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
+    defaults.get("common").setDefault("server_service_mapping", singletonList(serviceMapping));
 
     Map<String, String> properties = defaults.toConfigProperties();
 
     assertThat(properties)
         .containsEntry(
-            "otel.instrumentation.common.peer-service-mapping", "example.com=checkout=api");
+            "otel.instrumentation.common.server-service-mapping", "example.com=checkout=api");
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
             DefaultConfigProperties.createFromMap(properties));
     List<DeclarativeConfigProperties> roundTripped =
-        config.get("java").get("common").getStructuredList("service_peer_mapping");
+        config.get("java").get("common").getStructuredList("server_service_mapping");
     assertThat(roundTripped).hasSize(1);
-    assertThat(roundTripped.get(0).getString("peer")).isEqualTo("example.com");
+    assertThat(roundTripped.get(0).getString("target")).isEqualTo("example.com");
     assertThat(roundTripped.get(0).getString("service_name")).isEqualTo("checkout=api");
   }
 
@@ -194,37 +194,37 @@ class DefaultInstrumentationConfigTest {
             "scalar list default must contain only strings for traditional config: " + path);
   }
 
-  private static Stream<Arguments> invalidServicePeerMappingPeers() {
+  private static Stream<Arguments> invalidServiceMappingTargets() {
     return Stream.of(
         argumentSet("comma", "host1:5432,host2:5432"), argumentSet("equals", "host=alias"));
   }
 
   @ParameterizedTest
-  @MethodSource("invalidServicePeerMappingPeers")
-  void toConfigPropertiesRejectsServicePeerMappingPeersWithFlatDelimiters(String peer) {
-    Map<String, String> servicePeerMapping = new HashMap<>();
-    servicePeerMapping.put("peer", peer);
-    servicePeerMapping.put("service_name", "checkout");
+  @MethodSource("invalidServiceMappingTargets")
+  void toConfigPropertiesRejectsServiceMappingTargetsWithFlatDelimiters(String target) {
+    Map<String, String> serviceMapping = new HashMap<>();
+    serviceMapping.put("target", target);
+    serviceMapping.put("service_name", "checkout");
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
+    defaults.get("common").setDefault("server_service_mapping", singletonList(serviceMapping));
 
     assertThatThrownBy(defaults::toConfigProperties)
         .isInstanceOf(IllegalArgumentException.class)
-        .hasMessage("common.service_peer_mapping peer must not contain ',' or '=': " + peer);
+        .hasMessage("common.server_service_mapping target must not contain ',' or '=': " + target);
   }
 
   @Test
-  void toConfigPropertiesRejectsCommaContainingServicePeerMappingServiceName() {
-    Map<String, String> servicePeerMapping = new HashMap<>();
-    servicePeerMapping.put("peer", "db");
-    servicePeerMapping.put("service_name", "checkout,api=other");
+  void toConfigPropertiesRejectsCommaContainingServiceMappingServiceName() {
+    Map<String, String> serviceMapping = new HashMap<>();
+    serviceMapping.put("target", "db");
+    serviceMapping.put("service_name", "checkout,api=other");
     DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
-    defaults.get("common").setDefault("service_peer_mapping", singletonList(servicePeerMapping));
+    defaults.get("common").setDefault("server_service_mapping", singletonList(serviceMapping));
 
     assertThatThrownBy(defaults::toConfigProperties)
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage(
-            "common.service_peer_mapping service_name must not contain ',': checkout,api=other");
+            "common.server_service_mapping service_name must not contain ',': checkout,api=other");
   }
 
   @Test
