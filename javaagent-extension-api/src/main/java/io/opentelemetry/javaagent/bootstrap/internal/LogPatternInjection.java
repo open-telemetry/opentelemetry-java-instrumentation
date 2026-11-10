@@ -79,7 +79,7 @@ public final class LogPatternInjection {
           fields.append(' ');
         }
         String label = key;
-        if (framework == Framework.LOGBACK) {
+        if (isLogback(framework)) {
           label = escapeLogbackLiteral(key);
         } else {
           label = key.replace("%", "%%");
@@ -103,7 +103,7 @@ public final class LogPatternInjection {
       if (Character.isWhitespace(c)) {
         break;
       }
-      if (framework == Framework.LOGBACK && c == '\\') {
+      if (isLogback(framework) && c == '\\') {
         end = Math.min(pattern.length(), end + 2);
         continue;
       }
@@ -111,14 +111,18 @@ public final class LogPatternInjection {
         if (converterSeen) {
           break;
         }
-        end = converterEnd(pattern, end, framework);
+        int converterEnd = converterEnd(pattern, end, framework);
+        if (containsLineBreak(pattern.substring(end, converterEnd), framework)) {
+          break;
+        }
+        end = converterEnd;
         converterSeen = true;
       } else {
         end++;
       }
     }
     return pattern.substring(0, end)
-        + " "
+        + (end > 0 && !Character.isWhitespace(pattern.charAt(end - 1)) ? " " : "")
         + fields
         + (end < pattern.length() && !Character.isWhitespace(pattern.charAt(end)) ? " " : "")
         + pattern.substring(end);
@@ -141,6 +145,7 @@ public final class LogPatternInjection {
     String prefix;
     switch (framework) {
       case LOGBACK:
+      case LOGBACK_LEGACY:
         prefix = field == 1 ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
         break;
       case LOG4J2:
@@ -160,7 +165,7 @@ public final class LogPatternInjection {
   private static boolean contains(
       String pattern, Framework framework, String key, String mdcOption) {
     for (int i = 0; i < pattern.length(); i++) {
-      if (framework == Framework.LOGBACK && pattern.charAt(i) == '\\') {
+      if (isLogback(framework) && pattern.charAt(i) == '\\') {
         i++;
         continue;
       }
@@ -185,7 +190,7 @@ public final class LogPatternInjection {
       String converter = pattern.substring(name, end);
       boolean mdc =
           converter.equals("X")
-              || (framework == Framework.LOGBACK && converter.equals("mdc"))
+              || (isLogback(framework) && converter.equals("mdc"))
               || (framework == Framework.LOG4J2
                   && (converter.equals("mdc") || converter.equals("MDC")));
       if (mdc) {
@@ -199,12 +204,22 @@ public final class LogPatternInjection {
           if (option.equals(mdcOption)) {
             return true;
           }
-          if (framework == Framework.LOGBACK) {
+          if (isLogback(framework)) {
             option = firstLogbackOption(option);
+            if (option.isEmpty()) {
+              return true;
+            }
+            if (framework == Framework.LOGBACK) {
+              int delimiter = option.indexOf(":-");
+              if (delimiter >= 0) {
+                option = option.substring(0, delimiter);
+              }
+            }
           }
-          if ((option.equals(key) && (framework != Framework.LOG4J2 || option.indexOf(',') <= 0))
-              || (framework == Framework.LOGBACK && option.startsWith(key + ":-"))
-              || (framework == Framework.LOGBACK && option.isEmpty())) {
+          if (option.equals(mdcOption)) {
+            return true;
+          }
+          if (option.equals(key) && (framework != Framework.LOG4J2 || option.indexOf(',') <= 0)) {
             return true;
           }
           if (framework == Framework.LOG4J2 && option.indexOf(',') > 0) {
@@ -217,7 +232,7 @@ public final class LogPatternInjection {
         }
       }
       // Descend into presentation wrappers, but never interpret option text as converters.
-      if (framework == Framework.LOGBACK && end < pattern.length() && pattern.charAt(end) == '(') {
+      if (isLogback(framework) && end < pattern.length() && pattern.charAt(end) == '(') {
         int close = balancedEnd(pattern, end, '(', ')', framework);
         if (close > end + 1
             && contains(pattern.substring(end + 1, close - 1), framework, key, mdcOption)) {
@@ -274,7 +289,7 @@ public final class LogPatternInjection {
         break;
       }
     }
-    if (framework == Framework.LOGBACK && end < pattern.length() && pattern.charAt(end) == '(') {
+    if (isLogback(framework) && end < pattern.length() && pattern.charAt(end) == '(') {
       end = balancedEnd(pattern, end, '(', ')', framework);
     }
     while (end < pattern.length() && pattern.charAt(end) == '{') {
@@ -332,7 +347,7 @@ public final class LogPatternInjection {
 
   private static int balancedEnd(
       String pattern, int start, char open, char close, Framework framework) {
-    if (framework == Framework.LOGBACK && open == '{') {
+    if (isLogback(framework) && open == '{') {
       return logbackOptionEnd(pattern, start);
     }
     if ((framework == Framework.LOG4J1 || framework == Framework.LOG4J1_WITH_MDC_MAP)
@@ -340,13 +355,24 @@ public final class LogPatternInjection {
       int end = pattern.indexOf('}', start + 1);
       return end < 0 ? pattern.length() : end + 1;
     }
+    if (isLogback(framework) && open == '(') {
+      for (int i = start + 1; i < pattern.length(); i++) {
+        char c = pattern.charAt(i);
+        if (c == '\\') {
+          i++;
+        } else if (c == '%') {
+          i = converterEnd(pattern, i, framework) - 1;
+        } else if (c == ')') {
+          return i + 1;
+        }
+      }
+      return pattern.length();
+    }
     int depth = 0;
     for (int i = start; i < pattern.length(); i++) {
       char c = pattern.charAt(i);
-      if (framework == Framework.LOGBACK && c == '\\') {
+      if (isLogback(framework) && c == '\\') {
         i++;
-      } else if (framework == Framework.LOGBACK && open == '(' && c == '{') {
-        i = logbackOptionEnd(pattern, i) - 1;
       } else if (c == open) {
         depth++;
       } else if (c == close && --depth == 0) {
@@ -354,6 +380,37 @@ public final class LogPatternInjection {
       }
     }
     return pattern.length();
+  }
+
+  private static boolean isLogback(Framework framework) {
+    return framework == Framework.LOGBACK || framework == Framework.LOGBACK_LEGACY;
+  }
+
+  private static boolean containsLineBreak(String pattern, Framework framework) {
+    for (int i = 0; i < pattern.length(); i++) {
+      char c = pattern.charAt(i);
+      if (c == '\n' || c == '\r') {
+        return true;
+      }
+      if (isLogback(framework) && c == '\\') {
+        i++;
+      } else if (c == '%' && i + 1 < pattern.length()) {
+        int name = i + 1;
+        if (pattern.charAt(name) == '%') {
+          i++;
+          continue;
+        }
+        while (name < pattern.length() && "-0123456789.".indexOf(pattern.charAt(name)) >= 0) {
+          name++;
+        }
+        if (name < pattern.length()
+            && pattern.charAt(name) == 'n'
+            && (name + 1 == pattern.length() || !Character.isLetter(pattern.charAt(name + 1)))) {
+          return true;
+        }
+      }
+    }
+    return false;
   }
 
   private LogPatternInjection() {}
@@ -364,6 +421,7 @@ public final class LogPatternInjection {
    */
   public enum Framework {
     LOGBACK,
+    LOGBACK_LEGACY,
     LOG4J1,
     LOG4J2,
     LOG4J1_WITH_MDC_MAP

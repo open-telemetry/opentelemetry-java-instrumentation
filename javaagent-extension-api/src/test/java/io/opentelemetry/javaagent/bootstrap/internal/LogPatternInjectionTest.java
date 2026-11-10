@@ -130,7 +130,7 @@ class LogPatternInjectionTest {
   void respectsFrameworkSpecificPercentEscaping(Framework framework) {
     String suffix = " \\%X{trace_id} %m";
     String fields =
-        framework == Framework.LOGBACK
+        (framework == Framework.LOGBACK || framework == Framework.LOGBACK_LEGACY)
             ? FIELDS
             : "service.name=%X{service.name} span_id=%X{span_id}";
     assertThat(LogPatternInjection.enhance("%d" + suffix, framework, "trace_id", "span_id"))
@@ -322,6 +322,60 @@ class LogPatternInjectionTest {
   void log4j2ParenthesesAreLiteral(String pattern) {
     assertThat(LogPatternInjection.enhance(pattern, Framework.LOG4J2, "trace_id", "span_id"))
         .isEqualTo("%d( " + FIELDS + pattern.substring(3));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"%highlight(%d %msg%n)", "%replace(%d %msg%n){'x','y'}"})
+  void insertsBeforeWholeLineLogbackWrappers(String pattern) {
+    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK, "trace_id", "span_id"))
+        .isEqualTo(FIELDS + " " + pattern);
+  }
+
+  @Test
+  void insertsBeforeWholeLineLog4j2Wrappers() {
+    String pattern = "%highlight{%d{HH:mm:ss} %-5p %m%n}";
+    assertThat(LogPatternInjection.enhance(pattern, Framework.LOG4J2, "trace_id", "span_id"))
+        .isEqualTo(FIELDS + " " + pattern);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"%cyan(request={)", "%replace(request={){'x','y'}"})
+  void literalCompositeBracesDoNotConsumeFollowingFields(String field) {
+    assertThat(
+            LogPatternInjection.enhance(field + " %m%n", Framework.LOGBACK, "trace_id", "span_id"))
+        .isEqualTo(field + " " + FIELDS + " %m%n");
+  }
+
+  @Test
+  void distinguishesLegacyAndModernLogbackDefaultDelimiters() {
+    String pattern = "%d %X{custom:-trace} %m%n";
+    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK, "custom:-trace", "span_id"))
+        .contains("custom:-trace=%X{otel.pattern-injection.trace.Y3VzdG9tOi10cmFjZQ}");
+    assertThat(
+            LogPatternInjection.enhance(
+                pattern, Framework.LOGBACK_LEGACY, "custom:-trace", "span_id"))
+        .isEqualTo("%d service.name=%X{service.name} span_id=%X{span_id} %X{custom:-trace} %m%n");
+    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK_LEGACY, "custom", "span_id"))
+        .contains("custom=%X{custom}");
+  }
+
+  @Test
+  void emptyLookupKeyWithDefaultDoesNotRenderWholeMdc() {
+    String pattern = "%d %X{:-fallback} %m%n";
+    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK, "trace_id", "span_id"))
+        .isEqualTo("%d " + FIELDS + " %X{:-fallback} %m%n");
+  }
+
+  @Test
+  void quotedLogbackEscapesRemainPartOfTheNativeKey() {
+    String pattern = "%d %X{'custom,\\'\"trace'} %m%n";
+    assertThat(
+            LogPatternInjection.enhance(pattern, Framework.LOGBACK, "custom,\\'\"trace", "span_id"))
+        .isEqualTo(
+            "%d service.name=%X{service.name} span_id=%X{span_id} %X{'custom,\\'\"trace'} %m%n");
+    assertThat(
+            LogPatternInjection.enhance(pattern, Framework.LOGBACK, "custom,'\"trace", "span_id"))
+        .contains("custom,'\"trace=%X{otel.pattern-injection.trace.Y3VzdG9tLCcidHJhY2U}");
   }
 
   @Test

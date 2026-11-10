@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.Logger;
@@ -18,6 +20,8 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
@@ -107,6 +111,74 @@ class LogPatternTest {
       quoted.stop();
       control.stop();
       MDC.clear();
+      logger.detachAppender(appender);
+      logger.setAdditive(additive);
+      logger.setLevel(level);
+      appender.stop();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "%replace(%d %msg%n){'unused','replacement'}",
+        "%replace(request={){'unused','replacement'} %m%n",
+        "%highlight(%d %msg%n)",
+        "%cyan(request={) %m%n"
+      })
+  void keepsWrappedRecordsOnOneLine(String pattern) {
+    assumeTrue(testLatestDeps() || pattern.startsWith("%replace"));
+    assertRenderedPattern(pattern);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "%d %X{:-fallback} %m%n",
+        "%d %X{custom:-trace} %m%n",
+        "%d %X{'custom,\\'\"span'} %m%n"
+      })
+  void respectsNativeMdcKeySemantics(String pattern) {
+    assertRenderedPattern(pattern);
+  }
+
+  private static void assertRenderedPattern(String pattern) {
+    LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    Logger logger = context.getLogger("pattern-regression");
+    boolean additive = logger.isAdditive();
+    Level level = logger.getLevel();
+    ListAppender<ILoggingEvent> appender = new ListAppender<>();
+    PatternLayout layout = new PatternLayout();
+    try {
+      layout.setContext(context);
+      layout.setPattern(pattern);
+      layout.start();
+      String enhanced = layout.getPattern();
+      layout.stop();
+      layout.start();
+      assertThat(layout.getPattern()).isEqualTo(enhanced);
+      appender.setContext(context);
+      appender.start();
+      logger.setLevel(Level.INFO);
+      logger.setAdditive(false);
+      logger.addAppender(appender);
+      testing.runWithSpan(
+          "log",
+          () -> {
+            logger.info("pattern message");
+            String rendered =
+                layout.doLayout(appender.list.get(0)).replaceAll("\u001B\\[[;\\d]*m", "");
+            assertThat(rendered).contains("pattern message").endsWith(System.lineSeparator());
+            assertThat(rendered.split("\\R")).hasSize(1);
+            if (ENABLED) {
+              assertThat(rendered)
+                  .contains("service.name=pattern-service")
+                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+            }
+          });
+    } finally {
+      layout.stop();
       logger.detachAppender(appender);
       logger.setAdditive(additive);
       logger.setLevel(level);

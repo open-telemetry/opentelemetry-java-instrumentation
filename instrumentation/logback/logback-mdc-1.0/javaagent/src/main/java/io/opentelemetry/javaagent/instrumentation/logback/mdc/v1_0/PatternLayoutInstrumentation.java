@@ -35,7 +35,7 @@ class PatternLayoutInstrumentation implements TypeInstrumentation {
     public static void onEnter(@Advice.This PatternLayoutBase<?> layout) {
       if (layout instanceof PatternLayout && LogPatternInjection.isEnabled()) {
         layout.setPattern(
-            LogPatternInjection.inject(layout.getPattern(), LogPatternInjection.Framework.LOGBACK));
+            LogPatternInjection.inject(layout.getPattern(), LogbackPatternInjection.FRAMEWORK));
       }
     }
   }

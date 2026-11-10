@@ -194,6 +194,25 @@ public abstract class LogPatternTest {
         });
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"%highlight{%d{HH:mm:ss} %-5p %m%n}", "%cyan{%d %m%n}", "%style{%d %m%n}{red}"})
+  void keepsWholeLineWrappersOnOneLine(String pattern) {
+    assertRenderedPattern(
+        pattern,
+        (layout, rendered) -> {
+          String plain = rendered.replaceAll("\u001B\\[[;\\d]*m", "");
+          assertThat(plain).contains("pattern message").endsWith(System.lineSeparator());
+          assertThat(plain.split("\\R")).hasSize(1);
+          if (ENABLED) {
+            assertThat(plain)
+                .contains("service.name=pattern-service")
+                .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+          }
+        });
+  }
+
   private void assertRenderedPattern(String pattern, BiConsumer<PatternLayout, String> assertion) {
     PatternLayout layout = PatternLayout.newBuilder().withPattern(pattern).build();
     Logger logger = (Logger) LogManager.getLogger("TestLogger");
