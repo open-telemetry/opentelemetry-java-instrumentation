@@ -304,7 +304,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testJavaCommonServiceMapping() {
+  void testJavaCommonServerServiceMapping() {
     DeclarativeConfigProperties config =
         createConfig("otel.instrumentation.common.server-service-mapping", "1.2.3.4=FooService");
 
