@@ -758,6 +758,59 @@ class LogbackAppenderTest {
                                     "baggage.key")));
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"logback-test.xml", "logback-no-otel-appenders.xml"})
+  void exportsOnlyApplicationMdc(String configurationFile) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:" + configurationFile);
+    properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "*");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+    ListAppender<ILoggingEvent> listAppender = getListAppender();
+    listAppender.list.clear();
+
+    MDC.put("request-id", "123");
+    MDC.put("span_id", "application-span");
+    MDC.put("baggage.key", "application-baggage");
+    Span span = testing.getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
+    cleanup.deferCleanup(span::end);
+    try (Scope ignored = span.makeCurrent();
+        Scope ignoredBaggage =
+            Baggage.builder().put("key", "enriched-baggage").build().makeCurrent()) {
+      LoggerFactory.getLogger("test").info("test log message");
+    } finally {
+      MDC.clear();
+    }
+
+    testing.waitAndAssertLogRecords(
+        log ->
+            log.hasBody("test log message")
+                .hasSpanContext(span.getSpanContext())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("request-id"), "123"),
+                    equalTo(stringKey("span_id"), "application-span"),
+                    equalTo(stringKey("baggage.key"), "application-baggage")));
+    assertThat(listAppender.list)
+        .singleElement()
+        .satisfies(
+            event ->
+                assertThat(event.getMDCPropertyMap())
+                    .containsEntry("trace_id", span.getSpanContext().getTraceId())
+                    .containsEntry("span_id", span.getSpanContext().getSpanId())
+                    .containsEntry("baggage.key", "enriched-baggage")
+                    .containsEntry("request-id", "123"));
+  }
+
   @Test
   void shouldInitializeMdcAppender() {
     Map<String, Object> properties = new HashMap<>();

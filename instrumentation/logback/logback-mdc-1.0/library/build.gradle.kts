@@ -2,6 +2,7 @@ import io.opentelemetry.instrumentation.gradle.executions
 
 plugins {
   id("otel.library-instrumentation")
+  id("otel.osgi-conventions")
 }
 
 testing.suites {
