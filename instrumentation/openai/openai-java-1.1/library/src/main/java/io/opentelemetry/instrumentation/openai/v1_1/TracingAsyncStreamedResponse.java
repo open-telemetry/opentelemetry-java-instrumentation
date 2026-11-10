@@ -24,8 +24,11 @@ final class TracingAsyncStreamedResponse implements AsyncStreamResponse<ChatComp
 
   @Override
   public void close() {
-    listener.endSpan(null);
-    delegate.close();
+    try {
+      listener.endSpan(null);
+    } finally {
+      delegate.close();
+    }
   }
 
   @Override
