@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.jdbc.internal;
 import static io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser.parse;
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
+import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.sanitizeHostList;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemIncubatingValues.CLICKHOUSE;
@@ -22,6 +23,21 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.ClickhouseUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.Db2UrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.GenericUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.InformixDirectUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.InformixSqliUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.JdbcUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.LindormUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.MysqlUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.OceanbaseUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.OracleUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.ParseContext;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.PolardbUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.PostgresqlUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.SapUrlParser;
+import io.opentelemetry.instrumentation.jdbc.internal.parser.SqliteUrlParser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -90,6 +106,65 @@ class JdbcConnectionUrlParserTest {
         .isEqualTo(DbServerTarget.create("pg.host", null));
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "jdbc:vendor://h1;******@synthetic-one,synthetic-two",
+        "jdbc:vendor://h1/db;password=synthetic-secret",
+        "jdbc:vendor://alice:123;rest@db.example/orders"
+      })
+  void unknownDriverSemicolonDoesNotExposeUrlDerivedInfo(String url) {
+    DbInfo dbInfo = parse(url, null);
+    DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
+    JdbcAttributesGetter attributesGetter = new JdbcAttributesGetter();
+
+    assertThat(dbInfo.getDbSystemName()).isEqualTo("other_sql");
+    assertThat(dbInfo.getDbNamespace()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
+    assertThat(attributesGetter.getDbNamespace(request)).isNull();
+    assertThat(attributesGetter.getServerAddress(request)).isNull();
+    assertThat(attributesGetter.getServerPort(request)).isNull();
+  }
+
+  @Test
+  void unknownDriverSemicolonPreservesDataSourceProperties() {
+    Properties properties = new Properties();
+    properties.setProperty("serverName", "property.host");
+    properties.setProperty("portNumber", "5433");
+    properties.setProperty("databaseName", "property_db");
+
+    DbInfo dbInfo =
+        parse(
+            "jdbc:vendor://url.host/url_db;serverName=url.host;portNumber=1234"
+                + ";databaseName=url_db",
+            properties);
+
+    assertThat(dbInfo.getDbSystemName()).isEqualTo("other_sql");
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("property_db");
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("property.host", 5433));
+  }
+
+  @Test
+  void unknownDriverWithoutSemicolonUsesGenericParsing() {
+    DbInfo dbInfo = parse("jdbc:vendor://db.example:5432/orders", null);
+
+    assertThat(dbInfo.getDbSystemName()).isEqualTo("other_sql");
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("orders");
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("db.example", 5432));
+  }
+
+  @Test
+  void knownDriverSemicolonUserInfoStillUsesItsParser() {
+    DbInfo dbInfo = parse("jdbc:mysql://alice:123;rest@db.example/orders", null);
+
+    assertThat(dbInfo.getDbSystemName()).isEqualTo(MYSQL);
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("orders");
+    assertThat(dbInfo.getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("db.example", null));
+  }
+
   @Test
   void omittedDefaultPortIsNotReportedInConfiguredTarget() {
     DbInfo dbInfo = parse("jdbc:postgresql://pg.host/db", null);
@@ -102,12 +177,13 @@ class JdbcConnectionUrlParserTest {
   void commasOutsideAuthorityDoNotMarkSingletonAsMultiTarget() {
     DbInfo dbInfo =
         parse(
-            "jdbc:postgresql://pg.host:5432/db"
-                + "?user=admin@corp.com&options=search_path=test,public",
+            "jdbc:postgresql://pg.host:5432/db@corp.com"
+                + "?user=admin@corp.com&currentSchema=test,public",
             null);
 
     assertThat(dbInfo.getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create("pg.host", null));
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("db@corp.com|test,public");
   }
 
   @Test
@@ -135,6 +211,12 @@ class JdbcConnectionUrlParserTest {
         "jdbc:unknown://address=(host=valid.host)(port=1234),"
             + "address=(host=evil host)(port=1234)/db",
         "jdbc:h2:tcp://h1:8082,h2:8083/db",
+        "jdbc:db2://h1:50000,unexpected=value/db",
+        "jdbc:jtds:sybase://h1:5000,unexpected=value/db",
+        "jdbc:derby://h1:1527,unexpected=value/db",
+        "jdbc:sqlserver://h1:1433,unexpected=value/db",
+        "jdbc:datadirect:sqlserver://h1:1433,unexpected=value/db",
+        "jdbc:hsqldb:hsql://h1:9001,unexpected=value/db",
         "jdbc:sqlserver://;failoverPartner=h2",
         "jdbc:sqlserver://h1;failoverPartner=unexpected=value",
         "jdbc:oracle:thin:@//h1,unexpected=value/service",
@@ -149,27 +231,29 @@ class JdbcConnectionUrlParserTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "jdbc:postgresql://user:123,a/ss@pg.host:5432",
-        "jdbc:postgresql://user:123,a#ignored?x=y@pg.host:5432,pg2:5432/db"
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "jdbc:mariadb:failover://h1,h2/db@corp.com|h1,h2|db@corp.com",
+        "jdbc:mariadb:failover://h1/db?user=admin%40corp.com&sessionVariables=sql_mode=ANSI,time_zone=UTC"
+            + "|h1|db"
       })
-  void ambiguousPostgresCredentialsDoNotBecomeAConfiguredTarget(String url) {
+  void mariaDbAuthorityBoundariesFollowUrlGrammar(String url, String target, String namespace) {
     DbInfo dbInfo = parse(url, null);
-    assertThat(dbInfo.getConfiguredServerTarget()).isNull();
-    assertThat(dbInfo.getDbNamespace()).isNull();
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create(target, null));
+    assertThat(dbInfo.getDbNamespace()).isEqualTo(namespace);
   }
 
   @Test
   void atInPostgresQueryDoesNotDisableConfiguredTargetParsing() {
     DbInfo dbInfo =
         parse(
-            "jdbc:postgresql://pg.host1:5432,pg.host2:5433/pgdb"
+            "jdbc:postgresql://pg.host1:5432,pg.host2:5433/pgdb@corp.com"
                 + "?user=admin@corp.com&currentSchema=test,public",
             null);
     assertThat(dbInfo.getConfiguredServerTarget())
         .isEqualTo(DbServerTarget.create("pg.host1:5432,pg.host2:5433", null));
-    assertThat(dbInfo.getDbNamespace()).isEqualTo("pgdb|test,public");
+    assertThat(dbInfo.getDbNamespace()).isEqualTo("pgdb@corp.com|test,public");
   }
 
   @Test
@@ -2044,28 +2128,132 @@ class JdbcConnectionUrlParserTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {
-        "postgresql://user:123,a/ss@pg.host:5432",
-        "postgresql://user:p,a/ss@pg.host:5432/db",
-        "postgresql://user:p,a/ss@pg.host:5432",
-        "postgresql://user:pa,ss/word@pg.host1:5432,pg.host2:5433/pgdb",
-        "postgresql://user:p@ss,w/ord@pg.host1:5432,pg.host2:5433/pgdb"
+  @CsvSource(
+      delimiter = '|',
+      value = {
+        "postgresql://pg.host/db|pg.host",
+        "postgresql://pg.host1,pg.host2/db@corp.com|pg.host1,pg.host2",
+        "postgresql://pg.host1,pg.host2/db?user=admin@corp.com&currentSchema=test,public"
+            + "|pg.host1,pg.host2"
       })
-  void testAmbiguousUserInfoIsNotExtractedAsAuthority(String url) {
-    assertThat(extractAuthority(url)).isNull();
+  void authorityEndsAtPathDelimiterInValidUrls(String url, String authority) {
+    assertThat(extractAuthority(url)).isEqualTo(authority);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"postgresql", "mysql", "mariadb:failover"})
+  void recognizedUserInfoIsStrippedFromConfiguredTargets(String type) {
+    String userInfo = "alice" + ':' + "test-secret" + '@';
+    assertThat(
+            parse("jdbc:" + type + "://" + userInfo + "h1,h2/db", null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1,h2", null));
+  }
+
+  @Test
+  void recognizedAddressPropertiesAreStrippedFromConfiguredTargets() {
+    String credentials = "(user=alice)(" + "password" + "=test-secret@,value)";
+    String url =
+        "jdbc:mariadb:failover://address=(host=h1)"
+            + credentials
+            + ",address=(host=h2)"
+            + credentials
+            + "/db";
+    assertThat(parse(url, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1,h2", null));
   }
 
   @ParameterizedTest
   @ValueSource(
-      strings = {"postgresql://h1,h2/db/admin@corp.com", "postgresql://h1,h2/db#admin@corp.com"})
-  void testAtAfterCommaSeparatedAuthorityIsAmbiguous(String url) {
-    assertThat(extractAuthority(url)).isNull();
+      strings = {
+        "sqlserver://h1",
+        "microsoft:sqlserver://h1",
+        "jtds:sqlserver://h1/db",
+        "jtds:sybase://h1",
+        "derby://h1/db",
+        "datadirect:sqlserver://h1",
+        "tibcosoftware:sqlserver://h1",
+        "h2:tcp://h1",
+        "h2:ssl://h1",
+        "hsqldb:hsql://h1",
+        "hsqldb:hsqls://h1",
+        "hsqldb:http://h1",
+        "hsqldb:https://h1"
+      })
+  void semicolonParametersDoNotChangeTargetCount(String connection) {
+    String url = "jdbc:" + connection + ";property=a,b";
+    assertThat(parse(url, null).getConfiguredServerTarget())
+        .isEqualTo(DbServerTarget.create("h1", null));
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "sqlserver://h1,h2",
+        "jtds:sybase://h1,h2",
+        "derby://h1,h2/db",
+        "datadirect:sqlserver://h1,h2",
+        "tibcosoftware:sqlserver://h1,h2",
+        "db2://h1:50000,h2:50001",
+        "as400://h1:50000,h2:50001",
+        "h2:tcp://h1,h2/db",
+        "h2:ssl://h1,h2/db",
+        "hsqldb:hsql://h1,h2",
+        "hsqldb:hsqls://h1,h2",
+        "hsqldb:http://h1,h2",
+        "hsqldb:https://h1,h2",
+        "informix-sqli://h1,h2/db",
+        "oceanbase:oracle://h1,h2/db"
+      })
+  void semicolonMultiTargetDoesNotFallBackToFirstServer(String connection) {
+    String url = "jdbc:" + connection + ";property=a,b";
+    assertThat(parse(url, null).getConfiguredServerTarget()).isNull();
+  }
+
+  @ParameterizedTest
+  @MethodSource("parserUrlForms")
+  void multipleTargetsDisableFallbackDuringParserExecution(
+      JdbcUrlParser parser, String url, String expectedAuthority) {
+    ParseContext ctx = ParseContext.of("other", null);
+    parser.parse(url, ctx);
+    ctx.host("fallback.host");
+
+    assertThat(ctx.system()).isNotNull();
+    if (expectedAuthority != null && hasMultipleTargets(expectedAuthority)) {
+      assertThat(ctx.toDbInfo().getConfiguredServerTarget())
+          .isNotEqualTo(DbServerTarget.create("fallback.host", null));
+    }
+  }
+
+  private static Stream<Arguments> parserUrlForms() {
+    return Stream.of(
+        arguments(GenericUrlParser.INSTANCE, "other://h1,h2/db", "h1,h2"),
+        arguments(ClickhouseUrlParser.INSTANCE, "clickhouse:http://h1,h2/db", "h1,h2"),
+        arguments(LindormUrlParser.INSTANCE, "lindorm:table:url=http://h1,h2/db", "h1,h2"),
+        arguments(MysqlUrlParser.INSTANCE, "mysql://h1,h2/db", "h1,h2"),
+        arguments(
+            OracleUrlParser.INSTANCE, "oracle:thin:@ldap://h1:389/cn=oraclecontext", "h1:389"),
+        arguments(PolardbUrlParser.INSTANCE, "polardb://h1,h2/db", "h1,h2"),
+        arguments(PostgresqlUrlParser.INSTANCE, "postgresql://h1,h2/db", "h1,h2"),
+        arguments(SapUrlParser.INSTANCE, "sap://h1,h2/db", "h1,h2"),
+        arguments(SqliteUrlParser.INSTANCE, "sqlite:file:db", null),
+        arguments(Db2UrlParser.INSTANCE, "db2://h1:50000;user=a,b", "h1:50000"),
+        arguments(Db2UrlParser.INSTANCE, "as400://h1:50000;user=a,b", "h1:50000"),
+        arguments(InformixSqliUrlParser.INSTANCE, "informix-sqli://h1;user=a,b", "h1"),
+        arguments(InformixDirectUrlParser.INSTANCE, "informix-direct://db;user=a,b", "db"),
+        arguments(OceanbaseUrlParser.INSTANCE, "oceanbase:oracle://h1;user=a,b", "h1"),
+        arguments(OceanbaseUrlParser.INSTANCE, "oceanbase://h1;user=a,b", "h1;user=a,b"),
+        arguments(
+            MysqlUrlParser.INSTANCE,
+            "mariadb:failover://user:pw;extra@h1,h2/db",
+            "user:pw;extra@h1,h2"));
   }
 
   @Test
-  void testAtInQueryParameterDoesNotHideAuthority() {
-    assertThat(extractAuthority("postgresql://h1,h2/db?user=admin@corp.com")).isEqualTo("h1,h2");
+  void mariaDbSemicolonUserInfoDoesNotFallbackForRejectedFailoverGroup() {
+    String userInfo = "user:pw;extra@";
+    String url = "jdbc:mariadb:failover://" + userInfo + "h1,unexpected=value/db";
+
+    assertThat(parse(url, null).getConfiguredServerTarget()).isNull();
   }
 
   private static void testVerifySystemSubtypeParsingOfUrl(ParseTestArgument argument) {

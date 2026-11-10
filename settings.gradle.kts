@@ -9,7 +9,7 @@ pluginManagement {
     id("com.github.bjornvester.xjc") version "1.9.1"
     id("org.graalvm.buildtools.native") version "1.1.18"
     id("com.google.osdetector") version "1.7.3"
-    id("com.google.protobuf") version "0.10.0"
+    id("com.google.protobuf") version "0.10.1"
   }
 }
 
@@ -158,13 +158,13 @@ include(":instrumentation-annotations-support-testing")
 // misc
 include(":dependencyManagement")
 include(":instrumentation-docs")
-include(":testing:agent-exporter")
-include(":testing:agent-for-testing")
-include(":testing:dependencies-shaded-for-testing")
-include(":testing-common")
-include(":testing-common:with-shaded-dependencies")
-include(":testing-common:integration-tests")
-include(":testing-common:library-for-integration-tests")
+include(":testing:testing-common")
+include(":testing:testing-common:integration-tests")
+include(":testing:testing-common:library-for-integration-tests")
+include(":testing:testing-common:with-shaded-dependencies")
+include(":testing:javaagent-for-testing")
+include(":testing:javaagent-test-exporters")
+include(":testing:shaded-dependencies")
 
 // smoke tests
 include(":smoke-tests")
@@ -491,12 +491,14 @@ include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:javaa
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure")
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing")
 include(":instrumentation:log4j:log4j-mdc-1.2:javaagent")
+include(":instrumentation:logback:bootstrap")
 include(":instrumentation:logback:logback-appender-1.0:javaagent")
 include(":instrumentation:logback:logback-appender-1.0:library")
 include(":instrumentation:logback:logback-appender-1.0:testing")
 include(":instrumentation:logback:logback-mdc-1.0:javaagent")
 include(":instrumentation:logback:logback-mdc-1.0:library")
 include(":instrumentation:logback:logback-mdc-1.0:testing")
+include(":instrumentation:mcp-java-sdk-0.14:javaagent")
 include(":instrumentation:methods:javaagent")
 include(":instrumentation:micrometer:micrometer-1.5:javaagent")
 include(":instrumentation:micrometer:micrometer-1.5:library")

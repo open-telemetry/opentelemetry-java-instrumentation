@@ -1,0 +1,37 @@
+---
+id: 20725000-0000-4000-8000-000000000001
+name: chat_completions
+request:
+  url: /chat/completions
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "content" : "Answer in up to 3 words: Which ocean contains Bouvet Island?",
+          "role" : "user"
+        } ],
+        "model" : "gpt-4o-mini",
+        "seed" : 20725,
+        "stream" : true
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: |+
+    data: {"id":"chatcmpl-closed-early","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"role":"assistant","content":"","refusal":null},"logprobs":null,"finish_reason":null}]}
+
+    data: {"id":"chatcmpl-closed-early","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":"Atlantic"},"logprobs":null,"finish_reason":null}]}
+
+    data: {"id":"chatcmpl-closed-early","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{"content":" Ocean."},"logprobs":null,"finish_reason":null}]}
+
+    data: {"id":"chatcmpl-closed-early","object":"chat.completion.chunk","created":1752819045,"model":"gpt-4o-mini-2024-07-18","service_tier":"default","system_fingerprint":null,"choices":[{"index":0,"delta":{},"logprobs":null,"finish_reason":"stop"}]}
+
+    data: [DONE]
+
+  headers:
+    Content-Type: text/event-stream; charset=utf-8
+uuid: 20725000-0000-4000-8000-000000000001
+persistent: true
+insertionIndex: 20

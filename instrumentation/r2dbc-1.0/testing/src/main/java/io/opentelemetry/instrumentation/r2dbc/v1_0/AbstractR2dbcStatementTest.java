@@ -12,6 +12,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -32,6 +33,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.r2dbc.spi.Batch;
 import io.r2dbc.spi.Connection;
 import io.r2dbc.spi.ConnectionFactories;
@@ -203,6 +205,76 @@ public abstract class AbstractR2dbcStatementTest {
                             .hasParent(trace.getSpan(0))));
   }
 
+  @ParameterizedTest(name = "{index}: {0}")
+  @MethodSource("responseStatusScenarios")
+  void failedQueriesReportResponseStatus(String system, String expectedStatusCode) {
+    DbSystemProps props = systems.get(system);
+    String queryText = "SELECT * FROM r2dbc_missing_table";
+    startContainer(props);
+    ConnectionFactory connectionFactory =
+        createProxyConnectionFactory(
+            ConnectionFactoryOptions.builder()
+                .option(DRIVER, props.system)
+                .option(HOST, container.getHost())
+                .option(PORT, port)
+                .option(USER, USER_DB)
+                .option(PASSWORD, PW_DB)
+                .option(DATABASE, DB)
+                .option(CONNECT_TIMEOUT, Duration.ofSeconds(30))
+                .build());
+
+    Throwable error =
+        catchThrowable(
+            () ->
+                getTesting()
+                    .runWithSpan(
+                        "parent",
+                        () -> {
+                          Connection connection =
+                              Mono.from(connectionFactory.create()).block(Duration.ofMinutes(1));
+                          try {
+                            Mono.from(connection.createStatement(queryText).execute())
+                                .flatMapMany(result -> result.map((row, metadata) -> ""))
+                                .blockLast(Duration.ofMinutes(1));
+                          } finally {
+                            Mono.from(connection.close()).block(Duration.ofMinutes(1));
+                          }
+                        }));
+
+    assertThat(error).isNotNull();
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                    span ->
+                        span.hasName("SELECT r2dbc_missing_table")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, system),
+                                equalTo(DB_NAMESPACE, DB),
+                                equalTo(DB_QUERY_TEXT, queryText),
+                                equalTo(DB_QUERY_SUMMARY, "SELECT r2dbc_missing_table"),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
+                                equalTo(SERVER_ADDRESS, container.getHost()),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_RESPONSE_STATUS_CODE, expectedStatusCode),
+                                equalTo(ERROR_TYPE, expectedStatusCode))));
+    assertDurationMetric(
+        getTesting(),
+        "io.opentelemetry.r2dbc-1.0",
+        DB_SYSTEM_NAME,
+        DB_NAMESPACE,
+        DB_QUERY_SUMMARY,
+        SERVER_ADDRESS,
+        SERVER_PORT,
+        DB_RESPONSE_STATUS_CODE,
+        ERROR_TYPE);
+  }
+
   @Test
   void filteredResultConsumptionFinishesQuerySpan() {
     ConnectionFactoryOptions options =
@@ -277,6 +349,13 @@ public abstract class AbstractR2dbcStatementTest {
                                 "SELECT * FROM person where first_name = 'tom'",
                                 "SELECT * FROM person where first_name = ?",
                                 "SELECT person")))));
+  }
+
+  private static Stream<Arguments> responseStatusScenarios() {
+    return Stream.of(
+        argumentSet("PostgreSQL SQLSTATE", POSTGRESQL.system, "42P01"),
+        argumentSet("MySQL vendor code", MYSQL.system, "1146"),
+        argumentSet("MariaDB vendor code", MARIADB.system, "1146"));
   }
 
   @Test

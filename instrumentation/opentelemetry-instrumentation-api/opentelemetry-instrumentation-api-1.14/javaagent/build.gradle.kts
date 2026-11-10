@@ -32,14 +32,12 @@ dependencies {
 // version 1.13.0 contains the old ServerSpan implementation that uses SERVER_KEY context key
 val oldServerSpanVersion = "1.13.0-alpha"
 
-testing {
-  suites {
-    register<JvmTestSuite>("testOldServerSpan") {
-      dependencies {
-        implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$oldServerSpanVersion")
-        implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
-        implementation(project(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:testing"))
-      }
+testing.suites {
+  register<JvmTestSuite>("testOldServerSpan") {
+    dependencies {
+      implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api-semconv:$oldServerSpanVersion")
+      implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-api")
+      implementation(project(":instrumentation:opentelemetry-instrumentation-api:opentelemetry-instrumentation-api-1.14:testing"))
     }
   }
 }

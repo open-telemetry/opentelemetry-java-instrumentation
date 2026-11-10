@@ -11,9 +11,3 @@ dependencies {
   // needed for latest dep tests
   testCompileOnly("com.google.errorprone:error_prone_annotations")
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-}

@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 
@@ -34,11 +33,26 @@ kotlin {
   }
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  register<JvmTestSuite>("version343Test") {
+    dependencies {
+      implementation(project())
+      implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      val version = baseVersion("3.4.3").orLatest("+")
+      implementation("io.ktor:ktor-server-netty:$version")
+      implementation("io.ktor:ktor-client-cio:$version")
+    }
+  }
+
+  executions("test") {
     register("Experimental") {
       systemProperty("test.emitExperimentalHttpServerTelemetry", "true")
       systemProperty("metadataConfig", "Experimental.emitExperimentalTelemetry(this)")
     }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

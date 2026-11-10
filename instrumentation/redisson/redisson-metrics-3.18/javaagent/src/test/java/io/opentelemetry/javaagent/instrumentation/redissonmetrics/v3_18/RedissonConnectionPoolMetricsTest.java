@@ -35,7 +35,8 @@ class RedissonConnectionPoolMetricsTest extends AbstractRedissonConnectionPoolMe
     clearMetrics();
     RedisConnection connection = entry.connectionWriteOp(RedisCommands.PING).join();
     try {
-      assertUsageMetric(regularPool, -1, 1, subscriptionPool, 0, 0);
+      assertUsageMetric(
+          regularPool, REGULAR_MIN_IDLE - 1, 1, subscriptionPool, SUBSCRIPTION_MIN_IDLE, 0);
     } finally {
       entry.releaseWrite(connection);
     }

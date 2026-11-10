@@ -69,11 +69,6 @@ testing.suites {
         exclude("org.jboss.naming", "jnpserver")
       }
     }
-    executions {
-      register("ReceiveTelemetryEnabled") {
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-      }
-    }
   }
 
   register<JvmTestSuite>("version30Test") {
@@ -121,6 +116,12 @@ testing.suites {
       telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
 
       systemProperty("testJmsDisabled", "true")
+    }
+  }
+
+  executions("version20Test") {
+    register("ReceiveTelemetryEnabled") {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
   }
 }

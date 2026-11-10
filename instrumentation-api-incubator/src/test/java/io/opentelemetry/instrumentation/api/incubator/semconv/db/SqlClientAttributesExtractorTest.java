@@ -13,7 +13,9 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
@@ -37,6 +39,62 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SqlClientAttributesExtractorTest {
+
+  @Test
+  void shouldExtractResponseStatusAndErrorType() {
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getDbResponseStatusCode(
+                  Map<String, Object> request, Void response, Throwable error) {
+                return "42601";
+              }
+
+              @Override
+              public String getErrorType(
+                  Map<String, Object> request, Void response, Throwable error) {
+                return "42601";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build())
+        .containsOnly(entry(DB_RESPONSE_STATUS_CODE, "42601"), entry(ERROR_TYPE, "42601"));
+  }
+
+  @Test
+  void shouldInheritExceptionClassFallback() {
+    TestAttributesGetter getter = new TestAttributesGetter();
+    IllegalStateException error = new IllegalStateException();
+    assertThat(getter.getErrorType(emptyMap(), null, error))
+        .isEqualTo(IllegalStateException.class.getName());
+
+    AttributesBuilder attributes = Attributes.builder();
+    SqlClientAttributesExtractor.create(getter)
+        .onEnd(attributes, Context.root(), emptyMap(), null, error);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
+  }
+
+  @Test
+  void shouldRespectExplicitNullDespiteException() {
+    AttributesBuilder attributes = Attributes.builder();
+    SqlClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, Object> request, Void response, Throwable error) {
+                return null;
+              }
+            })
+        .onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build()).isEmpty();
+  }
 
   @Test
   void shouldRetainNetworkPeerWithoutProtocolAttributes() {

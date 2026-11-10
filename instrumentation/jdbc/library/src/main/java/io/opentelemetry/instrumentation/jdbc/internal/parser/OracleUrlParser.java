@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractAuthority;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.extractHostPort;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.indexOfAny;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
@@ -125,7 +124,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
 
   @Nullable
   private static DbServerTarget parseLdapTarget(String connectInfo, String scheme) {
-    String authority = extractAuthority(connectInfo);
+    String authority = UrlParsingUtils.extractAuthority(connectInfo);
     if (authority == null || authority.indexOf(',') >= 0 || authority.indexOf('@') >= 0) {
       return null;
     }
@@ -176,7 +175,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
 
   @Nullable
   private static String applyEasyConnectGroup(String connectInfo, ParseContext ctx) {
-    String authority = extractAuthority("oracle://" + connectInfo);
+    String authority = UrlParsingUtils.extractAuthority("oracle://" + connectInfo);
     if (authority == null || authority.indexOf(',') < 0) {
       return null;
     }
