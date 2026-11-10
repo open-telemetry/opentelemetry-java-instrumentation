@@ -90,8 +90,8 @@ testing {
         implementation("org.apache.pekko:pekko-stream_$scalaVersion:${baseVersion("1.0.1").orLatest("1.+")}")
         implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_$scalaVersion:${baseVersion("1.7.0").orLatest("1.+")}")
         if (otelProps.testLatestDeps) {
-          implementation("org.apache.pekko:pekko-slf4j_2.13:latest.release")
-          implementation("org.apache.pekko:pekko-actor_2.13:latest.release")
+          implementation("org.apache.pekko:pekko-slf4j_2.13:1.+")
+          implementation("org.apache.pekko:pekko-actor_2.13:1.+")
         }
       }
     }
