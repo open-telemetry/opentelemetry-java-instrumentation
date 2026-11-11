@@ -29,7 +29,8 @@ dependencies {
 
   library("org.apache.pekko:pekko-actor_2.12:1.0.1")
 
-  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:latest.release")
+  // pekko 2 support has not been backported yet
+  latestDepTestLibrary("org.apache.pekko:pekko-actor_2.13:1.+") // documented limitation
 
   testImplementation(project(":instrumentation:executors:testing"))
 }
@@ -42,7 +43,7 @@ testing {
     register<JvmTestSuite>("scala3Test") {
       dependencies {
         implementation("org.scala-lang:scala3-library_3:3.3.6")
-        implementation("org.apache.pekko:pekko-actor_3:${baseVersion("1.0.1").orLatest()}")
+        implementation("org.apache.pekko:pekko-actor_3:${baseVersion("1.0.1").orLatest("1.+")}")
         implementation(project(":instrumentation:executors:testing"))
       }
     }

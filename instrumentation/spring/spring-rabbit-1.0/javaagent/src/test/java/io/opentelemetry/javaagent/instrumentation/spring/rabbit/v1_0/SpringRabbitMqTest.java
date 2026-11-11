@@ -689,7 +689,7 @@ class SpringRabbitMqTest {
   }
 
   private static void verifyNackSpan(SpanDataAssert span) {
-    verifySettleSpan(span, "nack");
+    verifySettleSpan(span, testLatestDeps() ? "reject" : "nack");
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

@@ -26,6 +26,7 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:mongo:mongo-async-3.3:javaagent"))
   testInstrumentation(project(":instrumentation:mongo:mongo-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
 }
 
 tasks {

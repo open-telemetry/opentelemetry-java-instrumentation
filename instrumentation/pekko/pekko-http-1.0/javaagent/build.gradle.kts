@@ -65,8 +65,9 @@ dependencies {
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
-  latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:latest.release")
-  latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:latest.release")
+  // pekko 2 support has not been backported yet
+  latestDepTestLibrary("org.apache.pekko:pekko-http_2.13:1.+") // documented limitation
+  latestDepTestLibrary("org.apache.pekko:pekko-stream_2.13:1.+") // documented limitation
 }
 
 testing {
@@ -77,20 +78,20 @@ testing {
     register<JvmTestSuite>("scala3Test") {
       dependencies {
         implementation("org.scala-lang:scala3-library_3:3.3.6")
-        implementation("org.apache.pekko:pekko-http_3:${baseVersion("1.0.0").orLatest()}")
-        implementation("org.apache.pekko:pekko-stream_3:${baseVersion("1.0.1").orLatest()}")
+        implementation("org.apache.pekko:pekko-http_3:${baseVersion("1.0.0").orLatest("1.+")}")
+        implementation("org.apache.pekko:pekko-stream_3:${baseVersion("1.0.1").orLatest("1.+")}")
       }
     }
 
     register<JvmTestSuite>("tapirTest") {
       dependencies {
         val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
-        implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest()}")
-        implementation("org.apache.pekko:pekko-stream_$scalaVersion:${baseVersion("1.0.1").orLatest()}")
-        implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_$scalaVersion:${baseVersion("1.7.0").orLatest()}")
+        implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest("1.+")}")
+        implementation("org.apache.pekko:pekko-stream_$scalaVersion:${baseVersion("1.0.1").orLatest("1.+")}")
+        implementation("com.softwaremill.sttp.tapir:tapir-pekko-http-server_$scalaVersion:${baseVersion("1.7.0").orLatest("1.+")}")
         if (otelProps.testLatestDeps) {
-          implementation("org.apache.pekko:pekko-slf4j_2.13:latest.release")
-          implementation("org.apache.pekko:pekko-actor_2.13:latest.release")
+          implementation("org.apache.pekko:pekko-slf4j_2.13:1.+")
+          implementation("org.apache.pekko:pekko-actor_2.13:1.+")
         }
       }
     }

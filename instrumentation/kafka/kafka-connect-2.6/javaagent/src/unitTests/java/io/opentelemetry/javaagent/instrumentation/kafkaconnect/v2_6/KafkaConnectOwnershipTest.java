@@ -77,6 +77,7 @@ class KafkaConnectOwnershipTest {
         .isFalse();
   }
 
+  @SuppressWarnings("removal")
   private static ConsumerRecords<String, String> records() {
     TopicPartition partition = new TopicPartition("topic", 0);
     ConsumerRecord<String, String> record = new ConsumerRecord<>("topic", 0, 0, "key", "value");

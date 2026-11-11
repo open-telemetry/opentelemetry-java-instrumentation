@@ -38,7 +38,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
   testInstrumentation(project(":instrumentation:executors:javaagent"))
 
-  latestDepTestLibrary("org.apache.pekko:pekko-remote_2.13:latest.release")
+  // pekko 2 support has not been backported yet
+  latestDepTestLibrary("org.apache.pekko:pekko-remote_2.13:1.+") // documented limitation
 }
 
 testing {
@@ -48,7 +49,7 @@ testing {
     register<JvmTestSuite>("scala3Test") {
       dependencies {
         implementation("org.scala-lang:scala3-library_3:3.3.6")
-        implementation("org.apache.pekko:pekko-remote_3:${baseVersion("1.0.1").orLatest()}")
+        implementation("org.apache.pekko:pekko-remote_3:${baseVersion("1.0.1").orLatest("1.+")}")
         if (otelProps.testLatestDeps) {
           implementation("io.netty:netty-transport:4.2.17.Final")
           implementation("io.netty:netty-handler:4.2.17.Final")
