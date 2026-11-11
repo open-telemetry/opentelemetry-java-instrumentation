@@ -269,8 +269,12 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         span.hasName("chat amazon.nova-micro-v1:0")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
+                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 6),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")),
                                 equalTo(
                                     GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
                                     cacheTokensSupported ? 1024L : null),
@@ -312,8 +316,13 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                         span.hasName("chat amazon.titan-text-lite-v1")
                             .hasKind(SpanKind.CLIENT)
                             .hasAttributesSatisfying(
+                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                                equalTo(GEN_AI_REQUEST_STREAM, true),
                                 equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
                                 equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 26),
+                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")),
                                 equalTo(
                                     GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
                                     cacheTokensSupported ? 1024L : null),
