@@ -10,6 +10,8 @@ import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -27,6 +29,7 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -43,6 +46,8 @@ import java.util.stream.Stream;
 import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageContext;
+import org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageBatch;
@@ -62,12 +67,14 @@ class RocketMqInstrumenterFactoryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void capturesProducerServerAndExperimentalMessageTag(boolean captureExperimentalSpanAttributes) {
+  void capturesProducerServerPeerAndExperimentalMessageTag(
+      boolean captureExperimentalSpanAttributes) {
     SendMessageContext request = mock(SendMessageContext.class);
     Message message = new Message("topic", new byte[0]);
     message.setTags("tag");
     when(request.getMessage()).thenReturn(message);
     when(request.getBrokerAddr()).thenReturn("broker.example:10911");
+    when(request.getProducer()).thenReturn(producer());
     Instrumenter<SendMessageContext, Void> instrumenter =
         RocketMqInstrumenterFactory.createProducerInstrumenter(
             testing.getOpenTelemetry(),
@@ -90,8 +97,10 @@ class RocketMqInstrumenterFactoryTest {
                             equalTo(MESSAGING_DESTINATION_NAME, "topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(SERVER_ADDRESS, "broker.example"),
-                            equalTo(SERVER_PORT, 10911),
+                            equalTo(SERVER_ADDRESS, "ns.example"),
+                            equalTo(SERVER_PORT, 9876),
+                            equalTo(NETWORK_PEER_ADDRESS, "broker.example"),
+                            equalTo(NETWORK_PEER_PORT, 10911),
                             equalTo(
                                 stringKey("rocketmq.message.tag"),
                                 captureExperimentalSpanAttributes ? "tag" : null))));
@@ -99,7 +108,7 @@ class RocketMqInstrumenterFactoryTest {
 
   @ParameterizedTest
   @MethodSource("producerCases")
-  void capturesProducerServer(String brokerAddress, String expectedAddress, Long expectedPort) {
+  void capturesProducerPeer(String brokerAddress, String expectedAddress, Long expectedPort) {
     SendMessageContext request = new SendMessageContext();
     request.setMessage(new Message("topic", new byte[0]));
     request.setBrokerAddr(brokerAddress);
@@ -107,11 +116,13 @@ class RocketMqInstrumenterFactoryTest {
         RocketMqInstrumenterFactory.createProducerInstrumenter(
             testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
 
+    request.setProducer(producer());
     Context context = instrumenter.start(Context.root(), request);
     ReadableSpan startedSpan = (ReadableSpan) Span.fromContext(context);
-    assertThat(startedSpan.toSpanData().getAttributes().get(SERVER_ADDRESS))
+    assertThat(startedSpan.toSpanData().getAttributes().get(NETWORK_PEER_ADDRESS))
         .isEqualTo(expectedAddress);
-    assertThat(startedSpan.toSpanData().getAttributes().get(SERVER_PORT)).isEqualTo(expectedPort);
+    assertThat(startedSpan.toSpanData().getAttributes().get(NETWORK_PEER_PORT))
+        .isEqualTo(expectedPort);
     instrumenter.end(context, request, null, null);
 
     assertSendSpan(expectedAddress, expectedPort, null);
@@ -129,7 +140,7 @@ class RocketMqInstrumenterFactoryTest {
 
   @ParameterizedTest
   @MethodSource("batchProducerCases")
-  void capturesBatchServerAtCompletion(
+  void capturesBatchPeerAtCompletion(
       String finalAddress, String expectedAddress, Long expectedPort) {
     SendMessageContext request = new SendMessageContext();
     request.setMessage(
@@ -139,10 +150,14 @@ class RocketMqInstrumenterFactoryTest {
         RocketMqInstrumenterFactory.createBatchProducerInstrumenter(
             testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
 
+    request.setProducer(producer());
     Context context = instrumenter.start(Context.root(), request);
     ReadableSpan startedSpan = (ReadableSpan) Span.fromContext(context);
-    assertThat(startedSpan.toSpanData().getAttributes().get(SERVER_ADDRESS)).isNull();
-    assertThat(startedSpan.toSpanData().getAttributes().get(SERVER_PORT)).isNull();
+    assertThat(startedSpan.toSpanData().getAttributes().get(SERVER_ADDRESS))
+        .isEqualTo("ns.example");
+    assertThat(startedSpan.toSpanData().getAttributes().get(SERVER_PORT)).isEqualTo(9876L);
+    assertThat(startedSpan.toSpanData().getAttributes().get(NETWORK_PEER_ADDRESS)).isNull();
+    assertThat(startedSpan.toSpanData().getAttributes().get(NETWORK_PEER_PORT)).isNull();
 
     // Both batch implementations copy this value from the send hook after span creation.
     request.setBrokerAddr(finalAddress);
@@ -169,19 +184,27 @@ class RocketMqInstrumenterFactoryTest {
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchCount),
-                            equalTo(SERVER_ADDRESS, expectedAddress),
-                            equalTo(SERVER_PORT, expectedPort))));
+                            equalTo(SERVER_ADDRESS, "ns.example"),
+                            equalTo(SERVER_PORT, 9876),
+                            equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
+                            equalTo(NETWORK_PEER_PORT, expectedPort))));
   }
 
   @ParameterizedTest
   @MethodSource("consumerCases")
-  void capturesConsumerServer(
+  void capturesConsumerServerAndPeer(
       List<MessageExt> messages, String expectedAddress, Long expectedPort) {
     RocketMqConsumerInstrumenter instrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
             testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
     RocketMqConsumerInstrumenter.ConsumerContext context =
-        requireNonNull(instrumenter.start(Context.root(), messages, "consumer-group", null));
+        requireNonNull(
+            instrumenter.start(
+                Context.root(),
+                messages,
+                "consumer-group",
+                null,
+                RocketMqServerAttributesHelper.createAttributes("ns.example:9876")));
     ConsumeMessageContext response = new ConsumeMessageContext();
     response.setSuccess(true);
     instrumenter.end(context, response);
@@ -200,8 +223,10 @@ class RocketMqInstrumenterFactoryTest {
                             equalTo(
                                 MESSAGING_BATCH_MESSAGE_COUNT,
                                 messages.size() > 1 ? (long) messages.size() : null),
-                            equalTo(SERVER_ADDRESS, expectedAddress),
-                            equalTo(SERVER_PORT, expectedPort))));
+                            equalTo(SERVER_ADDRESS, "ns.example"),
+                            equalTo(SERVER_PORT, 9876),
+                            equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
+                            equalTo(NETWORK_PEER_PORT, expectedPort))));
   }
 
   private static Stream<Arguments> consumerCases() throws UnknownHostException {
@@ -237,6 +262,13 @@ class RocketMqInstrumenterFactoryTest {
     return message;
   }
 
+  private static DefaultMQProducerImpl producer() {
+    DefaultMQProducer producer = new DefaultMQProducer("producer-group");
+    producer.setNamesrvAddr("ns.example:9876");
+    RocketMqServerAttributesHelper.initialize(producer);
+    return producer.getDefaultMQProducerImpl();
+  }
+
   @Test
   void marksProcessSpanAsErroredWhenConsumeTimedOut() {
     MessageExt message = new MessageExt();
@@ -253,7 +285,12 @@ class RocketMqInstrumenterFactoryTest {
 
     RocketMqConsumerInstrumenter.ConsumerContext consumerContext =
         requireNonNull(
-            instrumenter.start(Context.root(), singletonList(message), "consumer-group", null));
+            instrumenter.start(
+                Context.root(),
+                singletonList(message),
+                "consumer-group",
+                null,
+                Attributes.empty()));
     instrumenter.end(consumerContext, response);
 
     testing.waitAndAssertTraces(

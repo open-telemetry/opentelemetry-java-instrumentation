@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
@@ -18,8 +19,12 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
 
   private final RocketMqConsumerInstrumenter instrumenter;
 
-  TracingConsumeMessageHookImpl(RocketMqConsumerInstrumenter instrumenter) {
+  private final Attributes serverAttributes;
+
+  TracingConsumeMessageHookImpl(
+      RocketMqConsumerInstrumenter instrumenter, Attributes serverAttributes) {
     this.instrumenter = instrumenter;
+    this.serverAttributes = serverAttributes;
   }
 
   @Override
@@ -38,7 +43,8 @@ final class TracingConsumeMessageHookImpl implements ConsumeMessageHook {
             parentContext,
             context.getMsgList(),
             context.getConsumerGroup(),
-            RocketMqNamespaceUtil.getNamespace(context));
+            RocketMqNamespaceUtil.getNamespace(context),
+            serverAttributes);
 
     // it's safe to store the scope in the rocketMq message context, both before() and after()
     // methods are always called from the same thread; see:

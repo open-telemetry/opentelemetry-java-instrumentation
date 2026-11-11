@@ -7,8 +7,8 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -137,7 +137,9 @@ class RocketMqInstrumenterFactory {
           AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
         String namespace = RocketMqNamespaceUtil.getNamespace(request);
         attributes.put(ROCKETMQ_NAMESPACE, namespace);
-        captureProducerServerAttributes(attributes, request);
+        attributes.putAll(
+            RocketMqServerAttributesHelper.getProducerAttributes(request.getProducer()));
+        captureProducerNetworkPeerAttributes(attributes, request);
       }
 
       @Override
@@ -148,12 +150,12 @@ class RocketMqInstrumenterFactory {
           @Nullable Void unused,
           @Nullable Throwable error) {
         // Batch sends start before routing; the send hook supplies the address later.
-        captureProducerServerAttributes(attributes, request);
+        captureProducerNetworkPeerAttributes(attributes, request);
       }
     };
   }
 
-  private static void captureProducerServerAttributes(
+  private static void captureProducerNetworkPeerAttributes(
       AttributesBuilder attributes, SendMessageContext request) {
     String brokerAddress = request.getBrokerAddr();
     if (brokerAddress == null) {
@@ -169,8 +171,8 @@ class RocketMqInstrumenterFactory {
       address = address.substring(1, address.length() - 1);
     }
 
-    attributes.put(SERVER_ADDRESS, address);
-    attributes.put(SERVER_PORT, port);
+    attributes.put(NETWORK_PEER_ADDRESS, address);
+    attributes.put(NETWORK_PEER_PORT, port);
   }
 
   static RocketMqConsumerInstrumenter createConsumerInstrumenter(
@@ -261,7 +263,8 @@ class RocketMqInstrumenterFactory {
           AttributesBuilder attributes, Context parentContext, RocketMqConsumerRequest request) {
         attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
         attributes.put(ROCKETMQ_NAMESPACE, request.getNamespace());
-        captureConsumerServerAttributes(attributes, request);
+        attributes.putAll(request.getServerAttributes());
+        captureConsumerNetworkPeerAttributes(attributes, request);
       }
 
       @Override
@@ -274,9 +277,10 @@ class RocketMqInstrumenterFactory {
     };
   }
 
-  private static void captureConsumerServerAttributes(
+  private static void captureConsumerNetworkPeerAttributes(
       AttributesBuilder attributes, RocketMqConsumerRequest request) {
-    // MessageDecoder constructs storeHost as an InetSocketAddress.
+    // MessageDecoder constructs storeHost as an InetSocketAddress. This is storage metadata,
+    // not an observed connection peer.
     InetSocketAddress storeHost = (InetSocketAddress) request.getMessage().getStoreHost();
     if (storeHost == null) {
       return;
@@ -290,8 +294,8 @@ class RocketMqInstrumenterFactory {
       }
     }
 
-    attributes.put(SERVER_ADDRESS, storeHost.getHostString());
-    attributes.put(SERVER_PORT, storeHost.getPort());
+    attributes.put(NETWORK_PEER_ADDRESS, storeHost.getHostString());
+    attributes.put(NETWORK_PEER_PORT, storeHost.getPort());
   }
 
   private static SpanStatusExtractor<RocketMqConsumerRequest, ConsumeMessageContext>

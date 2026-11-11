@@ -13,6 +13,8 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -203,8 +205,10 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                                 equalTo(
                                     stringKey("rocketmq.send_result"), experimental("SEND_OK"))),
                     span ->
@@ -222,8 +226,10 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                                 satisfies(
                                     longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                                 satisfies(
@@ -360,8 +366,10 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                                 equalTo(
                                     stringKey("rocketmq.send_result"), experimental("SEND_OK"))),
                     span ->
@@ -379,8 +387,10 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                                 satisfies(
                                     longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                                 satisfies(
@@ -548,8 +558,10 @@ abstract class AbstractRocketMqClientTest {
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
                             equalTo(MESSAGING_MESSAGE_ID, null),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                             equalTo(stringKey("rocketmq.send_result"), experimental("SEND_OK")));
                     if (hasBatchCreateSpans) {
                       span.hasLinksSatisfying(
@@ -573,8 +585,10 @@ abstract class AbstractRocketMqClientTest {
                             equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(
@@ -629,8 +643,10 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                                 equalTo(stringKey("rocketmq.send_result"), experimental("SEND_OK")),
                                 equalTo(
                                     headerAttributeKey("Test-Message-Header"),
@@ -650,8 +666,10 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                                 satisfies(
                                     longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                                 satisfies(
@@ -687,8 +705,10 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                 equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, BaseConf.getBrokerPort())),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort())),
                     span ->
                         span.hasName("process " + sharedTopic)
                             .hasKind(SpanKind.CONSUMER)
@@ -704,8 +724,10 @@ abstract class AbstractRocketMqClientTest {
                                 satisfies(
                                     MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                                 equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, BaseConf.getBrokerPort()),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, BaseConf.getNameServerPort()),
+                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                                equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                                 satisfies(
                                     longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                                 satisfies(

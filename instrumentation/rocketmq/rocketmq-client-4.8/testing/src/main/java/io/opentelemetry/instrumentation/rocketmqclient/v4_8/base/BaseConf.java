@@ -35,6 +35,10 @@ public class BaseConf {
 
   private BaseConf() {}
 
+  public static int getNameServerPort() {
+    return namesrvController.getNettyServerConfig().getListenPort();
+  }
+
   public static int getBrokerPort() {
     return brokerController.getNettyServerConfig().getListenPort();
   }

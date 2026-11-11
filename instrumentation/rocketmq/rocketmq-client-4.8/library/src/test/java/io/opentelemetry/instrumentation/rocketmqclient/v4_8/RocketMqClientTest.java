@@ -50,7 +50,7 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
                         .build())
                 .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
                 .build()
-                .createConsumeMessageHook());
+                .createConsumeMessageHook(consumer));
   }
 
   @Override

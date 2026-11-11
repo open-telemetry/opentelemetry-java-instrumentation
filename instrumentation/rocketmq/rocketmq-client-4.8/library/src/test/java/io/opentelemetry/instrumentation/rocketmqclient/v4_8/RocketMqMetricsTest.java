@@ -35,6 +35,7 @@ import java.util.stream.Stream;
 import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageContext;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.common.MixAll;
 import org.apache.rocketmq.common.message.Message;
 import org.apache.rocketmq.common.message.MessageBatch;
@@ -59,6 +60,10 @@ class RocketMqMetricsTest {
       Message message, long expectedCount, Throwable error, String errorType) {
     SendMessageContext request = new SendMessageContext();
     request.setMessage(message);
+    DefaultMQProducer producer = new DefaultMQProducer("producer-group");
+    producer.setNamesrvAddr("ns.example:9876");
+    RocketMqServerAttributesHelper.initialize(producer);
+    request.setProducer(producer.getDefaultMQProducerImpl());
     boolean batch = message instanceof MessageBatch;
     if (!batch) {
       request.setBrokerAddr("127.0.0.1:10911");
@@ -132,7 +137,13 @@ class RocketMqMetricsTest {
             testing.getOpenTelemetry(), NO_HEADERS, false);
 
     RocketMqConsumerInstrumenter.ConsumerContext consumerContext =
-        requireNonNull(instrumenter.start(Context.root(), messages, "consumer-group", null));
+        requireNonNull(
+            instrumenter.start(
+                Context.root(),
+                messages,
+                "consumer-group",
+                null,
+                RocketMqServerAttributesHelper.createAttributes("ns.example:9876")));
     instrumenter.end(consumerContext, response);
 
     String destination = messages.get(0).getTopic();
@@ -218,8 +229,8 @@ class RocketMqMetricsTest {
                                                 equalTo(
                                                     stringKey("messaging.system.name"), "rocketmq"),
                                                 equalTo(ERROR_TYPE, errorType),
-                                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                equalTo(SERVER_PORT, 10911),
+                                                equalTo(SERVER_ADDRESS, "ns.example"),
+                                                equalTo(SERVER_PORT, 9876),
                                                 equalTo(
                                                     MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
                                                 equalTo(
@@ -251,8 +262,8 @@ class RocketMqMetricsTest {
                                                 equalTo(
                                                     stringKey("messaging.system.name"), "rocketmq"),
                                                 equalTo(ERROR_TYPE, errorType),
-                                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                                equalTo(SERVER_PORT, 10911),
+                                                equalTo(SERVER_ADDRESS, "ns.example"),
+                                                equalTo(SERVER_PORT, 9876),
                                                 equalTo(
                                                     MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
                                                 equalTo(MESSAGING_DESTINATION_NAME, destination),
