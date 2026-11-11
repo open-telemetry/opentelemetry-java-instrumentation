@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -53,6 +54,45 @@ class RocketMqReceiveSpanLinksExtractorTest {
     RocketMqReceiveRequest.create(receiveRequest, asList(first, second));
 
     verifyNoInteractions(receiveRequest, first, second);
+  }
+
+  @Test
+  void doesNotReadExperimentalAttributesWhenDisabled() {
+    MessageView first = message("topic", "message-1", "tag", null, null, "key", TRACEPARENT);
+    MessageView second = message("topic", "message-2", "tag", null, null, "key", TRACEPARENT);
+    RocketMqReceiveRequest request = request(first, second);
+
+    assertThat(request.getDestination()).isEqualTo("topic");
+    batchAttributes(request, false);
+    linkAttributes(request, 2, false);
+
+    for (MessageView message : asList(first, second)) {
+      verify(message, never()).getLiteTopic();
+      verify(message, never()).getPriority();
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"0,0,0", "0,7,", ",,"})
+  void cachesExperimentalBatchValues(
+      Integer firstPriority, Integer secondPriority, Long expectedPriority) {
+    MessageView first = message("topic", "message-1", "tag", null, null, "key", TRACEPARENT);
+    MessageView second = message("topic", "message-2", "tag", null, null, "key", TRACEPARENT);
+    when(first.getLiteTopic()).thenReturn(Optional.empty());
+    when(second.getLiteTopic()).thenReturn(Optional.empty());
+    when(first.getPriority()).thenReturn(Optional.ofNullable(firstPriority));
+    when(second.getPriority()).thenReturn(Optional.ofNullable(secondPriority));
+    RocketMqReceiveRequest request = request(first, second);
+
+    for (int i = 0; i < 2; i++) {
+      assertThat(request.getMessageLiteTopic()).isNull();
+      assertThat(request.getMessagePriority()).isEqualTo(expectedPriority);
+    }
+
+    for (MessageView message : asList(first, second)) {
+      verify(message, times(1)).getLiteTopic();
+      verify(message, times(1)).getPriority();
+    }
   }
 
   @Test
