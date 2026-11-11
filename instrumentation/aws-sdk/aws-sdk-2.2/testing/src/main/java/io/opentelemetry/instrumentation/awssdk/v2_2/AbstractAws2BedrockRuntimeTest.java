@@ -20,6 +20,8 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TOP_P;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOKEN_TYPE;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_OUTPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.CHAT;
@@ -80,6 +82,7 @@ import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelWithRespo
 import software.amazon.awssdk.services.bedrockruntime.model.InvokeModelWithResponseStreamResponseHandler;
 import software.amazon.awssdk.services.bedrockruntime.model.Message;
 import software.amazon.awssdk.services.bedrockruntime.model.PayloadPart;
+import software.amazon.awssdk.services.bedrockruntime.model.TokenUsage;
 import software.amazon.awssdk.services.bedrockruntime.model.Tool;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolConfiguration;
 import software.amazon.awssdk.services.bedrockruntime.model.ToolInputSchema;
@@ -236,6 +239,47 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 ? KeyValue.of(
                                     "content", Value.of("Hi there! How can I help you today?"))
                                 : SKIP)));
+  }
+
+  @Test
+  void testConverseCacheTokens() {
+    BedrockRuntimeClientBuilder builder = BedrockRuntimeClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeClient client = builder.build();
+
+    String modelId = "amazon.nova-micro-v1:0";
+    client.converse(
+        ConverseRequest.builder()
+            .modelId(modelId)
+            .messages(
+                Message.builder()
+                    .role(ConversationRole.USER)
+                    .content(ContentBlock.fromText("Say this is a cached test"))
+                    .build())
+            .build());
+
+    // TokenUsage has no cache token fields before bedrockruntime 2.31.12.
+    boolean cacheTokensSupported =
+        TokenUsage.builder().build().sdkFields().stream()
+            .anyMatch(field -> field.memberName().equals("cacheReadInputTokens"));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("chat amazon.nova-micro-v1:0")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 6),
+                                equalTo(
+                                    GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+                                    cacheTokensSupported ? 1024L : null),
+                                equalTo(
+                                    GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+                                    cacheTokensSupported ? 24L : null))));
   }
 
   @Test

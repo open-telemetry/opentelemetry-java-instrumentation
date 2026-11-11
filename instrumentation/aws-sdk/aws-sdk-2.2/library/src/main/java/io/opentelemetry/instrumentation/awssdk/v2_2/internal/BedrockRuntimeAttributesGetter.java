@@ -133,6 +133,26 @@ class BedrockRuntimeAttributesGetter
 
   @Nullable
   @Override
+  public Long getUsageCacheReadInputTokens(
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    return BedrockRuntimeAccess.getUsageCacheReadInputTokens(response);
+  }
+
+  @Nullable
+  @Override
+  public Long getUsageCacheCreationInputTokens(
+      ExecutionAttributes executionAttributes, @Nullable Response response) {
+    if (response == null) {
+      return null;
+    }
+    return BedrockRuntimeAccess.getUsageCacheCreationInputTokens(response);
+  }
+
+  @Nullable
+  @Override
   public Long getUsageOutputTokens(
       ExecutionAttributes executionAttributes, @Nullable Response response) {
     if (response == null) {
