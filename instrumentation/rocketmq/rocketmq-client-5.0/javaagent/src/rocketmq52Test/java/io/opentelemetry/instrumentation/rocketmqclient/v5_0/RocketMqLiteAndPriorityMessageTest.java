@@ -75,6 +75,8 @@ import org.testcontainers.utility.MountableFile;
 @SuppressWarnings("deprecation") // using deprecated semconv
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class RocketMqLiteAndPriorityMessageTest {
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
+      Boolean.getBoolean("otel.instrumentation.rocketmq-client.experimental-span-attributes");
   private static final boolean RECEIVE_TELEMETRY_ENABLED =
       Boolean.getBoolean(
           "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
@@ -335,8 +337,8 @@ class RocketMqLiteAndPriorityMessageTest {
             equalTo(stringKey("rocketmq.message.tag"), "tag"),
             equalTo(stringArrayKey("rocketmq.message.keys"), singletonList("key")),
             equalTo(stringKey("rocketmq.message.type"), liteTopic != null ? "lite" : "priority"),
-            equalTo(stringKey("rocketmq.message.lite_topic"), liteTopic),
-            equalTo(longKey("rocketmq.message.priority"), priority));
+            equalTo(stringKey("rocketmq.message.lite_topic"), experimental(liteTopic)),
+            equalTo(longKey("rocketmq.message.priority"), experimental(priority)));
   }
 
   private static SpanDataAssert assertReceive(
@@ -358,8 +360,8 @@ class RocketMqLiteAndPriorityMessageTest {
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
             equalTo(stringKey("rocketmq.message.tag"), "tag"),
             equalTo(stringArrayKey("rocketmq.message.keys"), singletonList("key")),
-            equalTo(stringKey("rocketmq.message.lite_topic"), liteTopic),
-            equalTo(longKey("rocketmq.message.priority"), priority))
+            equalTo(stringKey("rocketmq.message.lite_topic"), experimental(liteTopic)),
+            equalTo(longKey("rocketmq.message.priority"), experimental(priority)))
         .hasLinks(
             LinkData.create(
                 asRemote(send.getSpanContext()),
@@ -388,10 +390,14 @@ class RocketMqLiteAndPriorityMessageTest {
             equalTo(MESSAGING_MESSAGE_ID, send.getAttributes().get(MESSAGING_MESSAGE_ID)),
             equalTo(stringKey("rocketmq.message.tag"), "tag"),
             equalTo(stringArrayKey("rocketmq.message.keys"), singletonList("key")),
-            equalTo(stringKey("rocketmq.message.lite_topic"), liteTopic),
-            equalTo(longKey("rocketmq.message.priority"), priority),
+            equalTo(stringKey("rocketmq.message.lite_topic"), experimental(liteTopic)),
+            equalTo(longKey("rocketmq.message.priority"), experimental(priority)),
             equalTo(ERROR_TYPE, failure ? "FAILURE" : null))
         .hasLinks(LinkData.create(asRemote(send.getSpanContext())));
+  }
+
+  private static <T> T experimental(T value) {
+    return EXPERIMENTAL_ATTRIBUTES ? value : null;
   }
 
   private static void assertPushTraces(

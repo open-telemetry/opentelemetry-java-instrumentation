@@ -29,11 +29,19 @@ class RocketMqReceiveBatchMessageAttributeExtractor
   private static final AttributeKey<String> ROCKETMQ_MESSAGE_TAG =
       AttributeKey.stringKey("rocketmq.message.tag");
 
+  private final boolean captureExperimentalSpanAttributes;
+
+  RocketMqReceiveBatchMessageAttributeExtractor(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, RocketMqReceiveRequest request) {
-    attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, request.getMessageLiteTopic());
-    attributes.put(ROCKETMQ_MESSAGE_PRIORITY, request.getMessagePriority());
+    if (captureExperimentalSpanAttributes) {
+      attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, request.getMessageLiteTopic());
+      attributes.put(ROCKETMQ_MESSAGE_PRIORITY, request.getMessagePriority());
+    }
     attributes.put(ROCKETMQ_MESSAGE_TAG, request.getMessageTag());
     attributes.put(ROCKETMQ_MESSAGE_GROUP, request.getMessageGroup());
     attributes.put(ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, request.getMessageDeliveryTimestamp());

@@ -255,6 +255,8 @@ readonly INSTRUMENTATIONS=(
   "rocketmq:rocketmq-client-5.0:javaagent:test"
   "rocketmq:rocketmq-client-5.0:javaagent:rocketmq52Test"
   "rocketmq:rocketmq-client-5.0:javaagent:rocketmq52TestReceiveTelemetry"
+  "rocketmq:rocketmq-client-5.0:javaagent:rocketmq52TestExperimental"
+  "rocketmq:rocketmq-client-5.0:javaagent:rocketmq52TestExperimentalReceiveTelemetry"
   "runtime-telemetry:library:test"
   "runtime-telemetry:library:testJava17G1"
   "runtime-telemetry:library:testJava17"

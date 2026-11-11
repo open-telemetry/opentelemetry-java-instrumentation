@@ -35,12 +35,20 @@ class RocketMqConsumerProcessAttributeExtractor
   private static final AttributeKey<String> ROCKETMQ_NAMESPACE =
       AttributeKey.stringKey("rocketmq.namespace");
 
+  private final boolean captureExperimentalSpanAttributes;
+
+  RocketMqConsumerProcessAttributeExtractor(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, MessageView messageView) {
-    attributes.put(
-        ROCKETMQ_MESSAGE_LITE_TOPIC, RocketMqMessageAttributes.getLiteTopic(messageView));
-    attributes.put(ROCKETMQ_MESSAGE_PRIORITY, RocketMqMessageAttributes.getPriority(messageView));
+    if (captureExperimentalSpanAttributes) {
+      attributes.put(
+          ROCKETMQ_MESSAGE_LITE_TOPIC, RocketMqMessageAttributes.getLiteTopic(messageView));
+      attributes.put(ROCKETMQ_MESSAGE_PRIORITY, RocketMqMessageAttributes.getPriority(messageView));
+    }
     messageView.getTag().ifPresent(s -> attributes.put(ROCKETMQ_MESSAGE_TAG, s));
     messageView.getMessageGroup().ifPresent(s -> attributes.put(ROCKETMQ_MESSAGE_GROUP, s));
     messageView

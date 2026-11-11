@@ -5,15 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static java.util.logging.Level.FINE;
+
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.javaagent.bootstrap.ExceptionLogger;
 import java.lang.reflect.Method;
 import java.util.Optional;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.message.MessageView;
 
 final class RocketMqMessageAttributes {
+  private static final Logger logger = Logger.getLogger(RocketMqMessageAttributes.class.getName());
+
   static final AttributeKey<String> ROCKETMQ_MESSAGE_LITE_TOPIC =
       AttributeKey.stringKey("rocketmq.message.lite_topic");
   static final AttributeKey<Long> ROCKETMQ_MESSAGE_PRIORITY =
@@ -61,7 +65,7 @@ final class RocketMqMessageAttributes {
       // The getters were added in 5.1 (LiteTopic) and 5.2 (priority).
       return null;
     } catch (Throwable t) {
-      ExceptionLogger.logSuppressedError("Error finding RocketMQ message attribute getter", t);
+      logger.log(FINE, "Error finding RocketMQ message attribute getter", t);
       return null;
     }
   }
@@ -74,7 +78,7 @@ final class RocketMqMessageAttributes {
     try {
       return ((Optional<?>) method.invoke(message)).orElse(null);
     } catch (Throwable t) {
-      ExceptionLogger.logSuppressedError("Error reading RocketMQ message attribute", t);
+      logger.log(FINE, "Error reading RocketMQ message attribute", t);
       return null;
     }
   }

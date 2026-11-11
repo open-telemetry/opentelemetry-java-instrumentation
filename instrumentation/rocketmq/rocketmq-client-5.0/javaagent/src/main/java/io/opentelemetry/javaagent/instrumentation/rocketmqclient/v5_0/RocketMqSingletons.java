@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 import java.util.List;
@@ -31,17 +32,28 @@ public class RocketMqSingletons {
     boolean receiveInstrumentationEnabled =
         ExperimentalConfig.get().messagingReceiveInstrumentationEnabled();
 
+    boolean captureExperimentalSpanAttributes =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "rocketmq_client")
+            .getBoolean("experimental_span_attributes/development", false);
+
     producerInstrumenter =
-        RocketMqInstrumenterFactory.createProducerInstrumenter(openTelemetry, messagingHeaders);
+        RocketMqInstrumenterFactory.createProducerInstrumenter(
+            openTelemetry, messagingHeaders, captureExperimentalSpanAttributes);
     consumerReceiveInstrumenter =
         RocketMqInstrumenterFactory.createConsumerReceiveInstrumenter(
-            openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
+            openTelemetry,
+            messagingHeaders,
+            receiveInstrumentationEnabled,
+            captureExperimentalSpanAttributes);
     simpleConsumerReceiveInstrumenter =
         RocketMqInstrumenterFactory.createConsumerReceiveInstrumenter(
-            openTelemetry, messagingHeaders, true);
+            openTelemetry, messagingHeaders, true, captureExperimentalSpanAttributes);
     consumerProcessInstrumenter =
         RocketMqInstrumenterFactory.createConsumerProcessInstrumenter(
-            openTelemetry, messagingHeaders, receiveInstrumentationEnabled);
+            openTelemetry,
+            messagingHeaders,
+            receiveInstrumentationEnabled,
+            captureExperimentalSpanAttributes);
   }
 
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> producerInstrumenter() {

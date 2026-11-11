@@ -36,10 +36,13 @@ class RocketMqReceiveSpanLinksExtractor implements SpanLinksExtractor<RocketMqRe
       AttributeKey.stringKey("rocketmq.message.tag");
 
   private final TextMapPropagator propagator;
+  private final boolean captureExperimentalSpanAttributes;
   private final MessageMapGetter getter = new MessageMapGetter();
 
-  RocketMqReceiveSpanLinksExtractor(TextMapPropagator propagator) {
+  RocketMqReceiveSpanLinksExtractor(
+      TextMapPropagator propagator, boolean captureExperimentalSpanAttributes) {
     this.propagator = propagator;
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
   }
 
   @Override
@@ -65,13 +68,15 @@ class RocketMqReceiveSpanLinksExtractor implements SpanLinksExtractor<RocketMqRe
       if (!Objects.equals(deliveryTimestamp, request.getMessageDeliveryTimestamp())) {
         attributes.put(ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, deliveryTimestamp);
       }
-      String liteTopic = RocketMqMessageAttributes.getLiteTopic(message);
-      if (!Objects.equals(liteTopic, request.getMessageLiteTopic())) {
-        attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, liteTopic);
-      }
-      Long priority = RocketMqMessageAttributes.getPriority(message);
-      if (!Objects.equals(priority, request.getMessagePriority())) {
-        attributes.put(ROCKETMQ_MESSAGE_PRIORITY, priority);
+      if (captureExperimentalSpanAttributes) {
+        String liteTopic = RocketMqMessageAttributes.getLiteTopic(message);
+        if (!Objects.equals(liteTopic, request.getMessageLiteTopic())) {
+          attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, liteTopic);
+        }
+        Long priority = RocketMqMessageAttributes.getPriority(message);
+        if (!Objects.equals(priority, request.getMessagePriority())) {
+          attributes.put(ROCKETMQ_MESSAGE_PRIORITY, priority);
+        }
       }
       ArrayList<String> messageKeys = new ArrayList<>(message.getKeys());
       if (request.getMessageKeys() == null
