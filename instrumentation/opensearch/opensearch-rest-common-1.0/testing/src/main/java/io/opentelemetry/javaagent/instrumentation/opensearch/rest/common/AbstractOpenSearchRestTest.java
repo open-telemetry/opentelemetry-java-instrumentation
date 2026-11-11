@@ -10,12 +10,15 @@ import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsT
 import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -65,6 +68,10 @@ public abstract class AbstractOpenSearchRestTest {
   protected abstract String getResponseAddress(Response response);
 
   protected abstract String getInstrumentationName();
+
+  protected boolean hasHttpClientNetworkPeerAttributes() {
+    return false;
+  }
 
   @BeforeAll
   void setUp() throws Exception {
@@ -201,6 +208,20 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasParent(trace.getSpan(0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS,
+                                    val -> {
+                                      if (hasHttpClientNetworkPeerAttributes()) {
+                                        val.isNotNull();
+                                      } else {
+                                        val.isNull();
+                                      }
+                                    }),
+                                equalTo(
+                                    NETWORK_PEER_PORT,
+                                    hasHttpClientNetworkPeerAttributes()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
@@ -275,6 +296,20 @@ public abstract class AbstractOpenSearchRestTest {
                             .hasParent(trace.getSpan(1))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                                satisfies(
+                                    NETWORK_PEER_ADDRESS,
+                                    val -> {
+                                      if (hasHttpClientNetworkPeerAttributes()) {
+                                        val.isNotNull();
+                                      } else {
+                                        val.isNull();
+                                      }
+                                    }),
+                                equalTo(
+                                    NETWORK_PEER_PORT,
+                                    hasHttpClientNetworkPeerAttributes()
+                                        ? Long.valueOf(httpHost.getPort())
+                                        : null),
                                 equalTo(SERVER_ADDRESS, httpHost.getHost()),
                                 equalTo(SERVER_PORT, httpHost.getPort()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),
