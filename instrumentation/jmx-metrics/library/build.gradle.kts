@@ -92,6 +92,10 @@ testing.suites {
       val registryDir = layout.projectDirectory.dir("../model").asFile.absolutePath
       inputs.dir(registryDir).withPathSensitivity(PathSensitivity.RELATIVE)
 
+      val weblogicEnabled =
+        providers.systemProperty("io.opentelemetry.jmx.weblogic.enabled").orElse("false")
+      inputs.property("weblogicEnabled", weblogicEnabled)
+
       jvmArgumentProviders += CommandLineArgumentProvider {
         listOf(
           "-Dio.opentelemetry.javaagent.path=${agentJarPath.get()}",
@@ -99,6 +103,7 @@ testing.suites {
           "-Dio.opentelemetry.testapp.path=${testAppWarPath.get()}",
           "-Dio.opentelemetry.registry.path=$registryDir",
           "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJarPath.get()}",
+          "-Dio.opentelemetry.jmx.weblogic.enabled=${weblogicEnabled.get()}",
         )
       }
     }
