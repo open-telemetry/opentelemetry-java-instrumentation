@@ -16,6 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.route.Pe
 import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.apache.pekko.http.Version;
 import org.apache.pekko.http.javadsl.model.HttpHeader;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
@@ -24,6 +25,7 @@ public class PekkoHttpServerSingletons {
 
   public static final VirtualField<HttpRequest, InetSocketAddress> HTTP_REQUEST_PEER_ADDRESS =
       VirtualField.find(HttpRequest.class, InetSocketAddress.class);
+  public static final boolean SHOULD_WRAP_HANDLER = Version.current().startsWith("1.1.");
 
   private static final Instrumenter<HttpRequest, HttpResponse> instrumenter;
 
