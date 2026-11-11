@@ -9,11 +9,16 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.instrumentation.hikaricp.v3_0.HikariTelemetry;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionPoolMetricsUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.javaagent.bootstrap.jdbc.DbInfo;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 
 public class HikariSingletons {
@@ -63,6 +68,21 @@ public class HikariSingletons {
     }
 
     return JdbcConnectionUrlParser.parse(config.getJdbcUrl(), config.getDataSourceProperties());
+  }
+
+  public static ScheduledExecutorService wrap(ScheduledExecutorService executor) {
+    return (ScheduledExecutorService)
+        Proxy.newProxyInstance(
+            HikariPoolInstrumentation.InitializeHouseKeepingExecutorServiceAdvice.class
+                .getClassLoader(),
+            new Class<?>[] {ScheduledExecutorService.class},
+            (proxy, method, args) -> {
+              try (Scope ignore = Context.root().makeCurrent()) {
+                return method.invoke(executor, args);
+              } catch (InvocationTargetException e) {
+                throw e.getCause();
+              }
+            });
   }
 
   private HikariSingletons() {}
