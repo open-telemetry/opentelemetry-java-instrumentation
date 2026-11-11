@@ -1,0 +1,25 @@
+---
+id: 9d3c2a71-5e84-4b0f-a6c2-7f1e0b8d4c55
+name: model_amazontitan-text-lite-v1_converse-stream
+request:
+  url: /model/amazon.titan-text-lite-v1/converse-stream
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "Say this is a cached stream test"
+          } ]
+        } ]
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  base64Body: AAAArAAAAFJVkJ0mCzpldmVudC10eXBlBwAMbWVzc2FnZVN0YXJ0DTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsicCI6ImFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6QUJDREVGR0hJSktMTU5PUFFSU1RVIiwicm9sZSI6ImFzc2lzdGFudCJ9mBqgYwAAAPIAAABXotkYAws6ZXZlbnQtdHlwZQcAEWNvbnRlbnRCbG9ja0RlbHRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsiY29udGVudEJsb2NrSW5kZXgiOjAsImRlbHRhIjp7InRleHQiOiJIZWxsbyEgSSdtIHNvcnJ5LCBidXQgSSdtIG5vdCBzdXJlIHdoYXQgeW91IG1lYW4uIENhbiB5b3UgcGxlYXNlIGNsYXJpZnkgeW91ciBxdWVzdGlvbj8ifSwicCI6ImFiIn149OkZAAAAsQAAAFbKjQoMCzpldmVudC10eXBlBwAQY29udGVudEJsb2NrU3RvcA06Y29udGVudC10eXBlBwAQYXBwbGljYXRpb24vanNvbg06bWVzc2FnZS10eXBlBwAFZXZlbnR7ImNvbnRlbnRCbG9ja0luZGV4IjowLCJwIjoiYWJjZGVmZ2hpamtsbW5vcHFyc3R1dnd4eXpBQkNERUZHSElKS0xNTk9QUVJTIn1DzHT/AAAAhQAAAFEASIHpCzpldmVudC10eXBlBwALbWVzc2FnZVN0b3ANOmNvbnRlbnQtdHlwZQcAEGFwcGxpY2F0aW9uL2pzb24NOm1lc3NhZ2UtdHlwZQcABWV2ZW50eyJwIjoiYWJjZCIsInN0b3BSZWFzb24iOiJlbmRfdHVybiJ9HPrdBQAAAP8AAABOPiJ0cgs6ZXZlbnQtdHlwZQcACG1ldGFkYXRhDTpjb250ZW50LXR5cGUHABBhcHBsaWNhdGlvbi9qc29uDTptZXNzYWdlLXR5cGUHAAVldmVudHsibWV0cmljcyI6eyJsYXRlbmN5TXMiOjEyNzF9LCJwIjoiYWJjZGVmIiwidXNhZ2UiOnsiaW5wdXRUb2tlbnMiOjgsIm91dHB1dFRva2VucyI6MjYsInRvdGFsVG9rZW5zIjoxMDgyLCJjYWNoZVJlYWRJbnB1dFRva2VucyI6MTAyNCwiY2FjaGVXcml0ZUlucHV0VG9rZW5zIjoyNH19X1q6Xw==
+  headers:
+    Content-Type: application/vnd.amazon.eventstream
+uuid: 9d3c2a71-5e84-4b0f-a6c2-7f1e0b8d4c55
+persistent: true

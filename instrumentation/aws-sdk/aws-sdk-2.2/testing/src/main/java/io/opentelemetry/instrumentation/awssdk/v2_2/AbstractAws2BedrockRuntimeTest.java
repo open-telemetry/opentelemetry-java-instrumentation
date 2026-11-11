@@ -259,10 +259,7 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                     .build())
             .build());
 
-    // TokenUsage has no cache token fields before bedrockruntime 2.31.12.
-    boolean cacheTokensSupported =
-        TokenUsage.builder().build().sdkFields().stream()
-            .anyMatch(field -> field.memberName().equals("cacheReadInputTokens"));
+    boolean cacheTokensSupported = cacheTokensSupported();
 
     getTesting()
         .waitAndAssertTraces(
@@ -280,6 +277,55 @@ public abstract class AbstractAws2BedrockRuntimeTest {
                                 equalTo(
                                     GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
                                     cacheTokensSupported ? 24L : null))));
+  }
+
+  @Test
+  void testConverseStreamCacheTokens() {
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(createOverrideConfigurationBuilder().build());
+    configureClient(builder);
+    BedrockRuntimeAsyncClient client = configureBedrockRuntimeClient(builder.build());
+
+    String modelId = "amazon.titan-text-lite-v1";
+    client
+        .converseStream(
+            ConverseStreamRequest.builder()
+                .modelId(modelId)
+                .messages(
+                    Message.builder()
+                        .role(ConversationRole.USER)
+                        .content(ContentBlock.fromText("Say this is a cached stream test"))
+                        .build())
+                .build(),
+            ConverseStreamResponseHandler.builder()
+                .subscriber(ConverseStreamResponseHandler.Visitor.builder().build())
+                .build())
+        .join();
+
+    boolean cacheTokensSupported = cacheTokensSupported();
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("chat amazon.titan-text-lite-v1")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasAttributesSatisfying(
+                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 8),
+                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 26),
+                                equalTo(
+                                    GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
+                                    cacheTokensSupported ? 1024L : null),
+                                equalTo(
+                                    GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+                                    cacheTokensSupported ? 24L : null))));
+  }
+
+  // TokenUsage has no cache token fields before bedrockruntime 2.31.12.
+  private static boolean cacheTokensSupported() {
+    return TokenUsage.builder().build().sdkFields().stream()
+        .anyMatch(field -> field.memberName().equals("cacheReadInputTokens"));
   }
 
   @Test
