@@ -4,10 +4,9 @@
 
 ### ⚠️ Breaking changes
 
-- Apache HttpAsyncClient instrumentation no longer emits `network.peer.address`
-  or `network.peer.port` inferred from request targets, including pipelined
-  requests. `server.address` and `server.port` continue to identify the logical
-  destination.
+- Apache HttpAsyncClient instrumentation captures `network.peer.address` and
+  `network.peer.port` from the actual connection, including for pipelined requests,
+  and retains the last observed peer if a subsequent connection attempt fails.
 - Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
   `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.

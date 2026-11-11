@@ -5,14 +5,21 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.InetAddress;
@@ -23,14 +30,18 @@ import java.util.concurrent.CancellationException;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.message.BasicHeader;
 import org.apache.http.nio.client.HttpAsyncClient;
+import org.apache.http.nio.client.methods.HttpAsyncMethods;
+import org.apache.http.nio.protocol.BasicAsyncResponseConsumer;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class ApacheHttpAsyncClientTest {
@@ -103,10 +114,81 @@ class ApacheHttpAsyncClientTest {
   @Nested
   class ApacheClientHostRequestTest extends AbstractTest {
 
+    @Test
+    void requestWithMinimalClientAndNullContext() throws Exception {
+      URI uri = resolveAddress("/success");
+      CloseableHttpAsyncClient minimalClient = HttpAsyncClients.createMinimal();
+      cleanup.deferCleanup(minimalClient);
+      minimalClient.start();
+
+      HttpResponse response =
+          minimalClient
+              .execute(
+                  HttpAsyncMethods.create(
+                      new HttpHost(uri.getHost(), uri.getPort(), uri.getScheme()),
+                      new HttpGet(uri.getRawPath())),
+                  new BasicAsyncResponseConsumer(),
+                  null,
+                  null)
+              .get(10, SECONDS);
+
+      assertThat(getResponseCode(response)).isEqualTo(200);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertSuccessfulPeerSpan(span, uri),
+                  span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    }
+
+    @Test
+    void redirectToDifferentPort() throws Exception {
+      URI target = resolveAddress("/success");
+
+      HttpServer redirectServer =
+          HttpServer.create(
+              new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
+      cleanup.deferCleanup(() -> redirectServer.stop(0));
+
+      redirectServer.createContext(
+          "/redirect",
+          exchange -> {
+            try {
+              exchange.getResponseHeaders().set("Location", target.toString());
+              exchange.sendResponseHeaders(302, -1);
+            } finally {
+              exchange.close();
+            }
+          });
+      redirectServer.start();
+
+      int redirectPort = redirectServer.getAddress().getPort();
+      assertThat(redirectPort).isNotEqualTo(target.getPort());
+      URI uri = URI.create("http://127.0.0.1:" + redirectPort + "/redirect");
+
+      HttpResponse response = client.execute(new HttpGet(uri), null).get(10, SECONDS);
+      assertThat(getResponseCode(response)).isEqualTo(200);
+
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertSuccessfulPeerSpan(span, uri),
+                  span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    }
+
+    private SpanDataAssert assertSuccessfulPeerSpan(SpanDataAssert span, URI uri) {
+      return assertClientSpan(span, uri, "GET", 200, null)
+          .hasNoParent()
+          .hasStatus(StatusData.unset())
+          .hasAttributesSatisfying(
+              satisfies(NETWORK_PEER_ADDRESS, val -> val.isNotNull()),
+              satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
+    }
+
     @Override
     protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       super.configure(optionsBuilder);
-      optionsBuilder.setTestProxy(true).setExpectProxyNetworkPeerAttributes(false);
+      optionsBuilder.setTestProxy(true).setExpectProxyNetworkPeerAttributes(true);
     }
 
     @Override

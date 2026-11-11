@@ -61,6 +61,20 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
 
   @Override
   @Nullable
+  public String getNetworkPeerAddress(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getNetworkPeerAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getNetworkPeerPort(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getNetworkPeerPort();
+  }
+
+  @Override
+  @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
     return request.getServerAddress();
   }
