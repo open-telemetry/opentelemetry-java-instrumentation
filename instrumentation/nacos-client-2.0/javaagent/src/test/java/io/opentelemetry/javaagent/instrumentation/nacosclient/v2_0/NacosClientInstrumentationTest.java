@@ -221,14 +221,14 @@ class NacosClientInstrumentationTest {
     TestResponse failedResponseWithoutCode = new TestResponse();
     failedResponseWithoutCode.setErrorInfo(0, "failed");
 
-    assertThat(getter.getSystem(request)).isEqualTo("nacos");
-    assertThat(getter.getService(request)).isEqualTo("config");
-    assertThat(getter.getMethod(request)).isEqualTo("queryConfig");
+    assertThat(getter.getRpcSystemName(request)).isEqualTo("nacos");
     assertThat(getter.getRpcMethod(request)).isEqualTo("config/queryConfig");
     assertThat(getter.getErrorType(request, failedResponse, null)).isEqualTo("500");
     assertThat(getter.getErrorType(request, failedResponseWithoutCode, null))
         .isEqualTo("response_error");
-    assertThat(getter.getErrorType(request, null, new IllegalStateException("boom"))).isNull();
+    assertThat(getter.getErrorType(request, null, new IllegalStateException("boom")))
+        .isEqualTo(IllegalStateException.class.getName());
+    assertThat(getter.getErrorType(request, null, null)).isNull();
   }
 
   @ParameterizedTest

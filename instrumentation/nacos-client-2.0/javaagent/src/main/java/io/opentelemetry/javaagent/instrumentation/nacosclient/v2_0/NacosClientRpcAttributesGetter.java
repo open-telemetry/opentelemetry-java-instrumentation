@@ -9,26 +9,11 @@ import com.alibaba.nacos.api.remote.response.Response;
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
 import javax.annotation.Nullable;
 
-// RpcAttributesGetter is deprecated in the current instrumentation API, but this module still
-// integrates with that contract until the surrounding RPC semantic-convention wiring is migrated.
-@SuppressWarnings("deprecation")
 class NacosClientRpcAttributesGetter implements RpcAttributesGetter<NacosClientRequest, Response> {
 
   @Override
-  public String getSystem(NacosClientRequest request) {
+  public String getRpcSystemName(NacosClientRequest request) {
     return "nacos";
-  }
-
-  @Override
-  @Nullable
-  public String getService(NacosClientRequest request) {
-    return request.category();
-  }
-
-  @Override
-  @Nullable
-  public String getMethod(NacosClientRequest request) {
-    return request.operation();
   }
 
   @Override
@@ -45,6 +30,6 @@ class NacosClientRpcAttributesGetter implements RpcAttributesGetter<NacosClientR
       int errorCode = response.getErrorCode();
       return errorCode == 0 ? "response_error" : String.valueOf(errorCode);
     }
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 }
