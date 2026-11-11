@@ -42,7 +42,7 @@ class RoutingContextInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void next(@Advice.This RoutingContext routingContext) {
-      // calling next tells router to move to the next matching route
+      // calling next tells router to move to the next handler or matching route
       // restore remembered route to remove currently matched route from it
       String previousRoute = RoutingContextUtil.getRoute(routingContext);
       if (previousRoute != null) {
