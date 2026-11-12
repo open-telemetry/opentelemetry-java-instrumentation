@@ -144,6 +144,9 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         "/",
         exchange -> {
           try {
+            // Close the request body before sending an empty response so older JDKs
+            // keep the connection open for the next pipelined request.
+            exchange.getRequestBody().close();
             exchange.sendResponseHeaders(200, -1);
           } finally {
             exchange.close();
