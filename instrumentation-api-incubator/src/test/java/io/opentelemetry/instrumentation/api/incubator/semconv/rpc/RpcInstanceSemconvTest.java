@@ -296,11 +296,12 @@ class RpcInstanceSemconvTest {
                   ? singletonList(dualEmit ? "service.peer/dup" : "service.peer")
                   : emptyList());
       DeclarativeConfigProperties mapping = mock(DeclarativeConfigProperties.class);
+      when(mapping.getString("target")).thenReturn(null);
       when(mapping.getString("peer")).thenReturn("example.com");
       when(mapping.getString("service_name")).thenReturn("peer");
       when(mapping.getString("service_namespace")).thenReturn("namespace");
-      when(common.getStructuredList("service_peer_mapping", emptyList()))
-          .thenReturn(singletonList(mapping));
+      when(common.getStructuredList("server_service_mapping")).thenReturn(null);
+      when(common.getStructuredList("service_peer_mapping")).thenReturn(singletonList(mapping));
       ConfigProvider configProvider = mock(ConfigProvider.class);
       when(configProvider.getInstrumentationConfig("common")).thenReturn(common);
       ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);

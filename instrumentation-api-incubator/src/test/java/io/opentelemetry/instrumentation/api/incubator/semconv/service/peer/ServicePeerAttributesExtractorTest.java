@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static io.opentelemetry.semconv.incubating.ServiceIncubatingAttributes.SERVICE_PEER_NAME;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
@@ -141,13 +140,15 @@ class ServicePeerAttributesExtractorTest {
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
     when(commonConfig.get("semconv_stability")).thenReturn(DeclarativeConfigProperties.empty());
     List<DeclarativeConfigProperties> entryList = asList(entries);
-    when(commonConfig.getStructuredList("service_peer_mapping", emptyList())).thenReturn(entryList);
+    when(commonConfig.getStructuredList("server_service_mapping")).thenReturn(null);
+    when(commonConfig.getStructuredList("service_peer_mapping")).thenReturn(entryList);
     return new ServicePeerResolver(otel);
   }
 
   private static DeclarativeConfigProperties mapping(
       String peer, @Nullable String serviceName, @Nullable String serviceNamespace) {
     DeclarativeConfigProperties props = mock(DeclarativeConfigProperties.class);
+    when(props.getString("target")).thenReturn(null);
     when(props.getString("peer")).thenReturn(peer);
     when(props.getString("service_name")).thenReturn(serviceName);
     when(props.getString("service_namespace")).thenReturn(serviceNamespace);

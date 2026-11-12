@@ -164,7 +164,7 @@ class DefaultInstrumentationConfigTest {
 
     assertThat(properties)
         .containsEntry(
-            "otel.instrumentation.common.server-service-mapping", "example.com=checkout=api");
+            "otel.instrumentation.common.peer-service-mapping", "example.com=checkout=api");
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
             DefaultConfigProperties.createFromMap(properties));
@@ -173,6 +173,50 @@ class DefaultInstrumentationConfigTest {
     assertThat(roundTripped).hasSize(1);
     assertThat(roundTripped.get(0).getString("target")).isEqualTo("example.com");
     assertThat(roundTripped.get(0).getString("service_name")).isEqualTo("checkout=api");
+  }
+
+  @Test
+  void toConfigPropertiesPreservesLegacyServicePeerMappingDefault() {
+    Map<String, String> mapping = new HashMap<>();
+    mapping.put("peer", "legacy.example");
+    mapping.put("service_name", "legacy-service");
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").setDefault("service_peer_mapping", singletonList(mapping));
+
+    Map<String, String> properties = defaults.toConfigProperties();
+
+    assertThat(properties)
+        .containsEntry(
+            "otel.instrumentation.common.peer-service-mapping", "legacy.example=legacy-service")
+        .hasSize(1);
+    DeclarativeConfigProperties common =
+        ConfigPropertiesBackedDeclarativeConfigProperties.createInstrumentationConfig(
+                DefaultConfigProperties.createFromMap(properties))
+            .get("java")
+            .get("common");
+    assertThat(common.getStructuredList("service_peer_mapping").get(0).getString("peer"))
+        .isEqualTo("legacy.example");
+    assertThat(common.getStructuredList("server_service_mapping").get(0).getString("target"))
+        .isEqualTo("legacy.example");
+  }
+
+  @Test
+  void canonicalServiceMappingDefaultWinsWhenBothAliasesAreConfigured() {
+    Map<String, String> legacyMapping = new HashMap<>();
+    legacyMapping.put("peer", "legacy.example");
+    legacyMapping.put("service_name", "legacy-service");
+    Map<String, String> canonicalMapping = new HashMap<>();
+    canonicalMapping.put("target", "canonical.example");
+    canonicalMapping.put("service_name", "canonical-service");
+    DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+    defaults.get("common").setDefault("service_peer_mapping", singletonList(legacyMapping));
+    defaults.get("common").setDefault("server_service_mapping", singletonList(canonicalMapping));
+
+    assertThat(defaults.toConfigProperties())
+        .containsEntry(
+            "otel.instrumentation.common.peer-service-mapping",
+            "canonical.example=canonical-service")
+        .hasSize(1);
   }
 
   private static Stream<Arguments> nonStringScalarListDefaults() {

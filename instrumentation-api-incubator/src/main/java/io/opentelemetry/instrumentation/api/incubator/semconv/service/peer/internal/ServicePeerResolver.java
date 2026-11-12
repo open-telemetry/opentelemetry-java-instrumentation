@@ -16,10 +16,12 @@ import static java.util.logging.Level.WARNING;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
@@ -65,11 +67,15 @@ public class ServicePeerResolver {
   public ServicePeerResolver(OpenTelemetry openTelemetry) {
     emitOldServicePeerSemconv = emitOldServicePeerSemconv(openTelemetry);
     emitPreviewServicePeerSemconv = emitPreviewServicePeerSemconv(openTelemetry);
-    DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
-        .getStructuredList("service_peer_mapping", emptyList())
+    DeclarativeConfigProperties commonConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
+    getMappings(commonConfig)
         .forEach(
             entry -> {
-              String peer = entry.getString("peer");
+              String peer = entry.getString("target");
+              if (peer == null) {
+                peer = entry.getString("peer");
+              }
               String serviceName = entry.getString("service_name");
               String serviceNamespace = entry.getString("service_namespace");
               if (peer == null) {
@@ -86,6 +92,17 @@ public class ServicePeerResolver {
               }
               addMapping(peer, serviceName, serviceNamespace);
             });
+  }
+
+  private static List<DeclarativeConfigProperties> getMappings(
+      DeclarativeConfigProperties commonConfig) {
+    List<DeclarativeConfigProperties> mappings =
+        commonConfig.getStructuredList("server_service_mapping");
+    if (mappings != null) {
+      return mappings;
+    }
+    mappings = commonConfig.getStructuredList("service_peer_mapping");
+    return mappings == null ? emptyList() : mappings;
   }
 
   private void addMapping(

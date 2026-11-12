@@ -47,6 +47,9 @@ final class ServiceMapping implements DeclarativeConfigProperties {
     Map<String, String> map =
         configProperties.getMap("otel.instrumentation.common.server-service-mapping");
     if (map.isEmpty()) {
+      map = configProperties.getMap("otel.instrumentation.common.peer-service-mapping");
+    }
+    if (map.isEmpty()) {
       return null;
     }
     List<DeclarativeConfigProperties> result = new ArrayList<>();

@@ -144,8 +144,7 @@ class DefaultInstrumentationConfigApplierTest {
     assertThat(secondMappings.get(0).getString("service_name")).isEqualTo("checkout");
     assertThat(defaults.toConfigProperties())
         .containsEntry("otel.instrumentation.http.known-methods", "GET,POST")
-        .containsEntry(
-            "otel.instrumentation.common.server-service-mapping", "example.com=checkout");
+        .containsEntry("otel.instrumentation.common.peer-service-mapping", "example.com=checkout");
   }
 
   @Test

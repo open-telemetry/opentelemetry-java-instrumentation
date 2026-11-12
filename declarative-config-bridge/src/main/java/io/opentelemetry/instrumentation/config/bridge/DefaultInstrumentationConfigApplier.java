@@ -20,6 +20,9 @@ import java.util.Map;
 /** Utility that applies {@link DefaultInstrumentationConfig} defaults to the declarative model. */
 final class DefaultInstrumentationConfigApplier {
 
+  private static final String COMMON_SERVICE_PEER_MAPPING = "common.service_peer_mapping";
+  private static final String COMMON_SERVER_SERVICE_MAPPING = "common.server_service_mapping";
+
   /**
    * Applies defaults to the declarative configuration model under {@code
    * instrumentation/development}. Existing values in the model take precedence; defaults are only
@@ -38,7 +41,18 @@ final class DefaultInstrumentationConfigApplier {
     if (instrumentation == null) {
       instrumentation = new ExperimentalInstrumentationModel();
     }
+    boolean userServiceMappingConfigured = hasUserServiceMapping(instrumentation);
+    boolean canonicalServiceMappingDefault =
+        defaults.getDefaults().containsKey(COMMON_SERVER_SERVICE_MAPPING);
     for (Map.Entry<String, Object> entry : defaults.getDefaults().entrySet()) {
+      if (isServiceMappingPath(entry.getKey())) {
+        if (userServiceMappingConfigured) {
+          continue;
+        }
+        if (canonicalServiceMappingDefault && entry.getKey().equals(COMMON_SERVICE_PEER_MAPPING)) {
+          continue;
+        }
+      }
       applyJavaDefault(instrumentation, entry.getKey(), entry.getValue());
     }
     ExperimentalGeneralInstrumentationModel generalDefaults = defaults.getGeneralDefaults();
@@ -55,6 +69,25 @@ final class DefaultInstrumentationConfigApplier {
     }
 
     return model;
+  }
+
+  private static boolean hasUserServiceMapping(ExperimentalInstrumentationModel instrumentation) {
+    ExperimentalLanguageSpecificInstrumentationModel java = instrumentation.getJava();
+    if (java == null) {
+      return false;
+    }
+    ExperimentalLanguageSpecificInstrumentationPropertyModel common =
+        java.getAdditionalProperties().get("common");
+    if (common == null) {
+      return false;
+    }
+    Map<String, Object> commonProperties = common.getAdditionalProperties();
+    return commonProperties.get("service_peer_mapping") != null
+        || commonProperties.get("server_service_mapping") != null;
+  }
+
+  private static boolean isServiceMappingPath(String path) {
+    return path.equals(COMMON_SERVICE_PEER_MAPPING) || path.equals(COMMON_SERVER_SERVICE_MAPPING);
   }
 
   private static void applyJavaDefault(

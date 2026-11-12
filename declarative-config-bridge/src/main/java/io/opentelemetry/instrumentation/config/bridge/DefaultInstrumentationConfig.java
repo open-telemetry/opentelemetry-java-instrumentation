@@ -45,6 +45,11 @@ import javax.annotation.Nullable;
  */
 public final class DefaultInstrumentationConfig {
 
+  private static final String COMMON_SERVICE_PEER_MAPPING = "common.service_peer_mapping";
+  private static final String COMMON_SERVER_SERVICE_MAPPING = "common.server_service_mapping";
+  private static final String LEGACY_SERVICE_MAPPING_PROPERTY =
+      "otel.instrumentation.common.peer-service-mapping";
+
   private final Map<String, Object> defaults;
   private final List<String> path;
   private final boolean generalNamespace;
@@ -153,10 +158,11 @@ public final class DefaultInstrumentationConfig {
   /**
    * Sets a list-valued default. Scalar lists are preserved when applying defaults to the
    * declarative model and serialized as comma-separated values for traditional configuration
-   * properties. The structured {@code common.server_service_mapping} list is also supported; other
-   * structured lists cannot be converted to traditional configuration properties. Empty lists
-   * cannot be exported as equivalent traditional configuration defaults and are rejected by {@link
-   * #toConfigProperties()}.
+   * properties. Structured {@code common.service_peer_mapping} and {@code
+   * common.server_service_mapping} lists are also supported; they are exported through the legacy
+   * flat property so existing defaults continue to work. Other structured lists cannot be converted
+   * to traditional configuration properties. Empty lists cannot be exported as equivalent
+   * traditional configuration defaults and are rejected by {@link #toConfigProperties()}.
    */
   @CanIgnoreReturnValue
   public DefaultInstrumentationConfig setDefault(String key, List<?> value) {
@@ -171,10 +177,15 @@ public final class DefaultInstrumentationConfig {
    */
   public Map<String, String> toConfigProperties() {
     HashMap<String, String> map = new HashMap<>();
+    boolean canonicalServiceMappingDefault = defaults.containsKey(COMMON_SERVER_SERVICE_MAPPING);
     defaults.forEach(
-        (declarativePath, value) ->
-            map.put(
-                toConfigProperty(declarativePath), toConfigPropertyValue(declarativePath, value)));
+        (declarativePath, value) -> {
+          if (canonicalServiceMappingDefault
+              && declarativePath.equals(COMMON_SERVICE_PEER_MAPPING)) {
+            return;
+          }
+          map.put(toConfigProperty(declarativePath), toConfigPropertyValue(declarativePath, value));
+        });
     ExperimentalGeneralInstrumentationModel general = generalDefaults.model;
     if (general != null) {
       DeclarativeModelUtil.forEachLeaf(
@@ -233,6 +244,11 @@ public final class DefaultInstrumentationConfig {
     }
 
     if (propertyPrefix == null) {
+      if (isServiceMappingPath(declarativePath)) {
+        // Keep the original property as the default carrier. The bridge reads the canonical
+        // property first, so a user-supplied replacement still wins over this default.
+        return LEGACY_SERVICE_MAPPING_PROPERTY;
+      }
       return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey(
           "java." + declarativePath);
     }
@@ -282,8 +298,8 @@ public final class DefaultInstrumentationConfig {
     if (list.isEmpty()) {
       throw new IllegalArgumentException("list default must not be empty: " + declarativePath);
     }
-    if (declarativePath.equals("common.server_service_mapping")) {
-      return serializeServiceMapping(list);
+    if (isServiceMappingPath(declarativePath)) {
+      return serializeServiceMapping(declarativePath, list);
     }
     for (Object item : list) {
       if (item instanceof String) {
@@ -312,40 +328,47 @@ public final class DefaultInstrumentationConfig {
     return list.stream().map(String::valueOf).collect(joining(","));
   }
 
-  private static String serializeServiceMapping(List<?> mappings) {
+  private static String serializeServiceMapping(String declarativePath, List<?> mappings) {
+    String fieldName = declarativePath.equals(COMMON_SERVER_SERVICE_MAPPING) ? "target" : "peer";
+    String displayPath = declarativePath;
     return mappings.stream()
         .map(
             mapping -> {
               if (!(mapping instanceof Map)) {
-                throw new IllegalArgumentException(
-                    "common.server_service_mapping entries must be maps");
+                throw new IllegalArgumentException(displayPath + " entries must be maps");
               }
               Map<?, ?> fields = (Map<?, ?>) mapping;
-              Object target = fields.get("target");
+              Object target = fields.get(fieldName);
               Object serviceName = fields.get("service_name");
               if (!(target instanceof String) || !(serviceName instanceof String)) {
                 throw new IllegalArgumentException(
-                    "common.server_service_mapping entries require string target and service_name fields");
+                    displayPath
+                        + " entries require string "
+                        + fieldName
+                        + " and service_name fields");
               }
               String targetValue = (String) target;
               if (targetValue.indexOf(',') >= 0 || targetValue.indexOf('=') >= 0) {
                 throw new IllegalArgumentException(
-                    "common.server_service_mapping target must not contain ',' or '=': "
-                        + targetValue);
+                    displayPath + " " + fieldName + " must not contain ',' or '=': " + targetValue);
               }
               String serviceNameValue = (String) serviceName;
               if (serviceNameValue.indexOf(',') >= 0) {
                 throw new IllegalArgumentException(
-                    "common.server_service_mapping service_name must not contain ',': "
-                        + serviceNameValue);
+                    displayPath + " service_name must not contain ',': " + serviceNameValue);
               }
               if (fields.get("service_namespace") != null) {
                 throw new IllegalArgumentException(
-                    "common.server_service_mapping service_namespace is not supported by traditional configuration");
+                    displayPath
+                        + " service_namespace is not supported by traditional configuration");
               }
               return targetValue + "=" + serviceNameValue;
             })
         .collect(joining(","));
+  }
+
+  private static boolean isServiceMappingPath(String path) {
+    return path.equals(COMMON_SERVICE_PEER_MAPPING) || path.equals(COMMON_SERVER_SERVICE_MAPPING);
   }
 
   private static boolean matchesPrefix(String path, String prefix) {

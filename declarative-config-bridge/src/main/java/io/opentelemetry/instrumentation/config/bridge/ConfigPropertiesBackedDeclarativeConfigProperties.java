@@ -31,6 +31,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
 
   private static final String JAVA_DECLARATIVE_PREFIX = "java.";
   private static final String INSTRUMENTATION_PROPERTY_PREFIX = "otel.instrumentation.";
+  private static final String JAVA_COMMON_SERVICE_PEER_MAPPING = "java.common.service_peer_mapping";
   private static final String JAVA_COMMON_SERVER_SERVICE_MAPPING =
       "java.common.server_service_mapping";
 
@@ -73,6 +74,8 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     SPECIAL_MAPPINGS.put(
         "java.common.gen_ai.capture_message_content",
         "otel.instrumentation.genai.capture-message-content");
+    SPECIAL_MAPPINGS.put(
+        JAVA_COMMON_SERVICE_PEER_MAPPING, "otel.instrumentation.common.peer-service-mapping");
     SPECIAL_MAPPINGS.put(
         JAVA_COMMON_SERVER_SERVICE_MAPPING, "otel.instrumentation.common.server-service-mapping");
     // renaming to match instrumentation module name
@@ -255,8 +258,13 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   @Override
   public List<DeclarativeConfigProperties> getStructuredList(String name) {
     String fullPath = pathWithName(name);
-    if (instrumentationConfig && fullPath.equals(JAVA_COMMON_SERVER_SERVICE_MAPPING)) {
-      return ServiceMapping.getList(configProperties);
+    if (instrumentationConfig) {
+      if (fullPath.equals(JAVA_COMMON_SERVER_SERVICE_MAPPING)) {
+        return ServiceMapping.getList(configProperties);
+      }
+      if (fullPath.equals(JAVA_COMMON_SERVICE_PEER_MAPPING)) {
+        return ServicePeerMapping.getList(configProperties);
+      }
     }
     return null;
   }

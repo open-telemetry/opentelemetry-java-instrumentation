@@ -13,6 +13,7 @@ dependencies {
   implementation("io.opentelemetry:opentelemetry-api-incubator")
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
+  testImplementation(project(":instrumentation-api-incubator"))
 
   compileOnly("com.google.code.findbugs:annotations")
   testCompileOnly("com.google.code.findbugs:annotations")
