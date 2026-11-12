@@ -70,7 +70,7 @@ public abstract class AbstractSpringWebfluxTest {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.0";
 
   @RegisterExtension
-  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+  protected static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static final String INNER_HANDLER_FUNCTION_CLASS_TAG_PREFIX =
       SpringWebFluxTestApplication.class.getName() + "$";
@@ -81,7 +81,7 @@ public abstract class AbstractSpringWebfluxTest {
   @Value("${local.server.port}")
   private int port;
 
-  private WebClient client;
+  protected WebClient client;
 
   @BeforeEach
   void beforeEach() {

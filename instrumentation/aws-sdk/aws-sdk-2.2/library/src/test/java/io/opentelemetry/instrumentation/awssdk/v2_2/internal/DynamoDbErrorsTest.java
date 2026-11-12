@@ -6,24 +6,22 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -40,11 +38,14 @@ import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
 import io.opentelemetry.testing.internal.armeria.testing.junit5.server.mock.MockWebServerExtension;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.awscore.exception.AwsErrorDetails;
+import software.amazon.awssdk.awscore.exception.AwsServiceException;
 import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.regions.Region;
@@ -56,6 +57,31 @@ import software.amazon.awssdk.services.dynamodb.model.ResourceNotFoundException;
 class DynamoDbErrorsTest {
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @Test
+  void responseStatusOmitsExceptionFallbackAndMissingCodes() {
+    DynamoDbAttributesGetter getter = new DynamoDbAttributesGetter();
+    AwsServiceException serviceError =
+        AwsServiceException.builder()
+            .awsErrorDetails(
+                AwsErrorDetails.builder().errorCode("ResourceNotFoundException").build())
+            .build();
+    assertThat(getter.getDbResponseStatusCode(null, null, serviceError))
+        .isEqualTo("ResourceNotFoundException");
+    assertThat(getter.getDbResponseStatusCode(null, null, AwsServiceException.builder().build()))
+        .isNull();
+    assertThat(
+            getter.getDbResponseStatusCode(
+                null,
+                null,
+                AwsServiceException.builder()
+                    .awsErrorDetails(AwsErrorDetails.builder().build())
+                    .build()))
+        .isNull();
+    assertThat(getter.getDbResponseStatusCode(null, null, new IllegalStateException("failed")))
+        .isNull();
+    assertThat(getter.getDbResponseStatusCode(null, null, null)).isNull();
+  }
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
@@ -97,7 +123,7 @@ class DynamoDbErrorsTest {
               .isInstanceOf(ResourceNotFoundException.class);
         }
       }
-      String errorType = missingItem ? null : "ResourceNotFoundException";
+      String errorCode = missingItem ? null : "ResourceNotFoundException";
       testing.waitAndAssertTraces(
           trace ->
               trace.hasSpansSatisfyingExactly(
@@ -111,25 +137,28 @@ class DynamoDbErrorsTest {
                               equalTo(DB_COLLECTION_NAME, "items"),
                               equalTo(DB_OPERATION_NAME, "GetItem"),
                               equalTo(HTTP_RESPONSE_STATUS_CODE, missingItem ? 200L : null),
-                              equalTo(ERROR_TYPE, errorType),
+                              equalTo(DB_RESPONSE_STATUS_CODE, errorCode),
+                              equalTo(ERROR_TYPE, errorCode),
                               equalTo(SERVER_ADDRESS, "127.0.0.1"),
                               equalTo(SERVER_PORT, server.httpPort()),
                               equalTo(HTTP_REQUEST_METHOD, "POST"),
                               equalTo(URL_FULL, server.httpUri() + "/"),
                               equalTo(AWS_DYNAMODB_TABLE_NAMES, singletonList("items")),
                               equalTo(AWS_REQUEST_ID, missingItem ? "UNKNOWN" : null),
-                              equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "aws-api" : null),
-                              equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "DynamoDb" : null),
-                              equalTo(RPC_METHOD, emitPreviewRpcSemconv() ? null : "GetItem"),
-                              equalTo(
-                                  RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "aws-api" : null))));
+                              equalTo(RPC_SYSTEM, "aws-api"),
+                              equalTo(RPC_SERVICE, "DynamoDb"),
+                              equalTo(RPC_METHOD, "GetItem"))));
       assertDurationMetric(
           testing,
           "io.opentelemetry.aws-sdk-2.2",
           missingItem
               ? new AttributeKey<?>[] {DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME}
               : new AttributeKey<?>[] {
-                DB_SYSTEM_NAME, DB_COLLECTION_NAME, DB_OPERATION_NAME, ERROR_TYPE
+                DB_SYSTEM_NAME,
+                DB_COLLECTION_NAME,
+                DB_OPERATION_NAME,
+                DB_RESPONSE_STATUS_CODE,
+                ERROR_TYPE
               });
       testing.waitAndAssertMetrics(
           "io.opentelemetry.aws-sdk-2.2",
@@ -150,7 +179,8 @@ class DynamoDbErrorsTest {
                                                 .put(DB_SYSTEM_NAME, "aws.dynamodb")
                                                 .put(DB_COLLECTION_NAME, "items")
                                                 .put(DB_OPERATION_NAME, "GetItem")
-                                                .put(ERROR_TYPE, errorType)
+                                                .put(DB_RESPONSE_STATUS_CODE, errorCode)
+                                                .put(ERROR_TYPE, errorCode)
                                                 .build()
                                                 .asMap());
                                   })));

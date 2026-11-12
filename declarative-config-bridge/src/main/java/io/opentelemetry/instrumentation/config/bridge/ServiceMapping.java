@@ -36,6 +36,10 @@ import javax.annotation.Nullable;
  *
  * <p>The flat property cannot express {@code service_namespace} or targets containing commas or
  * equals signs. Use declarative configuration for those cases.
+ *
+ * <p>The bridge also preserves the historical {@code service_peer_mapping} structure and {@code
+ * otel.instrumentation.common.peer-service-mapping} property. When both flat property names are
+ * supplied, {@code server-service-mapping} takes precedence.
  */
 final class ServiceMapping implements DeclarativeConfigProperties {
 
@@ -44,6 +48,17 @@ final class ServiceMapping implements DeclarativeConfigProperties {
 
   @Nullable
   static List<DeclarativeConfigProperties> getList(ConfigProperties configProperties) {
+    return getMappings(configProperties, false);
+  }
+
+  @Nullable
+  static List<DeclarativeConfigProperties> getLegacyList(ConfigProperties configProperties) {
+    return getMappings(configProperties, true);
+  }
+
+  @Nullable
+  private static List<DeclarativeConfigProperties> getMappings(
+      ConfigProperties configProperties, boolean legacyView) {
     Map<String, String> map =
         configProperties.getMap("otel.instrumentation.common.server-service-mapping");
     if (map.isEmpty()) {
@@ -55,7 +70,7 @@ final class ServiceMapping implements DeclarativeConfigProperties {
     List<DeclarativeConfigProperties> result = new ArrayList<>();
     for (Map.Entry<String, String> entry : map.entrySet()) {
       Map<String, String> fields = new HashMap<>();
-      fields.put("target", entry.getKey());
+      fields.put(legacyView ? "peer" : "target", entry.getKey());
       fields.put("service_name", entry.getValue());
       // service_namespace is not supported in flat config, will be null
       result.add(new ServiceMapping(fields, configProperties.getComponentLoader()));

@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -31,14 +34,36 @@ dependencies {
   latestDepTestLibrary("com.xuxueli:xxl-job-core:3.2.+") // see test suite below
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("xxlJob33Test") {
-      dependencies {
-        val version = baseVersion("3.3.0").orLatest()
-        implementation("com.xuxueli:xxl-job-core:$version")
-        implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+
+testing.suites {
+  register<JvmTestSuite>("xxlJob33Test") {
+    dependencies {
+      val version = baseVersion("3.3.0").orLatest()
+      implementation("com.xuxueli:xxl-job-core:$version")
+      implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
+    }
+
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(17)
+    }
+  }
+
+  executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
+    }
+  }
+
+  executions("xxlJob33Test") {
+    configureEach {
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
       }
+    }
+
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
     }
   }
 }
@@ -50,37 +75,7 @@ tasks {
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   }
 
-  val experimentalSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}Experimental") {
-        val sourceTask = named<Test>(suite.name).get()
-        setJvmArgs(sourceTask.jvmArgs)
-        setSystemProperties(sourceTask.systemProperties)
-
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        val experimentalConfig = "otel.instrumentation.xxl-job.experimental-span-attributes=true"
-        jvmArgs("-D$experimentalConfig")
-        systemProperty(
-          "metadataConfig",
-          listOfNotNull(sourceTask.systemProperties["metadataConfig"], experimentalConfig).joinToString(","),
-        )
-        isEnabled = sourceTask.enabled
-      }
-    }
-
-  named("compileXxlJob33TestJava", JavaCompile::class).configure {
-    options.release.set(17)
-  }
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-    named("xxlJob33Test", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
-    dependsOn(testing.suites, experimentalSuites)
+    dependsOn(testing.suites)
   }
 }

@@ -336,7 +336,7 @@ public final class KafkaUtil {
     if (logger.isLoggable(FINE) && reflectionFailuresLogged.add(holderClass.getName())) {
       logger.log(
           FINE,
-          "Unable to resolve Kafka cluster id from {0}: {1}. messaging.kafka.cluster.id will be"
+          "Unable to resolve Kafka cluster id from {0}: {1}. kafka.cluster.id will be"
               + " absent for this client type.",
           new Object[] {holderClass.getName(), detail});
     }

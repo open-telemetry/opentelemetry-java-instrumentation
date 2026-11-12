@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jms.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
@@ -20,9 +21,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -58,7 +57,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
-@SuppressWarnings("deprecation")
 class Jms3InstrumentationTest extends AbstractJms3Test {
 
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-3.0";
@@ -188,7 +186,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasStatusSatisfying(status -> status.hasCode(ERROR))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -214,7 +212,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, destinationName),
                             equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -230,7 +228,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasKind(PRODUCER)
                       .hasNoParent()
                       .hasAttributesSatisfying(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, destinationName),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -254,7 +252,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         histogram.hasPointsSatisfying(
                             point ->
                                 point.hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_SYSTEM, "jms"),
+                                    equalTo(stringKey("messaging.system.name"), "jms"),
                                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                     equalTo(
@@ -272,7 +270,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                                     point
                                         .hasValue(1)
                                         .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_SYSTEM, "jms"),
+                                            equalTo(stringKey("messaging.system.name"), "jms"),
                                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                                             equalTo(
                                                 ERROR_TYPE,
@@ -412,7 +410,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(PRODUCER)
                         .hasParent(trace.getSpan(0))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "send"),
                             equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -422,7 +420,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "durable-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -468,7 +466,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -504,7 +502,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -539,7 +537,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -553,7 +551,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -588,7 +586,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, topicName),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -647,7 +645,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                   span.hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, "shared-receive-topic"),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -663,8 +661,68 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "shared-receive-topic"),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
+  }
+
+  // the simplified API consumers are created and received through the classic Session and
+  // MessageConsumer instrumentation, which is where the subscription name is recorded
+  @ParameterizedTest
+  @MethodSource("jmsContextSubscriptionArguments")
+  void capturesSubscriptionNameForJmsContextConsumer(
+      String subscriptionName,
+      JmsContextConsumerFactory consumerFactory,
+      JmsConsumerReceiver receiver)
+      throws JMSException {
+    Topic topic = session.createTopic("jms-context-subscription-topic");
+    TextMessage sentMessage = session.createTextMessage("hello there");
+    MessageProducer producer = session.createProducer(topic);
+    cleanup.deferCleanup(producer);
+
+    JMSContext context = connectionFactory.createContext("test", "test");
+    cleanup.deferCleanup(context);
+    // durable subscriptions are scoped to a client id
+    context.setClientID(subscriptionName + "-client");
+    JMSConsumer consumer = consumerFactory.create(context, topic, subscriptionName);
+    cleanup.deferCleanup(consumer);
+
+    testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
+    TextMessage receivedMessage =
+        (TextMessage) testing.runWithSpan("consumer parent", () -> receiver.receive(consumer));
+
+    assertThat(receivedMessage.getText()).isEqualTo(sentMessage.getText());
+    String messageId = receivedMessage.getJMSMessageID();
+    AtomicReference<SpanData> producerSpan = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace -> {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("producer parent").hasNoParent(),
+              span ->
+                  span.hasKind(PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(stringKey("messaging.system.name"), "jms"),
+                          equalTo(MESSAGING_DESTINATION_NAME, "jms-context-subscription-topic"),
+                          equalTo(MESSAGING_OPERATION_NAME, "send"),
+                          equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                          equalTo(MESSAGING_MESSAGE_ID, messageId),
+                          messagingTempDestination(false)));
+          producerSpan.set(trace.getSpan(1));
+        },
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("consumer parent").hasNoParent(),
+                span ->
+                    span.hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "jms-context-subscription-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
@@ -695,7 +753,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "shared-listener-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -728,7 +786,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                     span.hasKind(CONSUMER)
                         .hasNoParent()
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, "reused-listener-topic"),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -779,7 +837,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -800,7 +858,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
@@ -829,11 +887,68 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
             (SharedConsumerFactory) Session::createSharedDurableConsumer));
   }
 
+  // durable subscriptions outlive the consumer that created them, so each case gets its own name
+  private static Stream<Arguments> jmsContextSubscriptionArguments() {
+    Stream.Builder<Arguments> arguments = Stream.builder();
+    addJmsContextSubscriptionArguments(arguments, "durable", JMSContext::createDurableConsumer);
+    addJmsContextSubscriptionArguments(arguments, "shared", JMSContext::createSharedConsumer);
+    addJmsContextSubscriptionArguments(
+        arguments, "shared durable", JMSContext::createSharedDurableConsumer);
+    return arguments.build();
+  }
+
+  private static void addJmsContextSubscriptionArguments(
+      Stream.Builder<Arguments> arguments,
+      String consumerType,
+      JmsContextConsumerFactory consumerFactory) {
+    String namePrefix = "jms-context-" + consumerType.replace(' ', '-');
+    arguments.add(
+        argumentSet(
+            consumerType + ", receive()",
+            namePrefix + "-receive",
+            consumerFactory,
+            (JmsConsumerReceiver) JMSConsumer::receive));
+    arguments.add(
+        argumentSet(
+            consumerType + ", receive(timeout)",
+            namePrefix + "-receive-timeout",
+            consumerFactory,
+            (JmsConsumerReceiver) consumer -> consumer.receive(SECONDS.toMillis(10))));
+    arguments.add(
+        argumentSet(
+            consumerType + ", receiveNoWait()",
+            namePrefix + "-receive-no-wait",
+            consumerFactory,
+            (JmsConsumerReceiver) Jms3InstrumentationTest::receiveNoWaitWhenDelivered));
+  }
+
+  // delivery to the consumer is asynchronous, and an empty receiveNoWait() emits no telemetry
+  private static Message receiveNoWaitWhenDelivered(JMSConsumer consumer) {
+    long deadline = System.nanoTime() + SECONDS.toNanos(10);
+    Message message = consumer.receiveNoWait();
+    while (message == null && System.nanoTime() < deadline) {
+      try {
+        Thread.sleep(10);
+      } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
+        throw new IllegalStateException(e);
+      }
+      message = consumer.receiveNoWait();
+    }
+    return message;
+  }
+
   @FunctionalInterface
   interface SharedConsumerFactory {
 
     MessageConsumer create(Session session, Topic topic, String subscriptionName)
         throws JMSException;
+  }
+
+  @FunctionalInterface
+  interface JmsContextConsumerFactory {
+
+    JMSConsumer create(JMSContext context, Topic topic, String subscriptionName);
   }
 
   @ParameterizedTest
@@ -873,7 +988,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                       .hasKind(PRODUCER)
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
+                          equalTo(stringKey("messaging.system.name"), "jms"),
                           equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                           equalTo(MESSAGING_OPERATION_NAME, "send"),
                           equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -891,7 +1006,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         .hasParent(trace.getSpan(0))
                         .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
+                            equalTo(stringKey("messaging.system.name"), "jms"),
                             equalTo(MESSAGING_DESTINATION_NAME, actualDestinationName),
                             equalTo(MESSAGING_OPERATION_NAME, "receive"),
                             equalTo(MESSAGING_OPERATION_TYPE, "receive"),

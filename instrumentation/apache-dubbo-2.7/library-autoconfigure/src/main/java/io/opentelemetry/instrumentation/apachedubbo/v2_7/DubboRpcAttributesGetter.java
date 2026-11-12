@@ -13,32 +13,15 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
 
   private static final String UNKNOWN_METHOD_SPAN_NAME = "_OTHER";
 
+  private final boolean isClient;
+
+  DubboRpcAttributesGetter(boolean isClient) {
+    this.isClient = isClient;
+  }
+
   @Override
   public String getRpcSystemName(DubboRequest request) {
     return "dubbo";
-  }
-
-  @Override
-  public String getSystem(DubboRequest request) {
-    return "apache_dubbo";
-  }
-
-  @Override
-  @Nullable
-  public String getService(DubboRequest request) {
-    if (request.isUnknownService()) {
-      return null;
-    }
-    return request.invocation().getInvoker().getInterface().getName();
-  }
-
-  @Deprecated
-  @Override
-  public String getMethod(DubboRequest request) {
-    if (request.isUnknownService()) {
-      return UNKNOWN_METHOD_SPAN_NAME;
-    }
-    return request.invocation().getMethodName();
   }
 
   @Override
@@ -55,9 +38,28 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
     return null;
   }
 
+  @Nullable
+  private static String getService(DubboRequest request) {
+    if (request.isUnknownService()) {
+      return null;
+    }
+    return request.invocation().getInvoker().getInterface().getName();
+  }
+
   @Override
   @Nullable
   public String getRpcMethodOriginal(DubboRequest request) {
     return request.originalFullMethodName();
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      DubboRequest request, @Nullable Result response, @Nullable Throwable error) {
+    String statusCode = DubboRpcStatus.getStatusCode(response, error);
+    if (statusCode != null && !"OK".equals(statusCode)) {
+      return DubboRpcStatus.isError(statusCode, isClient) ? statusCode : null;
+    }
+    return DubboRpcStatus.getExceptionType(response, error);
   }
 }

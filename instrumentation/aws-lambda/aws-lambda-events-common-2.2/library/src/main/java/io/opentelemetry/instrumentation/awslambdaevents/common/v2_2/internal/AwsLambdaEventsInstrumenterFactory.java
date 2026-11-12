@@ -32,10 +32,11 @@ public final class AwsLambdaEventsInstrumenterFactory {
     InstrumenterBuilder<AwsLambdaRequest, Object> builder =
         Instrumenter.<AwsLambdaRequest, Object>builder(
                 openTelemetry, instrumentationName, AwsLambdaEventsInstrumenterFactory::spanName)
-            .setSchemaUrl(SchemaUrls.V1_44_0)
+            .setSchemaUrl(SchemaUrls.V1_45_0)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor())
             .addAttributesExtractor(
-                new ApiGatewayProxyAttributesExtractor(knownMethods, sensitiveQueryParameters));
+                new ApiGatewayProxyAttributesExtractor(knownMethods, sensitiveQueryParameters))
+            .setSpanStatusExtractor(new ApiGatewayProxySpanStatusExtractor());
     setFaasInvocationExceptionEventExtractor(builder);
 
     return new AwsLambdaFunctionInstrumenter(

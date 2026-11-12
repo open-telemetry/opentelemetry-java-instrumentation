@@ -78,8 +78,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   }
 
   private void handleHeader(String name, String value) {
-    // checking content-type is just an optimization to avoid unnecessary parsing
-    if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
+    if ("Content-Length".equalsIgnoreCase(name)) {
       try {
         contentLength = Long.parseLong(value);
       } catch (NumberFormatException e) {
@@ -90,8 +89,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void setIntHeader(String name, int value) {
-    // checking content-type is just an optimization to avoid unnecessary parsing
-    if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
+    if ("Content-Length".equalsIgnoreCase(name)) {
       contentLength = value;
     }
     super.setIntHeader(name, value);
@@ -99,8 +97,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void addIntHeader(String name, int value) {
-    // checking content-type is just an optimization to avoid unnecessary parsing
-    if ("Content-Length".equalsIgnoreCase(name) && isContentTypeTextHtml()) {
+    if ("Content-Length".equalsIgnoreCase(name)) {
       contentLength = value;
     }
     super.addIntHeader(name, value);
@@ -127,9 +124,6 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public PrintWriter getWriter() throws IOException {
-    if (!isContentTypeTextHtml()) {
-      return super.getWriter();
-    }
     if (snippetInjectingPrintWriter == null) {
       snippetInjectingPrintWriter =
           new SnippetInjectingPrintWriter(super.getWriter(), snippet, this);

@@ -1,6 +1,7 @@
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 otelJava {
@@ -37,13 +38,11 @@ configurations
     resolutionStrategy.force("com.google.guava:guava:12.0.1")
   }
 
-testing {
-  suites {
-    register<JvmTestSuite>("shadedClientTest") {
-      dependencies {
-        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.2.6").orLatest("1.3.+")}")
-        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
-      }
+testing.suites {
+  register<JvmTestSuite>("shadedClientTest") {
+    dependencies {
+      implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.2.6").orLatest("1.3.+")}")
+      implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
     }
   }
 }
@@ -57,7 +56,6 @@ gradle.sharedServices.registerIfAbsent("hbaseBuildService", HbaseBuildService::c
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     usesService(gradle.sharedServices.registrations["hbaseBuildService"].service)
   }
 

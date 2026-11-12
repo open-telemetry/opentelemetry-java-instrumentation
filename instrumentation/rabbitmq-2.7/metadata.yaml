@@ -8,8 +8,8 @@ configurations:
     declarative_name: java.rabbitmq.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
-      `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `messaging.rabbitmq.vhost.name`, and
-      `messaging.rabbitmq.cluster.name`.
+      `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `rabbitmq.vhost.name`, and
+      `rabbitmq.cluster.name`.
     type: boolean
     default: false
   - ref: messaging.headers.included

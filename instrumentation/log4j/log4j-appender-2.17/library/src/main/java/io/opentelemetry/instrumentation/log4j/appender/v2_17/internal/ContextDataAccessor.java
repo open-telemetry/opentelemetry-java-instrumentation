@@ -17,5 +17,5 @@ public interface ContextDataAccessor<T> {
   @Nullable
   String getValue(T contextData, String key);
 
-  void forEach(T contextData, BiConsumer<String, String> action);
+  void forEach(T contextData, BiConsumer<String, Object> action);
 }

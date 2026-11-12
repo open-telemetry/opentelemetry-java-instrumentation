@@ -13,16 +13,17 @@ final class OpenAiErrorType {
 
   @Nullable
   static String getErrorType(@Nullable Throwable error) {
-    if (!(error instanceof OpenAIServiceException)) {
-      return null;
+    if (error instanceof OpenAIServiceException) {
+      try {
+        String code = ((OpenAIServiceException) error).code().orElse(null);
+        if (code != null) {
+          return code;
+        }
+      } catch (OpenAIInvalidDataException ignored) {
+        // Typed SDK accessors can throw for an unexpected JSON field type.
+      }
     }
-
-    try {
-      return ((OpenAIServiceException) error).code().orElse(null);
-    } catch (OpenAIInvalidDataException ignored) {
-      // Typed SDK accessors can throw for an unexpected JSON field type.
-      return null;
-    }
+    return error == null ? null : error.getClass().getName();
   }
 
   private OpenAiErrorType() {}

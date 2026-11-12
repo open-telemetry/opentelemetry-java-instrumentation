@@ -41,11 +41,7 @@ public class DubboProtocolInstrumentation implements TypeInstrumentation {
   public static class GetInvokerAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
     public static Timer onEnter() {
-      if (!DubboUnknownServiceHelper.isEnabled()) {
-        return null;
-      }
       return Timer.start();
     }
 

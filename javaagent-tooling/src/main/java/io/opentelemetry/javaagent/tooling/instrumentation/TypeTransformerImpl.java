@@ -5,27 +5,37 @@
 
 package io.opentelemetry.javaagent.tooling.instrumentation;
 
+import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.tooling.Utils;
 import io.opentelemetry.javaagent.tooling.bytebuddy.ExceptionHandlers;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceBootstrap;
 import io.opentelemetry.javaagent.tooling.instrumentation.indy.ForceDynamicallyTypedAssignReturnedFactory;
 import java.util.function.Function;
 import net.bytebuddy.agent.builder.AgentBuilder;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-final class TypeTransformerImpl implements TypeTransformer {
-  private AgentBuilder.Identified.Extendable agentBuilder;
-  private final Advice.WithCustomMapping adviceMapping;
+public final class TypeTransformerImpl implements TypeTransformer {
 
-  TypeTransformerImpl(AgentBuilder.Identified.Extendable agentBuilder) {
+  private final Advice.WithCustomMapping adviceMapping;
+  private AgentBuilder.Identified.Extendable agentBuilder;
+  private final InstrumentationModule instrumentationModule;
+
+  public TypeTransformerImpl(
+      AgentBuilder.Identified.Extendable agentBuilder, InstrumentationModule module) {
     this.agentBuilder = agentBuilder;
-    adviceMapping =
+    this.instrumentationModule = module;
+    this.adviceMapping =
         Advice.withCustomMapping()
             .with(
                 new ForceDynamicallyTypedAssignReturnedFactory(
-                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)));
+                    new Advice.AssignReturned.Factory().withSuppressed(Throwable.class)))
+            .bootstrap(
+                AdviceBootstrap.getBootstrapMethod(),
+                AdviceBootstrap.createBootstrapArgumentResolverFactory(instrumentationModule),
+                TypeDescription.Generic.Visitor.Generalizing.INSTANCE);
   }
 
   @Override
@@ -36,14 +46,11 @@ final class TypeTransformerImpl implements TypeTransformer {
     agentBuilder =
         agentBuilder.transform(
             new AgentBuilder.Transformer.ForAdvice(mappingCustomizer.apply(adviceMapping))
-                .include(
-                    Utils.getBootstrapProxy(),
-                    Utils.getAgentClassLoader(),
-                    Utils.getExtensionsClassLoader())
+                .advice(methodMatcher, adviceClassName)
                 // default strategy used by AgentBuilder.Transformer.ForAdvice
                 .with(AgentBuilder.PoolStrategy.Default.FAST)
-                .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler())
-                .advice(methodMatcher, adviceClassName));
+                .include(instrumentationModule.getClass().getClassLoader())
+                .withExceptionHandler(ExceptionHandlers.defaultExceptionHandler()));
   }
 
   @Override
@@ -51,7 +58,7 @@ final class TypeTransformerImpl implements TypeTransformer {
     agentBuilder = agentBuilder.transform(transformer);
   }
 
-  AgentBuilder.Identified.Extendable getAgentBuilder() {
+  public AgentBuilder.Identified.Extendable getAgentBuilder() {
     return agentBuilder;
   }
 }

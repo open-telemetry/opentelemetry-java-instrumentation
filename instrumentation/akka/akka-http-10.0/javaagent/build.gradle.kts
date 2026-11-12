@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
@@ -41,36 +43,29 @@ dependencies {
   latestDepTestLibrary("com.typesafe.akka:akka-stream_2.13:latest.release")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("javaRouteTest") {
-      dependencies {
-        val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
-        implementation("com.typesafe.akka:akka-http_$scalaVersion:${baseVersion("10.2.0").orLatest()}")
-        implementation("com.typesafe.akka:akka-stream_$scalaVersion:${baseVersion("2.6.21").orLatest()}")
-      }
+testing.suites {
+  register<JvmTestSuite>("javaRouteTest") {
+    dependencies {
+      val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
+      implementation("com.typesafe.akka:akka-http_$scalaVersion:${baseVersion("10.2.0").orLatest()}")
+      implementation("com.typesafe.akka:akka-stream_$scalaVersion:${baseVersion("2.6.21").orLatest()}")
+    }
+  }
+
+  executions {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
   }
 }
 
 tasks {
-  withType<Test>().configureEach {
-    // required on jdk17
-    jvmArgs("--add-exports=java.base/sun.security.util=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
   check {
-    dependsOn(testing.suites, testPreviewSemconv)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

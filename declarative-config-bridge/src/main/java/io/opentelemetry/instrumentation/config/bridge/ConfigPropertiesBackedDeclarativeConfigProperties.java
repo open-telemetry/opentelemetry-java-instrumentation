@@ -57,7 +57,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "otel.instrumentation.sanitization.url.experimental.sensitive-query-parameters");
     // general.stability_opt_in_list is the name in the declarative configuration schema; the
     // general.semconv_stability.opt_in spelling is only reachable through this bridge and is kept
-    // for backwards compatibility (see SemconvSelectionResolver, which reads both)
+    // for backwards compatibility.
     SPECIAL_MAPPINGS.put("general.stability_opt_in_list", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put("general.semconv_stability.opt_in", "otel.semconv-stability.opt-in");
     SPECIAL_MAPPINGS.put(
@@ -76,8 +76,6 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         "otel.instrumentation.genai.capture-message-content");
     SPECIAL_MAPPINGS.put(
         JAVA_COMMON_SERVICE_PEER_MAPPING, "otel.instrumentation.common.peer-service-mapping");
-    SPECIAL_MAPPINGS.put(
-        JAVA_COMMON_SERVER_SERVICE_MAPPING, "otel.instrumentation.common.server-service-mapping");
     // renaming to match instrumentation module name
     SPECIAL_MAPPINGS.put(
         "java.opentelemetry_extension_annotations.exclude_methods",
@@ -263,7 +261,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
         return ServiceMapping.getList(configProperties);
       }
       if (fullPath.equals(JAVA_COMMON_SERVICE_PEER_MAPPING)) {
-        return ServicePeerMapping.getList(configProperties);
+        return ServiceMapping.getLegacyList(configProperties);
       }
     }
     return null;
@@ -295,17 +293,14 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
       String configPropertyPrefix,
       boolean instrumentationConfig) {
     if (instrumentationConfig) {
-      // Check explicit property mappings first
       String mappedKey = SPECIAL_MAPPINGS.get(fullPath);
       if (mappedKey != null) {
         return mappedKey;
       }
     }
-
     if (!declarativePrefix.isEmpty() && !fullPath.startsWith(declarativePrefix)) {
       return "";
     }
-
     String[] segments = fullPath.substring(declarativePrefix.length()).split("\\.");
     StringBuilder translatedPath = new StringBuilder();
 

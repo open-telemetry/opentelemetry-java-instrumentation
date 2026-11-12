@@ -22,13 +22,13 @@ For SQS an additional step is needed
 ```java
 SqsClientBuilder sqsClientBuilder = SqsClient.builder();
 ...
-SqsClient sqsClient = telemetry.wrap(sqsClientBuilder.build());
+SqsClient sqsClient = telemetry.instrument(sqsClientBuilder.build());
 ```
 
 ```java
 SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 ...
-SqsAsyncClient sqsAsyncClient = telemetry.wrap(sqsAsyncClientBuilder.build());
+SqsAsyncClient sqsAsyncClient = telemetry.instrument(sqsAsyncClientBuilder.build());
 ```
 
 For the Bedrock Runtime async client, an additional step is also needed:
@@ -36,7 +36,7 @@ For the Bedrock Runtime async client, an additional step is also needed:
 ```java
 BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClient.builder();
 ...
-BedrockRuntimeAsyncClient bedrockClient = telemetry.wrapBedrockRuntimeClient(bedrockClientBuilder.build());
+BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
 
 ## Trace propagation

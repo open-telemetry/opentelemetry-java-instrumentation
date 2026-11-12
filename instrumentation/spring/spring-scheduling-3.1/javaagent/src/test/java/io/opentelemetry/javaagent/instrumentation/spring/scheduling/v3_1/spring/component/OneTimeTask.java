@@ -20,7 +20,7 @@ public class OneTimeTask implements Runnable {
     latch.countDown();
   }
 
-  public void blockUntilExecute() throws InterruptedException {
-    latch.await(5, SECONDS);
+  public boolean blockUntilExecute() throws InterruptedException {
+    return latch.await(5, SECONDS);
   }
 }

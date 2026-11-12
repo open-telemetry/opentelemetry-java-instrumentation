@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertNoMetrics;
 import static io.opentelemetry.javaagent.instrumentation.spring.integration.v4_1.SpringIntegrationTestHelper.assertProcessMetrics;
@@ -13,7 +14,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
@@ -59,7 +59,7 @@ import org.springframework.messaging.support.MessageBuilder;
 class MessageProducerSupportInstrumentationTest {
 
   private static final String SPRING_RABBIT_INSTRUMENTATION_NAME =
-      "io.opentelemetry.spring-rabbit-1.0";
+      "io.opentelemetry.spring-rabbit-1.1";
 
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
@@ -305,7 +305,8 @@ class MessageProducerSupportInstrumentationTest {
   private static Instrumenter<Message, Void> newUnrelatedProcessInstrumenter() {
     return Instrumenter.<Message, Void>builder(
             GlobalOpenTelemetry.get(), "test-lower-messaging-process", unused -> "lower process")
-        .addAttributesExtractor(AttributesExtractor.constant(MESSAGING_SYSTEM, "test"))
+        .addAttributesExtractor(
+            AttributesExtractor.constant(stringKey("messaging.system.name"), "test"))
         .addAttributesExtractor(AttributesExtractor.constant(MESSAGING_OPERATION_NAME, "process"))
         .addAttributesExtractor(AttributesExtractor.constant(MESSAGING_OPERATION_TYPE, "process"))
         .addAttributesExtractor(AttributesExtractor.constant(MESSAGING_DESTINATION_NAME, "input"))
@@ -329,7 +330,7 @@ class MessageProducerSupportInstrumentationTest {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "test"),
+                                                equalTo(stringKey("messaging.system.name"), "test"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, "input"))))));
   }
 

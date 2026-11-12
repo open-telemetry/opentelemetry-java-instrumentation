@@ -19,4 +19,9 @@ class JdbcInstrumentationTest extends AbstractJdbcInstrumentationTest {
   protected InstrumentationExtension testing() {
     return testing;
   }
+
+  @Override
+  protected boolean hasSqliteConnectionInitializationSpans() {
+    return true;
+  }
 }

@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -17,6 +18,9 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CLICKHOUSE;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
@@ -30,9 +34,8 @@ import com.clickhouse.client.ClickHouseResponse;
 import com.clickhouse.client.ClickHouseResponseSummary;
 import com.clickhouse.client.TestClickHouseClient;
 import com.clickhouse.data.ClickHouseFormat;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -42,7 +45,10 @@ import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -145,7 +151,8 @@ class ClickHouseClientV1Test {
     ClickHouseNode third =
         ClickHouseNode.builder(ClickHouseNode.of("http://third.example")).port(8124).build();
 
-    Object serverTarget = serverTarget(requestWithNodes(ImmutableList.of(first, second, third)));
+    Object serverTarget =
+        serverTarget(requestWithNodes(Collections.unmodifiableList(asList(first, second, third))));
 
     assertThat(serverTarget).isNotNull();
     assertThat(serverTargetAddress(serverTarget))
@@ -157,7 +164,7 @@ class ClickHouseClientV1Test {
   void testConfiguredBracketedIpv6() throws Exception {
     Object serverTarget =
         serverTarget(
-            requestWithNodes(ImmutableList.of(ClickHouseNode.of("http://[2001:db8::1]:8123"))));
+            requestWithNodes(singletonList(ClickHouseNode.of("http://[2001:db8::1]:8123"))));
 
     assertThat(serverTarget).isNotNull();
     assertThat(serverTargetAddress(serverTarget)).isEqualTo("2001:db8::1");
@@ -168,8 +175,7 @@ class ClickHouseClientV1Test {
   void testConfiguredSingleEndpointOmitsDefaultPortAndReportsNonDefaultPortSeparately()
       throws Exception {
     Object serverTarget =
-        serverTarget(
-            requestWithNodes(ImmutableList.of(ClickHouseNode.of("http://default.example"))));
+        serverTarget(requestWithNodes(singletonList(ClickHouseNode.of("http://default.example"))));
 
     assertThat(serverTarget).isNotNull();
     assertThat(serverTargetAddress(serverTarget)).isEqualTo("default.example");
@@ -177,7 +183,7 @@ class ClickHouseClientV1Test {
 
     serverTarget =
         serverTarget(
-            requestWithNodes(ImmutableList.of(ClickHouseNode.of("http://single.example:9123"))));
+            requestWithNodes(singletonList(ClickHouseNode.of("http://single.example:9123"))));
 
     assertThat(serverTarget).isNotNull();
     assertThat(serverTargetAddress(serverTarget)).isEqualTo("single.example");
@@ -191,7 +197,7 @@ class ClickHouseClientV1Test {
             .host(" unsafe.example ")
             .build();
 
-    Object serverTarget = serverTarget(requestWithNodes(ImmutableList.of(node)));
+    Object serverTarget = serverTarget(requestWithNodes(singletonList(node)));
 
     assertThat(serverTarget).isNotNull();
     assertThat(serverTargetAddress(serverTarget)).isEqualTo("unsafe.example");
@@ -210,7 +216,7 @@ class ClickHouseClientV1Test {
     ClickHouseNode unsafe =
         ClickHouseNode.builder(ClickHouseNode.of("http://safe.example")).host(host).build();
 
-    assertThat(serverTarget(requestWithNodes(ImmutableList.of(unsafe)))).isNull();
+    assertThat(serverTarget(requestWithNodes(singletonList(unsafe)))).isNull();
   }
 
   @Test
@@ -220,7 +226,7 @@ class ClickHouseClientV1Test {
             .host("fe80::1%3Apassword")
             .build();
 
-    assertThat(serverTarget(requestWithNodes(ImmutableList.of(unsafe)))).isNull();
+    assertThat(serverTarget(requestWithNodes(singletonList(unsafe)))).isNull();
   }
 
   @Test
@@ -331,6 +337,71 @@ class ClickHouseClientV1Test {
   }
 
   @Test
+  void testClientConnectionFailureCapturesResponseStatus() {
+    int unavailablePort = PortUtils.findOpenPort();
+    ClickHouseNode unavailableServer =
+        ClickHouseNode.of("http://127.0.0.1:" + unavailablePort + "/default?compress=0");
+    Throwable thrown =
+        catchThrowable(
+            () -> {
+              ClickHouseResponse response =
+                  client
+                      .read(unavailableServer)
+                      .query("select * from non_existent_table")
+                      .executeAndWait();
+              response.close();
+            });
+
+    assertThat(thrown).isInstanceOf(ClickHouseException.class);
+    assertThat(((ClickHouseException) thrown).getErrorCode()).isEqualTo(210);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("select non_existent_table")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasException(thrown)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, unavailablePort),
+                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                            equalTo(NETWORK_PEER_PORT, unavailablePort),
+                            equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
+                            equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
+                            equalTo(ERROR_TYPE, "210"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "210"))));
+
+    assertDurationMetric(
+        testing,
+        "io.opentelemetry.clickhouse-client-v1-0.5",
+        DB_SYSTEM_NAME,
+        DB_QUERY_SUMMARY,
+        DB_NAMESPACE,
+        DB_RESPONSE_STATUS_CODE,
+        ERROR_TYPE,
+        NETWORK_PEER_ADDRESS,
+        NETWORK_PEER_PORT,
+        SERVER_ADDRESS,
+        SERVER_PORT);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.clickhouse-client-v1-0.5",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasAttribute(DB_RESPONSE_STATUS_CODE, "210")
+                                    .hasAttribute(ERROR_TYPE, "210"))));
+  }
+
+  @Test
   void testExecuteAndWaitThrowsException() {
     Throwable thrown =
         catchThrowable(
@@ -363,7 +434,8 @@ class ClickHouseClientV1Test {
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
                             equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
-                            equalTo(ERROR_TYPE, "60"))));
+                            equalTo(ERROR_TYPE, "60"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "60"))));
 
     assertDurationMetric(
         testing,
@@ -371,6 +443,7 @@ class ClickHouseClientV1Test {
         DB_SYSTEM_NAME,
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
+        DB_RESPONSE_STATUS_CODE,
         ERROR_TYPE,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT,
@@ -384,7 +457,10 @@ class ClickHouseClientV1Test {
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(ERROR_TYPE, "60"))));
+                            point ->
+                                point
+                                    .hasAttribute(DB_RESPONSE_STATUS_CODE, "60")
+                                    .hasAttribute(ERROR_TYPE, "60"))));
   }
 
   @Test
@@ -529,6 +605,10 @@ class ClickHouseClientV1Test {
   void testParameterizedQueryInput() throws ClickHouseException {
     ClickHouseRequest<?> request =
         client.read(server).format(ClickHouseFormat.RowBinaryWithNamesAndTypes);
+    Map<String, String> parameters = new LinkedHashMap<>();
+    parameters.put("val1", "1");
+    parameters.put("val2", "2");
+    parameters.put("val3", "3");
 
     testing.runWithSpan(
         "parent",
@@ -540,7 +620,7 @@ class ClickHouseClientV1Test {
                       ClickHouseParameterizedQuery.of(
                           request.getConfig(),
                           "insert into " + TABLE_NAME + " values(:val1)(:val2)(:val3)"))
-                  .params(ImmutableMap.of("val1", "1", "val2", "2", "val3", "3"))
+                  .params(Collections.unmodifiableMap(parameters))
                   .executeAndWait();
           response.close();
 
@@ -549,7 +629,7 @@ class ClickHouseClientV1Test {
                   .query(
                       ClickHouseParameterizedQuery.of(
                           request.getConfig(), "select * from " + TABLE_NAME + " where s=:val"))
-                  .params(ImmutableMap.of("val", "'2'"))
+                  .params(singletonMap("val", "'2'"))
                   .executeAndWait();
           response.close();
         });
@@ -604,7 +684,7 @@ class ClickHouseClientV1Test {
               request
                   // {s:String} is really a syntax error should be {s: String}
                   .query("select * from " + TABLE_NAME + " where s={s:String}")
-                  .settings(ImmutableMap.of("param_s", "" + Instant.now().getEpochSecond()))
+                  .settings(singletonMap("param_s", "" + Instant.now().getEpochSecond()))
                   .execute()
                   .join();
           response.close();
@@ -669,7 +749,7 @@ class ClickHouseClientV1Test {
     } catch (ClassNotFoundException ignored) {
       Class<?> registry =
           AgentClassLoaderAccess.loadClass(
-              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+              "io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationClassLoaderRegistry");
       Method getInstrumentationClassLoader =
           registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
       ClassLoader instrumentationClassLoader =

@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.executions
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
@@ -53,21 +54,35 @@ kotlin {
   }
 }
 
-tasks {
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+testing.suites {
+  register<JvmTestSuite>("externalJobTest") {
+    dependencies {
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation("io.ktor:ktor-server-cio:${baseVersion(ktorVersion).orLatest("+")}")
+    }
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
+  // Ktor 3.4.3 changes how SuspendFunctionGun resumes pipeline continuations (KTOR-9431), so
+  // rerun the external job tests against it.
+  register<JvmTestSuite>("version343Test") {
+    dependencies {
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation("io.ktor:ktor-server-cio:${baseVersion("3.4.3").orLatest("+")}")
+    }
+    sources {
+      kotlin {
+        setSrcDirs(listOf("src/externalJobTest/kotlin"))
+      }
+    }
   }
 
-  check {
-    dependsOn(testExperimental, testPreviewSemconv)
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
+    }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

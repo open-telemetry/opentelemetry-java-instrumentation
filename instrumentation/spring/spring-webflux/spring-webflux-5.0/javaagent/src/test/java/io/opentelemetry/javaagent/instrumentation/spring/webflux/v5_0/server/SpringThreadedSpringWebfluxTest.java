@@ -29,7 +29,9 @@ import server.SpringWebFluxTestApplication;
 class SpringThreadedSpringWebfluxTest extends SpringWebfluxTest {
 
   @TestConfiguration
-  static class ForceSingleThreadedNettyAutoConfiguration {
+  static class ForceSingleThreadedNettyAutoConfiguration
+      extends SpringWebfluxTest.ForceNettyAutoConfiguration {
+    @Override
     @Bean
     NettyReactiveWebServerFactory nettyFactory() {
       NettyReactiveWebServerFactory factory = new NettyReactiveWebServerFactory();

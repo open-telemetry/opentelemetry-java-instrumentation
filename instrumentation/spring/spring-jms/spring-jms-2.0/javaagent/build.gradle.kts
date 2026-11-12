@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -42,26 +45,83 @@ dependencies {
   latestDepTestLibrary("org.springframework:spring-jms:5.+") // see spring-jms-6.0 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
-        implementation(project(":instrumentation:jms:jms-1.1:javaagent"))
-        implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("javax.jms:jms-api:1.1-rev-1")
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+      implementation(project(":instrumentation:jms:jms-1.1:javaagent"))
+      implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("javax.jms:jms-api:1.1-rev-1")
+    }
+  }
+
+  register<JvmTestSuite>("version20Test") {
+    dependencies {
+      implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
+      implementation("org.springframework:spring-jms:2.0")
+      implementation("javax.jms:jms-api:1.1-rev-1")
+      implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
+      implementation("org.hornetq:hornetq-jms-server:2.4.7.Final") {
+        // this doesn't exist in maven central, and doesn't seem to be needed anyways
+        exclude("org.jboss.naming", "jnpserver")
       }
     }
+  }
 
-    register<JvmTestSuite>("testReceiveSpansDisabled") {
-      dependencies {
-        implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
-        // this is just to avoid a bit more copy-pasting
-        implementation(sourceSets["test"].output)
+  register<JvmTestSuite>("version30Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/version20Test/java"))
       }
+    }
+    dependencies {
+      implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
+      implementation("org.springframework:spring-jms:3.0.0.RELEASE")
+      implementation("org.springframework:spring-tx:3.0.0.RELEASE")
+      implementation("javax.jms:jms-api:1.1-rev-1")
+      implementation("org.hornetq:hornetq-jms-client:2.4.7.Final")
+      implementation("org.hornetq:hornetq-jms-server:2.4.7.Final") {
+        // this doesn't exist in maven central, and doesn't seem to be needed anyways
+        exclude("org.jboss.naming", "jnpserver")
+      }
+    }
+  }
+
+  register<JvmTestSuite>("testReceiveSpansDisabled") {
+    dependencies {
+      implementation(project(":instrumentation:spring:spring-jms:spring-jms-2.0:testing"))
+      // this is just to avoid a bit more copy-pasting
+      implementation(sourceSets["test"].output)
+    }
+  }
+
+  executions("test") {
+    // this does not apply to testReceiveSpansDisabled
+    configureDefault {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+
+    register("JmsDisabled") {
+      filter {
+        includeTestsMatching(
+          "*.receivingMessageInSpringListenerGeneratesSpansWithJmsDisabled",
+        )
+      }
+      telemetryConfig("otel.instrumentation.jms.enabled", "false")
+      // receive telemetry is enabled here because the jms instrumentation that would create the
+      // receive operation is disabled, so the process operation owns the messaging telemetry
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+
+      systemProperty("testJmsDisabled", "true")
+    }
+  }
+
+  executions("version20Test") {
+    register("ReceiveTelemetryEnabled") {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
   }
 }
@@ -73,40 +133,7 @@ configurations {
 }
 
 tasks {
-  // this does not apply to testReceiveSpansDisabled
-  test {
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  val testJmsDisabled = register<Test>("testJmsDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching(
-        "*.receivingMessageInSpringListenerGeneratesSpansWithJmsDisabled",
-      )
-    }
-    jvmArgs("-Dotel.instrumentation.jms.enabled=false")
-    // receive telemetry is enabled here because the jms instrumentation that would create the
-    // receive operation is disabled, so the process operation owns the messaging telemetry
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-
-    systemProperty("testJmsDisabled", "true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.jms.enabled=false," +
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
   check {
-    dependsOn(
-      testing.suites,
-      testJmsDisabled,
-    )
+    dependsOn(testing.suites)
   }
 }

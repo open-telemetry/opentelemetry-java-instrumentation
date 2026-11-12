@@ -31,6 +31,11 @@ final class InstrumentedEmbeddingService extends DelegatingInvocationHandler<Emb
   }
 
   @Override
+  protected EmbeddingService wrap(EmbeddingService delegate) {
+    return new InstrumentedEmbeddingService(delegate, instrumenter).createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.config.bridge;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -14,13 +13,12 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.internal.ServiceMappingResolver;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.io.ByteArrayInputStream;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.util.HashMap;
 import java.util.Map;
@@ -29,11 +27,6 @@ import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 class ServiceMappingCompatibilityTest {
-
-  private static final String LEGACY_RESOLVER_CLASS =
-      "io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.internal.ServicePeerResolver";
-  private static final String CURRENT_RESOLVER_CLASS =
-      "io.opentelemetry.instrumentation.api.incubator.semconv.service.internal.ServiceMappingResolver";
 
   @Test
   void flatLegacyUserValueWinsOverCanonicalDefault() throws Exception {
@@ -219,34 +212,17 @@ class ServiceMappingCompatibilityTest {
   private static void assertResolves(DeclarativeConfigProperties common, String expected)
       throws Exception {
     OpenTelemetry openTelemetry = openTelemetry(common);
-    int resolverCount = 0;
-    for (String className : asList(LEGACY_RESOLVER_CLASS, CURRENT_RESOLVER_CLASS)) {
-      Class<?> resolverClass;
-      try {
-        resolverClass = Class.forName(className);
-      } catch (ClassNotFoundException ignored) {
-        continue;
-      }
-      resolverCount++;
-      Constructor<?> constructor = resolverClass.getConstructor(OpenTelemetry.class);
-      Object resolver = constructor.newInstance(openTelemetry);
-      Map<String, String> attributes = new HashMap<>();
-      BiConsumer<AttributeKey<String>, String> setter =
-          (key, value) -> attributes.put(key.getKey(), value);
-      Method resolve =
-          resolverClass.getMethod(
-              "resolve", String.class, Integer.class, Supplier.class, BiConsumer.class);
-      resolve.invoke(resolver, "example.com", null, (Supplier<String>) () -> null, setter);
+    ServiceMappingResolver resolver = new ServiceMappingResolver(openTelemetry);
+    Map<String, String> attributes = new HashMap<>();
+    BiConsumer<AttributeKey<String>, String> setter =
+        (key, value) -> attributes.put(key.getKey(), value);
+    resolver.resolve("example.com", null, (Supplier<String>) () -> null, setter);
 
-      String expectedKey =
-          className.equals(LEGACY_RESOLVER_CLASS) ? "peer.service" : "server.service.name";
-      if (expected == null) {
-        assertThat(attributes).isEmpty();
-      } else {
-        assertThat(attributes).containsEntry(expectedKey, expected);
-      }
+    if (expected == null) {
+      assertThat(attributes).isEmpty();
+    } else {
+      assertThat(attributes).containsEntry("server.service.name", expected);
     }
-    assertThat(resolverCount).isPositive();
   }
 
   private static OpenTelemetry openTelemetry(DeclarativeConfigProperties common) {

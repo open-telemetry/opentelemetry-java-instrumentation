@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -44,9 +48,11 @@ import io.vertx.redis.client.RedisConnection;
 import io.vertx.redis.client.RedisOptions;
 import io.vertx.redis.client.Request;
 import io.vertx.redis.client.Response;
+import io.vertx.redis.client.impl.types.ErrorType;
 import java.net.InetAddress;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.CompletableFuture;
@@ -62,6 +68,8 @@ import org.testcontainers.containers.GenericContainer;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class VertxRedisClientTest {
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vertx-redis-client-4.0";
+
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -120,7 +128,7 @@ class VertxRedisClientTest {
 
     assertDurationMetric(
         testing,
-        "io.opentelemetry.vertx-redis-client-4.0",
+        INSTRUMENTATION_NAME,
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
         DB_NAMESPACE,
@@ -151,13 +159,13 @@ class VertxRedisClientTest {
                             equalTo(DB_NAMESPACE, "0"),
                             equalTo(SERVER_ADDRESS, host),
                             equalTo(SERVER_PORT, port),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(NETWORK_PEER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip))));
 
     assertDurationMetric(
         testing,
-        "io.opentelemetry.vertx-redis-client-4.0",
+        INSTRUMENTATION_NAME,
         DB_SYSTEM_NAME,
         DB_OPERATION_NAME,
         DB_NAMESPACE,
@@ -188,6 +196,124 @@ class VertxRedisClientTest {
                     span.hasName("GET " + host + ":" + port)
                         .hasKind(SpanKind.CLIENT)
                         .hasAttributesSatisfyingExactly(redisSpanAttributes("GET", "GET foo"))));
+  }
+
+  @Test
+  void singleCommandServerError() throws Exception {
+    redis
+        .lpush(asList("wrong-type", "value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Object result =
+        connection
+            .send(Request.cmd(Command.GET).arg("wrong-type"))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .handle((response, error) -> error == null ? response : error)
+            .get(30, SECONDS);
+
+    assertThat(result).isInstanceOf(ErrorType.class);
+    assertErrorTypeTelemetry("WRONGTYPE", "WRONGTYPE", "GET", "GET wrong-type", null);
+  }
+
+  @Test
+  void batchCommandServerError() throws Exception {
+    redis
+        .lpush(asList("batch-wrong-type", "value"))
+        .toCompletionStage()
+        .toCompletableFuture()
+        .get(30, SECONDS);
+    testing.waitForTraces(1);
+    testing.clearData();
+
+    Object result =
+        connection
+            .batch(
+                asList(
+                    Request.cmd(Command.GET).arg("batch-wrong-type"),
+                    Request.cmd(Command.GET).arg("batch-wrong-type")))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .handle((response, error) -> error == null ? response : error)
+            .get(30, SECONDS);
+
+    assertThat(result).isInstanceOf(ErrorType.class);
+    assertErrorTypeTelemetry(
+        testLatestDeps() ? ErrorType.class.getName() : "WRONGTYPE",
+        testLatestDeps() ? null : "WRONGTYPE",
+        "PIPELINE GET",
+        "GET batch-wrong-type; GET batch-wrong-type",
+        2L);
+  }
+
+  @ParameterizedTest
+  @MethodSource("serverErrorReplyPrefixCases")
+  void serverErrorReplyPrefixes(String reply, String expectedErrorType, String expectedStatusCode)
+      throws Exception {
+    Object result =
+        connection
+            .send(
+                Request.cmd(Command.EVAL)
+                    .arg("return redis.error_reply(ARGV[1])")
+                    .arg("0")
+                    .arg(reply))
+            .toCompletionStage()
+            .toCompletableFuture()
+            .handle((response, error) -> error == null ? response : error)
+            .get(30, SECONDS);
+
+    assertThat(result).isInstanceOf(ErrorType.class);
+    assertErrorTypeTelemetry(
+        expectedErrorType,
+        expectedStatusCode,
+        "EVAL",
+        "EVAL return redis.error_reply(ARGV[1]) 0 ?",
+        null);
+  }
+
+  private static Stream<Arguments> serverErrorReplyPrefixCases() {
+    return Stream.of(
+        argumentSet("customPrefix", "Custom.Code! detail", "Custom.Code!", "Custom.Code!"),
+        argumentSet("lowercasePrefix", "lowercase detail", "lowercase", "lowercase"),
+        argumentSet("prefixOnly", "PrefixOnly", "PrefixOnly", "PrefixOnly"),
+        argumentSet("blankPrefix", " ", ErrorType.class.getName(), null));
+  }
+
+  private static void assertErrorTypeTelemetry(
+      String expectedErrorType,
+      String expectedStatusCode,
+      String operationName,
+      String queryText,
+      Long batchSize) {
+    AttributeAssertion[] operationAttributes =
+        redisSpanAttributes(operationName, queryText, batchSize);
+    AttributeAssertion[] attributes =
+        Arrays.copyOf(operationAttributes, operationAttributes.length + 2);
+    attributes[attributes.length - 2] = equalTo(DB_RESPONSE_STATUS_CODE, expectedStatusCode);
+    attributes[attributes.length - 1] = equalTo(ERROR_TYPE, expectedErrorType);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(operationName + " " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(attributes)));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metrics ->
+            metrics
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    equalTo(ERROR_TYPE, expectedErrorType)))));
   }
 
   @Test
@@ -536,7 +662,7 @@ class VertxRedisClientTest {
       equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
       equalTo(SERVER_ADDRESS, host),
       equalTo(SERVER_PORT, port),
-      equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+      equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
       equalTo(NETWORK_PEER_PORT, port),
       equalTo(NETWORK_PEER_ADDRESS, ip)
     };

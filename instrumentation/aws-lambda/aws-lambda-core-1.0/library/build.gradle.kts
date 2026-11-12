@@ -27,55 +27,42 @@ dependencies {
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        }
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
+testing.suites {
+  register<JvmTestSuite>("version12Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java", "src/version12Test/java"))
       }
     }
 
-    register<JvmTestSuite>("version12Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+    dependencies {
+      implementation(project())
+      implementation(
+        "com.amazonaws:aws-lambda-java-core:${baseVersion("1.2.1").orLatest()}"
+      )
+    }
 
-      dependencies {
-        implementation(project())
-        implementation(
-          "com.amazonaws:aws-lambda-java-core:${baseVersion("1.2.1").orLatest()}"
-        )
-      }
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        }
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
-      }
+    project.configurations.named(sources.implementationConfigurationName) {
+      extendsFrom(configurations["testImplementation"])
+    }
+    project.configurations.named(sources.runtimeOnlyConfigurationName) {
+      extendsFrom(configurations["testRuntimeOnly"])
+    }
+  }
+
+  executions("test", "version12Test") {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    }
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     }
   }
 }
 
-configurations {
-  named("version12TestImplementation") {
-    extendsFrom(configurations["testImplementation"])
-  }
-  named("version12TestRuntimeOnly") {
-    extendsFrom(configurations["testRuntimeOnly"])
-  }
+tasks.check {
+  dependsOn(testing.suites)
 }

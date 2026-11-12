@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -78,7 +78,7 @@ class AwsLambdaWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -111,7 +111,7 @@ class AwsLambdaWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -142,7 +142,7 @@ class AwsLambdaWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -176,7 +176,7 @@ class AwsLambdaWrapperTest {
                                 AwsLambdaTestUtils.supportsInvokedFunctionArn()
                                     ? "123456789"
                                     : null),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   public static class TestRequestHandlerString implements RequestHandler<String, String> {

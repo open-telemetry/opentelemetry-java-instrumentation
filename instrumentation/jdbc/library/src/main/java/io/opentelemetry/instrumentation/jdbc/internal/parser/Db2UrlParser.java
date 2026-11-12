@@ -37,6 +37,11 @@ public final class Db2UrlParser implements JdbcUrlParser {
 
     ctx.applyDataSourceProperties();
 
+    String authority = UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
+    if (authority != null && UrlParsingUtils.hasMultipleTargets(authority)) {
+      ctx.disableSingleServerFallback();
+    }
+
     // DB2/AS400 uses colon to separate URL from params, semicolons within params
     if (jdbcUrl.contains("=")) {
       int paramLoc = jdbcUrl.lastIndexOf(":");

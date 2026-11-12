@@ -80,6 +80,37 @@ public class Application {
 }
 ```
 
+#### Asynchronous logging and trace correlation
+
+Attach `OpenTelemetryAppender` directly to your logger. Placing it behind Logback's `AsyncAppender`
+loses trace/span correlation because the logging thread's OpenTelemetry context is not propagated
+to the async worker. This limitation does not apply to the Java agent's automatic log capture.
+
+Use the SDK's `BatchLogRecordProcessor` for asynchronous export. Formatting and attribute extraction
+still run on the logging thread. Console or file appenders can remain asynchronous, as shown below:
+
+```xml
+<configuration>
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder>
+      <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+  </appender>
+  <appender name="async-console" class="ch.qos.logback.classic.AsyncAppender">
+    <appender-ref ref="console"/>
+  </appender>
+  <appender name="OpenTelemetry"
+            class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender"/>
+  <root level="INFO">
+    <appender-ref ref="OpenTelemetry"/>
+    <appender-ref ref="async-console"/>
+  </root>
+</configuration>
+```
+
+With the OpenTelemetry Spring Boot starter, use the same layout in `logback-spring.xml`. The starter
+configures SDK batch export by default.
+
 #### Settings for the Logback Appender
 
 Settings can be configured in `logback.xml`, for example:
@@ -131,6 +162,10 @@ MDC attributes are captured only when at least one of these settings is configur
 `setMdcAttributes(IncludeExclude)` selector takes precedence over `mdcAttributesIncluded` and
 `mdcAttributesExcluded`, which in turn take precedence over the deprecated `captureMdcAttributes`.
 No MDC attributes are captured when all of these are absent or empty.
+
+MDC capture selects application-owned values, not trace or baggage values added by the OpenTelemetry
+MDC appender. Application-owned values remain selectable even under keys such as `trace_id`.
+Application appenders still receive the enriched MDC.
 
 Captured MDC attributes may contain sensitive information. Configure included and excluded patterns
 to limit the data exported as log attributes.
