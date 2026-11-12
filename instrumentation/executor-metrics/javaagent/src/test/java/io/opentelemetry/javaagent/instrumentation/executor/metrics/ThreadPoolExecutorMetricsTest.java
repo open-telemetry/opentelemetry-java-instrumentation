@@ -3,11 +3,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.executors.metrics;
+package io.opentelemetry.javaagent.instrumentation.executor.metrics;
 
-import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetric;
-import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetrics;
-import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetricsWithOwner;
+import static io.opentelemetry.javaagent.instrumentation.executor.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetric;
+import static io.opentelemetry.javaagent.instrumentation.executor.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetrics;
+import static io.opentelemetry.javaagent.instrumentation.executor.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetricsWithOwner;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -17,7 +17,7 @@ import static org.awaitility.Awaitility.await;
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.bootstrap.executors.metrics.JdkExecutorMetrics;
+import io.opentelemetry.javaagent.bootstrap.executor.metrics.JdkExecutorMetrics;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
 import java.util.concurrent.ArrayBlockingQueue;
@@ -128,7 +128,7 @@ class ThreadPoolExecutorMetricsTest {
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "metrics-pool-*", THREAD_POOL_EXECUTOR_TYPE)
           .withCompletedTasks(1)
-          .withQueueSize(-1)
+          .withQueueSize(0)
           .assertExecutorEmitsMetrics();
     } finally {
       release.countDown();

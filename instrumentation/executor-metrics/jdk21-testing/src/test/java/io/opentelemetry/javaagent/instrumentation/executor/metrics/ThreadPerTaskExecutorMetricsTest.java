@@ -3,9 +3,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.executors.metrics;
+package io.opentelemetry.javaagent.instrumentation.executor.metrics;
 
-import static io.opentelemetry.javaagent.instrumentation.executors.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetrics;
+import static io.opentelemetry.javaagent.instrumentation.executor.metrics.JvmExecutorMetricsAssertions.assertNoExecutorMetrics;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -114,7 +114,7 @@ class ThreadPerTaskExecutorMetricsTest {
       releaseFirst.countDown();
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "draining-thread-per-task-*", EXECUTOR_TYPE)
-          .withActiveThreads(-1)
+          .withActiveThreads(1)
           .assertExecutorEmitsMetrics();
       assertThat(executor.isTerminated()).isFalse();
     } finally {
@@ -164,7 +164,7 @@ class ThreadPerTaskExecutorMetricsTest {
       assertThat(secondStarted.await(10, SECONDS)).isTrue();
       JvmExecutorMetricsAssertions.create(
               testing, INSTRUMENTATION_NAME, "initial-thread-*", EXECUTOR_TYPE)
-          .withActiveThreads(1)
+          .withActiveThreads(2)
           .assertExecutorEmitsMetrics();
       assertNoExecutorMetrics(testing, INSTRUMENTATION_NAME, "later-thread-*");
 
@@ -243,7 +243,7 @@ class ThreadPerTaskExecutorMetricsTest {
         () -> {
           started.countDown();
           try {
-            release.await(10, SECONDS);
+            release.await();
           } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new AssertionError(e);
@@ -270,7 +270,7 @@ class ThreadPerTaskExecutorMetricsTest {
       Executor executor, String ownerName, String threadNameNormalization) throws Exception {
     Class<?> executorMetrics =
         Class.forName(
-            "io.opentelemetry.javaagent.bootstrap.executors.metrics.JdkExecutorMetrics",
+            "io.opentelemetry.javaagent.bootstrap.executor.metrics.JdkExecutorMetrics",
             false,
             null);
     executorMetrics

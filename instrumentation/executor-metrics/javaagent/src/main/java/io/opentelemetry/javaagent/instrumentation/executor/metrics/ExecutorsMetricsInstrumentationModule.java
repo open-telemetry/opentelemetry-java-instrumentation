@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.executors.metrics;
+package io.opentelemetry.javaagent.instrumentation.executor.metrics;
 
 import static java.util.Arrays.asList;
 

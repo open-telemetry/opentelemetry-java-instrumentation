@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.executors.metrics;
+package io.opentelemetry.javaagent.instrumentation.executor.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -246,7 +246,7 @@ public class JvmExecutorMetricsAssertions {
         .hasDescription(
             "The number of executor threads that are currently in the state described by the jvm.executor.thread.state attribute.")
         .hasLongSumSatisfying(
-            sum -> sum.isNotMonotonic().containsPointsSatisfying(pointAssertions));
+            sum -> sum.isNotMonotonic().isCumulative().containsPointsSatisfying(pointAssertions));
   }
 
   private void verifyThreadCountPoint(LongPointAssert point, String state, long expectedValue) {
@@ -355,9 +355,9 @@ public class JvmExecutorMetricsAssertions {
 
   private void verifyExecutorAttributes(LongSumAssert sum, boolean monotonic, long expectedValue) {
     if (monotonic) {
-      sum.isMonotonic();
+      sum.isMonotonic().isDelta();
     } else {
-      sum.isNotMonotonic();
+      sum.isNotMonotonic().isCumulative();
     }
     sum.containsPointsSatisfying(
         point ->
