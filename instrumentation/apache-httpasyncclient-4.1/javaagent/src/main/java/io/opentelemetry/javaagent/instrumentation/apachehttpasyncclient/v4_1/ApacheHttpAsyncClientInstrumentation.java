@@ -25,7 +25,6 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpInetConnection;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpResponse;
 import org.apache.http.concurrent.FutureCallback;
@@ -104,13 +103,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (request != null) {
         request.setNetworkPeer(
             ApacheHttpClientRequest.captureNetworkPeer(wrappedFutureCallback.httpContext));
-      }
-    }
-
-    void captureNetworkPeer(HttpInetConnection connection) {
-      ApacheHttpClientRequest request = wrappedFutureCallback.otelRequest;
-      if (request != null) {
-        request.setNetworkPeer(ApacheHttpClientRequest.captureNetworkPeer(connection));
       }
     }
 

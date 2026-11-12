@@ -6,14 +6,21 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
@@ -193,15 +200,23 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
           }
         };
 
-    HttpClientResult outerResult = new HttpClientResult(() -> {});
-    client.execute(
-        outerTarget,
-        singletonList(requestProducer),
-        singletonList(new BasicAsyncResponseConsumer()),
-        sharedContext,
-        new ResponseCallback(outerResult));
+    URI secondOuterUri = outerUri.resolve("/second");
+    HttpAsyncRequestProducer secondRequestProducer =
+        new BasicAsyncRequestProducer(outerTarget, new HttpGet(secondOuterUri.getRawPath()));
 
-    assertThat(outerResult.get()).isEqualTo(200);
+    List<HttpResponse> responses =
+        client
+            .execute(
+                outerTarget,
+                asList(requestProducer, secondRequestProducer),
+                asList(new BasicAsyncResponseConsumer(), new BasicAsyncResponseConsumer()),
+                sharedContext,
+                null)
+            .get(10, SECONDS);
+
+    assertThat(responses)
+        .extracting(response -> getResponseCode(response))
+        .containsExactly(200, 200);
     assertThat(getResponseCode(innerCallbackResult.get(10, SECONDS))).isEqualTo(200);
 
     testing.waitAndAssertTraces(
@@ -212,17 +227,9 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
                         .hasNoParent()
                         .hasStatus(StatusData.unset()),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))),
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertOuterPipelineSpan(span, outerUri)),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfying(
-                            equalTo(URL_FULL, outerUri.toString()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, outerUri.getPort()))));
+            trace.hasSpansSatisfyingExactly(span -> assertOuterPipelineSpan(span, secondOuterUri)));
   }
 
   @Test
@@ -708,6 +715,23 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
                         .hasKind(INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())));
+  }
+
+  private static SpanDataAssert assertOuterPipelineSpan(SpanDataAssert span, URI uri) {
+    return span.hasName("GET")
+        .hasKind(CLIENT)
+        .hasNoParent()
+        .hasStatus(StatusData.unset())
+        .hasAttributesSatisfyingExactly(
+            equalTo(HTTP_REQUEST_METHOD, "GET"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+            equalTo(SERVER_ADDRESS, uri.getHost()),
+            equalTo(SERVER_PORT, uri.getPort()),
+            equalTo(URL_FULL, uri.toString()),
+            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+            equalTo(NETWORK_PEER_PORT, uri.getPort()),
+            equalTo(stringKey("server.service.name"), expectedMappedServiceName()));
   }
 
   private SpanDataAssert assertClientSpanWithPeer(
