@@ -154,17 +154,17 @@ final class HandlerRegistry {
                 () ->
                     OldGarbageCollectionHandler.create(meter, effectiveMetricNamePredicate, name));
 
-        // GraalVM native image: its collectors ("young generation scavenger" and "complete
-        // scavenger") emit only the generic jdk.GarbageCollection event, so one handler covers both
-        case "young generation scavenger" ->
-            addIfAvailable(
-                handlers,
-                availableEventNames,
-                "jdk.GarbageCollection",
-                () -> GarbageCollectionHandler.create(meter, effectiveMetricNamePredicate));
-
         default -> {}
       }
+    }
+    if (handlers.isEmpty()) {
+      // No collector-specific event is available, as in a GraalVM native image, whose collectors
+      // emit only the generic jdk.GarbageCollection event: fall back to it for every collector
+      addIfAvailable(
+          handlers,
+          availableEventNames,
+          "jdk.GarbageCollection",
+          () -> GarbageCollectionHandler.create(meter, effectiveMetricNamePredicate));
     }
 
     addIfAvailable(

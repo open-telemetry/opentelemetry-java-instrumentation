@@ -12,9 +12,11 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection.G1GarbageCollectionHandler;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection.GarbageCollectionHandler;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class HandlerRegistryTest {
@@ -30,7 +32,23 @@ class HandlerRegistryTest {
   }
 
   @Test
-  void handlesNativeImageGarbageCollectionOnce() {
+  void doesNotFallBackWhenCollectorSpecificEventsExist() {
+    Meter meter = SdkMeterProvider.builder().build().get("test");
+
+    assertThat(
+            HandlerRegistry.getHandlers(
+                meter,
+                "jvm.gc.duration"::equals,
+                false,
+                false,
+                Set.of("jdk.G1GarbageCollection", "jdk.GarbageCollection"),
+                List.of("G1 Young Generation", "G1 Old Generation")))
+        .singleElement()
+        .isInstanceOf(G1GarbageCollectionHandler.class);
+  }
+
+  @Test
+  void fallsBackToGenericGarbageCollectionEvent() {
     Meter meter = SdkMeterProvider.builder().build().get("test");
 
     assertThat(
