@@ -19,14 +19,64 @@ import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryC
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import io.opentelemetry.sdk.internal.SdkConfigProvider;
 import java.io.ByteArrayInputStream;
+import java.lang.reflect.Field;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.Test;
 
 class ServiceMappingCompatibilityTest {
+
+  @Test
+  void flatLegacyMappingWarnsOnceAndCanonicalMappingStaysSilent() throws Exception {
+    Logger logger = Logger.getLogger(ServiceMapping.class.getName());
+    TestHandler handler = new TestHandler();
+    AtomicBoolean warningLogged = legacyWarningFlag();
+    boolean originalWarningState = warningLogged.get();
+    logger.addHandler(handler);
+    try {
+      warningLogged.set(false);
+      Map<String, String> legacyProperties = new HashMap<>();
+      legacyProperties.put(
+          "otel.instrumentation.common.peer-service-mapping", "example.com=legacy-user");
+      DeclarativeConfigProperties legacyCommon = flatCommon(legacyProperties);
+
+      assertThat(legacyCommon.getStructuredList("server_service_mapping")).hasSize(1);
+      assertResolves(legacyCommon, "legacy-user");
+      assertResolves(legacyCommon, "legacy-user");
+
+      assertThat(handler.records)
+          .singleElement()
+          .satisfies(
+              record -> {
+                assertThat(record.getMessage())
+                    .contains("otel.instrumentation.common.peer-service-mapping")
+                    .contains("otel.instrumentation.common.server-service-mapping");
+              });
+
+      warningLogged.set(false);
+      handler.records.clear();
+      Map<String, String> canonicalProperties = new HashMap<>();
+      canonicalProperties.put(
+          "otel.instrumentation.common.server-service-mapping", "example.com=canonical-user");
+      canonicalProperties.put(
+          "otel.instrumentation.common.peer-service-mapping", "example.com=legacy-user");
+      DeclarativeConfigProperties canonicalCommon = flatCommon(canonicalProperties);
+      assertResolves(canonicalCommon, "canonical-user");
+      assertThat(handler.records).isEmpty();
+    } finally {
+      warningLogged.set(originalWarningState);
+      logger.removeHandler(handler);
+    }
+  }
 
   @Test
   void flatLegacyUserValueWinsOverCanonicalDefault() throws Exception {
@@ -251,5 +301,26 @@ class ServiceMappingCompatibilityTest {
               }
               return null;
             });
+  }
+
+  private static AtomicBoolean legacyWarningFlag() throws ReflectiveOperationException {
+    Field field = ServiceMapping.class.getDeclaredField("legacyWarningLogged");
+    field.setAccessible(true);
+    return (AtomicBoolean) field.get(null);
+  }
+
+  private static final class TestHandler extends Handler {
+    private final List<LogRecord> records = new ArrayList<>();
+
+    @Override
+    public void publish(LogRecord record) {
+      records.add(record);
+    }
+
+    @Override
+    public void flush() {}
+
+    @Override
+    public void close() {}
   }
 }

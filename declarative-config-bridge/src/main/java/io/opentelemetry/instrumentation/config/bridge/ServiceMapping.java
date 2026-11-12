@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -43,6 +45,9 @@ import javax.annotation.Nullable;
  */
 final class ServiceMapping implements DeclarativeConfigProperties {
 
+  private static final Logger logger = Logger.getLogger(ServiceMapping.class.getName());
+  private static final AtomicBoolean legacyWarningLogged = new AtomicBoolean();
+
   private final Map<String, String> fields;
   private final ComponentLoader componentLoader;
 
@@ -63,6 +68,11 @@ final class ServiceMapping implements DeclarativeConfigProperties {
         configProperties.getMap("otel.instrumentation.common.server-service-mapping");
     if (map.isEmpty()) {
       map = configProperties.getMap("otel.instrumentation.common.peer-service-mapping");
+      if (!map.isEmpty() && legacyWarningLogged.compareAndSet(false, true)) {
+        logger.warning(
+            "Deprecated configuration otel.instrumentation.common.peer-service-mapping is in use;"
+                + " use otel.instrumentation.common.server-service-mapping instead.");
+      }
     }
     if (map.isEmpty()) {
       return null;
