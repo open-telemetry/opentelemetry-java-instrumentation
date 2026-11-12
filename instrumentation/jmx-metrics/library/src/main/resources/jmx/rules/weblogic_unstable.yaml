@@ -109,6 +109,9 @@ rules:
         desc: &db_conn_desc The number of open physical database connections.
         metricAttribute:
           db.client.connection.state: const(used)
+      # In WebLogic, NumAvailable is the number of currently created physical connections in the
+      # pool that are idle and available (CurrCapacity = NumAvailable + NumUnavailable), not the
+      # remaining capacity up to MaxCapacity.
       NumAvailable:
         metric: *db_conn_metric
         type: *db_conn_type

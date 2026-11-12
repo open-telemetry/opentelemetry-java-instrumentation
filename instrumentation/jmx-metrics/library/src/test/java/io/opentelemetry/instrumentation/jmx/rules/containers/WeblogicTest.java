@@ -290,7 +290,8 @@ class WeblogicTest extends TargetSystemTest {
                             attribute("network.io.direction", "receive"), channelAttribute),
                         attributeGroup(
                             attribute("network.io.direction", "transmit"), channelAttribute)))
-        // JDBC connection pool metrics
+        // JDBC connection pool metrics (pool has InitialCapacity=1, MaxCapacity=5; idle is 1 and
+        // used is 0)
         .add(
             "weblogic.db.client.connection.count",
             metric ->
@@ -298,7 +299,7 @@ class WeblogicTest extends TargetSystemTest {
                     .isUpDownCounter()
                     .hasDescription("The number of open physical database connections.")
                     .hasUnit("{connection}")
-                    .hasDataPointsWithIntValues(v -> v.isGreaterThan(0), v -> v.isEqualTo(0))
+                    .hasDataPointsWithIntValues(v -> v.isEqualTo(1), v -> v.isEqualTo(0))
                     .hasDataPointsWithAttributes(
                         attributeGroup(
                             dataSourceAttribute, attribute("db.client.connection.state", "used")),
