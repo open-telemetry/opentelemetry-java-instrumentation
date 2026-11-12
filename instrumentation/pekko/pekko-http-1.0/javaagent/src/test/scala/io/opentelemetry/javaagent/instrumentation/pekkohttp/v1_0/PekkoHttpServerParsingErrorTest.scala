@@ -50,7 +50,7 @@ class PekkoHttpServerParsingErrorTest {
       // where another process can claim it before pekko binds
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -89,7 +89,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -129,7 +129,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort
@@ -177,7 +177,7 @@ class PekkoHttpServerParsingErrorTest {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
       val binding =
         Await.result(
-          Http().bindAndHandleSync(handler, "localhost", 0),
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
           10.seconds
         )
       val port = binding.localAddress.getPort

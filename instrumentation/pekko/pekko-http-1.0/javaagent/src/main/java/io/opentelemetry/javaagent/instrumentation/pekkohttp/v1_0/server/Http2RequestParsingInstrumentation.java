@@ -14,7 +14,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.stream.Attributes;
 import scala.Function1;
 
@@ -42,9 +41,9 @@ class Http2RequestParsingInstrumentation implements TypeInstrumentation {
 
     @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static Function1<Object, HttpRequest> onExit(
+    public static Function1<Object, Object> onExit(
         @Advice.Argument(2) Attributes attributes,
-        @Advice.Return Function1<Object, HttpRequest> parseRequest) {
+        @Advice.Return Function1<Object, Object> parseRequest) {
       return PekkoHttp2RequestParsingWrapper.wrap(parseRequest, attributes);
     }
   }

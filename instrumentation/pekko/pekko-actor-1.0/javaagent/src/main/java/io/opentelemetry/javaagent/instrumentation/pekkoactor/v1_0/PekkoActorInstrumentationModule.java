@@ -30,6 +30,7 @@ public class PekkoActorInstrumentationModule extends InstrumentationModule {
         new PekkoBatchingExecutorInstrumentation(),
         new PekkoActorCellInstrumentation(),
         new PekkoDefaultSystemMessageQueueInstrumentation(),
-        new PekkoScheduleInstrumentation());
+        new PekkoScheduleInstrumentation(),
+        new PekkoMailboxInstrumentation());
   }
 }
