@@ -16,7 +16,10 @@ otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true
 ```
 
 Ownership is disabled by default. When enabled, the bridge stops bridging each exact name and type
-below, whether or not runtime telemetry is enabled. Rows marked experimental are suppressed only
+below. If `otel.instrumentation.runtime-telemetry.enabled=false`, nothing is suppressed, so the
+Micrometer metrics remain bridged. If you set `otel.instrumentation.common.default-enabled=false`,
+also set `otel.instrumentation.runtime-telemetry.enabled=true`; otherwise the listed metrics are
+suppressed without a runtime telemetry replacement. Rows marked experimental are suppressed only
 when `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`, since runtime
 telemetry emits those replacements only in that mode.
 
