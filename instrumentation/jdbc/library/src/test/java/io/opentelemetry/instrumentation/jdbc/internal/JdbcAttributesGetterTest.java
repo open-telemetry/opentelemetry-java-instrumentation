@@ -23,11 +23,13 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class JdbcAttributesGetterTest {
 
@@ -71,7 +73,8 @@ class JdbcAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("errorCodes")
-  void getErrorTypeNormalizesVendorCode(int errorCode, String sqlState, String expectedErrorType) {
+  void extractsPostgresqlCodes(
+      int errorCode, String sqlState, String expectedErrorType, String expectedStatusCode) {
     DbRequest request =
         DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
 
@@ -79,16 +82,71 @@ class JdbcAttributesGetterTest {
             attributesGetter.getErrorType(
                 request, null, new SQLException("test", sqlState, errorCode)))
         .isEqualTo(expectedErrorType);
+    assertThat(
+            attributesGetter.getDbResponseStatusCode(
+                request, null, new SQLException("test", sqlState, errorCode)))
+        .isEqualTo(expectedStatusCode);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {17008, 17009})
+  void extractsOracleExceptionCodes(int errorCode) {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(ORACLE_DB).build(), "SELECT 1", false);
+    SQLException error = new SQLException("Closed locally", "99999", errorCode);
+
+    assertThat(attributesGetter.getErrorType(request, null, error))
+        .isEqualTo(Integer.toString(errorCode));
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error))
+        .isEqualTo(Integer.toString(errorCode));
+  }
+
+  @Test
+  void prefersSqlTimeoutExceptionOverDatabaseCodes() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(MYSQL).build(), "SELECT 1", false);
+    SQLTimeoutException error = new TestSqlTimeoutException("test", "HYT00", 1064);
+
+    assertThat(attributesGetter.getErrorType(request, null, error))
+        .isEqualTo(TestSqlTimeoutException.class.getName());
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
+  }
+
+  @Test
+  void omitsResponseStatusWithoutSqlException() {
+    DbRequest request =
+        DbRequest.create(DbInfo.builder().dbSystemName(POSTGRESQL).build(), "SELECT 1", false);
+
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, null)).isNull();
+    assertThat(attributesGetter.getDbResponseStatusCode(request, null, new IllegalStateException()))
+        .isNull();
+    assertThat(attributesGetter.getErrorType(request, null, null)).isNull();
+    assertThat(attributesGetter.getErrorType(request, null, new IllegalStateException()))
+        .isEqualTo(IllegalStateException.class.getName());
   }
 
   private static Stream<Arguments> errorCodes() {
     return Stream.of(
-        argumentSet("positive vendor code takes precedence", 42, "42601", "42"),
-        argumentSet("negative vendor code", -42, null, "-42"),
-        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601"),
-        argumentSet("null SQLSTATE is unavailable", 0, null, null),
-        argumentSet("empty SQLSTATE is unavailable", 0, "", null),
-        argumentSet("successful completion SQLSTATE is unavailable", 0, "00000", null));
+        argumentSet("PostgreSQL SQLSTATE takes precedence", 42, "42601", "42601", "42601"),
+        argumentSet("negative vendor code", -42, null, "-42", "-42"),
+        argumentSet("SQLSTATE with zero vendor code", 0, "42601", "42601", "42601"),
+        argumentSet("null SQLSTATE is unavailable", 0, null, SQLException.class.getName(), null),
+        argumentSet("empty SQLSTATE is unavailable", 0, "", SQLException.class.getName(), null),
+        argumentSet(
+            "successful completion SQLSTATE is available for status",
+            42,
+            "00000",
+            SQLException.class.getName(),
+            "00000"));
+  }
+
+  private static final class TestSqlTimeoutException extends SQLTimeoutException {
+
+    private static final long serialVersionUID = 1L;
+
+    TestSqlTimeoutException(String reason, String sqlState, int vendorCode) {
+      super(reason, sqlState, vendorCode);
+    }
   }
 
   @Test

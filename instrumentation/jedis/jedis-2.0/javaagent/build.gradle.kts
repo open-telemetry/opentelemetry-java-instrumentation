@@ -39,23 +39,21 @@ dependencies {
   latestDepTestLibrary("redis.clients:jedis:2.+") // see jedis-3.0 module
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
-        implementation(project(":javaagent-extension-api"))
-        implementation(project(":instrumentation-api-incubator"))
-        implementation("redis.clients:jedis:2.0.0")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+      implementation(project(":javaagent-extension-api"))
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("redis.clients:jedis:2.0.0")
     }
+  }
 
-    register<JvmTestSuite>("version23Test") {
-      dependencies {
-        implementation("redis.clients:jedis:2.3.0")
-        implementation("org.testcontainers:testcontainers")
-      }
+  register<JvmTestSuite>("version23Test") {
+    dependencies {
+      implementation("redis.clients:jedis:2.3.0")
+      implementation("org.testcontainers:testcontainers")
     }
   }
 }

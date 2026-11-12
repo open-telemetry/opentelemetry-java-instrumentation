@@ -16,11 +16,14 @@ import org.apache.pekko.actor.{
   Stash
 }
 import org.apache.pekko.pattern.ask
+import org.apache.pekko.routing.{BalancingPool, GetRoutees}
 import org.apache.pekko.util.Timeout
 import io.opentelemetry.api.GlobalOpenTelemetry
 import io.opentelemetry.api.trace.Tracer
 import io.opentelemetry.context.Context
+import org.assertj.core.api.Assertions.assertThat
 
+import java.util.concurrent.{CountDownLatch, TimeUnit}
 import scala.concurrent.Await
 import scala.concurrent.duration._
 
@@ -95,6 +98,37 @@ class PekkoActors {
     } finally {
       parentScope.close()
       parentSpan.end()
+    }
+  }
+
+  def balancingPool(): Unit = {
+    val started = new CountDownLatch(2)
+    val pool = system.actorOf(
+      BalancingPool(2).props(Props(new BalancingReceiver(started)))
+    )
+    try {
+      Await.result(pool ? GetRoutees, 10.seconds)
+      // All routees must be started so UnstartedCell cannot capture the sender context.
+      assertThat(started.await(10, TimeUnit.SECONDS)).isTrue()
+      Seq("first", "second").foreach { name =>
+        val parentSpan = tracer.spanBuilder(name).startSpan()
+        val parentScope =
+          Context.current().`with`(parentSpan).makeCurrent()
+        try {
+          Await.result(pool ? name, 10.seconds)
+        } finally {
+          parentScope.close()
+          parentSpan.end()
+        }
+      }
+      val rootScope = Context.root().makeCurrent()
+      try {
+        Await.result(pool ? "untraced", 10.seconds)
+      } finally {
+        rootScope.close()
+      }
+    } finally {
+      system.stop(pool)
     }
   }
 
@@ -189,6 +223,15 @@ class Receiver extends Actor with ActorLogging {
       PekkoActors.tracedChild(greeting)
     }
 
+  }
+}
+
+class BalancingReceiver(started: CountDownLatch) extends Actor {
+  override def preStart(): Unit = started.countDown()
+
+  def receive = { case name: String =>
+    PekkoActors.tracedChild(s"handled-$name")
+    sender() ! Done
   }
 }
 

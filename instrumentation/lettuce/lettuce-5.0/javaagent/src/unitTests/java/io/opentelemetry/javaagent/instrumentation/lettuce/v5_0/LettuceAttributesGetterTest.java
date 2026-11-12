@@ -32,6 +32,32 @@ import org.junit.jupiter.api.Test;
 class LettuceAttributesGetterTest {
 
   @Test
+  void responseStatusUsesOnlyServerErrorPrefixes() {
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+    LettuceBatchAttributesGetter batchGetter = new LettuceBatchAttributesGetter();
+    Throwable serverError = new RedisCommandExecutionException("WRONGTYPE detail");
+    Throwable clientError = new RedisCommandTimeoutException("WRONGTYPE client timeout");
+    Throwable blankError = new RedisCommandExecutionException(" ");
+
+    assertThat(getter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(batchGetter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getErrorType(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(batchGetter.getErrorType(null, null, serverError)).isEqualTo("WRONGTYPE");
+    for (Throwable error : new Throwable[] {null, clientError, blankError}) {
+      assertThat(getter.getDbResponseStatusCode(null, null, error)).isNull();
+      assertThat(batchGetter.getDbResponseStatusCode(null, null, error)).isNull();
+    }
+    assertThat(getter.getErrorType(null, null, clientError))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(batchGetter.getErrorType(null, null, clientError))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(getter.getErrorType(null, null, blankError))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
+    assertThat(batchGetter.getErrorType(null, null, blankError))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
+  }
+
+  @Test
   void commandWithoutTargetOmitsServerAttributes() {
     RedisCommand<String, String, String> command = command();
     try (DefaultEndpoint endpoint = new DefaultEndpoint(ClientOptions.create())) {

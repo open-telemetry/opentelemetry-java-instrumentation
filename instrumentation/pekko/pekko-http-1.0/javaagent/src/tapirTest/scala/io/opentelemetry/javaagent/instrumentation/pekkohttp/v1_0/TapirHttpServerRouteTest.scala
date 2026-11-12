@@ -134,7 +134,7 @@ class TapirHttpServerRouteTest {
 
   def test(route: Route, path: String, spanName: String): Unit = {
     val binding =
-      Await.result(Http().bindAndHandle(route, "localhost", 0), 10.seconds)
+      Await.result(Http().newServerAt("localhost", 0).bind(route), 10.seconds)
     val address: URI = buildAddress(binding.localAddress.getPort)
     try {
       val request = AggregatedHttpRequest.of(

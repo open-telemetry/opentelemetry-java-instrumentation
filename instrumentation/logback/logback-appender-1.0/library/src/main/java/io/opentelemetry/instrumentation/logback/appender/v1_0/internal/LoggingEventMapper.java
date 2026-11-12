@@ -74,6 +74,7 @@ public final class LoggingEventMapper {
   @Nullable private final Predicate<String> loggerContextAttributes;
   private final boolean captureTemplate;
   private final boolean captureArguments;
+  private final Function<ILoggingEvent, Map<String, String>> mdcReader;
 
   private LoggingEventMapper(Builder builder) {
     this.captureExperimentalAttributes = builder.captureExperimentalAttributes;
@@ -84,6 +85,7 @@ public final class LoggingEventMapper {
     this.captureTemplate = builder.captureTemplate;
     this.captureArguments = builder.captureArguments;
     this.mdcAttributes = builder.mdcAttributes;
+    this.mdcReader = builder.mdcReader;
   }
 
   public static Builder builder() {
@@ -197,7 +199,7 @@ public final class LoggingEventMapper {
       processLogstashStructuredArguments(builder, loggingEvent.getArgumentArray());
     }
 
-    captureMdcAttributes(builder, loggingEvent.getMDCPropertyMap());
+    captureMdcAttributes(builder, mdcReader.apply(loggingEvent));
 
     if (supportsKeyValuePairs && structuredAttributes != null) {
       captureKeyValuePairAttributes(builder, loggingEvent, structuredAttributes);
@@ -679,6 +681,8 @@ public final class LoggingEventMapper {
     @Nullable private Predicate<String> loggerContextAttributes;
     private boolean captureTemplate;
     private boolean captureArguments;
+    private Function<ILoggingEvent, Map<String, String>> mdcReader =
+        ILoggingEvent::getMDCPropertyMap;
 
     Builder() {}
 
@@ -695,6 +699,12 @@ public final class LoggingEventMapper {
     @CanIgnoreReturnValue
     public Builder setMdcAttributes(@Nullable Predicate<String> mdcAttributes) {
       this.mdcAttributes = mdcAttributes;
+      return this;
+    }
+
+    @CanIgnoreReturnValue
+    public Builder setMdcReader(Function<ILoggingEvent, Map<String, String>> mdcReader) {
+      this.mdcReader = mdcReader;
       return this;
     }
 

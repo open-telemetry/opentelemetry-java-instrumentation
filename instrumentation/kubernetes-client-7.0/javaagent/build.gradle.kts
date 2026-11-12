@@ -37,21 +37,22 @@ testing.suites {
     dependencies {
       implementation("io.kubernetes:client-java-api:${baseVersion("22.0.0").orLatest()}")
     }
-    executions {
-      configureEach {
-        // client-java-api 22.0.0+ requires Java 11+
-        if (testJavaVersion.isJava8) {
-          enabled = false
-        }
-      }
-
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
-      }
-    }
   }
 
   executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
+    }
+  }
+
+  executions("version22Test") {
+    configureEach {
+      // client-java-api 22.0.0+ requires Java 11+
+      if (testJavaVersion.isJava8) {
+        enabled = false
+      }
+    }
+
     register("Experimental") {
       telemetryConfig("otel.instrumentation.kubernetes-client.experimental-span-attributes", "true")
     }

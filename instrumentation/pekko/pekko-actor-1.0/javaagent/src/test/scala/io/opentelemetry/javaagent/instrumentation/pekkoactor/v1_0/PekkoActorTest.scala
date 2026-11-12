@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.testing.junit.{
   InstrumentationExtension
 }
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
-import org.junit.jupiter.api.{AfterAll, TestInstance}
+import org.junit.jupiter.api.{AfterAll, Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
@@ -139,6 +139,49 @@ class PekkoActorTest {
       .asJava
 
     testing.waitAndAssertTraces(assertions)
+  }
+
+  @Test
+  def balancingPool(): Unit = {
+    new PekkoActors().balancingPool()
+
+    val parentAssertions = Seq("first", "second").map { name =>
+      new Consumer[TraceAssert] {
+        override def accept(trace: TraceAssert): Unit =
+          trace.hasSpansSatisfyingExactly(
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span.hasName(name).hasNoParent().hasTotalAttributeCount(0)
+              }
+            },
+            new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                span
+                  .hasName(s"handled-$name")
+                  .hasParent(trace.getSpan(0))
+                  .hasTotalAttributeCount(0)
+              }
+            }
+          )
+      }
+    }
+    val rootAssertion = new Consumer[TraceAssert] {
+      override def accept(trace: TraceAssert): Unit =
+        trace.hasSpansSatisfyingExactly(
+          new Consumer[SpanDataAssert] {
+            override def accept(span: SpanDataAssert): Unit = {
+              span
+                .hasName("handled-untraced")
+                .hasNoParent()
+                .hasTotalAttributeCount(0)
+            }
+          }
+        )
+    }
+    testing.waitAndAssertSortedTraces(
+      orderByRootSpanName("first", "second", "handled-untraced"),
+      (parentAssertions :+ rootAssertion).asJava
+    )
   }
 
   @ParameterizedTest
