@@ -35,6 +35,7 @@ configurations:
     type: boolean
   - ref: common.db.sqlcommenter.enabled
   - ref: common.server-service-mapping
+  - ref: common.legacy-service-peer-mapping
   - name: otel.instrumentation.jdbc.experimental.capture-query-parameters
     declarative_name: java.jdbc.capture_query_parameters/development
     description: >

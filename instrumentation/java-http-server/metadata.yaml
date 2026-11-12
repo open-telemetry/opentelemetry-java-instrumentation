@@ -9,4 +9,5 @@ configurations:
   - ref: http.server.capture-request-headers
   - ref: http.server.capture-response-headers
   - ref: common.server-service-mapping
+  - ref: common.legacy-service-peer-mapping
   - ref: http.server.emit-experimental-telemetry

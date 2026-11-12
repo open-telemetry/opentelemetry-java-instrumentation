@@ -18,3 +18,4 @@ configurations:
     type: boolean
     default: false
   - ref: common.server-service-mapping
+  - ref: common.legacy-service-peer-mapping
