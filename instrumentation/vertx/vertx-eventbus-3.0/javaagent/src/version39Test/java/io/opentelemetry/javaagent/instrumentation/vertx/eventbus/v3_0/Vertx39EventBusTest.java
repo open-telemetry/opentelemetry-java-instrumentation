@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.eventbus.v3_0;
 
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
+import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -73,8 +74,12 @@ class Vertx39EventBusTest extends AbstractVertxEventBusTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span ->
+                    span.hasName("request " + address)
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0)),
+                span ->
                     span.hasName("process " + address)
                         .hasKind(CONSUMER)
-                        .hasParent(trace.getSpan(0))));
+                        .hasParent(trace.getSpan(1))));
   }
 }

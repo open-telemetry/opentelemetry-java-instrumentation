@@ -22,28 +22,22 @@ import javax.annotation.Nullable;
  */
 final class NativeTracing {
 
-  private static final VirtualField<EventBus, NativeTracingState> EVENT_BUS_STATE =
-      VirtualField.find(EventBus.class, NativeTracingState.class);
+  private static final VirtualField<EventBus, Vertx> EVENT_BUS_VERTX =
+      VirtualField.find(EventBus.class, Vertx.class);
   private static final VirtualField<Vertx, NativeTracingState> VERTX_STATE =
       VirtualField.find(Vertx.class, NativeTracingState.class);
 
-  static boolean isEnabled(EventBus eventBus) {
-    NativeTracingState state = EVENT_BUS_STATE.get(eventBus);
-    if (state == null) {
-      Object vertx = readField(eventBus, "vertx");
-      state = NativeTracingState.of(vertx != null && hasTracer(vertx));
-      EVENT_BUS_STATE.set(eventBus, state);
-    }
-    return state == NativeTracingState.ENABLED;
+  /** Called when the event bus is constructed, which is the only place it is handed its Vertx. */
+  static void setVertx(EventBus eventBus, Vertx vertx) {
+    EVENT_BUS_VERTX.set(eventBus, vertx);
   }
 
-  /** For consumers, which are invoked on a context of the Vertx instance they belong to. */
-  static boolean isEnabledForCurrentContext() {
-    Context context = Vertx.currentContext();
-    if (context == null) {
-      return false;
-    }
-    Vertx vertx = context.owner();
+  static boolean isEnabled(EventBus eventBus) {
+    Vertx vertx = EVENT_BUS_VERTX.get(eventBus);
+    return vertx != null && isEnabled(vertx);
+  }
+
+  static boolean isEnabled(Vertx vertx) {
     NativeTracingState state = VERTX_STATE.get(vertx);
     if (state == null) {
       state = NativeTracingState.of(hasTracer(vertx));
@@ -52,8 +46,14 @@ final class NativeTracing {
     return state == NativeTracingState.ENABLED;
   }
 
-  private static boolean hasTracer(Object vertx) {
-    Object tracer = readField(vertx, "tracer");
+  /** For consumers, which are invoked on a context of the Vertx instance they belong to. */
+  static boolean isEnabledForCurrentContext() {
+    Context context = Vertx.currentContext();
+    return context != null && isEnabled(context.owner());
+  }
+
+  private static boolean hasTracer(Vertx vertx) {
+    Object tracer = readTracer(vertx);
     return tracer != null && tracer != noopTracer(vertx.getClass().getClassLoader());
   }
 
@@ -70,12 +70,12 @@ final class NativeTracing {
   }
 
   @Nullable
-  private static Object readField(Object target, String name) {
-    for (Class<?> type = target.getClass(); type != null; type = type.getSuperclass()) {
+  private static Object readTracer(Vertx vertx) {
+    for (Class<?> type = vertx.getClass(); type != null; type = type.getSuperclass()) {
       try {
-        Field field = type.getDeclaredField(name);
+        Field field = type.getDeclaredField("tracer");
         field.setAccessible(true);
-        return field.get(target);
+        return field.get(vertx);
       } catch (NoSuchFieldException e) {
         // keep looking in the superclass
       } catch (Exception e) {

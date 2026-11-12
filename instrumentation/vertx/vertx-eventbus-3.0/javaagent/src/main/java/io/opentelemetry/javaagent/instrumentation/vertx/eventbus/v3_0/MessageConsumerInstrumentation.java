@@ -51,8 +51,12 @@ class MessageConsumerInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) @Nullable Handler<Message<T>> handler) {
       if (handler == null
           || handler instanceof TracingHandlerWrapper
-          || EventBusInternals.isInternalHandler(handler)) {
+          || handler instanceof ReplyContextHandler
+          || EventBusInternals.isFlowControlHandler(handler)) {
         return handler;
+      }
+      if (EventBusInternals.isReplyHandler(handler)) {
+        return new ReplyContextHandler<>(handler);
       }
       return new TracingHandlerWrapper<>(handler);
     }

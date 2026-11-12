@@ -16,10 +16,16 @@ final class EventBusInternals {
    * MessageConsumer} handlers. Both are lambdas declared in these classes, while their addresses
    * differ between versions: a counter, {@code __vertx.reply.<counter>} or a UUID.
    */
-  static boolean isInternalHandler(Object handler) {
-    String name = handler.getClass().getName();
-    return name.startsWith("io.vertx.core.eventbus.impl.EventBusImpl")
-        || name.startsWith("io.vertx.core.eventbus.impl.MessageProducerImpl");
+  static boolean isReplyHandler(Object handler) {
+    return handler.getClass().getName().startsWith("io.vertx.core.eventbus.impl.EventBusImpl");
+  }
+
+  /** See {@link #isReplyHandler}. */
+  static boolean isFlowControlHandler(Object handler) {
+    return handler
+        .getClass()
+        .getName()
+        .startsWith("io.vertx.core.eventbus.impl.MessageProducerImpl");
   }
 
   /** {@code MessageProducer} flow control messages go to {@code <uuid>-credit} addresses. */

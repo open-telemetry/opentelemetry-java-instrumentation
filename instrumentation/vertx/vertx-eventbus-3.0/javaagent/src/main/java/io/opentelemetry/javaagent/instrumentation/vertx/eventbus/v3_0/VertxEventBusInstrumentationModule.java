@@ -23,14 +23,18 @@ public class VertxEventBusInstrumentationModule extends InstrumentationModule {
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
+    // added in 3.0
     return hasClassesNamed("io.vertx.core.eventbus.impl.EventBusImpl");
   }
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
+        new EventBusImplInstrumentation(),
         new EventBusInstrumentation(),
         new CreateMessageInstrumentation(),
-        new MessageConsumerInstrumentation());
+        new MessageProducerInstrumentation(),
+        new MessageConsumerInstrumentation(),
+        new ReplyHandlerInstrumentation());
   }
 }

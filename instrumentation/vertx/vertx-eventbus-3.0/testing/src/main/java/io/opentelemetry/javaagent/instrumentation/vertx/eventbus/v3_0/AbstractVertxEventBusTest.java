@@ -29,7 +29,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
-import io.opentelemetry.sdk.trace.data.SpanData;
 import io.vertx.core.Vertx;
 import io.vertx.core.eventbus.DeliveryOptions;
 import io.vertx.core.eventbus.EventBus;
@@ -155,14 +154,51 @@ public abstract class AbstractVertxEventBusTest {
 
     CountDownLatch replied = new CountDownLatch(1);
     testing.runWithSpan(
-        "parent", () -> request(eventBus, address, "ping", reply -> replied.countDown()));
+        "parent",
+        () ->
+            request(
+                eventBus,
+                address,
+                "ping",
+                reply -> {
+                  testing.runWithSpan("reply-callback", () -> {});
+                  replied.countDown();
+                }));
 
     assertThat(replied.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(
-        trace -> assertProducerConsumerTrace(trace, "parent", "request", address));
+    testing.waitAndAssertTraces(trace -> assertRequestReplyTrace(trace, "parent", address));
     assertProducerMetrics("request", address);
     assertConsumerMetrics(address, null);
+  }
+
+  @Test
+  void requestFailureCallbackRunsInCallerContext() throws InterruptedException {
+    String address = "address.no.handlers." + System.nanoTime();
+    EventBus eventBus = vertx.eventBus();
+
+    CountDownLatch failed = new CountDownLatch(1);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            request(
+                eventBus,
+                address,
+                "ping",
+                reply -> {
+                  testing.runWithSpan("failure-callback", () -> {});
+                  failed.countDown();
+                }));
+
+    assertThat(failed.await(10, SECONDS)).isTrue();
+
+    // nobody consumes the request, the callback belongs to the caller like other client callbacks
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> assertProducer(span, "request", address).hasParent(trace.getSpan(0)),
+                span -> span.hasName("failure-callback").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -192,24 +228,44 @@ public abstract class AbstractVertxEventBusTest {
     EventBus eventBus = vertx.eventBus();
 
     CountDownLatch received = new CountDownLatch(1);
-    eventBus.consumer(address, message -> received.countDown());
+    eventBus.consumer(
+        address,
+        message -> {
+          testing.runWithSpan("handler-inner", () -> {});
+          received.countDown();
+        });
 
     MessageProducer<Object> producer = eventBus.sender(address);
     testing.runWithSpan("parent", () -> write(producer, "hello"));
 
     assertThat(received.await(10, SECONDS)).isTrue();
 
-    // The context must propagate to the consumer. Early Vert.x 3 producers go through
-    // EventBus.send, so a producer span may be present. The credit messages later versions exchange
-    // internally to flow control the producer must not be traced.
+    // the credit messages later versions exchange internally to flow control the producer must not
+    // be traced
     testing.waitAndAssertTraces(
-        trace ->
-            trace.satisfies(
-                spans ->
-                    assertThat(spans)
-                        .extracting(SpanData::getName)
-                        .contains("parent", "process " + address)
-                        .isSubsetOf("parent", "send " + address, "process " + address)));
+        trace -> assertProducerConsumerTrace(trace, "parent", "send", address));
+  }
+
+  @Test
+  void publisher() throws InterruptedException {
+    String address = "address.publisher." + System.nanoTime();
+    EventBus eventBus = vertx.eventBus();
+
+    CountDownLatch received = new CountDownLatch(1);
+    eventBus.consumer(
+        address,
+        message -> {
+          testing.runWithSpan("handler-inner", () -> {});
+          received.countDown();
+        });
+
+    MessageProducer<Object> producer = eventBus.publisher(address);
+    testing.runWithSpan("parent", () -> write(producer, "hello"));
+
+    assertThat(received.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(
+        trace -> assertProducerConsumerTrace(trace, "parent", "publish", address));
   }
 
   @Test
@@ -409,6 +465,48 @@ public abstract class AbstractVertxEventBusTest {
 
     testing.waitAndAssertTraces(
         trace -> assertProducerConsumerTrace(trace, "parent", "send", address));
+    testing.clearData();
+
+    // the reply has to cross the cluster transport back, and carries the consumer's context like
+    // a reply that is delivered locally
+    String requestAddress = "address.cluster.request." + System.nanoTime();
+    MessageConsumer<Object> replyingConsumer =
+        otherNode
+            .eventBus()
+            .consumer(
+                requestAddress,
+                message -> {
+                  testing.runWithSpan("handler-inner", () -> {});
+                  message.reply("pong");
+                });
+    awaitRegistration.accept(replyingConsumer);
+
+    CountDownLatch replied = new CountDownLatch(1);
+    testing.runWithSpan(
+        "parent",
+        () ->
+            request(
+                vertx.eventBus(),
+                requestAddress,
+                "ping",
+                reply -> {
+                  testing.runWithSpan("reply-callback", () -> {});
+                  replied.countDown();
+                }));
+
+    assertThat(replied.await(10, SECONDS)).isTrue();
+
+    testing.waitAndAssertTraces(trace -> assertRequestReplyTrace(trace, "parent", requestAddress));
+  }
+
+  private static void assertRequestReplyTrace(
+      TraceAssert trace, String parentName, String address) {
+    trace.hasSpansSatisfyingExactly(
+        span -> span.hasName(parentName).hasNoParent(),
+        span -> assertProducer(span, "request", address).hasParent(trace.getSpan(0)),
+        span -> assertConsumer(span, address).hasParent(trace.getSpan(1)),
+        span -> span.hasName("handler-inner").hasParent(trace.getSpan(2)),
+        span -> span.hasName("reply-callback").hasParent(trace.getSpan(2)));
   }
 
   private static void assertProducerConsumerTrace(
@@ -435,15 +533,14 @@ public abstract class AbstractVertxEventBusTest {
     Attributes attributes = metricAttributes(operationName, address, null);
     assertDurationMetric(
         "messaging.client.operation.duration",
-        address,
         attributes.toBuilder().put(MESSAGING_OPERATION_TYPE, "send").build());
-    assertCounterMetric("messaging.client.sent.messages", address, attributes);
+    assertCounterMetric("messaging.client.sent.messages", attributes);
   }
 
   private static void assertConsumerMetrics(String address, @Nullable String errorType) {
     Attributes attributes = metricAttributes("process", address, errorType);
-    assertDurationMetric("messaging.process.duration", address, attributes);
-    assertCounterMetric("messaging.client.consumed.messages", address, attributes);
+    assertDurationMetric("messaging.process.duration", attributes);
+    assertCounterMetric("messaging.client.consumed.messages", attributes);
   }
 
   private static Attributes metricAttributes(
@@ -459,9 +556,7 @@ public abstract class AbstractVertxEventBusTest {
     return attributes.build();
   }
 
-  // metrics accumulate across tests, so only the points of this test's address are looked at
-  private static void assertDurationMetric(
-      String metricName, String address, Attributes attributes) {
+  private static void assertDurationMetric(String metricName, Attributes attributes) {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         metricName,
@@ -471,10 +566,6 @@ public abstract class AbstractVertxEventBusTest {
                 .satisfies(
                     metric ->
                         assertThat(metric.getHistogramData().getPoints())
-                            .filteredOn(
-                                point ->
-                                    address.equals(
-                                        point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
                             .singleElement()
                             .satisfies(
                                 point -> {
@@ -484,8 +575,7 @@ public abstract class AbstractVertxEventBusTest {
                                 })));
   }
 
-  private static void assertCounterMetric(
-      String metricName, String address, Attributes attributes) {
+  private static void assertCounterMetric(String metricName, Attributes attributes) {
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         metricName,
@@ -495,10 +585,6 @@ public abstract class AbstractVertxEventBusTest {
                 .satisfies(
                     metric ->
                         assertThat(metric.getLongSumData().getPoints())
-                            .filteredOn(
-                                point ->
-                                    address.equals(
-                                        point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
                             .singleElement()
                             .satisfies(
                                 point -> {
