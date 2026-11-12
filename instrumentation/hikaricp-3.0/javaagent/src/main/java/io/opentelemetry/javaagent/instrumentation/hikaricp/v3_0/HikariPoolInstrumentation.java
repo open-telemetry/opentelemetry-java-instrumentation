@@ -13,6 +13,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -36,6 +37,9 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
             .and(takesArguments(1))
             .and(takesArgument(0, named("com.zaxxer.hikari.metrics.MetricsTrackerFactory"))),
         getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
+    transformer.applyAdviceToMethod(
+        named("initializeHouseKeepingExecutorService"),
+        getClass().getName() + "$InitializeHouseKeepingExecutorServiceAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -56,6 +60,17 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
         existingMetricsTracker.close();
       }
       return HikariSingletons.createMetricsTrackerFactory(userMetricsTracker, config);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializeHouseKeepingExecutorServiceAdvice {
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static ScheduledExecutorService onExit(
+        @Advice.Return ScheduledExecutorService executorService) {
+      return HikariSingletons.wrap(executorService);
     }
   }
 }
