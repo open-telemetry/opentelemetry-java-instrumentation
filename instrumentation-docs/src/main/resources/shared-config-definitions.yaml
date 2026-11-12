@@ -50,16 +50,17 @@ configurations:
           example: checkout
 
   common.legacy-service-peer-mapping:
+    name: otel.instrumentation.common.peer-service-mapping
     declarative_name: java.common.service_peer_mapping
     description: >-
-      Deprecated: use `java.common.server_service_mapping` instead. Maps server peers to logical
-      server service identities using `peer`, `service_name`, and optional `service_namespace`
-      fields. The flat `otel.instrumentation.common.peer-service-mapping` spelling is also retained
-      for compatibility, but cannot express namespaces or targets containing commas or equals signs.
-    type: list
+      Deprecated: use `otel.instrumentation.common.server-service-mapping` or declarative
+      `java.common.server_service_mapping` instead. Maps server peers to logical server service
+      identities using `peer`, `service_name`, and optional `service_namespace` fields. The flat
+      property cannot express namespaces or targets containing commas or equals signs.
+    type: map
     default: ""
     deprecated: true
-    replaced_by: java.common.server_service_mapping
+    replaced_by: otel.instrumentation.common.server-service-mapping
     declarative_type: structured_list
     declarative_schema:
       type: object

@@ -157,12 +157,14 @@ public final class DefaultInstrumentationConfig {
 
   /**
    * Sets a list-valued default. Scalar lists are preserved when applying defaults to the
-   * declarative model and serialized as comma-separated values for traditional configuration
-   * properties. Structured {@code common.service_peer_mapping} and {@code
-   * common.server_service_mapping} lists are also supported; they are exported through the legacy
-   * flat property so existing defaults continue to work. Other structured lists cannot be converted
-   * to traditional configuration properties. Empty lists cannot be exported as equivalent
-   * traditional configuration defaults and are rejected by {@link #toConfigProperties()}.
+   * declarative model, but only non-empty string scalar lists with non-empty, comma-free elements
+   * can be serialized as comma-separated values for traditional configuration properties; numeric
+   * and boolean scalar lists are declarative-only. Structured {@code common.service_peer_mapping}
+   * and {@code common.server_service_mapping} lists are also supported; they are exported through
+   * the legacy flat property so existing defaults continue to work. Other structured lists cannot
+   * be converted to traditional configuration properties. Empty lists cannot be exported as
+   * equivalent traditional configuration defaults and are rejected by {@link
+   * #toConfigProperties()}.
    */
   @CanIgnoreReturnValue
   public DefaultInstrumentationConfig setDefault(String key, List<?> value) {

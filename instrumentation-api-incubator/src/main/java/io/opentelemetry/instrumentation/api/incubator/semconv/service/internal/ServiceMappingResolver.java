@@ -21,6 +21,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
@@ -37,6 +38,7 @@ public class ServiceMappingResolver {
   private static final Pattern ADDRESS_GROUP_PATTERN =
       Pattern.compile("\\(\\s*address\\s*=", Pattern.CASE_INSENSITIVE);
   private static final Logger logger = Logger.getLogger(ServiceMappingResolver.class.getName());
+  private static final AtomicBoolean legacyServiceMappingWarningLogged = new AtomicBoolean();
 
   // copied from ServiceIncubatingAttributes
   private static final AttributeKey<String> SERVER_SERVICE_NAME =
@@ -95,7 +97,17 @@ public class ServiceMappingResolver {
       return mappings;
     }
     mappings = commonConfig.getStructuredList("service_peer_mapping");
-    return mappings == null ? emptyList() : mappings;
+    if (mappings == null) {
+      return emptyList();
+    }
+    if (legacyServiceMappingWarningLogged.compareAndSet(false, true)) {
+      logger.warning(
+          "Deprecated service mapping configuration java.common.service_peer_mapping (or"
+              + " otel.instrumentation.common.peer-service-mapping) is in use; use"
+              + " java.common.server_service_mapping (or"
+              + " otel.instrumentation.common.server-service-mapping) instead.");
+    }
+    return mappings;
   }
 
   private void addMapping(
