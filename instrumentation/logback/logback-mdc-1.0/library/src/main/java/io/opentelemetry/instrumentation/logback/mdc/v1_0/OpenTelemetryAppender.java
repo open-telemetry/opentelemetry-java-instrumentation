@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.logback.mdc.v1_0;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
-import ch.qos.logback.classic.spi.LoggerContextVO;
 import ch.qos.logback.classic.spi.LoggingEvent;
 import ch.qos.logback.core.Appender;
 import ch.qos.logback.core.UnsynchronizedAppenderBase;
@@ -17,8 +16,8 @@ import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
+import io.opentelemetry.instrumentation.logback.mdc.v1_0.internal.MdcContext;
 import java.lang.reflect.Field;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -82,10 +81,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
       return;
     }
 
-    Map<String, String> contextData = new HashMap<>();
-    if (eventContext != null) {
-      contextData.putAll(eventContext);
-    }
+    Map<String, String> contextData = new MdcContext(eventContext);
     Context context = Context.current();
     Span currentSpan = Span.fromContext(context);
 
@@ -105,18 +101,11 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
                   "baggage." + key, value.getValue()));
     }
 
-    LoggerContextVO oldVo = event.getLoggerContextVO();
-    LoggerContextVO vo =
-        oldVo != null
-            ? new LoggerContextVO(oldVo.getName(), contextData, oldVo.getBirthTime())
-            : null;
-
     try {
       MDC_MAP_FIELD.set(event, contextData);
     } catch (IllegalAccessException ignored) {
       // setAccessible(true) was called on the field
     }
-    ((LoggingEvent) event).setLoggerContextRemoteView(vo);
   }
 
   @Override

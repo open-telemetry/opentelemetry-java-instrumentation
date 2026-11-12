@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -30,49 +33,42 @@ dependencies {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testReceiveSpansDisabled") {
-      dependencies {
-        implementation(project(":instrumentation:spring:spring-pulsar-1.0:testing"))
+testing.suites {
+  register<JvmTestSuite>("testReceiveSpansDisabled") {
+    dependencies {
+      implementation(project(":instrumentation:spring:spring-pulsar-1.0:testing"))
 
-        val springBootVersion = baseVersion("3.2.4").orLatest()
-        val springPulsarVersion = baseVersion("1.0.0").orLatest()
-        implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
-        implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
-        if (otelProps.testLatestDeps) {
-          implementation("org.springframework.boot:spring-boot-starter-pulsar:$springPulsarVersion")
-        } else {
-          implementation("org.springframework.pulsar:spring-pulsar:$springPulsarVersion")
-        }
+      val springBootVersion = baseVersion("3.2.4").orLatest()
+      val springPulsarVersion = baseVersion("1.0.0").orLatest()
+      implementation("org.springframework.boot:spring-boot-starter-test:$springBootVersion")
+      implementation("org.springframework.boot:spring-boot-starter:$springBootVersion")
+      if (otelProps.testLatestDeps) {
+        implementation("org.springframework.boot:spring-boot-starter-pulsar:$springPulsarVersion")
+      } else {
+        implementation("org.springframework.pulsar:spring-pulsar:$springPulsarVersion")
       }
+    }
+  }
 
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=true")
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
-            systemProperty(
-              "metadataConfig",
-              "otel.instrumentation.pulsar.experimental-span-attributes=true",
-            )
-          }
-        }
-      }
+  executions("testReceiveSpansDisabled") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=false")
+      telemetryConfig("otel.instrumentation.pulsar.experimental-span-attributes", "true")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
     }
   }
 }
 
 tasks {
-  test {
-    jvmArgs("-Dotel.instrumentation.pulsar.experimental-span-attributes=false")
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
   check {
     dependsOn(
       testing.suites,

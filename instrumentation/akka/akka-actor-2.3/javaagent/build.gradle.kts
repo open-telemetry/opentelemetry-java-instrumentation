@@ -65,16 +65,14 @@ dependencies {
   latestDepTestLibrary("com.typesafe.akka:akka-actor_2.13:latest.release")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version25Test") {
-      dependencies {
-        val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.11"
-        implementation(
-          "com.typesafe.akka:akka-actor_$scalaVersion:${baseVersion("2.5.0").orLatest("2.5.+")}",
-        )
-        implementation(project(":instrumentation:executors:testing"))
-      }
+testing.suites {
+  register<JvmTestSuite>("version25Test") {
+    dependencies {
+      val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.11"
+      implementation(
+        "com.typesafe.akka:akka-actor_$scalaVersion:${baseVersion("2.5.0").orLatest("2.5.+")}",
+      )
+      implementation(project(":instrumentation:executors:testing"))
     }
   }
 }

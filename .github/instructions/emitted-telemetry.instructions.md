@@ -39,6 +39,24 @@ An exact contract field matters even when its generated table does not repeat `M
 most specific domain rule instead of substituting general advice. Using the right constant alone
 does not establish conformance.
 
+## Error origin and operation ownership
+
+When attributing span or metric errors, keep a nested operation's server-error response and
+protocol code with that operation. Handle escaping callback exceptions under the outer client's
+failure and span-lifecycle policy, separately from its own response classification. Do not relay
+nested server-error confirmation just to classify the callback exception.
+
+Unless the applicable semantic convention says otherwise, prefer an available protocol failure code
+over a generic exception reporting that failure. Prefer useful typed exception classes for timeout,
+connection, and local-processing failures. Apply these choices consistently by failure category,
+not through per-code specificity checks. Fall back to the exception class when no applicable code is
+available. Record `db.response.status_code` independently.
+
+For example, Redis `PING` receives `PONG`, then an application response builder issues an independent
+`GET` that receives `WRONGTYPE`. If the builder catches the exception, that failure alone does not
+fail `PING`. If it escapes, the outer call may fail during callback processing. Either way,
+`WRONGTYPE` belongs to `GET`, not to `PING`'s successful server response.
+
 ## Requirement levels
 
 Evaluate whether an attribute should be included separately from the rules governing its value.

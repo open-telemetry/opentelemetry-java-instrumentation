@@ -54,10 +54,35 @@ kotlin {
   }
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  register<JvmTestSuite>("externalJobTest") {
+    dependencies {
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation("io.ktor:ktor-server-cio:${baseVersion(ktorVersion).orLatest("+")}")
+    }
+  }
+
+  // Ktor 3.4.3 changes how SuspendFunctionGun resumes pipeline continuations (KTOR-9431), so
+  // rerun the external job tests against it.
+  register<JvmTestSuite>("version343Test") {
+    dependencies {
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation("io.ktor:ktor-server-cio:${baseVersion("3.4.3").orLatest("+")}")
+    }
+    sources {
+      kotlin {
+        setSrcDirs(listOf("src/externalJobTest/kotlin"))
+      }
+    }
+  }
+
+  executions("test") {
     register("Experimental") {
       jvmArgs("-Dotel.instrumentation.http.server.emit-experimental-telemetry=true")
     }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

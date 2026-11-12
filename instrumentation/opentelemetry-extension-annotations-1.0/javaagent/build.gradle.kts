@@ -29,14 +29,8 @@ dependencies {
   testImplementation("net.bytebuddy:byte-buddy")
 }
 
-tasks {
-  compileTestJava {
-    options.compilerArgs.add("-parameters")
-  }
-}
-
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.opentelemetry-annotations.exclude-methods=io.opentelemetry.test.annotation.TracedWithSpan[ignored]")
     }

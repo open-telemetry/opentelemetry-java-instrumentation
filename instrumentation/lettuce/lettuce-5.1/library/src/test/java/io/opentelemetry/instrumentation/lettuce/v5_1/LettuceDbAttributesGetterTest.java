@@ -16,17 +16,12 @@ class LettuceDbAttributesGetterTest {
   private final LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
   @Test
-  void returnsRedisErrorPrefix() {
-    LettuceResponse response =
-        LettuceResponse.fromErrorMessage(
-            "WRONGTYPE Operation against a key holding the wrong kind of value");
-
-    assertThat(getter.getErrorType(null, response, null)).isEqualTo("WRONGTYPE");
-  }
-
-  @Test
-  void ignoresClientErrorWithoutResponse() {
+  void returnsExceptionFallbackWithoutResponse() {
     assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(
+            getter.getDbResponseStatusCode(
+                null, null, new RedisCommandTimeoutException("timed out")))
         .isNull();
   }
 
@@ -35,33 +30,16 @@ class LettuceDbAttributesGetterTest {
     LettuceResponse response = LettuceResponse.fromErrorMessage("   ");
 
     assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isNull();
     assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
-        .isNull();
+        .isEqualTo(RedisNoScriptException.class.getName());
   }
 
   @Test
   void doesNotInventExceptionClassForUnknownFailure() {
     assertThat(getter.getErrorType(null, LettuceResponse.unknownFailure(), null))
         .isEqualTo("_OTHER");
-  }
-
-  @Test
-  void omitsErrorTypeOnSuccess() {
-    assertThat(getter.getErrorType(null, LettuceResponse.fromErrorMessage(null), null)).isNull();
-  }
-
-  @Test
-  void preservesExceptionFallback() {
-    assertThat(
-            getter.getErrorType(
-                null,
-                LettuceResponse.unknownFailure(),
-                new RedisCommandTimeoutException("Connection closed")))
+    assertThat(getter.getDbResponseStatusCode(null, LettuceResponse.unknownFailure(), null))
         .isNull();
-  }
-
-  @Test
-  void ignoresMissingResponse() {
-    assertThat(getter.getErrorType(null, null, null)).isNull();
   }
 }

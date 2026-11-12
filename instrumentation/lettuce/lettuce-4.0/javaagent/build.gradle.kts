@@ -23,8 +23,8 @@ dependencies {
   latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-5.0 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }

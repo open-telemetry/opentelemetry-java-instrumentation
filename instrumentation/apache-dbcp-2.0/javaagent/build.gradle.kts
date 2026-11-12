@@ -27,8 +27,8 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-commons-pool-2.0:javaagent"))
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     register("WithCommonsPoolInstrumentation") {
       filter {
         includeTestsMatching(

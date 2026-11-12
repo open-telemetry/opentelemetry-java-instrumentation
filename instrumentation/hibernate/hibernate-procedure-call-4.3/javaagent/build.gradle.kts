@@ -35,8 +35,8 @@ dependencies {
   latestDepTestLibrary("org.hibernate:hibernate-entitymanager:5.+") // see hibernate-6.0 module
 }
 
-testing.suites.named<JvmTestSuite>("test") {
-  executions {
+testing.suites {
+  executions("test") {
     configureEach {
       if (name != "testDisabled") {
         jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")

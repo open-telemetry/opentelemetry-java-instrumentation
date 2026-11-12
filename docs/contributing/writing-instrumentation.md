@@ -211,7 +211,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api(project(":testing:testing-common"))
 
   // ...
 }
@@ -331,7 +331,7 @@ method. Unlike the library instrumentation, the javaagent instrumentation is sup
 without any explicit user code modification. Add an `AgentInstrumentationExtension` and try running
 tests in this class. All tests should pass.
 
-Note that all the tests inside the `javaagent` module are run using the `agent-for-testing`
+Note that all the tests inside the `javaagent` module are run using the `javaagent-for-testing`
 javaagent, with the instrumentation being loaded as an extension. This is done to perform the same
 bytecode instrumentation as when the agent is run against a normal app, and means that the javaagent
 instrumentation will be hidden inside the javaagent (loaded by the `AgentClassLoader`) and will not

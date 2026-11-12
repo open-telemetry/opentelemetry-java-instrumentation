@@ -163,6 +163,10 @@ MDC attributes are captured only when at least one of these settings is configur
 `mdcAttributesExcluded`, which in turn take precedence over the deprecated `captureMdcAttributes`.
 No MDC attributes are captured when all of these are absent or empty.
 
+MDC capture selects application-owned values, not trace or baggage values added by the OpenTelemetry
+MDC appender. Application-owned values remain selectable even under keys such as `trace_id`.
+Application appenders still receive the enriched MDC.
+
 Captured MDC attributes may contain sensitive information. Configure included and excluded patterns
 to limit the data exported as log attributes.
 

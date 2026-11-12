@@ -38,7 +38,7 @@ final class StreamedMessageBuffer {
     if (finishReason != null) {
       choice.finishReason(ChatCompletion.Choice.FinishReason.of(finishReason));
     } else {
-      // Can't happen in practice, mostly to satisfy null check
+      // The caller may close the stream before the finish reason arrives.
       choice.finishReason(JsonField.ofNullable(null));
     }
     if (message != null) {

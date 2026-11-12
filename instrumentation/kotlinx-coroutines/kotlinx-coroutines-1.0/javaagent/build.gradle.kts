@@ -83,11 +83,6 @@ kotlin {
 
 testing.suites {
   register<JvmTestSuite>("version13Test") {
-    executions {
-      configureDefault {
-        jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
-      }
-    }
     dependencies {
       implementation("io.opentelemetry:opentelemetry-extension-kotlin")
       implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
@@ -99,6 +94,12 @@ testing.suites {
       )
       implementation(project(":instrumentation:reactor:reactor-3.1:library"))
       implementation(project(":instrumentation-annotations"))
+    }
+  }
+
+  executions("version13Test") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
     }
   }
 

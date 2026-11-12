@@ -30,33 +30,22 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-kafka")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("org.apache.kafka:kafka-streams:0.11.0.0")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("org.apache.kafka:kafka-streams:0.11.0.0")
     }
   }
-}
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  check {
-    dependsOn(testing.suites)
-  }
-}
-
-testing.suites {
   executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+
     configureDefault {
       filter {
         excludeTestsMatching("KafkaStreamsSuppressReceiveSpansTest")
@@ -91,6 +80,10 @@ testing.suites {
       telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
     }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }
 
 // kafka 4.1 requires java 11
