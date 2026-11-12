@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.eventbus.v3_0;
 
-import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.extendsClass;
 import static io.opentelemetry.javaagent.instrumentation.vertx.eventbus.v3_0.VertxEventBusSingletons.propagator;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -29,30 +28,28 @@ import net.bytebuddy.matcher.ElementMatcher;
 /**
  * Injects the current context into the headers of every message the event bus creates. All {@code
  * send}/{@code publish}/{@code request} overloads and {@code MessageProducer}s end up in {@code
- * createMessage}. Subclasses are matched too because {@code ClusteredEventBus} overrides {@code
+ * createMessage}. {@code ClusteredEventBus} is matched too because it overrides {@code
  * createMessage} without calling {@code super}.
  */
 class CreateMessageInstrumentation implements TypeInstrumentation {
 
-  private static final String MULTI_MAP_CLASS_NAME = "io.vertx.core.MultiMap";
-
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return extendsClass(named("io.vertx.core.eventbus.impl.EventBusImpl"));
+    return namedOneOf(
+        "io.vertx.core.eventbus.impl.EventBusImpl",
+        "io.vertx.core.eventbus.impl.clustered.ClusteredEventBus");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     ElementMatcher.Junction<MethodDescription> createMessage =
-        isMethod()
-            .and(named("createMessage"))
-            .and(returns(named("io.vertx.core.eventbus.impl.MessageImpl")));
+        named("createMessage").and(returns(named("io.vertx.core.eventbus.impl.MessageImpl")));
     // Vert.x 4.5 added an argument before the headers
     transformer.applyAdviceToMethod(
-        createMessage.and(takesArgument(2, named(MULTI_MAP_CLASS_NAME))),
+        createMessage.and(takesArgument(2, named("io.vertx.core.MultiMap"))),
         getClass().getName() + "$CreateMessageAdvice");
     transformer.applyAdviceToMethod(
-        createMessage.and(takesArgument(3, named(MULTI_MAP_CLASS_NAME))),
+        createMessage.and(takesArgument(3, named("io.vertx.core.MultiMap"))),
         getClass().getName() + "$CreateMessage45Advice");
   }
 

@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.
 import static io.opentelemetry.javaagent.instrumentation.vertx.eventbus.v3_0.VertxEventBusSingletons.publishInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.vertx.eventbus.v3_0.VertxEventBusSingletons.requestInstrumenter;
 import static io.opentelemetry.javaagent.instrumentation.vertx.eventbus.v3_0.VertxEventBusSingletons.sendInstrumenter;
-import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -48,7 +47,7 @@ class EventBusInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     ElementMatcher.Junction<MethodDescription> operation =
-        isMethod().and(isPublic()).and(takesArgument(0, String.class));
+        isPublic().and(takesArgument(0, String.class));
     // send with a reply handler is how a request is made before EventBus.request exists
     ElementMatcher.Junction<MethodDescription> takesReplyHandler =
         takesArgument(2, named(HANDLER_CLASS_NAME)).or(takesArgument(3, named(HANDLER_CLASS_NAME)));
