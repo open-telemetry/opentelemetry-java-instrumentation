@@ -87,6 +87,25 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
      -jar myapp.jar
 ```
 
+With declarative configuration, you can also embed metric definitions directly under `java.jmx.rules`:
+
+```yaml
+file_format: "1.2"
+instrumentation/development:
+  java:
+    jmx:
+      rules:
+        - bean: java.lang:type=Threading
+          mapping:
+            ThreadCount:
+              metric: app.thread.count
+              type: updowncounter
+              desc: The current number of threads
+              unit: "1"
+```
+
+Inline rules use the same syntax as rules in configuration files and are added to any rules loaded from files.
+
 ### Basic Syntax
 
 Each configuration file can contain multiple entries (which we call _rules_), defining a number of metrics. Each rule must identify a set of MBeans and the name of the MBean attribute to query, along with additional information on how to report the values. Let's look at a simple example.

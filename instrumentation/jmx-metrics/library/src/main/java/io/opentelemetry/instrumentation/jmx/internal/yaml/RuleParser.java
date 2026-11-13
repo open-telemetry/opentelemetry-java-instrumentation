@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.io.InputStream;
@@ -184,13 +185,7 @@ public class RuleParser {
    */
   public List<MetricDef> parseMetricDefs(InputStream is) {
     try {
-      JmxConfig config = loadConfig(is);
-      logger.log(FINE, "Found {0} metric rules", config.getRules().size());
-      List<MetricDef> metricDefs = new ArrayList<>();
-      for (JmxRule rule : config.getRules()) {
-        metricDefs.add(rule.buildMetricDef());
-      }
-      return metricDefs;
+      return createMetricDefs(loadConfig(is));
     } catch (Exception e) {
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
@@ -198,6 +193,39 @@ public class RuleParser {
           String.format("Failed to parse YAML rules : %s %s", rootCause(e), e.getMessage());
       throw new IllegalArgumentException(msg, e);
     }
+  }
+
+  /**
+   * Creates metric rules from a list of declarative rule definitions.
+   *
+   * @param rules declarative JMX rule definitions
+   * @return parsed collection of MetricDef
+   * @throws IllegalArgumentException when unable to parse YAML
+   */
+  public List<MetricDef> createMetricDefs(List<DeclarativeConfigProperties> rules) {
+    try {
+      List<JmxRule> jmxRules =
+          rules.stream()
+              .map(DeclarativeConfigProperties::toMap)
+              .map(RuleParser::parseJmxRule)
+              .collect(toList());
+      return createMetricDefs(new JmxConfig(jmxRules));
+    } catch (Exception e) {
+      // It is essential that the parser exception is made visible to the user.
+      // It contains contextual information about any syntax issues found by the parser.
+      String msg =
+          String.format("Failed to parse YAML rules : %s %s", rootCause(e), e.getMessage());
+      throw new IllegalArgumentException(msg, e);
+    }
+  }
+
+  private static List<MetricDef> createMetricDefs(JmxConfig config) throws Exception {
+    logger.log(FINE, "Found {0} metric rules", config.getRules().size());
+    List<MetricDef> metricDefs = new ArrayList<>();
+    for (JmxRule rule : config.getRules()) {
+      metricDefs.add(rule.buildMetricDef());
+    }
+    return metricDefs;
   }
 
   /**

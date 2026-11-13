@@ -1,0 +1,32 @@
+file_format: "1.2"
+instrumentation/development:
+  java:
+    jmx:
+      metrics:
+        included:
+          - custom.test.*
+          - tomcat.test.*
+        excluded:
+          - custom.test.excluded
+          - tomcat.test.stable
+        experimental:
+          included:
+            - tomcat.test.unstable
+      rules:
+        - bean: java.lang:type=Threading
+          metricAttribute:
+            test.source: const(declarative)
+          mapping:
+            ThreadCount:
+              metric: custom.test.embedded
+              type: gauge
+              unit: "{thread}"
+              desc: Current number of threads.
+            PeakThreadCount:
+              metric: custom.test.excluded
+              type: gauge
+              unit: "{thread}"
+            TotalStartedThreadCount:
+              metric: other.test.not-included
+              type: counter
+              unit: "{thread}"

@@ -9,16 +9,20 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 // because it needs to access package-private methods from a number of classes.
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
@@ -31,6 +35,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
 
 class RuleParserTest {
   private static RuleParser parser;
@@ -569,6 +575,44 @@ class RuleParserTest {
     } else {
       assertThat(filteredValue).isEqualTo(unFilteredValue).isEqualTo(value);
     }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
+  void createMetricDefsFromDeclarativeConfig() {
+    Map<String, Object> data =
+        (Map<String, Object>) new Load(LoadSettings.builder().build()).loadFromString(CONF4);
+    DeclarativeConfigProperties config =
+        YamlDeclarativeConfigProperties.create(
+            data, ComponentLoader.forClassLoader(RuleParserTest.class.getClassLoader()));
+
+    assertThat(parser.createMetricDefs(config.getStructuredList("rules", emptyList())))
+        .singleElement()
+        .satisfies(
+            def -> {
+              assertThat(def.getBeanGroup().getNamePatterns())
+                  .extracting(ObjectName::toString)
+                  .containsExactly("my-test:type=4");
+              assertThat(def.getMetricExtractors())
+                  .extracting(extractor -> extractor.getInfo().getMetricName())
+                  .containsExactlyInAnyOrder(
+                      "PREFIX.METRIC_NAME1", "PREFIX.METRIC_NAME2", "PREFIX.ATTRIBUTE3");
+              assertThat(def.getMetricExtractors())
+                  .anySatisfy(
+                      extractor -> {
+                        assertThat(extractor.getMetricValueExtractor().getAttributeName())
+                            .isEqualTo("A.b");
+                        MetricInfo info = extractor.getInfo();
+                        assertThat(info.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
+                        assertThat(info.getDescription()).isEqualTo("DESCRIPTION1");
+                        assertThat(info.getType()).isEqualTo(MetricInfo.Type.COUNTER);
+                        assertThat(info.getSourceUnit()).isEqualTo("SOURCE_UNIT1");
+                        assertThat(info.getUnit()).isEqualTo("UNIT1");
+                        assertThat(extractor.getAttributes())
+                            .extracting(MetricAttribute::getAttributeName)
+                            .containsExactlyInAnyOrder("LABEL_KEY1", "LABEL_KEY2", "LABEL_KEY3");
+                      });
+            });
   }
 
   private static void checkConstantMetricAttribute(

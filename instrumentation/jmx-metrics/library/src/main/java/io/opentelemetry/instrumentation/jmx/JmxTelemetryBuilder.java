@@ -11,6 +11,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
@@ -114,6 +115,29 @@ public final class JmxTelemetryBuilder {
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to load JMX rules from: " + path, e);
     }
+  }
+
+  /**
+   * Adds JMX rules from a list of declarative rule definitions. All metrics are included unless
+   * filtered out by the {@link #setMetrics(IncludeExclude)} method.
+   *
+   * @param rules rule definitions to add
+   * @return builder instance
+   * @throws IllegalArgumentException when rules is {@literal null} or can't be parsed
+   */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder addRules(List<DeclarativeConfigProperties> rules) {
+    if (rules == null) {
+      throw new IllegalArgumentException("missing JMX rules");
+    }
+    List<MetricDef> metricDefs = RuleParser.get().createMetricDefs(rules);
+
+    for (MetricDef metricDef : metricDefs) {
+      userMetricDefs.add(metricDef);
+      registeredMetrics.addAll(metricDef.getMetricNames());
+      registeredHandlers.addAll(metricDef.getHandlerNames());
+    }
+    return this;
   }
 
   /**

@@ -22,8 +22,10 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -170,6 +172,43 @@ class JmxMetricInsightInstallerTest {
                             point ->
                                 point.hasAttributes(
                                     Attributes.of(stringKey("test.source"), "custom")))));
+  }
+
+  @Test
+  void customRulesFromDeclarativeConfig() throws IOException {
+    DeclarativeConfigProperties config;
+    try (InputStream input = getClass().getResourceAsStream("/jmx-declarative-config.yaml")) {
+      config =
+          DeclarativeConfiguration.toConfigProperties(DeclarativeConfiguration.parse(input))
+              .get("instrumentation/development")
+              .get("java")
+              .get("jmx");
+    }
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxMetricInsightInstaller.configure(builder, config);
+    cleanup.deferCleanup(builder.build().start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric -> metric.hasName("tomcat.test.unstable"),
+        metric ->
+            metric
+                .hasName("custom.test.embedded")
+                .hasUnit("{thread}")
+                .hasDescription("Current number of threads.")
+                .hasLongGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributes(
+                                    Attributes.of(stringKey("test.source"), "declarative")))));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "custom.test.excluded", metrics -> metrics.isEmpty());
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "other.test.not-included", metrics -> metrics.isEmpty());
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "tomcat.test.stable", metrics -> metrics.isEmpty());
   }
 
   @Test

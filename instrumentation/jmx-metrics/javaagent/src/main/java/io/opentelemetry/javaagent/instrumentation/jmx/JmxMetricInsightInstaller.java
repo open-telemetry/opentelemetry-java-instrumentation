@@ -59,6 +59,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .map(Paths::get)
         .forEach(path -> addFileRules(path, jmx));
 
+    jmx.addRules(config.getStructuredList("rules", emptyList()));
+
     List<String> unstableInclude =
         config
             .get("metrics")

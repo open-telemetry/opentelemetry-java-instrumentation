@@ -35,6 +35,7 @@ dependencies {
   camelTestApp(project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app", configuration = "camelTestApp"))
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
   testImplementation("org.testcontainers:testcontainers")
 
   testImplementation("org.testcontainers:testcontainers-junit-jupiter")

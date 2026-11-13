@@ -12,6 +12,29 @@ configurations:
     description: List of paths to JMX metric definition YAML files.
     type: list
     default: ""
+  - declarative_name: java.jmx.rules
+    description: >
+      Inline JMX metric definitions, using the same rule syntax as JMX metric definition YAML
+      files. These rules are added to any rules loaded from files.
+    type: list
+    default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      properties:
+        bean:
+          type: string
+          description: MBean ObjectName or pattern to match.
+          example: java.lang:type=Threading
+        mapping:
+          type: object
+          description: MBean attribute names mapped to metric definitions.
+          example:
+            ThreadCount:
+              metric: app.thread.count
+              type: updowncounter
+              desc: The current number of threads
+              unit: "1"
   - name: otel.jmx.discovery.delay
     declarative_name: java.jmx.discovery.delay
     description: Time in milliseconds between JMX MBean detection attempts.
