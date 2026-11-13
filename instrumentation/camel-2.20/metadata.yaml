@@ -8,6 +8,7 @@ semantic_conventions:
   - HTTP_SERVER_SPANS
   - DATABASE_CLIENT_SPANS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 features:
   - HTTP_ROUTE
 library_link: https://camel.apache.org/

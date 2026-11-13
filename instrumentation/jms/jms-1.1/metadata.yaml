@@ -4,6 +4,7 @@ description: >
   consumers.
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 library_link: https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html
 configurations:
   - ref: messaging.headers.included

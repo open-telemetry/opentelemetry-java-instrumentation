@@ -5,6 +5,7 @@ display_name: Vert.x Kafka Client
 library_link: https://vertx.io/docs/vertx-kafka-client/java/
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 disabled_by_default: true
 classification: library
 configurations:
