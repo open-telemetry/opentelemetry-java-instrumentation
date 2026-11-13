@@ -183,7 +183,9 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
       @Override
       public void onClose(Status status, Metadata trailers) {
-        request.setPeerSocketAddress(getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+        io.grpc.Attributes attributes = getAttributes();
+        request.setPeerSocketAddress(attributes.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+        request.setLocalSocketAddress(GrpcAttributesUtil.getLocalSocketAddress(attributes));
         if (captureExperimentalSpanAttributes) {
           Span span = Span.fromContext(context);
           span.setAttribute(
