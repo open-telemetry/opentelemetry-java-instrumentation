@@ -50,6 +50,8 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.agent.builder.AgentBuilder.Transformer;
 import net.bytebuddy.description.type.TypeDescription;
@@ -71,8 +73,7 @@ import net.bytebuddy.utility.JavaModule;
  */
 public class HelperInjector implements Transformer {
 
-  private static final TransformSafeLogger logger =
-      TransformSafeLogger.getLogger(HelperInjector.class);
+  private static final Logger logger = Logger.getLogger(HelperInjector.class.getName());
 
   private static final ProtectionDomain PROTECTION_DOMAIN =
       HelperInjector.class.getProtectionDomain();
@@ -233,11 +234,12 @@ public class HelperInjector implements Transformer {
       try {
         resources = Collections.list(source.getResources(helperResource.getAgentPath()));
       } catch (IOException e) {
-        logger.log(
-            SEVERE,
-            "Unexpected exception occurred when loading resources {}; skipping",
-            new Object[] {helperResource.getAgentPath()},
-            e);
+        LogRecord record =
+            new LogRecord(
+                SEVERE, "Unexpected exception occurred when loading resources {}; skipping");
+        record.setParameters(new Object[] {helperResource.getAgentPath()});
+        record.setThrown(e);
+        logger.log(record);
         continue;
       }
       if (resources.isEmpty()) {
@@ -311,12 +313,14 @@ public class HelperInjector implements Transformer {
       }
     } catch (RuntimeException e) {
       if (logger.isLoggable(SEVERE)) {
-        logger.log(
-            SEVERE,
-            "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes"
-                + " into instance {2}",
-            new Object[] {typeDescription, requestingName, classLoader},
-            e);
+        LogRecord record =
+            new LogRecord(
+                SEVERE,
+                "Error preparing helpers while processing {0} for {1}. Failed to inject helper classes"
+                    + " into instance {2}");
+        record.setParameters(new Object[] {typeDescription, requestingName, classLoader});
+        record.setThrown(e);
+        logger.log(record);
       }
       throw e;
     }

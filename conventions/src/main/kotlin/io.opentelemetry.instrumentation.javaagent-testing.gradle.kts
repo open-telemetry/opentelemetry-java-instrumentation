@@ -95,8 +95,6 @@ class JavaagentTestArgumentsProvider(
       "-Dotel.javaagent.experimental.initializer.jar=${shadowJar.absolutePath}",
       "-Dotel.javaagent.testing.additional-library-ignores.enabled=false",
       "-Dotel.javaagent.testing.fail-on-context-leak=$failOnContextLeak",
-      // prevent sporadic gradle deadlocks, see SafeLogger for more details
-      "-Dotel.javaagent.testing.transform-safe-logging.enabled=true",
       // suppress repeated logging of "No metric data to export - skipping export."
       // since PeriodicMetricReader is configured with a short interval
       "-Dio.opentelemetry.javaagent.slf4j.simpleLogger.log.io.opentelemetry.sdk.metrics.export.PeriodicMetricReader=INFO",
