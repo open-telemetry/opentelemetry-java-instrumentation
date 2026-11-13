@@ -29,6 +29,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.testcontainers.DockerClientFactory;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -124,6 +125,51 @@ class WeblogicTest extends TargetSystemTest {
     copyYamlFilesToTarget(target, yamlFiles);
     copyTestWebAppToTarget(target, "/u01/oracle/testapp.war");
 
+    startWeblogicWeaverValidation();
+
+    startTarget(target);
+
+    sendHttpRequestToDeployedApp(target, dockerImageName);
+
+    verifyMetrics(createMetricsVerifier());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void testCollectedMetricsWithSyntheticMBeans(boolean experimentalOptIn) {
+    List<String> yamlFiles = new ArrayList<>();
+    Map<String, String> config;
+    if (experimentalOptIn) {
+      config = otelConfigPropertiesExperimentalOptIn("weblogic.*");
+    } else {
+      yamlFiles.addAll(getAllRulesForSystem("weblogic"));
+      config = otelConfigProperties(yamlFiles);
+    }
+
+    List<String> jvmArgs = new ArrayList<>();
+    jvmArgs.add(javaAgentJvmArgument());
+    jvmArgs.addAll(javaPropertiesToJvmArgs(config));
+
+    GenericContainer<?> target =
+        new GenericContainer<>("eclipse-temurin:17.0.18_8-jre")
+            .withCommand(
+                String.format("java %s -jar /weblogic_test.jar", String.join(" ", jvmArgs)))
+            .waitingFor(
+                Wait.forLogMessage(".*Synthetic WebLogic runtime MBeans registered.*", 1)
+                    .withStartupTimeout(Duration.ofMinutes(1)));
+
+    copyAgentToTarget(target);
+    copyYamlFilesToTarget(target, yamlFiles);
+    copyTestAppToTarget(
+        getArtifactPath("io.opentelemetry.weblogictestapp.path"), target, "/weblogic_test.jar");
+
+    startWeblogicWeaverValidation();
+    startTarget(target);
+
+    verifyMetrics(createMetricsVerifier());
+  }
+
+  private void startWeblogicWeaverValidation() {
     startWeaverValidation(
         "weblogic.yaml",
         result ->
@@ -160,12 +206,6 @@ class WeblogicTest extends TargetSystemTest {
                         "weblogic.channel",
                         "weblogic.rollback.cause"),
                     emptyList()));
-
-    startTarget(target);
-
-    sendHttpRequestToDeployedApp(target, dockerImageName);
-
-    verifyMetrics(createMetricsVerifier());
   }
 
   private static void sendHttpRequestToDeployedApp(

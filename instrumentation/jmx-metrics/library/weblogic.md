@@ -1,7 +1,5 @@
 # WebLogic Metrics
 
-Here is the list of metrics based on MBeans exposed by Oracle WebLogic Server (tested with WebLogic Server 14.1.1 on JDK 8 and 11, 14.1.2 on JDK 17 and 21, and 15.1.1 on JDK 17 and 21).
-
 ## Prerequisites
 
 WebLogic Server must have `PlatformMBeanServerUsed` enabled so that `com.bea:*` runtime MBeans are registered on the JVM platform `MBeanServer` (this is `true` by default for WebLogic Server 10.3.3.0 and later domains).
@@ -9,6 +7,8 @@ WebLogic Server must have `PlatformMBeanServerUsed` enabled so that `com.bea:*` 
 If you also pass `-Dcom.sun.management.jmxremote` to the JVM, add `-Djavax.management.builder.initial=weblogic.management.jmx.mbeanserver.WLSMBeanServerBuilder` so WebLogic initializes the platform `MBeanServer` with its security hooks intact.
 
 ## Metrics
+
+The metric mappings below were verified against WebLogic Server 14.1.1 on JDK 8 and 11, 14.1.2 on JDK 17 and 21, and 15.1.1 on JDK 17 and 21.
 
 | Metric Name                              | Type          | Unit          | Attributes                                                 | Description                                                                |
 | ---------------------------------------- | ------------- | ------------- | ---------------------------------------------------------- | -------------------------------------------------------------------------- |
