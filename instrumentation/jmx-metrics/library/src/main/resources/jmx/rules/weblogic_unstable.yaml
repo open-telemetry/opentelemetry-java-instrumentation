@@ -34,6 +34,7 @@ rules:
     prefix: weblogic.session.
     unit: "{session}"
     metricAttribute:
+      weblogic.application: param(ApplicationRuntime)
       weblogic.context: beanattr(ContextRoot)
     mapping:
       # weblogic.session.active.count

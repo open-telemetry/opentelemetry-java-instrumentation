@@ -103,6 +103,7 @@ groups:
     unit: "{session}"
     instrument: updowncounter
     attributes:
+      - ref: weblogic.application
       - ref: weblogic.context
 
   - id: metric.weblogic.session.created
@@ -113,6 +114,7 @@ groups:
     unit: "{session}"
     instrument: counter
     attributes:
+      - ref: weblogic.application
       - ref: weblogic.context
 
   - id: metric.weblogic.request.count

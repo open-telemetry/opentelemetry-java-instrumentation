@@ -131,7 +131,7 @@ class WeblogicTest extends TargetSystemTest {
 
     sendHttpRequestToDeployedApp(target, dockerImageName);
 
-    verifyMetrics(createMetricsVerifier());
+    verifyMetrics(createMetricsVerifier(false));
   }
 
   @ParameterizedTest
@@ -166,7 +166,7 @@ class WeblogicTest extends TargetSystemTest {
     startWeblogicWeaverValidation();
     startTarget(target);
 
-    verifyMetrics(createMetricsVerifier());
+    verifyMetrics(createMetricsVerifier(true));
   }
 
   private void startWeblogicWeaverValidation() {
@@ -218,11 +218,13 @@ class WeblogicTest extends TargetSystemTest {
     assertThat(response.status()).isEqualTo(HttpStatus.OK);
   }
 
-  private static MetricsVerifier createMetricsVerifier() {
+  private static MetricsVerifier createMetricsVerifier(boolean assertSyntheticDurationValues) {
     AttributeMatcher applicationAttribute = attributeWithAnyValue("weblogic.application");
     AttributeMatcher contextAttribute = attributeWithAnyValue("weblogic.context");
     AttributeMatcher servletAttribute = attributeWithAnyValue("weblogic.servlet");
     AttributeMatcher channelAttribute = attributeWithAnyValue("weblogic.channel");
+    AttributeMatcherGroup sessionAttributes =
+        attributeGroup(applicationAttribute, contextAttribute);
     AttributeMatcherGroup servletAttributes =
         attributeGroup(applicationAttribute, contextAttribute, servletAttribute);
     AttributeMatcher dataSourceAttribute = attribute("db.client.connection.pool.name", "ExampleDS");
@@ -280,7 +282,7 @@ class WeblogicTest extends TargetSystemTest {
                     .hasDescription("The number of currently active sessions.")
                     .hasUnit("{session}")
                     .hasDataPointsWithIntValues(v -> v.isGreaterThan(0), v -> v.isEqualTo(0))
-                    .hasDataPointsWithOneAttribute(contextAttribute))
+                    .hasDataPointsWithAttributes(sessionAttributes))
         .add(
             "weblogic.session.created",
             metric ->
@@ -289,7 +291,7 @@ class WeblogicTest extends TargetSystemTest {
                     .hasDescription("The number of sessions opened.")
                     .hasUnit("{session}")
                     .hasDataPointsWithIntValues(v -> v.isGreaterThan(0), v -> v.isEqualTo(0))
-                    .hasDataPointsWithOneAttribute(contextAttribute))
+                    .hasDataPointsWithAttributes(sessionAttributes))
         // servlet request metrics
         .add(
             "weblogic.request.count",
@@ -302,20 +304,30 @@ class WeblogicTest extends TargetSystemTest {
                     .hasDataPointsWithAttributes(servletAttributes))
         .add(
             "weblogic.request.duration.sum",
-            metric ->
-                metric
-                    .isCounter()
-                    .hasDescription("The total amount of time spent executing servlet requests.")
-                    .hasUnit("s")
-                    .hasDataPointsWithAttributes(servletAttributes))
+            metric -> {
+              metric
+                  .isCounter()
+                  .hasDescription("The total amount of time spent executing servlet requests.")
+                  .hasUnit("s")
+                  .hasDataPointsWithAttributes(servletAttributes);
+              if (assertSyntheticDurationValues) {
+                metric.hasDataPointsWithDoubleValues(
+                    v -> v.isBetween(0.839, 0.841), v -> v.isEqualTo(0.0));
+              }
+            })
         .add(
             "weblogic.request.duration.max",
-            metric ->
-                metric
-                    .isGauge()
-                    .hasDescription("The longest servlet request execution time.")
-                    .hasUnit("s")
-                    .hasDataPointsWithAttributes(servletAttributes))
+            metric -> {
+              metric
+                  .isGauge()
+                  .hasDescription("The longest servlet request execution time.")
+                  .hasUnit("s")
+                  .hasDataPointsWithAttributes(servletAttributes);
+              if (assertSyntheticDurationValues) {
+                metric.hasDataPointsWithDoubleValues(
+                    v -> v.isBetween(0.074, 0.076), v -> v.isEqualTo(0.0));
+              }
+            })
         // network channel I/O metrics
         .add(
             "weblogic.network.io",

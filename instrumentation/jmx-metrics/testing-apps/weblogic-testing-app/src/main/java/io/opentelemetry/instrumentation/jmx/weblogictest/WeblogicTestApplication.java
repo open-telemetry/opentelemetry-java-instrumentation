@@ -43,7 +43,7 @@ public final class WeblogicTestApplication {
             0L));
 
     register(
-        "com.bea:ServerRuntime=AdminServer,ApplicationRuntime=demo,Name=demo,"
+        "com.bea:ServerRuntime=AdminServer,ApplicationRuntime=demo#1.0,Name=demo,"
             + "Type=WebAppComponentRuntime",
         values(
             "OpenSessionsCurrentCount",
@@ -53,7 +53,7 @@ public final class WeblogicTestApplication {
             "ContextRoot",
             "/demo"));
     register(
-        "com.bea:ServerRuntime=AdminServer,ApplicationRuntime=idle,Name=idle,"
+        "com.bea:ServerRuntime=AdminServer,ApplicationRuntime=demo#2.0,Name=demo,"
             + "Type=WebAppComponentRuntime",
         values(
             "OpenSessionsCurrentCount",
@@ -61,10 +61,10 @@ public final class WeblogicTestApplication {
             "SessionsOpenedTotalCount",
             0L,
             "ContextRoot",
-            "/idle"));
+            "/demo"));
 
     register(
-        "com.bea:ServerRuntime=AdminServer,ApplicationRuntime=demo,"
+        "com.bea:ServerRuntime=AdminServer,ApplicationRuntime=demo#1.0,"
             + "WebAppComponentRuntime=demo,Name=MainServlet,Type=ServletRuntime",
         values(
             "InvocationTotalCount",
@@ -76,8 +76,8 @@ public final class WeblogicTestApplication {
             "ContextPath",
             "/demo"));
     register(
-        "com.bea:ServerRuntime=AdminServer,ApplicationRuntime=idle,"
-            + "WebAppComponentRuntime=idle,Name=IdleServlet,Type=ServletRuntime",
+        "com.bea:ServerRuntime=AdminServer,ApplicationRuntime=demo#2.0,"
+            + "WebAppComponentRuntime=demo,Name=MainServlet,Type=ServletRuntime",
         values(
             "InvocationTotalCount",
             0L,
@@ -86,7 +86,7 @@ public final class WeblogicTestApplication {
             "ExecutionTimeHigh",
             0L,
             "ContextPath",
-            "/idle"));
+            "/demo"));
 
     register(
         "com.bea:ServerRuntime=AdminServer,Name=DefaultHttp,Type=ServerChannelRuntime",
