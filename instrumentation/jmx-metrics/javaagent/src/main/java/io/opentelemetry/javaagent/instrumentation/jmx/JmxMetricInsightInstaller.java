@@ -60,10 +60,7 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .map(Paths::get)
         .forEach(path -> addFileRules(path, jmx));
 
-    jmx.addRules(
-        config.getStructuredList("rules", emptyList()).stream()
-            .map(DeclarativeConfigProperties::toMap)
-            .collect(toList()));
+    addInlineRules(config, jmx);
 
     List<String> unstableInclude =
         config
@@ -82,6 +79,17 @@ public class JmxMetricInsightInstaller implements AgentListener {
         SelectorConfig.resolve(config, INSTRUMENTATION_NAME, "metrics", STABLE);
     if (metrics != null) {
       jmx.setMetrics(metrics);
+    }
+  }
+
+  private static void addInlineRules(DeclarativeConfigProperties config, JmxTelemetryBuilder jmx) {
+    try {
+      jmx.addRules(
+          config.getStructuredList("rules", emptyList()).stream()
+              .map(DeclarativeConfigProperties::toMap)
+              .collect(toList()));
+    } catch (RuntimeException e) {
+      logger.log(SEVERE, "Error while loading inline JMX rules", e);
     }
   }
 
