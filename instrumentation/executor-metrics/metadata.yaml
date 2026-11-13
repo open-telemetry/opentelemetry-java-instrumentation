@@ -5,11 +5,6 @@ description: >
 disabled_by_default: true
 library_link: https://docs.oracle.com/javase/8/docs/api/java/util/concurrent/ThreadPoolExecutor.html
 configurations:
-  - name: otel.instrumentation.executor-metrics.enabled
-    declarative_name: java.executor_metrics.enabled
-    description: Enables executor metrics instrumentation.
-    type: boolean
-    default: false
   - name: otel.instrumentation.executor-metrics.experimental.name-normalization
     declarative_name: java.executor_metrics.name_normalization/development
     description: >

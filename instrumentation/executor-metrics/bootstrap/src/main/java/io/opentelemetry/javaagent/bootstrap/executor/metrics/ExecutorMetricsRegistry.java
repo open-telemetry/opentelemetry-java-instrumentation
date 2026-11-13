@@ -145,7 +145,6 @@ public final class ExecutorMetricsRegistry {
     private final LongAdder rejectedTaskCount = new LongAdder();
     @Nullable private String ownerName;
     private String threadNameNormalization;
-    @Nullable private String executorName;
     @Nullable private BatchCallback callback;
     private volatile boolean awaitingWorkerThread = true;
     private boolean closed;
@@ -162,40 +161,67 @@ public final class ExecutorMetricsRegistry {
         return;
       }
 
-      @Nullable BatchCallback previous;
+      Set<Thread> threads;
+      String normalization;
+      @Nullable String registrationOwner;
+
       synchronized (this) {
-        String newExecutorName = executorName(threadName, threadNameNormalization);
-        if (closed || !awaitingWorkerThread || newExecutorName.equals(executorName)) {
+        if (closed || !awaitingWorkerThread) {
           return;
         }
 
-        Set<Thread> threads = threadsRef.get();
-        if (threads == null) {
+        Set<Thread> currentThreads = threadsRef.get();
+        if (currentThreads == null) {
           return;
         }
 
-        BatchCallback newCallback =
-            metricsRegistrar.registerMetrics(
-                executor, threads, newExecutorName, ownerName, queueCapacity, rejectedTaskCount);
-        previous = callback;
-        callback = newCallback;
-        executorName = newExecutorName;
+        threads = currentThreads;
+        normalization = threadNameNormalization;
+        registrationOwner = ownerName;
         awaitingWorkerThread = false;
       }
 
-      if (previous != null) {
-        previous.close();
+      BatchCallback newCallback;
+      try {
+        newCallback =
+            metricsRegistrar.registerMetrics(
+                executor,
+                threads,
+                executorName(threadName, normalization),
+                registrationOwner,
+                queueCapacity,
+                rejectedTaskCount);
+      } catch (Throwable t) {
+        synchronized (this) {
+          if (!closed) {
+            awaitingWorkerThread = true;
+          }
+        }
+        throw t;
       }
+
+      synchronized (this) {
+        if (!closed) {
+          callback = newCallback;
+          return;
+        }
+      }
+
+      newCallback.close();
     }
 
     private synchronized void reregister(
         @Nullable String newOwnerName, String newThreadNameNormalization) {
-      if (closed || callback != null) {
+      if (closed || !awaitingWorkerThread) {
         return;
       }
 
       ownerName = newOwnerName;
       threadNameNormalization = newThreadNameNormalization;
+    }
+
+    private synchronized boolean isRegisteredOrClosed() {
+      return closed || callback != null;
     }
 
     private void recordRejectedTask() {
@@ -238,8 +264,13 @@ public final class ExecutorMetricsRegistry {
       if (!registrationPending) {
         return;
       }
-      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, threadName, metricsRegistrar);
-      registrationPending = false;
+      Registration registration = registrations.get(executor);
+      if (registration != null) {
+        registration.onWorkerThreadStarted(executor, threadName, metricsRegistrar);
+        if (registration.isRegisteredOrClosed()) {
+          registrationPending = false;
+        }
+      }
     }
 
     private void clearPendingRegistration() {

@@ -4,14 +4,20 @@ The `jvm.executor.name` metric attribute is derived from the worker thread name 
 executor metrics are registered. Empty or unavailable thread names are reported as `unknown`;
 otherwise, the configured `trailing` or `all` normalization rule is applied.
 
-The `unknown` value does not identify an executor, so metrics from multiple unnamed executors may
-be aggregated. Users requiring per-executor metric series should configure distinct names through
-the executor's `ThreadFactory`.
+Executors with the same normalized name, type, and owner share metric series.
+This can occur with unnamed executors or thread factories whose names become
+identical after normalization.
 
-The optional `jvm.executor.owner.name` attribute is omitted by default. Instrumentations that know
-the logical component owning an executor SHOULD configure it before the first worker is registered.
-Once executor metrics are registered, `jvm.executor.name` and `jvm.executor.owner.name` remain fixed
-for that registration; later `reregister` calls do not create a new metric identity.
+For ThreadPoolExecutor task counters, terminating or collecting one of several
+executors sharing a series can decrease the reported cumulative value. Configure
+thread names that remain distinct after normalization when accurate per-executor
+counts and rates are required.
+
+The optional `jvm.executor.owner.name` attribute is omitted by default.
+Instrumentations that know the logical component owning an executor SHOULD
+configure it before the first worker starts metric registration. Registration
+captures the name-normalization rule and owner together; later `reregister` calls
+do not change an in-progress or completed registration.
 
 | System property                                                         | Type    | Default    | Description                                                                                                                                   |
 | ----------------------------------------------------------------------- | ------- | ---------- | --------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.bootstrap.executor.metrics;
 
 import static java.util.Collections.emptySet;
 import static java.util.concurrent.TimeUnit.MINUTES;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
@@ -18,7 +19,12 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -30,6 +36,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ExecutorMetricsRegistryTest {
 
@@ -348,6 +355,132 @@ class ExecutorMetricsRegistryTest {
       ExecutorMetricsRegistry.unregister(executor);
       executor.shutdownNow();
     }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void lifecycleOperationsDoNotWaitForRegistrar(boolean wrapped) throws Exception {
+    TestMetricsRegistrar metrics = new TestMetricsRegistrar();
+    ThreadPoolExecutor executor = newExecutor();
+    ThreadFactory factory = preRegisterForTest(executor, wrapped);
+    ExecutorService callers = Executors.newFixedThreadPool(2);
+    CompletableFuture<Void> entered = new CompletableFuture<>();
+    CompletableFuture<Void> release = new CompletableFuture<>();
+
+    ExecutorMetricsRegistry.MetricsRegistrar registrar =
+        (pool, threads, name, owner, capacity, rejected) -> {
+          entered.complete(null);
+          release.join();
+          return metrics.registerMetrics(pool, threads, name, owner, capacity, rejected);
+        };
+
+    try {
+      Future<?> first =
+          callers.submit(
+              () ->
+                  ExecutorMetricsRegistry.onWorkerThreadStarted(
+                      executor, factory, "first-1-thread-1", registrar));
+
+      entered.get(10, SECONDS);
+
+      Future<?> concurrent =
+          callers.submit(
+              () -> {
+                ExecutorMetricsRegistry.reregister(executor, "late-owner", "trailing", metrics);
+                ExecutorMetricsRegistry.onWorkerThreadStarted(
+                    executor, factory, "second-2-thread-2", metrics);
+                ExecutorMetricsRegistry.unregister(executor, factory);
+              });
+
+      concurrent.get(10, SECONDS);
+      assertThat(first.isDone()).isFalse();
+
+      release.complete(null);
+      first.get(10, SECONDS);
+
+      assertThat(metrics.executorNames).containsExactly("first-*-thread-*");
+      assertThat(metrics.ownerNames).containsExactly(NO_OWNER);
+      assertThat(metrics.callbacks)
+          .singleElement()
+          .satisfies(callback -> assertThat(callback.closeCount).hasValue(1));
+    } finally {
+      release.complete(null);
+      callers.shutdownNow();
+      try {
+        assertThat(callers.awaitTermination(10, SECONDS)).isTrue();
+      } finally {
+        ExecutorMetricsRegistry.unregister(executor, factory);
+        executor.shutdownNow();
+      }
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void retriesAfterConcurrentWorkerObservesRegistrationInProgress(boolean wrapped)
+      throws Exception {
+    TestMetricsRegistrar metrics = new TestMetricsRegistrar();
+    metrics.failuresRemaining = 1;
+
+    ThreadPoolExecutor executor = newExecutor();
+    ThreadFactory factory = preRegisterForTest(executor, wrapped);
+    ExecutorService callers = Executors.newFixedThreadPool(2);
+    CompletableFuture<Void> entered = new CompletableFuture<>();
+    CompletableFuture<Void> release = new CompletableFuture<>();
+
+    ExecutorMetricsRegistry.MetricsRegistrar registrar =
+        (pool, threads, name, owner, capacity, rejected) -> {
+          entered.complete(null);
+          release.join();
+          return metrics.registerMetrics(pool, threads, name, owner, capacity, rejected);
+        };
+
+    try {
+      Future<?> first =
+          callers.submit(
+              () ->
+                  ExecutorMetricsRegistry.onWorkerThreadStarted(
+                      executor, factory, "first-1-thread-1", registrar));
+
+      entered.get(10, SECONDS);
+
+      Future<?> concurrent =
+          callers.submit(
+              () ->
+                  ExecutorMetricsRegistry.onWorkerThreadStarted(
+                      executor, factory, "second-2-thread-2", metrics));
+      concurrent.get(10, SECONDS);
+
+      release.complete(null);
+      assertThatThrownBy(() -> first.get(10, SECONDS))
+          .isInstanceOf(ExecutionException.class)
+          .hasCauseInstanceOf(IllegalStateException.class);
+
+      ExecutorMetricsRegistry.onWorkerThreadStarted(executor, factory, "retry-3-thread-3", metrics);
+
+      assertThat(metrics.executorNames).containsExactly("first-*-thread-*", "retry-*-thread-*");
+      assertThat(metrics.callbacks)
+          .singleElement()
+          .satisfies(callback -> assertThat(callback.closeCount).hasValue(0));
+    } finally {
+      release.complete(null);
+      callers.shutdownNow();
+      try {
+        assertThat(callers.awaitTermination(10, SECONDS)).isTrue();
+      } finally {
+        ExecutorMetricsRegistry.unregister(executor, factory);
+        executor.shutdownNow();
+      }
+    }
+  }
+
+  private static ThreadFactory preRegisterForTest(ThreadPoolExecutor executor, boolean wrapped) {
+    if (wrapped) {
+      return ExecutorMetricsRegistry.preRegister(executor, Thread::new, emptySet(), "all");
+    }
+
+    ExecutorMetricsRegistry.preRegister(executor, TEST_QUEUE_CAPACITY, "all");
+    return Thread::new;
   }
 
   private static ThreadPoolExecutor newExecutor() {
