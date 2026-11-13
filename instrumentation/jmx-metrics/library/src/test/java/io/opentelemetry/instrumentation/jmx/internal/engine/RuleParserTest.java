@@ -9,20 +9,16 @@ package io.opentelemetry.instrumentation.jmx.internal.engine;
 // because it needs to access package-private methods from a number of classes.
 
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxConfig;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.JmxRule;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.Metric;
 import io.opentelemetry.instrumentation.jmx.internal.yaml.RuleParser;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.util.List;
@@ -579,14 +575,12 @@ class RuleParserTest {
 
   @Test
   @SuppressWarnings("unchecked") // for casting yaml parsed objects
-  void createMetricDefsFromDeclarativeConfig() {
+  void createMetricDefsFromMaps() {
     Map<String, Object> data =
         (Map<String, Object>) new Load(LoadSettings.builder().build()).loadFromString(CONF4);
-    DeclarativeConfigProperties config =
-        YamlDeclarativeConfigProperties.create(
-            data, ComponentLoader.forClassLoader(RuleParserTest.class.getClassLoader()));
+    List<Map<String, Object>> rules = (List<Map<String, Object>>) data.get("rules");
 
-    assertThat(parser.createMetricDefs(config.getStructuredList("rules", emptyList())))
+    assertThat(parser.createMetricDefs(rules))
         .singleElement()
         .satisfies(
             def -> {

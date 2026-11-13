@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
 
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.io.InputStream;
@@ -78,6 +77,7 @@ public class RuleParser {
 
   @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static JmxRule parseJmxRule(Map<String, Object> ruleYaml) {
+    ruleYaml = new LinkedHashMap<>(ruleYaml);
     JmxRule jmxRule = new JmxRule();
 
     String bean = (String) ruleYaml.remove("bean");
@@ -128,6 +128,7 @@ public class RuleParser {
   }
 
   private static Metric parseMetric(Map<String, Object> metricYaml) {
+    metricYaml = new LinkedHashMap<>(metricYaml);
     Metric metric = new Metric();
 
     String metricName = (String) metricYaml.remove("metric");
@@ -196,19 +197,15 @@ public class RuleParser {
   }
 
   /**
-   * Creates metric rules from a list of declarative rule definitions.
+   * Creates metric rules from a list of maps using the YAML rule syntax.
    *
-   * @param rules declarative JMX rule definitions
+   * @param rules JMX rule definitions
    * @return parsed collection of MetricDef
    * @throws IllegalArgumentException when unable to parse YAML
    */
-  public List<MetricDef> createMetricDefs(List<DeclarativeConfigProperties> rules) {
+  public List<MetricDef> createMetricDefs(List<Map<String, Object>> rules) {
     try {
-      List<JmxRule> jmxRules =
-          rules.stream()
-              .map(DeclarativeConfigProperties::toMap)
-              .map(RuleParser::parseJmxRule)
-              .collect(toList());
+      List<JmxRule> jmxRules = rules.stream().map(RuleParser::parseJmxRule).collect(toList());
       return createMetricDefs(new JmxConfig(jmxRules));
     } catch (Exception e) {
       // It is essential that the parser exception is made visible to the user.

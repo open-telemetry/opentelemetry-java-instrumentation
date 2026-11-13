@@ -11,7 +11,6 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
@@ -29,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -118,15 +118,18 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Adds JMX rules from a list of declarative rule definitions. All metrics are included unless
-   * filtered out by the {@link #setMetrics(IncludeExclude)} method.
+   * Adds JMX rules from a list of maps. Each map uses the same syntax as an individual rule in a
+   * YAML configuration file. All metrics are included unless filtered out by the {@link
+   * #setMetrics(IncludeExclude)} method.
+   *
+   * <p>The supplied list and maps are not modified.
    *
    * @param rules rule definitions to add
    * @return builder instance
    * @throws IllegalArgumentException when rules is {@literal null} or can't be parsed
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addRules(List<DeclarativeConfigProperties> rules) {
+  public JmxTelemetryBuilder addRules(List<Map<String, Object>> rules) {
     if (rules == null) {
       throw new IllegalArgumentException("missing JMX rules");
     }

@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jmx;
 import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.STABLE;
 import static java.util.Collections.emptyList;
 import static java.util.logging.Level.SEVERE;
+import static java.util.stream.Collectors.toList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -59,7 +60,10 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .map(Paths::get)
         .forEach(path -> addFileRules(path, jmx));
 
-    jmx.addRules(config.getStructuredList("rules", emptyList()));
+    jmx.addRules(
+        config.getStructuredList("rules", emptyList()).stream()
+            .map(DeclarativeConfigProperties::toMap)
+            .collect(toList()));
 
     List<String> unstableInclude =
         config
