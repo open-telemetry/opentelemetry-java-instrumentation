@@ -115,6 +115,9 @@ public final class IncludeExclude {
   }
 
   private static Predicate<String> createGlobPredicate(String globPattern) {
+    if (globPattern.equals("*")) {
+      return value -> true;
+    }
     if (globPattern.indexOf('*') == -1 && globPattern.indexOf('?') == -1) {
       return globPattern::equals;
     }
@@ -168,8 +171,10 @@ public final class IncludeExclude {
   }
 
   private static boolean matchesAny(List<Predicate<String>> predicates, String value) {
-    for (Predicate<String> predicate : predicates) {
-      if (predicate.test(value)) {
+    // Index loop rather than for-each: matches() runs per attribute key on hot paths such as
+    // per-log-record attribute capture, and the iterator is not reliably scalar-replaced there.
+    for (int i = 0; i < predicates.size(); i++) {
+      if (predicates.get(i).test(value)) {
         return true;
       }
     }
