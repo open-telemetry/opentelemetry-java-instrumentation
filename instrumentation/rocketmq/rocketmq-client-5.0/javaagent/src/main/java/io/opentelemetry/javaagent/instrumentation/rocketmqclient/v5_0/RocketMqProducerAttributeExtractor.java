@@ -5,13 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqMessageAttributes.ROCKETMQ_MESSAGE_LITE_TOPIC;
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqMessageAttributes.ROCKETMQ_MESSAGE_PRIORITY;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.RocketmqIncubatingAttributes.RocketmqMessageTypeIncubatingValues;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
@@ -32,6 +35,12 @@ class RocketMqProducerAttributeExtractor
   private static final AttributeKey<String> ROCKETMQ_NAMESPACE =
       AttributeKey.stringKey("rocketmq.namespace");
 
+  private final boolean captureExperimentalSpanAttributes;
+
+  RocketMqProducerAttributeExtractor(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, PublishingMessageImpl message) {
@@ -42,18 +51,10 @@ class RocketMqProducerAttributeExtractor
         .getDeliveryTimestamp()
         .ifPresent(s -> attributes.put(ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, s));
     attributes.put(ROCKETMQ_MESSAGE_KEYS, new ArrayList<>(message.getKeys()));
-    switch (message.getMessageType()) {
-      case FIFO:
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.FIFO);
-        break;
-      case DELAY:
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.DELAY);
-        break;
-      case TRANSACTION:
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.TRANSACTION);
-        break;
-      default:
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.NORMAL);
+    attributes.put(ROCKETMQ_MESSAGE_TYPE, message.getMessageType().name().toLowerCase(Locale.ROOT));
+    if (captureExperimentalSpanAttributes) {
+      attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, RocketMqMessageAttributes.getLiteTopic(message));
+      attributes.put(ROCKETMQ_MESSAGE_PRIORITY, RocketMqMessageAttributes.getPriority(message));
     }
   }
 

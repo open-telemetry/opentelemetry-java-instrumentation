@@ -43,7 +43,9 @@ final class RocketMqInstrumenterFactory {
   private RocketMqInstrumenterFactory() {}
 
   public static Instrumenter<PublishingMessageImpl, SendReceiptImpl> createProducerInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers) {
+      OpenTelemetry openTelemetry,
+      IncludeExclude headers,
+      boolean captureExperimentalSpanAttributes) {
     RocketMqProducerAttributeGetter getter = new RocketMqProducerAttributeGetter();
     MessagingOperationType operationType = MessagingOperationType.SEND;
 
@@ -57,7 +59,8 @@ final class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
             .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(new RocketMqProducerAttributeExtractor())
+            .addAttributesExtractor(
+                new RocketMqProducerAttributeExtractor(captureExperimentalSpanAttributes))
             .addOperationMetrics(MessagingProducerMetrics.get());
     setMessagingSendExceptionEventExtractor(instrumenterBuilder);
     return instrumenterBuilder.buildProducerInstrumenter(new MessageMapSetter());
@@ -65,7 +68,10 @@ final class RocketMqInstrumenterFactory {
 
   public static Instrumenter<RocketMqReceiveRequest, List<MessageView>>
       createConsumerReceiveInstrumenter(
-          OpenTelemetry openTelemetry, IncludeExclude headers, boolean enabled) {
+          OpenTelemetry openTelemetry,
+          IncludeExclude headers,
+          boolean enabled,
+          boolean captureExperimentalSpanAttributes) {
     RocketMqConsumerReceiveAttributeGetter getter = new RocketMqConsumerReceiveAttributeGetter();
     MessagingOperationType operationType = MessagingOperationType.RECEIVE;
 
@@ -82,16 +88,21 @@ final class RocketMqInstrumenterFactory {
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerReceiveAttributeExtractor())
             .addOperationMetrics(MessagingConsumerMetrics.get());
-    instrumenterBuilder.addAttributesExtractor(new RocketMqReceiveBatchMessageAttributeExtractor());
+    instrumenterBuilder.addAttributesExtractor(
+        new RocketMqReceiveBatchMessageAttributeExtractor(captureExperimentalSpanAttributes));
     instrumenterBuilder.addSpanLinksExtractor(
         new RocketMqReceiveSpanLinksExtractor(
-            openTelemetry.getPropagators().getTextMapPropagator()));
+            openTelemetry.getPropagators().getTextMapPropagator(),
+            captureExperimentalSpanAttributes));
     setMessagingReceiveExceptionEventExtractor(instrumenterBuilder);
     return instrumenterBuilder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
   public static Instrumenter<MessageView, ConsumeResult> createConsumerProcessInstrumenter(
-      OpenTelemetry openTelemetry, IncludeExclude headers, boolean receiveInstrumentationEnabled) {
+      OpenTelemetry openTelemetry,
+      IncludeExclude headers,
+      boolean receiveInstrumentationEnabled,
+      boolean captureExperimentalSpanAttributes) {
     RocketMqConsumerProcessAttributeGetter getter = new RocketMqConsumerProcessAttributeGetter();
     MessagingOperationType operationType = MessagingOperationType.PROCESS;
 
@@ -105,7 +116,8 @@ final class RocketMqInstrumenterFactory {
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
             .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(attributesExtractor)
-            .addAttributesExtractor(new RocketMqConsumerProcessAttributeExtractor())
+            .addAttributesExtractor(
+                new RocketMqConsumerProcessAttributeExtractor(captureExperimentalSpanAttributes))
             .addOperationMetrics(MessagingProcessMetrics.get())
             .setSpanStatusExtractor(
                 (spanStatusBuilder, messageView, consumeResult, error) -> {
