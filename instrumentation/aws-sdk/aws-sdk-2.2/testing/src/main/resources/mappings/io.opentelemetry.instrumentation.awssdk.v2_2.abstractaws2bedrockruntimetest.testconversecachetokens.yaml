@@ -1,0 +1,28 @@
+---
+id: 6f0c1b8e-3a7d-4c2e-9f51-0d2b7e4a9c13
+name: model_amazonnova-micro-v10_converse
+request:
+  url: /model/amazon.nova-micro-v1%3A0/converse
+  method: POST
+  bodyPatterns:
+  - equalToJson: |-
+      {
+        "messages" : [ {
+          "role" : "user",
+          "content" : [ {
+            "text" : "Say this is a cached test"
+          } ]
+        } ]
+      }
+    ignoreArrayOrder: false
+    ignoreExtraElements: false
+response:
+  status: 200
+  body: "{\"metrics\":{\"latencyMs\":512},\"output\":{\"message\":{\"content\":[{\"\
+    text\":\"This is a cached test.\"}],\"role\":\"assistant\"}},\"stopReason\"\
+    :\"end_turn\",\"usage\":{\"inputTokens\":8,\"outputTokens\":6,\"totalTokens\"\
+    :1062,\"cacheReadInputTokens\":1024,\"cacheWriteInputTokens\":24}}"
+  headers:
+    Content-Type: application/json
+uuid: 6f0c1b8e-3a7d-4c2e-9f51-0d2b7e4a9c13
+persistent: true
