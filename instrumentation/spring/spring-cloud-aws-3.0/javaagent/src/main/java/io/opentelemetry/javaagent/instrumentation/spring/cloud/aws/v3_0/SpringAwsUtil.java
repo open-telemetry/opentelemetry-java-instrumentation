@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.SpringAwsSqsSingletons.batchProcessInstrumenter;
+
 import io.awspring.cloud.sqs.listener.ContainerOptions;
 import io.awspring.cloud.sqs.listener.ListenerMode;
 import io.awspring.cloud.sqs.listener.source.AbstractMessageConvertingMessageSource;
@@ -20,7 +22,9 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsParentContext;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsProcessRequest;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import org.springframework.messaging.Message;
@@ -82,7 +86,7 @@ public class SpringAwsUtil {
   }
 
   @Nullable
-  public static ProcessingInvocation handleMessage(Message<?> message) {
+  public static ProcessingInvocation<?, ?> handleMessage(Message<?> message) {
     TracingContext tracingContext = TRACING_CONTEXT.get(message);
     if (tracingContext == null) {
       return null;
@@ -91,7 +95,39 @@ public class SpringAwsUtil {
     return tracingContext.trace();
   }
 
-  // restore context from the first message of the batch
+  @Nullable
+  public static ProcessingInvocation<?, ?> handleBatchProcess(
+      Collection<? extends Message<?>> messages) {
+    List<TracingContext> tracingContexts = new ArrayList<>();
+    List<SqsMessage> sqsMessages = new ArrayList<>();
+    for (Message<?> message : messages) {
+      TracingContext tracingContext = TRACING_CONTEXT.get(message);
+      if (tracingContext != null) {
+        tracingContexts.add(tracingContext);
+        sqsMessages.add(tracingContext.sqsMessage);
+      }
+    }
+    if (tracingContexts.isEmpty()) {
+      return null;
+    }
+
+    Instrumenter<SpringAwsSqsBatchProcessRequest, Void> instrumenter = batchProcessInstrumenter();
+    SpringAwsSqsBatchProcessRequest request =
+        new SpringAwsSqsBatchProcessRequest(messages, sqsMessages);
+    Context parentContext = Context.current();
+    if (!instrumenter.shouldStart(parentContext, request)) {
+      return null;
+    }
+    Context context = instrumenter.start(parentContext, request);
+    // acknowledgement of the batch happens later, possibly on another thread
+    for (TracingContext tracingContext : tracingContexts) {
+      tracingContext.batchProcessContext = context;
+    }
+    return new ProcessingInvocation<>(instrumenter, context, request, null);
+  }
+
+  // restore context of the batch process span, or of the first message of the batch when there
+  // was none
   @Nullable
   public static Scope handleBatch(Collection<Message<?>> messages) {
     if (messages.isEmpty()) {
@@ -101,6 +137,10 @@ public class SpringAwsUtil {
     TracingContext tracingContext = TRACING_CONTEXT.get(message);
     if (tracingContext == null) {
       return null;
+    }
+    Context batchProcessContext = tracingContext.batchProcessContext;
+    if (batchProcessContext != null) {
+      return batchProcessContext.makeCurrent();
     }
     SqsMessage wrappedMessage = tracingContext.sqsMessage;
     Context parentContext = tracingContext.processParentContext;
@@ -113,18 +153,18 @@ public class SpringAwsUtil {
     return parentContext.makeCurrent();
   }
 
-  public static class ProcessingInvocation {
-    private final Instrumenter<SqsProcessRequest, Response> instrumenter;
+  public static class ProcessingInvocation<REQUEST, RESPONSE> {
+    private final Instrumenter<REQUEST, RESPONSE> instrumenter;
     private final Context context;
-    private final SqsProcessRequest request;
-    private final Response response;
+    private final REQUEST request;
+    @Nullable private final RESPONSE response;
     private final Scope scope;
 
     private ProcessingInvocation(
-        Instrumenter<SqsProcessRequest, Response> instrumenter,
+        Instrumenter<REQUEST, RESPONSE> instrumenter,
         Context context,
-        SqsProcessRequest request,
-        Response response) {
+        REQUEST request,
+        @Nullable RESPONSE response) {
       this.instrumenter = instrumenter;
       this.context = context;
       this.request = request;
@@ -157,6 +197,7 @@ public class SpringAwsUtil {
     private final TracingExecutionInterceptor config;
     @Nullable private final Context processParentContext;
     private final SqsMessage sqsMessage;
+    @Nullable private volatile Context batchProcessContext;
 
     private TracingContext(TracingList tracingList, SqsMessage sqsMessage) {
       this.request = tracingList.getRequest();
@@ -168,7 +209,7 @@ public class SpringAwsUtil {
     }
 
     @Nullable
-    ProcessingInvocation trace() {
+    ProcessingInvocation<SqsProcessRequest, Response> trace() {
       SqsMessage wrappedMessage = sqsMessage;
       Context parentContext = processParentContext;
       if (parentContext == null) {
@@ -179,7 +220,7 @@ public class SpringAwsUtil {
         return null;
       }
       Context context = instrumenter.start(parentContext, processRequest);
-      return new ProcessingInvocation(instrumenter, context, processRequest, response);
+      return new ProcessingInvocation<>(instrumenter, context, processRequest, response);
     }
   }
 
