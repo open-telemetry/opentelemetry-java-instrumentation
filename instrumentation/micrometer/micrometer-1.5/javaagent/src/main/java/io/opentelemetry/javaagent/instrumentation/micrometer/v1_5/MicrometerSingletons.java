@@ -39,6 +39,16 @@ public class MicrometerSingletons {
         builder, TimeUnitParser.parseConfigValue(config.getString("base_time_unit")));
     Experimental.setMicrometerHistogramGaugesEnabled(
         builder, config.get("histogram_gauges/development").getBoolean("enabled", false));
+    DeclarativeConfigProperties runtimeTelemetryConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+            GlobalOpenTelemetry.get(), "runtime_telemetry");
+    if (config.get("jvm_metrics_ownership/development").getBoolean("enabled", false)
+        && runtimeTelemetryConfig.getBoolean("enabled", true)) {
+      Experimental.setSuppressionPredicate(
+          builder,
+          new JvmMetricsOwnership(
+              runtimeTelemetryConfig.getBoolean("emit_experimental_metrics/development", false)));
+    }
     meterRegistry = builder.build();
   }
 
