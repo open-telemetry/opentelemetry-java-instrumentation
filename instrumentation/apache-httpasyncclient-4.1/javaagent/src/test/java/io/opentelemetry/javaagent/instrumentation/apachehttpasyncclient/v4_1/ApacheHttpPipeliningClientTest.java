@@ -6,27 +6,45 @@
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 
+import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions;
+import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -40,6 +58,7 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.concurrent.FutureCallback;
+import org.apache.http.impl.nio.client.CloseableHttpAsyncClient;
 import org.apache.http.impl.nio.client.CloseableHttpPipeliningClient;
 import org.apache.http.impl.nio.client.HttpAsyncClients;
 import org.apache.http.message.BasicHeader;
@@ -115,6 +134,108 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
   }
 
   @Test
+  void nestedRequestWithSharedContext() throws Throwable {
+    HttpServer outerServer =
+        HttpServer.create(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
+    cleanup.deferCleanup(() -> outerServer.stop(0));
+
+    outerServer.createContext(
+        "/",
+        exchange -> {
+          try {
+            // Close the request body before sending an empty response so older JDKs
+            // keep the connection open for the next pipelined request.
+            exchange.getRequestBody().close();
+            exchange.sendResponseHeaders(200, -1);
+          } finally {
+            exchange.close();
+          }
+        });
+    outerServer.start();
+
+    URI outerUri =
+        URI.create("http://127.0.0.1:" + outerServer.getAddress().getPort() + "/success");
+    URI innerUri = resolveAddress("/success");
+
+    assertThat(outerUri.getPort()).isNotEqualTo(innerUri.getPort());
+
+    CloseableHttpAsyncClient innerClient =
+        HttpAsyncClients.custom().setDefaultRequestConfig(REQUEST_CONFIG).build();
+    cleanup.deferCleanup(innerClient);
+    innerClient.start();
+
+    HttpClientContext sharedContext = context(outerUri);
+    CompletableFuture<HttpResponse> innerCallbackResult = new CompletableFuture<>();
+    FutureCallback<HttpResponse> innerCallback =
+        new FutureCallback<HttpResponse>() {
+          @Override
+          public void completed(HttpResponse response) {
+            innerCallbackResult.complete(response);
+          }
+
+          @Override
+          public void failed(Exception e) {
+            innerCallbackResult.completeExceptionally(e);
+          }
+
+          @Override
+          public void cancelled() {
+            innerCallbackResult.cancel(false);
+          }
+        };
+
+    HttpHost outerTarget = target(outerUri);
+    HttpAsyncRequestProducer requestProducer =
+        new BasicAsyncRequestProducer(outerTarget, new HttpGet(outerUri.getRawPath())) {
+          @Override
+          public HttpRequest generateRequest() {
+            innerClient.execute(new HttpGet(innerUri), sharedContext, innerCallback);
+            try {
+              innerCallbackResult.get(10, SECONDS);
+            } catch (Exception e) {
+              if (e instanceof InterruptedException) {
+                Thread.currentThread().interrupt();
+              }
+              throw new IllegalStateException(e);
+            }
+            return super.generateRequest();
+          }
+        };
+
+    URI secondOuterUri = outerUri.resolve("/second");
+    HttpAsyncRequestProducer secondRequestProducer =
+        new BasicAsyncRequestProducer(outerTarget, new HttpGet(secondOuterUri.getRawPath()));
+
+    List<HttpResponse> responses =
+        client
+            .execute(
+                outerTarget,
+                asList(requestProducer, secondRequestProducer),
+                asList(new BasicAsyncResponseConsumer(), new BasicAsyncResponseConsumer()),
+                sharedContext,
+                null)
+            .get(10, SECONDS);
+
+    assertThat(responses)
+        .extracting(response -> getResponseCode(response))
+        .containsExactly(200, 200);
+    assertThat(getResponseCode(innerCallbackResult.get(10, SECONDS))).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpanWithPeer(span, innerUri, 200, null)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset()),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0))),
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertOuterPipelineSpan(span, outerUri)),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> assertOuterPipelineSpan(span, secondOuterUri)));
+  }
+
+  @Test
   void pipelinedRequestsCreateIndependentSpansAndPropagateCallbackContext() throws Exception {
     URI successUri = resolveAddress("/success");
     URI errorUri = resolveAddress("/error");
@@ -169,11 +290,11 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    assertClientSpan(span, successUri, "GET", 200, null)
+                    assertClientSpanWithPeer(span, successUri, 200, null)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.unset()),
                 span ->
-                    assertClientSpan(span, errorUri, "GET", 500, null)
+                    assertClientSpanWithPeer(span, errorUri, 500, "500")
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error()),
                 span ->
@@ -266,11 +387,13 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
                         .hasNoParent()
                         .hasStatus(StatusData.error()),
                 span ->
-                    assertClientSpan(span, firstUri, "GET", 200, null)
+                    assertClientSpanWithPeer(
+                            span, firstUri, 200, consumerFailure.getClass().getName())
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error()),
                 span ->
-                    assertClientSpan(span, secondUri, "GET", null, null)
+                    assertClientSpanWithPeer(
+                            span, secondUri, null, consumerFailure.getClass().getName())
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error()),
                 span ->
@@ -411,7 +534,7 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    assertClientSpan(span, uri, "GET", 200, null)
+                    assertClientSpanWithPeer(span, uri, 200, null)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.unset()),
                 span ->
@@ -595,6 +718,32 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
                         .hasKind(INTERNAL)
                         .hasNoParent()
                         .hasStatus(StatusData.error())));
+  }
+
+  private static SpanDataAssert assertOuterPipelineSpan(SpanDataAssert span, URI uri) {
+    return span.hasName("GET")
+        .hasKind(CLIENT)
+        .hasNoParent()
+        .hasStatus(StatusData.unset())
+        .hasAttributesSatisfyingExactly(
+            equalTo(HTTP_REQUEST_METHOD, "GET"),
+            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+            equalTo(SERVER_ADDRESS, uri.getHost()),
+            equalTo(SERVER_PORT, uri.getPort()),
+            equalTo(URL_FULL, uri.toString()),
+            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+            equalTo(NETWORK_PEER_PORT, uri.getPort()),
+            equalTo(stringKey("server.service.name"), expectedMappedServiceName()));
+  }
+
+  private SpanDataAssert assertClientSpanWithPeer(
+      SpanDataAssert span, URI uri, Integer responseCode, String errorType) {
+    return assertClientSpan(span, uri, "GET", responseCode, null)
+        .hasAttributesSatisfying(
+            satisfies(NETWORK_PEER_ADDRESS, val -> val.isNotNull()),
+            satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
+            equalTo(ERROR_TYPE, errorType));
   }
 
   private static HttpHost target(URI uri) {
