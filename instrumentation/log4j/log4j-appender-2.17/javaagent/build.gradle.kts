@@ -43,6 +43,28 @@ dependencies {
 }
 
 testing.suites {
+  listOf("2.0", "2.8.2", "2.9.0", "2.17.0").forEach { log4jVersion ->
+    register<JvmTestSuite>("mapMessage${log4jVersion.replace(".", "_")}Test") {
+      sources.java.srcDir("src/mapMessageCompatibilityTest/java")
+      dependencies {
+        implementation("org.apache.logging.log4j:log4j-core:$log4jVersion") {
+          version { strictly(log4jVersion) }
+        }
+        implementation("org.apache.logging.log4j:log4j-api:$log4jVersion") {
+          version { strictly(log4jVersion) }
+        }
+      }
+    }
+  }
+
+  executions("mapMessage2_0Test", "mapMessage2_8_2Test", "mapMessage2_9_0Test", "mapMessage2_17_0Test") {
+    configureEach {
+      systemProperty("otel.instrumentation.common.logging.structured-attributes.included", "keep-*")
+      systemProperty("otel.instrumentation.common.logging.structured-attributes.excluded", "keep-secret")
+      systemProperty("test.mapMessageUsesGetData", name == "mapMessage2_0Test" || name == "mapMessage2_8_2Test")
+    }
+  }
+
   executions("test") {
     configureDefault {
       jvmArgs(
@@ -105,4 +127,8 @@ configurations {
     // this is needed for the slf4j->log4j test
     exclude("ch.qos.logback", "logback-classic")
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }
