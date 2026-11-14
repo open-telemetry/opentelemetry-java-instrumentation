@@ -1,0 +1,228 @@
+groups:
+  - id: attributes.weblogic
+    type: attribute_group
+    brief: WebLogic attributes
+    attributes:
+      - id: weblogic.application
+        type: string
+        stability: development
+        brief: WebLogic application runtime name, including version when side-by-side deployment is used.
+        examples:
+          - "myapp"
+          - "myapp#1.0"
+      - id: weblogic.context
+        type: string
+        stability: development
+        brief: Web application context path.
+        examples:
+          - "/myapp"
+      - id: weblogic.servlet
+        type: string
+        stability: development
+        brief: Name of the WebLogic servlet.
+        examples:
+          - "javaxServlet"
+      - id: weblogic.channel
+        type: string
+        stability: development
+        brief: Name of the WebLogic server network channel.
+        examples:
+          - "Default[http]"
+      - id: weblogic.rollback.cause
+        type:
+          members:
+            - id: application
+              value: application
+              brief: Application rollback cause.
+              stability: development
+            - id: resource
+              value: resource
+              brief: Resource rollback cause.
+              stability: development
+            - id: system
+              value: system
+              brief: System rollback cause.
+              stability: development
+            - id: timeout
+              value: timeout
+              brief: Timeout rollback cause.
+              stability: development
+        stability: development
+        brief: WebLogic transaction rollback cause.
+        examples:
+          - "application"
+          - "resource"
+          - "system"
+          - "timeout"
+
+  - id: metric.weblogic.thread.count
+    metric_name: weblogic.thread.count
+    stability: development
+    type: metric
+    brief: The total number of threads in the pool.
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.weblogic.thread.idle.count
+    metric_name: weblogic.thread.idle.count
+    stability: development
+    type: metric
+    brief: The number of idle threads in the pool.
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.weblogic.thread.standby.count
+    metric_name: weblogic.thread.standby.count
+    stability: development
+    type: metric
+    brief: The number of threads in the standby pool.
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.weblogic.thread.stuck.count
+    metric_name: weblogic.thread.stuck.count
+    stability: development
+    type: metric
+    brief: Number of stuck threads in the thread pool.
+    unit: "{thread}"
+    instrument: updowncounter
+
+  - id: metric.weblogic.thread.queue.size
+    metric_name: weblogic.thread.queue.size
+    stability: development
+    type: metric
+    brief: The number of pending requests in the priority queue.
+    unit: "{request}"
+    instrument: updowncounter
+
+  - id: metric.weblogic.session.active.count
+    metric_name: weblogic.session.active.count
+    stability: development
+    type: metric
+    brief: The number of currently active sessions.
+    unit: "{session}"
+    instrument: updowncounter
+    attributes:
+      - ref: weblogic.application
+      - ref: weblogic.context
+
+  - id: metric.weblogic.session.created
+    metric_name: weblogic.session.created
+    stability: development
+    type: metric
+    brief: The number of sessions opened.
+    unit: "{session}"
+    instrument: counter
+    attributes:
+      - ref: weblogic.application
+      - ref: weblogic.context
+
+  - id: metric.weblogic.request.count
+    metric_name: weblogic.request.count
+    stability: development
+    type: metric
+    brief: The number of times the servlet has been invoked.
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: weblogic.application
+      - ref: weblogic.context
+      - ref: weblogic.servlet
+
+  - id: metric.weblogic.request.duration.sum
+    metric_name: weblogic.request.duration.sum
+    stability: development
+    type: metric
+    brief: The total amount of time spent executing servlet requests.
+    unit: s
+    instrument: counter
+    attributes:
+      - ref: weblogic.application
+      - ref: weblogic.context
+      - ref: weblogic.servlet
+
+  - id: metric.weblogic.request.duration.max
+    metric_name: weblogic.request.duration.max
+    stability: development
+    type: metric
+    brief: The longest servlet request execution time.
+    unit: s
+    instrument: gauge
+    attributes:
+      - ref: weblogic.application
+      - ref: weblogic.context
+      - ref: weblogic.servlet
+
+  - id: metric.weblogic.network.io
+    metric_name: weblogic.network.io
+    stability: development
+    type: metric
+    brief: Total number of bytes transferred on the channel.
+    unit: By
+    instrument: counter
+    attributes:
+      - ref: weblogic.channel
+      - ref: network.io.direction
+
+  - id: metric.weblogic.db.client.connection.count
+    metric_name: weblogic.db.client.connection.count
+    stability: development
+    type: metric
+    brief: The number of open physical database connections.
+    unit: "{connection}"
+    instrument: updowncounter
+    attributes:
+      - ref: db.client.connection.pool.name
+      - ref: db.client.connection.state
+
+  - id: metric.weblogic.db.client.connection.wait.count
+    metric_name: weblogic.db.client.connection.wait.count
+    stability: development
+    type: metric
+    brief: The number of connection requests that had to wait to obtain a connection.
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: db.client.connection.pool.name
+
+  - id: metric.weblogic.transaction.count
+    metric_name: weblogic.transaction.count
+    stability: development
+    type: metric
+    brief: The number of active transactions.
+    unit: "{transaction}"
+    instrument: updowncounter
+
+  - id: metric.weblogic.transaction.completed
+    metric_name: weblogic.transaction.completed
+    stability: development
+    type: metric
+    brief: The total number of transactions processed.
+    unit: "{transaction}"
+    instrument: counter
+
+  - id: metric.weblogic.transaction.committed
+    metric_name: weblogic.transaction.committed
+    stability: development
+    type: metric
+    brief: The total number of transactions committed.
+    unit: "{transaction}"
+    instrument: counter
+
+  - id: metric.weblogic.transaction.rollback
+    metric_name: weblogic.transaction.rollback
+    stability: development
+    type: metric
+    brief: The total number of transactions rolled back.
+    unit: "{transaction}"
+    instrument: counter
+    attributes:
+      - ref: weblogic.rollback.cause
+
+  - id: metric.weblogic.transaction.abandoned
+    metric_name: weblogic.transaction.abandoned
+    stability: development
+    type: metric
+    brief: The total number of transactions abandoned.
+    unit: "{transaction}"
+    instrument: counter

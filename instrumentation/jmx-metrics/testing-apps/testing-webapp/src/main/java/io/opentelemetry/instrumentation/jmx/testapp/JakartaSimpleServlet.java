@@ -18,6 +18,7 @@ public class JakartaSimpleServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+    req.getSession(true);
     resp.getWriter().write("hello!");
   }
 }
