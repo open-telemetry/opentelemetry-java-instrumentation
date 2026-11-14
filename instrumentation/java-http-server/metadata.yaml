@@ -8,5 +8,4 @@ configurations:
   - ref: http.known-methods
   - ref: http.server.capture-request-headers
   - ref: http.server.capture-response-headers
-  - ref: common.server-service-mapping
   - ref: http.server.emit-experimental-telemetry

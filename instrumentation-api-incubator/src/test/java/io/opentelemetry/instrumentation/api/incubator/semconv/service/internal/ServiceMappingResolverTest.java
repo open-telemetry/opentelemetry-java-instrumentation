@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.service.internal;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
+import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -16,7 +18,11 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Handler;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
@@ -88,6 +94,77 @@ class ServiceMappingResolverTest {
   void emptyWhenNoMappings() {
     ServiceMappingResolver empty = createResolver();
     assertThat(empty.isEmpty()).isTrue();
+  }
+
+  @Test
+  void legacyMappingFallbackWarnsOnce() {
+    List<LogRecord> records = new ArrayList<>();
+    Logger logger = Logger.getLogger(ServiceMappingResolver.class.getName());
+    Handler handler = new CollectingHandler(records);
+    logger.addHandler(handler);
+    try {
+      ServiceMappingResolver first =
+          createResolverWithMappings(null, singletonList(legacyMapping("legacy.example.com")));
+      ServiceMappingResolver second =
+          createResolverWithMappings(null, singletonList(legacyMapping("legacy.example.com")));
+
+      assertThat(first.isEmpty()).isFalse();
+      assertThat(second.isEmpty()).isFalse();
+      AttributesBuilder attributes = Attributes.builder();
+      first.resolve("legacy.example.com", null, () -> null, attributes::put);
+      assertName("legacyService", attributes.build());
+      assertThat(records).hasSize(1);
+      assertThat(records.get(0).getLevel()).isEqualTo(WARNING);
+      assertThat(records.get(0).getMessage())
+          .contains("java.common.service_peer_mapping")
+          .contains("java.common.server_service_mapping")
+          .contains("otel.instrumentation.common.peer-service-mapping")
+          .contains("otel.instrumentation.common.server-service-mapping");
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  void emptyCanonicalMappingsTakePrecedenceWithoutWarning() {
+    List<LogRecord> records = new ArrayList<>();
+    Logger logger = Logger.getLogger(ServiceMappingResolver.class.getName());
+    Handler handler = new CollectingHandler(records);
+    logger.addHandler(handler);
+    try {
+      ServiceMappingResolver resolver =
+          createResolverWithMappings(
+              emptyList(), singletonList(legacyMapping("legacy.example.com")));
+
+      assertThat(resolver.isEmpty()).isTrue();
+      assertThat(records).isEmpty();
+    } finally {
+      logger.removeHandler(handler);
+    }
+  }
+
+  @Test
+  void canonicalMappingsTakePrecedenceWithoutWarning() {
+    List<LogRecord> records = new ArrayList<>();
+    Logger logger = Logger.getLogger(ServiceMappingResolver.class.getName());
+    Handler handler = new CollectingHandler(records);
+    logger.addHandler(handler);
+    try {
+      ServiceMappingResolver resolver =
+          createResolverWithMappings(
+              singletonList(mapping("canonical.example.com", "canonicalService", null)),
+              singletonList(legacyMapping("legacy.example.com")));
+
+      AttributesBuilder attributes = Attributes.builder();
+      resolver.resolve("canonical.example.com", null, () -> null, attributes::put);
+      assertName("canonicalService", attributes.build());
+      attributes = Attributes.builder();
+      resolver.resolve("legacy.example.com", null, () -> null, attributes::put);
+      assertThat(attributes.build().isEmpty()).isTrue();
+      assertThat(records).isEmpty();
+    } finally {
+      logger.removeHandler(handler);
+    }
   }
 
   @Test
@@ -216,14 +293,24 @@ class ServiceMappingResolverTest {
     return new ServiceMappingResolver(createOpenTelemetry(entries));
   }
 
+  private static ServiceMappingResolver createResolverWithMappings(
+      @Nullable List<DeclarativeConfigProperties> canonicalMappings,
+      @Nullable List<DeclarativeConfigProperties> legacyMappings) {
+    ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
+    DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
+    when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
+    when(commonConfig.getStructuredList("server_service_mapping")).thenReturn(canonicalMappings);
+    when(commonConfig.getStructuredList("service_peer_mapping")).thenReturn(legacyMappings);
+    return new ServiceMappingResolver(otel);
+  }
+
   private static ExtendedOpenTelemetry createOpenTelemetry(DeclarativeConfigProperties... entries) {
     ExtendedOpenTelemetry otel = mock(ExtendedOpenTelemetry.class);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
 
     List<DeclarativeConfigProperties> entryList = asList(entries);
-    when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
-        .thenReturn(entryList);
+    when(commonConfig.getStructuredList("server_service_mapping")).thenReturn(entryList);
 
     return otel;
   }
@@ -235,5 +322,33 @@ class ServiceMappingResolverTest {
     when(props.getString("service_name")).thenReturn(serviceName);
     when(props.getString("service_namespace")).thenReturn(serviceNamespace);
     return props;
+  }
+
+  private static DeclarativeConfigProperties legacyMapping(String peer) {
+    DeclarativeConfigProperties props = mock(DeclarativeConfigProperties.class);
+    when(props.getString("peer")).thenReturn(peer);
+    when(props.getString("service_name")).thenReturn("legacyService");
+    when(props.getString("service_namespace")).thenReturn(null);
+    return props;
+  }
+
+  private static final class CollectingHandler extends Handler {
+
+    private final List<LogRecord> records;
+
+    private CollectingHandler(List<LogRecord> records) {
+      this.records = records;
+    }
+
+    @Override
+    public void publish(LogRecord record) {
+      records.add(record);
+    }
+
+    @Override
+    public void flush() {}
+
+    @Override
+    public void close() {}
   }
 }
