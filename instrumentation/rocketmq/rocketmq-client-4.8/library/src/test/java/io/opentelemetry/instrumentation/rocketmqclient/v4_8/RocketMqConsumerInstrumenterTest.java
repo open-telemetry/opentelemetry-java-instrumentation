@@ -15,6 +15,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
@@ -56,7 +57,8 @@ class RocketMqConsumerInstrumenterTest {
                 parentContext,
                 asList(mock(MessageExt.class), mock(MessageExt.class)),
                 "consumer-group",
-                "namespace"));
+                "namespace",
+                Attributes.empty()));
     ConsumeMessageContext response = mock(ConsumeMessageContext.class);
     instrumenter.end(consumerContext, response);
 

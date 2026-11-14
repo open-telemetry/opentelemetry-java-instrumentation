@@ -22,7 +22,6 @@ configurations:
     declarative_name: java.rocketmq_client.experimental_span_attributes/development
     description: >
       Enables capturing experimental span attributes `rocketmq.message.tag`,
-      `rocketmq.broker_address`, `rocketmq.send_result`,
-      `rocketmq.queue_id`, and `rocketmq.queue_offset`.
+      `rocketmq.send_result`, `rocketmq.queue_id`, and `rocketmq.queue_offset`.
     type: boolean
     default: false

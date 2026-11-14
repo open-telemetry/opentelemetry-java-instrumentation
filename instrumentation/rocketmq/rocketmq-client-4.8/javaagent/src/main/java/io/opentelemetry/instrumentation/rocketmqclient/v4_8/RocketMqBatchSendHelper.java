@@ -22,6 +22,8 @@ import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
 import org.apache.rocketmq.client.impl.CommunicationMode;
+import org.apache.rocketmq.client.impl.producer.DefaultMQProducerImpl;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 import org.apache.rocketmq.client.producer.SendCallback;
 import org.apache.rocketmq.client.producer.SendResult;
 import org.apache.rocketmq.common.message.Message;
@@ -54,10 +56,14 @@ public final class RocketMqBatchSendHelper {
     propagator = openTelemetry.getPropagators().getTextMapPropagator();
   }
 
+  @SuppressWarnings(
+      "deprecation") // Batch requests need the producer implementation before routing.
   public BatchSendState createBatchSendState(Object producer, boolean callbackCompletionExpected) {
+    DefaultMQProducer mqProducer = (DefaultMQProducer) producer;
     return new BatchSendState(
         Context.current(),
         RocketMqNamespaceUtil.getNamespace(producer),
+        mqProducer.getDefaultMQProducerImpl(),
         callbackCompletionExpected);
   }
 
@@ -99,7 +105,8 @@ public final class RocketMqBatchSendHelper {
     };
   }
 
-  public SendMessageHook createSendMessageHook() {
+  public SendMessageHook createSendMessageHook(DefaultMQProducer producer) {
+    RocketMqServerAttributesHelper.initialize(producer);
     SendMessageHook delegate = new TracingSendMessageHookImpl(singleSendInstrumenter);
     return new SendMessageHook() {
       @Override
@@ -143,6 +150,7 @@ public final class RocketMqBatchSendHelper {
   public final class BatchSendState {
     private final Context parentContext;
     @Nullable private final String namespace;
+    private final DefaultMQProducerImpl producer;
     private final boolean callbackCompletionExpected;
 
     @Nullable private BatchSendContext request;
@@ -150,14 +158,19 @@ public final class RocketMqBatchSendHelper {
     private boolean ended;
 
     private BatchSendState(
-        Context parentContext, @Nullable String namespace, boolean callbackCompletionExpected) {
+        Context parentContext,
+        @Nullable String namespace,
+        DefaultMQProducerImpl producer,
+        boolean callbackCompletionExpected) {
       this.parentContext = parentContext;
       this.namespace = namespace;
+      this.producer = producer;
       this.callbackCompletionExpected = callbackCompletionExpected;
     }
 
     private void prepare(Message batch) {
       request = new BatchSendContext(batch, namespace);
+      request.setProducer(producer);
       List<Context> creationContexts = new ArrayList<>();
       List<Message> messagesWithoutCreationContext = new ArrayList<>();
       List<Context> extractedContextsWithoutCreationContext = new ArrayList<>();

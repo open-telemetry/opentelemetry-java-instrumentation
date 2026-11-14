@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingProcessExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
@@ -30,9 +32,12 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
+import java.net.InetSocketAddress;
+import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageContext;
+import org.apache.rocketmq.common.message.MessageExt;
 
 class RocketMqInstrumenterFactory {
 
@@ -132,6 +137,9 @@ class RocketMqInstrumenterFactory {
           AttributesBuilder attributes, Context parentContext, SendMessageContext request) {
         String namespace = RocketMqNamespaceUtil.getNamespace(request);
         attributes.put(ROCKETMQ_NAMESPACE, namespace);
+        attributes.putAll(
+            RocketMqServerAttributesHelper.getProducerAttributes(request.getProducer()));
+        captureProducerNetworkPeerAttributes(attributes, request);
       }
 
       @Override
@@ -140,8 +148,31 @@ class RocketMqInstrumenterFactory {
           Context context,
           SendMessageContext request,
           @Nullable Void unused,
-          @Nullable Throwable error) {}
+          @Nullable Throwable error) {
+        // Batch sends start before routing; the send hook supplies the address later.
+        captureProducerNetworkPeerAttributes(attributes, request);
+      }
     };
+  }
+
+  private static void captureProducerNetworkPeerAttributes(
+      AttributesBuilder attributes, SendMessageContext request) {
+    String brokerAddress = request.getBrokerAddr();
+    if (brokerAddress == null) {
+      return;
+    }
+
+    // RocketMQ broker addresses use host:port, with the final colon separating the port.
+    int separator = brokerAddress.lastIndexOf(':');
+    String address = brokerAddress.substring(0, separator);
+    int port = Integer.parseInt(brokerAddress.substring(separator + 1));
+
+    if (address.startsWith("[") && address.endsWith("]")) {
+      address = address.substring(1, address.length() - 1);
+    }
+
+    attributes.put(NETWORK_PEER_ADDRESS, address);
+    attributes.put(NETWORK_PEER_PORT, port);
   }
 
   static RocketMqConsumerInstrumenter createConsumerInstrumenter(
@@ -232,6 +263,8 @@ class RocketMqInstrumenterFactory {
           AttributesBuilder attributes, Context parentContext, RocketMqConsumerRequest request) {
         attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
         attributes.put(ROCKETMQ_NAMESPACE, request.getNamespace());
+        attributes.putAll(request.getServerAttributes());
+        captureConsumerNetworkPeerAttributes(attributes, request);
       }
 
       @Override
@@ -242,6 +275,27 @@ class RocketMqInstrumenterFactory {
           @Nullable ConsumeMessageContext response,
           @Nullable Throwable error) {}
     };
+  }
+
+  private static void captureConsumerNetworkPeerAttributes(
+      AttributesBuilder attributes, RocketMqConsumerRequest request) {
+    // MessageDecoder constructs storeHost as an InetSocketAddress. This is storage metadata,
+    // not an observed connection peer.
+    InetSocketAddress storeHost = (InetSocketAddress) request.getMessage().getStoreHost();
+    if (storeHost == null) {
+      return;
+    }
+
+    // A queue can contain messages stored before and after a broker endpoint change.
+    List<MessageExt> messages = request.getMessages();
+    for (int i = 1; i < messages.size(); i++) {
+      if (!storeHost.equals(messages.get(i).getStoreHost())) {
+        return;
+      }
+    }
+
+    attributes.put(NETWORK_PEER_ADDRESS, storeHost.getHostString());
+    attributes.put(NETWORK_PEER_PORT, storeHost.getPort());
   }
 
   private static SpanStatusExtractor<RocketMqConsumerRequest, ConsumeMessageContext>

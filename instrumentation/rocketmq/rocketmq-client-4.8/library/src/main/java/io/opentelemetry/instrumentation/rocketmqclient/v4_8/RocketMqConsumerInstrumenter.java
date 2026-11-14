@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.List;
@@ -31,11 +32,13 @@ final class RocketMqConsumerInstrumenter {
       Context parentContext,
       List<MessageExt> msgs,
       String consumerGroup,
-      @Nullable String namespace) {
+      @Nullable String namespace,
+      Attributes serverAttributes) {
     int batchSize = msgs.size();
     if (batchSize == 1) {
       RocketMqConsumerRequest request =
           new RocketMqConsumerRequest(msgs.get(0), consumerGroup, batchSize, namespace);
+      request.setServerAttributes(serverAttributes);
       if (singleProcessInstrumenter.shouldStart(parentContext, request)) {
         Context context = singleProcessInstrumenter.start(parentContext, request);
         return new ConsumerContext(context, request);
@@ -45,6 +48,7 @@ final class RocketMqConsumerInstrumenter {
 
     RocketMqConsumerRequest request =
         new RocketMqConsumerRequest(msgs, consumerGroup, batchSize, namespace);
+    request.setServerAttributes(serverAttributes);
     if (!batchProcessInstrumenter.shouldStart(parentContext, request)) {
       return null;
     }
