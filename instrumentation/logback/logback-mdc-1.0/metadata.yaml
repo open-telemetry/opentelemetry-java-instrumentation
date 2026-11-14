@@ -4,6 +4,7 @@ description: >
 display_name: Logback
 library_link: https://logback.qos.ch/
 configurations:
+  - ref: logging.pattern-injection.enabled
   - name: otel.instrumentation.logback-mdc.add-baggage
     declarative_name: java.logback_mdc.add_baggage
     description: >

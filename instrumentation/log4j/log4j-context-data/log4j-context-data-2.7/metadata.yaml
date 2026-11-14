@@ -4,6 +4,7 @@ description: >
 display_name: Log4j
 library_link: https://logging.apache.org/log4j/2.x/
 configurations:
+  - ref: logging.pattern-injection.enabled
   - name: otel.instrumentation.log4j-context-data.add-baggage
     declarative_name: java.log4j_context_data.add_baggage
     description: >

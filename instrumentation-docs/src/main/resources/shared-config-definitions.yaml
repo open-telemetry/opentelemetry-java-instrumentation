@@ -13,6 +13,14 @@
 # fails the build on an unknown id. The id is also used as the definition key in the generated
 # docs/instrumentation-list.yaml `definitions.configurations` catalog, so keep ids stable.
 configurations:
+  logging.pattern-injection.enabled:
+    name: otel.instrumentation.logging.pattern-injection.enabled
+    declarative_name: java.logging.pattern_injection.enabled
+    description: >
+      Automatically add missing service.name and configured trace/span ID MDC converters to
+      text patterns in Logback and Log4j. JSON layouts and Log4j2 PatternSelector branches are excluded.
+    type: boolean
+    default: false
   http.known-methods:
     name: otel.instrumentation.http.known-methods
     declarative_name: java.common.http.known_methods

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.log4j.contextdata.v2_17;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -47,7 +48,10 @@ public class Log4j2InstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return singletonList(new ResourceInjectingTypeInstrumentation());
+    return asList(
+        new ResourceInjectingTypeInstrumentation(),
+        new PatternLayoutInstrumentation(),
+        new MdcPatternConverterInstrumentation());
   }
 
   // A type instrumentation is needed to trigger resource injection.
