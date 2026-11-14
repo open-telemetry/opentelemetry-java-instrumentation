@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.DYNAMODB;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkRequestType.RDS_DATA;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.joining;
 
@@ -23,11 +24,13 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.Timer;
+import java.io.BufferedInputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.nio.charset.Charset;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
@@ -97,6 +100,8 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
   static final AttributeKey<String> HTTP_ERROR_MSG =
       AttributeKey.stringKey("aws.http.error_message");
   static final String HTTP_FAILURE_EVENT = "HTTP request failure";
+  // only this many bytes of an error response body are recorded in the span event
+  static final int ERROR_SIZE_LIMIT = 32 * 1024;
 
   Instrumenter<SqsReceiveRequest, Response> getConsumerReceiveInstrumenter() {
     return consumerReceiveInstrumenter;
@@ -394,9 +399,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
       Context.ModifyHttpResponse context, ExecutionAttributes executionAttributes) {
     Optional<InputStream> responseBody = context.responseBody();
     if (recordIndividualHttpError) {
-      String errorMsg = extractHttpErrorAsEvent(context, executionAttributes);
-      if (errorMsg != null) {
-        return Optional.of(new ByteArrayInputStream(errorMsg.getBytes(Charset.defaultCharset())));
+      InputStream errorBody = recordHttpErrorAsEvent(context, executionAttributes);
+      if (errorBody != null) {
+        return Optional.of(errorBody);
       }
     }
     return responseBody;
@@ -454,7 +459,9 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
     }
   }
 
-  private static String extractHttpErrorAsEvent(
+  // returns the response body reset to its start so that the SDK can still read it unchanged
+  @Nullable
+  private static InputStream recordHttpErrorAsEvent(
       Context.AfterTransmission context, ExecutionAttributes executionAttributes) {
     io.opentelemetry.context.Context otelContext = getContext(executionAttributes);
     if (otelContext != null) {
@@ -466,16 +473,31 @@ public final class TracingExecutionInterceptor implements ExecutionInterceptor {
         // we want to record the error message from http response
         Optional<InputStream> responseBody = context.responseBody();
         if (responseBody.isPresent()) {
+          BufferedInputStream errorBody = new BufferedInputStream(responseBody.get());
+          errorBody.mark(ERROR_SIZE_LIMIT);
+          byte[] buffer = new byte[ERROR_SIZE_LIMIT];
+          int size = 0;
+          try {
+            // a single read may return only part of the available bytes
+            int read;
+            while (size < ERROR_SIZE_LIMIT
+                && (read = errorBody.read(buffer, size, ERROR_SIZE_LIMIT - size)) != -1) {
+              size += read;
+            }
+            errorBody.reset();
+          } catch (IOException e) {
+            throw new UncheckedIOException(e);
+          }
           String errorMsg =
               new BufferedReader(
-                      new InputStreamReader(responseBody.get(), Charset.defaultCharset()))
+                      new InputStreamReader(new ByteArrayInputStream(buffer, 0, size), UTF_8))
                   .lines()
                   .collect(joining("\n"));
           Attributes attributes =
               Attributes.of(
                   HTTP_RESPONSE_STATUS_CODE, Long.valueOf(errorCode), HTTP_ERROR_MSG, errorMsg);
           span.addEvent(HTTP_FAILURE_EVENT, attributes);
-          return errorMsg;
+          return errorBody;
         }
       }
     }
