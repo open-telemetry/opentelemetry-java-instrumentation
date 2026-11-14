@@ -48,6 +48,25 @@ class HandlerRegistryTest {
   }
 
   @Test
+  void doesNotFallBackOnHotSpotWithZgc() {
+    Meter meter = SdkMeterProvider.builder().build().get("test");
+
+    assertThat(
+            HandlerRegistry.getHandlers(
+                meter,
+                "jvm.gc.duration"::equals,
+                false,
+                false,
+                Set.of(
+                    "jdk.G1GarbageCollection",
+                    "jdk.YoungGarbageCollection",
+                    "jdk.OldGarbageCollection",
+                    "jdk.GarbageCollection"),
+                List.of("ZGC Pauses", "ZGC Cycles")))
+        .isEmpty();
+  }
+
+  @Test
   void fallsBackToGenericGarbageCollectionEvent() {
     Meter meter = SdkMeterProvider.builder().build().get("test");
 
