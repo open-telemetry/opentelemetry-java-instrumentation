@@ -3,3 +3,4 @@ display_name: Apache Kafka Connect
 library_link: https://kafka.apache.org/documentation/#connect
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS

@@ -3,6 +3,7 @@ display_name: Apache Kafka Streams
 library_link: https://kafka.apache.org/documentation/streams/
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 configurations:
   - name: otel.instrumentation.kafka.experimental-span-attributes
     declarative_name: java.kafka.experimental_span_attributes/development

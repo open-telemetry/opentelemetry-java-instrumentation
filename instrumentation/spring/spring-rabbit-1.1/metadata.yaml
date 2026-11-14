@@ -3,6 +3,7 @@ description: This instrumentation enables consumer messaging spans for Spring Ra
 library_link: https://spring.io/projects/spring-amqp
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 configurations:
   - ref: messaging.headers.included
   - ref: messaging.headers.excluded

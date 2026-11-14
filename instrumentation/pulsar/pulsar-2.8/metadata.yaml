@@ -4,6 +4,7 @@ description: >
 library_link: https://pulsar.apache.org/
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 configurations:
   - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
