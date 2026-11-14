@@ -30,6 +30,7 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.threads.Virtua
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -42,6 +43,9 @@ final class HandlerRegistry {
 
   // These handlers cover only a subset of memory pools, so JMX must remain the source of the
   // metric.
+  private static final Set<String> COLLECTOR_SPECIFIC_GC_EVENTS =
+      Set.of("jdk.G1GarbageCollection", "jdk.YoungGarbageCollection", "jdk.OldGarbageCollection");
+
   private static final Set<String> INCOMPLETE_JMX_REPLACEMENTS =
       Set.of(
           "jvm.memory.committed",
@@ -157,9 +161,11 @@ final class HandlerRegistry {
         default -> {}
       }
     }
-    if (handlers.isEmpty()) {
-      // No collector-specific event is available, as in a GraalVM native image, whose collectors
-      // emit only the generic jdk.GarbageCollection event: fall back to it for every collector
+    if (handlers.isEmpty()
+        && Collections.disjoint(availableEventNames, COLLECTOR_SPECIFIC_GC_EVENTS)) {
+      // The JVM has no collector-specific collection event at all, as in a GraalVM native image:
+      // fall back to the generic jdk.GarbageCollection event. HotSpot registers the specific
+      // event types whatever collector runs, so ZGC and Shenandoah keep their JMX metrics.
       addIfAvailable(
           handlers,
           availableEventNames,
