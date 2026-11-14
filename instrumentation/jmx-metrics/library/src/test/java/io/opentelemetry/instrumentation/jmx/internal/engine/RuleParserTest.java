@@ -31,6 +31,8 @@ import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.snakeyaml.engine.v2.api.Load;
+import org.snakeyaml.engine.v2.api.LoadSettings;
 
 class RuleParserTest {
   private static RuleParser parser;
@@ -569,6 +571,42 @@ class RuleParserTest {
     } else {
       assertThat(filteredValue).isEqualTo(unFilteredValue).isEqualTo(value);
     }
+  }
+
+  @Test
+  @SuppressWarnings("unchecked") // for casting yaml parsed objects
+  void createMetricDefsFromMaps() {
+    Map<String, Object> data =
+        (Map<String, Object>) new Load(LoadSettings.builder().build()).loadFromString(CONF4);
+    List<Map<String, Object>> rules = (List<Map<String, Object>>) data.get("rules");
+
+    assertThat(parser.createMetricDefs(rules))
+        .singleElement()
+        .satisfies(
+            def -> {
+              assertThat(def.getBeanGroup().getNamePatterns())
+                  .extracting(ObjectName::toString)
+                  .containsExactly("my-test:type=4");
+              assertThat(def.getMetricExtractors())
+                  .extracting(extractor -> extractor.getInfo().getMetricName())
+                  .containsExactlyInAnyOrder(
+                      "PREFIX.METRIC_NAME1", "PREFIX.METRIC_NAME2", "PREFIX.ATTRIBUTE3");
+              assertThat(def.getMetricExtractors())
+                  .anySatisfy(
+                      extractor -> {
+                        assertThat(extractor.getMetricValueExtractor().getAttributeName())
+                            .isEqualTo("A.b");
+                        MetricInfo info = extractor.getInfo();
+                        assertThat(info.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
+                        assertThat(info.getDescription()).isEqualTo("DESCRIPTION1");
+                        assertThat(info.getType()).isEqualTo(MetricInfo.Type.COUNTER);
+                        assertThat(info.getSourceUnit()).isEqualTo("SOURCE_UNIT1");
+                        assertThat(info.getUnit()).isEqualTo("UNIT1");
+                        assertThat(extractor.getAttributes())
+                            .extracting(MetricAttribute::getAttributeName)
+                            .containsExactlyInAnyOrder("LABEL_KEY1", "LABEL_KEY2", "LABEL_KEY3");
+                      });
+            });
   }
 
   private static void checkConstantMetricAttribute(
