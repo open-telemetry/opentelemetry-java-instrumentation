@@ -3,6 +3,7 @@ description: This instrumentation enables producer and consumer messaging spans 
 library_link: https://spring.io/projects/spring-integration
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 configurations:
   - name: otel.instrumentation.spring-integration.producer.enabled
     declarative_name: java.spring_integration.producer.enabled
