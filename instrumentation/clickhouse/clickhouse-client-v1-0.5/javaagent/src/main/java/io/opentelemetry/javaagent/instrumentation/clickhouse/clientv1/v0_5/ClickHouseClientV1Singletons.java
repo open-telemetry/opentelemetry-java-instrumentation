@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
-import com.clickhouse.client.ClickHouseException;
 import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseNodes;
 import com.clickhouse.client.ClickHouseProtocol;
@@ -38,14 +37,7 @@ public class ClickHouseClientV1Singletons {
   static {
     instrumenter =
         ClickHouseInstrumenterFactory.createInstrumenter(
-            INSTRUMENTER_NAME,
-            error -> {
-              if (error instanceof ClickHouseException) {
-                int errorCode = ((ClickHouseException) error).getErrorCode();
-                return errorCode == 0 ? null : Integer.toString(errorCode);
-              }
-              return null;
-            });
+            INSTRUMENTER_NAME, ClickHouseErrorCodeExtractor::getErrorCode);
   }
 
   public static Instrumenter<ClickHouseDbRequest, Void> instrumenter() {

@@ -5,19 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned;
-import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -33,19 +30,16 @@ class LoggerInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("callAppenders"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("ch.qos.logback.classic.spi.ILoggingEvent"))),
+            .and(takesArguments(named("ch.qos.logback.classic.spi.ILoggingEvent"))),
         getClass().getName() + "$CallAppendersAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class CallAppendersAdvice {
 
-    @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static ILoggingEvent onEnter(@Advice.Argument(0) ILoggingEvent event) {
+    public static void onEnter(@Advice.Argument(0) ILoggingEvent event) {
       CONTEXT.set(event, Context.current());
-      return event;
     }
   }
 }

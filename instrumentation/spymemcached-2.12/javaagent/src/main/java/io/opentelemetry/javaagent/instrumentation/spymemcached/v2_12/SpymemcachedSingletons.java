@@ -23,12 +23,22 @@ import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
+import net.spy.memcached.internal.BulkGetFuture;
+import net.spy.memcached.internal.GetFuture;
+import net.spy.memcached.internal.OperationFuture;
+import net.spy.memcached.ops.OperationStatus;
 
 public class SpymemcachedSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spymemcached-2.12";
   private static final int DEFAULT_PORT = 11211;
 
   private static final Instrumenter<SpymemcachedRequest, Object> instrumenter;
+  private static final VirtualField<OperationFuture<?>, OperationStatus> OPERATION_FUTURE_STATUS =
+      VirtualField.find(OperationFuture.class, OperationStatus.class);
+  private static final VirtualField<GetFuture<?>, OperationStatus> GET_FUTURE_STATUS =
+      VirtualField.find(GetFuture.class, OperationStatus.class);
+  private static final VirtualField<BulkGetFuture<?>, OperationStatus> BULK_FUTURE_STATUS =
+      VirtualField.find(BulkGetFuture.class, OperationStatus.class);
   private static final VirtualField<MemcachedConnection, DbServerTarget> CONFIGURED_TARGETS =
       VirtualField.find(MemcachedConnection.class, DbServerTarget.class);
 
@@ -71,6 +81,30 @@ public class SpymemcachedSingletons {
       return;
     }
     CONFIGURED_TARGETS.set(connection, createServerTarget(nodes));
+  }
+
+  static void captureResponseStatus(Object future, OperationStatus status) {
+    if (future instanceof OperationFuture) {
+      OPERATION_FUTURE_STATUS.set((OperationFuture<?>) future, status);
+    } else if (future instanceof GetFuture) {
+      GET_FUTURE_STATUS.set((GetFuture<?>) future, status);
+    } else if (future instanceof BulkGetFuture) {
+      BULK_FUTURE_STATUS.set((BulkGetFuture<?>) future, status);
+    }
+  }
+
+  @Nullable
+  static OperationStatus getResponseStatus(@Nullable Object response) {
+    if (response instanceof OperationFuture) {
+      return OPERATION_FUTURE_STATUS.get((OperationFuture<?>) response);
+    }
+    if (response instanceof GetFuture) {
+      return GET_FUTURE_STATUS.get((GetFuture<?>) response);
+    }
+    if (response instanceof BulkGetFuture) {
+      return BULK_FUTURE_STATUS.get((BulkGetFuture<?>) response);
+    }
+    return null;
   }
 
   @Nullable

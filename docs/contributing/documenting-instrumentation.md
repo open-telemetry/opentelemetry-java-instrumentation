@@ -191,6 +191,8 @@ List of possible options:
 - [FAAS_SERVER_SPANS](https://github.com/open-telemetry/semantic-conventions/blob/main/docs/faas/faas-spans.md)
 - [GENAI_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-spans.md)
 - [GENAI_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/gen-ai-metrics.md#generative-ai-client-metrics)
+- [MCP_CLIENT_SPANS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/mcp.md#client)
+- [MCP_CLIENT_METRICS](https://github.com/open-telemetry/semantic-conventions-genai/blob/main/docs/gen-ai/mcp.md#metric-mcpclientoperationduration)
 
 ### Features (optional)
 
@@ -282,29 +284,34 @@ structured list and documents the entry shape in the comment above it, using eac
 `example` (falling back to its `default`, then to a `<property-name>` placeholder) for the sample
 entry.
 
-For example, `service_peer_mapping` is a `host=service` map as a flat property but a list of
-`{peer, service_name}` objects in declarative configuration:
+For example, `server_service_mapping` is a `target=service_name` map as a flat property but a list
+of `{target, service_name, service_namespace}` objects in declarative configuration. A flat target
+can be a hostname, IP address, or target including a port or path:
 
 ```yaml
 configurations:
-  - name: otel.instrumentation.common.peer-service-mapping
-    declarative_name: java.common.service_peer_mapping
-    description: Used to specify a mapping from host names or IP addresses to peer services.
+  - name: otel.instrumentation.common.server-service-mapping
+    declarative_name: java.common.server_service_mapping
+    description: Maps server addresses or configured targets to logical server service identities.
     type: map
     default: ""
     declarative_type: structured_list
     declarative_schema:
       type: object
-      required: [peer, service_name]
+      required: [target]
       properties:
-        peer:
+        target:
           type: string
-          description: Host name or IP address to match against.
-          example: host
+          description: Server address or complete configured target to match against.
+          example: payments.example.com
         service_name:
           type: string
-          description: Peer service name to record for matching peers.
-          example: serviceName
+          description: Logical server service name to record for matching targets.
+          example: payments
+        service_namespace:
+          type: string
+          description: Logical server service namespace to record for matching targets.
+          example: checkout
 ```
 
 A configuration that exists only in declarative configuration (no flat system property) omits `name`

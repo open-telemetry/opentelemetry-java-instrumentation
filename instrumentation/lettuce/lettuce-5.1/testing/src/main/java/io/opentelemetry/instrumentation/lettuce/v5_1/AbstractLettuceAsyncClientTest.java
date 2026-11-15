@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -215,15 +216,13 @@ public abstract class AbstractLettuceAsyncClientTest extends AbstractLettuceClie
                                     equalTo(DB_SYSTEM_NAME, REDIS),
                                     equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
                                     equalTo(DB_OPERATION_NAME, "LPUSH"),
+                                    equalTo(ERROR_TYPE, testLatestDeps() ? "WRONGTYPE" : "_OTHER"),
                                     equalTo(
-                                        ERROR_TYPE,
-                                        testLatestDeps()
-                                            ? RedisCommandExecutionException.class.getName()
-                                            : "_OTHER")))
+                                        DB_RESPONSE_STATUS_CODE,
+                                        testLatestDeps() ? "WRONGTYPE" : null)))
                             .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
-    assertCommandMetric(
-        "LPUSH", testLatestDeps() ? RedisCommandExecutionException.class.getName() : "_OTHER");
+    assertCommandMetric("LPUSH", testLatestDeps() ? "WRONGTYPE" : "_OTHER");
   }
 
   @Test

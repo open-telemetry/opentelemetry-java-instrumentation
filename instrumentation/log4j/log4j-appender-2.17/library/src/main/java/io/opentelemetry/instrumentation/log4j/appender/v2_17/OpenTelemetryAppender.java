@@ -577,11 +577,12 @@ public class OpenTelemetryAppender extends AbstractAppender {
     }
 
     @Override
-    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, String> action) {
+    public void forEach(ReadOnlyStringMap contextData, BiConsumer<String, Object> action) {
       contextData.forEach(
           (key, value) -> {
-            if (value instanceof String) {
-              action.accept(key, (String) value);
+            // the carried Context is internal state, not a context data attribute
+            if (!(OTEL_CONTEXT_DATA_KEY.equals(key) && value instanceof Context)) {
+              action.accept(key, value);
             }
           });
     }

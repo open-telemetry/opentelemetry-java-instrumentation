@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -21,28 +24,26 @@ dependencies {
   testImplementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("redisson324Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
+testing.suites {
+  register<JvmTestSuite>("redisson324Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
+    }
 
-      dependencies {
-        implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
-        // Redisson 3.24.3 routes configuration through ServiceManager.
-        implementation("org.redisson:redisson:3.24.3")
-      }
+    dependencies {
+      implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+      // Redisson 3.24.3 routes configuration through ServiceManager.
+      implementation("org.redisson:redisson:3.24.3")
+    }
+  }
 
-      targets.all {
-        testTask.configure {
-          filter {
-            includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-            includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-          }
-        }
+  executions("redisson324Test") {
+    configureEach {
+      filter {
+        includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+        includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
       }
     }
   }
@@ -51,24 +52,10 @@ testing {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 
-  val redisson324ServerTarget = testing.suites.withType(JvmTestSuite::class)
-    .matching { it.name == "redisson324Test" }
-    .map { suite ->
-      register<Test>("${suite.name}ServerTarget") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-        filter {
-          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-        }
-      }
-    }
-
   check {
-    dependsOn(testing.suites, redisson324ServerTarget)
+    dependsOn(testing.suites)
   }
 
   if (otelProps.denyUnsafe) {

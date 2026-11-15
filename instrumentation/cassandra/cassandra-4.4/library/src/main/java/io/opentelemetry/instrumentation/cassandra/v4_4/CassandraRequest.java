@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.singleton;
 
 import com.datastax.oss.driver.api.core.cql.BatchStatement;
@@ -33,10 +34,11 @@ public abstract class CassandraRequest {
     if (statement instanceof BatchStatement) {
       return create(session, serverTarget, (BatchStatement) statement);
     }
+    String queryText = getQuery(statement);
     return create(
         session,
         serverTarget,
-        singleton(getQuery(statement)),
+        queryText == null ? emptyList() : singleton(queryText),
         hasQueryValues(statement),
         null,
         null);
@@ -50,7 +52,11 @@ public abstract class CassandraRequest {
     Boolean firstParameterizedQuery = null;
     int queryIndex = 0;
     for (BatchableStatement<?> batchEntry : batchStatement) {
-      queryTexts.add(getQuery(batchEntry));
+      String queryText = getQuery(batchEntry);
+      if (queryText == null) {
+        continue;
+      }
+      queryTexts.add(queryText);
       boolean parameterizedQuery = hasQueryValues(batchEntry);
       if (!parameterizedQuery) {
         allQueriesParameterized = false;
@@ -98,6 +104,7 @@ public abstract class CassandraRequest {
         batchSize);
   }
 
+  @Nullable
   private static String getQuery(Statement<?> statement) {
     String query = null;
     if (statement instanceof SimpleStatement) {
@@ -106,7 +113,7 @@ public abstract class CassandraRequest {
       query = ((BoundStatement) statement).getPreparedStatement().getQuery();
     }
 
-    return query == null ? "" : query;
+    return query;
   }
 
   private static boolean hasQueryValues(Statement<?> statement) {

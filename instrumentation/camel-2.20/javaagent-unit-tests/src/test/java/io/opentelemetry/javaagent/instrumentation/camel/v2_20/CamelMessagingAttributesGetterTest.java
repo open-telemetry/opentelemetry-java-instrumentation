@@ -55,6 +55,17 @@ class CamelMessagingAttributesGetterTest {
   }
 
   @Test
+  void errorType() {
+    CamelRequest request = request();
+    IllegalStateException error = new IllegalStateException();
+    request.getExchange().setException(error);
+
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(IllegalStateException.class.getName());
+    assertThat(getter.getErrorType(request, null, null)).isEqualTo("_OTHER");
+  }
+
+  @Test
   void selectors() {
     CamelRequest request = request();
     request.getExchange().getIn().setHeader("Test-Header", "value");

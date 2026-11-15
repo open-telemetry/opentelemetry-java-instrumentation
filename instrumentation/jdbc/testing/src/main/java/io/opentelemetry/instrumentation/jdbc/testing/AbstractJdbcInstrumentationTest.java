@@ -5,11 +5,12 @@
 
 package io.opentelemetry.instrumentation.jdbc.testing;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -17,6 +18,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -40,7 +42,6 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.jdbc.TestConnection;
 import io.opentelemetry.instrumentation.jdbc.TestDriver;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
-import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
@@ -87,6 +88,10 @@ public abstract class AbstractJdbcInstrumentationTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
+
+  protected boolean hasSqliteConnectionInitializationSpans() {
+    return false;
+  }
 
   protected Connection wrap(Connection connection) throws SQLException {
     return connection;
@@ -471,6 +476,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                         () -> statement.executeQuery("SELECT * FROM table_does_not_exist")));
 
     assertThat(error).isInstanceOf(SQLException.class);
+    SQLException sqlException = (SQLException) error;
+    String expectedErrorCode = sqlException.getSQLState() + "/" + sqlException.getErrorCode();
 
     testing()
         .waitAndAssertTraces(
@@ -481,6 +488,9 @@ public abstract class AbstractJdbcInstrumentationTest {
                         span.hasKind(SpanKind.CLIENT)
                             .hasParent(trace.getSpan(0))
                             .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(DB_RESPONSE_STATUS_CODE, expectedErrorCode),
+                                equalTo(ERROR_TYPE, expectedErrorCode))
                             .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
@@ -1359,8 +1369,7 @@ public abstract class AbstractJdbcInstrumentationTest {
                                       equalTo(DB_NAMESPACE, "jdbcunittest"),
                                       equalTo(DB_CONNECTION_STRING, null))));
               // sqlite-jdbc executes extra statements during connection init
-              if (ds instanceof SQLiteDataSource
-                  && testing() instanceof AgentInstrumentationExtension) {
+              if (ds instanceof SQLiteDataSource && hasSqliteConnectionInitializationSpans()) {
                 assertions.add(
                     span ->
                         span.hasName("jdbcunittest")
@@ -1406,7 +1415,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                             .hasAttributesSatisfyingExactly(
                                 equalTo(DB_SYSTEM_NAME, OTHER_SQL),
                                 equalTo(DB_QUERY_TEXT, "testing ?"),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1493,7 +1503,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(
                                     DB_QUERY_SUMMARY,
                                     table != null ? operation + " " + table : operation),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -1608,7 +1619,8 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_SYSTEM_NAME, OTHER_SQL),
                                 equalTo(DB_QUERY_TEXT, "SELECT * FROM table"),
                                 equalTo(DB_QUERY_SUMMARY, "SELECT table"),
-                                equalTo(maybeStablePeerService(), testing().expectedPeerService()),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
                                 equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
@@ -2149,7 +2161,11 @@ public abstract class AbstractJdbcInstrumentationTest {
                                 equalTo(DB_SYSTEM_NAME, "h2database"),
                                 equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
                                 equalTo(DB_OPERATION_NAME, operation),
-                                equalTo(ERROR_TYPE, Integer.toString(error.getErrorCode())))));
+                                equalTo(
+                                    ERROR_TYPE, error.getSQLState() + "/" + error.getErrorCode()),
+                                equalTo(
+                                    DB_RESPONSE_STATUS_CODE,
+                                    error.getSQLState() + "/" + error.getErrorCode()))));
 
     if (emitExceptionAsLogs()) {
       testing()

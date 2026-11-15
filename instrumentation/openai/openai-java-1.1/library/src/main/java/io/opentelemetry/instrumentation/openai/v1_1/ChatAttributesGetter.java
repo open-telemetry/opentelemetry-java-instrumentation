@@ -120,8 +120,10 @@ final class ChatAttributesGetter
     if (response == null) {
       return emptyList();
     }
+    // A streamed response closed before a choice's finish reason arrives has no finish reason for
+    // that choice. Report "error" to keep the entries aligned with the choices.
     return response.choices().stream()
-        .map(choice -> choice.finishReason().asString())
+        .map(choice -> choice._finishReason().asKnown().map(r -> r.asString()).orElse("error"))
         .collect(toList());
   }
 

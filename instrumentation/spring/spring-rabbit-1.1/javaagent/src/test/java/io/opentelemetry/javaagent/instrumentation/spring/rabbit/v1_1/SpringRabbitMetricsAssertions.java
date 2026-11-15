@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_1;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -13,7 +14,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -54,7 +54,9 @@ class SpringRabbitMetricsAssertions {
                                                 .hasValue(consumedMessagesCount)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rabbitmq"),
                                                     equalTo(ERROR_TYPE, springErrorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),
@@ -112,7 +114,9 @@ class SpringRabbitMetricsAssertions {
                                                 .hasCount(1)
                                                 .hasAttributesSatisfyingExactly(
                                                     equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rabbitmq"),
                                                     equalTo(ERROR_TYPE, errorType),
                                                     equalTo(
                                                         MESSAGING_DESTINATION_NAME, destination),

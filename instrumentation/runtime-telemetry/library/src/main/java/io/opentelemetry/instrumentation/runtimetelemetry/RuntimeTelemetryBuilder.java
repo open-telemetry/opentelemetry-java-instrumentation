@@ -75,7 +75,7 @@ public final class RuntimeTelemetryBuilder {
 
   /** Build and start a {@link RuntimeTelemetry} with the config from this builder. */
   public RuntimeTelemetry build() {
-    Meter schemaMeter = getMeter(openTelemetry, SchemaUrls.V1_44_0);
+    Meter schemaMeter = getMeter(openTelemetry, SchemaUrls.V1_45_0);
     IncludeExclude effectiveJfrMetrics = getEffectiveJfrMetrics();
     JfrConfig.JfrTelemetry jfrTelemetry =
         effectiveJfrMetrics == null

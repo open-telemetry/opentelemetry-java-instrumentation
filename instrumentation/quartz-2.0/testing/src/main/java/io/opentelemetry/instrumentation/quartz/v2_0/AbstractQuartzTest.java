@@ -36,10 +36,14 @@ import org.quartz.impl.StdSchedulerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractQuartzTest {
 
-  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.quartz.experimental-span-attributes");
 
   private Scheduler scheduler;
+
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
 
   protected abstract void configureScheduler(Scheduler scheduler);
 
@@ -79,7 +83,7 @@ public abstract class AbstractQuartzTest {
                                     CODE_FUNCTION_NAME, SuccessfulJob.class.getName() + ".execute"),
                                 equalTo(
                                     stringKey("job.system"),
-                                    EXPERIMENTAL_ATTRIBUTES ? "quartz" : null)),
+                                    captureExperimentalSpanAttributes() ? "quartz" : null)),
                     span ->
                         span.hasName("child")
                             .hasKind(SpanKind.INTERNAL)
@@ -109,7 +113,7 @@ public abstract class AbstractQuartzTest {
                                     CODE_FUNCTION_NAME, FailingJob.class.getName() + ".execute"),
                                 equalTo(
                                     stringKey("job.system"),
-                                    EXPERIMENTAL_ATTRIBUTES ? "quartz" : null))));
+                                    captureExperimentalSpanAttributes() ? "quartz" : null))));
   }
 
   private static Scheduler createScheduler() throws Exception {

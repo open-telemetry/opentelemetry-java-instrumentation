@@ -6,14 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
 import static io.opentelemetry.api.common.AttributeKey.booleanKey;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.ExperimentalHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -154,7 +156,11 @@ class LettuceAsyncClientTest {
     // (+ 1 connect trace per client when connection telemetry is enabled). Older lettuce connects
     // synchronously and nests the SELECT under CONNECT, while newer lettuce connects asynchronously
     // and starts a new trace for it.
-    testing.waitForTraces(connectionTelemetryEnabled() ? (testLatestDeps() ? 4 : 3) : 2);
+    int expectedTraceCount = 2;
+    if (connectionTelemetryEnabled()) {
+      expectedTraceCount = testLatestDeps() ? 4 : 3;
+    }
+    testing.waitForTraces(expectedTraceCount);
   }
 
   private static boolean connectionTelemetryEnabled() {
@@ -187,7 +193,8 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 
   @Test
@@ -217,6 +224,7 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "WRONGTYPE"),
                             equalTo(ERROR_TYPE, "WRONGTYPE"))));
 
     assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", "WRONGTYPE", 1);
@@ -355,7 +363,8 @@ class LettuceAsyncClientTest {
                             equalTo(SERVER_PORT, incorrectPort),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 
   @Test
@@ -765,9 +774,10 @@ class LettuceAsyncClientTest {
                             equalTo(NETWORK_PEER_ADDRESS, ip),
                             equalTo(NETWORK_PEER_PORT, Long.valueOf(port)),
                             equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(ERROR_TYPE, scenario.errorType))));
+                            equalTo(DB_RESPONSE_STATUS_CODE, scenario.errorCode),
+                            equalTo(ERROR_TYPE, scenario.errorCode))));
 
-    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", scenario.errorType, 1);
+    assertErrorTypeMetric("io.opentelemetry.lettuce-4.0", scenario.errorCode, 1);
   }
 
   private static void assertErrorTypeMetric(
@@ -909,7 +919,7 @@ class LettuceAsyncClientTest {
                 .operationName("PIPELINE")
                 .batchSize(2)
                 .exceptionType("com.lambdaworks.redis.RedisCommandExecutionException")
-                .errorType("ERR")
+                .errorCode("ERR")
                 .build()));
   }
 
@@ -918,14 +928,14 @@ class LettuceAsyncClientTest {
     private final String operationName;
     private final Long batchSize;
     private final String exceptionType;
-    private final String errorType;
+    private final String errorCode;
 
     private BatchScenario(Builder builder) {
       this.commands = builder.commands;
       this.operationName = builder.operationName;
       this.batchSize = builder.batchSize;
       this.exceptionType = builder.exceptionType;
-      this.errorType = builder.errorType;
+      this.errorCode = builder.errorCode;
     }
 
     private static Builder builder() {
@@ -941,7 +951,7 @@ class LettuceAsyncClientTest {
       private String operationName;
       private Long batchSize;
       private String exceptionType;
-      private String errorType;
+      private String errorCode;
 
       private Builder addCommand(BatchCommand command) {
         commands.add(command);
@@ -958,8 +968,8 @@ class LettuceAsyncClientTest {
         return this;
       }
 
-      private Builder errorType(String errorType) {
-        this.errorType = errorType;
+      private Builder errorCode(String errorCode) {
+        this.errorCode = errorCode;
         return this;
       }
 

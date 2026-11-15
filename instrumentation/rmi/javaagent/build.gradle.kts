@@ -29,27 +29,10 @@ java {
 }
 
 tasks {
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Djava.rmi.server.hostname=127.0.0.1", "-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Djava.rmi.server.hostname=127.0.0.1", "-Dotel.semconv-stability.preview=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
-  }
-
   withType<JavaCompile>().configureEach {
     options.release.set(null as Int?)
   }
   test {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
-  }
-  check {
-    dependsOn(testPreviewSemconv, testBothSemconv)
   }
 }

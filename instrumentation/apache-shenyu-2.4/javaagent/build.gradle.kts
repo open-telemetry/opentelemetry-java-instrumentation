@@ -47,8 +47,6 @@ tasks.test {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
 // spring 6 (spring boot 3) uses slf4j 2.0

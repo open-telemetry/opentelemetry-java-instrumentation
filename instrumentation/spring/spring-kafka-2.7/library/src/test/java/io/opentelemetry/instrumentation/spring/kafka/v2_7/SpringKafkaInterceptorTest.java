@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricPointCounts;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
@@ -13,11 +15,8 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -470,11 +469,11 @@ class SpringKafkaInterceptorTest {
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
         .hasAttributesSatisfyingExactly(
-            equalTo(MESSAGING_SYSTEM, "kafka"),
+            equalTo(stringKey("messaging.system.name"), "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
             equalTo(MESSAGING_DESTINATION_PARTITION_ID, Integer.toString(record.partition())),
-            equalTo(MESSAGING_KAFKA_MESSAGE_KEY, record.key()),
-            equalTo(MESSAGING_KAFKA_OFFSET, record.offset()),
+            equalTo(stringKey("kafka.message.key"), record.key()),
+            equalTo(longKey("kafka.offset"), record.offset()),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
@@ -486,7 +485,7 @@ class SpringKafkaInterceptorTest {
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
         .hasAttributesSatisfyingExactly(
-            equalTo(MESSAGING_SYSTEM, "kafka"),
+            equalTo(stringKey("messaging.system.name"), "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
             equalTo(MESSAGING_DESTINATION_PARTITION_ID, partition),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
@@ -500,15 +499,21 @@ class SpringKafkaInterceptorTest {
       LinkData.create(
           FIRST_CREATION,
           Attributes.of(
-              MESSAGING_DESTINATION_PARTITION_ID, "0",
-              MESSAGING_KAFKA_OFFSET, 1L,
-              MESSAGING_KAFKA_MESSAGE_KEY, "first")),
+              MESSAGING_DESTINATION_PARTITION_ID,
+              "0",
+              longKey("kafka.offset"),
+              1L,
+              stringKey("kafka.message.key"),
+              "first")),
       LinkData.create(
           SECOND_CREATION,
           Attributes.of(
-              MESSAGING_DESTINATION_PARTITION_ID, "1",
-              MESSAGING_KAFKA_OFFSET, 2L,
-              MESSAGING_KAFKA_MESSAGE_KEY, "second"))
+              MESSAGING_DESTINATION_PARTITION_ID,
+              "1",
+              longKey("kafka.offset"),
+              2L,
+              stringKey("kafka.message.key"),
+              "second"))
     };
   }
 

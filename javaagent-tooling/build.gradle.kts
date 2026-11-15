@@ -1,3 +1,4 @@
+import io.opentelemetry.instrumentation.gradle.executions
 import net.ltgt.gradle.errorprone.errorprone
 
 plugins {
@@ -66,67 +67,63 @@ dependencies {
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testExceptionHandler") {
-      dependencies {
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-tooling"))
-        implementation("net.bytebuddy:byte-buddy-dep")
+testing.suites {
+  register<JvmTestSuite>("testExceptionHandler") {
+    dependencies {
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-tooling"))
+      implementation("net.bytebuddy:byte-buddy-dep")
 
-        // Used by byte-buddy but not brought in as a transitive dependency.
-        compileOnly("com.google.code.findbugs:annotations")
+      // Used by byte-buddy but not brought in as a transitive dependency.
+      compileOnly("com.google.code.findbugs:annotations")
+    }
+  }
+
+  register<JvmTestSuite>("testMissingType") {
+    dependencies {
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-tooling"))
+      implementation("net.bytebuddy:byte-buddy-dep")
+      compileOnly("org.apache.commons:commons-lang3:3.21.0")
+
+      // Used by byte-buddy but not brought in as a transitive dependency.
+      compileOnly("com.google.code.findbugs:annotations")
+    }
+  }
+
+  register<JvmTestSuite>("testConfigFile") {
+    dependencies {
+      implementation(project(":javaagent-tooling"))
+      // requires mockito-inline
+      implementation("uk.org.webcompere:system-stubs-jupiter")
+    }
+  }
+
+  register<JvmTestSuite>("testDistributionConfig") {
+    dependencies {
+      implementation(project(":javaagent-extension-api"))
+      implementation(project(":instrumentation-api-incubator"))
+      implementation(project(":javaagent-tooling"))
+      implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+    }
+  }
+
+  executions("testMissingType") {
+    configureEach {
+      filter {
+        // Helper class used in test that refers to a class that is missing from the test
+        // classpath. We need to exclude it to avoid junit failing while it is searching for
+        // test classes.
+        excludeTestsMatching("MissingTypeTest\$SomeClass")
       }
     }
+  }
 
-    register<JvmTestSuite>("testMissingType") {
-      dependencies {
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-tooling"))
-        implementation("net.bytebuddy:byte-buddy-dep")
-        compileOnly("org.apache.commons:commons-lang3:3.21.0")
-
-        // Used by byte-buddy but not brought in as a transitive dependency.
-        compileOnly("com.google.code.findbugs:annotations")
-      }
-      targets {
-        all {
-          testTask.configure {
-            filter {
-              // Helper class used in test that refers to a class that is missing from the test
-              // classpath. We need to exclude it to avoid junit failing while it is searching for
-              // test classes.
-              excludeTestsMatching("MissingTypeTest\$SomeClass")
-            }
-          }
-        }
-      }
-    }
-
-    register<JvmTestSuite>("testConfigFile") {
-      dependencies {
-        implementation(project(":javaagent-tooling"))
-        // requires mockito-inline
-        implementation("uk.org.webcompere:system-stubs-jupiter")
-      }
-    }
-
-    register<JvmTestSuite>("testDistributionConfig") {
-      dependencies {
-        implementation(project(":javaagent-extension-api"))
-        implementation(project(":instrumentation-api-incubator"))
-        implementation(project(":javaagent-tooling"))
-        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-      }
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs(
-              "-Dotel.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
-            )
-          }
-        }
-      }
+  executions("testDistributionConfig") {
+    configureEach {
+      jvmArgs(
+        "-Dotel.config.file=$projectDir/src/testDistributionConfig/resources/distribution-config.yaml"
+      )
     }
   }
 }

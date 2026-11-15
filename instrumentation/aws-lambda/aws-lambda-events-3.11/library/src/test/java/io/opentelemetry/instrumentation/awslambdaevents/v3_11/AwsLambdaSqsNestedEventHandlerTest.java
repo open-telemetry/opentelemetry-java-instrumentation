@@ -58,12 +58,12 @@ class AwsLambdaSqsNestedEventHandlerTest {
                 span -> span.hasName("my_function").hasKind(SpanKind.SERVER),
                 span ->
                     span.hasName("process queue1")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("process queue1")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_43_0))
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "queue1", 2, 2, null);

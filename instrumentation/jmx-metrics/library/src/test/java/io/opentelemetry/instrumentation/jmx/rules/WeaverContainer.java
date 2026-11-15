@@ -239,7 +239,16 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
       assertThat(map.keySet())
           .filteredOn(item -> item.startsWith(prefix))
           .describedAs("expected registered %s to contain all keys", type)
-          .containsExactlyInAnyOrderElementsOf(expectedKeys);
+          .containsAll(expectedKeys);
+
+      map.forEach(
+          (key, count) -> {
+            if (key.startsWith(prefix) && !expectedKeys.contains(key)) {
+              assertThat(count)
+                  .describedAs("expected registered %s to have zero count for key %s", type, key)
+                  .isZero();
+            }
+          });
 
       reported.forEach(
           key ->

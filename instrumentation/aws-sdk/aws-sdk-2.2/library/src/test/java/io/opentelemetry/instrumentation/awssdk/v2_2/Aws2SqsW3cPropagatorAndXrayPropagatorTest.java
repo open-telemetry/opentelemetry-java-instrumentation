@@ -131,7 +131,7 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
                 SendMessageBatchRequestEntry.builder().id("i2").messageBody("e2").build())
             .build();
 
-    try (SqsClient client = disabledTelemetry.wrap(builder.build())) {
+    try (SqsClient client = disabledTelemetry.instrument(builder.build())) {
       client.createQueue(createQueueRequest);
       client.sendMessageBatch(batchRequest);
 

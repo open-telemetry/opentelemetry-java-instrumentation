@@ -274,7 +274,7 @@ class JmxTelemetryTest {
               .allSatisfy(
                   metric -> {
                     assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                        .isEqualTo("https://opentelemetry.io/schemas/1.44.0");
+                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0");
                     assertThat(metric.getLongSumData().getPoints())
                         .isNotEmpty()
                         .allSatisfy(
@@ -291,7 +291,7 @@ class JmxTelemetryTest {
                 .extracting(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl())
                 .containsOnly(
                     includeUnstable
-                        ? new String[] {null, "https://opentelemetry.io/schemas/1.44.0"}
+                        ? new String[] {null, "https://opentelemetry.io/schemas/1.45.0"}
                         : new String[] {null}));
     assertThat(testing.metrics())
         .filteredOn(

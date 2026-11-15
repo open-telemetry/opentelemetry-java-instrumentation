@@ -5,8 +5,12 @@
 
 package io.opentelemetry.instrumentation.jetty.httpclient.v9_2;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
+import static java.util.Collections.emptyMap;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpClientResult;
@@ -20,6 +24,7 @@ import org.eclipse.jetty.client.api.Request;
 import org.eclipse.jetty.client.api.Response;
 import org.eclipse.jetty.util.ssl.SslContextFactory;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -48,6 +53,55 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     httpsClient.setFollowRedirects(false);
     httpsClient.start();
     cleanup.deferCleanup(httpsClient::stop);
+  }
+
+  @Test
+  void requestListenerUsesCallerContext() throws Exception {
+    Request request =
+        client
+            .newRequest(resolveAddress("/success"))
+            .onRequestBegin(ignored -> testing.runWithSpan("request-callback", () -> {}));
+
+    testing.runWithSpan(
+        "caller",
+        () -> {
+          assertThat(request.send().getStatus()).isEqualTo(200);
+        });
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("caller").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1)),
+                span ->
+                    span.hasName("request-callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void asynchronousRequestListenerUsesCallerContextWithoutParent() throws Throwable {
+    URI uri = resolveAddress("/success");
+    Request request =
+        client
+            .newRequest(uri)
+            .onRequestBegin(ignored -> testing.runWithSpan("request-callback", () -> {}));
+    HttpClientResult result = new HttpClientResult(() -> {});
+
+    sendRequestWithCallback(request, "GET", uri, emptyMap(), result);
+
+    assertThat(result.get()).isEqualTo(200);
+
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("GET", "request-callback"),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent(),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("request-callback").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Override

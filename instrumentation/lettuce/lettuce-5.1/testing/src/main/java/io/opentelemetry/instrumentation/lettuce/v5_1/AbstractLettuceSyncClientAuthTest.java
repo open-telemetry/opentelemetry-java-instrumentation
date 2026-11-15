@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -19,7 +20,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.api.sync.RedisCommands;
 import io.opentelemetry.api.trace.SpanKind;
@@ -82,9 +82,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                       equalTo(DB_SYSTEM_NAME, REDIS),
                                       equalTo(DB_QUERY_TEXT, "CLIENT SETINFO lib-name Lettuce"),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                                      equalTo(DB_RESPONSE_STATUS_CODE, "NOAUTH"),
+                                      equalTo(ERROR_TYPE, "NOAUTH")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -101,9 +100,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                           DB_QUERY_TEXT,
                                           val -> val.startsWith("CLIENT SETINFO lib-ver")),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                                      equalTo(DB_RESPONSE_STATUS_CODE, "NOAUTH"),
+                                      equalTo(ERROR_TYPE, "NOAUTH")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->
@@ -120,9 +118,8 @@ public abstract class AbstractLettuceSyncClientAuthTest extends AbstractLettuceC
                                           DB_QUERY_TEXT,
                                           val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
                                       equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(
-                                          ERROR_TYPE,
-                                          RedisCommandExecutionException.class.getName())))),
+                                      equalTo(DB_RESPONSE_STATUS_CODE, "NOAUTH"),
+                                      equalTo(ERROR_TYPE, "NOAUTH")))),
               trace ->
                   trace.hasSpansSatisfyingExactly(
                       span ->

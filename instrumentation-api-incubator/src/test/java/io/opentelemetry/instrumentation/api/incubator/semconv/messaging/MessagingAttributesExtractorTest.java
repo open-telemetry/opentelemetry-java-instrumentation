@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
@@ -17,12 +18,12 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -38,11 +39,19 @@ import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.assertj.core.data.MapEntry;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
+import org.mockito.Answers;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class MessagingAttributesExtractorTest {
+
+  @Mock(answer = Answers.CALLS_REAL_METHODS)
+  MessagingAttributesGetter<Map<String, String>, String> defaultGetter;
 
   @ParameterizedTest
   @MethodSource("destinations")
@@ -84,7 +93,7 @@ class MessagingAttributesExtractorTest {
 
     // then
     List<MapEntry<AttributeKey<?>, Object>> expectedEntries = new ArrayList<>();
-    expectedEntries.add(entry(MESSAGING_SYSTEM, "myQueue"));
+    expectedEntries.add(entry(stringKey("messaging.system.name"), "myQueue"));
     if (temporary) {
       expectedEntries.add(entry(MESSAGING_DESTINATION_TEMPORARY, true));
       expectedEntries.add(entry(MESSAGING_DESTINATION_NAME, destination));
@@ -188,9 +197,41 @@ class MessagingAttributesExtractorTest {
             TestGetter.INSTANCE, MessagingOperationType.RECEIVE, "receive");
 
     AttributesBuilder attributes = Attributes.builder();
-    underTest.onEnd(attributes, Context.root(), emptyMap(), "failure", null);
+    underTest.onEnd(attributes, Context.root(), emptyMap(), "failure", new IllegalStateException());
 
     assertThat(attributes.build()).isEqualTo(Attributes.of(ERROR_TYPE, "failure"));
+  }
+
+  @Test
+  void shouldUseDefaultErrorType() {
+    AttributesExtractor<Map<String, String>, String> underTest =
+        MessagingAttributesExtractor.create(
+            defaultGetter, MessagingOperationType.PROCESS, "process");
+    IllegalStateException error = new IllegalStateException();
+    when(defaultGetter.getBatchMessageCount(emptyMap(), null)).thenReturn(null);
+
+    AttributesBuilder errorAttributes = Attributes.builder();
+    underTest.onEnd(errorAttributes, Context.root(), emptyMap(), null, error);
+    AttributesBuilder noErrorAttributes = Attributes.builder();
+    underTest.onEnd(noErrorAttributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(errorAttributes.build())
+        .isEqualTo(Attributes.of(ERROR_TYPE, IllegalStateException.class.getName()));
+    assertThat(noErrorAttributes.build()).isEmpty();
+  }
+
+  @Test
+  void shouldOmitErrorTypeWhenGetterReturnsNull() {
+    AttributesExtractor<Map<String, String>, String> underTest =
+        MessagingAttributesExtractor.create(
+            defaultGetter, MessagingOperationType.PROCESS, "process");
+    IllegalStateException error = new IllegalStateException();
+    when(defaultGetter.getErrorType(emptyMap(), "failure", error)).thenReturn(null);
+
+    AttributesBuilder attributes = Attributes.builder();
+    underTest.onEnd(attributes, Context.root(), emptyMap(), "failure", error);
+
+    assertThat(attributes.build()).doesNotContainKey(ERROR_TYPE);
   }
 
   @Test
@@ -277,7 +318,10 @@ class MessagingAttributesExtractorTest {
 
     @Override
     public String getErrorType(Map<String, String> request, String response, Throwable error) {
-      return "failure".equals(response) ? response : null;
+      if ("failure".equals(response)) {
+        return response;
+      }
+      return error == null ? null : error.getClass().getName();
     }
 
     @Override

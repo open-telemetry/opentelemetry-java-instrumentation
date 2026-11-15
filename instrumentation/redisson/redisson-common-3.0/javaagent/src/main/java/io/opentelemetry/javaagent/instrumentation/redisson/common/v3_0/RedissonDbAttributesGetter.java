@@ -43,6 +43,17 @@ final class RedissonDbAttributesGetter implements DbClientAttributesGetter<Redis
     return request.getOperationBatchSize();
   }
 
+  @Override
+  @Nullable
+  public String getErrorType(
+      RedissonRequest request, @Nullable Void response, @Nullable Throwable error) {
+    String serverErrorType = RedissonErrorCapture.getServerErrorType(error);
+    if (serverErrorType != null) {
+      return serverErrorType;
+    }
+    return error != null ? error.getClass().getName() : null;
+  }
+
   @Nullable
   @Override
   public String getServerAddress(RedissonRequest request) {

@@ -59,7 +59,8 @@ public class VirtualFieldStore {
     return MESSAGE_NAMESPACE.get(message);
   }
 
-  public static void setNamespaceByMessage(PublishingMessageImpl message, String namespace) {
+  public static void setNamespaceByMessage(
+      PublishingMessageImpl message, @Nullable String namespace) {
     MESSAGE_NAMESPACE.set(message, namespace);
   }
 

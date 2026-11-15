@@ -3,6 +3,7 @@ import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -44,28 +45,37 @@ testing.suites {
     dependencies {
       implementation("org.testcontainers:testcontainers")
     }
-    val baseline = name == "test"
-    executions {
-      configureEach {
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-      }
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
-      }
-      if (baseline) {
-        register("ReceiveSpansDisabled") {
-          telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
-        }
-      }
+  }
+
+  executions("test") {
+    configureEach {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
+    }
+    register("ReceiveSpansDisabled") {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "false")
     }
   }
+
+  executions("reactorTest", "recoveryTest") {
+    configureEach {
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.rabbitmq.experimental-span-attributes", "true")
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }
 
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
 
     // add byte buddy agent for mockito
     configurations.testRuntimeClasspath.get().find { it.name.contains("byte-buddy-agent") }?.apply {

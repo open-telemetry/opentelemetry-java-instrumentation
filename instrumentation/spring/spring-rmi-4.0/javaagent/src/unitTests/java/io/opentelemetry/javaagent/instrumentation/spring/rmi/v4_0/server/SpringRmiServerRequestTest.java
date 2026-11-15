@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.spring.rmi.v4_0.server;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import java.lang.reflect.Method;
 import org.junit.jupiter.api.Test;
 
@@ -50,12 +49,19 @@ class SpringRmiServerRequestTest {
   }
 
   @Test
-  void handlesNullParameterTypesAndMissingLookups() throws Exception {
+  void handlesNullParameterTypesAndMissingLookups() {
     assertThat(rpcMethod(DuplicateService.class, "noArguments", (Class<?>[]) null))
         .isEqualTo(FirstService.class.getName() + "/noArguments");
-    assertThat(rpcMethod(DuplicateService.class, "missing")).isNull();
-    assertThat(rpcMethod(DuplicateService.class, "duplicate", Integer.class)).isNull();
-    assertThat(rpcMethod(null, "missing", (Class<?>[]) null)).isNull();
+    assertThat(rpcMethod(DuplicateService.class, "missing")).isEqualTo("_OTHER");
+    assertThat(createRequest(DuplicateService.class, "missing").rpcMethodOriginal())
+        .isEqualTo(DuplicateService.class.getName() + "/missing");
+    assertThat(rpcMethod(DuplicateService.class, "duplicate", Integer.class)).isEqualTo("_OTHER");
+    assertThat(
+            createRequest(DuplicateService.class, "duplicate", Integer.class).rpcMethodOriginal())
+        .isEqualTo(DuplicateService.class.getName() + "/duplicate");
+    assertThat(rpcMethod(null, "missing", (Class<?>[]) null)).isEqualTo("_OTHER");
+    assertThat(createRequest(null, "missing").rpcMethodOriginal()).isEqualTo("missing");
+    assertThat(createRequest(DuplicateService.class, "noArguments").rpcMethodOriginal()).isNull();
   }
 
   private static String rpcMethod(
@@ -65,10 +71,6 @@ class SpringRmiServerRequestTest {
 
   private static SpringRmiServerRequest createRequest(
       Class<?> serviceInterface, String methodName, Class<?>... parameterTypes) {
-    return new SpringRmiServerRequest(
-        ClassAndMethod.create(Object.class, methodName),
-        serviceInterface,
-        methodName,
-        parameterTypes);
+    return new SpringRmiServerRequest(serviceInterface, methodName, parameterTypes);
   }
 }

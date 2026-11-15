@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -16,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_SUBSCRIPTION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -84,7 +84,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             .hasSumGreaterThan(0.0)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
@@ -108,7 +109,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
@@ -133,7 +135,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             .hasValue(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                 equalTo(SERVER_ADDRESS, brokerHost),
                                                 equalTo(SERVER_PORT, brokerPort))))));
@@ -155,7 +158,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             .hasSumGreaterThan(0.0)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                                                 equalTo(SERVER_ADDRESS, brokerHost),
@@ -165,7 +169,8 @@ class PulsarClientTest extends AbstractPulsarClientTest {
                                             .hasSumGreaterThan(0.0)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "pulsar"),
                                                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                                                 equalTo(
                                                     MESSAGING_DESTINATION_SUBSCRIPTION_NAME,

@@ -41,6 +41,13 @@ final class InstrumentedChatCompletionService
   }
 
   @Override
+  protected ChatCompletionService wrap(ChatCompletionService delegate) {
+    return new InstrumentedChatCompletionService(
+            delegate, instrumenter, eventLogger, captureMessageContent)
+        .createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();
@@ -132,7 +139,7 @@ final class InstrumentedChatCompletionService
         context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     StreamResponse<ChatCompletionChunk> result =
         delegate.createStreaming(chatCompletionCreateParams, requestOptions);
-    return new TracingStreamedResponse(
+    return new TracingStreamedResponse<>(
         result,
         new StreamListener(
             context, request, instrumenter, eventLogger, captureMessageContent, newSpan));

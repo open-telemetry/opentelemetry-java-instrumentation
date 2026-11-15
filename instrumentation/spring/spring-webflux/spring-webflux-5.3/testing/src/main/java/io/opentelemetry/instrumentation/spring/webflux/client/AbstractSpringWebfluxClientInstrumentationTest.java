@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.client;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -206,7 +207,7 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                             equalTo(URL_FULL, uri.toString()),
                             equalTo(SERVER_ADDRESS, "localhost"),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
                             equalTo(ERROR_TYPE, "cancelled")),
                 span ->
                     span.hasName("test-http-server")

@@ -56,8 +56,7 @@ public abstract class RedissonRequest {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
       Class<?> promiseClass =
-          Class.forName(
-              "org.redisson.misc.RPromise", false, RedissonRequest.class.getClassLoader());
+          Class.forName("org.redisson.misc.RPromise", false, commandClass.getClassLoader());
       // try versions older than 3.16.8
       return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
     } catch (NoSuchMethodException | ClassNotFoundException ignored) {

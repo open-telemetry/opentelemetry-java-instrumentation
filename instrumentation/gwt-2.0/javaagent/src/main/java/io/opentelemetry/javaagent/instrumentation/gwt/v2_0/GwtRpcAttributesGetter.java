@@ -11,23 +11,12 @@ import java.lang.reflect.Method;
 class GwtRpcAttributesGetter implements RpcAttributesGetter<Method, Void> {
 
   @Override
-  public String getSystem(Method method) {
+  public String getRpcSystemName(Method method) {
     return "gwt";
   }
 
   @Override
-  public String getService(Method method) {
-    return method.getDeclaringClass().getName();
-  }
-
-  @Deprecated
-  @Override
-  public String getMethod(Method method) {
-    return method.getName();
-  }
-
-  @Override
   public String getRpcMethod(Method method) {
-    return getService(method) + "/" + method.getName();
+    return method.getDeclaringClass().getName() + "/" + method.getName();
   }
 }

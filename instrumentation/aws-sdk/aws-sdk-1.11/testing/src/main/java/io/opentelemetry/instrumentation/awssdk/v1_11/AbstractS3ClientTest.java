@@ -15,11 +15,11 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
@@ -144,7 +144,7 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
                             .hasStatus(StatusData.error())
                             .hasException(emitExceptionAsSpanEvents() ? error : null)
                             .hasNoParent()
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
+                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                             .hasAttributesSatisfyingExactly(
                                 equalTo(URL_FULL, endpoint.getServiceEndpoint()),
                                 equalTo(HTTP_REQUEST_METHOD, "GET"),

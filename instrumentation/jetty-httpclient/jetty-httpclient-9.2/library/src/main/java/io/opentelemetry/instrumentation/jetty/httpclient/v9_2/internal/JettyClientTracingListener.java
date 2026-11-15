@@ -22,8 +22,8 @@ import org.eclipse.jetty.client.api.Response;
 /**
  * JettyClientTracingListener performs three actions when {@link #handleRequest(Context,
  * HttpRequest, Instrumenter)} is called 1. Start the CLIENT span 2. Set the listener callbacks for
- * each lifecycle action that signal end of the request 3. Wrap request listeners to propagate
- * context into the listeners
+ * each lifecycle action that signal end of the request 3. Wrap application request callbacks with
+ * the caller context
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
@@ -68,10 +68,9 @@ public final class JettyClientTracingListener
 
     Context context = instrumenter.start(parentContext, request);
 
-    // wrap all important request-based listeners that may already be attached, null should ensure
-    // that all listeners are returned here
+    // wrap all important request-based listeners
     List<Request.RequestListener> existingListeners = request.getRequestListeners(null);
-    wrapRequestListeners(existingListeners, context);
+    wrapRequestListeners(existingListeners, parentContext);
 
     JettyClientTracingListener listener = new JettyClientTracingListener(context, instrumenter);
     request.onRequestFailure(listener).onResponseFailure(listener).onResponseSuccess(listener);

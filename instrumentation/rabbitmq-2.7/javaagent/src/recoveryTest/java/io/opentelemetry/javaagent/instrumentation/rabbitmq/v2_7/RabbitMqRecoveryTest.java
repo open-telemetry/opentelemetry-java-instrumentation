@@ -12,7 +12,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.rabbitmq.client.Channel;
@@ -29,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RabbitMqRecoveryTest extends AbstractRabbitMqTest {
+
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -75,16 +75,15 @@ class RabbitMqRecoveryTest extends AbstractRabbitMqTest {
             trace.hasSpansSatisfyingExactly(
                 span ->
                     span.hasAttributesSatisfyingExactly(
-                        equalTo(MESSAGING_SYSTEM, "rabbitmq"),
+                        equalTo(stringKey("messaging.system.name"), "rabbitmq"),
                         satisfies(
                             NETWORK_PEER_ADDRESS, val -> val.isIn(recoveredPeerAddress, null)),
                         satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", "ipv6", null)),
                         satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
                         equalTo(stringKey("rabbitmq.command"), experimental("queue.declare")),
+                        equalTo(stringKey("rabbitmq.vhost.name"), experimental("otel-test")),
                         equalTo(
-                            stringKey("messaging.rabbitmq.vhost.name"), experimental("otel-test")),
-                        equalTo(
-                            stringKey("messaging.rabbitmq.cluster.name"),
+                            stringKey("rabbitmq.cluster.name"),
                             experimental("otel-test-cluster")))));
   }
 }

@@ -17,6 +17,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
@@ -64,8 +65,11 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
       Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter = producerInstrumenter();
       int count = messages.size();
       List<SettableFuture<SendReceiptImpl>> futures = FutureConverter.convert(future0, count);
+      @Nullable
       String namespace =
-          messageQueues.isEmpty() ? "" : messageQueues.get(0).getTopicResource().getNamespace();
+          messageQueues.isEmpty()
+              ? null
+              : StringUtils.emptyToNull(messageQueues.get(0).getTopicResource().getNamespace());
       for (int i = 0; i < count; i++) {
         PublishingMessageImpl message = messages.get(i);
         VirtualFieldStore.setNamespaceByMessage(message, namespace);

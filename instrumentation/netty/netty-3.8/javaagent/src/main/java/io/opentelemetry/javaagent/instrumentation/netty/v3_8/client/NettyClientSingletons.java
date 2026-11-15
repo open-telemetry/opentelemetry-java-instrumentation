@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.netty.v3_8.client;
 import static io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpClientInstrumenterBuilder.setHttpClientExceptionEventExtractor;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -45,7 +45,7 @@ public class NettyClientSingletons {
             .addAttributesExtractor(
                 HttpClientAttributesExtractor.create(new NettyConnectHttpAttributesGetter()))
             .addAttributesExtractor(
-                HttpClientServicePeerAttributesExtractor.create(
+                HttpClientServerServiceAttributesExtractor.create(
                     new NettyConnectHttpAttributesGetter(), GlobalOpenTelemetry.get()))
             .setSchemaUrl(HttpSchemaUrls.SCHEMA_URL);
     setHttpClientExceptionEventExtractor(builder);

@@ -7,11 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v3_0;
 
 import static com.couchbase.client.core.cnc.RequestTracer.DISPATCH_SPAN_NAME;
 import static com.couchbase.client.core.cnc.RequestTracer.PAYLOAD_ENCODING_SPAN_NAME;
-import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_ANALYTICS;
-import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_KV;
-import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_QUERY;
-import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_SEARCH;
-import static com.couchbase.client.core.cnc.RequestTracer.SERVICE_IDENTIFIER_VIEW;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Objects.requireNonNull;
 
@@ -20,7 +15,6 @@ import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.msg.RequestContext;
 import com.couchbase.client.core.msg.kv.BaseKeyValueRequest;
-import com.couchbase.client.core.service.ServiceType;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Logger;
 import io.opentelemetry.api.trace.Tracer;
@@ -123,8 +117,6 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       endEncodingSpan();
       endDispatchSpan();
       RequestContext context = requireNonNull(requestContext);
-      span.setExperimentalAttribute(
-          "peer.service", mapServiceType(context.request().serviceType()));
       String operationId = context.request().operationId();
       if (operationId != null) {
         span.setExperimentalAttribute("couchbase.operation_id", operationId);
@@ -208,24 +200,6 @@ public final class CouchbaseRequestTracer implements RequestTracer {
       dispatchSpan = null;
       if (dispatch != null) {
         dispatch.end();
-      }
-    }
-
-    @Nullable
-    private static String mapServiceType(ServiceType serviceType) {
-      switch (serviceType) {
-        case KV:
-          return SERVICE_IDENTIFIER_KV;
-        case QUERY:
-          return SERVICE_IDENTIFIER_QUERY;
-        case ANALYTICS:
-          return SERVICE_IDENTIFIER_ANALYTICS;
-        case VIEWS:
-          return SERVICE_IDENTIFIER_VIEW;
-        case SEARCH:
-          return SERVICE_IDENTIFIER_SEARCH;
-        default:
-          return null;
       }
     }
   }

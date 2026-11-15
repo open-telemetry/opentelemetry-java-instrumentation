@@ -11,8 +11,7 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyBootstrap;
-import io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyTypeTransformerImpl;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.AdviceBootstrap;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -25,7 +24,6 @@ import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.Type;
 
 class ClassInstrumentation implements TypeInstrumentation {
   @Override
@@ -60,18 +58,15 @@ class ClassInstrumentation implements TypeInstrumentation {
                       MethodList<?> methods,
                       int writerFlags,
                       int readerFlags) {
-                    return new ClassClassVisitor(
-                        classVisitor, transformer instanceof IndyTypeTransformerImpl);
+                    return new ClassClassVisitor(classVisitor);
                   }
                 }));
   }
 
   private static class ClassClassVisitor extends ClassVisitor {
-    private final boolean isIndy;
 
-    ClassClassVisitor(ClassVisitor cv, boolean isIndy) {
+    ClassClassVisitor(ClassVisitor cv) {
       super(AsmApi.VERSION, cv);
-      this.isIndy = isIndy;
     }
 
     @Override
@@ -97,23 +92,15 @@ class ClassInstrumentation implements TypeInstrumentation {
                         && "java/lang/J9VMInternals".equals(owner)
                         && "(Ljava/lang/Class;)[Ljava/lang/Class;".equals(descriptor))) {
                   super.visitVarInsn(Opcodes.ALOAD, 0);
-                  if (isIndy) {
-                    // ReflectionHelper is in a separate class loader that is not visible to the
-                    // instrumented class, so we need to invoke it via indy bootstrap method
-                    IndyBootstrap.emitIndyStaticCall(
-                        mv,
-                        "filterInterfaces",
-                        "([Ljava/lang/Class;Ljava/lang/Class;)[Ljava/lang/Class;",
-                        ReflectionInstrumentationModule.class,
-                        ReflectionHelper.class.getName());
-                  } else {
-                    super.visitMethodInsn(
-                        Opcodes.INVOKESTATIC,
-                        Type.getInternalName(ReflectionHelper.class),
-                        "filterInterfaces",
-                        "([Ljava/lang/Class;Ljava/lang/Class;)[Ljava/lang/Class;",
-                        false);
-                  }
+                  // ReflectionHelper is in a separate class loader that is not visible to the
+                  // instrumented class, so invoke it through the advice bootstrap's invokedynamic
+                  // call
+                  AdviceBootstrap.emitHelperStaticCall(
+                      mv,
+                      "filterInterfaces",
+                      "([Ljava/lang/Class;Ljava/lang/Class;)[Ljava/lang/Class;",
+                      ReflectionInstrumentationModule.class,
+                      ReflectionHelper.class.getName());
                 }
               }
             };

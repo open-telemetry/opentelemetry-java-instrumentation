@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -30,7 +32,6 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -180,7 +181,7 @@ class VertxRedisClientErrorTest {
     Throwable error = failure(connection.batch(requests(3)));
 
     assertThat(error).isNotInstanceOf(ErrorType.class);
-    assertTelemetry(error.getClass().getName(), 3);
+    assertTelemetry(error.getClass().getName(), 3, null);
   }
 
   @Test
@@ -235,7 +236,8 @@ class VertxRedisClientErrorTest {
   @Test
   void collidingBinaryMapKeysDoNotHideNestedServerError()
       throws ExecutionException, IOException, InterruptedException, TimeoutException {
-    assumeTrue(testLatestDeps());
+    String vertxVersion = Vertx.class.getPackage().getImplementationVersion();
+    assumeTrue(testLatestDeps() && vertxVersion != null && vertxVersion.startsWith("5."));
     RedisConnection connection = connectRaw(resp3MapWithCollidingBinaryKeys());
 
     Response response =
@@ -403,6 +405,11 @@ class VertxRedisClientErrorTest {
   }
 
   private void assertTelemetry(String errorType, int requestCount) {
+    assertTelemetry(
+        errorType, requestCount, ErrorType.class.getName().equals(errorType) ? null : errorType);
+  }
+
+  private void assertTelemetry(String errorType, int requestCount, String responseStatusCode) {
     String operation = requestCount == 1 ? "GET" : "PIPELINE GET";
     testing.waitAndAssertTraces(
         trace ->
@@ -427,7 +434,8 @@ class VertxRedisClientErrorTest {
                             equalTo(SERVER_PORT, server.port),
                             equalTo(NETWORK_PEER_ADDRESS, HOST),
                             equalTo(NETWORK_PEER_PORT, server.port),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(DB_RESPONSE_STATUS_CODE, responseStatusCode),
                             equalTo(ERROR_TYPE, errorType))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
@@ -448,6 +456,7 @@ class VertxRedisClientErrorTest {
                                         equalTo(SERVER_PORT, server.port),
                                         equalTo(NETWORK_PEER_ADDRESS, HOST),
                                         equalTo(NETWORK_PEER_PORT, server.port),
+                                        equalTo(DB_RESPONSE_STATUS_CODE, responseStatusCode),
                                         equalTo(ERROR_TYPE, errorType)))));
     assertThat(server.failure.get()).isNull();
   }
@@ -465,8 +474,8 @@ class VertxRedisClientErrorTest {
 
     private ReplyServer(List<byte[]> replies) throws IOException {
       this.replies = replies;
-      port = PortUtils.findOpenPort();
-      listener = new ServerSocket(port, 1, InetAddress.getAllByName(HOST)[0]);
+      listener = new ServerSocket(0, 1, InetAddress.getAllByName(HOST)[0]);
+      port = listener.getLocalPort();
       thread = new Thread(this::run, "test-vertx-redis-error-replies");
       thread.setDaemon(true);
       thread.start();
