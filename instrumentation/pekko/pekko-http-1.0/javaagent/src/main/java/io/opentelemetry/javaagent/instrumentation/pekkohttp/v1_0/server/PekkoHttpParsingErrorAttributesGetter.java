@@ -68,7 +68,9 @@ class PekkoHttpParsingErrorAttributesGetter
       return null;
     }
     int queryStart = target.indexOf('?');
-    return queryStart >= 0 ? target.substring(0, queryStart) : target;
+    String path = queryStart >= 0 ? target.substring(0, queryStart) : target;
+    // an absolute-form target may have a query but no path
+    return path.isEmpty() ? null : path;
   }
 
   @Nullable
@@ -100,8 +102,9 @@ class PekkoHttpParsingErrorAttributesGetter
 
   /**
    * Returns the path and query of a request-target in origin form ({@code /path?query}) or absolute
-   * form ({@code http://host/path?query}), and {@code null} for the authority form of a CONNECT
-   * request and the asterisk form of a server-wide OPTIONS request, which have neither.
+   * form ({@code http://host/path?query}, where the path may be empty), and {@code null} for the
+   * authority form of a CONNECT request and the asterisk form of a server-wide OPTIONS request,
+   * which have neither.
    */
   @Nullable
   private static String pathAndQuery(@Nullable String target) {
@@ -112,7 +115,14 @@ class PekkoHttpParsingErrorAttributesGetter
     if (schemeEnd <= 0) {
       return null;
     }
-    int pathStart = target.indexOf('/', schemeEnd + 3);
-    return pathStart >= 0 ? target.substring(pathStart) : null;
+    // the authority ends at the first '/', '?' or '#', a '/' after a '?' belongs to the query
+    int authorityEnd = schemeEnd + 3;
+    while (authorityEnd < target.length() && "/?#".indexOf(target.charAt(authorityEnd)) < 0) {
+      authorityEnd++;
+    }
+    if (authorityEnd == target.length() || target.charAt(authorityEnd) == '#') {
+      return null;
+    }
+    return target.substring(authorityEnd);
   }
 }

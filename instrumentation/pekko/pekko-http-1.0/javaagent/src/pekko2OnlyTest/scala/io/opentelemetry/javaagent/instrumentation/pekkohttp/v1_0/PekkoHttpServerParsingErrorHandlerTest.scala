@@ -58,7 +58,7 @@ class PekkoHttpServerParsingErrorHandlerTest {
     * other one passes through both instrumented methods for one rejection.
     */
   @Test def handlerDelegatingBetweenOverloadsIsTracedOnce(): Unit =
-    assertRejectionTraced(classOf[DelegatingParsingErrorHandler])
+    assertRejectionTraced(classOf[OverloadDelegatingParsingErrorHandler])
 
   private def assertRejectionTraced(handlerClass: Class[_]): Unit = {
     implicit val system: ActorSystem = ActorSystem(
@@ -138,7 +138,7 @@ class RequestContextParsingErrorHandler extends ParsingErrorHandler {
 /** Answers from the overload without the request, reached from the one that
   * carries it.
   */
-class DelegatingParsingErrorHandler extends ParsingErrorHandler {
+class OverloadDelegatingParsingErrorHandler extends ParsingErrorHandler {
 
   override def handle(
       status: StatusCode,
