@@ -240,9 +240,41 @@ class PekkoHttpServerParsingErrorTest {
     * that query must not be taken for the start of a path, which would report
     * part of the query as `url.path` and keep it from query redaction.
     */
-  @Test def absoluteTargetWithoutPathIsTraced(): Unit = {
+  @Test def absoluteTargetWithoutPathIsTraced(): Unit =
+    assertRejectedTargetTraced(
+      "http://example.com?q=/%%",
+      scheme = Some("http"),
+      query = Some("q=/%%")
+    )
+
+  /** A request-target has no fragment, and query redaction does not look past a
+    * `#`, so whatever follows one in a rejected target is not reported.
+    */
+  @Test def fragmentOfRejectedTargetIsDropped(): Unit =
+    assertRejectedTargetTraced(
+      "/%%?q=1#&q=2",
+      path = Some("/%%"),
+      query = Some("q=1")
+    )
+
+  /** A `://` further into a target that does not start with a scheme does not
+    * make it an absolute-form target, so nothing before it is reported as the
+    * scheme.
+    */
+  @Test def targetWithoutValidSchemeIsNotAbsolute(): Unit =
+    assertRejectedTargetTraced("bad?q=1://example.com/%%")
+
+  /** Sends a GET request with the given request-target, which pekko-http
+    * rejects, and checks the parts of the target that its span reports.
+    */
+  private def assertRejectedTargetTraced(
+      target: String,
+      scheme: Option[String] = None,
+      path: Option[String] = None,
+      query: Option[String] = None
+  ): Unit = {
     implicit val system: ActorSystem = ActorSystem(
-      "parsing-error-absolute-target-test"
+      "parsing-error-rejected-target-test"
     )
     try {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
@@ -256,7 +288,7 @@ class PekkoHttpServerParsingErrorTest {
       try {
         val response = send(
           port,
-          "GET http://example.com?q=/%% HTTP/1.1\r\nHost: example.com\r\n\r\n"
+          "GET " + target + " HTTP/1.1\r\nHost: example.com\r\n\r\n"
         )
         assertThat(response.head).contains("400 Bad Request")
 
@@ -268,8 +300,9 @@ class PekkoHttpServerParsingErrorTest {
                   span,
                   400,
                   method = Some("GET"),
-                  scheme = Some("http"),
-                  query = Some("q=/%%")
+                  scheme = scheme,
+                  path = path,
+                  query = query
                 )
                 ()
               }

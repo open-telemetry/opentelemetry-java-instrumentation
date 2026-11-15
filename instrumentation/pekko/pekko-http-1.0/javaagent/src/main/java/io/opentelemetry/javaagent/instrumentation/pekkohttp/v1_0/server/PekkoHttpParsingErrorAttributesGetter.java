@@ -52,11 +52,11 @@ class PekkoHttpParsingErrorAttributesGetter
   @Nullable
   @Override
   public String getUrlScheme(PekkoHttpParsingErrorRequest request) {
-    String target = request.rawRequestTarget();
-    if (target == null || target.startsWith("/")) {
+    String target = withoutFragment(request.rawRequestTarget());
+    if (target == null) {
       return null;
     }
-    int schemeEnd = target.indexOf("://");
+    int schemeEnd = absoluteFormSchemeEnd(target);
     return schemeEnd > 0 ? target.substring(0, schemeEnd) : null;
   }
 
@@ -103,26 +103,63 @@ class PekkoHttpParsingErrorAttributesGetter
   /**
    * Returns the path and query of a request-target in origin form ({@code /path?query}) or absolute
    * form ({@code http://host/path?query}, where the path may be empty), and {@code null} for the
-   * authority form of a CONNECT request and the asterisk form of a server-wide OPTIONS request,
-   * which have neither.
+   * authority form of a CONNECT request, the asterisk form of a server-wide OPTIONS request, and
+   * anything else that is neither origin nor absolute form.
    */
   @Nullable
-  private static String pathAndQuery(@Nullable String target) {
+  private static String pathAndQuery(@Nullable String rawTarget) {
+    String target = withoutFragment(rawTarget);
     if (target == null || target.startsWith("/")) {
       return target;
     }
-    int schemeEnd = target.indexOf("://");
+    int schemeEnd = absoluteFormSchemeEnd(target);
     if (schemeEnd <= 0) {
       return null;
     }
-    // the authority ends at the first '/', '?' or '#', a '/' after a '?' belongs to the query
+    // the authority ends at the first '/' or '?', a '/' after a '?' belongs to the query
     int authorityEnd = schemeEnd + 3;
-    while (authorityEnd < target.length() && "/?#".indexOf(target.charAt(authorityEnd)) < 0) {
+    while (authorityEnd < target.length() && "/?".indexOf(target.charAt(authorityEnd)) < 0) {
       authorityEnd++;
     }
-    if (authorityEnd == target.length() || target.charAt(authorityEnd) == '#') {
+    return authorityEnd < target.length() ? target.substring(authorityEnd) : null;
+  }
+
+  /**
+   * A request-target never carries a fragment, but a rejected one may hold anything. Whatever
+   * follows a {@code #} is dropped, query redaction does not look past it.
+   */
+  @Nullable
+  private static String withoutFragment(@Nullable String target) {
+    if (target == null) {
       return null;
     }
-    return target.substring(authorityEnd);
+    int fragmentStart = target.indexOf('#');
+    return fragmentStart >= 0 ? target.substring(0, fragmentStart) : target;
+  }
+
+  /**
+   * Returns where the scheme of an absolute-form request-target ends, that is the index of its
+   * {@code ://}, or {@code -1} when the target does not start with a valid scheme followed by
+   * {@code ://}. A scheme is a letter followed by letters, digits, {@code +}, {@code -} or {@code
+   * .}, so that a {@code ://} further into a malformed target is not taken for one.
+   */
+  private static int absoluteFormSchemeEnd(String target) {
+    if (target.isEmpty() || !isAsciiLetter(target.charAt(0))) {
+      return -1;
+    }
+    for (int i = 1; i < target.length(); i++) {
+      char c = target.charAt(i);
+      if (c == ':') {
+        return target.startsWith("://", i) ? i : -1;
+      }
+      if (!isAsciiLetter(c) && !(c >= '0' && c <= '9') && c != '+' && c != '-' && c != '.') {
+        return -1;
+      }
+    }
+    return -1;
+  }
+
+  private static boolean isAsciiLetter(char c) {
+    return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z');
   }
 }
