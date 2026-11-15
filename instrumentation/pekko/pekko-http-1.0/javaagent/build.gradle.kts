@@ -11,6 +11,7 @@ muzzle {
   pass {
     group.set("org.apache.pekko")
     module.set("pekko-http_2.13")
+    name.set("pekko-http 2.x parsing error request context")
     versions.set("[2.0,)")
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_2.13:2.0.0")
@@ -22,6 +23,7 @@ muzzle {
   pass {
     group.set("org.apache.pekko")
     module.set("pekko-http_3")
+    name.set("pekko-http 2.x parsing error request context")
     versions.set("[2.0,)")
     assertInverse.set(true)
     extraDependency("org.apache.pekko:pekko-stream_3:2.0.0")
@@ -205,7 +207,25 @@ testing.suites {
   }
 
   val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  executions("pekko2Test", "pekko2Scala3Test") {
+  executions("pekko2Test") {
+    configureEach {
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
+      }
+    }
+
+    register("NoSpanSuppression") {
+      jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=none")
+
+      // a rejection passes through both instrumented handler overloads, check that it still gets
+      // a single span when nested server spans are not suppressed
+      filter {
+        includeTestsMatching("*PekkoHttpServerParsingErrorHandlerTest")
+      }
+    }
+  }
+
+  executions("pekko2Scala3Test") {
     configureEach {
       if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
         enabled = false

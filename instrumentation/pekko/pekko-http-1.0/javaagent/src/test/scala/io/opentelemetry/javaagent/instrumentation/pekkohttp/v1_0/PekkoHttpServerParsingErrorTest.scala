@@ -236,6 +236,49 @@ class PekkoHttpServerParsingErrorTest {
     } finally Await.result(system.terminate(), 10.seconds)
   }
 
+  /** An absolute-form request-target may have a query but no path, so a `/` in
+    * that query must not be taken for the start of a path, which would report
+    * part of the query as `url.path` and keep it from query redaction.
+    */
+  @Test def absoluteTargetWithoutPathIsTraced(): Unit = {
+    implicit val system: ActorSystem = ActorSystem(
+      "parsing-error-absolute-target-test"
+    )
+    try {
+      val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val binding =
+        Await.result(
+          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
+          10.seconds
+        )
+      val port = binding.localAddress.getPort
+
+      try {
+        val response = send(
+          port,
+          "GET http://example.com?q=/%% HTTP/1.1\r\nHost: example.com\r\n\r\n"
+        )
+        assertThat(response.head).contains("400 Bad Request")
+
+        testing.waitAndAssertTraces(new Consumer[TraceAssert] {
+          override def accept(trace: TraceAssert): Unit =
+            trace.hasSpansSatisfyingExactly(new Consumer[SpanDataAssert] {
+              override def accept(span: SpanDataAssert): Unit = {
+                assertParsingErrorSpan(
+                  span,
+                  400,
+                  method = Some("GET"),
+                  scheme = Some("http"),
+                  query = Some("q=/%%")
+                )
+                ()
+              }
+            })
+        })
+      } finally Await.result(binding.unbind(), 10.seconds)
+    } finally Await.result(system.terminate(), 10.seconds)
+  }
+
   /** A user written handler is instrumented too, and the span reports the
     * response that handler built. This handler delegates to the default one,
     * which is instrumented as well, and the rejection still produces a single
@@ -339,6 +382,7 @@ class PekkoHttpServerParsingErrorTest {
       span: SpanDataAssert,
       statusCode: Long,
       method: Option[String] = None,
+      scheme: Option[String] = None,
       path: Option[String] = None,
       query: Option[String] = None,
       protocolVersion: Option[String] = None
@@ -363,6 +407,7 @@ class PekkoHttpServerParsingErrorTest {
       else None,
       ifRequestContext(HttpAttributes.HTTP_REQUEST_METHOD, method),
       ifRequestContext(UrlAttributes.URL_PATH, path),
+      ifRequestContext(UrlAttributes.URL_SCHEME, scheme),
       ifRequestContext(UrlAttributes.URL_QUERY, query),
       ifRequestContext(
         NetworkAttributes.NETWORK_PROTOCOL_VERSION,
