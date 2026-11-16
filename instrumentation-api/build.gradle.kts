@@ -30,6 +30,7 @@ dependencies {
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
+  compileOnly("org.codehaus.mojo:animal-sniffer-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
@@ -38,6 +39,8 @@ dependencies {
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
   testImplementation("io.opentelemetry:opentelemetry-exporter-common")
   testImplementation(project(":declarative-config-bridge"))
+  testImplementation("io.netty:netty-transport-native-unix-common:4.1.140.Final")
+  testImplementation("io.grpc:grpc-netty-shaded:1.85.1")
 
   jmhImplementation(project(":instrumentation-api-incubator"))
 }
