@@ -24,9 +24,12 @@ import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SY
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toList;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import io.opentelemetry.testing.internal.armeria.common.HttpData;
 import io.opentelemetry.testing.internal.armeria.common.HttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpStatus;
 import io.opentelemetry.testing.internal.armeria.common.MediaType;
@@ -37,6 +40,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.AfterAll;
@@ -49,10 +53,12 @@ import software.amazon.awssdk.core.client.config.ClientOverrideConfiguration;
 import software.amazon.awssdk.core.interceptor.Context;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 import software.amazon.awssdk.core.interceptor.ExecutionInterceptor;
+import software.amazon.awssdk.core.retry.RetryPolicy;
 import software.amazon.awssdk.http.SdkHttpResponse;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClientBuilder;
+import software.amazon.awssdk.services.dynamodb.model.DynamoDbException;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
@@ -217,5 +223,83 @@ public abstract class AbstractAws2ClientRecordHttpErrorTest extends AbstractAwsS
         .hasSize(2)
         .containsExactly(
             "DynamoDB could not process your request", "DynamoDB is currently unavailable");
+  }
+
+  @Test
+  void testHttpErrorBodyIsNotModified() {
+    // bytes that do not survive decoding as text, such as in a CBOR error body
+    byte[] errorBody = {(byte) 0xBF, 'a', '\r', '\n', 'b', '\n', (byte) 0xFF};
+    server.enqueue(
+        HttpResponse.of(
+            HttpStatus.BAD_REQUEST,
+            MediaType.create("application", "cbor"),
+            HttpData.wrap(errorBody)));
+
+    try (DynamoDbClient client =
+        DynamoDbClient.builder()
+            .overrideConfiguration(
+                createOverrideConfigurationBuilder().retryPolicy(RetryPolicy.none()).build())
+            .endpointOverride(server.httpUri())
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build()) {
+      assertThatThrownBy(
+              () -> client.putItem(PutItemRequest.builder().tableName("sometable").build()))
+          .isInstanceOfSatisfying(
+              DynamoDbException.class,
+              e ->
+                  assertThat(e.awsErrorDetails().rawResponse().asByteArray()).isEqualTo(errorBody));
+    }
+  }
+
+  @Test
+  void testLargeHttpErrorBody() {
+    int limit = 32 * 1024;
+    char[] chars = new char[limit + 8 * 1024];
+    Arrays.fill(chars, 'a');
+    String errorBody = new String(chars);
+    server.enqueue(HttpResponse.of(HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, errorBody));
+
+    try (DynamoDbClient client =
+        DynamoDbClient.builder()
+            .overrideConfiguration(
+                createOverrideConfigurationBuilder().retryPolicy(RetryPolicy.none()).build())
+            .endpointOverride(server.httpUri())
+            .region(Region.AP_NORTHEAST_1)
+            .credentialsProvider(CREDENTIALS_PROVIDER)
+            .build()) {
+      assertThatThrownBy(
+              () -> client.putItem(PutItemRequest.builder().tableName("sometable").build()))
+          .isInstanceOfSatisfying(
+              DynamoDbException.class,
+              e ->
+                  assertThat(e.awsErrorDetails().rawResponse().asUtf8String())
+                      .isEqualTo(errorBody));
+    }
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasEventsSatisfying(
+                            events -> {
+                              List<String> errorMessages =
+                                  events.stream()
+                                      .filter(
+                                          event -> event.getName().equals("HTTP request failure"))
+                                      .map(
+                                          event ->
+                                              event
+                                                  .getAttributes()
+                                                  .get(stringKey("aws.http.error_message")))
+                                      .collect(toList());
+                              if (isRecordIndividualHttpErrorEnabled()) {
+                                assertThat(errorMessages)
+                                    .containsExactly(errorBody.substring(0, limit));
+                              } else {
+                                assertThat(errorMessages).isEmpty();
+                              }
+                            })));
   }
 }
