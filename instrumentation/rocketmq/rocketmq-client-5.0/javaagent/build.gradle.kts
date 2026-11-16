@@ -79,21 +79,7 @@ testing.suites {
   }
 
   executions("rocketmq52Test") {
-    register("ReceiveTelemetry") {
-      telemetryConfig(
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
-        "true",
-      )
-    }
-
     register("Experimental") {
-      telemetryConfig(
-        "otel.instrumentation.rocketmq-client.experimental-span-attributes",
-        "true",
-      )
-    }
-
-    register("ExperimentalReceiveTelemetry") {
       telemetryConfig(
         "otel.instrumentation.rocketmq-client.experimental-span-attributes",
         "true",
