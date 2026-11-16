@@ -41,6 +41,7 @@ class InternalMetricsDefinitionsTest {
             "cassandra",
             "kafka-broker",
             "kafka-connect",
+            "kafka-producer",
             "hadoop",
             "jetty",
             "jvm",

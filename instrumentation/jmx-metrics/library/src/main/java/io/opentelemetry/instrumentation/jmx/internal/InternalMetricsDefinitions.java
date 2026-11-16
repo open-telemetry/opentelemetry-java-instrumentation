@@ -40,6 +40,7 @@ public class InternalMetricsDefinitions {
                   "cassandra",
                   "kafka-broker",
                   "kafka-connect",
+                  "kafka-producer",
                   "hadoop",
                   "jetty",
                   "jvm",
