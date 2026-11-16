@@ -20,7 +20,8 @@ class NacosClientSpanStatusExtractor implements SpanStatusExtractor<NacosClientR
       @Nullable Response response,
       @Nullable Throwable error) {
     SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
-    if (response != null && !response.isSuccess()) {
+    if ((response != null && !response.isSuccess())
+        || NacosRequestMapper.isFailedServerCheck(request, response)) {
       spanStatusBuilder.setStatus(StatusCode.ERROR);
     }
   }

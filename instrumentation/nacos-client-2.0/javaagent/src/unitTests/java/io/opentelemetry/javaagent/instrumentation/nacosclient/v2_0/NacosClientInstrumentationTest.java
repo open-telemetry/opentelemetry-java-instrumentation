@@ -21,6 +21,7 @@ import com.alibaba.nacos.api.naming.remote.request.ServiceQueryRequest;
 import com.alibaba.nacos.api.naming.remote.request.SubscribeServiceRequest;
 import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.response.Response;
+import com.alibaba.nacos.api.remote.response.ServerCheckResponse;
 import com.alibaba.nacos.common.remote.client.RpcClient;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -248,6 +249,31 @@ class NacosClientInstrumentationTest {
     assertThat(getter.getErrorType(request, null, new IllegalStateException("boom")))
         .isEqualTo(IllegalStateException.class.getName());
     assertThat(getter.getErrorType(request, null, null)).isNull();
+  }
+
+  @Test
+  void treatsServerCheckWithoutServerCheckResponseAsFailed() {
+    NacosClientRpcAttributesGetter getter = new NacosClientRpcAttributesGetter();
+    NacosClientRequest request = NacosRequestMapper.createServerCheckRequest("127.0.0.1", 9848);
+    TestResponse failedResponse = new TestResponse();
+    failedResponse.setErrorInfo(500, "failed");
+
+    assertThat(NacosRequestMapper.isFailedServerCheck(request, new ServerCheckResponse()))
+        .isFalse();
+    assertThat(getter.getErrorType(request, new ServerCheckResponse(), null)).isNull();
+
+    assertThat(NacosRequestMapper.isFailedServerCheck(request, null)).isTrue();
+    assertThat(getter.getErrorType(request, null, null)).isEqualTo("_OTHER");
+    assertThat(getter.getErrorType(request, null, new IllegalStateException("boom")))
+        .isEqualTo(IllegalStateException.class.getName());
+
+    assertThat(NacosRequestMapper.isFailedServerCheck(request, failedResponse)).isTrue();
+    assertThat(getter.getErrorType(request, failedResponse, null)).isEqualTo("500");
+
+    NacosClientRequest otherRequest =
+        NacosRequestMapper.mapClientRequest(
+            ConfigQueryRequest.build("app.yaml", "DEFAULT_GROUP", "tenant-a"), "127.0.0.1:8848");
+    assertThat(NacosRequestMapper.isFailedServerCheck(otherRequest, null)).isFalse();
   }
 
   @ParameterizedTest

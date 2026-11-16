@@ -30,6 +30,9 @@ class NacosClientRpcAttributesGetter implements RpcAttributesGetter<NacosClientR
       int errorCode = response.getErrorCode();
       return errorCode == 0 ? "response_error" : String.valueOf(errorCode);
     }
+    if (error == null && NacosRequestMapper.isFailedServerCheck(request, response)) {
+      return "_OTHER";
+    }
     return RpcAttributesGetter.super.getErrorType(request, response, error);
   }
 }

@@ -15,6 +15,8 @@ import com.alibaba.nacos.api.naming.remote.request.ServiceListRequest;
 import com.alibaba.nacos.api.naming.remote.request.ServiceQueryRequest;
 import com.alibaba.nacos.api.naming.remote.request.SubscribeServiceRequest;
 import com.alibaba.nacos.api.remote.request.Request;
+import com.alibaba.nacos.api.remote.response.Response;
+import com.alibaba.nacos.api.remote.response.ServerCheckResponse;
 import javax.annotation.Nullable;
 
 public class NacosRequestMapper {
@@ -29,6 +31,16 @@ public class NacosRequestMapper {
 
   public static NacosClientRequest createServerCheckRequest(String peer) {
     return createRequest(new ServerCheckRequest(), "connection", "serverCheck", peer);
+  }
+
+  /**
+   * Nacos treats a server check as failed unless it gets a {@link ServerCheckResponse}. When the
+   * server can't be reached it swallows the exception and returns {@code null} instead.
+   */
+  public static boolean isFailedServerCheck(
+      NacosClientRequest request, @Nullable Response response) {
+    return request.request() instanceof ServerCheckRequest
+        && !(response instanceof ServerCheckResponse);
   }
 
   @Nullable

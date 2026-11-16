@@ -24,6 +24,7 @@ import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 import com.alibaba.nacos.api.config.remote.request.ConfigQueryRequest;
+import com.alibaba.nacos.api.grpc.auto.RequestGrpc;
 import com.alibaba.nacos.api.naming.pojo.ServiceInfo;
 import com.alibaba.nacos.api.naming.remote.request.NotifySubscriberRequest;
 import com.alibaba.nacos.api.naming.remote.response.NotifySubscriberResponse;
@@ -31,6 +32,7 @@ import com.alibaba.nacos.api.remote.request.Request;
 import com.alibaba.nacos.api.remote.response.Response;
 import com.alibaba.nacos.common.remote.client.RpcClient;
 import com.alibaba.nacos.common.remote.client.ServerRequestHandler;
+import com.alibaba.nacos.common.remote.client.grpc.GrpcClient;
 import com.alibaba.nacos.common.remote.client.grpc.GrpcConnection;
 import com.alibaba.nacos.shaded.io.grpc.CallOptions;
 import com.alibaba.nacos.shaded.io.grpc.ClientCall;
@@ -93,6 +95,39 @@ class NacosClientAgentInstrumentationTest {
                             equalTo(ERROR_TYPE, error.getClass().getName()),
                             equalTo(stringKey("nacos.category"), "config"),
                             equalTo(stringKey("nacos.request.type"), "ConfigQueryRequest"))));
+  }
+
+  @Test
+  void instrumentsGrpcClientServerCheckAdvice() throws Exception {
+    GrpcClient grpcClient =
+        mock(GrpcClient.class, withSettings().defaultAnswer(CALLS_REAL_METHODS));
+    // the channel fails the call, the client swallows the exception and returns null
+    RequestGrpc.RequestFutureStub requestStub =
+        RequestGrpc.newFutureStub(new TestManagedChannel("127.0.0.1:9848"));
+
+    Response response = testing.runWithSpan("parent", () -> serverCheck(grpcClient, requestStub));
+
+    assertThat(response).isNull();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("connection/serverCheck")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly()
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfying(
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, 9848),
+                            equalTo(NETWORK_TRANSPORT, "tcp"),
+                            equalTo(NETWORK_PROTOCOL_NAME, "grpc"),
+                            equalTo(NETWORK_PEER_ADDRESS, null),
+                            equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(ERROR_TYPE, "_OTHER"),
+                            equalTo(stringKey("nacos.category"), "connection"),
+                            equalTo(stringKey("nacos.request.type"), "ServerCheckRequest"))));
   }
 
   @ParameterizedTest
@@ -176,6 +211,26 @@ class NacosClientAgentInstrumentationTest {
       Method method = RpcClient.class.getDeclaredMethod("handleServerRequest", Request.class);
       method.setAccessible(true);
       return (Response) method.invoke(rpcClient, request);
+    } catch (ReflectiveOperationException e) {
+      throw new LinkageError(e.getMessage(), e);
+    }
+  }
+
+  private static Response serverCheck(
+      GrpcClient grpcClient, RequestGrpc.RequestFutureStub requestStub) {
+    try {
+      for (Method method : GrpcClient.class.getDeclaredMethods()) {
+        if (!"serverCheck".equals(method.getName())) {
+          continue;
+        }
+        method.setAccessible(true);
+        // the server address is passed to serverCheck since 2.0.2
+        return (Response)
+            (method.getParameterCount() == 1
+                ? method.invoke(grpcClient, requestStub)
+                : method.invoke(grpcClient, "127.0.0.1", 9848, requestStub));
+      }
+      throw new NoSuchMethodException("serverCheck");
     } catch (ReflectiveOperationException e) {
       throw new LinkageError(e.getMessage(), e);
     }

@@ -36,6 +36,10 @@ testing.suites {
       val nacosClientDir = layout.buildDirectory.dir("nacos-client").get().asFile.absolutePath
       systemProperty("JM.SNAPSHOT.PATH", nacosClientDir)
       systemProperty("JM.LOG.PATH", nacosClientDir)
+      if (otelProps.denyUnsafe) {
+        // the protobuf and prometheus classes bundled with the Nacos client access sun.misc.Unsafe
+        enabled = false
+      }
     }
   }
 }
