@@ -4,6 +4,7 @@ description: >
   producers and consumers.
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 library_link: https://jakarta.ee/specifications/messaging/3.0/
 configurations:
   - ref: messaging.headers.included

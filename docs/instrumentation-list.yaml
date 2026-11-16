@@ -6550,6 +6550,7 @@ libraries:
   semantic_conventions:
   - FAAS_SERVER_SPANS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
   source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
   scope:
@@ -6610,6 +6611,7 @@ libraries:
   semantic_conventions:
   - FAAS_SERVER_SPANS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
   source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
   scope:
@@ -6677,6 +6679,7 @@ libraries:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   - GENAI_CLIENT_SPANS
   - GENAI_CLIENT_METRICS
   library_link: https://aws.amazon.com/sdk-for-java/
@@ -7374,6 +7377,7 @@ libraries:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   - GENAI_CLIENT_SPANS
   - GENAI_CLIENT_METRICS
   library_link: https://aws.amazon.com/sdk-for-java/
@@ -8458,6 +8462,7 @@ libraries:
   - HTTP_SERVER_SPANS
   - DATABASE_CLIENT_SPANS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://camel.apache.org/
   features:
   - HTTP_ROUTE
@@ -11806,6 +11811,7 @@ libraries:
     This instrumentation enables messaging spans for JMS (Java Message Service) message producers and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html
   source_path: instrumentation/jms/jms-1.1
   scope:
@@ -11877,6 +11883,7 @@ libraries:
     This instrumentation enables messaging spans for Jakarta JMS (Java Message Service) message producers and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://jakarta.ee/specifications/messaging/3.0/
   source_path: instrumentation/jms/jms-3.0
   minimum_java_version: 11
@@ -12114,6 +12121,7 @@ libraries:
     This instrumentation enables messaging spans for Kafka producers and consumers. Native Kafka client metrics are collected only when the separate `kafka-clients-metrics` instrumentation is enabled.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://kafka.apache.org/
   source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
   scope:
@@ -12160,7 +12168,6 @@ libraries:
     - kafka.consumer.fetch_throttle_time_max-a716c191
     - kafka.consumer.fetch_total-9d09818d
     - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_response_time_max-15ed35ff
     - kafka.consumer.heartbeat_total-ffc8a49f
     - kafka.consumer.incoming_byte_rate-aa366cac
     - kafka.consumer.incoming_byte_total-40c552cf
@@ -12824,6 +12831,7 @@ libraries:
     and consumers, and collects internal Kafka client metrics.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://kafka.apache.org/
   source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
   scope:
@@ -13485,6 +13493,7 @@ libraries:
     tasks.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://kafka.apache.org/documentation/#connect
   source_path: instrumentation/kafka/kafka-connect-2.6
   scope:
@@ -13507,6 +13516,7 @@ libraries:
   description: This instrumentation enables messaging spans for Kafka Streams processing.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://kafka.apache.org/documentation/streams/
   source_path: instrumentation/kafka/kafka-streams-0.11
   scope:
@@ -14632,6 +14642,7 @@ libraries:
     and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://nats.io/
   source_path: instrumentation/nats/nats-2.17
   scope:
@@ -15758,6 +15769,7 @@ libraries:
     This instrumentation enables messaging spans for Apache Pulsar message producers and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://pulsar.apache.org/
   source_path: instrumentation/pulsar/pulsar-2.8
   scope:
@@ -15998,6 +16010,7 @@ libraries:
     and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://www.rabbitmq.com/client-libraries/java-api-guide
   source_path: instrumentation/rabbitmq-2.7
   scope:
@@ -16456,6 +16469,7 @@ libraries:
     This instrumentation enables messaging spans for Reactor Kafka message consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://projectreactor.io/docs/kafka/release/reference/
   source_path: instrumentation/reactor/reactor-kafka-1.0
   scope:
@@ -16961,6 +16975,7 @@ libraries:
     This instrumentation enables messaging spans for Apache RocketMQ message producers and consumers using the Remoting Protocol.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://rocketmq.apache.org/
   source_path: instrumentation/rocketmq/rocketmq-client-4.8
   scope:
@@ -17105,6 +17120,7 @@ libraries:
     This instrumentation enables messaging spans for Apache RocketMQ message producers and consumers using the gRPC/Protobuf Protocol.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://rocketmq.apache.org/
   source_path: instrumentation/rocketmq/rocketmq-client-5.0
   scope:
@@ -17971,6 +17987,7 @@ libraries:
     for Spring Integration.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://spring.io/projects/spring-integration
   source_path: instrumentation/spring/spring-integration-4.1
   scope:
@@ -18035,6 +18052,7 @@ libraries:
     consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
   source_path: instrumentation/spring/spring-jms/spring-jms-2.0
   scope:
@@ -18073,6 +18091,7 @@ libraries:
     consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
   source_path: instrumentation/spring/spring-jms/spring-jms-6.0
   minimum_java_version: 17
@@ -18112,6 +18131,7 @@ libraries:
     listeners.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://spring.io/projects/spring-kafka
   source_path: instrumentation/spring/spring-kafka-2.7
   scope:
@@ -18195,6 +18215,7 @@ libraries:
     listeners.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://spring.io/projects/spring-pulsar
   source_path: instrumentation/spring/spring-pulsar-1.0
   minimum_java_version: 17
@@ -18233,6 +18254,7 @@ libraries:
     listeners.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://spring.io/projects/spring-amqp
   source_path: instrumentation/spring/spring-rabbit-1.1
   scope:
@@ -19468,6 +19490,7 @@ libraries:
     This instrumentation enables messaging spans for Kafka consumers using the Vert.x Kafka Client library.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://vertx.io/docs/vertx-kafka-client/java/
   disabled_by_default: true
   source_path: instrumentation/vertx/vertx-kafka-client-3.6
