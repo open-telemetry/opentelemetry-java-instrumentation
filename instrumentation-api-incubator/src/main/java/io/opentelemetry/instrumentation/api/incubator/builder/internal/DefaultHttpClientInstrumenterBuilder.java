@@ -15,7 +15,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.internal.HttpClientUrlTemplateUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -32,7 +32,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientMetrics;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -267,7 +267,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractor(httpAttributesExtractorBuilder.build())
             .addAttributesExtractors(additionalExtractors)
             .addOperationMetrics(HttpClientMetrics.get())
-            .setSchemaUrl(SchemaUrls.V1_41_0);
+            .setSchemaUrl(HttpSchemaUrls.SCHEMA_URL);
     setHttpClientExceptionEventExtractor(builder);
     if (emitExperimentalHttpClientTelemetry) {
       builder
@@ -288,7 +288,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
           SpanNameExtractor<? super BUILDERREQUEST> spanNameExtractor) {
     return Instrumenter.<BUILDERREQUEST, BUILDERRESPONSE>builder(
             openTelemetry, instrumentationName, spanNameExtractor)
-        .setSchemaUrl(SchemaUrls.V1_41_0);
+        .setSchemaUrl(HttpSchemaUrls.SCHEMA_URL);
   }
 
   public static <REQUEST> void setHttpClientExceptionEventExtractor(
@@ -311,7 +311,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
         this::setEmitExperimentalHttpClientTelemetry);
     set(config::getSensitiveQueryParameters, this::setSensitiveQueryParameters);
     addAttributesExtractor(
-        HttpClientServicePeerAttributesExtractor.create(attributesGetter, openTelemetry));
+        HttpClientServerServiceAttributesExtractor.create(attributesGetter, openTelemetry));
     return this;
   }
 

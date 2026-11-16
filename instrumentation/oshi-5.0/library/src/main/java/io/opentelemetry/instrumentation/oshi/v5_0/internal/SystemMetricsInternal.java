@@ -25,7 +25,8 @@ import oshi.hardware.NetworkIF;
 public final class SystemMetricsInternal {
 
   // copied from SystemIncubatingAttributes
-  private static final AttributeKey<String> SYSTEM_DEVICE = AttributeKey.stringKey("system.device");
+  private static final AttributeKey<String> SYSTEM_DEVICE_NAME =
+      AttributeKey.stringKey("system.device.name");
   private static final AttributeKey<String> SYSTEM_MEMORY_STATE =
       AttributeKey.stringKey("system.memory.state");
 
@@ -44,30 +45,30 @@ public final class SystemMetricsInternal {
     HardwareAbstractionLayer hal = systemInfo.getHardware();
     List<AutoCloseable> observables = new ArrayList<>();
     Attributes used = Attributes.of(SYSTEM_MEMORY_STATE, "used");
-    Attributes free = Attributes.of(SYSTEM_MEMORY_STATE, "free");
+    Attributes available = Attributes.of(SYSTEM_MEMORY_STATE, "available");
 
     observables.add(
         meter
             .upDownCounterBuilder("system.memory.usage")
-            .setDescription("Reports memory in use by state.")
+            .setDescription("Reports memory by state.")
             .setUnit("By")
             .buildWithCallback(
                 r -> {
                   GlobalMemory mem = hal.getMemory();
                   r.record(mem.getTotal() - mem.getAvailable(), used);
-                  r.record(mem.getAvailable(), free);
+                  r.record(mem.getAvailable(), available);
                 }));
 
     observables.add(
         meter
             .gaugeBuilder("system.memory.utilization")
-            .setDescription("Percentage of memory bytes in use.")
+            .setDescription("Fraction of memory bytes by state.")
             .setUnit("1")
             .buildWithCallback(
                 r -> {
                   GlobalMemory mem = hal.getMemory();
                   r.record(((double) (mem.getTotal() - mem.getAvailable())) / mem.getTotal(), used);
-                  r.record(((double) mem.getAvailable()) / mem.getTotal(), free);
+                  r.record(((double) mem.getAvailable()) / mem.getTotal(), available);
                 }));
 
     observables.add(
@@ -107,10 +108,11 @@ public final class SystemMetricsInternal {
                     String device = networkIf.getName();
                     r.record(
                         recv,
-                        Attributes.of(SYSTEM_DEVICE, device, NETWORK_IO_DIRECTION, "receive"));
+                        Attributes.of(SYSTEM_DEVICE_NAME, device, NETWORK_IO_DIRECTION, "receive"));
                     r.record(
                         sent,
-                        Attributes.of(SYSTEM_DEVICE, device, NETWORK_IO_DIRECTION, "transmit"));
+                        Attributes.of(
+                            SYSTEM_DEVICE_NAME, device, NETWORK_IO_DIRECTION, "transmit"));
                   }
                 }));
 
@@ -149,9 +151,11 @@ public final class SystemMetricsInternal {
                     long read = diskStore.getReadBytes();
                     long write = diskStore.getWriteBytes();
                     String device = diskStore.getName();
-                    r.record(read, Attributes.of(SYSTEM_DEVICE, device, DISK_IO_DIRECTION, "read"));
                     r.record(
-                        write, Attributes.of(SYSTEM_DEVICE, device, DISK_IO_DIRECTION, "write"));
+                        read, Attributes.of(SYSTEM_DEVICE_NAME, device, DISK_IO_DIRECTION, "read"));
+                    r.record(
+                        write,
+                        Attributes.of(SYSTEM_DEVICE_NAME, device, DISK_IO_DIRECTION, "write"));
                   }
                 }));
 
@@ -167,9 +171,11 @@ public final class SystemMetricsInternal {
                     long read = diskStore.getReads();
                     long write = diskStore.getWrites();
                     String device = diskStore.getName();
-                    r.record(read, Attributes.of(SYSTEM_DEVICE, device, DISK_IO_DIRECTION, "read"));
                     r.record(
-                        write, Attributes.of(SYSTEM_DEVICE, device, DISK_IO_DIRECTION, "write"));
+                        read, Attributes.of(SYSTEM_DEVICE_NAME, device, DISK_IO_DIRECTION, "read"));
+                    r.record(
+                        write,
+                        Attributes.of(SYSTEM_DEVICE_NAME, device, DISK_IO_DIRECTION, "write"));
                   }
                 }));
 

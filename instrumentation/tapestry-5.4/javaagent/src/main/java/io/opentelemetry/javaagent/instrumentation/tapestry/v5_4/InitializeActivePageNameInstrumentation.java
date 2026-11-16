@@ -6,13 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.tapestry.v5_4;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.tapestry.v5_4.TapestryServerSpanNaming.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -34,20 +33,16 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handleComponentEvent"))
-            .and(takesArguments(2))
             .and(
                 takesArgument(
-                    0, named("org.apache.tapestry5.services.ComponentEventRequestParameters")))
-            .and(takesArgument(1, named("org.apache.tapestry5.services.ComponentRequestHandler"))),
+                    0, named("org.apache.tapestry5.services.ComponentEventRequestParameters"))),
         getClass().getName() + "$HandleComponentEventAdvice");
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handlePageRender"))
-            .and(takesArguments(2))
             .and(
                 takesArgument(
-                    0, named("org.apache.tapestry5.services.PageRenderRequestParameters")))
-            .and(takesArgument(1, named("org.apache.tapestry5.services.ComponentRequestHandler"))),
+                    0, named("org.apache.tapestry5.services.PageRenderRequestParameters"))),
         getClass().getName() + "$HandlePageRenderAdvice");
   }
 
@@ -57,7 +52,7 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) ComponentEventRequestParameters parameters) {
       HttpServerRoute.update(
-          currentContext(), CONTROLLER, serverSpanName(), parameters.getActivePageName());
+          Context.current(), CONTROLLER, serverSpanName(), parameters.getActivePageName());
     }
   }
 
@@ -67,7 +62,7 @@ class InitializeActivePageNameInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(0) PageRenderRequestParameters parameters) {
       HttpServerRoute.update(
-          currentContext(), CONTROLLER, serverSpanName(), parameters.getLogicalPageName());
+          Context.current(), CONTROLLER, serverSpanName(), parameters.getLogicalPageName());
     }
   }
 }

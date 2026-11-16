@@ -9,37 +9,46 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesG
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftResponse;
 import javax.annotation.Nullable;
+import org.apache.thrift.TApplicationException;
 import org.apache.thrift.transport.TTransportException;
 
 final class ThriftRpcAttributesGetter
     implements RpcAttributesGetter<ThriftRequest, ThriftResponse> {
 
   @Override
-  public String getSystem(ThriftRequest request) {
+  public String getRpcSystemName(ThriftRequest request) {
     return "apache_thrift";
-  }
-
-  @Nullable
-  @Override
-  public String getService(ThriftRequest request) {
-    return request.getServiceName();
-  }
-
-  @Nullable
-  @Override
-  public String getMethod(ThriftRequest request) {
-    return request.getMethodName();
   }
 
   @Override
   @Nullable
   public String getRpcMethod(ThriftRequest request) {
     String service = getService(request);
-    String method = getMethod(request);
+    String method = request.getMethodName();
     if (service != null && method != null) {
       return service + "/" + method;
     }
     return method;
+  }
+
+  @Nullable
+  private static String getService(ThriftRequest request) {
+    return request.getServiceName();
+  }
+
+  @Override
+  @Nullable
+  public String getRpcStatusCode(
+      ThriftRequest request, @Nullable ThriftResponse response, @Nullable Throwable error) {
+    // Application exception types are carried in RPC replies; transport exception types are not.
+    if (error instanceof TApplicationException) {
+      int code = ((TApplicationException) error).getType();
+      if (code >= TApplicationException.UNKNOWN
+          && code <= TApplicationException.UNSUPPORTED_CLIENT_TYPE) {
+        return Integer.toString(code);
+      }
+    }
+    return null;
   }
 
   @Override
@@ -65,6 +74,9 @@ final class ThriftRpcAttributesGetter
           return String.valueOf(errorCode);
       }
     }
-    return null;
+    if (error == null && response != null && response.isFailed()) {
+      return "_OTHER";
+    }
+    return error == null ? null : error.getClass().getName();
   }
 }

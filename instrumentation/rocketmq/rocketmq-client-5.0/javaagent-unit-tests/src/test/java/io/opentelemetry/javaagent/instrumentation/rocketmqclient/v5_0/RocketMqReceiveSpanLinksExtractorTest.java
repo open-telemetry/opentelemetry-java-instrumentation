@@ -5,12 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_GROUP;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
@@ -66,10 +65,10 @@ class RocketMqReceiveSpanLinksExtractorTest {
     assertThat(getter.getMessageId(request, null)).isNull();
     assertThat(batchAttributes(request).asMap())
         .containsOnly(
-            entry(MESSAGING_ROCKETMQ_MESSAGE_TAG, "tag"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_GROUP, "group"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, 123L),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList("key")));
+            entry(stringKey("rocketmq.message.tag"), "tag"),
+            entry(stringKey("rocketmq.message.group"), "group"),
+            entry(longKey("rocketmq.message.delivery_timestamp"), 123L),
+            entry(stringArrayKey("rocketmq.message.keys"), asList("key")));
 
     assertThat(linkAttributes(request))
         .extracting(Attributes::asMap)
@@ -95,18 +94,18 @@ class RocketMqReceiveSpanLinksExtractorTest {
         .containsOnly(
             entry(MESSAGING_DESTINATION_NAME, "topic-1"),
             entry(MESSAGING_MESSAGE_ID, "message-1"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_TAG, "tag-1"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_GROUP, "group-1"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, 123L),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList("key-1")));
+            entry(stringKey("rocketmq.message.tag"), "tag-1"),
+            entry(stringKey("rocketmq.message.group"), "group-1"),
+            entry(longKey("rocketmq.message.delivery_timestamp"), 123L),
+            entry(stringArrayKey("rocketmq.message.keys"), asList("key-1")));
     assertThat(linkAttributes.get(1).asMap())
         .containsOnly(
             entry(MESSAGING_DESTINATION_NAME, "topic-2"),
             entry(MESSAGING_MESSAGE_ID, "message-2"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_TAG, "tag-2"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_GROUP, "group-2"),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, 456L),
-            entry(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList("key-2")));
+            entry(stringKey("rocketmq.message.tag"), "tag-2"),
+            entry(stringKey("rocketmq.message.group"), "group-2"),
+            entry(longKey("rocketmq.message.delivery_timestamp"), 456L),
+            entry(stringArrayKey("rocketmq.message.keys"), asList("key-2")));
   }
 
   @Test

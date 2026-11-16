@@ -6,9 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
@@ -16,12 +19,31 @@ import net.spy.memcached.MemcachedNode;
 @AutoValue
 public abstract class SpymemcachedRequest {
 
-  public static SpymemcachedRequest create(MemcachedConnection connection, String queryText) {
+  static final ContextKey<AtomicReference<String>> BULK_QUERY_TEXT =
+      ContextKey.named("opentelemetry-spymemcached-bulk-query-text");
+
+  public static SpymemcachedRequest create(MemcachedConnection connection, String methodName) {
+    return create(connection, methodName, "", new Object[0]);
+  }
+
+  public static SpymemcachedRequest create(
+      MemcachedConnection connection, String methodName, String descriptor, Object[] args) {
+    String operationName = operationName(methodName);
+    AtomicReference<String> bulkQueryText =
+        operationName.equals("getBulk") ? Context.current().get(BULK_QUERY_TEXT) : null;
+    String queryText = bulkQueryText == null ? null : bulkQueryText.getAndSet(null);
     return new AutoValue_SpymemcachedRequest(
-        connection, queryText, SpymemcachedSingletons.serverTarget(connection));
+        connection,
+        operationName,
+        queryText != null
+            ? queryText
+            : SpymemcachedQuerySanitizer.sanitize(operationName, descriptor, args),
+        SpymemcachedSingletons.serverTarget(connection));
   }
 
   public abstract MemcachedConnection getConnection();
+
+  public abstract String getOperationName();
 
   public abstract String getQueryText();
 
@@ -84,8 +106,7 @@ public abstract class SpymemcachedRequest {
     }
   }
 
-  public String getOperationName() {
-    String queryText = getQueryText();
+  private static String operationName(String queryText) {
     if (queryText.startsWith("async")) {
       queryText = queryText.substring("async".length());
     }

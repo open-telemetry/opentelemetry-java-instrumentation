@@ -15,7 +15,6 @@ import com.amazonaws.services.sqs.AmazonSQSAsyncClient;
 import com.amazonaws.services.sqs.model.Message;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -51,8 +50,7 @@ class SqsCamelOwnershipInstrumentationTest {
 
   @Test
   void selectsCamelTraversalWithoutSuppressingOtherResponses() throws Exception {
-    HttpServer server =
-        HttpServer.create(new InetSocketAddress("localhost", PortUtils.findOpenPort()), 0);
+    HttpServer server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     cleanup.deferCleanup(() -> server.stop(0));
     server.createContext(
         "/",

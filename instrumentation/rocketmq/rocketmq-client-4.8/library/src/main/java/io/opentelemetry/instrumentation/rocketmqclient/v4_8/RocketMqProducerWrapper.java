@@ -123,7 +123,7 @@ final class RocketMqProducerWrapper implements InvocationHandler {
       Object[] delegateArgs = args.clone();
       delegateArgs[0] = messages;
       if (callbackIndex != -1) {
-        delegateArgs[callbackIndex] = state.wrap((SendCallback) args[callbackIndex]);
+        delegateArgs[callbackIndex] = state.wrap((SendCallback) args[callbackIndex], parentContext);
       }
       try (Scope ignored = context == null ? null : context.makeCurrent()) {
         Object result = invokeDelegate(method, delegateArgs);
@@ -236,14 +236,16 @@ final class RocketMqProducerWrapper implements InvocationHandler {
       request.setException(context.getException());
     }
 
-    private SendCallback wrap(@Nullable SendCallback delegate) {
+    private SendCallback wrap(@Nullable SendCallback delegate, Context parentContext) {
       return new SendCallback() {
         @Override
         public void onSuccess(SendResult sendResult) {
           request.setSendResult(sendResult);
           end(null);
           if (delegate != null) {
-            delegate.onSuccess(sendResult);
+            try (Scope ignored = parentContext.makeCurrent()) {
+              delegate.onSuccess(sendResult);
+            }
           }
         }
 
@@ -251,7 +253,9 @@ final class RocketMqProducerWrapper implements InvocationHandler {
         public void onException(Throwable e) {
           end(e);
           if (delegate != null) {
-            delegate.onException(e);
+            try (Scope ignored = parentContext.makeCurrent()) {
+              delegate.onException(e);
+            }
           }
         }
       };

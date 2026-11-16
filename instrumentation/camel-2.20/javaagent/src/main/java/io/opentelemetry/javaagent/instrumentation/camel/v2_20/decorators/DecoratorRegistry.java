@@ -22,7 +22,7 @@ public class DecoratorRegistry {
     result.put("amqp", MessagingSpanDecorator.create("amqp"));
     result.put("aws-s3", new S3SpanDecorator());
     result.put("aws-sns", MessagingSpanDecorator.create("aws-sns", "aws.sns"));
-    result.put("aws-sqs", MessagingSpanDecorator.create("aws-sqs", "aws_sqs", false));
+    result.put("aws-sqs", MessagingSpanDecorator.create("aws-sqs", "aws.sqs", false));
     result.put("cometd", MessagingSpanDecorator.create("cometd"));
     result.put("cometds", MessagingSpanDecorator.create("cometds", "cometd"));
     result.put("cql", new DbSpanDecorator("cql", DbSystemNameIncubatingValues.CASSANDRA));

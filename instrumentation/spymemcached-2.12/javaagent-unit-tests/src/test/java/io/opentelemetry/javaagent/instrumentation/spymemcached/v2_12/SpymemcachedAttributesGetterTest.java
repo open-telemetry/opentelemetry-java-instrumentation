@@ -26,11 +26,18 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
+import net.spy.memcached.ops.OperationException;
 import org.junit.jupiter.api.Test;
 
 class SpymemcachedAttributesGetterTest {
 
   private final SpymemcachedAttributesGetter getter = new SpymemcachedAttributesGetter();
+
+  @Test
+  void usesExceptionFallbackWithoutProtocolStatus() {
+    assertThat(getter.getErrorType(null, null, new OperationException()))
+        .isEqualTo(OperationException.class.getName());
+  }
 
   @Test
   void singleDefaultPortIsOmitted() {

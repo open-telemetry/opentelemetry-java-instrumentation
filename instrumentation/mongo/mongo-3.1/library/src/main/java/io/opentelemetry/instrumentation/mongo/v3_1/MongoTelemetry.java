@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1;
 import com.mongodb.ServerAddress;
 import com.mongodb.event.CommandListener;
 import com.mongodb.event.CommandStartedEvent;
+import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
@@ -18,7 +19,7 @@ import java.util.List;
 // TODO this class is used for all Mongo versions. Extract to mongo-common module
 /** Entrypoint to OpenTelemetry instrumentation of the MongoDB client. */
 public final class MongoTelemetry {
-  private final Instrumenter<CommandStartedEvent, Void> instrumenter;
+  private final Instrumenter<CommandStartedEvent, CommandSucceededEvent> instrumenter;
 
   /** Returns a new {@link MongoTelemetry} configured with the given {@link OpenTelemetry}. */
   public static MongoTelemetry create(OpenTelemetry openTelemetry) {

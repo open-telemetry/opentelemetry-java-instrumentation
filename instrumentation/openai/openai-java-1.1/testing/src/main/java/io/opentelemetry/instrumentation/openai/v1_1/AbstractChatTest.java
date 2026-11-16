@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -36,10 +38,13 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.OpenAIClientAsync;
@@ -65,6 +70,8 @@ import com.openai.models.chat.completions.ChatCompletionSystemMessageParam;
 import com.openai.models.chat.completions.ChatCompletionTool;
 import com.openai.models.chat.completions.ChatCompletionToolMessageParam;
 import com.openai.models.chat.completions.ChatCompletionUserMessageParam;
+import com.openai.services.async.chat.ChatCompletionServiceAsync;
+import com.openai.services.blocking.chat.ChatCompletionService;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.Span;
@@ -75,15 +82,25 @@ import io.opentelemetry.instrumentation.openai.TestHelper;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.sdk.testing.assertj.LogRecordDataAssert;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletionException;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
+import java.util.function.Function;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 public abstract class AbstractChatTest extends AbstractOpenAiTest {
@@ -94,7 +111,9 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
       "Answer in up to 3 words: Which ocean contains Bouvet Island?";
 
   protected static SpanDataAssert assertChatSpan(SpanDataAssert span) {
-    return span.hasName("chat " + TEST_CHAT_MODEL).hasKind(SpanKind.CLIENT);
+    return span.hasName("chat " + TEST_CHAT_MODEL)
+        .hasKind(SpanKind.CLIENT)
+        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0));
   }
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -210,6 +229,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -225,6 +245,7 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramSatisfying(
                         histogram ->
                             histogram.hasPointsSatisfying(
@@ -258,11 +279,13 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                         equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
                         equalTo(EVENT_NAME, "gen_ai.user.message"))
                     .hasSpanContext(spanCtx)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasBody(Value.of(KeyValue.of("content", Value.of(TEST_CHAT_INPUT)))),
             log -> {
               log.hasAttributesSatisfyingExactly(
                       equalTo(GEN_AI_PROVIDER_NAME, OPENAI), equalTo(EVENT_NAME, "gen_ai.choice"))
                   .hasSpanContext(spanCtx)
+                  .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                   .hasBody(
                       Value.of(
                           KeyValue.of("finish_reason", Value.of("stop")),
@@ -270,6 +293,66 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                           KeyValue.of(
                               "message", Value.of(KeyValue.of("content", Value.of(content))))));
             });
+  }
+
+  @ParameterizedTest
+  @MethodSource("withOptionsCases")
+  void withOptions(
+      Function<OpenAIClient, ChatCompletionService> sync,
+      Function<OpenAIClientAsync, ChatCompletionServiceAsync> async) {
+    // withOptions was added in SDK 2.x
+    assumeTrue(testLatestDeps());
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .build();
+
+    ChatCompletion response =
+        call(
+            client -> sync.apply(client).create(params),
+            client -> async.apply(client).create(params));
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            assertChatSpan(span)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                    satisfies(
+                                        GEN_AI_RESPONSE_FINISH_REASONS,
+                                        val -> val.containsExactly("stop")),
+                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L)))));
+  }
+
+  private static Stream<Arguments> withOptionsCases() {
+    return Stream.of(
+        argumentSet(
+            "client",
+            (Function<OpenAIClient, ChatCompletionService>)
+                client -> testHelper.withoutRetries(client).chat().completions(),
+            (Function<OpenAIClientAsync, ChatCompletionServiceAsync>)
+                client -> testHelper.withoutRetries(client).chat().completions()),
+        argumentSet(
+            "chat service",
+            (Function<OpenAIClient, ChatCompletionService>)
+                client -> testHelper.withoutRetries(client.chat()).completions(),
+            (Function<OpenAIClientAsync, ChatCompletionServiceAsync>)
+                client -> testHelper.withoutRetries(client.chat()).completions()),
+        argumentSet(
+            "chat completion service",
+            (Function<OpenAIClient, ChatCompletionService>)
+                client -> testHelper.withoutRetries(client.chat().completions()),
+            (Function<OpenAIClientAsync, ChatCompletionServiceAsync>)
+                client -> testHelper.withoutRetries(client.chat().completions())));
   }
 
   @Test
@@ -1047,6 +1130,77 @@ public abstract class AbstractChatTest extends AbstractOpenAiTest {
                           KeyValue.of(
                               "message", Value.of(KeyValue.of("content", Value.of(content))))));
             });
+  }
+
+  @Test
+  void streamClosedBeforeFinishReason() throws InterruptedException {
+    ChatCompletionCreateParams params =
+        ChatCompletionCreateParams.builder()
+            .messages(singletonList(createUserMessage(TEST_CHAT_INPUT)))
+            .model(TEST_CHAT_MODEL)
+            .seed(20725)
+            .build();
+
+    Throwable thrown;
+    switch (testType) {
+      case SYNC:
+      case SYNC_FROM_ASYNC:
+        {
+          OpenAIClient client = testType == TestType.SYNC ? getClient() : getClientAsync().sync();
+          StreamResponse<ChatCompletionChunk> result =
+              client.chat().completions().createStreaming(params);
+          Iterator<ChatCompletionChunk> chunks = result.stream().iterator();
+          chunks.next();
+          chunks.next();
+          thrown = catchThrowable(result::close);
+          break;
+        }
+      case ASYNC:
+      case ASYNC_FROM_SYNC:
+        {
+          OpenAIClientAsync client =
+              testType == TestType.ASYNC ? getClientAsync() : getClient().async();
+          AsyncStreamResponse<ChatCompletionChunk> stream =
+              client.chat().completions().createStreaming(params);
+          AtomicReference<Throwable> closeError = new AtomicReference<>();
+          CountDownLatch closed = new CountDownLatch(1);
+          AtomicInteger count = new AtomicInteger();
+          stream.subscribe(
+              chunk -> {
+                if (count.incrementAndGet() == 2) {
+                  closeError.set(catchThrowable(stream::close));
+                  closed.countDown();
+                }
+              });
+          assertThat(closed.await(30, SECONDS)).isTrue();
+          thrown = closeError.get();
+          break;
+        }
+      default:
+        throw new AssertionError();
+    }
+
+    assertThat(thrown).isNull();
+
+    getTesting()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            assertChatSpan(span)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_CHAT_MODEL),
+                                    equalTo(GEN_AI_REQUEST_STREAM, true),
+                                    equalTo(GEN_AI_REQUEST_SEED, 20725),
+                                    satisfies(
+                                        GEN_AI_RESPONSE_ID, val -> val.startsWith("chatcmpl-")),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_CHAT_RESPONSE_MODEL),
+                                    satisfies(
+                                        GEN_AI_RESPONSE_FINISH_REASONS,
+                                        val -> val.containsExactly("error"))))));
   }
 
   @Test

@@ -10,6 +10,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -329,7 +330,8 @@ class ClickHouseClientV2Test {
                             equalTo(NETWORK_PEER_PORT, (long) port),
                             equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
                             equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
-                            equalTo(ERROR_TYPE, "60"))));
+                            equalTo(ERROR_TYPE, "60"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "60"))));
 
     assertDurationMetric(
         testing,
@@ -337,6 +339,7 @@ class ClickHouseClientV2Test {
         DB_SYSTEM_NAME,
         DB_QUERY_SUMMARY,
         DB_NAMESPACE,
+        DB_RESPONSE_STATUS_CODE,
         ERROR_TYPE,
         NETWORK_PEER_ADDRESS,
         NETWORK_PEER_PORT,
@@ -350,7 +353,10 @@ class ClickHouseClientV2Test {
                 .hasHistogramSatisfying(
                     histogram ->
                         histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(ERROR_TYPE, "60"))));
+                            point ->
+                                point
+                                    .hasAttribute(DB_RESPONSE_STATUS_CODE, "60")
+                                    .hasAttribute(ERROR_TYPE, "60"))));
   }
 
   @Test
@@ -585,7 +591,7 @@ class ClickHouseClientV2Test {
     } catch (ClassNotFoundException ignored) {
       Class<?> registry =
           AgentClassLoaderAccess.loadClass(
-              "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+              "io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationClassLoaderRegistry");
       Method getInstrumentationClassLoader =
           registry.getMethod("getInstrumentationClassLoader", String.class, ClassLoader.class);
       ClassLoader instrumentationClassLoader =

@@ -10,8 +10,10 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
+import java.sql.SQLTimeoutException;
 import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -52,19 +54,36 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getErrorType(
       DbRequest request, @Nullable Void response, @Nullable Throwable error) {
-    if (error instanceof SQLException) {
-      SQLException sqlException = (SQLException) error;
-      int errorCode = sqlException.getErrorCode();
-      if (errorCode != 0) {
-        return Integer.toString(errorCode);
-      }
-      String sqlState = sqlException.getSQLState();
-      if (sqlState == null || sqlState.isEmpty() || sqlState.equals("00000")) {
-        return null;
-      }
-      return sqlState;
+    if (error instanceof SQLTimeoutException) {
+      return error.getClass().getName();
     }
-    return null;
+    if (!(error instanceof SQLException)) {
+      return error == null ? null : error.getClass().getName();
+    }
+    String responseStatusCode = getSqlResponseStatusCode(request, (SQLException) error);
+    if (responseStatusCode != null && !"00000".equals(responseStatusCode)) {
+      return responseStatusCode;
+    }
+    return error.getClass().getName();
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      DbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    if (!(error instanceof SQLException)) {
+      return null;
+    }
+    return getSqlResponseStatusCode(request, (SQLException) error);
+  }
+
+  @Nullable
+  private String getSqlResponseStatusCode(DbRequest request, SQLException sqlException) {
+    String dbSystemName = getDbSystemName(request);
+    String sqlState = sqlException.getSQLState();
+    int errorCode = sqlException.getErrorCode();
+    String vendorCode = errorCode == 0 ? null : Integer.toString(errorCode);
+    return SqlResponseStatusCodeUtil.getResponseStatusCode(dbSystemName, sqlState, vendorCode);
   }
 
   @Override

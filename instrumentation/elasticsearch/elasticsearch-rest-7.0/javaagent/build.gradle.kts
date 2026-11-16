@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -38,11 +39,4 @@ dependencies {
 
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation("org.testcontainers:testcontainers-elasticsearch")
-}
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

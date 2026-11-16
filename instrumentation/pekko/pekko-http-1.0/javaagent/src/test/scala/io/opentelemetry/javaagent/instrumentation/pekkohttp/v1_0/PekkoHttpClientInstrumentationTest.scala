@@ -13,7 +13,7 @@ import org.apache.pekko.http.javadsl.model.HttpHeader
 import org.apache.pekko.http.scaladsl.settings.ClientConnectionSettings
 import org.apache.pekko.http.scaladsl.model.headers.RawHeader
 import org.apache.pekko.http.scaladsl.settings.ConnectionPoolSettings
-import org.apache.pekko.stream.ActorMaterializer
+import org.apache.pekko.stream.Materializer
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension
 import io.opentelemetry.instrumentation.testing.junit.http.{
   AbstractHttpClientTest,
@@ -43,7 +43,7 @@ class PekkoHttpClientInstrumentationTest
     HttpClientInstrumentationExtension.forAgent()
 
   val system: ActorSystem = ActorSystem.create()
-  val materializer: ActorMaterializer = ActorMaterializer.create(system)
+  val materializer: Materializer = Materializer(system)
 
   override def buildRequest(
       method: String,

@@ -14,31 +14,30 @@ import org.apache.geode.cache.client.Pool;
 import org.apache.geode.cache.client.PoolFactory;
 import org.apache.geode.cache.client.PoolManager;
 
-// Public because advice may be inlined into Geode classes in a different package.
-public class GeodeServerTargets {
+class GeodeServerTargets {
 
   private static final VirtualField<PoolFactory, GeodeServerTargetBuilder> CONFIGURED_TARGETS =
       VirtualField.find(PoolFactory.class, GeodeServerTargetBuilder.class);
   private static final VirtualField<Pool, DbServerTarget> POOL_TARGETS =
       VirtualField.find(Pool.class, DbServerTarget.class);
 
-  public static void addServer(PoolFactory poolFactory, @Nullable String host, int port) {
+  static void addServer(PoolFactory poolFactory, @Nullable String host, int port) {
     builder(poolFactory).addServer(host, port);
   }
 
-  public static void addLocator(PoolFactory poolFactory, @Nullable String host, int port) {
+  static void addLocator(PoolFactory poolFactory, @Nullable String host, int port) {
     builder(poolFactory).addLocator(host, port);
   }
 
-  public static void setServerGroup(PoolFactory poolFactory, @Nullable String serverGroup) {
+  static void setServerGroup(PoolFactory poolFactory, @Nullable String serverGroup) {
     builder(poolFactory).setServerGroup(serverGroup);
   }
 
-  public static void reset(PoolFactory poolFactory) {
+  static void reset(PoolFactory poolFactory) {
     builder(poolFactory).reset();
   }
 
-  public static void copyConfiguration(PoolFactory poolFactory, Pool sourcePool) {
+  static void copyConfiguration(PoolFactory poolFactory, Pool sourcePool) {
     GeodeServerTargetBuilder builder = builder(poolFactory);
     builder.reset();
     builder.setServerGroup(sourcePool.getServerGroup());
@@ -50,7 +49,7 @@ public class GeodeServerTargets {
     }
   }
 
-  public static void capture(PoolFactory poolFactory, @Nullable Pool pool) {
+  static void capture(PoolFactory poolFactory, @Nullable Pool pool) {
     if (pool != null) {
       // Each pool keeps the configuration snapshot from the moment it was created.
       DbServerTarget target = builder(poolFactory).build();

@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.addNestedHttpClientSpan;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -113,7 +114,7 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
                 url,
                 "localhost",
                 port,
-                testing.expectedPeerService(),
+                expectedMappedServiceName(),
                 trace.getSpan(1));
             assertions.add(span -> span.hasName("GET /camelService").hasKind(SpanKind.SERVER));
             trace.hasSpansSatisfyingExactly(assertions);
@@ -157,7 +158,7 @@ class SingleServiceCamelTest extends AbstractHttpServerUsingTest<ConfigurableApp
                 "http://localhost:" + port + "/camelService",
                 "localhost",
                 port,
-                testing.expectedPeerService(),
+                expectedMappedServiceName(),
                 trace.getSpan(1));
             assertions.add(span -> span.hasName("POST /camelService").hasKind(SpanKind.SERVER));
             trace.hasSpansSatisfyingExactly(assertions);

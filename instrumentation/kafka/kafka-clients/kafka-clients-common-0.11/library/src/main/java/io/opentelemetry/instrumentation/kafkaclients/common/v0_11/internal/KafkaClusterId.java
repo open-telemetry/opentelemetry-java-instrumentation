@@ -25,9 +25,8 @@ import org.apache.kafka.clients.Metadata;
  */
 final class KafkaClusterId {
 
-  // copied from MessagingIncubatingAttributes
-  static final AttributeKey<String> ATTRIBUTE_KEY =
-      AttributeKey.stringKey("messaging.kafka.cluster.id");
+  // copied from KafkaIncubatingAttributes
+  static final AttributeKey<String> ATTRIBUTE_KEY = AttributeKey.stringKey("kafka.cluster.id");
 
   // Prevents retrying reflection on clients that can't provide a cluster id.
   static final KafkaClusterId UNAVAILABLE = new KafkaClusterId(null);

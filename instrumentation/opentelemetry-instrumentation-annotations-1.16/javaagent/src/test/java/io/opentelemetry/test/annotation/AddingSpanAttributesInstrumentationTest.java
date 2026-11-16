@@ -12,7 +12,10 @@ import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.annotations.AddingSpanAttributes;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -77,37 +80,9 @@ class AddingSpanAttributesInstrumentationTest {
   }
 
   @Test
-  void constructorOnlyAddingSpanAttributesDoesNotTransformType() {
-    testing.runWithSpan(
-        "root", () -> new ConstructorOnlyAddingSpanAttributes("foo", "bar", null, "baz"));
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("root")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0)));
-  }
-
-  @Test
-  void constructorAndMethodAddingSpanAttributesIgnoresConstructor() {
-    testing.runWithSpan(
-        "root",
-        () ->
-            new ConstructedWithAddingSpanAttributes("foo", "bar", null, "baz")
-                .addAttributes("method"));
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("root")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("methodAttribute"), "method"))));
+  void annotationTargetsMethodsOnly() {
+    assertThat(AddingSpanAttributes.class.getAnnotation(Target.class).value())
+        .containsExactly(ElementType.METHOD);
   }
 
   @Test

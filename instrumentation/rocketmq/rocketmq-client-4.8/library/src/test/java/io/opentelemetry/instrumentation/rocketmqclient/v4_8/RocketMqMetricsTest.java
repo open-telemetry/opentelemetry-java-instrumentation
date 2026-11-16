@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -12,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -200,7 +200,8 @@ class RocketMqMetricsTest {
                                             .hasValue(expectedCount)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "rocketmq"),
                                                 equalTo(ERROR_TYPE, errorType),
                                                 equalTo(
                                                     MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
@@ -230,7 +231,8 @@ class RocketMqMetricsTest {
                                             .hasCount(1)
                                             .hasAttributesSatisfyingExactly(
                                                 equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
+                                                equalTo(
+                                                    stringKey("messaging.system.name"), "rocketmq"),
                                                 equalTo(ERROR_TYPE, errorType),
                                                 equalTo(
                                                     MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),

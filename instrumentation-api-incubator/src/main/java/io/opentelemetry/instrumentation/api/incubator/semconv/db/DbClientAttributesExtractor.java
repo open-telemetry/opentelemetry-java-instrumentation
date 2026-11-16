@@ -11,19 +11,18 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Map;
 import javax.annotation.Nullable;
 
@@ -36,7 +35,7 @@ import javax.annotation.Nullable;
  * attribute extraction from request/response objects.
  */
 public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider, SpanKeyProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
       AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
@@ -124,12 +123,9 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
       REQUEST request,
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
-    String errorType = getter.getErrorType(request, response, error);
-    // fall back to exception class name
-    if (errorType == null && error != null) {
-      errorType = error.getClass().getName();
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(
+        DB_RESPONSE_STATUS_CODE, getter.getDbResponseStatusCode(request, response, error));
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
   }
 
   /**
@@ -139,10 +135,5 @@ public final class DbClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.DB_CLIENT;
-  }
-
-  @Override
-  public String internalGetSchemaUrl() {
-    return SchemaUrls.V1_44_0;
   }
 }

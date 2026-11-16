@@ -9,7 +9,11 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
+import java.util.concurrent.Future;
 import javax.annotation.Nullable;
+import net.spy.memcached.ops.OperationException;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.StatusCode;
 
 class SpymemcachedAttributesGetter
     implements DbClientAttributesGetter<SpymemcachedRequest, Object> {
@@ -26,14 +30,59 @@ class SpymemcachedAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
-    return null;
+    return spymemcachedRequest.getQueryText();
   }
 
   @Override
   public String getDbOperationName(SpymemcachedRequest spymemcachedRequest) {
     return spymemcachedRequest.getStableOperationName();
+  }
+
+  @Override
+  @Nullable
+  public String getDbResponseStatusCode(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    return getErrorStatusCode(response);
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    if (error != null && !(error instanceof OperationException)) {
+      return error.getClass().getName();
+    }
+    if (response instanceof Future && ((Future<?>) response).isCancelled()) {
+      return error == null ? null : error.getClass().getName();
+    }
+    String errorStatusCode = getErrorStatusCode(response);
+    if (errorStatusCode != null) {
+      return errorStatusCode;
+    }
+    return error == null ? null : error.getClass().getName();
+  }
+
+  @Nullable
+  private static String getErrorStatusCode(@Nullable Object response) {
+    OperationStatus status = SpymemcachedSingletons.getResponseStatus(response);
+    if (status == null) {
+      return null;
+    }
+    StatusCode code = status.getStatusCode();
+    if (code == null || status.isSuccess()) {
+      return null;
+    }
+    switch (code) {
+      case SUCCESS:
+      case ERR_NOT_FOUND:
+      case ERR_EXISTS:
+      case ERR_NOT_STORED:
+      case CANCELLED:
+        return null;
+      default:
+        return code.name();
+    }
   }
 
   @Override

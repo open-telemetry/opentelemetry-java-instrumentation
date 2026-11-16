@@ -35,7 +35,7 @@ public class SpringWebInstrumentationModule extends InstrumentationModule {
     // Spring might want to read the class file metadata; this line will make the filter class file
     // visible to the bean class loader
     helperResourceBuilder.register(
-        "org/springframework/web/servlet/v6_0/OpenTelemetryHandlerMappingFilter.class");
+        "io/opentelemetry/javaagent/instrumentation/spring/webmvc/v6_0/OpenTelemetryHandlerMappingFilter.class");
   }
 
   @Override

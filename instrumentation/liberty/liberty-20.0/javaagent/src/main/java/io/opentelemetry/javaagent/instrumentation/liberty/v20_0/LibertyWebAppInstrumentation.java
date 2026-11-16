@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.http.HttpServerResponseCustomizerHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -111,7 +110,7 @@ class LibertyWebAppInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       ServletRequestContext<HttpServletRequest> requestContext = requestInfo.getRequestContext();
 
       if (!helper().shouldStart(parentContext, requestContext)) {

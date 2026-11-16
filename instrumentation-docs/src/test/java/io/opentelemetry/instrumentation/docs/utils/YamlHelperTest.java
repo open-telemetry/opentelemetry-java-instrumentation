@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.docs.utils;
 
 import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_METRICS;
 import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.DATABASE_CLIENT_SPANS;
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.MCP_CLIENT_METRICS;
+import static io.opentelemetry.instrumentation.docs.internal.SemanticConvention.MCP_CLIENT_SPANS;
 import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -36,6 +38,35 @@ import org.junit.jupiter.api.Test;
 import org.yaml.snakeyaml.Yaml;
 
 class YamlHelperTest {
+  @Test
+  void testMcpSemanticConventionsMetadataRoundTrip() throws Exception {
+    InstrumentationMetadata metadata =
+        YamlHelper.metaDataParser(
+            """
+            semantic_conventions:
+              - MCP_CLIENT_SPANS
+              - MCP_CLIENT_METRICS
+            """);
+    assertThat(metadata.getSemanticConventions())
+        .containsExactly(MCP_CLIENT_SPANS, MCP_CLIENT_METRICS);
+
+    InstrumentationModule module =
+        new InstrumentationModule.Builder("mcp-java-sdk-0.14").metadata(metadata).build();
+
+    assertThat(generateInstrumentationYaml(List.of(module)))
+        .isEqualTo(
+            """
+            libraries:
+            - name: mcp-java-sdk-0.14
+              semantic_conventions:
+              - MCP_CLIENT_SPANS
+              - MCP_CLIENT_METRICS
+              source_path: instrumentation/mcp-java-sdk-0.14
+              scope:
+                name: io.opentelemetry.mcp-java-sdk-0.14
+            """);
+  }
+
   @Test
   void testPrintInstrumentationList() throws Exception {
     List<InstrumentationModule> modules = new ArrayList<>();
@@ -1031,17 +1062,17 @@ class YamlHelperTest {
   void listsGlobalConfigurationsInCatalogAndGlobalRefs() throws IOException {
     ConfigurationOption global =
         new ConfigurationOption(
-                "otel.instrumentation.common.v3-preview",
-                "java.common.v3_preview",
-                "Enables v3 preview.",
-                "false",
-                ConfigurationType.BOOLEAN,
+                "otel.instrumentation.common.span-suppression-strategy",
+                "java.common.span_suppression_strategy",
+                "Strategy for suppressing nested instrumentation spans.",
+                "semconv",
+                ConfigurationType.STRING,
                 null,
                 null,
                 null,
                 null,
                 null)
-            .withId("common.v3-preview");
+            .withId("span-suppression-strategy");
 
     StringWriter stringWriter = new StringWriter();
     try (BufferedWriter writer = new BufferedWriter(stringWriter)) {
@@ -1052,10 +1083,11 @@ class YamlHelperTest {
     Map<String, Object> configurations =
         (Map<String, Object>)
             ((Map<String, Object>) parsed.get("definitions")).get("configurations");
-    assertThat((Map<String, Object>) configurations.get("common.v3-preview"))
-        .containsEntry("name", "otel.instrumentation.common.v3-preview")
-        .containsEntry("declarative_name", "java.common.v3_preview");
-    assertThat(parsed.get("global_configuration_refs")).isEqualTo(List.of("common.v3-preview"));
+    assertThat((Map<String, Object>) configurations.get("span-suppression-strategy"))
+        .containsEntry("name", "otel.instrumentation.common.span-suppression-strategy")
+        .containsEntry("declarative_name", "java.common.span_suppression_strategy");
+    assertThat(parsed.get("global_configuration_refs"))
+        .isEqualTo(List.of("span-suppression-strategy"));
   }
 
   @Test

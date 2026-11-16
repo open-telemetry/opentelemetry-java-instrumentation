@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.ExperimentalTest.experimental;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.addNestedHttpClientSpan;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.SuppressionTest.nestedHttpClientSpans;
@@ -138,7 +139,7 @@ class TwoServicesWithDirectClientCamelTest
               "http://localhost:" + portOne + "/serviceOne",
               "localhost",
               portOne,
-              testing.expectedPeerService(),
+              expectedMappedServiceName(),
               trace.getSpan(1));
           assertions.add(
               span ->
@@ -170,7 +171,7 @@ class TwoServicesWithDirectClientCamelTest
               "http://127.0.0.1:" + portTwo + "/serviceTwo",
               "127.0.0.1",
               portTwo,
-              testing.expectedPeerService(),
+              expectedMappedServiceName(),
               trace.getSpan(3 + nested));
           assertions.add(
               span ->

@@ -13,6 +13,8 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.lettuce.core.ClientOptions;
+import io.lettuce.core.RedisCommandExecutionException;
+import io.lettuce.core.RedisCommandTimeoutException;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.StatefulRedisConnectionImpl;
 import io.lettuce.core.cluster.RedisClusterClient;
@@ -28,6 +30,32 @@ import java.util.function.BiConsumer;
 import org.junit.jupiter.api.Test;
 
 class LettuceAttributesGetterTest {
+
+  @Test
+  void responseStatusUsesOnlyServerErrorPrefixes() {
+    LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+    LettuceBatchAttributesGetter batchGetter = new LettuceBatchAttributesGetter();
+    Throwable serverError = new RedisCommandExecutionException("WRONGTYPE detail");
+    Throwable clientError = new RedisCommandTimeoutException("WRONGTYPE client timeout");
+    Throwable blankError = new RedisCommandExecutionException(" ");
+
+    assertThat(getter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(batchGetter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getErrorType(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(batchGetter.getErrorType(null, null, serverError)).isEqualTo("WRONGTYPE");
+    for (Throwable error : new Throwable[] {null, clientError, blankError}) {
+      assertThat(getter.getDbResponseStatusCode(null, null, error)).isNull();
+      assertThat(batchGetter.getDbResponseStatusCode(null, null, error)).isNull();
+    }
+    assertThat(getter.getErrorType(null, null, clientError))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(batchGetter.getErrorType(null, null, clientError))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(getter.getErrorType(null, null, blankError))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
+    assertThat(batchGetter.getErrorType(null, null, blankError))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
+  }
 
   @Test
   void commandWithoutTargetOmitsServerAttributes() {
@@ -53,6 +81,23 @@ class LettuceAttributesGetterTest {
 
     assertThat(getter.getServerAddress(request)).isEqualTo(null);
     assertThat(getter.getServerPort(request)).isEqualTo(null);
+  }
+
+  @Test
+  void batchErrorUsesRequestOrderUnlessClientFails() {
+    Throwable first = new RedisCommandExecutionException("");
+    Throwable second = new RedisCommandExecutionException("Second.Code! details");
+    Throwable client = new RedisCommandTimeoutException("WRONGTYPE client timeout");
+
+    assertThat(LettuceBatchContext.getError(null, new Throwable[] {null, first, second}))
+        .isSameAs(first);
+    assertThat(LettuceBatchContext.getError(null, new Throwable[] {first, client}))
+        .isSameAs(client);
+    assertThat(LettuceBatchContext.getError(null, new Throwable[] {client, first}))
+        .isSameAs(client);
+    assertThat(LettuceBatchContext.getError(second, new Throwable[] {first})).isSameAs(second);
+    assertThat(LettuceBatchContext.getError(client, new Throwable[] {first})).isSameAs(client);
+    assertThat(LettuceBatchContext.getError(null, new Throwable[] {null, null})).isNull();
   }
 
   @Test

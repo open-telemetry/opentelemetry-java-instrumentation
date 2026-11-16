@@ -9,6 +9,11 @@ class WebServiceFromInterface implements WebServiceDefinitionInterface {
   @Override
   public void partOfPublicInterface() {}
 
+  @Override
+  public String covariantMethod() {
+    return "";
+  }
+
   public void notPartOfPublicInterface() {}
 
   void notPartOfAnything() {}

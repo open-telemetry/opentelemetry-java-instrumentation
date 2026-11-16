@@ -5,8 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.hikaricp.v3_0;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.anyInt;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.zaxxer.hikari.HikariConfig;
@@ -16,9 +19,13 @@ import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
 import io.opentelemetry.instrumentation.hikaricp.AbstractHikariInstrumentationTest;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Properties;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -177,6 +184,64 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     }
 
     assertNoConnectionPoolMetrics();
+  }
+
+  @Test
+  void contextDoesNotPropagateIntoMaintenanceTask() throws Exception {
+    CountDownLatch threeCreations = new CountDownLatch(3);
+    AtomicInteger counter = new AtomicInteger();
+    DataSource source = mock(DataSource.class);
+    when(source.getConnection())
+        .thenAnswer(
+            ignored -> {
+              Connection connection = mock(Connection.class);
+              when(connection.isValid(anyInt())).thenReturn(true);
+              when(connection.getAutoCommit()).thenReturn(true);
+              when(connection.getTransactionIsolation())
+                  .thenReturn(Connection.TRANSACTION_READ_COMMITTED);
+              threeCreations.countDown();
+              if (counter.incrementAndGet() <= 3) {
+                testing.runWithSpan("get connection", () -> {});
+              }
+              return connection;
+            });
+
+    // Disable validation so we could set a low max lifetime.
+    HikariConfig config =
+        new HikariConfig() {
+          @Override
+          public void validate() {}
+        };
+    config.setDataSource(source);
+    config.setMinimumIdle(0);
+    config.setMaximumPoolSize(1);
+    config.setInitializationFailTimeout(-1);
+    // Exercise Hikari's real lifetime scheduling, including its minimum accepted lifetime.
+    config.setMaxLifetime(1_000);
+    config.setConnectionTimeout(10_000);
+
+    // Initialize the pool outside the request; only the borrow should capture request context.
+    try (HikariDataSource pool = new HikariDataSource(config)) {
+      testing.runWithSpan(
+          "parent",
+          () -> {
+            try (Connection ignored = pool.getConnection()) {
+              pool.setMinimumIdle(1);
+            }
+          });
+
+      threeCreations.await(10, SECONDS);
+    }
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("get connection").hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("get connection").hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("get connection").hasNoParent()));
   }
 
   private HikariDataSource newDataSource() {

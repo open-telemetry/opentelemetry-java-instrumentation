@@ -24,6 +24,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
@@ -97,6 +98,7 @@ class CouchbaseExceptionSignalTest {
                             equalTo(DB_NAMESPACE, "test"),
                             equalTo(DB_COLLECTION_NAME, "_default"),
                             equalTo(DB_OPERATION_NAME, "get"),
+                            equalTo(ERROR_TYPE, UnambiguousTimeoutException.class.getName()),
                             equalTo(stringKey("db.couchbase.document_id"), experimental("id")),
                             equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
                             satisfies(
@@ -127,7 +129,7 @@ class CouchbaseExceptionSignalTest {
                   .hasSpanContext(couchbaseSpan.getSpanContext())
                   .hasInstrumentationScope(
                       InstrumentationScopeInfo.builder("io.opentelemetry.couchbase-3.2")
-                          .setSchemaUrl(SchemaUrls.V1_44_0)
+                          .setSchemaUrl(SchemaUrls.V1_45_0)
                           .build()));
     } else {
       assertThat(testing.logRecords()).isEmpty();

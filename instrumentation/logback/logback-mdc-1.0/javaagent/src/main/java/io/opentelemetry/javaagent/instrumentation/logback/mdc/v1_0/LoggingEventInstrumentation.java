@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0;
 
+import static io.opentelemetry.javaagent.bootstrap.logback.LogbackMdcState.suppressMdcEnrichment;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.ADD_BAGGAGE;
@@ -12,6 +13,7 @@ import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.Logbac
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.SPAN_ID_KEY;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.TRACE_FLAGS_KEY;
 import static io.opentelemetry.javaagent.instrumentation.logback.mdc.v1_0.LogbackSingletons.TRACE_ID_KEY;
+import static java.util.Collections.emptyMap;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -20,9 +22,9 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.baggage.BaggageEntry;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.internal.AgentCommonConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.ConfiguredResourceAttributesHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -61,6 +63,10 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
         @Advice.This ILoggingEvent event,
         @Advice.Return(typing = Typing.DYNAMIC) Map<String, String> contextData) {
 
+      if (suppressMdcEnrichment().get() == event) {
+        return contextData == null ? emptyMap() : contextData;
+      }
+
       if (contextData != null && contextData.containsKey(AgentCommonConfig.get().getTraceIdKey())) {
         // Assume already instrumented event if traceId is present.
         return contextData;
@@ -76,7 +82,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
         spanContextData.putAll(contextData);
       }
 
-      SpanContext spanContext = Java8BytecodeBridge.spanFromContext(context).getSpanContext();
+      SpanContext spanContext = Span.fromContext(context).getSpanContext();
 
       if (spanContext.isValid()) {
         spanContextData.put(TRACE_ID_KEY, spanContext.getTraceId());
@@ -86,7 +92,7 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
       spanContextData.putAll(ConfiguredResourceAttributesHolder.getResourceAttributes());
 
       if (ADD_BAGGAGE) {
-        Baggage baggage = Java8BytecodeBridge.baggageFromContext(context);
+        Baggage baggage = Baggage.fromContext(context);
 
         // using a lambda here does not play nicely with instrumentation bytecode process
         // (Java 6 related errors are observed) so relying on for loop instead

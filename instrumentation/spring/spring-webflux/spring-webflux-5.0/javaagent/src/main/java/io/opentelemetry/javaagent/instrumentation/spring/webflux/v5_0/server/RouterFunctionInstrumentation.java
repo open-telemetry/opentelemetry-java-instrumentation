@@ -11,8 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.isAbstract;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -44,13 +42,7 @@ class RouterFunctionInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("route"))
-            .and(
-                takesArgument(
-                    0, named("org.springframework.web.reactive.function.server.ServerRequest")))
-            .and(takesArguments(1)),
-        getClass().getName() + "$RouteAdvice");
+        isPublic().and(named("route")), getClass().getName() + "$RouteAdvice");
   }
 
   /**

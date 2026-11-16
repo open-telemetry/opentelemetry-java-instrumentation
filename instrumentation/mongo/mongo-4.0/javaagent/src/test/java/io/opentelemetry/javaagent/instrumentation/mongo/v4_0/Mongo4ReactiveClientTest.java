@@ -133,6 +133,23 @@ class Mongo4ReactiveClientTest extends AbstractMongoClientTest<MongoCollection<D
   }
 
   @Override
+  protected Document runCommand(String dbName, Document command) throws Exception {
+    MongoDatabase db = client.getDatabase(dbName);
+    CompletableFuture<Object> result = new CompletableFuture<>();
+    db.runCommand(command)
+        .subscribe(
+            toSubscriber(
+                value -> {
+                  if (value instanceof Throwable) {
+                    result.completeExceptionally((Throwable) value);
+                  } else {
+                    result.complete(value);
+                  }
+                }));
+    return (Document) result.get(30, SECONDS);
+  }
+
+  @Override
   protected long insert(MongoCollection<Document> collection) throws Exception {
     CompletableFuture<Long> count = new CompletableFuture<>();
     collection

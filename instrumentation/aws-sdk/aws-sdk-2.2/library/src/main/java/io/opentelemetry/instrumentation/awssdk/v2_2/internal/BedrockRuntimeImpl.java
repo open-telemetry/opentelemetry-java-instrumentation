@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
+import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -79,6 +80,10 @@ import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
  * any time.
  */
 public final class BedrockRuntimeImpl {
+
+  private static final java.util.logging.Logger logger =
+      java.util.logging.Logger.getLogger(BedrockRuntimeImpl.class.getName());
+
   private BedrockRuntimeImpl() {}
 
   // copied from GenAiIncubatingAttributes
@@ -1229,9 +1234,20 @@ public final class BedrockRuntimeImpl {
       delegate.onEventStream(
           sdkPublisher.map(
               event -> {
-                handleEvent(event);
+                handleEventSafely(event);
                 return event;
               }));
+    }
+
+    // Telemetry parsing must never change the behavior of the application's stream.
+    // visible for testing
+    final void handleEventSafely(S event) {
+      try {
+        handleEvent(event);
+      } catch (RuntimeException e) {
+        // Keep the original event flowing to the delegate subscriber.
+        logger.log(FINE, "Failed to handle event", e);
+      }
     }
 
     @Override

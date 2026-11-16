@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -40,7 +40,7 @@ class DemoServlet3Instrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class DemoServlet3Advice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(value = 1) ServletResponse response) {
       // VirtualField depends on muzzle-generation. Using it here to verify that muzzle-generation
       // was set up.
@@ -57,8 +57,7 @@ class DemoServlet3Instrumentation implements TypeInstrumentation {
 
       HttpServletResponse httpServletResponse = (HttpServletResponse) response;
       if (!httpServletResponse.containsHeader("X-server-id")) {
-        httpServletResponse.setHeader(
-            "X-server-id", Java8BytecodeBridge.currentSpan().getSpanContext().getTraceId());
+        httpServletResponse.setHeader("X-server-id", Span.current().getSpanContext().getTraceId());
       }
     }
   }

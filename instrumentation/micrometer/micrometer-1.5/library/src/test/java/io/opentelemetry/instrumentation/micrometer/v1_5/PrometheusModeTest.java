@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -20,7 +21,8 @@ class PrometheusModeTest extends AbstractPrometheusModeTest {
         @Override
         OpenTelemetryMeterRegistryBuilder configureOtelRegistry(
             OpenTelemetryMeterRegistryBuilder registry) {
-          return registry.setPrometheusMode(true);
+          Experimental.setPrometheusMode(registry, true);
+          return registry;
         }
       };
 

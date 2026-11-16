@@ -11,13 +11,13 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.M
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.CONSUMED_MESSAGES;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.add;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.enable;
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelMessageTelemetry.messageTelemetry;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingConsumerMetrics;
@@ -27,14 +27,15 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
-import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.HttpSpanDecorator;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;
@@ -45,8 +46,10 @@ class CamelSingletons {
 
   private static final DecoratorRegistry registry = new DecoratorRegistry();
   private static final Instrumenter<CamelRequest, Void> instrumenter = createInstrumenter();
+  private static final Instrumenter<CamelRequest, Void> httpInstrumenter =
+      createInstrumenter(HttpSchemaUrls.SCHEMA_URL);
   private static final Instrumenter<CamelRequest, Void> databaseInstrumenter =
-      createInstrumenter(SchemaUrls.V1_44_0);
+      createInstrumenter(DbSchemaUrls.SCHEMA_URL);
   private static final Instrumenter<CamelRequest, Void> messagingSendInstrumenter =
       createMessagingInstrumenter(SEND, "send", true);
   private static final Instrumenter<CamelRequest, Void> messagingPublishInstrumenter =
@@ -85,7 +88,7 @@ class CamelSingletons {
     SpanNameExtractor<CamelRequest> spanNameExtractor =
         MessagingSpanNameExtractor.create(getter, operationType, operationName);
     InstrumenterBuilder<CamelRequest, Void> builder =
-        instrumenterBuilder(spanNameExtractor).setSchemaUrl(messagingSchemaUrl());
+        instrumenterBuilder(spanNameExtractor).setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL);
     AttributesExtractor<CamelRequest, Void> attributesExtractor =
         MessagingAttributesExtractor.create(getter, operationType, operationName);
     builder.addAttributesExtractor(
@@ -142,6 +145,9 @@ class CamelSingletons {
     if (request.isDatabase()) {
       return databaseInstrumenter;
     }
+    if (request.getSpanDecorator() instanceof HttpSpanDecorator) {
+      return httpInstrumenter;
+    }
     return instrumenter;
   }
 
@@ -181,7 +187,7 @@ class CamelSingletons {
   }
 
   private static class KeylessAttributesExtractor
-      implements AttributesExtractor<CamelRequest, Void>, SchemaUrlProvider {
+      implements AttributesExtractor<CamelRequest, Void> {
 
     private final AttributesExtractor<CamelRequest, Void> delegate;
 
@@ -202,14 +208,6 @@ class CamelSingletons {
         @Nullable Void unused,
         @Nullable Throwable error) {
       delegate.onEnd(attributes, context, request, null, error);
-    }
-
-    @Nullable
-    @Override
-    public String internalGetSchemaUrl() {
-      return delegate instanceof SchemaUrlProvider
-          ? ((SchemaUrlProvider) delegate).internalGetSchemaUrl()
-          : null;
     }
   }
 

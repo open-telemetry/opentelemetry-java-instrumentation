@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -27,7 +28,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 
-import com.google.common.collect.ImmutableMap;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisConnectionException;
 import io.lettuce.core.RedisFuture;
@@ -44,6 +44,8 @@ import io.opentelemetry.sdk.trace.data.StatusData;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
@@ -58,11 +60,15 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   private int incorrectPort;
   private String dbUriNonExistent;
 
-  private static final ImmutableMap<String, String> testHashMap =
-      ImmutableMap.of(
-          "firstname", "John",
-          "lastname", "Doe",
-          "age", "53");
+  private static final Map<String, String> TEST_HASH_MAP;
+
+  static {
+    Map<String, String> map = new LinkedHashMap<>();
+    map.put("firstname", "John");
+    map.put("lastname", "Doe");
+    map.put("age", "53");
+    TEST_HASH_MAP = Collections.unmodifiableMap(map);
+  }
 
   private RedisCommands<String, String> syncCommands;
 
@@ -84,7 +90,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
     syncCommands = connection.sync();
 
     syncCommands.set("TESTKEY", "TESTVAL");
-    syncCommands.hmset("TESTHM", testHashMap);
+    syncCommands.hmset("TESTHM", TEST_HASH_MAP);
 
     testing.waitForTraces(connectionTelemetryEnabled() ? 3 : 2);
   }
@@ -119,7 +125,8 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_PORT, port),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 
   @Test
@@ -146,7 +153,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
                             equalTo(SERVER_PORT, incorrectPort),
                             equalTo(DB_SYSTEM_NAME, REDIS),
                             equalTo(DB_NAMESPACE, "0"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()))
                         .hasEventsSatisfyingExactly(
                             event ->
                                 event
@@ -403,7 +410,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
 
   @Test
   void testHashSetCommand() {
-    String res = syncCommands.hmset("user", testHashMap);
+    String res = syncCommands.hmset("user", TEST_HASH_MAP);
     assertThat(res).isEqualTo("OK");
 
     testing.waitAndAssertTraces(
@@ -426,7 +433,7 @@ class LettuceSyncClientTest extends AbstractLettuceClientTest {
   @Test
   void testHashGetallCommand() {
     Map<String, String> res = syncCommands.hgetall("TESTHM");
-    assertThat(res).isEqualTo(testHashMap);
+    assertThat(res).isEqualTo(TEST_HASH_MAP);
 
     testing.waitAndAssertTraces(
         trace ->

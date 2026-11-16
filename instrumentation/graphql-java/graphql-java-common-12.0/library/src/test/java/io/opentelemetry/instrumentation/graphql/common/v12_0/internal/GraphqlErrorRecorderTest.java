@@ -50,13 +50,13 @@ class GraphqlErrorRecorderTest {
       InstrumentationScopeInfo expectedScope =
           InstrumentationScopeInfo.builder(INSTRUMENTATION_NAME)
               .setVersion(version)
-              .setSchemaUrl(SchemaUrls.V1_44_0)
+              .setSchemaUrl(SchemaUrls.V1_45_0)
               .build();
       Span span =
           openTelemetry
               .tracerBuilder(INSTRUMENTATION_NAME)
               .setInstrumentationVersion(version)
-              .setSchemaUrl(SchemaUrls.V1_44_0)
+              .setSchemaUrl(SchemaUrls.V1_45_0)
               .build()
               .spanBuilder("GraphQL Operation")
               .setNoParent()
@@ -66,7 +66,7 @@ class GraphqlErrorRecorderTest {
 
       // Completion callbacks may run with an unrelated current context.
       try (Scope ignored = Context.root().makeCurrent()) {
-        new GraphqlErrorRecorder(openTelemetry, INSTRUMENTATION_NAME, SchemaUrls.V1_44_0)
+        new GraphqlErrorRecorder(openTelemetry, INSTRUMENTATION_NAME, SchemaUrls.V1_45_0)
             .record(context, error);
       }
       span.end();

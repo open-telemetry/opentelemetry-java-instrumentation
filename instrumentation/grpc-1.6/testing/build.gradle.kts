@@ -17,8 +17,6 @@ dependencies {
 
   implementation("javax.annotation:javax.annotation-api:1.3.2")
 
-  implementation("com.google.guava:guava")
-
   api("org.junit-pioneer:junit-pioneer")
   implementation("io.opentelemetry:opentelemetry-api")
 }

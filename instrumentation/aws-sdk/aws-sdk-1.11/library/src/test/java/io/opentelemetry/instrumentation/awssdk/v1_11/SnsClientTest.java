@@ -23,7 +23,7 @@ class SnsClientTest extends AbstractSnsClientTest {
   public AmazonSNSClientBuilder configureClient(AmazonSNSClientBuilder clientBuilder) {
     return clientBuilder.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
             .build()
             .createRequestHandler());
   }

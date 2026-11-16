@@ -60,7 +60,7 @@ class JavaHttpClientHeaderSelectorTest {
             .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
             .setResponseHeaders(IncludeExclude.builder().setExcluded("x-secret-*").build())
             .build()
-            .wrap(HttpClient.newHttpClient());
+            .instrument(HttpClient.newHttpClient());
 
     send(client);
 
@@ -96,7 +96,7 @@ class JavaHttpClientHeaderSelectorTest {
             .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request").build())
             .setResponseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
             .build()
-            .wrap(HttpClient.newHttpClient());
+            .instrument(HttpClient.newHttpClient());
 
     send(client);
 
@@ -119,7 +119,7 @@ class JavaHttpClientHeaderSelectorTest {
     HttpClient client =
         JavaHttpClientTelemetry.builder(testing.getOpenTelemetry())
             .build()
-            .wrap(HttpClient.newHttpClient());
+            .instrument(HttpClient.newHttpClient());
 
     send(client);
 

@@ -5,9 +5,14 @@
 
 package io.opentelemetry.instrumentation.resources;
 
+import static java.util.Collections.singletonList;
+
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.resources.internal.Entity;
+import io.opentelemetry.sdk.resources.internal.EntityUtil;
 import io.opentelemetry.semconv.SchemaUrls;
 
 /** Factory of a {@link Resource} which provides information about the Java runtime. */
@@ -40,15 +45,21 @@ public final class ProcessRuntimeResource {
               + " "
               + System.getProperty("java.vm.version");
 
-      return Resource.create(
-          Attributes.of(
-              PROCESS_RUNTIME_NAME,
-              name,
-              PROCESS_RUNTIME_VERSION,
-              version,
-              PROCESS_RUNTIME_DESCRIPTION,
-              description),
-          SchemaUrls.V1_24_0);
+      if (name == null || version == null) {
+        AttributesBuilder attributes =
+            Attributes.builder().put(PROCESS_RUNTIME_DESCRIPTION, description);
+        attributes.put(PROCESS_RUNTIME_NAME, name);
+        attributes.put(PROCESS_RUNTIME_VERSION, version);
+        return Resource.create(attributes.build(), SchemaUrls.V1_40_0);
+      }
+      Attributes descriptive = Attributes.of(PROCESS_RUNTIME_DESCRIPTION, description);
+      Attributes id = Attributes.of(PROCESS_RUNTIME_NAME, name, PROCESS_RUNTIME_VERSION, version);
+      return EntityUtil.createResource(
+          singletonList(
+              Entity.builder("process.runtime", id)
+                  .setDescription(descriptive)
+                  .setSchemaUrl(SchemaUrls.V1_40_0)
+                  .build()));
     } catch (SecurityException ignored) {
       return Resource.empty();
     }

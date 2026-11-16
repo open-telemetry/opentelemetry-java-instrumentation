@@ -47,10 +47,12 @@ public final class MessageAttributesAccessor {
     Class<?> setValueReturnType;
     try {
       // changed the generic bound to NamedValue in version 2.1; earlier than that it's Parameter
-      setValueReturnType = Class.forName("org.restlet.util.NamedValue");
+      setValueReturnType =
+          Class.forName("org.restlet.util.NamedValue", false, Series.class.getClassLoader());
     } catch (ClassNotFoundException ignored) {
       try {
-        setValueReturnType = Class.forName("org.restlet.data.Parameter");
+        setValueReturnType =
+            Class.forName("org.restlet.data.Parameter", false, Series.class.getClassLoader());
       } catch (ClassNotFoundException ignore) {
         return null;
       }

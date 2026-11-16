@@ -46,6 +46,7 @@ class JarAnalyzerInstallerTest {
             logRecord -> {
               assertThat(logRecord.getInstrumentationScopeInfo().getName())
                   .isEqualTo("io.opentelemetry.runtime-telemetry");
+              assertThat(logRecord.getInstrumentationScopeInfo().getVersion()).isNotEmpty();
               assertThat(logRecord.getAttributes())
                   .containsEntry("package.type", "jar")
                   .containsEntry("package.checksum_algorithm", "SHA-256")

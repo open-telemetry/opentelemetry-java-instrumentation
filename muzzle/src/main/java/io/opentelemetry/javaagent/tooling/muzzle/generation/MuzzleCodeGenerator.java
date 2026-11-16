@@ -602,7 +602,7 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       AdviceInspector adviceInspector =
           new AdviceInspector(ClassFileLocator.ForClassLoader.of(classLoader));
       Boolean result =
-          adviceInspector.useIsolatedAdvice(module, adviceClassNames.getAdviceClassNames());
+          adviceInspector.inferHelperClassIsolation(module, adviceClassNames.getAdviceClassNames());
       if (result == null) {
         return;
       }

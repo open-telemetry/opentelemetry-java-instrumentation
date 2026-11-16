@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.playws.common.v1_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -36,8 +36,8 @@ public class AbstractBootstrapInstrumentation implements TypeInstrumentation {
     public static Scope onEnter() {
       // Prevent context from leaking by running this method under root context.
       // Root context is not propagated by executor instrumentation.
-      if (Java8BytecodeBridge.currentContext() != Java8BytecodeBridge.rootContext()) {
-        return Java8BytecodeBridge.rootContext().makeCurrent();
+      if (Context.current() != Context.root()) {
+        return Context.root().makeCurrent();
       }
       return null;
     }

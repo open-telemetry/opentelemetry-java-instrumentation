@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
+import io.opentelemetry.instrumentation.api.semconv.http.HttpErrorType;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.HeaderUtil;
 import java.lang.invoke.MethodHandle;
@@ -102,6 +103,16 @@ enum WebfluxServerHttpAttributesGetter
   public Integer getHttpResponseStatusCode(
       ServerWebExchange request, ServerWebExchange response, @Nullable Throwable error) {
     return getStatusCode(response.getResponse());
+  }
+
+  @Nullable
+  @Override
+  public String getErrorType(
+      ServerWebExchange request, @Nullable ServerWebExchange response, @Nullable Throwable error) {
+    if (response == null && error == null) {
+      return "cancelled";
+    }
+    return HttpErrorType.forServer(this, request, response, error);
   }
 
   @Override

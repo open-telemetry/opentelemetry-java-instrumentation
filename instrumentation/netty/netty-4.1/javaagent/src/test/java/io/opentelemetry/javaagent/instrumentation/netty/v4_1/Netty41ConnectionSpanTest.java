@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -129,7 +130,7 @@ class Netty41ConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -141,7 +142,7 @@ class Netty41ConnectionSpanTest {
                             equalTo(SERVER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_PORT, uri.getPort()),
                             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
                 span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
                 span ->
                     span.hasName("test-http-server")
@@ -172,7 +173,7 @@ class Netty41ConnectionSpanTest {
                         .hasAttributesSatisfyingExactly(
                             equalTo(SERVER_ADDRESS, uri.getHost()),
                             equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
                 span ->
                     span.hasName("CONNECT")
                         .hasKind(SpanKind.INTERNAL)
@@ -187,6 +188,7 @@ class Netty41ConnectionSpanTest {
                             satisfies(
                                 NETWORK_PEER_PORT, val -> val.isIn((long) uri.getPort(), null)),
                             satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn("127.0.0.1", null)),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 }

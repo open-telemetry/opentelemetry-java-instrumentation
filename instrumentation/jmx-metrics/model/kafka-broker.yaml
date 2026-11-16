@@ -1,0 +1,236 @@
+groups:
+  - id: attributes.kafka.broker
+    type: attribute_group
+    brief: Kafka broker attributes.
+    attributes:
+      - id: kafka.request.type
+        type:
+          members:
+            - id: fetch
+              value: "fetch"
+              brief: Fetch requests, from consumers and followers.
+              stability: development
+            - id: produce
+              value: "produce"
+              brief: Produce requests.
+              stability: development
+            - id: fetchconsumer
+              value: "fetchconsumer"
+              brief: Fetch requests from consumers.
+              stability: development
+            - id: fetchfollower
+              value: "fetchfollower"
+              brief: Fetch requests from follower replicas.
+              stability: development
+        stability: development
+        brief: Kafka request type.
+        examples:
+          - "fetch"
+          - "produce"
+          - "fetchconsumer"
+          - "fetchfollower"
+      - id: kafka.topic.name
+        type: string
+        stability: development
+        brief: Kafka topic name.
+        examples:
+          - "my-topic"
+      - id: kafka.server.isr.operation
+        type:
+          members:
+            - id: shrink
+              value: "shrink"
+              brief: In-sync replica set shrink.
+              stability: development
+            - id: expand
+              value: "expand"
+              brief: In-sync replica set expand.
+              stability: development
+        stability: development
+        brief: Kafka in-sync replica set operation.
+        examples:
+          - "shrink"
+          - "expand"
+
+  - id: metric.kafka.server.messages
+    metric_name: kafka.server.messages
+    type: metric
+    stability: development
+    brief: The number of messages received by the broker.
+    unit: "{message}"
+    instrument: counter
+    attributes:
+      - ref: kafka.topic.name
+
+  - id: metric.kafka.server.requests
+    metric_name: kafka.server.requests
+    type: metric
+    stability: development
+    brief: The number of requests received by the broker.
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: kafka.request.type
+      - ref: kafka.topic.name
+
+  - id: metric.kafka.server.failed_requests
+    metric_name: kafka.server.failed_requests
+    type: metric
+    stability: development
+    brief: The number of requests to the broker resulting in a failure.
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: kafka.request.type
+      - ref: kafka.topic.name
+
+  - id: metric.kafka.server.network.io
+    metric_name: kafka.server.network.io
+    type: metric
+    stability: development
+    brief: The bytes received or sent by the broker.
+    unit: "By"
+    instrument: counter
+    attributes:
+      - ref: kafka.topic.name
+      - ref: network.io.direction
+
+  - id: metric.kafka.server.purgatory.size
+    metric_name: kafka.server.purgatory.size
+    type: metric
+    stability: development
+    brief: The number of requests waiting in purgatory.
+    unit: "{request}"
+    instrument: updowncounter
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.network.requests
+    metric_name: kafka.network.requests
+    type: metric
+    stability: development
+    brief: The number of network requests received by the broker.
+    unit: "{request}"
+    instrument: counter
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.network.request.duration.p50
+    metric_name: kafka.network.request.duration.p50
+    type: metric
+    stability: development
+    brief: The 50th percentile duration the broker has taken to service network requests.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.network.request.duration.p99
+    metric_name: kafka.network.request.duration.p99
+    type: metric
+    stability: development
+    brief: The 99th percentile duration the broker has taken to service network requests.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: kafka.request.type
+
+  - id: metric.kafka.network.request.queue
+    metric_name: kafka.network.request.queue
+    type: metric
+    stability: development
+    brief: Size of the network request queue.
+    unit: "{request}"
+    instrument: updowncounter
+
+  - id: metric.kafka.server.partition.count
+    metric_name: kafka.server.partition.count
+    type: metric
+    stability: development
+    brief: The number of partitions on the broker.
+    unit: "{partition}"
+    instrument: updowncounter
+
+  - id: metric.kafka.controller.partition.offline
+    metric_name: kafka.controller.partition.offline
+    type: metric
+    stability: development
+    brief: The number of partitions offline.
+    unit: "{partition}"
+    instrument: updowncounter
+
+  - id: metric.kafka.server.partition.under_replicated
+    metric_name: kafka.server.partition.under_replicated
+    type: metric
+    stability: development
+    brief: The number of under-replicated partitions.
+    unit: "{partition}"
+    instrument: updowncounter
+
+  - id: metric.kafka.server.isr.operations
+    metric_name: kafka.server.isr.operations
+    type: metric
+    stability: development
+    brief: The number of in-sync replica operations.
+    unit: "{operation}"
+    instrument: counter
+    attributes:
+      - ref: kafka.server.isr.operation
+
+  - id: metric.kafka.server.lag.max
+    metric_name: kafka.server.lag.max
+    type: metric
+    stability: development
+    brief: The max lag in messages between follower and leader replicas.
+    unit: "{message}"
+    instrument: gauge
+
+  - id: metric.kafka.controller.active.count
+    metric_name: kafka.controller.active.count
+    type: metric
+    stability: development
+    brief: The number of controllers active on the broker.
+    unit: "{controller}"
+    instrument: updowncounter
+
+  - id: metric.kafka.controller.leader_elections
+    metric_name: kafka.controller.leader_elections
+    type: metric
+    stability: development
+    brief: The leader election count.
+    unit: "{election}"
+    instrument: counter
+
+  - id: metric.kafka.controller.unclean_leader_elections
+    metric_name: kafka.controller.unclean_leader_elections
+    type: metric
+    stability: development
+    brief: Unclean leader election count.
+    unit: "{election}"
+    instrument: counter
+
+  - id: metric.kafka.log.flushes
+    metric_name: kafka.log.flushes
+    type: metric
+    stability: development
+    brief: Log flush count.
+    unit: "{flush}"
+    instrument: counter
+
+  - id: metric.kafka.log.flush.duration.p50
+    metric_name: kafka.log.flush.duration.p50
+    type: metric
+    stability: development
+    brief: Log flush duration 50th percentile.
+    unit: "s"
+    instrument: gauge
+    attributes: []
+
+  - id: metric.kafka.log.flush.duration.p99
+    metric_name: kafka.log.flush.duration.p99
+    type: metric
+    stability: development
+    brief: Log flush duration 99th percentile.
+    unit: "s"
+    instrument: gauge
+    attributes: []

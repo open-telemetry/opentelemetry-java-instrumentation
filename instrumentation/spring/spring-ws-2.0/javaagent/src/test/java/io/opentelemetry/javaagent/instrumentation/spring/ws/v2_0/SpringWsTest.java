@@ -14,7 +14,6 @@ import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerUsingTest;
@@ -25,6 +24,8 @@ import io.opentelemetry.test.hello_web_service.HelloRequestSoapAction;
 import io.opentelemetry.test.hello_web_service.HelloRequestWsAction;
 import io.opentelemetry.test.hello_web_service.HelloResponse;
 import java.net.URISyntaxException;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -65,16 +66,12 @@ class SpringWsTest extends AbstractHttpServerUsingTest<ConfigurableApplicationCo
   @Override
   protected ConfigurableApplicationContext setupServer() throws Exception {
     SpringApplication app = new SpringApplication(AppConfig.class, WebServiceConfig.class);
-    app.setDefaultProperties(
-        ImmutableMap.of(
-            "server.port",
-            port,
-            "server.context-path",
-            getContextPath(),
-            "server.servlet.contextPath",
-            getContextPath(),
-            "server.error.include-message",
-            "always"));
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("server.port", port);
+    properties.put("server.context-path", getContextPath());
+    properties.put("server.servlet.contextPath", getContextPath());
+    properties.put("server.error.include-message", "always");
+    app.setDefaultProperties(properties);
     marshaller.setPackagesToScan(ClassUtils.getPackageName(HelloRequest.class));
     marshaller.afterPropertiesSet();
     return app.run();

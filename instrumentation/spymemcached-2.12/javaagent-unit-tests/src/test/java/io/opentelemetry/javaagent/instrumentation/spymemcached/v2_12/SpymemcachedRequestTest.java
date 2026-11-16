@@ -26,9 +26,26 @@ import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SpymemcachedRequestTest {
+
+  @ParameterizedTest
+  @CsvSource({
+    "asyncGet, get, get",
+    "asyncGets, gets, gets",
+    "asyncCAS, cas, cas",
+    "asyncGetBulk, getBulk, get",
+    "asyncGetAndTouch, getAndTouch, gat"
+  })
+  void normalizesOperationNames(String method, String operation, String stableOperation) {
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(mock(MemcachedConnection.class), method);
+
+    assertThat(request.getOperationName()).isEqualTo(operation);
+    assertThat(request.getStableOperationName()).isEqualTo(stableOperation);
+  }
 
   @Test
   void requestCarriesTheTargetItsConnectionWasCreatedFor() {

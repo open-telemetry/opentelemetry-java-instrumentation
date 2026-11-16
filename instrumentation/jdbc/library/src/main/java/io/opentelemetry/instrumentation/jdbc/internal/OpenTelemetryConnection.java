@@ -25,6 +25,9 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlCommenter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.sql.Array;
 import java.sql.Blob;
 import java.sql.CallableStatement;
@@ -52,6 +55,7 @@ import java.util.concurrent.Executor;
 public class OpenTelemetryConnection implements Connection {
 
   private static final boolean hasJdbc43 = hasJdbc43();
+  private static final boolean hasJdbc45 = hasJdbc45();
   protected final Connection delegate;
   private final DbInfo dbInfo;
   protected final Instrumenter<DbRequest, Void> statementInstrumenter;
@@ -66,6 +70,15 @@ public class OpenTelemetryConnection implements Connection {
       Instrumenter<DbRequest, Void> transactionInstrumenter,
       boolean captureQueryParameters,
       SqlCommenter sqlCommenter) {
+    if (hasJdbc45) {
+      return new OpenTelemetryConnectionJdbc45(
+          delegate,
+          dbInfo,
+          statementInstrumenter,
+          transactionInstrumenter,
+          captureQueryParameters,
+          sqlCommenter);
+    }
     if (hasJdbc43) {
       return new OpenTelemetryConnectionJdbc43(
           delegate,
@@ -105,6 +118,16 @@ public class OpenTelemetryConnection implements Connection {
       Class.forName("java.sql.ShardingKey");
       return true;
     } catch (ClassNotFoundException ignored) {
+      return false;
+    }
+  }
+
+  // visible for testing
+  static boolean hasJdbc45() {
+    try {
+      Connection.class.getMethod("enquoteLiteral", String.class);
+      return true;
+    } catch (NoSuchMethodException ignored) {
       return false;
     }
   }
@@ -431,12 +454,15 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
+    if (iface.isInstance(this)) {
+      return iface.cast(this);
+    }
     return delegate.unwrap(iface);
   }
 
   @Override
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
-    return delegate.isWrapperFor(iface);
+    return iface.isInstance(this) || delegate.isWrapperFor(iface);
   }
 
   // visible for testing
@@ -498,6 +524,85 @@ public class OpenTelemetryConnection implements Connection {
     @Override
     public void setShardingKey(ShardingKey shardingKey) throws SQLException {
       delegate.setShardingKey(shardingKey);
+    }
+  }
+
+  // JDBC 4.5
+  static class OpenTelemetryConnectionJdbc45 extends OpenTelemetryConnectionJdbc43 {
+
+    private static final MethodHandle ENQUOTE_LITERAL =
+        connectionMethod("enquoteLiteral", MethodType.methodType(String.class, String.class));
+    private static final MethodHandle ENQUOTE_IDENTIFIER =
+        connectionMethod(
+            "enquoteIdentifier", MethodType.methodType(String.class, String.class, boolean.class));
+    private static final MethodHandle ENQUOTE_NCHAR_LITERAL =
+        connectionMethod("enquoteNCharLiteral", MethodType.methodType(String.class, String.class));
+    private static final MethodHandle IS_SIMPLE_IDENTIFIER =
+        connectionMethod("isSimpleIdentifier", MethodType.methodType(boolean.class, String.class));
+
+    OpenTelemetryConnectionJdbc45(
+        Connection delegate,
+        DbInfo dbInfo,
+        Instrumenter<DbRequest, Void> statementInstrumenter,
+        Instrumenter<DbRequest, Void> transactionInstrumenter,
+        boolean captureQueryParameters,
+        SqlCommenter sqlCommenter) {
+      super(
+          delegate,
+          dbInfo,
+          statementInstrumenter,
+          transactionInstrumenter,
+          captureQueryParameters,
+          sqlCommenter);
+    }
+
+    private static MethodHandle connectionMethod(String name, MethodType type) {
+      try {
+        return MethodHandles.publicLookup().findVirtual(Connection.class, name, type);
+      } catch (NoSuchMethodException | IllegalAccessException e) {
+        // should not happen, this class is only used when hasJdbc45() verified method presence
+        throw new IllegalStateException(e);
+      }
+    }
+
+    public String enquoteLiteral(String val) throws SQLException {
+      try {
+        return (String) ENQUOTE_LITERAL.invokeExact(delegate, val);
+      } catch (SQLException | RuntimeException | Error e) {
+        throw e;
+      } catch (Throwable t) {
+        throw new SQLException(t);
+      }
+    }
+
+    public String enquoteIdentifier(String identifier, boolean alwaysQuote) throws SQLException {
+      try {
+        return (String) ENQUOTE_IDENTIFIER.invokeExact(delegate, identifier, alwaysQuote);
+      } catch (SQLException | RuntimeException | Error e) {
+        throw e;
+      } catch (Throwable t) {
+        throw new SQLException(t);
+      }
+    }
+
+    public String enquoteNCharLiteral(String val) throws SQLException {
+      try {
+        return (String) ENQUOTE_NCHAR_LITERAL.invokeExact(delegate, val);
+      } catch (SQLException | RuntimeException | Error e) {
+        throw e;
+      } catch (Throwable t) {
+        throw new SQLException(t);
+      }
+    }
+
+    public boolean isSimpleIdentifier(String identifier) throws SQLException {
+      try {
+        return (boolean) IS_SIMPLE_IDENTIFIER.invokeExact(delegate, identifier);
+      } catch (SQLException | RuntimeException | Error e) {
+        throw e;
+      } catch (Throwable t) {
+        throw new SQLException(t);
+      }
     }
   }
 

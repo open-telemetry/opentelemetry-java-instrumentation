@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.googlehttpclient.v1_19;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -113,7 +114,7 @@ abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpR
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
                 equalTo(ERROR_TYPE, "500"),
-                equalTo(maybeStablePeerService(), testing.expectedPeerService())));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
     testing.waitAndAssertTraces(
         trace ->

@@ -11,12 +11,12 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.i
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingReceiveExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSendExceptionEventExtractor;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingExceptionEventExtractors.setMessagingSettleExceptionEventExtractor;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.Consumer;
 import com.rabbitmq.client.GetResponse;
 import io.opentelemetry.api.GlobalOpenTelemetry;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -27,6 +27,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -42,6 +43,9 @@ import java.util.List;
 import java.util.Map;
 
 public class RabbitSingletons {
+  // copied from semconv
+  private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+      AttributeKey.stringKey("messaging.system.name");
 
   // Shared with framework instrumentations through the application Consumer type.
   public static final VirtualField<Consumer, Boolean> PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT =
@@ -119,7 +123,7 @@ public class RabbitSingletons {
 
   private static Instrumenter<ChannelAndMethod, Void> createChannelInstrumenter() {
     return channelInstrumenterBuilder(ChannelAndMethod::getMethod, false)
-        .addAttributesExtractor(AttributesExtractor.constant(MESSAGING_SYSTEM, "rabbitmq"))
+        .addAttributesExtractor(AttributesExtractor.constant(MESSAGING_SYSTEM_NAME, "rabbitmq"))
         .buildInstrumenter(channelAndMethod -> CLIENT);
   }
 
@@ -130,6 +134,7 @@ public class RabbitSingletons {
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.SEND, PUBLISH_OPERATION_NAME),
                 true)
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, PUBLISH_OPERATION_NAME))
@@ -159,6 +164,7 @@ public class RabbitSingletons {
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.SETTLE, operationName),
                 true)
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, MessagingOperationType.SETTLE, operationName))
@@ -190,6 +196,7 @@ public class RabbitSingletons {
     InstrumenterBuilder<ReceiveRequest, GetResponse> builder =
         Instrumenter.<ReceiveRequest, GetResponse>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractors(extractors)
             .addOperationMetrics(MessagingConsumerMetrics.get())
             .addSpanLinksExtractor(
@@ -222,6 +229,7 @@ public class RabbitSingletons {
     InstrumenterBuilder<DeliveryRequest, Void> builder =
         Instrumenter.<DeliveryRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, spanNameExtractor)
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractors(extractors)
             .addOperationMetrics(MessagingProcessMetrics.get())
             .addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());

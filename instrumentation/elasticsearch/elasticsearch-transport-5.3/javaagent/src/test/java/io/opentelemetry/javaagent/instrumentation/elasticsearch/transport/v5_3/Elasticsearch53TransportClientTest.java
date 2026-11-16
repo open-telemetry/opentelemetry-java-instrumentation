@@ -48,6 +48,7 @@ class Elasticsearch53TransportClientTest extends AbstractElasticsearchTransportC
             .put("http.type", "netty3")
             .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
             .put("discovery.type", "single-node")
+            .put("transport.tcp.port", "0")
             .build();
     testNode =
         new Node(

@@ -26,6 +26,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
@@ -279,6 +281,18 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
 
     assertThat(((Scannable) flux).parents().filter(UnicastProcessor.class::isInstance).findFirst())
         .isPresent();
+  }
+
+  @Test
+  void fluxPassesDownstreamDemandToSource() {
+    List<Long> requests = new CopyOnWriteArrayList<>();
+    // hide() prevents fusion so that demand reaches the source as request() calls
+    Flux<Integer> source = Flux.range(0, 100).hide().doOnRequest(requests::add);
+    Flux<Integer> flux = ContextPropagationOperator.runWithContext(source, Context.root());
+
+    StepVerifier.create(flux, 1).expectNext(0).thenCancel().verify();
+
+    assertThat(requests).containsExactly(1L);
   }
 
   @Test

@@ -56,8 +56,7 @@ under Breaking.
 
 Emitted-attribute, attribute-value, or span-name changes are Breaking
 **only** when they ship unconditionally. If the change is gated behind
-`otel.instrumentation.common.v3-preview`,
-`otel.semconv-stability.opt-in=…`, or an `experimental` property, the
+`otel.semconv-stability.opt-in=…` or an `experimental` property, the
 entry belongs under Enhancements. Unconditional changes to a metric
 attribute value that fix unbounded cardinality belong under Bug fixes —
 see that section.
@@ -106,15 +105,14 @@ do not qualify.
 ## Enhancements
 
 New attributes, new config flags, new stable-semconv support, observable
-behavior gated on a flag (`v3-preview`, `SemconvStability`, experimental
-property), or measurable hot-path performance improvements. For semconv
+behavior gated on a supported semconv selection or experimental property, or measurable hot-path
+performance improvements. For semconv
 opt-ins, cite the flag value (for example
 `otel.semconv-stability.opt-in=messaging`) — the known values in this
 repo are `database`, `messaging`, `http`, `jvm`, `rpc`. Gated changes go
 here, never under Breaking.
 
-Never cite `otel.semconv-stability.preview`; it is an internal implementation
-name, not a user-facing property. Translate it to
+Never cite `otel.semconv-stability.preview`; translate it to
 `otel.semconv-stability.opt-in=<value>`.
 
 ## Bug fixes
@@ -184,7 +182,7 @@ keep the PR.
   that can disable telemetry, leak memory, deadlock, or otherwise break
   normal operation (removal of an early `GlobalOpenTelemetry.get()`
   call; closing bridged callbacks on GC; fixing an agent deadlock).
-- Agent transformation correctness: `@Advice` inline vs indy, advice
+- Agent transformation correctness: inlined vs non-inlined `@Advice`, advice
   scope, helper-class exposure to the application class loader.
 - Any public or extension-facing API, builder method, config key, or
   semconv surface, even when the diff also includes plumbing.
@@ -195,9 +193,6 @@ keep the PR.
 - Name concrete user-facing surfaces: flag names, property names, class
   names, attribute names. Use backticks for config keys, property names,
   attributes, and class/method names.
-- For `v3-preview`-gated changes, cite the user-facing property name
-  `otel.instrumentation.common.v3-preview`, not the internal
-  `v3_preview` key.
 - When behavior is disabled by default or gated by an opt-in, name the exact
   user-facing property and value needed to enable it.
 - Do not describe implementation details ("refactored", "moved",

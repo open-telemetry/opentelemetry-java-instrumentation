@@ -1,0 +1,47 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0;
+
+import com.google.auto.value.AutoValue;
+import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
+import org.apache.hadoop.hbase.TableName;
+
+@AutoValue
+public abstract class HbaseRequest {
+
+  // Retries create a new Call/request, and each Call is sent through one connection.
+  @Nullable private volatile InetSocketAddress networkPeer;
+
+  public static HbaseRequest create(
+      @Nullable String operation,
+      @Nullable TableName tableName,
+      @Nullable String serverTarget,
+      @Nullable Long operationBatchSize) {
+    return new AutoValue_HbaseRequest(operation, tableName, serverTarget, operationBatchSize);
+  }
+
+  public void setNetworkPeer(InetSocketAddress networkPeer) {
+    this.networkPeer = networkPeer;
+  }
+
+  @Nullable
+  public abstract String getOperation();
+
+  @Nullable
+  public abstract TableName getTableName();
+
+  @Nullable
+  public abstract String getServerTarget();
+
+  @Nullable
+  public InetSocketAddress getNetworkPeerInetSocketAddress() {
+    return networkPeer;
+  }
+
+  @Nullable
+  public abstract Long getOperationBatchSize();
+}

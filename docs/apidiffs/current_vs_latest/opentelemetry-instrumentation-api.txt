@@ -24,3 +24,22 @@ Comparing source compatibility of opentelemetry-instrumentation-api-3.0.0-SNAPSH
 	+++  NEW METHOD: PUBLIC(+) STATIC(+) io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor<REQUEST> create(io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter<REQUEST>)
 		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object
 	+++  NEW METHOD: PUBLIC(+) java.lang.String extract(java.lang.Object)
+***  MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getErrorType(java.lang.Object, java.lang.Object, java.lang.Throwable)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
++++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.http.HttpErrorType  (not serializable)
+	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
+	+++  NEW SUPERCLASS: java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) java.lang.String forClient(io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter<REQUEST,RESPONSE>, java.lang.Object, java.lang.Object, java.lang.Throwable)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) STATIC(+) java.lang.String forServer(io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter<REQUEST,RESPONSE>, java.lang.Object, java.lang.Object, java.lang.Throwable)
+		+++  NEW ANNOTATION: javax.annotation.Nullable
+		GENERIC TEMPLATES: +++ REQUEST:java.lang.Object, +++ RESPONSE:java.lang.Object
+***  MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter  (not serializable)
+	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
+	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
+	+++  NEW METHOD: PUBLIC(+) java.lang.String getErrorType(java.lang.Object, java.lang.Object, java.lang.Throwable)
+		+++  NEW ANNOTATION: javax.annotation.Nullable

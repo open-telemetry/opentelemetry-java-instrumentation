@@ -24,8 +24,8 @@ final class RocketMqBatchProcessSpanLinksExtractor
       AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<String> MESSAGING_MESSAGE_ID =
       AttributeKey.stringKey("messaging.message.id");
-  private static final AttributeKey<String> MESSAGING_ROCKETMQ_MESSAGE_TAG =
-      AttributeKey.stringKey("messaging.rocketmq.message.tag");
+  private static final AttributeKey<String> ROCKETMQ_MESSAGE_TAG =
+      AttributeKey.stringKey("rocketmq.message.tag");
 
   private final TextMapPropagator propagator;
   private final MessageExtractAdapter getter = new MessageExtractAdapter();
@@ -49,7 +49,7 @@ final class RocketMqBatchProcessSpanLinksExtractor
         attributes.put(MESSAGING_MESSAGE_ID, message.getMsgId());
       }
       if (captureMessageTag && !Objects.equals(message.getTags(), request.getMessageTag())) {
-        attributes.put(MESSAGING_ROCKETMQ_MESSAGE_TAG, message.getTags());
+        attributes.put(ROCKETMQ_MESSAGE_TAG, message.getTags());
       }
       spanLinks.addLink(Span.fromContext(extracted).getSpanContext(), attributes.build());
     }

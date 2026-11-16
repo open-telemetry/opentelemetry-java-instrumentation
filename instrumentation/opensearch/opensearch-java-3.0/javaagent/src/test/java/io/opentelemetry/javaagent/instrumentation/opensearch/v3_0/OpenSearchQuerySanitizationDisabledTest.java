@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -75,6 +76,8 @@ class OpenSearchQuerySanitizationDisabledTest extends AbstractOpenSearchQueryTes
                                         val.asString()
                                             .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
                                 equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                                equalTo(
+                                    stringKey("server.service.name"),
+                                    expectedMappedServiceName()))));
   }
 }

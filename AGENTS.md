@@ -15,15 +15,21 @@ build and test commands, style expectations, and scope.
 - After implementation changes, check the final diff and update only stale or misleading PR metadata.
 - Never hard wrap PR text.
 
-## Knowledge Loading
+## Repository rules
 
-For any task that analyzes or changes repository code, consult
-`.github/agents/knowledge/README.md` before drawing conclusions. Load only the
-articles relevant to the task.
+Read [`.github/copilot-instructions.md`](.github/copilot-instructions.md) and the applicable
+`.github/instructions/*.instructions.md` files when analyzing or changing code. The topic files'
+`applyTo` patterns select relevant paths; their stated conditions determine which rules apply.
+The same rules guide implementation and review, with review-only behavior in the
+`When reviewing` section of `.github/copilot-instructions.md`.
 
-Before introducing `WeakReference`, `WeakHashMap`, `Cache.weak()`, or another
-identity-keyed registry to attach javaagent state to a third-party object, load
-`.github/agents/knowledge/javaagent-virtual-fields.md`.
+Keep each topic's rules, exceptions, explanations, and examples together in its instruction file.
+Do not maintain a separate agent knowledge catalog. Read the instructions for related callers,
+helpers, and configuration when those contracts are part of the task.
+
+Before introducing weak references, weak-key caches, or another identity-keyed registry for
+javaagent state attached to third-party objects, read
+[instrumentation state](.github/instructions/instrumentation-state.instructions.md).
 
 ## Gradle Execution Rules
 

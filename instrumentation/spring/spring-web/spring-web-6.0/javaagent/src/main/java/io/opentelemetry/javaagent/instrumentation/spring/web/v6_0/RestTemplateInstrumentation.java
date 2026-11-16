@@ -8,10 +8,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.web.v6_0;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientUrlTemplate;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -42,7 +42,7 @@ class RestTemplateInstrumentation implements TypeInstrumentation {
       if (uriTemplate != null) {
         String path = UrlParser.getPath(uriTemplate);
         if (path != null) {
-          return HttpClientUrlTemplate.with(Java8BytecodeBridge.currentContext(), path);
+          return HttpClientUrlTemplate.with(Context.current(), path);
         }
       }
       return null;

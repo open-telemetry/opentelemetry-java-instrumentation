@@ -16,7 +16,6 @@ import com.lambdaworks.redis.protocol.AsyncCommand;
 import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -48,7 +47,7 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
     public static void saveContext(
         @Advice.This AsyncCommand<?, ?, ?> asyncCommand,
         @Advice.Argument(0) RedisCommand<?, ?, ?> command) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       // get the context that submitted this command and attach it, it will be used to run callbacks
       context = context.get(COMMAND_CONTEXT_KEY);
       CONTEXT.set(asyncCommand, context);

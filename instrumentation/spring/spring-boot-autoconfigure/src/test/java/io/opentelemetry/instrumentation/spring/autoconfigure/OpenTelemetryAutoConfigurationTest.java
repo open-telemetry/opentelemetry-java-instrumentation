@@ -200,6 +200,13 @@ class OpenTelemetryAutoConfigurationTest {
             context -> {
               assertThat(context).getBean("openTelemetry").isEqualTo(OpenTelemetry.noop());
               assertThat(context).getBean("configProvider").isEqualTo(ConfigProvider.noop());
+              assertThat(context)
+                  .getBean("otelProperties", ConfigProperties.class)
+                  .satisfies(
+                      configProperties -> {
+                        assertThat(configProperties.getString("otel.sdk.disabled")).isNull();
+                        assertThat(configProperties.getList("otel.propagators")).isEmpty();
+                      });
             });
   }
 }

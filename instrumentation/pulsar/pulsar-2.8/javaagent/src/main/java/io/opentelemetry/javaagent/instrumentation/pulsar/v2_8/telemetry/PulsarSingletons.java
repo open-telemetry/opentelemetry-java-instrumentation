@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -97,6 +98,7 @@ public class PulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(
                     getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
@@ -121,6 +123,7 @@ public class PulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(
                     getter, MessagingOperationType.RECEIVE, RECEIVE_OPERATION_NAME))
@@ -142,6 +145,7 @@ public class PulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
@@ -164,6 +168,7 @@ public class PulsarSingletons {
                 INSTRUMENTATION_NAME,
                 MessagingSpanNameExtractor.create(
                     getter, MessagingOperationType.SEND, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 createMessagingAttributesExtractor(
                     getter, MessagingOperationType.SEND, SEND_OPERATION_NAME))

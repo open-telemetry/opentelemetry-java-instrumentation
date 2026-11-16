@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -43,8 +42,8 @@ class SendInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This EndpointManager.Send send) {
-      Context context = Java8BytecodeBridge.currentContext();
-      if (context != Java8BytecodeBridge.rootContext()) {
+      Context context = Context.current();
+      if (context != Context.root()) {
         SEND_CONTEXT.set(send, context);
       }
     }

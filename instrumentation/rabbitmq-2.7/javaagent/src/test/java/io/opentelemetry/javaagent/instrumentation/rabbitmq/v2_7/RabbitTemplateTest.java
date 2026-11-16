@@ -9,15 +9,15 @@ import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitMqM
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.mockito.ArgumentMatchers.anyBoolean;
+import static org.mockito.Mockito.CALLS_REAL_METHODS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.rabbitmq.client.AMQP;
+import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Envelope;
 import com.rabbitmq.client.GetResponse;
 import com.rabbitmq.client.impl.AMQConnection;
-import com.rabbitmq.client.impl.ChannelN;
-import com.rabbitmq.client.impl.ConsumerWorkService;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -39,7 +39,8 @@ class RabbitTemplateTest {
     AMQConnection rabbitConnection = mock(AMQConnection.class);
     when(rabbitConnection.getAddress()).thenReturn(InetAddress.getLoopbackAddress());
     when(rabbitConnection.getPort()).thenReturn(5672);
-    StubChannel channel = new StubChannel(rabbitConnection);
+    StubChannel channel = mock(StubChannel.class, CALLS_REAL_METHODS);
+    when(channel.getConnection()).thenReturn(rabbitConnection);
     Connection connection = mock(Connection.class);
     when(connection.createChannel(anyBoolean())).thenReturn(channel);
     ConnectionFactory connectionFactory = mock(ConnectionFactory.class);
@@ -55,11 +56,7 @@ class RabbitTemplateTest {
     assertReceiveMetrics(testing, "template", null, 1);
   }
 
-  private static class StubChannel extends ChannelN {
-    StubChannel(AMQConnection connection) {
-      super(connection, 1, mock(ConsumerWorkService.class));
-    }
-
+  private abstract static class StubChannel implements Channel {
     @Override
     public GetResponse basicGet(String queue, boolean autoAck) throws IOException {
       assertThat(queue).isEqualTo("template");

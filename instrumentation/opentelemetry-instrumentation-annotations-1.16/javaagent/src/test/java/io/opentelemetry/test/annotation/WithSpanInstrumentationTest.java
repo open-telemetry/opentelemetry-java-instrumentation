@@ -19,6 +19,8 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.annotations.WithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Target;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.CompletableFuture;
 import net.bytebuddy.ByteBuddy;
@@ -146,11 +148,9 @@ class WithSpanInstrumentationTest {
   }
 
   @Test
-  void annotatedConstructorDoesNotCreateSpan() throws InterruptedException {
-    new TracedWithSpan("unused");
-
-    Thread.sleep(500); // sleep a bit just to make sure no span is captured
-    assertThat(testing.waitForTraces(0)).isEmpty();
+  void annotationTargetsMethodsOnly() {
+    assertThat(WithSpan.class.getAnnotation(Target.class).value())
+        .containsExactly(ElementType.METHOD);
   }
 
   @Test

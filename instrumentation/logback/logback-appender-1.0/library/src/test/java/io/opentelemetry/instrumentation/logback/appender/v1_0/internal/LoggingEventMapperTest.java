@@ -14,12 +14,19 @@ import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_
 import static java.util.Arrays.asList;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.when;
 
+import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.LoggerBuilder;
+import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,6 +51,29 @@ class LoggingEventMapperTest {
 
     // then
     verifyNoInteractions(builder);
+  }
+
+  @Test
+  void defaultMdcReaderUsesLoggingEventGetter() {
+    ILoggingEvent event = mock(ILoggingEvent.class);
+    when(event.getLoggerName()).thenReturn("test");
+    when(event.getMDCPropertyMap()).thenReturn(singletonMap("key", "value"));
+
+    LoggerProvider loggerProvider = mock(LoggerProvider.class);
+    LoggerBuilder loggerBuilder = mock(LoggerBuilder.class);
+    Logger logger = mock(Logger.class);
+    LogRecordBuilder recordBuilder = mock(LogRecordBuilder.class);
+    when(loggerProvider.loggerBuilder(anyString())).thenReturn(loggerBuilder);
+    when(loggerBuilder.build()).thenReturn(logger);
+    when(logger.logRecordBuilder()).thenReturn(recordBuilder);
+
+    LoggingEventMapper mapper =
+        LoggingEventMapper.builder().setMdcAttributes(include("key")).build();
+    mapper.emit(loggerProvider, event, -1);
+
+    verify(event).getMDCPropertyMap();
+    verify(recordBuilder).setAttribute(stringKey("key"), "value");
+    verify(recordBuilder).emit();
   }
 
   @Test

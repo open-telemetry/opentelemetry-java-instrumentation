@@ -22,7 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 // Host.getHostId() was added in driver 3.3.1. The other reflected APIs were added in 3.8.0.
-// These tests use 3.11.5; the javaagent module tests use 3.2.0, where none of them exist.
+// These tests use 3.11.5; the javaagent module tests cover 3.0.0, where none of them exist.
 @ExtendWith(MockitoExtension.class)
 class CassandraEndPointsTest {
 

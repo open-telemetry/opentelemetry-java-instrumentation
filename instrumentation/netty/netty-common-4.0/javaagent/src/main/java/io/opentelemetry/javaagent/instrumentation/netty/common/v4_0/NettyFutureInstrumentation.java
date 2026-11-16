@@ -13,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import io.netty.util.concurrent.Future;
 import io.netty.util.concurrent.GenericFutureListener;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -59,12 +58,10 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static GenericFutureListener<? extends Future<?>> wrapListener(
-        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listenerArg) {
+        @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>> listener) {
 
-      // TODO remove this extra variable when migrating to "indy only" instrumentation.
-      GenericFutureListener<? extends Future<?>> listener = listenerArg;
       if (FutureListenerWrappers.shouldWrap(listener)) {
-        listener = FutureListenerWrappers.wrap(Java8BytecodeBridge.currentContext(), listener);
+        listener = FutureListenerWrappers.wrap(Context.current(), listener);
       }
       return listener;
     }
@@ -82,7 +79,7 @@ public class NettyFutureInstrumentation implements TypeInstrumentation {
     public static GenericFutureListener<?>[] wrapListener(
         @Advice.Argument(value = 0) GenericFutureListener<? extends Future<?>>[] listeners) {
 
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       @SuppressWarnings({"unchecked", "rawtypes"}) // creating array of generic type
       GenericFutureListener<? extends Future<?>>[] wrappedListeners =
           new GenericFutureListener[listeners.length];

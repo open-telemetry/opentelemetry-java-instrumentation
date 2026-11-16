@@ -42,6 +42,7 @@ import java.util.concurrent.LinkedBlockingDeque;
  */
 final class JarAnalyzer implements ClassFileTransformer {
 
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.runtime-telemetry";
   private static final java.util.logging.Logger logger =
       java.util.logging.Logger.getLogger(JarAnalyzer.class.getName());
 
@@ -61,13 +62,13 @@ final class JarAnalyzer implements ClassFileTransformer {
   private final Set<URI> seenUris = ConcurrentHashMap.newKeySet();
   private final BlockingQueue<URL> toProcess = new LinkedBlockingDeque<>();
 
-  private JarAnalyzer(OpenTelemetry openTelemetry, String instrumentationName, int jarsPerSecond) {
+  private JarAnalyzer(OpenTelemetry openTelemetry, int jarsPerSecond) {
     String instrumentationVersion =
-        EmbeddedInstrumentationProperties.findVersion(instrumentationName);
+        EmbeddedInstrumentationProperties.findVersion(INSTRUMENTATION_NAME);
     Logger logger =
         openTelemetry
             .getLogsBridge()
-            .loggerBuilder(instrumentationName)
+            .loggerBuilder(INSTRUMENTATION_NAME)
             .setInstrumentationVersion(instrumentationVersion)
             .build();
     Worker worker = new Worker(logger, toProcess, jarsPerSecond);
@@ -78,10 +79,8 @@ final class JarAnalyzer implements ClassFileTransformer {
   }
 
   /** Create {@link JarAnalyzer} and start the worker thread. */
-  // TODO can remove instrumentationName parameter in 3.0
-  static JarAnalyzer create(
-      OpenTelemetry openTelemetry, String instrumentationName, int jarsPerSecond) {
-    return new JarAnalyzer(openTelemetry, instrumentationName, jarsPerSecond);
+  static JarAnalyzer create(OpenTelemetry openTelemetry, int jarsPerSecond) {
+    return new JarAnalyzer(openTelemetry, jarsPerSecond);
   }
 
   /**

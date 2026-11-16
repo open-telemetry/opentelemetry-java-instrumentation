@@ -8,10 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.jetty.v8_0;
 import static io.opentelemetry.javaagent.instrumentation.jetty.v8_0.Jetty8Singletons.PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -31,7 +29,7 @@ class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("dispatch").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
+        named("dispatch").and(takesArgument(0, Runnable.class)),
         getClass().getName() + "$DispatchAdvice");
   }
 
@@ -41,7 +39,7 @@ class JettyQueuedThreadPoolInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static PropagatedContext enterJobSubmit(@Advice.Argument(0) Runnable task) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         return ExecutorAdviceHelper.attachContextToTask(context, PROPAGATED_CONTEXT, task);
       }

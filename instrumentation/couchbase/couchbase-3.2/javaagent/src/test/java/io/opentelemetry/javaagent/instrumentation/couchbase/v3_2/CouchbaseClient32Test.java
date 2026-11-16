@@ -19,6 +19,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -138,7 +139,8 @@ class CouchbaseClient32Test {
                       span,
                       "get",
                       "id",
-                      testLatestDeps() ? StatusData.error() : StatusData.unset());
+                      testLatestDeps() ? StatusData.error() : StatusData.unset(),
+                      testLatestDeps() ? DocumentNotFoundException.class.getName() : null);
                   span.hasNoParent();
                 },
                 span ->
@@ -153,7 +155,8 @@ class CouchbaseClient32Test {
                       span,
                       "get",
                       "id",
-                      testLatestDeps() ? StatusData.error() : StatusData.unset());
+                      testLatestDeps() ? StatusData.error() : StatusData.unset(),
+                      testLatestDeps() ? DocumentNotFoundException.class.getName() : null);
                   span.hasNoParent();
                 });
           }
@@ -239,6 +242,15 @@ class CouchbaseClient32Test {
 
   private static void assertOperationSpan(
       SpanDataAssert span, String operation, String documentId, StatusData status) {
+    assertOperationSpan(span, operation, documentId, status, null);
+  }
+
+  private static void assertOperationSpan(
+      SpanDataAssert span,
+      String operation,
+      String documentId,
+      StatusData status,
+      String errorType) {
     span.hasKind(CLIENT)
         .hasName(operation + " _default")
         .satisfies(hasScopeName("io.opentelemetry.couchbase-3.2"))
@@ -248,6 +260,7 @@ class CouchbaseClient32Test {
             equalTo(DB_NAMESPACE, "test"),
             equalTo(DB_OPERATION_NAME, operation),
             equalTo(DB_COLLECTION_NAME, "_default"),
+            equalTo(ERROR_TYPE, errorType),
             equalTo(stringKey("db.couchbase.document_id"), experimental(documentId)),
             equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
             equalTo(longKey("db.couchbase.retries"), experimental(0L)),

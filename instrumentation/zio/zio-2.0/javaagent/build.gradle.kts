@@ -11,19 +11,19 @@ muzzle {
   pass {
     group.set("dev.zio")
     module.set("zio_2.12")
-    versions.set("[$zioVersion,)")
+    versions.set("[2.0.0,)")
     assertInverse.set(true)
   }
   pass {
     group.set("dev.zio")
     module.set("zio_2.13")
-    versions.set("[$zioVersion,)")
+    versions.set("[2.0.0,)")
     assertInverse.set(true)
   }
   pass {
     group.set("dev.zio")
     module.set("zio_3")
-    versions.set("[$zioVersion,)")
+    versions.set("[2.0.0,)")
     assertInverse.set(true)
   }
 }

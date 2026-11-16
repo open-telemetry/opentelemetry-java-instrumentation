@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.data.v3_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -83,6 +84,7 @@ class ReactiveSpringDataTest {
                             equalTo(DB_QUERY_TEXT, "SELECT CUSTOMER.* FROM CUSTOMER"),
                             equalTo(DB_QUERY_SUMMARY, "SELECT CUSTOMER"),
                             equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 }
