@@ -129,7 +129,8 @@ public final class SocketAddressUtil {
         return null;
       }
       try {
-        Object value = path.invokeExact(address);
+        // Unlike invokeExact, this ordinary call can be dexed for older Android versions.
+        Object value = path.invokeWithArguments(address);
         String name = value instanceof Path ? value.toString() : (String) value;
         return name == null || name.isEmpty() ? null : name;
       } catch (Throwable t) {
