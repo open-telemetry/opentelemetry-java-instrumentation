@@ -85,15 +85,17 @@ public final class SocketAddressUtil {
 
     // This helper is shared across application loaders, so optional types must be resolved and
     // cached by their runtime class rather than by the helper's defining loader.
-    private static final ClassValue<UnixSocketAccessor> unixSocketAccessors =
-        new ClassValue<UnixSocketAccessor>() {
+    private static final ClassValue<MethodHandle> unixSocketAccessors =
+        new ClassValue<MethodHandle>() {
           @Override
-          protected UnixSocketAccessor computeValue(Class<?> type) {
+          @Nullable
+          protected MethodHandle computeValue(Class<?> type) {
             return createAccessor(type);
           }
         };
 
-    private static UnixSocketAccessor createAccessor(Class<?> type) {
+    @Nullable
+    private static MethodHandle createAccessor(Class<?> type) {
       String name = type.getName();
       String method;
       Class<?> returnType;
@@ -105,26 +107,24 @@ public final class SocketAddressUtil {
         method = "path";
         returnType = String.class;
       } else {
-        return UnixSocketAccessor.UNSUPPORTED;
+        return null;
       }
       try {
-        MethodHandle handle =
-            MethodHandles.publicLookup()
-                .findVirtual(type, method, MethodType.methodType(returnType))
-                .asType(MethodType.methodType(Object.class, SocketAddress.class));
-        return new UnixSocketAccessor(handle);
+        return MethodHandles.publicLookup()
+            .findVirtual(type, method, MethodType.methodType(returnType));
       } catch (NoSuchMethodException | IllegalAccessException ignored) {
-        return UnixSocketAccessor.UNSUPPORTED;
+        return null;
       }
     }
 
     private static boolean isUnixSocket(SocketAddress address) {
-      return unixSocketAccessors.get(address.getClass()).path != null;
+      @Nullable MethodHandle path = unixSocketAccessors.get(address.getClass());
+      return path != null;
     }
 
     @Nullable
     private static String getAddress(SocketAddress address) {
-      MethodHandle path = unixSocketAccessors.get(address.getClass()).path;
+      @Nullable MethodHandle path = unixSocketAccessors.get(address.getClass());
       if (path == null) {
         return null;
       }
@@ -136,17 +136,6 @@ public final class SocketAddressUtil {
       } catch (Throwable t) {
         logger.log(FINE, "Unable to read Unix domain socket path", t);
         return null;
-      }
-    }
-
-    @IgnoreJRERequirement
-    private static final class UnixSocketAccessor {
-      private static final UnixSocketAccessor UNSUPPORTED = new UnixSocketAccessor(null);
-
-      @Nullable private final MethodHandle path;
-
-      private UnixSocketAccessor(@Nullable MethodHandle path) {
-        this.path = path;
       }
     }
   }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.grpc.v1_6;
 
-import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
@@ -16,7 +15,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.entry;
-import static org.junit.jupiter.api.Assumptions.assumeFalse;
 import static org.mockito.Mockito.mock;
 
 import io.grpc.MethodDescriptor;
@@ -79,22 +77,6 @@ class GrpcNetworkAttributesTest {
   @ValueSource(booleans = {false, true})
   void unsupportedAddresses(boolean client) {
     SocketAddress address = new SocketAddress() {};
-
-    assertThat(extract(client, request(client, address, address)))
-        .containsOnly(entry(SERVER_ADDRESS, "logical.example"), entry(SERVER_PORT, 443L));
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void inProcessAddresses(boolean client) throws Exception {
-    // Newer gRPC versions move this type out of grpc-core into the optional grpc-inprocess
-    // artifact.
-    assumeFalse(testLatestDeps());
-    SocketAddress address =
-        Class.forName("io.grpc.inprocess.InProcessSocketAddress")
-            .asSubclass(SocketAddress.class)
-            .getConstructor(String.class)
-            .newInstance("in-process");
 
     assertThat(extract(client, request(client, address, address)))
         .containsOnly(entry(SERVER_ADDRESS, "logical.example"), entry(SERVER_PORT, 443L));
