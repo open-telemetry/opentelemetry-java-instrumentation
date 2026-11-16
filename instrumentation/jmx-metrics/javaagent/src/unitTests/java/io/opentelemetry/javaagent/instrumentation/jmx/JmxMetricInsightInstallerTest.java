@@ -179,7 +179,7 @@ class JmxMetricInsightInstallerTest {
   }
 
   @Test
-  void customRulesFromDeclarativeConfig() throws IOException {
+  void validInlineJmxRulesFromDeclarativeConfig() throws IOException {
     DeclarativeConfigProperties config;
     try (InputStream input = getClass().getResourceAsStream("/jmx-declarative-config.yaml")) {
       config =
@@ -216,7 +216,8 @@ class JmxMetricInsightInstallerTest {
   }
 
   @Test
-  void invalidInlineRulesDoNotPreventOtherMetrics(@TempDir Path directory) throws IOException {
+  void invalidInlineJmxRulesDoNotPreventNonInlineMetrics(@TempDir Path directory)
+      throws IOException {
     Path rules = directory.resolve("custom-jmx.yaml");
     Files.write(
         rules,
