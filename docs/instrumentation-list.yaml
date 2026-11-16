@@ -12168,6 +12168,7 @@ libraries:
     - kafka.consumer.fetch_throttle_time_max-a716c191
     - kafka.consumer.fetch_total-9d09818d
     - kafka.consumer.heartbeat_rate-8cb2af4e
+    - kafka.consumer.heartbeat_response_time_max-15ed35ff
     - kafka.consumer.heartbeat_total-ffc8a49f
     - kafka.consumer.incoming_byte_rate-aa366cac
     - kafka.consumer.incoming_byte_total-40c552cf
