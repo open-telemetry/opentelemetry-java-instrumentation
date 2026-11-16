@@ -108,23 +108,23 @@ class ServletRequestBodyExtractorTest {
 
   @Test
   void nonUtf8WithContentTypeWithEncoding() {
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), "text/plain; charset=ISO-8859-1")).isEqualTo("café");
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), "text/plain; charset=ISO-8859-1"))
+        .isEqualTo("café");
   }
 
   @ParameterizedTest
   @CsvSource(
       delimiterString = "|",
       value = {
-          "text/plain; charset=ISO-8859-1|ISO-8859-1",
-          "text/plain;charset=iso-8859-1|ISO-8859-1",
-          "text/plain; charset=iso-8859-1 |ISO-8859-1",
-          "text/plain; charset=\"ISO-8859-1\"|ISO-8859-1",
-          "text/plain; charset=iso-8859-1; boundary=x|ISO-8859-1",
-          "text/plain; charset=latin1|ISO-8859-1",
-          "text/plain; charset=utf8|UTF-8",
-          "text/plain; charset=UTF-8|UTF-8"
-      }
-  )
+        "text/plain; charset=ISO-8859-1|ISO-8859-1",
+        "text/plain;charset=iso-8859-1|ISO-8859-1",
+        "text/plain; charset=iso-8859-1 |ISO-8859-1",
+        "text/plain; charset=\"ISO-8859-1\"|ISO-8859-1",
+        "text/plain; charset=iso-8859-1; boundary=x|ISO-8859-1",
+        "text/plain; charset=latin1|ISO-8859-1",
+        "text/plain; charset=utf8|UTF-8",
+        "text/plain; charset=UTF-8|UTF-8"
+      })
   void charsetDecoding(String contentType, String expectedCharset) {
     Charset expected = Charset.forName(expectedCharset);
     assertThat(getCharsetFromContentTypeHeader(contentType)).isEqualTo(expected);
