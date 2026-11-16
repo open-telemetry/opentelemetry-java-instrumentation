@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.nacosclient.v2_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_NAME;
@@ -89,6 +90,7 @@ class NacosClientAgentInstrumentationTest {
                             equalTo(NETWORK_PROTOCOL_NAME, "grpc"),
                             equalTo(NETWORK_PEER_ADDRESS, null),
                             equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(ERROR_TYPE, error.getClass().getName()),
                             equalTo(stringKey("nacos.category"), "config"),
                             equalTo(stringKey("nacos.request.type"), "ConfigQueryRequest"))));
   }
@@ -133,6 +135,7 @@ class NacosClientAgentInstrumentationTest {
                             equalTo(NETWORK_PROTOCOL_NAME, "grpc"),
                             equalTo(NETWORK_PEER_ADDRESS, null),
                             equalTo(NETWORK_PEER_PORT, null),
+                            equalTo(ERROR_TYPE, failedResponse ? "500" : null),
                             equalTo(stringKey("nacos.category"), "naming"),
                             equalTo(stringKey("nacos.request.type"), "NotifySubscriberRequest"),
                             equalTo(stringKey("nacos.group"), "DEFAULT_GROUP"),

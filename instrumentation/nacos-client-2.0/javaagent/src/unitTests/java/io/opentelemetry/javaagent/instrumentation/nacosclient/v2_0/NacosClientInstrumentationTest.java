@@ -156,6 +156,25 @@ class NacosClientInstrumentationTest {
   }
 
   @Test
+  void createsServerCheckRequests() {
+    assertRequest(
+        NacosRequestMapper.createServerCheckRequest("127.0.0.1", 9848),
+        Request.class,
+        "connection",
+        "serverCheck",
+        "127.0.0.1",
+        9848);
+
+    assertRequest(
+        NacosRequestMapper.createServerCheckRequest("[2001:db8::1]:9848"),
+        Request.class,
+        "connection",
+        "serverCheck",
+        "2001:db8::1",
+        9848);
+  }
+
+  @Test
   void ignoresUnsupportedRequests() {
     assertThat(NacosRequestMapper.mapClientRequest(new UnsupportedRequest(), "127.0.0.1:8848"))
         .isNull();

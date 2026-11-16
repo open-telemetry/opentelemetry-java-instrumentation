@@ -27,6 +27,10 @@ public class NacosRequestMapper {
         new ServerCheckRequest(), "connection", "serverCheck", peer, serverIp, serverPort);
   }
 
+  public static NacosClientRequest createServerCheckRequest(String peer) {
+    return createRequest(new ServerCheckRequest(), "connection", "serverCheck", peer);
+  }
+
   @Nullable
   public static NacosClientRequest mapClientRequest(Request request, String peer) {
     if (request instanceof InstanceRequest) {

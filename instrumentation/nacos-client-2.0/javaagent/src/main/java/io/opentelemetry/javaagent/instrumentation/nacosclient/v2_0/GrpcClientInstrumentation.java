@@ -10,6 +10,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import com.alibaba.nacos.api.grpc.auto.RequestGrpc;
 import com.alibaba.nacos.api.remote.response.Response;
 import com.alibaba.nacos.common.remote.client.RpcClient;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -38,6 +39,15 @@ class GrpcClientInstrumentation implements TypeInstrumentation {
                 takesArgument(
                     2, named("com.alibaba.nacos.api.grpc.auto.RequestGrpc$RequestFutureStub"))),
         getClass().getName() + "$ServerCheckAdvice");
+    // before 2.0.2 the server address is not passed to serverCheck
+    transformer.applyAdviceToMethod(
+        isMethod()
+            .and(named("serverCheck"))
+            .and(takesArguments(1))
+            .and(
+                takesArgument(
+                    0, named("com.alibaba.nacos.api.grpc.auto.RequestGrpc$RequestFutureStub"))),
+        getClass().getName() + "$StubServerCheckAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -65,6 +75,55 @@ class GrpcClientInstrumentation implements TypeInstrumentation {
           NacosRequestMapper.createServerCheckRequest(serverIp, serverPort),
           response,
           throwable);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class StubServerCheckAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static State onEnter(
+        @Advice.This RpcClient rpcClient,
+        @Advice.Argument(0) RequestGrpc.RequestFutureStub requestStub) {
+      NacosClientRequest request =
+          NacosRequestMapper.createServerCheckRequest(requestStub.getChannel().authority());
+      String serverIp = request.peerHost();
+      Integer serverPort = request.peerPort();
+      if (serverIp != null && serverPort != null) {
+        RpcClientServerInfoAccessor.set(rpcClient, new RpcClient.ServerInfo(serverIp, serverPort));
+      }
+      ContextAndScope contextAndScope = NacosClientSingletons.startClientSpan(request);
+      return contextAndScope == null ? null : new State(request, contextAndScope);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Enter @Nullable State state,
+        @Advice.Return @Nullable Response response,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      if (state == null) {
+        return;
+      }
+      NacosClientSingletons.endClientSpan(
+          state.contextAndScope(), state.request(), response, throwable);
+    }
+  }
+
+  public static class State {
+    private final NacosClientRequest request;
+    private final ContextAndScope contextAndScope;
+
+    public State(NacosClientRequest request, ContextAndScope contextAndScope) {
+      this.request = request;
+      this.contextAndScope = contextAndScope;
+    }
+
+    public NacosClientRequest request() {
+      return request;
+    }
+
+    public ContextAndScope contextAndScope() {
+      return contextAndScope;
     }
   }
 }

@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -15,34 +18,30 @@ dependencies {
   library("com.alibaba.nacos:nacos-client:2.0.0")
   latestDepTestLibrary("com.alibaba.nacos:nacos-client:2.+") // documented limitation
 
-  testImplementation(project(":instrumentation-api"))
-  testImplementation(project(":instrumentation-api-incubator"))
-
-  testImplementation("io.opentelemetry:opentelemetry-api")
-  testImplementation("io.opentelemetry:opentelemetry-context")
-  testImplementation("com.alibaba.nacos:nacos-client:2.0.0")
+  testImplementation("org.testcontainers:testcontainers")
 }
 
-val testAgentInstrumentation by tasks.registering(Test::class) {
-  testClassesDirs = sourceSets.test.get().output.classesDirs
-  classpath = sourceSets.test.get().runtimeClasspath
-  include("**/NacosClientAgentInstrumentationTest.class")
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("com.alibaba.nacos:nacos-client:2.0.0")
+    }
+  }
 
-  jvmArgs("-Dotel.instrumentation.nacos-client.enabled=true")
+  executions("test") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.nacos-client.enabled=true")
+      // keep the Nacos client's snapshot, cache and log files out of the user home directory
+      val nacosClientDir = layout.buildDirectory.dir("nacos-client").get().asFile.absolutePath
+      systemProperty("JM.SNAPSHOT.PATH", nacosClientDir)
+      systemProperty("JM.LOG.PATH", nacosClientDir)
+    }
+  }
 }
 
 tasks {
-  test {
-    exclude("**/NacosClientAgentInstrumentationTest.class")
-  }
-
   check {
-    dependsOn(testAgentInstrumentation)
-  }
-}
-
-afterEvaluate {
-  tasks.withType<Test>().configureEach {
-    classpath += sourceSets.main.get().output
+    dependsOn(testing.suites)
   }
 }
