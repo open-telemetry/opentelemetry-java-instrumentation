@@ -58,6 +58,7 @@ dependencies {
   }
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+  implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
@@ -152,6 +153,7 @@ testing.suites {
   register<JvmTestSuite>("asyncAppenderTest") {
     dependencies {
       implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+      implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
       implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
       implementation("ch.qos.logback:logback-classic") {
