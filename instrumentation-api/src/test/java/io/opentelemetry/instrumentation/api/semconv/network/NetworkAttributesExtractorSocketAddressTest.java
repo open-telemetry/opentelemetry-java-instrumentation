@@ -15,8 +15,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.netty.channel.unix.DomainSocketAddress;
-import io.netty.util.internal.ObjectUtil;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -111,7 +109,8 @@ class NetworkAttributesExtractorSocketAddressTest {
   }
 
   @Test
-  void newSocketGetterTakesPrecedenceOverInetGetter() {
+  @EnabledForJreRange(min = JRE.JAVA_16)
+  void newSocketGetterTakesPrecedenceOverInetGetter() throws Exception {
     NetworkAttributesGetter<SocketAddress, SocketAddress> getter =
         new TestGetter() {
           @Override
@@ -126,11 +125,7 @@ class NetworkAttributesExtractorSocketAddressTest {
             return new InetSocketAddress("4.3.2.1", 9090);
           }
         };
-    assertThat(
-            extract(
-                getter,
-                new DomainSocketAddress("local.sock"),
-                new DomainSocketAddress("peer.sock")))
+    assertThat(extract(getter, jdkUnixAddress("local.sock"), jdkUnixAddress("peer.sock")))
         .containsOnly(
             entry(NETWORK_TRANSPORT, "unix"),
             entry(NETWORK_LOCAL_ADDRESS, "local.sock"),
@@ -138,7 +133,8 @@ class NetworkAttributesExtractorSocketAddressTest {
   }
 
   @Test
-  void explicitAttributesTakePrecedence() {
+  @EnabledForJreRange(min = JRE.JAVA_16)
+  void explicitAttributesTakePrecedence() throws Exception {
     NetworkAttributesGetter<SocketAddress, SocketAddress> getter =
         new TestGetter() {
           @Override
@@ -171,11 +167,7 @@ class NetworkAttributesExtractorSocketAddressTest {
             return 5678;
           }
         };
-    assertThat(
-            extract(
-                getter,
-                new DomainSocketAddress("local.sock"),
-                new DomainSocketAddress("peer.sock")))
+    assertThat(extract(getter, jdkUnixAddress("local.sock"), jdkUnixAddress("peer.sock")))
         .containsOnly(
             entry(NETWORK_TYPE, "custom-type"),
             entry(NETWORK_TRANSPORT, "custom-transport"),
@@ -183,20 +175,6 @@ class NetworkAttributesExtractorSocketAddressTest {
             entry(NETWORK_LOCAL_PORT, 1234L),
             entry(NETWORK_PEER_ADDRESS, "custom-peer"),
             entry(NETWORK_PEER_PORT, 5678L));
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void nettyUnixAddresses(boolean shaded) {
-    assertUnixAddresses(nettyAddress(shaded, "local.sock"), nettyAddress(shaded, "peer.sock"));
-    assertEmptyUnixAddress(nettyAddress(shaded, ""));
-  }
-
-  private static SocketAddress nettyAddress(boolean shaded, String path) {
-    if (shaded) {
-      return new io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress(path);
-    }
-    return new DomainSocketAddress(path);
   }
 
   @Test
@@ -235,58 +213,11 @@ class NetworkAttributesExtractorSocketAddressTest {
   }
 
   @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void optionalNettyTypesInDifferentClassLoaders(boolean shaded) throws Exception {
-    Class<?> addressType =
-        shaded
-            ? io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress.class
-            : DomainSocketAddress.class;
-    URL addressJar = addressType.getProtectionDomain().getCodeSource().getLocation();
-    URL[] addressUrls =
-        shaded
-            ? new URL[] {addressJar}
-            : new URL[] {
-              addressJar, ObjectUtil.class.getProtectionDomain().getCodeSource().getLocation()
-            };
-    URL helperUrl = SocketAddressUtil.class.getProtectionDomain().getCodeSource().getLocation();
-    try (URLClassLoader helperLoader = new URLClassLoader(new URL[] {helperUrl}, null);
-        URLClassLoader firstLoader = new URLClassLoader(addressUrls, null);
-        URLClassLoader secondLoader = new URLClassLoader(addressUrls, null)) {
-      Class<?> helper = helperLoader.loadClass(SocketAddressUtil.class.getName());
-      assertThat(helper.getClassLoader()).isNotSameAs(SocketAddressUtil.class.getClassLoader());
-      for (URLClassLoader addressLoader : new URLClassLoader[] {firstLoader, secondLoader}) {
-        Class<? extends SocketAddress> isolatedType =
-            addressLoader.loadClass(addressType.getName()).asSubclass(SocketAddress.class);
-        assertThat(isolatedType).isNotSameAs(addressType);
-        SocketAddress address =
-            isolatedType.getConstructor(String.class).newInstance("isolated.sock");
-        assertThat(SocketAddressUtil.getAddress(address)).isEqualTo("isolated.sock");
-        assertThat(helper.getMethod("getAddress", SocketAddress.class).invoke(null, address))
-            .isEqualTo("isolated.sock");
-        assertThat(
-                helper
-                    .getMethod("getNetworkTransport", SocketAddress.class, SocketAddress.class)
-                    .invoke(null, null, address))
-            .isEqualTo("unix");
-      }
-    }
-  }
-
-  @ParameterizedTest
   @ValueSource(
       strings = {"java.lang.ClassValue", "java.lang.invoke.MethodHandle", "java.nio.file.Path"})
   void inetAddressesWorkWithoutUnixRuntimeSupport(String missingClass) throws Exception {
-    URL helperUrl = SocketAddressUtil.class.getProtectionDomain().getCodeSource().getLocation();
-    try (URLClassLoader helperLoader =
-        new URLClassLoader(new URL[] {helperUrl}, null) {
-          @Override
-          protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
-            if (name.equals(missingClass)) {
-              throw new ClassNotFoundException(name);
-            }
-            return super.loadClass(name, resolve);
-          }
-        }) {
+    URLClassLoader helperLoader = helperLoaderWithout(missingClass);
+    try {
       Class<?> helper = helperLoader.loadClass(SocketAddressUtil.class.getName());
       InetSocketAddress inet = new InetSocketAddress("1.2.3.4", 8080);
       assertThat(helper.getMethod("getAddress", SocketAddress.class).invoke(null, inet))
@@ -303,14 +234,47 @@ class NetworkAttributesExtractorSocketAddressTest {
                   .getMethod("getNetworkTransport", SocketAddress.class, SocketAddress.class)
                   .invoke(null, inet, inet))
           .isNull();
-      SocketAddress unix = new DomainSocketAddress("unavailable.sock");
+    } finally {
+      close(helperLoader);
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"java.lang.ClassValue", "java.lang.invoke.MethodHandle", "java.nio.file.Path"})
+  @EnabledForJreRange(min = JRE.JAVA_16)
+  void jdkUnixAddressesAreUnavailableWithoutUnixRuntimeSupport(String missingClass)
+      throws Exception {
+    URLClassLoader helperLoader = helperLoaderWithout(missingClass);
+    try {
+      Class<?> helper = helperLoader.loadClass(SocketAddressUtil.class.getName());
+      SocketAddress unix = jdkUnixAddress("unavailable.sock");
       assertThat(helper.getMethod("getAddress", SocketAddress.class).invoke(null, unix)).isNull();
       assertThat(
               helper
                   .getMethod("getNetworkTransport", SocketAddress.class, SocketAddress.class)
                   .invoke(null, unix, unix))
           .isNull();
+    } finally {
+      close(helperLoader);
     }
+  }
+
+  private static void close(URLClassLoader classLoader) throws Exception {
+    classLoader.getClass().getMethod("close").invoke(classLoader);
+  }
+
+  private static URLClassLoader helperLoaderWithout(String missingClass) {
+    URL helperUrl = SocketAddressUtil.class.getProtectionDomain().getCodeSource().getLocation();
+    return new URLClassLoader(new URL[] {helperUrl}, null) {
+      @Override
+      protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+        if (name.equals(missingClass)) {
+          throw new ClassNotFoundException(name);
+        }
+        return super.loadClass(name, resolve);
+      }
+    };
   }
 
   @Test
