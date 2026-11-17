@@ -14,7 +14,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-class JvmMetricsOwnershipDefaultTest {
+class JvmMetricsDeduplicationDisabledTest {
   private static final String MICROMETER_SCOPE = "io.opentelemetry.micrometer-1.5";
   private static final String RUNTIME_TELEMETRY_SCOPE = "io.opentelemetry.runtime-telemetry";
 
@@ -27,7 +27,7 @@ class JvmMetricsOwnershipDefaultTest {
   }
 
   @Test
-  void jvmMetricsAreBridgedByDefault() {
+  void jvmMetricsAreBridgedWhenDeduplicationIsDisabled() {
     new ClassLoaderMetrics().bindTo(Metrics.globalRegistry);
 
     testing.waitAndAssertMetrics(

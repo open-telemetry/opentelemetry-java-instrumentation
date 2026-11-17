@@ -18,8 +18,8 @@ import java.util.logging.Logger;
  * Selects standard Micrometer JVM meters that duplicate observations reported by agent runtime
  * telemetry. Complementary metrics and unknown names remain bridged.
  */
-final class JvmMetricsOwnership implements Predicate<Meter.Id> {
-  private static final Logger logger = Logger.getLogger(JvmMetricsOwnership.class.getName());
+final class JvmMetricsDeduplication implements Predicate<Meter.Id> {
+  private static final Logger logger = Logger.getLogger(JvmMetricsDeduplication.class.getName());
 
   private static final Map<String, Meter.Type> STABLE;
   private static final Map<String, Meter.Type> EXPERIMENTAL;
@@ -55,7 +55,7 @@ final class JvmMetricsOwnership implements Predicate<Meter.Id> {
     stable.put("process.cpu.time", Meter.Type.COUNTER);
     stable.put("jvm.cpu.time", Meter.Type.COUNTER);
     // Both timers partition the same GC notifications collected by the native histogram.
-    // Selecting ownership adopts native GC attributes, including GC cause capture.
+    // Selecting deduplication adopts native GC attributes, including GC cause capture.
     stable.put("jvm.gc.pause", Meter.Type.TIMER);
     stable.put("jvm.gc.concurrent.phase.time", Meter.Type.TIMER);
     // In particular, jvm.memory.usage.after.gc is a utilization ratio, not the native
@@ -77,7 +77,7 @@ final class JvmMetricsOwnership implements Predicate<Meter.Id> {
 
   private final boolean emitExperimentalMetrics;
 
-  JvmMetricsOwnership(boolean emitExperimentalMetrics) {
+  JvmMetricsDeduplication(boolean emitExperimentalMetrics) {
     this.emitExperimentalMetrics = emitExperimentalMetrics;
   }
 

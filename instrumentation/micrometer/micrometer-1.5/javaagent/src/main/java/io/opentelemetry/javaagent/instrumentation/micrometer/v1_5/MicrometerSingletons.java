@@ -42,11 +42,11 @@ public class MicrometerSingletons {
     DeclarativeConfigProperties runtimeTelemetryConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(
             GlobalOpenTelemetry.get(), "runtime_telemetry");
-    if (config.get("jvm_metrics_ownership/development").getBoolean("enabled", false)
+    if (config.get("jvm_metrics_deduplication/development").getBoolean("enabled", true)
         && runtimeTelemetryConfig.getBoolean("enabled", true)) {
       Experimental.setSuppressionPredicate(
           builder,
-          new JvmMetricsOwnership(
+          new JvmMetricsDeduplication(
               runtimeTelemetryConfig.getBoolean("emit_experimental_metrics/development", false)));
     }
     meterRegistry = builder.build();

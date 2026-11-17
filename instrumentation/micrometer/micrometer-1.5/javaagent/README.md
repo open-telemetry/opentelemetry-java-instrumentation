@@ -5,23 +5,40 @@
 | `otel.instrumentation.micrometer.base-time-unit`                        | String  | `s`     | Set the base time unit for the OpenTelemetry `MeterRegistry` implementation. <details><summary>Valid values</summary>`ns`, `nanoseconds`, `us`, `microseconds`, `ms`, `milliseconds`, `s`, `seconds`, `min`, `minutes`, `h`, `hours`, `d`, `days`</details> |
 | `otel.instrumentation.micrometer.prometheus-mode.enabled`               | Boolean | `false` | Enable the "Prometheus mode" this will simulate the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be renamed to match Micrometer instrument naming, and the base time unit will be set to seconds.                                 |
 | `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled` | Boolean | `false` | Enables the generation of gauge-based Micrometer histograms for `DistributionSummary` and `Timer` instruments.                                                                                                                                              |
+| `otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled` | Boolean | `true` | Stops bridging supported standard JVM metrics in favor of agent runtime telemetry. Set to `false` to retain the Micrometer representation. |
 
-## Prefer agent JVM metrics
+## JVM metrics deduplication
 
-Enable the bridge and opt into the agent's representation of supported standard JVM observations:
+When the bridge is enabled, it automatically stops bridging the supported standard JVM observations
+listed below in favor of the agent's runtime telemetry. Enable the bridge with:
 
 ```properties
 otel.instrumentation.micrometer.enabled=true
-otel.instrumentation.micrometer.experimental.jvm-metrics-ownership.enabled=true
 ```
 
-Ownership is disabled by default. When enabled, the bridge stops bridging each exact name and type
-below. If `otel.instrumentation.runtime-telemetry.enabled=false`, nothing is suppressed, so the
-Micrometer metrics remain bridged. If you set `otel.instrumentation.common.default-enabled=false`,
-also set `otel.instrumentation.runtime-telemetry.enabled=true`; otherwise the listed metrics are
-suppressed without a runtime telemetry replacement. Rows marked experimental are suppressed only
-when `otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`, since runtime
-telemetry emits those replacements only in that mode.
+Deduplication is enabled by default. To retain the Micrometer representation as well, disable it:
+
+```properties
+otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled=false
+```
+
+The equivalent declarative setting is:
+
+```yaml
+instrumentation/development:
+  java:
+    micrometer:
+      jvm_metrics_deduplication/development:
+        enabled: false
+```
+
+If `otel.instrumentation.runtime-telemetry.enabled=false`, nothing is suppressed, so the Micrometer
+metrics remain bridged. If you set `otel.instrumentation.common.default-enabled=false`, also set
+`otel.instrumentation.runtime-telemetry.enabled=true` or disable JVM metrics deduplication;
+otherwise the listed metrics are suppressed without a runtime telemetry replacement. Rows marked
+experimental are suppressed only when
+`otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true`, since runtime telemetry
+emits those replacements only in that mode.
 
 | Micrometer name | Agent replacement | Micrometer type |
 | --- | --- | --- |
@@ -48,7 +65,7 @@ and always includes `jvm.gc.cause`. Memory/buffer values of `-1` (unavailable) a
 runtime telemetry. CPU time uses seconds in the native representation.
 
 Matching uses the name after meter filters and before export naming conventions. Custom meters
-reusing a listed name and type are also suppressed; leave ownership disabled to keep them. The
+reusing a listed name and type are also suppressed; disable JVM metrics deduplication to keep them. The
 setting affects only the agent's bridge; other Micrometer registries continue recording.
 
 Metrics not listed in the table remain bridged. Matching uses exact names and types; wildcard

@@ -13,7 +13,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class JvmMetricsOwnershipTest {
+class JvmMetricsDeduplicationTest {
 
   @ParameterizedTest
   @CsvSource({
@@ -41,9 +41,9 @@ class JvmMetricsOwnershipTest {
     "jvm.class.unloaded, COUNTER"
   })
   void stableMetricsAreAlwaysSuppressed(String name, Meter.Type type) {
-    assertThat(new JvmMetricsOwnership(false).test(id(name, type))).isTrue();
-    assertThat(new JvmMetricsOwnership(true).test(id(name, type))).isTrue();
-    assertThat(new JvmMetricsOwnership(true).test(id(name, Meter.Type.OTHER))).isFalse();
+    assertThat(new JvmMetricsDeduplication(false).test(id(name, type))).isTrue();
+    assertThat(new JvmMetricsDeduplication(true).test(id(name, type))).isTrue();
+    assertThat(new JvmMetricsDeduplication(true).test(id(name, Meter.Type.OTHER))).isFalse();
   }
 
   @ParameterizedTest
@@ -58,9 +58,9 @@ class JvmMetricsOwnershipTest {
   })
   void experimentalMetricsAreSuppressedOnlyWithExperimentalRuntimeTelemetry(
       String name, Meter.Type type) {
-    assertThat(new JvmMetricsOwnership(false).test(id(name, type))).isFalse();
-    assertThat(new JvmMetricsOwnership(true).test(id(name, type))).isTrue();
-    assertThat(new JvmMetricsOwnership(true).test(id(name, Meter.Type.OTHER))).isFalse();
+    assertThat(new JvmMetricsDeduplication(false).test(id(name, type))).isFalse();
+    assertThat(new JvmMetricsDeduplication(true).test(id(name, type))).isTrue();
+    assertThat(new JvmMetricsDeduplication(true).test(id(name, Meter.Type.OTHER))).isFalse();
   }
 
   @ParameterizedTest
@@ -93,7 +93,7 @@ class JvmMetricsOwnershipTest {
       })
   void complementaryAndUnknownMetricsRemainBridged(String name) {
     for (Meter.Type type : Meter.Type.values()) {
-      assertThat(new JvmMetricsOwnership(true).test(id(name, type))).isFalse();
+      assertThat(new JvmMetricsDeduplication(true).test(id(name, type))).isFalse();
     }
   }
 

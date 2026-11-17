@@ -27,8 +27,8 @@ import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
-// runs with jvm-metrics-ownership enabled, see build.gradle.kts
-class JvmMetricsOwnershipEnabledTest {
+// Runs with default JVM deduplication and histogram gauges enabled, see build.gradle.kts.
+class JvmMetricsDeduplicationDefaultTest {
   private static final String MICROMETER_SCOPE = "io.opentelemetry.micrometer-1.5";
   private static final String RUNTIME_TELEMETRY_SCOPE = "io.opentelemetry.runtime-telemetry";
 
