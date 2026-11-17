@@ -52,7 +52,11 @@ The null-comparison and hot-path allocation rules also apply to Kotlin and Scala
   path for simple separators such as `","` and `"\\."`; no `Pattern` is needed
   there, in test code, or for one-time initialization.
 - **Hot-path allocation**: avoid allocations on the hot path whenever possible, including iterators.
-  A for-each loop over a plain Java array does not allocate an iterator.
+  For long-lived, privately owned configuration or metadata sequences traversed on hot paths,
+  use arrays rather than lists. This rule does not apply to per-request, per-message, or per-batch
+  data. The JIT does not reliably eliminate list iterator allocations: a shared loop receiving both
+  `ArrayList` and `Collections.emptyList()` can retain allocations even when iterator methods are
+  inlined. Enhanced-for over an array creates no iterator.
   Non-allocating Stream API usage is acceptable but may not fit the surrounding code.
   Consider the complexity of pre-sizing `collect` sinks and allocations from
   capturing `forEach` lambdas when choosing an implementation.
