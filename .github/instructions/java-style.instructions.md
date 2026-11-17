@@ -56,6 +56,13 @@ The null-comparison and hot-path allocation rules also apply to Kotlin and Scala
   Non-allocating Stream API usage is acceptable but may not fit the surrounding code.
   Consider the complexity of pre-sizing `collect` sinks and allocations from
   capturing `forEach` lambdas when choosing an implementation.
+- **Retained lists**: when retaining an incoming list as long-lived configuration or metadata,
+  take a private `ArrayList` copy, including for empty inputs. Treat that copy as read-only after
+  initialization. The shallow copy protects membership and order from caller mutation and avoids
+  empty/nonempty implementation mismatches at shared traversal sites. The JIT can retain iterator
+  allocations when a shared loop sees different implementations such as `ArrayList` and
+  `Collections.emptyList()`, even when iterator methods are inlined. A consistent implementation
+  addresses the measured case, not every JVM allocation.
 - **Lambda allocation**: do not hoist a non-capturing lambda or
   method reference into a field to avoid allocation. HotSpot caches it at
   the `invokedynamic` call site.

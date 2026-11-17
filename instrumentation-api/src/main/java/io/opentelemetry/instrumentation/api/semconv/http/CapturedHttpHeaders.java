@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -83,7 +82,7 @@ final class CapturedHttpHeaders {
         }
       }
     }
-    this.exactNames = unmodifiableList(new ArrayList<>(names));
+    this.exactNames = new ArrayList<>(names);
     this.exactAttributeKeys = createAttributeKeys(type, exactNames);
     this.enumerateNames = enumerate;
   }

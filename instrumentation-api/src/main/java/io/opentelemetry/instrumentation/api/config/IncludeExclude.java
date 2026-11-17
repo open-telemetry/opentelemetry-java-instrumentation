@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
@@ -103,15 +102,11 @@ public final class IncludeExclude {
   }
 
   private static List<Predicate<String>> createGlobPredicates(List<String> patterns) {
-    if (patterns.isEmpty()) {
-      return emptyList();
-    }
-
     List<Predicate<String>> predicates = new ArrayList<>(patterns.size());
     for (String pattern : patterns) {
       predicates.add(createGlobPredicate(pattern));
     }
-    return unmodifiableList(predicates);
+    return predicates;
   }
 
   private static Predicate<String> createGlobPredicate(String globPattern) {

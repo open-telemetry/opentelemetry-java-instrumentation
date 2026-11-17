@@ -114,6 +114,15 @@ class MessagingHeadersTest {
   }
 
   @Test
+  void mixedSelectorRetainsExactNamesWhenEnumerationIsEmpty() {
+    AttributesBuilder attributes = Attributes.builder();
+    extractor(new MapGetter(false), selector(asList("Test-Message-Header", "Other-*"), emptyList()))
+        .onEnd(attributes, Context.root(), MESSAGE, null, null);
+
+    assertThat(attributes.build().asMap()).containsOnly(headerEntry("Test-Message-Header", "one"));
+  }
+
+  @Test
   void excludeOnlyCapturesNothingWithoutHeaders() {
     AttributesBuilder attributes = Attributes.builder();
     extractor(new MapGetter(false), selector(emptyList(), singletonList("Authorization")))

@@ -133,6 +133,14 @@ class HttpHeaderSelectorTest {
                 selector(singletonList("Test-Request-Header"), emptyList()),
                 null))
         .containsOnly(requestHeaderEntry("test-request-header", "one"));
+    assertThat(
+            capture(
+                new MapGetter(false),
+                selector(asList("Test-Request-Header", "Test-Request-*"), emptyList()),
+                selector(asList("Test-Response-Header", "Test-Response-*"), emptyList())))
+        .containsOnly(
+            requestHeaderEntry("test-request-header", "one"),
+            responseHeaderEntry("test-response-header", "three"));
   }
 
   @Test
