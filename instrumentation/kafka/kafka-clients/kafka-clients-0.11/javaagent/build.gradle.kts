@@ -88,7 +88,7 @@ testing.suites {
         includeTestsMatching("*DefaultEnablementTest")
         includeTestsMatching("OpenTelemetryMetricsReporterTest")
       }
-      jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
+      telemetryConfig("otel.instrumentation.kafka-clients-metrics.enabled", "true")
     }
   }
 }
