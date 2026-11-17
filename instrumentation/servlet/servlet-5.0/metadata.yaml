@@ -56,6 +56,21 @@ configurations:
     description: Enables adding the trace ID and span ID as request attributes for downstream servlet access.
     type: boolean
     default: false
+  - name: otel.instrumentation.servlet.experimental.capture-request-body.enabled
+    declarative_name: java.servlet.capture_request_body/development.enabled
+    description: >
+      Enables capturing the request body, as read by the application from the request input
+      stream, in the `http.request.body.content` span attribute. The request body may contain
+      sensitive information.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.servlet.experimental.capture-request-body.max-size
+    declarative_name: java.servlet.capture_request_body/development.max_size
+    description: >
+      The maximum number of request body bytes to capture when request body capture is enabled.
+      Capturing is disabled when set to 0.
+    type: int
+    default: 1024
   - name: otel.experimental.javascript-snippet
     declarative_name: java.servlet.javascript_snippet/development
     description: Experimental setting to inject a JavaScript snippet into HTML responses after the opening `<head>` tag.

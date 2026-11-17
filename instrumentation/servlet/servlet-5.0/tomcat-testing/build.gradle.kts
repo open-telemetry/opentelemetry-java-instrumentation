@@ -30,6 +30,7 @@ testing.suites {
 
     register("Experimental") {
       jvmArgs("-Dotel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true")
+      jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
     }
   }
 }

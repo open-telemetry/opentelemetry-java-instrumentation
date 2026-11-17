@@ -11,6 +11,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.servlet.v5_0.TestServlet5;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.opentelemetry.testing.internal.armeria.common.HttpMethod;
@@ -40,6 +41,12 @@ public abstract class BaseTomcatServlet5Test extends AbstractTomcatServlet5Test 
   @AfterParameterizedClassInvocation
   void cleanup() {
     cleanupServer();
+  }
+
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    options.setTestRequestBodyCaptureAfterService(true);
   }
 
   @Override

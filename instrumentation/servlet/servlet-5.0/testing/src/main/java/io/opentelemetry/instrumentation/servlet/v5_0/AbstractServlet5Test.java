@@ -6,6 +6,9 @@
 package io.opentelemetry.instrumentation.servlet.v5_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_DISPATCH_READ;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_LATE_READ;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -42,6 +45,9 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
           || System.getProperty(
                   "otel.instrumentation.servlet.experimental.request-parameters.excluded")
               != null;
+
+  private static final boolean REQUEST_BODY_CAPTURE_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.servlet.experimental.capture-request-body.enabled");
 
   @RegisterExtension
   private static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
@@ -86,6 +92,7 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
       options.setHasResponseCustomizer(e -> true);
       options.setHasResponseSpan(this::hasResponseSpan);
     }
+    options.setTestRequestBodyCapture(REQUEST_BODY_CAPTURE_ENABLED);
   }
 
   protected boolean isAgentTest() {
@@ -113,6 +120,9 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
     addServlet(context, INDEXED_CHILD.getPath(), servlet);
     addServlet(context, CAPTURE_HEADERS.getPath(), servlet);
     addServlet(context, CAPTURE_PARAMETERS.getPath(), servlet);
+    addServlet(context, CAPTURE_BODY.getPath(), servlet);
+    addServlet(context, CAPTURE_BODY_LATE_READ.getPath(), servlet);
+    addServlet(context, CAPTURE_BODY_DISPATCH_READ.getPath(), servlet);
     addServlet(context, HTML_PRINT_WRITER.getPath(), servlet);
     addServlet(context, HTML_SERVLET_OUTPUT_STREAM.getPath(), servlet);
   }
