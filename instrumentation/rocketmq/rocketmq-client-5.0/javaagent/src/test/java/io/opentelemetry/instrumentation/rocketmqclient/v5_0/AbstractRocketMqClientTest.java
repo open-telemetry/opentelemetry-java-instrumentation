@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.as
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanKind;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
@@ -29,8 +30,18 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
+import static org.mockito.AdditionalAnswers.delegatesTo;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.spy;
+import static org.mockito.Mockito.when;
 
+import apache.rocketmq.v2.Code;
+import apache.rocketmq.v2.SendMessageRequest;
+import apache.rocketmq.v2.SendMessageResponse;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -48,6 +59,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.rocketmq.client.apis.ClientConfiguration;
 import org.apache.rocketmq.client.apis.ClientException;
@@ -59,7 +71,11 @@ import org.apache.rocketmq.client.apis.consumer.PushConsumer;
 import org.apache.rocketmq.client.apis.message.Message;
 import org.apache.rocketmq.client.apis.producer.Producer;
 import org.apache.rocketmq.client.apis.producer.SendReceipt;
+import org.apache.rocketmq.client.java.exception.InternalErrorException;
 import org.apache.rocketmq.client.java.impl.ClientImpl;
+import org.apache.rocketmq.client.java.impl.ClientManager;
+import org.apache.rocketmq.client.java.route.Endpoints;
+import org.apache.rocketmq.client.java.rpc.RpcFuture;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -135,12 +151,98 @@ abstract class AbstractRocketMqClientTest {
             .newProducerBuilder()
             .setClientConfiguration(clientConfiguration)
             .setTopics(NORMAL_TOPIC)
+            .setMaxAttempts(3)
             .build();
     cleanup.deferAfterAll(producer);
   }
 
   @Test
   void testSendAndConsumeNormalMessage() throws ClientException {
+    sendAndConsumeNormalMessage(producer);
+  }
+
+  @Test
+  void testSendRetriesAndConsumesMessage() throws ClientException {
+    AtomicInteger attempts = new AtomicInteger();
+
+    sendAndConsumeNormalMessage(producerWithSendFailures(2, attempts));
+
+    assertThat(attempts).hasValue(3);
+  }
+
+  @Test
+  void testSendRetriesExhausted() {
+    AtomicInteger attempts = new AtomicInteger();
+    Producer sender = producerWithSendFailures(3, attempts);
+    Message message =
+        provider
+            .newMessageBuilder()
+            .setTopic(NORMAL_TOPIC)
+            .setTag(TAG)
+            .setKeys("retry-key")
+            .setBody("message".getBytes(UTF_8))
+            .build();
+
+    testing()
+        .runWithSpan(
+            "parent",
+            () ->
+                assertThatThrownBy(() -> sender.send(message))
+                    .isInstanceOf(InternalErrorException.class));
+
+    assertThat(attempts).hasValue(3);
+
+    testing()
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("send " + NORMAL_TOPIC)
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
+                                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                                satisfies(MESSAGING_MESSAGE_ID, value -> value.isNotEmpty()),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(stringKey("rocketmq.message.type"), NORMAL),
+                                equalTo(stringKey("rocketmq.message.tag"), TAG),
+                                equalTo(
+                                    stringArrayKey("rocketmq.message.keys"),
+                                    singletonList("retry-key")),
+                                equalTo(ERROR_TYPE, InternalErrorException.class.getName()))));
+
+    assertFailedSendMetrics();
+  }
+
+  @SuppressWarnings("MockitoDoSetup") // when() would invoke the real RPC with matcher arguments.
+  private Producer producerWithSendFailures(int failures, AtomicInteger attempts) {
+    ClientManager realManager = ((ClientImpl) producer).getClientManager();
+    ClientManager manager = mock(ClientManager.class, delegatesTo(realManager));
+
+    doAnswer(
+            invocation -> {
+              if (attempts.incrementAndGet() <= failures) {
+                return new RpcFuture<SendMessageRequest, SendMessageResponse>(
+                    new InternalErrorException(
+                        Code.INTERNAL_ERROR.getNumber(), "retry-test", "send failed"));
+              }
+
+              return realManager.sendMessage(
+                  invocation.getArgument(0), invocation.getArgument(1), invocation.getArgument(2));
+            })
+        .when(manager)
+        .sendMessage(any(Endpoints.class), any(SendMessageRequest.class), any(Duration.class));
+
+    Producer sender = spy(producer);
+    when(((ClientImpl) sender).getClientManager()).thenReturn(manager);
+    return sender;
+  }
+
+  private void sendAndConsumeNormalMessage(Producer sender) throws ClientException {
     String[] keys = new String[] {"yourMessageKey-0", "yourMessageKey-1"};
     byte[] body = "foobar".getBytes(UTF_8);
     Message message =
@@ -156,7 +258,7 @@ abstract class AbstractRocketMqClientTest {
         testing()
             .runWithSpan(
                 "parent",
-                (ThrowingSupplier<SendReceipt, ClientException>) () -> producer.send(message));
+                (ThrowingSupplier<SendReceipt, ClientException>) () -> sender.send(message));
     AtomicReference<SpanData> sendSpanData = new AtomicReference<>();
     testing()
         .waitAndAssertSortedTraces(
@@ -744,6 +846,63 @@ abstract class AbstractRocketMqClientTest {
             .hasStatus(StatusData.unset())
             .hasAttributesSatisfyingExactly(attributeAssertions);
     return result.hasLinks(LinkData.create(asRemote(linkedSpan.getSpanContext())));
+  }
+
+  private void assertFailedSendMetrics() {
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
+            "messaging.client.sent.messages",
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric)
+                            .hasLongSumSatisfying(
+                                sum ->
+                                    sum.hasPointsSatisfying(
+                                        point ->
+                                            point
+                                                .hasValue(1)
+                                                .hasAttributesSatisfyingExactly(
+                                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                                    equalTo(
+                                                        stringKey("messaging.system.name"),
+                                                        "rocketmq"),
+                                                    equalTo(
+                                                        MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
+                                                    equalTo(
+                                                        ERROR_TYPE,
+                                                        InternalErrorException.class
+                                                            .getName()))))));
+
+    Attributes expectedAttributes =
+        Attributes.builder()
+            .put(MESSAGING_OPERATION_NAME, "send")
+            .put(MESSAGING_OPERATION_TYPE, "send")
+            .put(stringKey("messaging.system.name"), "rocketmq")
+            .put(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC)
+            .put(ERROR_TYPE, InternalErrorException.class.getName())
+            .build();
+
+    testing()
+        .waitAndAssertMetrics(
+            "io.opentelemetry.rocketmq-client-5.0",
+            "messaging.client.operation.duration",
+            metrics ->
+                metrics.satisfiesExactly(
+                    metric ->
+                        assertThat(metric.getHistogramData().getPoints())
+                            .filteredOn(
+                                point ->
+                                    "send"
+                                        .equals(
+                                            point.getAttributes().get(MESSAGING_OPERATION_NAME)))
+                            .singleElement()
+                            .satisfies(
+                                point -> {
+                                  assertThat(point.getCount()).isEqualTo(1);
+                                  assertThat(point.getAttributes()).isEqualTo(expectedAttributes);
+                                })));
   }
 
   private void assertFailureMetrics() {
