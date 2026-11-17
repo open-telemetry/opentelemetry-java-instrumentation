@@ -12,7 +12,7 @@ import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -137,7 +137,7 @@ final class ArmeriaHttpClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       ClientRequestContext ctx, @Nullable RequestLog requestLog) {
     return RequestContextAccess.remoteAddress(ctx);
   }
