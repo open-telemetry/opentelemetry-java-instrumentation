@@ -30,7 +30,7 @@ final class HttpRouteSupport {
 
   private final AtomicBoolean contextRefreshTriggered = new AtomicBoolean();
   @Nullable private volatile DispatcherServlet dispatcherServlet;
-  @Nullable private volatile List<HandlerMapping> handlerMappings;
+  @Nullable private volatile HandlerMapping[] handlerMappings;
   private volatile boolean parseRequestPath;
 
   void onFilterInit(FilterConfig filterConfig) {
@@ -81,7 +81,7 @@ final class HttpRouteSupport {
       }
     }
     if (!handlerMappings.isEmpty()) {
-      this.handlerMappings = handlerMappings;
+      this.handlerMappings = handlerMappings.toArray(new HandlerMapping[0]);
     }
   }
 

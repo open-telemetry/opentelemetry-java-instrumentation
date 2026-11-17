@@ -5,12 +5,9 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static java.util.Arrays.asList;
-
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributeType;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.EnumSet;
 import java.util.List;
@@ -34,7 +31,7 @@ class FieldMapping {
 
   private final Type type;
   private final AttributeKey<?> attributeKey;
-  private final List<String> fields;
+  private final String[] fields;
   private final boolean experimental;
 
   static FieldMapping request(AttributeKey<?> attributeKey, String fieldPath) {
@@ -69,7 +66,7 @@ class FieldMapping {
     }
     this.type = type;
     this.attributeKey = attributeKey;
-    this.fields = Collections.unmodifiableList(asList(fieldPath.split("\\.")));
+    this.fields = fieldPath.split("\\.");
     this.experimental = experimental;
   }
 
@@ -82,8 +79,12 @@ class FieldMapping {
     return (AttributeKey<T>) attributeKey;
   }
 
-  List<String> getFields() {
-    return fields;
+  int fieldCount() {
+    return fields.length;
+  }
+
+  String field(int index) {
+    return fields[index];
   }
 
   Type getType() {
@@ -94,7 +95,7 @@ class FieldMapping {
     return experimental;
   }
 
-  static Map<Type, List<FieldMapping>> groupByType(FieldMapping[] fieldMappings) {
+  static Map<Type, FieldMapping[]> groupByType(FieldMapping[] fieldMappings) {
     EnumMap<Type, List<FieldMapping>> fields = new EnumMap<>(Type.class);
     for (FieldMapping.Type type : FieldMapping.Type.values()) {
       fields.put(type, new ArrayList<>());
@@ -102,6 +103,10 @@ class FieldMapping {
     for (FieldMapping fieldMapping : fieldMappings) {
       fields.get(fieldMapping.getType()).add(fieldMapping);
     }
-    return fields;
+    EnumMap<Type, FieldMapping[]> result = new EnumMap<>(Type.class);
+    for (Type type : Type.values()) {
+      result.put(type, fields.get(type).toArray(new FieldMapping[0]));
+    }
+    return result;
   }
 }

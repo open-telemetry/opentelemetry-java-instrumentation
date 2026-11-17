@@ -15,7 +15,6 @@ import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.FieldMapping
 
 import io.opentelemetry.api.common.AttributeKey;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 enum AwsSdkRequestType {
@@ -47,13 +46,13 @@ enum AwsSdkRequestType {
 
   // Wrapping in unmodifiableMap
   @SuppressWarnings("ImmutableEnumChecker")
-  private final Map<FieldMapping.Type, List<FieldMapping>> fields;
+  private final Map<FieldMapping.Type, FieldMapping[]> fields;
 
   AwsSdkRequestType(FieldMapping... fieldMappings) {
     this.fields = Collections.unmodifiableMap(FieldMapping.groupByType(fieldMappings));
   }
 
-  List<FieldMapping> fields(FieldMapping.Type type) {
+  FieldMapping[] fields(FieldMapping.Type type) {
     return fields.get(type);
   }
 

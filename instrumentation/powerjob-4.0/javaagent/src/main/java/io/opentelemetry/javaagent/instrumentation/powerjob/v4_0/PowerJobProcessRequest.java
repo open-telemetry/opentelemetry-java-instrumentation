@@ -5,9 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.powerjob.v4_0;
 
-import static java.util.Arrays.asList;
-
-import java.util.List;
 import javax.annotation.Nullable;
 import tech.powerjob.official.processors.impl.FileCleanupProcessor;
 import tech.powerjob.official.processors.impl.HttpProcessor;
@@ -21,17 +18,17 @@ import tech.powerjob.worker.core.processor.sdk.MapProcessor;
 import tech.powerjob.worker.core.processor.sdk.MapReduceProcessor;
 
 public class PowerJobProcessRequest {
-  private static final List<Class<?>> KNOWN_PROCESSORS =
-      asList(
-          FileCleanupProcessor.class,
-          BroadcastProcessor.class,
-          MapReduceProcessor.class,
-          MapProcessor.class,
-          ShellProcessor.class,
-          PythonProcessor.class,
-          HttpProcessor.class,
-          SpringDatasourceSqlProcessor.class,
-          DynamicDatasourceSqlProcessor.class);
+  private static final Class<?>[] KNOWN_PROCESSORS = {
+    FileCleanupProcessor.class,
+    BroadcastProcessor.class,
+    MapReduceProcessor.class,
+    MapProcessor.class,
+    ShellProcessor.class,
+    PythonProcessor.class,
+    HttpProcessor.class,
+    SpringDatasourceSqlProcessor.class,
+    DynamicDatasourceSqlProcessor.class
+  };
 
   private final String methodName;
   @Nullable private final Long jobId;

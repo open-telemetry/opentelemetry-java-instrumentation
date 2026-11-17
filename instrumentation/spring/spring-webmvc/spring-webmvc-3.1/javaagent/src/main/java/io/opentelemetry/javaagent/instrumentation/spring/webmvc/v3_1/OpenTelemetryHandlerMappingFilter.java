@@ -64,7 +64,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
         return null;
       };
 
-  @Nullable private List<HandlerMapping> handlerMappings;
+  @Nullable private HandlerMapping[] handlerMappings;
   private boolean parseRequestPath;
 
   @Override
@@ -155,7 +155,7 @@ public class OpenTelemetryHandlerMappingFilter implements Filter, Ordered {
       }
     }
     if (!handlerMappings.isEmpty()) {
-      this.handlerMappings = handlerMappings;
+      this.handlerMappings = handlerMappings.toArray(new HandlerMapping[0]);
     }
   }
 

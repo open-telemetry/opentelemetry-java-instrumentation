@@ -77,10 +77,9 @@ class FieldMapper {
     }
 
     // traverse path
-    List<String> path = fieldMapping.getFields();
-    Object target = fieldValueProvider.apply(path.get(0));
-    for (int i = 1; i < path.size() && target != null; i++) {
-      target = next(target, path.get(i));
+    Object target = fieldValueProvider.apply(fieldMapping.field(0));
+    for (int i = 1; i < fieldMapping.fieldCount() && target != null; i++) {
+      target = next(target, fieldMapping.field(i));
     }
     if (target != null) {
       switch (fieldMapping.getAttributeType()) {

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
 import java.util.ArrayList;
@@ -23,13 +22,13 @@ import javax.annotation.Nullable;
  */
 public final class MappingResolver {
   private final Set<String> exactMatches;
-  private final List<WildcardMatcher> wildcardMatchers;
+  private final WildcardMatcher[] wildcardMatchers;
   private final boolean hasDefault;
 
   private MappingResolver(
       Set<String> exactMatches, List<WildcardMatcher> wildcardMatchers, boolean hasDefault) {
     this.exactMatches = exactMatches.isEmpty() ? emptySet() : exactMatches;
-    this.wildcardMatchers = wildcardMatchers.isEmpty() ? emptyList() : wildcardMatchers;
+    this.wildcardMatchers = wildcardMatchers.toArray(new WildcardMatcher[0]);
     this.hasDefault = hasDefault;
   }
 

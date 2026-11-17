@@ -166,7 +166,7 @@ enum AwsSdkRequest {
 
   // Wrap in unmodifiableMap
   @SuppressWarnings("ImmutableEnumChecker")
-  private final Map<FieldMapping.Type, List<FieldMapping>> fields;
+  private final Map<FieldMapping.Type, FieldMapping[]> fields;
 
   AwsSdkRequest(AwsSdkRequestType type, String requestClass, FieldMapping... fields) {
     this.type = type;
@@ -194,7 +194,7 @@ enum AwsSdkRequest {
     return null;
   }
 
-  List<FieldMapping> fields(FieldMapping.Type type) {
+  FieldMapping[] fields(FieldMapping.Type type) {
     return fields.get(type);
   }
 

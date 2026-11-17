@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DY
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_DYNAMODB_TABLE_NAMES;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -33,6 +34,20 @@ import software.amazon.awssdk.services.dynamodb.model.UpdateTableRequest;
 import software.amazon.awssdk.services.dynamodb.model.WriteRequest;
 
 class FieldMapperTest {
+
+  @Test
+  void groupsFieldsInDeclarationOrder() {
+    FieldMapping first = FieldMapping.request(AWS_DYNAMODB_TABLE_NAMES, "First");
+    FieldMapping response = FieldMapping.response(AWS_DYNAMODB_TABLE_NAMES, "Response");
+    FieldMapping second = FieldMapping.request(AWS_DYNAMODB_TABLE_NAMES, "Second");
+    Map<FieldMapping.Type, FieldMapping[]> fields =
+        FieldMapping.groupByType(new FieldMapping[] {first, response, second});
+
+    assertThat(fields.get(FieldMapping.Type.REQUEST)).containsExactly(first, second);
+    assertThat(fields.get(FieldMapping.Type.RESPONSE)).containsExactly(response);
+    assertThat(FieldMapping.groupByType(new FieldMapping[0]).get(FieldMapping.Type.REQUEST))
+        .isEmpty();
+  }
 
   @Test
   void shouldMapNestedField() {
