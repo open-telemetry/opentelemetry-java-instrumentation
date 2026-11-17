@@ -23,6 +23,7 @@ import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
  */
 public final class SocketAddressUtil {
 
+  // ClassValue, MethodHandle, and Path are unavailable on older Android runtimes.
   private static final boolean unixSocketSupported =
       isPresent("java.lang.ClassValue")
           && isPresent("java.lang.invoke.MethodHandle")
