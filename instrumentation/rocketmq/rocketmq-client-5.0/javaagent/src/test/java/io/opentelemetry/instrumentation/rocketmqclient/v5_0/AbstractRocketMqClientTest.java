@@ -206,7 +206,7 @@ abstract class AbstractRocketMqClientTest {
                                 equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
                                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                                satisfies(MESSAGING_MESSAGE_ID, value -> value.isNotEmpty()),
+                                satisfies(MESSAGING_MESSAGE_ID, val -> val.isNotEmpty()),
                                 equalTo(stringKey("messaging.system.name"), "rocketmq"),
                                 equalTo(stringKey("rocketmq.message.type"), NORMAL),
                                 equalTo(stringKey("rocketmq.message.tag"), TAG),
