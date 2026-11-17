@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSan
 import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorContext;
 import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorRequest;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.List;
@@ -101,7 +102,11 @@ public abstract class JedisRequest implements JedisServerErrorRequest {
       return;
     }
     SocketAddress address = socket.getRemoteSocketAddress();
-    if (SocketAddressUtil.getAddress(address) != null) {
+    if (address instanceof InetSocketAddress) {
+      if (!((InetSocketAddress) address).isUnresolved()) {
+        peerAddress = address;
+      }
+    } else if (SocketAddressUtil.getAddress(address) != null) {
       peerAddress = address;
     }
   }

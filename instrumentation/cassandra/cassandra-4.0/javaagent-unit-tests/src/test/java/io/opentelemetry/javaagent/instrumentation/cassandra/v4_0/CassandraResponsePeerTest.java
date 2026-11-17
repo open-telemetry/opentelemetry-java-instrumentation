@@ -9,6 +9,8 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
@@ -68,6 +70,16 @@ class CassandraResponsePeerTest {
         .isEqualTo(firstPeer);
     assertThat(CassandraResponsePeers.getExecutionInfoPeer(secondExecutionInfo))
         .isEqualTo(secondPeer);
+  }
+
+  @Test
+  void doesNotFormatResolvedInetAddressWhileCapturing() {
+    InetAddress address = mock(InetAddress.class);
+    InetSocketAddress peer = new InetSocketAddress(address, 19042);
+
+    assertThat(CassandraChannel.getRemoteAddress(new TestContext(new TestChannel(peer))))
+        .isSameAs(peer);
+    verify(address, never()).getHostAddress();
   }
 
   @Test

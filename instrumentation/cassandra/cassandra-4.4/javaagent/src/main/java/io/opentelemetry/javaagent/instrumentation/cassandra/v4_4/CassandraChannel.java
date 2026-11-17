@@ -11,6 +11,7 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -51,11 +52,18 @@ public class CassandraChannel {
       }
       Object remoteAddress =
           (Object) remoteAddressMethods.get(channel.getClass()).invokeExact(channel);
-      if (!(remoteAddress instanceof SocketAddress)
-          || SocketAddressUtil.getAddress((SocketAddress) remoteAddress) == null) {
+      if (!(remoteAddress instanceof SocketAddress)) {
         return null;
       }
-      return (SocketAddress) remoteAddress;
+      SocketAddress socketAddress = (SocketAddress) remoteAddress;
+      if (socketAddress instanceof InetSocketAddress) {
+        if (((InetSocketAddress) socketAddress).isUnresolved()) {
+          return null;
+        }
+      } else if (SocketAddressUtil.getAddress(socketAddress) == null) {
+        return null;
+      }
+      return socketAddress;
     } catch (Throwable ignored) {
       return null;
     }

@@ -7,6 +7,8 @@ package org.apache.hadoop.hbase.ipc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -48,8 +50,8 @@ class OpenTelemetryCallUtilTest {
     RequestAndContext requestAndContext = requestAndContext();
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
-    InetSocketAddress networkPeer =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234);
+    InetAddress address = mock(InetAddress.class);
+    InetSocketAddress networkPeer = new InetSocketAddress(address, 1234);
     OpenTelemetryCallUtil.setNetworkPeer(call, networkPeer);
 
     RequestAndContext updated = OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
@@ -59,6 +61,7 @@ class OpenTelemetryCallUtilTest {
     assertThat(updated.getRequest().getServerTarget()).isEqualTo("logical-target");
     assertThat(updated.getScope()).isSameAs(requestAndContext.getScope());
     assertThat(updated.getContext()).isSameAs(requestAndContext.getContext());
+    verify(address, never()).getHostAddress();
   }
 
   @Test
@@ -117,10 +120,11 @@ class OpenTelemetryCallUtilTest {
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext());
     OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
 
-    OpenTelemetryCallUtil.setNetworkPeer(
-        call, new InetSocketAddress(InetAddress.getLoopbackAddress(), 1234));
+    InetAddress address = mock(InetAddress.class);
+    OpenTelemetryCallUtil.setNetworkPeer(call, new InetSocketAddress(address, 1234));
 
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call)).isNull();
+    verify(address, never()).getHostAddress();
   }
 
   @Test

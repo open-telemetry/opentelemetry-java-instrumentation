@@ -13,6 +13,9 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterCommandInstrumentation.CommandAdvice.AdviceState;
@@ -84,6 +87,18 @@ class JedisNetworkAttributesGetterTest {
     request.capturePeerAddress();
 
     assertThat(request.getPeerAddress()).isEqualTo(peerAddress);
+  }
+
+  @Test
+  void doesNotFormatResolvedInetAddressWhileCapturing() {
+    InetAddress address = mock(InetAddress.class);
+    InetSocketAddress peerAddress = new InetSocketAddress(address, 6379);
+    JedisRequest request = requestWithPeer(peerAddress);
+
+    request.capturePeerAddress();
+
+    assertThat(request.getPeerAddress()).isSameAs(peerAddress);
+    verify(address, never()).getHostAddress();
   }
 
   @Test
