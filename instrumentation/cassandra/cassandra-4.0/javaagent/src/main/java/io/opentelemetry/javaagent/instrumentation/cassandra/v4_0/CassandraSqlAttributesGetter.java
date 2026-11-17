@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -82,7 +81,7 @@ final class CassandraSqlAttributesGetter
   }
 
   @Nullable
-  private static InetSocketAddress getNetworkPeerFallback(ExecutionInfo executionInfo) {
+  private static SocketAddress getNetworkPeerFallback(ExecutionInfo executionInfo) {
     Node coordinator = executionInfo.getCoordinator();
     if (coordinator == null) {
       return null;
@@ -91,11 +90,7 @@ final class CassandraSqlAttributesGetter
     if (!isDefaultEndPoint(endPoint)) {
       return null;
     }
-    SocketAddress address = endPoint.resolve();
-    if (!(address instanceof InetSocketAddress)) {
-      return null;
-    }
-    return (InetSocketAddress) address;
+    return endPoint.resolve();
   }
 
   @Override

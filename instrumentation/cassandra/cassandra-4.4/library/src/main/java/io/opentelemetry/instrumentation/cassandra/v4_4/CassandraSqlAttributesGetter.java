@@ -16,7 +16,6 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttrib
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
@@ -87,8 +86,7 @@ final class CassandraSqlAttributesGetter
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
-      InetSocketAddress coordinatorAddress = (InetSocketAddress) endPoint.resolve();
-      return coordinatorAddress;
+      return endPoint.resolve();
     }
     return null;
   }
