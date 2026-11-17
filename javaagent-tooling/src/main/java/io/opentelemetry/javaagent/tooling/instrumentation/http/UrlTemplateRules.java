@@ -7,16 +7,15 @@ package io.opentelemetry.javaagent.tooling.instrumentation.http;
 
 import static java.util.logging.Level.FINE;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Arrays;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
 final class UrlTemplateRules {
   private static final Logger logger = Logger.getLogger(UrlTemplateRules.class.getName());
-  private static final List<Rule> rules = new ArrayList<>();
+  private static volatile Rule[] rules = new Rule[0];
 
-  static List<Rule> getRules() {
+  static Rule[] getRules() {
     return rules;
   }
 
@@ -26,7 +25,10 @@ final class UrlTemplateRules {
         "Adding http client url template customization rule: pattern=\"{0}\", replacement=\"{1}\", override={2}.",
         new Object[] {pattern, replacement, override});
 
-    rules.add(new Rule(pattern, replacement, override));
+    Rule[] current = rules;
+    Rule[] updated = Arrays.copyOf(current, current.length + 1);
+    updated[updated.length - 1] = new Rule(pattern, replacement, override);
+    rules = updated;
   }
 
   static final class Rule {

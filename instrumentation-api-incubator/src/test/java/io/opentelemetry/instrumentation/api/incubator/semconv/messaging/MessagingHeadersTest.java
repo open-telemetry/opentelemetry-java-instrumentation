@@ -105,6 +105,25 @@ class MessagingHeadersTest {
   }
 
   @Test
+  void exactAndWildcardNamesAreQueriedOnceInOrder() {
+    MapGetter exactGetter = new MapGetter(true);
+    extractor(
+            exactGetter,
+            selector(
+                asList("Test-Message-Other", "Test-Message-Header", "Test-Message-Other"),
+                emptyList()))
+        .onEnd(Attributes.builder(), Context.root(), MESSAGE, null, null);
+    assertThat(exactGetter.lookedUpNames)
+        .containsExactly("Test-Message-Other", "Test-Message-Header");
+
+    MapGetter wildcardGetter = new MapGetter(false);
+    extractor(wildcardGetter, selector(asList("Test-Message-Other", "Test-Message-*"), emptyList()))
+        .onEnd(Attributes.builder(), Context.root(), MESSAGE, null, null);
+    assertThat(wildcardGetter.lookedUpNames)
+        .containsExactly("Test-Message-Other", "Test-Message-Header");
+  }
+
+  @Test
   void wildcardCapturesNothingWithoutHeaders() {
     AttributesBuilder attributes = Attributes.builder();
     extractor(new MapGetter(false), selector(singletonList("Test-Message-*"), emptyList()))
@@ -208,6 +227,7 @@ class MessagingHeadersTest {
       implements MessagingAttributesGetter<Map<String, String>, Void> {
 
     private final boolean failOnEnumeration;
+    private final List<String> lookedUpNames = new ArrayList<>();
 
     MapGetter(boolean failOnEnumeration) {
       this.failOnEnumeration = failOnEnumeration;
@@ -260,6 +280,7 @@ class MessagingHeadersTest {
 
     @Override
     public List<String> getMessageHeader(Map<String, String> request, String name) {
+      lookedUpNames.add(name);
       String value = request.get(name);
       return value == null ? emptyList() : singletonList(value);
     }

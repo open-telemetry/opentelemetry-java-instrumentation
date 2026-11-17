@@ -6,8 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -17,7 +15,6 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -100,7 +97,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   @Nullable private final IncludeExclude headers;
   // exact header names that the selector includes, queried directly so that getters which only
   // implement getMessageHeader() keep working
-  private final List<String> exactHeaderNames;
+  private final String[] exactHeaderNames;
   private final Map<String, AttributeKey<List<String>>> exactHeaderAttributeKeys;
   // whether the selector can match header names that are not listed in exactHeaderNames, which
   // requires enumerating the header names of each message
@@ -130,9 +127,9 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         }
       }
     }
-    this.exactHeaderNames = unmodifiableList(new ArrayList<>(exactNames));
+    this.exactHeaderNames = exactNames.toArray(new String[0]);
     this.exactHeaderAttributeKeys =
-        CapturedMessageHeadersUtil.createLiteralAttributeKeys(exactHeaderNames);
+        CapturedMessageHeadersUtil.createLiteralAttributeKeys(exactNames);
     this.enumerateHeaderNames = enumerate;
   }
 
@@ -169,23 +166,33 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
     attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
-    for (String name : headerNames(request)) {
-      List<String> values = getter.getMessageHeader(request, name);
-      if (!values.isEmpty()) {
-        attributes.put(
-            CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
+    if (headers == null) {
+      return;
+    }
+    if (enumerateHeaderNames) {
+      for (String name : headerNames(request, headers)) {
+        captureHeader(attributes, request, name);
+      }
+    } else {
+      for (String name : exactHeaderNames) {
+        captureHeader(attributes, request, name);
       }
     }
   }
 
-  private Collection<String> headerNames(REQUEST request) {
-    if (headers == null) {
-      return emptyList();
+  private void captureHeader(AttributesBuilder attributes, REQUEST request, String name) {
+    List<String> values = getter.getMessageHeader(request, name);
+    if (!values.isEmpty()) {
+      attributes.put(
+          CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
     }
-    if (!enumerateHeaderNames) {
-      return exactHeaderNames;
+  }
+
+  private Collection<String> headerNames(REQUEST request, IncludeExclude headers) {
+    Set<String> names = new LinkedHashSet<>();
+    for (String name : exactHeaderNames) {
+      names.add(name);
     }
-    Set<String> names = new LinkedHashSet<>(exactHeaderNames);
     for (String name : getter.getMessageHeaderNames(request)) {
       if (headers.matches(name)) {
         names.add(name);

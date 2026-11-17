@@ -136,6 +136,24 @@ class HttpHeaderSelectorTest {
   }
 
   @Test
+  void exactAndWildcardNamesAreQueriedOnceInOrder() {
+    MapGetter getter = new MapGetter(true);
+    capture(
+        getter,
+        selector(
+            asList("Test-Request-Other", "Test-Request-Header", "TEST-REQUEST-OTHER"), emptyList()),
+        selector(asList("Test-Response-Other", "Test-Response-*"), emptyList()));
+
+    assertThat(getter.lookedUpNames)
+        .filteredOn(name -> name.startsWith("test-"))
+        .containsExactly(
+            "test-request-other",
+            "test-request-header",
+            "test-response-other",
+            "test-response-header");
+  }
+
+  @Test
   void wildcardCapturesNothingWithoutHeaderNameEnumeration() {
     // a third party getter that implements only getHttpRequestHeader cannot resolve wildcards
     assertThat(
@@ -265,6 +283,7 @@ class HttpHeaderSelectorTest {
       implements HttpServerAttributesGetter<Map<String, String>, Map<String, String>> {
 
     private final boolean enumerateNames;
+    private final List<String> lookedUpNames = new ArrayList<>();
 
     MapGetter(boolean enumerateNames) {
       this.enumerateNames = enumerateNames;
@@ -292,6 +311,7 @@ class HttpHeaderSelectorTest {
 
     @Override
     public List<String> getHttpRequestHeader(Map<String, String> request, String name) {
+      lookedUpNames.add(name);
       return headerValue(request, name);
     }
 
@@ -309,6 +329,7 @@ class HttpHeaderSelectorTest {
     @Override
     public List<String> getHttpResponseHeader(
         Map<String, String> request, Map<String, String> response, String name) {
+      lookedUpNames.add(name);
       return headerValue(response, name);
     }
 

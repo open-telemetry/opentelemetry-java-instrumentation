@@ -8,5 +8,9 @@ instrumentation/development:
         client:
           emit_experimental_telemetry/development: true
           url_template_rules:
+            - pattern: "http://localhost:.*/not-a-match"
+              template: "/not-a-match"
             - pattern: "http://localhost:.*/hello/.*"
               template: "/hello/*"
+            - pattern: "http://localhost:.*/hello/.*"
+              template: "/later-match"
