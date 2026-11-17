@@ -506,6 +506,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `NetworkAttributesGetter.getNetworkLocalInetSocketAddress()` and
+  `getNetworkPeerInetSocketAddress()` in favor of `getNetworkLocalSocketAddress()` and
+  `getNetworkPeerSocketAddress()`.
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.

@@ -110,6 +110,7 @@ class NetworkAttributesExtractorSocketAddressTest {
   }
 
   @Test
+  @SuppressWarnings("deprecation")
   void newSocketGetterTakesPrecedenceOverInetGetter() {
     NetworkAttributesGetter<SocketAddress, SocketAddress> getter =
         new TestGetter() {
