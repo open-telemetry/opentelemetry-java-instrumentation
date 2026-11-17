@@ -51,13 +51,13 @@ class LogPatternTest {
     PatternLayout control = new PatternLayout();
     try {
       layout.setContext(context);
-      layout.setPattern("%d{yyyy-MM-dd HH:mm:ss} %m%n");
+      layout.setPattern("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] prefix: %m%n");
       layout.start();
       quoted.setContext(context);
       quoted.setPattern("%d{HH:mm:ss} %X{'quoted,key'} %m%n");
       quoted.start();
       control.setContext(context);
-      control.setPattern("%X{otel.pattern-injection.trace.app}");
+      control.setPattern("%X{otel.pattern-injection.trace.app} service.name=%X{service.name}");
       control.start();
       assertThat(layout.isStarted()).isTrue();
       assertThat(quoted.isStarted()).isTrue();
@@ -79,11 +79,14 @@ class LogPatternTest {
       assertThat(control.doLayout(appender.list.get(0)))
           .containsOnlyOnce("application-placeholder");
       if (ENABLED) {
-        assertThat(outside)
-            .contains("service.name=pattern-service", TRACE + "= ", SPAN + "= outside");
+        assertThat(layout.getPattern())
+            .startsWith("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] ")
+            .endsWith(" prefix: %m%n");
+        assertThat(layout.getPattern()).doesNotContain("service.name");
+        assertThat(outside).contains(TRACE + "= ", SPAN + "= prefix: outside");
       } else {
         assertThat(outside).matches("\\d{4}-\\d{2}-\\d{2} .* outside\\R");
-        assertThat(layout.getPattern()).isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %m%n");
+        assertThat(layout.getPattern()).isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] prefix: %m%n");
       }
       testing.runWithSpan(
           "log",
@@ -102,9 +105,12 @@ class LogPatternTest {
       MDC.put("service.name", "application-service");
       MDC.put(SPAN, "application-span");
       testing.runWithSpan("override", () -> logger.info("application"));
+      assertThat(control.doLayout(appender.list.get(2)))
+          .contains("service.name=application-service");
       if (ENABLED) {
         assertThat(layout.doLayout(appender.list.get(2)))
-            .contains("service.name=application-service", SPAN + "=application-span");
+            .contains(SPAN + "=application-span")
+            .doesNotContain("service.name=");
       }
     } finally {
       layout.stop();
@@ -134,6 +140,8 @@ class LogPatternTest {
   @ParameterizedTest
   @ValueSource(
       strings = {
+        "%d %-5p [%t] %msg%n",
+        "%d %-5p prefix: %message%n",
         "%d %X{:-fallback} %m%n",
         "%d %X{custom:-trace} %m%n",
         "%d %X{'custom,\\'\"span'} %m%n"
@@ -172,7 +180,7 @@ class LogPatternTest {
             assertThat(rendered.split("\\R")).hasSize(1);
             if (ENABLED) {
               assertThat(rendered)
-                  .contains("service.name=pattern-service")
+                  .doesNotContain("service.name=")
                   .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
                   .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
             }

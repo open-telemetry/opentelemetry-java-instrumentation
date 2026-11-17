@@ -53,11 +53,11 @@ public final class LogPatternInjection {
       return key;
     }
     String traceKey = AgentCommonConfig.get().getTraceIdKey();
-    if (key.equals(mdcOption(traceKey, 1, framework))) {
+    if (key.equals(mdcOption(traceKey, true, framework))) {
       return traceKey;
     }
     String spanKey = AgentCommonConfig.get().getSpanIdKey();
-    if (key.equals(mdcOption(spanKey, 2, framework))) {
+    if (key.equals(mdcOption(spanKey, false, framework))) {
       return spanKey;
     }
     return key;
@@ -70,10 +70,10 @@ public final class LogPatternInjection {
       return pattern;
     }
     StringBuilder fields = new StringBuilder();
-    String[] keys = {"service.name", traceKey, spanKey};
+    String[] keys = {traceKey, spanKey};
     for (int i = 0; i < keys.length; i++) {
       String key = keys[i];
-      String option = mdcOption(key, i, framework);
+      String option = mdcOption(key, i == 0, framework);
       if (!contains(pattern, framework, key, option)) {
         if (fields.length() > 0) {
           fields.append(' ');
@@ -90,36 +90,9 @@ public final class LogPatternInjection {
     if (fields.length() == 0) {
       return pattern;
     }
-    int end = 0;
-    while (end < pattern.length() && Character.isWhitespace(pattern.charAt(end))) {
-      end++;
-    }
-    if (end == pattern.length()) {
+    int end = messageInsertion(pattern, framework);
+    if (end < 0) {
       return pattern;
-    }
-    boolean converterSeen = false;
-    while (end < pattern.length()) {
-      char c = pattern.charAt(end);
-      if (Character.isWhitespace(c)) {
-        break;
-      }
-      if (isLogback(framework) && c == '\\') {
-        end = Math.min(pattern.length(), end + 2);
-        continue;
-      }
-      if (c == '%') {
-        if (converterSeen) {
-          break;
-        }
-        int converterEnd = converterEnd(pattern, end, framework);
-        if (containsLineBreak(pattern.substring(end, converterEnd), framework)) {
-          break;
-        }
-        end = converterEnd;
-        converterSeen = true;
-      } else {
-        end++;
-      }
     }
     return pattern.substring(0, end)
         + (end > 0 && !Character.isWhitespace(pattern.charAt(end - 1)) ? " " : "")
@@ -128,7 +101,7 @@ public final class LogPatternInjection {
         + pattern.substring(end);
   }
 
-  private static String mdcOption(String key, int field, Framework framework) {
+  private static String mdcOption(String key, boolean trace, Framework framework) {
     boolean simple = !key.isEmpty();
     for (int i = 0; i < key.length(); i++) {
       char c = key.charAt(i);
@@ -146,13 +119,13 @@ public final class LogPatternInjection {
     switch (framework) {
       case LOGBACK:
       case LOGBACK_LEGACY:
-        prefix = field == 1 ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
+        prefix = trace ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
         break;
       case LOG4J2:
-        prefix = field == 1 ? LOG4J2_TRACE_PREFIX : LOG4J2_SPAN_PREFIX;
+        prefix = trace ? LOG4J2_TRACE_PREFIX : LOG4J2_SPAN_PREFIX;
         break;
       default:
-        prefix = field == 1 ? LOG4J1_TRACE_PREFIX : LOG4J1_SPAN_PREFIX;
+        prefix = trace ? LOG4J1_TRACE_PREFIX : LOG4J1_SPAN_PREFIX;
         break;
     }
     return prefix + mdcKeyEncoder.encodeToString(key.getBytes(UTF_8));
@@ -243,25 +216,7 @@ public final class LogPatternInjection {
       i = end - 1;
       if (end < pattern.length() && pattern.charAt(end) == '{') {
         int close = balancedEnd(pattern, end, '{', '}', framework);
-        if (framework == Framework.LOG4J2
-            && (converter.equals("highlight")
-                || converter.equals("style")
-                || converter.equals("replace")
-                || converter.equals("enc")
-                || converter.equals("encode")
-                || converter.equals("notEmpty")
-                || converter.equals("varsNotEmpty")
-                || converter.equals("variablesNotEmpty")
-                || converter.equals("maxLen")
-                || converter.equals("maxLength")
-                || converter.equals("black")
-                || converter.equals("blue")
-                || converter.equals("cyan")
-                || converter.equals("green")
-                || converter.equals("magenta")
-                || converter.equals("red")
-                || converter.equals("white")
-                || converter.equals("yellow"))) {
+        if (framework == Framework.LOG4J2 && isLog4j2Wrapper(converter)) {
           if (contains(pattern.substring(end + 1, close - 1), framework, key, mdcOption)) {
             return true;
           }
@@ -386,31 +341,97 @@ public final class LogPatternInjection {
     return framework == Framework.LOGBACK || framework == Framework.LOGBACK_LEGACY;
   }
 
-  private static boolean containsLineBreak(String pattern, Framework framework) {
+  private static boolean isLog4j2Wrapper(String converter) {
+    return converter.equals("highlight")
+        || converter.equals("style")
+        || converter.equals("replace")
+        || converter.equals("enc")
+        || converter.equals("encode")
+        || converter.equals("notEmpty")
+        || converter.equals("varsNotEmpty")
+        || converter.equals("variablesNotEmpty")
+        || converter.equals("maxLen")
+        || converter.equals("maxLength")
+        || converter.equals("black")
+        || converter.equals("blue")
+        || converter.equals("cyan")
+        || converter.equals("green")
+        || converter.equals("magenta")
+        || converter.equals("red")
+        || converter.equals("white")
+        || converter.equals("yellow");
+  }
+
+  // Returns an insertion offset, -1 for literal-only text, or -2 for prefix fields without a
+  // message.
+  private static int messageInsertion(String pattern, Framework framework) {
+    boolean prefixSeen = false;
+    int precedingEnd = 0;
+    while (precedingEnd < pattern.length()
+        && Character.isWhitespace(pattern.charAt(precedingEnd))) {
+      precedingEnd++;
+    }
     for (int i = 0; i < pattern.length(); i++) {
-      char c = pattern.charAt(i);
-      if (c == '\n' || c == '\r') {
-        return true;
-      }
-      if (isLogback(framework) && c == '\\') {
+      if (isLogback(framework) && pattern.charAt(i) == '\\') {
         i++;
-      } else if (c == '%' && i + 1 < pattern.length()) {
-        int name = i + 1;
-        if (pattern.charAt(name) == '%') {
-          i++;
+        continue;
+      }
+      if (pattern.charAt(i) != '%') {
+        continue;
+      }
+      if (i + 1 < pattern.length() && pattern.charAt(i + 1) == '%') {
+        i++;
+        continue;
+      }
+      int name = i + 1;
+      while (name < pattern.length() && "-0123456789.".indexOf(pattern.charAt(name)) >= 0) {
+        name++;
+      }
+      int end = name;
+      while (end < pattern.length() && Character.isLetter(pattern.charAt(end))) {
+        end++;
+        if (framework == Framework.LOG4J1 || framework == Framework.LOG4J1_WITH_MDC_MAP) {
+          break;
+        }
+      }
+      String converter = pattern.substring(name, end);
+      if (converter.equals("m")
+          || ((isLogback(framework) || framework == Framework.LOG4J2)
+              && (converter.equals("msg") || converter.equals("message")))) {
+        return precedingEnd;
+      }
+      char open = isLogback(framework) ? '(' : '{';
+      char close = isLogback(framework) ? ')' : '}';
+      if (end < pattern.length()
+          && pattern.charAt(end) == open
+          && (isLogback(framework)
+              || (framework == Framework.LOG4J2 && isLog4j2Wrapper(converter)))) {
+        int wrapperEnd = balancedEnd(pattern, end, open, close, framework);
+        int nested = messageInsertion(pattern.substring(end + 1, wrapperEnd - 1), framework);
+        if (nested >= 0) {
+          return nested == 0 ? precedingEnd : end + 1 + nested;
+        }
+        if (nested == -1) {
+          // A wrapper containing only literal text belongs to the message prefix.
+          i = converterEnd(pattern, i, framework) - 1;
           continue;
         }
-        while (name < pattern.length() && "-0123456789.".indexOf(pattern.charAt(name)) >= 0) {
-          name++;
-        }
-        if (name < pattern.length()
-            && pattern.charAt(name) == 'n'
-            && (name + 1 == pattern.length() || !Character.isLetter(pattern.charAt(name + 1)))) {
-          return true;
-        }
+      }
+      i = converterEnd(pattern, i, framework) - 1;
+      prefixSeen = true;
+      precedingEnd = i + 1;
+      // Keep a closing bracket or other adjacent literal suffix with the preceding field.
+      while (precedingEnd < pattern.length()
+          && !Character.isWhitespace(pattern.charAt(precedingEnd))
+          && pattern.charAt(precedingEnd) != '%') {
+        precedingEnd++;
+      }
+      while (precedingEnd < pattern.length()
+          && Character.isWhitespace(pattern.charAt(precedingEnd))) {
+        precedingEnd++;
       }
     }
-    return false;
+    return prefixSeen ? -2 : -1;
   }
 
   private LogPatternInjection() {}

@@ -18,123 +18,206 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class LogPatternInjectionTest {
-  private static final String FIELDS =
-      "service.name=%X{service.name} trace_id=%X{trace_id} span_id=%X{span_id}";
+  private static final String FIELDS = "trace_id=%X{trace_id} span_id=%X{span_id}";
 
   @ParameterizedTest
   @EnumSource(Framework.class)
-  void preservesDateAndIsIdempotent(Framework framework) {
-    String pattern = "[%d{yyyy-MM-dd HH:mm:ss.SSS}] %-5p %m%n";
-    String enhanced = LogPatternInjection.enhance(pattern, framework, "trace_id", "span_id");
-    assertThat(enhanced).isEqualTo("[%d{yyyy-MM-dd HH:mm:ss.SSS}] " + FIELDS + " %-5p %m%n");
-    assertThat(LogPatternInjection.enhance(enhanced, framework, "trace_id", "span_id"))
-        .isEqualTo(enhanced);
+  void insertsBeforeMessageAndItsLiteralPrefix(Framework framework) {
+    assertPattern(
+        "[%d{yyyy-MM-dd HH:mm:ss.SSS}] %-5p [%t] - %m%n",
+        "[%d{yyyy-MM-dd HH:mm:ss.SSS}] %-5p [%t] " + FIELDS + " - %m%n", framework);
+    assertPattern("%d %-5p %m%n", "%d %-5p " + FIELDS + " %m%n", framework);
+    assertPattern("prefix: %m%n", FIELDS + " prefix: %m%n", framework);
+    assertPattern("%m%n", FIELDS + " %m%n", framework);
+    assertPattern("%d %X{service.name} %m%n", "%d %X{service.name} " + FIELDS + " %m%n", framework);
   }
 
   @ParameterizedTest
   @EnumSource(Framework.class)
-  void literalKeysAndEscapedConvertersDoNotSuppress(Framework framework) {
-    String pattern = "%d trace_id %%X{span_id} service.name %m%n";
-    assertThat(LogPatternInjection.enhance(pattern, framework, "trace_id", "span_id"))
-        .isEqualTo("%d " + FIELDS + " trace_id %%X{span_id} service.name %m%n");
-    assertThat(LogPatternInjection.enhance("%d %X{trace_id} %m", framework, "trace_id", "span_id"))
-        .isEqualTo("%d service.name=%X{service.name} span_id=%X{span_id} %X{trace_id} %m");
+  void reusesExistingKeysAndIgnoresEscapedConverters(Framework framework) {
+    assertPattern("%d %X{trace_id} %m", "%d %X{trace_id} span_id=%X{span_id} %m", framework);
+    assertPattern("%d %%X{trace_id} %m", "%d " + FIELDS + " %%X{trace_id} %m", framework);
+    assertPattern("%d %%m literal %m%n", "%d " + FIELDS + " %%m literal %m%n", framework);
+    assertPattern("%d %X{trace_id} %X{span_id} %m", "%d %X{trace_id} %X{span_id} %m", framework);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"%msg", "%message", "%10.20msg"})
+  void supportsMessageAliases(String message) {
+    for (Framework framework : new Framework[] {Framework.LOGBACK, Framework.LOG4J2}) {
+      assertPattern(
+          "%d %-5p " + message + "%n", "%d %-5p " + FIELDS + " " + message + "%n", framework);
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"%highlight", "%replace"})
+  void insertsWithinWholeLineLogbackWrappers(String wrapper) {
+    String options = wrapper.equals("%replace") ? "{'unused','replacement'}" : "";
+    assertPattern(
+        wrapper + "(%d %-5p prefix: %msg%n)" + options,
+        wrapper + "(%d %-5p " + FIELDS + " prefix: %msg%n)" + options,
+        Framework.LOGBACK);
+    assertPattern(
+        "%d " + wrapper + "(%msg)" + options + "%n",
+        "%d " + FIELDS + " " + wrapper + "(%msg)" + options + "%n",
+        Framework.LOGBACK);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "highlight",
+        "cyan",
+        "style",
+        "replace",
+        "enc",
+        "encode",
+        "notEmpty",
+        "varsNotEmpty",
+        "variablesNotEmpty",
+        "maxLen",
+        "maxLength",
+        "black",
+        "blue",
+        "green",
+        "magenta",
+        "red",
+        "white",
+        "yellow"
+      })
+  void supportsLog4j2Wrappers(String converter) {
+    String options = converter.startsWith("max") ? "{100}" : "";
+    assertPattern(
+        "%" + converter + "{%d %-5p prefix: %m%n}" + options,
+        "%" + converter + "{%d %-5p " + FIELDS + " prefix: %m%n}" + options,
+        Framework.LOG4J2);
+    assertPattern(
+        "%d %" + converter + "{%X{trace_id}}" + options + " %m%n",
+        "%d %" + converter + "{%X{trace_id}}" + options + " span_id=%X{span_id} %m%n",
+        Framework.LOG4J2);
   }
 
   @Test
-  void frameworkSpecificSyntaxAndWrappers() {
-    assertThat(
-            LogPatternInjection.enhance(
-                "%clr(%d{HH:mm:ss}){blue} %mdc{trace_id:-none} %m",
-                Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo(
-            "%clr(%d{HH:mm:ss}){blue} service.name=%X{service.name} span_id=%X{span_id}"
-                + " %mdc{trace_id:-none} %m");
-    assertThat(LogPatternInjection.enhance("%d %X %m", Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo("%d %X %m");
-    assertThat(
-            LogPatternInjection.enhance(
-                "%d %MDC{service.name, trace_id, span_id} %m",
-                Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo("%d %MDC{service.name, trace_id, span_id} %m");
-    assertThat(
-            LogPatternInjection.enhance(
-                "%d %mdc{trace_id} %m", Framework.LOG4J1, "trace_id", "span_id"))
-        .isEqualTo("%d " + FIELDS + " %mdc{trace_id} %m");
-    assertThat(
-            LogPatternInjection.enhance(
-                "%d %X{trace_id} %m", Framework.LOG4J2, "custom_trace", "custom_span"))
-        .contains("custom_trace=%X{custom_trace}", "custom_span=%X{custom_span}");
+  void handlesNestedWrappersAndLiteralBraces() {
+    assertPattern(
+        "%highlight(%d %cyan(%msg)%n)",
+        "%highlight(%d " + FIELDS + " %cyan(%msg)%n)", Framework.LOGBACK);
+    assertPattern(
+        "%highlight{%d %cyan{%m}%n}",
+        "%highlight{%d " + FIELDS + " %cyan{%m}%n}", Framework.LOG4J2);
+    assertPattern(
+        "%replace(request={){'x','y'} %m%n",
+        FIELDS + " %replace(request={){'x','y'} %m%n", Framework.LOGBACK);
+    assertPattern("%d( %-5p %m)%n", "%d( %-5p " + FIELDS + " %m)%n", Framework.LOG4J2);
+    assertPattern(
+        "%d{\"yyyy-MM-dd '{'\"} %m", "%d{\"yyyy-MM-dd '{'\"} " + FIELDS + " %m", Framework.LOGBACK);
+    assertPattern(
+        "%replace(%d){':','%msg'} %m",
+        "%replace(%d){':','%msg'} " + FIELDS + " %m", Framework.LOGBACK);
+  }
+
+  @Test
+  void insertsBeforeWrappedLiteralMessagePrefixes() {
+    assertPattern(
+        "%d %cyan(prefix:) %msg%n", "%d " + FIELDS + " %cyan(prefix:) %msg%n", Framework.LOGBACK);
+    assertPattern(
+        "%d %cyan{prefix:} %m%n", "%d " + FIELDS + " %cyan{prefix:} %m%n", Framework.LOG4J2);
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"'trace_id'", " trace_id ", "trace_id,ignored"})
+  @ValueSource(strings = {"'trace_id'", " trace_id ", "trace_id,ignored", "trace_id:-none"})
   void recognizesNativeLogbackOptions(String option) {
+    assertPattern(
+        "%d %X{" + option + "} %m",
+        "%d %X{" + option + "} span_id=%X{span_id} %m",
+        Framework.LOGBACK);
+  }
+
+  @Test
+  void respectsFrameworkSpecificMdcSemantics() {
+    assertPattern("%d %X %m", "%d %X " + FIELDS + " %m", Framework.LOG4J1);
+    for (Framework framework :
+        new Framework[] {Framework.LOGBACK, Framework.LOG4J2, Framework.LOG4J1_WITH_MDC_MAP}) {
+      assertPattern("%d %X %m", "%d %X %m", framework);
+    }
+    assertPattern(
+        "%d %MDC{trace_id, span_id} %m", "%d %MDC{trace_id, span_id} %m", Framework.LOG4J2);
+    for (String key : new String[] {" trace_id ", ",trace_id", ""}) {
+      assertPattern(
+          "%d %X{" + key + "} %m", "%d %X{" + key + "} " + FIELDS + " %m", Framework.LOG4J2);
+    }
+    assertPattern("%d %X{:-fallback} %m", "%d %X{:-fallback} " + FIELDS + " %m", Framework.LOGBACK);
+    String legacy =
+        LogPatternInjection.enhance(
+            "%d %X{custom:-trace} %m", Framework.LOGBACK_LEGACY, "custom:-trace", "span_id");
+    assertThat(legacy).isEqualTo("%d %X{custom:-trace} span_id=%X{span_id} %m");
     assertThat(
             LogPatternInjection.enhance(
-                "%d %X{" + option + "} %m", Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo("%d service.name=%X{service.name} span_id=%X{span_id} %X{" + option + "} %m");
-  }
-
-  @Test
-  void preservesQuotedDateOptionsAndBraces() {
-    String field = "%d{\"yyyy-MM-dd '{'\"}";
-    assertThat(LogPatternInjection.enhance(field + " %m", Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo(field + " " + FIELDS + " %m");
-  }
-
-  @Test
-  void wrapperOptionTextDoesNotCountAsAnMdcConverter() {
-    String field = "%replace(%d{HH:mm:ss}){':', '%X{trace_id}'}";
-    assertThat(LogPatternInjection.enhance(field + " %m", Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo(field + " " + FIELDS + " %m");
-  }
-
-  @Test
-  void distinguishesEarlyAndLaterLog4jWholeMdc() {
-    assertThat(LogPatternInjection.enhance("%d %X %m", Framework.LOG4J1, "trace_id", "span_id"))
-        .isEqualTo("%d " + FIELDS + " %X %m");
+                "%d %X{custom:-trace} %m", Framework.LOGBACK, "custom:-trace", "span_id"))
+        .contains("custom:-trace=%X{otel.pattern-injection.trace.Y3VzdG9tOi10cmFjZQ}");
     assertThat(
             LogPatternInjection.enhance(
-                "%d %X %m", Framework.LOG4J1_WITH_MDC_MAP, "trace_id", "span_id"))
-        .isEqualTo("%d %X %m");
-  }
-
-  @Test
-  void preservesLiteralDatePrefixAndLeadingWhitespace() {
+                "%d %X{'custom,trace'} %m", Framework.LOGBACK, "custom,trace", "span_id"))
+        .isEqualTo("%d %X{'custom,trace'} span_id=%X{span_id} %m");
+    String escaped = "%d %X{'custom,\\'\"trace'} %m";
     assertThat(
-            LogPatternInjection.enhance(
-                "  timestamp=%d{HH:mm:ss} %m", Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo("  timestamp=%d{HH:mm:ss} " + FIELDS + " %m");
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = Framework.class,
-      names = {"LOG4J1", "LOG4J1_WITH_MDC_MAP"})
-  void log4j1DateOptionsEndAtTheFirstClosingBrace(Framework framework) {
-    String field = "%d{yyyy-MM-dd '{'}";
-    assertThat(LogPatternInjection.enhance(field + " %m", framework, "trace_id", "span_id"))
-        .isEqualTo(field + " " + FIELDS + " %m");
-  }
-
-  @Test
-  void log4j2BackslashDoesNotEscapeAnOptionBoundary() {
-    String field = "%d{HH:mm:ss\\}";
-    assertThat(LogPatternInjection.enhance(field + " %m", Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo(field + " " + FIELDS + " %m");
+            LogPatternInjection.enhance(escaped, Framework.LOGBACK, "custom,\\'\"trace", "span_id"))
+        .isEqualTo("%d %X{'custom,\\'\"trace'} span_id=%X{span_id} %m");
+    assertThat(
+            LogPatternInjection.enhance(escaped, Framework.LOGBACK, "custom,'\"trace", "span_id"))
+        .contains("custom,'\"trace=%X{otel.pattern-injection.trace.Y3VzdG9tLCcidHJhY2U}");
   }
 
   @ParameterizedTest
   @EnumSource(Framework.class)
-  void respectsFrameworkSpecificPercentEscaping(Framework framework) {
-    String suffix = " \\%X{trace_id} %m";
-    String fields =
-        (framework == Framework.LOGBACK || framework == Framework.LOGBACK_LEGACY)
-            ? FIELDS
-            : "service.name=%X{service.name} span_id=%X{span_id}";
-    assertThat(LogPatternInjection.enhance("%d" + suffix, framework, "trace_id", "span_id"))
-        .isEqualTo("%d " + fields + suffix);
+  void leavesPatternsWithoutMessageUnchanged(Framework framework) {
+    assertThat(LogPatternInjection.enhance(null, framework, "trace_id", "span_id")).isNull();
+    for (String pattern : new String[] {"", "  ", "%d %p%n", "%d %%m%n"}) {
+      assertPattern(pattern, pattern, framework);
+    }
+  }
+
+  @Test
+  void preservesEscapingAndDateOptionBoundaries() {
+    assertPattern(
+        "  timestamp=%d{HH:mm:ss} %m",
+        "  timestamp=%d{HH:mm:ss} " + FIELDS + " %m", Framework.LOGBACK);
+    assertPattern(
+        "%replace(%d){':','%X{trace_id}'} %m",
+        "%replace(%d){':','%X{trace_id}'} " + FIELDS + " %m", Framework.LOGBACK);
+    assertPattern("%d %mdc{trace_id} %m", "%d " + FIELDS + " %mdc{trace_id} %m", Framework.LOG4J1);
+    assertPattern("%d{HH:mm:ss\\} %m", "%d{HH:mm:ss\\} " + FIELDS + " %m", Framework.LOG4J2);
+    for (Framework framework : Framework.values()) {
+      String suffix = " \\%X{trace_id} %m";
+      String expected =
+          framework == Framework.LOGBACK || framework == Framework.LOGBACK_LEGACY
+              ? "%d " + FIELDS + suffix
+              : "%d \\%X{trace_id} span_id=%X{span_id} %m";
+      assertPattern("%d" + suffix, expected, framework);
+    }
+    for (Framework framework : new Framework[] {Framework.LOG4J1, Framework.LOG4J1_WITH_MDC_MAP}) {
+      assertPattern("%d{yyyy-MM-dd '{'} %m", "%d{yyyy-MM-dd '{'} " + FIELDS + " %m", framework);
+      String enhanced =
+          LogPatternInjection.enhance("%d %m%n", framework, "custom}trace", "custom%span");
+      assertThat(enhanced)
+          .isEqualTo(
+              "%d custom}trace=%X{otel.pattern-injection.log4j1.trace.Y3VzdG9tfXRyYWNl} custom%%span=%X{otel.pattern-injection.log4j1.span.Y3VzdG9tJXNwYW4} %m%n");
+      assertThat(LogPatternInjection.enhance(enhanced, framework, "custom}trace", "custom%span"))
+          .isEqualTo(enhanced);
+    }
+    assertThat(
+            LogPatternInjection.enhance(
+                "%d %X{custom,trace} %m", Framework.LOG4J2, "custom,trace", "span_id"))
+        .isEqualTo(
+            "%d %X{custom,trace} custom,trace=%X{otel.pattern-injection.log4j2.trace.Y3VzdG9tLHRyYWNl} span_id=%X{span_id} %m");
+  }
+
+  private static void assertPattern(String pattern, String expected, Framework framework) {
+    String enhanced = LogPatternInjection.enhance(pattern, framework, "trace_id", "span_id");
+    assertThat(enhanced).isEqualTo(expected);
+    assertThat(LogPatternInjection.enhance(enhanced, framework, "trace_id", "span_id"))
+        .isEqualTo(expected);
   }
 
   @ParameterizedTest
@@ -142,13 +225,7 @@ class LogPatternInjectionTest {
   void preservesComplexLogbackKeys(String traceKey, String label, String option) {
     String enhanced =
         LogPatternInjection.enhance("%d %m%n", Framework.LOGBACK, traceKey, "span_id");
-    assertThat(enhanced)
-        .isEqualTo(
-            "%d service.name=%X{service.name} "
-                + label
-                + "=%X{"
-                + option
-                + "} span_id=%X{span_id} %m%n");
+    assertThat(enhanced).isEqualTo("%d " + label + "=%X{" + option + "} span_id=%X{span_id} %m%n");
     assertThat(LogPatternInjection.enhance(enhanced, Framework.LOGBACK, traceKey, "span_id"))
         .isEqualTo(enhanced);
   }
@@ -202,24 +279,11 @@ class LogPatternInjectionTest {
             "otel.pattern-injection.trace.IGN1c3RvbSB0cmFjZSA"));
   }
 
-  @Test
-  void reusesNativeQuotedLogbackKeys() {
-    String pattern = "%d %X{'custom,trace'} %m%n";
-    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK, "custom,trace", "span_id"))
-        .isEqualTo("%d service.name=%X{service.name} span_id=%X{span_id} %X{'custom,trace'} %m%n");
-  }
-
   @ParameterizedTest
   @MethodSource("complexLog4j2Keys")
   void preservesComplexLog4j2Keys(String traceKey, String label, String option) {
     String enhanced = LogPatternInjection.enhance("%d %m%n", Framework.LOG4J2, traceKey, "span_id");
-    assertThat(enhanced)
-        .isEqualTo(
-            "%d service.name=%X{service.name} "
-                + label
-                + "=%X{"
-                + option
-                + "} span_id=%X{span_id} %m%n");
+    assertThat(enhanced).isEqualTo("%d " + label + "=%X{" + option + "} span_id=%X{span_id} %m%n");
     assertThat(LogPatternInjection.enhance(enhanced, Framework.LOG4J2, traceKey, "span_id"))
         .isEqualTo(enhanced);
   }
@@ -246,142 +310,5 @@ class LogPatternInjectionTest {
             " custom trace ",
             " custom trace ",
             "otel.pattern-injection.log4j2.trace.IGN1c3RvbSB0cmFjZSA"));
-  }
-
-  @Test
-  void doesNotReuseLog4j2KeyListForCommaContainingKey() {
-    String pattern = "%d %X{custom,trace} %m%n";
-    String enhanced =
-        LogPatternInjection.enhance(pattern, Framework.LOG4J2, "custom,trace", "span_id");
-    assertThat(enhanced)
-        .isEqualTo(
-            "%d service.name=%X{service.name} "
-                + "custom,trace=%X{otel.pattern-injection.log4j2.trace.Y3VzdG9tLHRyYWNl} "
-                + "span_id=%X{span_id} %X{custom,trace} %m%n");
-    assertThat(LogPatternInjection.enhance(enhanced, Framework.LOG4J2, "custom,trace", "span_id"))
-        .isEqualTo(enhanced);
-  }
-
-  @ParameterizedTest
-  @EnumSource(
-      value = Framework.class,
-      names = {"LOG4J1", "LOG4J1_WITH_MDC_MAP"})
-  void preservesComplexLog4j1Keys(Framework framework) {
-    String enhanced =
-        LogPatternInjection.enhance("%d %m%n", framework, "custom}trace", "custom%span");
-    assertThat(enhanced)
-        .isEqualTo(
-            "%d service.name=%X{service.name} "
-                + "custom}trace=%X{otel.pattern-injection.log4j1.trace.Y3VzdG9tfXRyYWNl} "
-                + "custom%%span=%X{otel.pattern-injection.log4j1.span.Y3VzdG9tJXNwYW4} %m%n");
-    assertThat(LogPatternInjection.enhance(enhanced, framework, "custom}trace", "custom%span"))
-        .isEqualTo(enhanced);
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {" trace_id ", ",trace_id", ""})
-  void distinguishesLog4j2SingleKeysFromKeyLists(String key) {
-    String pattern = "%d %X{" + key + "} %m%n";
-    assertThat(LogPatternInjection.enhance(pattern, Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo("%d " + FIELDS + " %X{" + key + "} %m%n");
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"maxLen", "maxLength", "notEmpty", "varsNotEmpty", "variablesNotEmpty"})
-  void recognizesLog4j2NativeWrapperAliases(String converter) {
-    String options = converter.startsWith("max") ? "{100}" : "";
-    String keyed = "%d %" + converter + "{%X{trace_id}}" + options + " %m%n";
-    assertThat(LogPatternInjection.enhance(keyed, Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo(
-            "%d service.name=%X{service.name} span_id=%X{span_id} %"
-                + converter
-                + "{%X{trace_id}}"
-                + options
-                + " %m%n");
-    String wholeMdc = "%d %" + converter + "{%X}" + options + " %m%n";
-    assertThat(LogPatternInjection.enhance(wholeMdc, Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo(wholeMdc);
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"black", "blue", "cyan", "green", "magenta", "red", "white", "yellow"})
-  void recognizesLog4j2ColorWrappedMdc(String color) {
-    String keyed = "%d %" + color + "{%X{trace_id}} %m%n";
-    assertThat(LogPatternInjection.enhance(keyed, Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo(
-            "%d service.name=%X{service.name} span_id=%X{span_id} %"
-                + color
-                + "{%X{trace_id}} %m%n");
-    String wholeMdc = "%d %" + color + "{%X} %m%n";
-    assertThat(LogPatternInjection.enhance(wholeMdc, Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo(wholeMdc);
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"%d( %-5p %m%n", "%d( %-5p %m)%n"})
-  void log4j2ParenthesesAreLiteral(String pattern) {
-    assertThat(LogPatternInjection.enhance(pattern, Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo("%d( " + FIELDS + pattern.substring(3));
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"%highlight(%d %msg%n)", "%replace(%d %msg%n){'x','y'}"})
-  void insertsBeforeWholeLineLogbackWrappers(String pattern) {
-    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo(FIELDS + " " + pattern);
-  }
-
-  @Test
-  void insertsBeforeWholeLineLog4j2Wrappers() {
-    String pattern = "%highlight{%d{HH:mm:ss} %-5p %m%n}";
-    assertThat(LogPatternInjection.enhance(pattern, Framework.LOG4J2, "trace_id", "span_id"))
-        .isEqualTo(FIELDS + " " + pattern);
-  }
-
-  @ParameterizedTest
-  @ValueSource(strings = {"%cyan(request={)", "%replace(request={){'x','y'}"})
-  void literalCompositeBracesDoNotConsumeFollowingFields(String field) {
-    assertThat(
-            LogPatternInjection.enhance(field + " %m%n", Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo(field + " " + FIELDS + " %m%n");
-  }
-
-  @Test
-  void distinguishesLegacyAndModernLogbackDefaultDelimiters() {
-    String pattern = "%d %X{custom:-trace} %m%n";
-    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK, "custom:-trace", "span_id"))
-        .contains("custom:-trace=%X{otel.pattern-injection.trace.Y3VzdG9tOi10cmFjZQ}");
-    assertThat(
-            LogPatternInjection.enhance(
-                pattern, Framework.LOGBACK_LEGACY, "custom:-trace", "span_id"))
-        .isEqualTo("%d service.name=%X{service.name} span_id=%X{span_id} %X{custom:-trace} %m%n");
-    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK_LEGACY, "custom", "span_id"))
-        .contains("custom=%X{custom}");
-  }
-
-  @Test
-  void emptyLookupKeyWithDefaultDoesNotRenderWholeMdc() {
-    String pattern = "%d %X{:-fallback} %m%n";
-    assertThat(LogPatternInjection.enhance(pattern, Framework.LOGBACK, "trace_id", "span_id"))
-        .isEqualTo("%d " + FIELDS + " %X{:-fallback} %m%n");
-  }
-
-  @Test
-  void quotedLogbackEscapesRemainPartOfTheNativeKey() {
-    String pattern = "%d %X{'custom,\\'\"trace'} %m%n";
-    assertThat(
-            LogPatternInjection.enhance(pattern, Framework.LOGBACK, "custom,\\'\"trace", "span_id"))
-        .isEqualTo(
-            "%d service.name=%X{service.name} span_id=%X{span_id} %X{'custom,\\'\"trace'} %m%n");
-    assertThat(
-            LogPatternInjection.enhance(pattern, Framework.LOGBACK, "custom,'\"trace", "span_id"))
-        .contains("custom,'\"trace=%X{otel.pattern-injection.trace.Y3VzdG9tLCcidHJhY2U}");
-  }
-
-  @Test
-  void emptyPatternsAreUnchanged() {
-    assertThat(LogPatternInjection.enhance(null, Framework.LOGBACK, "trace_id", "span_id"))
-        .isNull();
-    assertThat(LogPatternInjection.enhance("", Framework.LOGBACK, "trace_id", "span_id")).isEmpty();
   }
 }

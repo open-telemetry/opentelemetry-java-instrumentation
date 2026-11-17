@@ -33,12 +33,14 @@ class LogPatternTest {
 
   @Test
   void rendersCorrelationAndPreservesApplicationValues() {
-    PatternLayout layout = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %m%n");
+    PatternLayout layout = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] prefix: %m%n");
     PatternLayout wholeMdc = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %X %m%n");
     if (ENABLED && testLatestDeps()) {
       assertThat(wholeMdc.getConversionPattern()).isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %X %m%n");
     }
-    PatternLayout control = new PatternLayout("%X{otel.pattern-injection.log4j1.trace.app}");
+    PatternLayout control =
+        new PatternLayout(
+            "%X{otel.pattern-injection.log4j1.trace.app} service.name=%X{service.name}");
     String pattern = layout.getConversionPattern();
     layout.setConversionPattern(pattern);
     layout.activateOptions();
@@ -53,11 +55,14 @@ class LogPatternTest {
       logger.info("outside");
       String outside = layout.format(ListAppender.getEvents().get(0));
       if (ENABLED) {
-        assertThat(wholeMdc.format(ListAppender.getEvents().get(0))).contains("pattern-service");
-        assertThat(outside)
-            .contains("service.name=pattern-service", TRACE + "= ", SPAN + "= outside");
+        assertThat(layout.getConversionPattern())
+            .startsWith("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] ")
+            .endsWith(" prefix: %m%n");
+        assertThat(layout.getConversionPattern()).doesNotContain("service.name");
+        assertThat(outside).contains(TRACE + "= ", SPAN + "= prefix: outside");
       } else {
-        assertThat(layout.getConversionPattern()).isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %m%n");
+        assertThat(layout.getConversionPattern())
+            .isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] prefix: %m%n");
       }
       testing.runWithSpan(
           "log",
@@ -79,10 +84,12 @@ class LogPatternTest {
       MDC.put(SPAN, "application-span");
       testing.runWithSpan("override", () -> logger.info("application"));
       assertThat(control.format(ListAppender.getEvents().get(2)))
-          .containsOnlyOnce("application-placeholder");
+          .containsOnlyOnce("application-placeholder")
+          .contains("service.name=application-service");
       if (ENABLED) {
         assertThat(layout.format(ListAppender.getEvents().get(2)))
-            .contains("service.name=application-service", SPAN + "=application-span");
+            .contains(SPAN + "=application-span")
+            .doesNotContain("service.name=");
       }
     } finally {
       MDC.remove("otel.pattern-injection.log4j1.trace.app");

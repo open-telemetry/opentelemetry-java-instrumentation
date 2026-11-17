@@ -49,7 +49,7 @@ public abstract class LogPatternTest {
   @Test
   void rendersCorrelationAndPreservesApplicationValues() {
     PatternLayout.Builder builder =
-        PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss} %m%n");
+        PatternLayout.newBuilder().withPattern("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] prefix: %m%n");
     PatternLayout layout = builder.build();
     assertThat(builder.build().getConversionPattern()).isEqualTo(layout.getConversionPattern());
     Logger logger = (Logger) LogManager.getLogger("TestLogger");
@@ -66,10 +66,14 @@ public abstract class LogPatternTest {
     try {
       logger.info("outside");
       if (ENABLED) {
-        assertThat(messages.get(0))
-            .contains("service.name=pattern-service", TRACE + "= ", SPAN + "= outside");
+        assertThat(layout.getConversionPattern())
+            .startsWith("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] ")
+            .endsWith(" prefix: %m%n");
+        assertThat(layout.getConversionPattern()).doesNotContain("service.name");
+        assertThat(messages.get(0)).contains(TRACE + "= ", SPAN + "= prefix: outside");
       } else {
-        assertThat(layout.getConversionPattern()).isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %m%n");
+        assertThat(layout.getConversionPattern())
+            .isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] prefix: %m%n");
       }
       testing()
           .runWithSpan(
@@ -88,12 +92,28 @@ public abstract class LogPatternTest {
       testing().runWithSpan("override", () -> logger.info("application"));
       if (ENABLED) {
         assertThat(messages.get(2))
-            .contains("service.name=application-service", SPAN + "=application-span");
+            .contains(SPAN + "=application-span")
+            .doesNotContain("service.name=");
       }
     } finally {
       ThreadContext.clearAll();
       logger.removeAppender(appender);
       appender.stop();
+    }
+  }
+
+  @Test
+  void preservesExplicitServiceNameConverter() {
+    ThreadContext.put("service.name", "application-service");
+    try {
+      assertRenderedPattern(
+          "%d %X{service.name} %m%n",
+          (layout, rendered) -> {
+            assertThat(rendered).containsOnlyOnce("application-service");
+            assertThat(layout.getConversionPattern()).containsOnlyOnce("%X{service.name}");
+          });
+    } finally {
+      ThreadContext.remove("service.name");
     }
   }
 
@@ -108,7 +128,6 @@ public abstract class LogPatternTest {
           if (ENABLED) {
             assertThat(rendered)
                 .contains(
-                    "service.name=pattern-service",
                     TRACE + "=" + Span.current().getSpanContext().getTraceId(),
                     SPAN + "=" + Span.current().getSpanContext().getSpanId());
             assertThat(rendered.indexOf(TRACE + "="))
@@ -170,7 +189,7 @@ public abstract class LogPatternTest {
             assertThat(rendered).containsOnlyOnce("application-value");
             if (ENABLED) {
               assertThat(rendered)
-                  .contains("service.name=pattern-service")
+                  .doesNotContain("service.name=")
                   .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
                   .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
             }
@@ -206,7 +225,7 @@ public abstract class LogPatternTest {
           assertThat(plain.split("\\R")).hasSize(1);
           if (ENABLED) {
             assertThat(plain)
-                .contains("service.name=pattern-service")
+                .doesNotContain("service.name=")
                 .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
                 .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
           }
