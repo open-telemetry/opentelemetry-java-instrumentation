@@ -115,9 +115,6 @@ public final class IncludeExclude {
   }
 
   private static Predicate<String> createGlobPredicate(String globPattern) {
-    if (globPattern.equals("*")) {
-      return value -> true;
-    }
     if (globPattern.indexOf('*') == -1 && globPattern.indexOf('?') == -1) {
       return globPattern::equals;
     }
@@ -141,6 +138,10 @@ public final class IncludeExclude {
         int patternCodePoint = pattern.codePointAt(patternIndex);
         if (patternCodePoint == '*') {
           patternIndex += Character.charCount(patternCodePoint);
+          if (patternIndex == pattern.length()) {
+            // trailing '*' matches whatever remains of the value
+            return true;
+          }
           patternIndexAfterStar = patternIndex;
           valueIndexAfterStar = valueIndex;
           continue;
