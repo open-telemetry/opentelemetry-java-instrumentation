@@ -47,6 +47,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import com.sun.net.httpserver.HttpServer;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -69,7 +70,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutionException;
@@ -120,7 +120,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
 
   protected InstrumentationTestRunner testing;
 
-  @RegisterExtension final AutoCleanupExtension proxyCleanup = AutoCleanupExtension.create();
+  @RegisterExtension final AutoCleanupExtension serverCleanup = AutoCleanupExtension.create();
 
   private HttpClientTestServer server;
 
@@ -163,7 +163,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     HttpServer proxy =
         HttpServer.create(
             new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
-    proxyCleanup.deferCleanup(() -> proxy.stop(0));
+    serverCleanup.deferCleanup(() -> proxy.stop(0));
 
     proxy.createContext(
         "/success",
@@ -466,6 +466,91 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           });
     }
+  }
+
+  @Test
+  void redirectToDifferentPort() throws Exception {
+    assumeTrue(options.getExpectNetworkPeerAttributes());
+    assumeTrue(options.getTestRedirects());
+    assumeTrue(options.getHasSendRequest());
+    assumeTrue(!options.isLowLevelInstrumentation());
+
+    URI target = resolveAddress("/success");
+    URI uri = startRedirectServer(target);
+    assertThat(uri.getPort()).isNotEqualTo(target.getPort());
+
+    int responseCode = doRequest("GET", uri);
+    assertThat(responseCode).isEqualTo(200);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(span, uri, "GET", responseCode, null, true, target)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset()),
+                span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void redirectToUnavailablePortRetainsLastNetworkPeer() throws Exception {
+    assumeTrue(options.getExpectNetworkPeerAttributes());
+    assumeTrue(options.getTestRedirects());
+    assumeTrue(options.getTestConnectionFailure());
+    assumeTrue(options.getHasSendRequest());
+    assumeTrue(!options.isLowLevelInstrumentation());
+
+    URI target = URI.create("http://127.0.0.1:" + PortUtils.UNUSABLE_PORT + "/success");
+    URI uri = startRedirectServer(target);
+
+    Throwable thrown = catchThrowable(() -> doRequest("GET", uri));
+    assertThat(thrown).isNotNull();
+
+    Throwable exception = thrown instanceof ExecutionException ? thrown.getCause() : thrown;
+    Throwable clientError = options.getClientSpanErrorMapper().apply(uri, exception);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertClientSpan(
+                            span,
+                            uri,
+                            "GET",
+                            options.getResponseCodeOnRedirectConnectionError(),
+                            null,
+                            true,
+                            uri)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(emitExceptionAsSpanEvents() ? clientError : null)
+                        .hasAttributesSatisfying(
+                            equalTo(ERROR_TYPE, clientError.getClass().getName()))));
+
+    if (emitExceptionAsLogs()) {
+      assertClientExceptionLog(clientError, "http.client.request.exception");
+    }
+  }
+
+  private URI startRedirectServer(URI target) throws Exception {
+    HttpServer redirectServer =
+        HttpServer.create(
+            new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 0), 0);
+    serverCleanup.deferCleanup(() -> redirectServer.stop(0));
+
+    redirectServer.createContext(
+        "/redirect",
+        exchange -> {
+          try {
+            exchange.getResponseHeaders().set("Location", target.toString());
+            exchange.sendResponseHeaders(302, -1);
+          } finally {
+            exchange.close();
+          }
+        });
+    redirectServer.start();
+
+    return URI.create("http://127.0.0.1:" + redirectServer.getAddress().getPort() + "/redirect");
   }
 
   @Test
@@ -1197,7 +1282,6 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
     return assertClientSpan(span, uri, method, responseCode, resendCount, true);
   }
 
-  @SuppressWarnings("deprecation") // using deprecated semconv
   private SpanDataAssert assertClientSpan(
       SpanDataAssert span,
       URI uri,
@@ -1205,6 +1289,22 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
       Integer responseCode,
       Integer resendCount,
       boolean responseReceived) {
+    URI expectedPeerUri =
+        uri.getPort() == PortUtils.UNUSABLE_PORT || uri.getHost().equals("192.0.2.1") ? null : uri;
+
+    return assertClientSpan(
+        span, uri, method, responseCode, resendCount, responseReceived, expectedPeerUri);
+  }
+
+  @SuppressWarnings("deprecation") // using deprecated semconv
+  private SpanDataAssert assertClientSpan(
+      SpanDataAssert span,
+      URI uri,
+      String method,
+      Integer responseCode,
+      Integer resendCount,
+      boolean responseReceived,
+      URI expectedPeerUri) {
     Set<AttributeKey<?>> httpClientAttributes = options.getHttpAttributes().apply(uri);
     return span.hasName(options.getExpectedClientSpanNameMapper().apply(uri, method))
         .hasKind(SpanKind.CLIENT)
@@ -1244,23 +1344,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 }
               }
 
-              if (uri.getPort() != PortUtils.UNUSABLE_PORT && !uri.getHost().equals("192.0.2.1")) {
-                // TODO: Move to test knob rather than always treating as optional
-                if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
-                  assertThat(attrs)
-                      .hasEntrySatisfying(
-                          NETWORK_PEER_ADDRESS,
-                          addr -> assertThat(addr).isIn("127.0.0.1", "0:0:0:0:0:0:0:1"));
-                }
-                if (attrs.get(NETWORK_PEER_PORT) != null) {
-                  assertThat(attrs)
-                      .containsEntry(
-                          NETWORK_PEER_PORT,
-                          Objects.equals(uri.getScheme(), "https")
-                              ? server.httpsPort()
-                              : server.httpPort());
-                }
-              }
+              assertNetworkPeerAttributes(attrs, expectedPeerUri);
 
               if (httpClientAttributes.contains(URL_FULL)) {
                 assertThat(attrs).containsEntry(URL_FULL, uri.toString());
@@ -1294,6 +1378,36 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               }
             })
         .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_41_0));
+  }
+
+  private void assertNetworkPeerAttributes(Attributes attributes, URI expectedPeerUri) {
+    boolean requirePeer = options.getExpectNetworkPeerAttributes();
+
+    if (expectedPeerUri == null) {
+      if (requirePeer) {
+        assertThat(attributes)
+            .doesNotContainKey(NETWORK_PEER_ADDRESS)
+            .doesNotContainKey(NETWORK_PEER_PORT);
+      }
+      return;
+    }
+
+    if (requirePeer || attributes.get(NETWORK_PEER_ADDRESS) != null) {
+      if (expectedPeerUri.getHost().equals("localhost")) {
+        assertThat(attributes)
+            .hasEntrySatisfying(
+                NETWORK_PEER_ADDRESS,
+                address -> assertThat(address).isIn("127.0.0.1", "0:0:0:0:0:0:0:1"));
+      } else {
+        assertThat(attributes).containsEntry(NETWORK_PEER_ADDRESS, expectedPeerUri.getHost());
+      }
+    }
+
+    if (requirePeer || attributes.get(NETWORK_PEER_PORT) != null) {
+      int port = expectedPeerUri.getPort();
+      int expectedPort = port > 0 ? port : defaultPortForScheme(expectedPeerUri.getScheme());
+      assertThat(attributes).containsEntry(NETWORK_PEER_PORT, expectedPort);
+    }
   }
 
   protected static SpanDataAssert assertServerSpan(SpanDataAssert span) {
