@@ -12,7 +12,7 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -59,8 +59,8 @@ final class CouchbaseSqlAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       CouchbaseRequestInfo request, @Nullable Void unused) {
-    return dbGetter.getNetworkPeerInetSocketAddress(request, null);
+    return dbGetter.getNetworkPeerSocketAddress(request, null);
   }
 }

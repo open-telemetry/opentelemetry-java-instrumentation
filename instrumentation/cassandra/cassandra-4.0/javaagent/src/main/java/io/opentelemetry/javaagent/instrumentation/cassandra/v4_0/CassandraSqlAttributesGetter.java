@@ -69,12 +69,12 @@ final class CassandraSqlAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;
     }
-    InetSocketAddress peer = CassandraResponsePeers.getExecutionInfoPeer(executionInfo);
+    SocketAddress peer = CassandraResponsePeers.getExecutionInfoPeer(executionInfo);
     if (peer != null) {
       return peer;
     }

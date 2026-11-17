@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.lettuce.v5_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
+import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class LettuceBatchAttributesGetter
@@ -72,13 +74,11 @@ final class LettuceBatchAttributesGetter
 
   @Nullable
   @Override
-  public String getNetworkPeerAddress(LettuceBatchRequest request, @Nullable Void unused) {
-    return LettuceCommandPeer.getNetworkPeerAddress(request.getPeerAddress());
-  }
-
-  @Nullable
-  @Override
-  public Integer getNetworkPeerPort(LettuceBatchRequest request, @Nullable Void unused) {
-    return LettuceCommandPeer.getNetworkPeerPort(request.getPeerAddress());
+  public SocketAddress getNetworkPeerSocketAddress(
+      LettuceBatchRequest request, @Nullable Void unused) {
+    SocketAddress address = request.getPeerAddress();
+    return address instanceof InetSocketAddress && ((InetSocketAddress) address).isUnresolved()
+        ? null
+        : address;
   }
 }

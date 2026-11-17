@@ -33,9 +33,9 @@ class MongoConnectionPeerTest {
     InetSocketAddress firstPeer = captureConnectedPeer(firstDescription);
     InetSocketAddress secondPeer = captureConnectedPeer(secondDescription);
 
-    assertThat(MongoConnectionPeer.resolve(firstDescription).getInetSocketAddress())
+    assertThat(MongoConnectionPeer.resolve(firstDescription).getSocketAddress())
         .isEqualTo(firstPeer);
-    assertThat(MongoConnectionPeer.resolve(secondDescription).getInetSocketAddress())
+    assertThat(MongoConnectionPeer.resolve(secondDescription).getSocketAddress())
         .isEqualTo(secondPeer);
     assertThat(firstPeer).isNotEqualTo(secondPeer);
   }
@@ -75,6 +75,7 @@ class MongoConnectionPeerTest {
     MongoConnectionPeer.endOpen(state, connectionDescription, null);
 
     MongoNetworkPeer peer = MongoConnectionPeer.resolve(connectionDescription);
+    assertThat(peer.getSocketAddress()).isSameAs(unixSocketAddress);
     assertThat(peer.getAddress()).isEqualTo(socketPath);
     assertThat(peer.getPort()).isNull();
   }

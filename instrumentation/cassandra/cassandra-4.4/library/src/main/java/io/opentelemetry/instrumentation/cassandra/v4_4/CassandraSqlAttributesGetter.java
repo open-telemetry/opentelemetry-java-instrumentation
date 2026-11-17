@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -70,12 +71,12 @@ final class CassandraSqlAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;
     }
-    InetSocketAddress peer = CassandraNetworkPeer.getExecutionInfoPeer(executionInfo);
+    SocketAddress peer = CassandraNetworkPeer.getExecutionInfoPeer(executionInfo);
     if (peer != null) {
       return peer;
     }

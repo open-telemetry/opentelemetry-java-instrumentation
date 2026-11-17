@@ -5,10 +5,14 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
+import static java.util.logging.Level.FINE;
+
+import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.net.SocketAddress;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -17,32 +21,47 @@ import javax.annotation.Nullable;
  */
 public class MongoNetworkPeer {
 
+  private static final Logger logger = Logger.getLogger(MongoNetworkPeer.class.getName());
+  // Resolve optional socket types through their runtime class, not the helper's class loader.
+  private static final ClassValue<MethodHandle> jnrSocketPaths =
+      new ClassValue<MethodHandle>() {
+        @Override
+        @Nullable
+        protected MethodHandle computeValue(Class<?> type) {
+          if (!type.getName().equals("jnr.unixsocket.UnixSocketAddress")) {
+            return null;
+          }
+          try {
+            return MethodHandles.publicLookup()
+                .findVirtual(type, "path", MethodType.methodType(String.class));
+          } catch (NoSuchMethodException | IllegalAccessException ignored) {
+            return null;
+          }
+        }
+      };
+
   private final String address;
   @Nullable private final Integer port;
-  @Nullable private final InetSocketAddress inetSocketAddress;
+  private final SocketAddress socketAddress;
 
   @Nullable
   public static MongoNetworkPeer fromSocketAddress(@Nullable SocketAddress socketAddress) {
-    if (socketAddress instanceof InetSocketAddress) {
-      InetSocketAddress inetSocketAddress = (InetSocketAddress) socketAddress;
-      if (inetSocketAddress.isUnresolved() || inetSocketAddress.getAddress() == null) {
-        return null;
-      }
-      return new MongoNetworkPeer(
-          inetSocketAddress.getAddress().getHostAddress(),
-          inetSocketAddress.getPort(),
-          inetSocketAddress);
+    if (socketAddress == null) {
+      return null;
     }
-
-    String path = getUnixSocketPath(socketAddress);
-    return path == null || path.isEmpty() ? null : new MongoNetworkPeer(path, null, null);
+    String address = SocketAddressUtil.getAddress(socketAddress);
+    if (address == null) {
+      address = getJnrSocketPath(socketAddress);
+    }
+    return address == null || address.isEmpty()
+        ? null
+        : new MongoNetworkPeer(address, SocketAddressUtil.getPort(socketAddress), socketAddress);
   }
 
-  private MongoNetworkPeer(
-      String address, @Nullable Integer port, @Nullable InetSocketAddress inetSocketAddress) {
+  private MongoNetworkPeer(String address, @Nullable Integer port, SocketAddress socketAddress) {
     this.address = address;
     this.port = port;
-    this.inetSocketAddress = inetSocketAddress;
+    this.socketAddress = socketAddress;
   }
 
   public String getAddress() {
@@ -54,30 +73,20 @@ public class MongoNetworkPeer {
     return port;
   }
 
-  @Nullable
-  public InetSocketAddress getInetSocketAddress() {
-    return inetSocketAddress;
+  public SocketAddress getSocketAddress() {
+    return socketAddress;
   }
 
   @Nullable
-  private static String getUnixSocketPath(@Nullable SocketAddress socketAddress) {
-    if (socketAddress == null) {
+  private static String getJnrSocketPath(SocketAddress socketAddress) {
+    MethodHandle path = jnrSocketPaths.get(socketAddress.getClass());
+    if (path == null) {
       return null;
     }
-
-    Object path = invokeNoArg(socketAddress, "getPath");
-    if (path == null) {
-      path = invokeNoArg(socketAddress, "path");
-    }
-    return path == null ? null : path.toString();
-  }
-
-  @Nullable
-  private static Object invokeNoArg(SocketAddress socketAddress, String methodName) {
     try {
-      Method method = socketAddress.getClass().getMethod(methodName);
-      return method.invoke(socketAddress);
-    } catch (IllegalAccessException | InvocationTargetException | NoSuchMethodException ignored) {
+      return (String) path.invoke(socketAddress);
+    } catch (Throwable t) {
+      logger.log(FINE, "Unable to read JNR Unix domain socket path", t);
       return null;
     }
   }

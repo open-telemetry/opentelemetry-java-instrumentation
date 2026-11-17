@@ -20,8 +20,31 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class CassandraResponsePeerTest {
+
+  @Test
+  @EnabledForJreRange(min = JRE.JAVA_16)
+  void preservesUnixResponsePeerThroughTheFrame() throws ReflectiveOperationException {
+    SocketAddress peer =
+        (SocketAddress)
+            Class.forName("java.net.UnixDomainSocketAddress")
+                .getMethod("of", String.class)
+                .invoke(null, "cassandra.sock");
+    Frame response = frame(1);
+    ExecutionInfo executionInfo = mock(ExecutionInfo.class);
+
+    InFlightHandlerInstrumentation.ChannelReadAdvice.onEnter(
+        new TestContext(new TestChannel(peer)), response);
+    DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(executionInfo, response);
+
+    CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isSameAs(peer);
+    assertThat(getter.getNetworkPeerAddress(null, executionInfo)).isEqualTo("cassandra.sock");
+    assertThat(getter.getNetworkPeerPort(null, executionInfo)).isNull();
+  }
 
   @Test
   void correlatesMultiplexedResponsesWithTheirChannels() throws UnknownHostException {

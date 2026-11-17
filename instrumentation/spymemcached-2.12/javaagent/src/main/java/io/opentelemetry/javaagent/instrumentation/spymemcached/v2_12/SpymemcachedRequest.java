@@ -9,6 +9,7 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicReference;
@@ -55,7 +56,7 @@ public abstract class SpymemcachedRequest {
   // routing. Capture runs before queue publication, so initial updates cannot overwrite retries.
   // Once suppressHandlingNodeAddress is true, even an in-progress capture cannot expose a peer.
   @Nullable private MemcachedNode handlingNode;
-  @Nullable private volatile InetSocketAddress handlingNodeAddress;
+  @Nullable private volatile SocketAddress handlingNodeAddress;
   private volatile boolean suppressHandlingNodeAddress;
 
   public void setHandlingNode(@Nullable MemcachedNode node) {
@@ -74,9 +75,11 @@ public abstract class SpymemcachedRequest {
     }
 
     handlingNode = node;
-    SocketAddress socketAddress = node.getSocketAddress();
+    SocketAddress address = node.getSocketAddress();
     handlingNodeAddress =
-        socketAddress instanceof InetSocketAddress ? (InetSocketAddress) socketAddress : null;
+        address instanceof InetSocketAddress || SocketAddressUtil.getAddress(address) != null
+            ? address
+            : null;
   }
 
   public void setRetryHandlingNode(@Nullable MemcachedNode node) {
@@ -88,7 +91,7 @@ public abstract class SpymemcachedRequest {
   }
 
   @Nullable
-  public InetSocketAddress getHandlingNodeAddress() {
+  public SocketAddress getHandlingNodeAddress() {
     return suppressHandlingNodeAddress ? null : handlingNodeAddress;
   }
 

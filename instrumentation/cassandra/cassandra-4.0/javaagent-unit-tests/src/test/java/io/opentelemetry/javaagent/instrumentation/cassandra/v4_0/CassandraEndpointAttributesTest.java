@@ -33,6 +33,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -117,8 +118,8 @@ class CassandraEndpointAttributesTest {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     CassandraRequest request = CassandraRequest.create(session, null, "SELECT 1");
 
-    InetSocketAddress peerAddress =
-        new CassandraSqlAttributesGetter().getNetworkPeerInetSocketAddress(request, executionInfo);
+    SocketAddress peerAddress =
+        new CassandraSqlAttributesGetter().getNetworkPeerSocketAddress(request, executionInfo);
 
     assertThat(peerAddress).isEqualTo(coordinatorAddress);
   }
@@ -129,8 +130,8 @@ class CassandraEndpointAttributesTest {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     CassandraRequest request = CassandraRequest.create(session, null, "SELECT 1");
 
-    InetSocketAddress peerAddress =
-        new CassandraSqlAttributesGetter().getNetworkPeerInetSocketAddress(request, executionInfo);
+    SocketAddress peerAddress =
+        new CassandraSqlAttributesGetter().getNetworkPeerSocketAddress(request, executionInfo);
 
     assertThat(peerAddress).isNull();
     verify(sniEndPoint, never()).resolve();
@@ -141,7 +142,7 @@ class CassandraEndpointAttributesTest {
     InetSocketAddress responsePeer = resolved(29042);
     CassandraResponsePeers.setExecutionInfoPeer(executionInfo, responsePeer);
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
     verify(executionInfo, never()).getCoordinator();
     verifyNoInteractions(coordinator);
   }
@@ -151,7 +152,7 @@ class CassandraEndpointAttributesTest {
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     when(coordinator.getEndPoint()).thenReturn(customEndPoint);
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
+    SocketAddress peer = getter.getNetworkPeerSocketAddress(null, executionInfo);
 
     assertThat(peer).isNull();
     verify(customEndPoint, never()).resolve();
@@ -165,7 +166,7 @@ class CassandraEndpointAttributesTest {
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(null);
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(null);
   }
 
   @Test
@@ -174,11 +175,9 @@ class CassandraEndpointAttributesTest {
     when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
+    SocketAddress peer = getter.getNetworkPeerSocketAddress(null, executionInfo);
 
-    assertThat(peer).isNotNull();
-    assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
-    assertThat(peer.getPort()).isEqualTo(9042);
+    assertThat(peer).isEqualTo(resolved(9042));
   }
 
   @Test
@@ -187,7 +186,7 @@ class CassandraEndpointAttributesTest {
     CassandraResponsePeers.setExecutionInfoPeer(executionInfo, responsePeer);
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
     verify(executionInfo, never()).getCoordinator();
     verifyNoInteractions(coordinator);
   }

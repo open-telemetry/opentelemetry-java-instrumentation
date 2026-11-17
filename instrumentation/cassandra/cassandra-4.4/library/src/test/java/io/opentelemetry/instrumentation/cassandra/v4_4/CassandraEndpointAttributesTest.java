@@ -34,6 +34,7 @@ import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtr
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -128,16 +129,14 @@ class CassandraEndpointAttributesTest {
 
     Attributes attributes =
         serverAttributes(CassandraServerTarget.of(singletonList("configured.example.com:9142")));
-    InetSocketAddress peer =
+    SocketAddress peer =
         new CassandraSqlAttributesGetter()
-            .getNetworkPeerInetSocketAddress(
+            .getNetworkPeerSocketAddress(
                 CassandraRequest.create(session, null, "SELECT 1"), executionInfo);
 
     assertThat(attributes.get(SERVER_ADDRESS)).isEqualTo("configured.example.com");
     assertThat(attributes.get(SERVER_PORT)).isEqualTo(9142L);
-    assertThat(peer).isNotNull();
-    assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
-    assertThat(peer.getPort()).isEqualTo(9042);
+    assertThat(peer).isEqualTo(resolved(9042));
   }
 
   @Test
@@ -147,7 +146,7 @@ class CassandraEndpointAttributesTest {
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isNull();
   }
 
   @Test
@@ -157,7 +156,7 @@ class CassandraEndpointAttributesTest {
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isNull();
     verifyNoInteractions(customEndPoint);
   }
 
@@ -170,7 +169,7 @@ class CassandraEndpointAttributesTest {
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(null);
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(null);
   }
 
   @Test
@@ -179,11 +178,9 @@ class CassandraEndpointAttributesTest {
     when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(resolved(9042)));
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    InetSocketAddress peer = getter.getNetworkPeerInetSocketAddress(null, executionInfo);
+    SocketAddress peer = getter.getNetworkPeerSocketAddress(null, executionInfo);
 
-    assertThat(peer).isNotNull();
-    assertThat(peer.getHostString()).isEqualTo("127.0.0.1");
-    assertThat(peer.getPort()).isEqualTo(9042);
+    assertThat(peer).isEqualTo(resolved(9042));
   }
 
   @Test
@@ -191,7 +188,7 @@ class CassandraEndpointAttributesTest {
     InetSocketAddress responsePeer = resolved(29042);
     CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, responsePeer);
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
     verify(executionInfo, never()).getCoordinator();
     verifyNoInteractions(coordinator);
   }
@@ -202,7 +199,7 @@ class CassandraEndpointAttributesTest {
     CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, responsePeer);
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
     verify(executionInfo, never()).getCoordinator();
     verifyNoInteractions(coordinator);
   }
@@ -213,7 +210,7 @@ class CassandraEndpointAttributesTest {
     CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, responsePeer);
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(responsePeer);
     verifyNoInteractions(customEndPoint);
   }
 

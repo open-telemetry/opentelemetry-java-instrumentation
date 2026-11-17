@@ -246,8 +246,27 @@ class LettuceNetworkAttributesGetterTest {
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceCommandPeer.address(command)).isEqualTo(address);
+    assertThat(getter.getNetworkPeerSocketAddress(command, null)).isSameAs(address);
     assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("/var/run/redis.sock");
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+    assertThat(getter.getNetworkTransport(command, null)).isEqualTo("unix");
+  }
+
+  @Test
+  void unixBatchUsesTheCommonFinalPeerAfterRetry() {
+    DomainSocketAddress initialPeer = new DomainSocketAddress("/var/run/redis-1.sock");
+    DomainSocketAddress finalPeer = new DomainSocketAddress("/var/run/redis-2.sock");
+    RedisCommand<?, ?, ?> first = commandWithPeer(initialPeer);
+    RedisCommand<?, ?, ?> second = commandWithPeer(finalPeer);
+    LettuceBatchRequest request = LettuceBatchRequest.create(asList(first, second), null);
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isNull();
+    LettuceCommandPeer.record(first, finalPeer);
+
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isSameAs(finalPeer);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("/var/run/redis-2.sock");
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @Test
