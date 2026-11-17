@@ -116,7 +116,9 @@ class MessagingHeadersTest {
   @Test
   void mixedSelectorRetainsExactNamesWhenEnumerationIsEmpty() {
     AttributesBuilder attributes = Attributes.builder();
-    extractor(new MapGetter(false), selector(asList("Test-Message-Header", "Other-*"), emptyList()))
+    extractor(
+            new MapGetter(false, true),
+            selector(asList("Test-Message-Header", "Other-*"), emptyList()))
         .onEnd(attributes, Context.root(), MESSAGE, null, null);
 
     assertThat(attributes.build().asMap()).containsOnly(headerEntry("Test-Message-Header", "one"));
@@ -217,9 +219,15 @@ class MessagingHeadersTest {
       implements MessagingAttributesGetter<Map<String, String>, Void> {
 
     private final boolean failOnEnumeration;
+    private final boolean returnEmptyHeaderNames;
 
     MapGetter(boolean failOnEnumeration) {
+      this(failOnEnumeration, false);
+    }
+
+    MapGetter(boolean failOnEnumeration, boolean returnEmptyHeaderNames) {
       this.failOnEnumeration = failOnEnumeration;
+      this.returnEmptyHeaderNames = returnEmptyHeaderNames;
     }
 
     @Override
@@ -277,6 +285,9 @@ class MessagingHeadersTest {
     public Collection<String> getMessageHeaderNames(Map<String, String> request) {
       if (failOnEnumeration) {
         throw new AssertionError("Exact header names must not require enumeration");
+      }
+      if (returnEmptyHeaderNames) {
+        return emptyList();
       }
       return new ArrayList<>(request.keySet());
     }
