@@ -7821,6 +7821,8 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: error.type
+        type: STRING
       - name: http.request.method
         type: STRING
       - name: http.response.status_code
@@ -8035,6 +8037,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
