@@ -15,6 +15,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -292,6 +293,28 @@ class LogEventMapperTest {
     verify(builder).setAttribute(stringKey("key1"), "value1");
     verify(builder).setAttribute(stringKey("key2"), "value2");
     verifyNoMoreInteractions(builder);
+  }
+
+  @Test
+  void testCaptureMapMessageAttributesWithoutCopyingData() {
+    LogEventMapper<Map<String, String>> mapper =
+        new LogEventMapper<>(
+            ContextDataAccessorImpl.INSTANCE,
+            false,
+            false,
+            include("*"),
+            false,
+            false,
+            false,
+            null);
+    StringMapMessage message = spy(new StringMapMessage());
+    message.put("order-id", "123");
+    LogRecordBuilder builder = mock(LogRecordBuilder.class);
+
+    mapper.captureMessage(builder, message);
+
+    verify(builder).setAttribute(stringKey("order-id"), "123");
+    verify(message, never()).getData();
   }
 
   @Test
