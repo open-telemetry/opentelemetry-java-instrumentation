@@ -159,14 +159,14 @@ class CassandraEndpointAttributesTest {
   }
 
   @Test
-  void unresolvedDefaultEndPointDoesNotReportNetworkPeer() {
+  void unresolvedDefaultEndPointPreservesNetworkPeer() {
     InetSocketAddress unresolvedPeer = InetSocketAddress.createUnresolved("node.example.com", 9042);
     when(executionInfo.getCoordinator()).thenReturn(coordinator);
     when(coordinator.getEndPoint()).thenReturn(new DefaultEndPoint(unresolvedPeer));
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
 
-    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(null);
+    assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isEqualTo(unresolvedPeer);
   }
 
   @Test

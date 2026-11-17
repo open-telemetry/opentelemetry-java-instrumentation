@@ -9,7 +9,6 @@ import com.lambdaworks.redis.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -73,9 +72,6 @@ final class LettuceDbAttributesGetter
   @Override
   public SocketAddress getNetworkPeerSocketAddress(
       RedisCommand<?, ?, ?> request, @Nullable Void unused) {
-    SocketAddress address = LettuceSingletons.commandPeerAddress(request);
-    return address instanceof InetSocketAddress && ((InetSocketAddress) address).isUnresolved()
-        ? null
-        : address;
+    return LettuceSingletons.commandPeerAddress(request);
   }
 }

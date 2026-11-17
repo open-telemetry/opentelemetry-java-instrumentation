@@ -63,14 +63,16 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void commandDropsUnresolvedSelectedAddress() {
+  void commandPreservesUnresolvedSelectedAddress() {
     RedisCommand<?, ?, ?> command = command();
-    LettuceCommandPeer.record(command, InetSocketAddress.createUnresolved("redis.example", PORT));
+    InetSocketAddress unresolved = InetSocketAddress.createUnresolved("redis.example", PORT);
+    LettuceCommandPeer.record(command, unresolved);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
+    assertThat(getter.getNetworkPeerSocketAddress(command, null)).isEqualTo(unresolved);
     assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -170,17 +172,16 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void batchDropsUnresolvedSelectedAddress() {
+  void batchPreservesUnresolvedSelectedAddress() {
+    InetSocketAddress unresolved = InetSocketAddress.createUnresolved("redis.example", PORT);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(
-            singletonList(
-                commandWithPeer(InetSocketAddress.createUnresolved("redis.example", PORT))),
-            null);
+        LettuceBatchRequest.create(singletonList(commandWithPeer(unresolved)), null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(unresolved);
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(PORT);
   }
 
   @Test

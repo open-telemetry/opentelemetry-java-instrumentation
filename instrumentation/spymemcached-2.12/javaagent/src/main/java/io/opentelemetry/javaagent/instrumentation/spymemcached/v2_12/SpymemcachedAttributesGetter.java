@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.Future;
 import javax.annotation.Nullable;
@@ -90,10 +89,7 @@ class SpymemcachedAttributesGetter
   @Nullable
   public SocketAddress getNetworkPeerSocketAddress(
       SpymemcachedRequest spymemcachedRequest, @Nullable Object response) {
-    SocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
-    return address instanceof InetSocketAddress && ((InetSocketAddress) address).isUnresolved()
-        ? null
-        : address;
+    return spymemcachedRequest.getHandlingNodeAddress();
   }
 
   @Override

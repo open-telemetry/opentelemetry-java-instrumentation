@@ -88,9 +88,6 @@ final class CassandraSqlAttributesGetter
     if (endPoint instanceof DefaultEndPoint) {
       // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
       InetSocketAddress coordinatorAddress = (InetSocketAddress) endPoint.resolve();
-      if (coordinatorAddress.isUnresolved()) {
-        return null;
-      }
       return coordinatorAddress;
     }
     return null;

@@ -95,8 +95,7 @@ final class CassandraSqlAttributesGetter
     if (!(address instanceof InetSocketAddress)) {
       return null;
     }
-    InetSocketAddress inetSocketAddress = (InetSocketAddress) address;
-    return inetSocketAddress.isUnresolved() ? null : inetSocketAddress;
+    return (InetSocketAddress) address;
   }
 
   @Override

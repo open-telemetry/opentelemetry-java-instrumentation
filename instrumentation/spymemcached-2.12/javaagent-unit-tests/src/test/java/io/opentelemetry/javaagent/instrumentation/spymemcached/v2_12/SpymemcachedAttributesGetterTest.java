@@ -130,14 +130,14 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void unresolvedHandlingNodeIsNotResolved() {
+  void unresolvedHandlingNodeIsPreservedWithoutResolving() {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
     InetSocketAddress unresolved = node("unresolved.example", 11211);
     request.setHandlingNode(memcachedNode(unresolved));
 
-    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(unresolved);
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(11211);
   }
 
   @Test
