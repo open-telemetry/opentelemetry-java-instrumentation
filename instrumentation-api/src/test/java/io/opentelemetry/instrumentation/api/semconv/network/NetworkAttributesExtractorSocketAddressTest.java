@@ -15,6 +15,8 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static org.assertj.core.api.Assertions.entry;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.netty.channel.unix.DomainSocketAddress;
+import io.netty.util.internal.ObjectUtil;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
@@ -210,6 +212,69 @@ class NetworkAttributesExtractorSocketAddressTest {
   private static void assertEmptyUnixAddress(SocketAddress address) {
     assertThat(extract(new TestGetter(), address, address))
         .containsOnly(entry(NETWORK_TRANSPORT, "unix"));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void nettyUnixAddresses(boolean shaded) {
+    assertUnixAddresses(nettyAddress(shaded, "local.sock"), nettyAddress(shaded, "peer.sock"));
+    assertEmptyUnixAddress(nettyAddress(shaded, ""));
+  }
+
+  private static SocketAddress nettyAddress(boolean shaded, String path) {
+    if (shaded) {
+      return new io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress(path);
+    }
+    return new DomainSocketAddress(path);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void optionalNettyTypesInDifferentClassLoaders(boolean shaded) throws Exception {
+    Class<?> addressType =
+        shaded
+            ? io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress.class
+            : DomainSocketAddress.class;
+    URL addressJar = addressType.getProtectionDomain().getCodeSource().getLocation();
+    URL[] addressUrls =
+        shaded
+            ? new URL[] {addressJar}
+            : new URL[] {
+              addressJar, ObjectUtil.class.getProtectionDomain().getCodeSource().getLocation()
+            };
+    URL helperUrl = SocketAddressUtil.class.getProtectionDomain().getCodeSource().getLocation();
+    URLClassLoader helperLoader = new URLClassLoader(new URL[] {helperUrl}, null);
+    try {
+      URLClassLoader firstLoader = new URLClassLoader(addressUrls, null);
+      try {
+        URLClassLoader secondLoader = new URLClassLoader(addressUrls, null);
+        try {
+          Class<?> helper = helperLoader.loadClass(SocketAddressUtil.class.getName());
+          assertThat(helper.getClassLoader()).isNotSameAs(SocketAddressUtil.class.getClassLoader());
+          for (URLClassLoader addressLoader : new URLClassLoader[] {firstLoader, secondLoader}) {
+            Class<? extends SocketAddress> isolatedType =
+                addressLoader.loadClass(addressType.getName()).asSubclass(SocketAddress.class);
+            assertThat(isolatedType).isNotSameAs(addressType);
+            SocketAddress address =
+                isolatedType.getConstructor(String.class).newInstance("isolated.sock");
+            assertThat(SocketAddressUtil.getAddress(address)).isEqualTo("isolated.sock");
+            assertThat(helper.getMethod("getAddress", SocketAddress.class).invoke(null, address))
+                .isEqualTo("isolated.sock");
+            assertThat(
+                    helper
+                        .getMethod("getNetworkTransport", SocketAddress.class, SocketAddress.class)
+                        .invoke(null, null, address))
+                .isEqualTo("unix");
+          }
+        } finally {
+          close(secondLoader);
+        }
+      } finally {
+        close(firstLoader);
+      }
+    } finally {
+      close(helperLoader);
+    }
   }
 
   @ParameterizedTest
