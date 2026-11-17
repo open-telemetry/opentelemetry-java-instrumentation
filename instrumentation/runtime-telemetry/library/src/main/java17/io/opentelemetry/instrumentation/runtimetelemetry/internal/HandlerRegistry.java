@@ -96,6 +96,7 @@ final class HandlerRegistry {
         garbageCollectorNames);
   }
 
+  // visible for testing
   static List<RecordedEventHandler> getHandlers(
       Meter meter,
       Predicate<String> metricNamePredicate,
@@ -163,9 +164,10 @@ final class HandlerRegistry {
     }
     if (handlers.isEmpty()
         && Collections.disjoint(availableEventNames, COLLECTOR_SPECIFIC_GC_EVENTS)) {
-      // The JVM has no collector-specific collection event at all, as in a GraalVM native image:
-      // fall back to the generic jdk.GarbageCollection event. HotSpot registers the specific
-      // event types whatever collector runs, so ZGC and Shenandoah keep their JMX metrics.
+      // Only a JVM without any collector-specific event type, such as a GraalVM native image,
+      // falls back to the generic jdk.GarbageCollection event. HotSpot registers these event
+      // types for every collector. With ZGC or Shenandoah, which the switch does not handle,
+      // jvm.gc.duration therefore stays on JMX, which reports pauses and cycles separately.
       addIfAvailable(
           handlers,
           availableEventNames,
