@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.config;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
@@ -30,8 +29,8 @@ public final class IncludeExclude {
 
   private final List<String> included;
   private final List<String> excluded;
-  private final List<Predicate<String>> includedPredicates;
-  private final List<Predicate<String>> excludedPredicates;
+  private final Predicate<String>[] includedPredicates;
+  private final Predicate<String>[] excludedPredicates;
 
   /** Returns a new builder for an {@link IncludeExclude}. */
   public static IncludeExcludeBuilder builder() {
@@ -76,7 +75,7 @@ public final class IncludeExclude {
    */
   public boolean matches(String value) {
     requireNonNull(value, "value");
-    return (includedPredicates.isEmpty() || matchesAny(includedPredicates, value))
+    return (includedPredicates.length == 0 || matchesAny(includedPredicates, value))
         && !matchesAny(excludedPredicates, value);
   }
 
@@ -102,16 +101,15 @@ public final class IncludeExclude {
     return "IncludeExclude{included=" + included + ", excluded=" + excluded + '}';
   }
 
-  private static List<Predicate<String>> createGlobPredicates(List<String> patterns) {
-    if (patterns.isEmpty()) {
-      return emptyList();
-    }
-
-    List<Predicate<String>> predicates = new ArrayList<>(patterns.size());
+  private static Predicate<String>[] createGlobPredicates(List<String> patterns) {
+    // The array is private and is populated only with predicates for strings.
+    @SuppressWarnings("unchecked")
+    Predicate<String>[] predicates = (Predicate<String>[]) new Predicate<?>[patterns.size()];
+    int index = 0;
     for (String pattern : patterns) {
-      predicates.add(createGlobPredicate(pattern));
+      predicates[index++] = createGlobPredicate(pattern);
     }
-    return unmodifiableList(predicates);
+    return predicates;
   }
 
   private static Predicate<String> createGlobPredicate(String globPattern) {
@@ -167,7 +165,7 @@ public final class IncludeExclude {
     return patternIndex == pattern.length();
   }
 
-  private static boolean matchesAny(List<Predicate<String>> predicates, String value) {
+  private static boolean matchesAny(Predicate<String>[] predicates, String value) {
     for (Predicate<String> predicate : predicates) {
       if (predicate.test(value)) {
         return true;

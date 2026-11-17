@@ -23,14 +23,16 @@ import javax.annotation.Nullable;
  */
 public final class HttpClientUrlTemplateUtil {
 
-  private static final List<HttpClientUrlTemplateCustomizer> customizers = new ArrayList<>();
+  private static final HttpClientUrlTemplateCustomizer[] customizers;
 
   static {
+    List<HttpClientUrlTemplateCustomizer> loadedCustomizers = new ArrayList<>();
     for (HttpClientUrlTemplateCustomizer customizer :
         ServiceLoaderUtil.load(
             HttpClientUrlTemplateCustomizer.class, HttpClientUrlTemplateUtil::loadCustomizers)) {
-      customizers.add(customizer);
+      loadedCustomizers.add(customizer);
     }
+    customizers = loadedCustomizers.toArray(new HttpClientUrlTemplateCustomizer[0]);
   }
 
   private static List<HttpClientUrlTemplateCustomizer> loadCustomizers() {
@@ -66,7 +68,7 @@ public final class HttpClientUrlTemplateUtil {
       @Nullable String urlTemplate,
       REQUEST request,
       HttpClientAttributesGetter<REQUEST, ?> getter) {
-    if (customizers.isEmpty()) {
+    if (customizers.length == 0) {
       return urlTemplate;
     }
 
