@@ -12,10 +12,8 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
@@ -157,11 +155,6 @@ public final class MetaspaceSummaryHandler implements RecordedEventHandler {
     if (value instanceof RecordedObject recordedObject) {
       closure.accept(recordedObject);
     }
-  }
-
-  @Override
-  public Optional<Duration> getPollingDuration() {
-    return Optional.of(Duration.ofSeconds(1));
   }
 
   @Override
