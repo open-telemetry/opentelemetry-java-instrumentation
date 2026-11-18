@@ -25,7 +25,14 @@ public final class MappingResolver {
   private final List<WildcardMatcher> wildcardMatchers;
   private final boolean hasDefault;
 
-  private MappingResolver(Collection<String> mappings) {
+  private MappingResolver(
+      Set<String> exactMatches, List<WildcardMatcher> wildcardMatchers, boolean hasDefault) {
+    this.exactMatches = exactMatches.isEmpty() ? emptySet() : exactMatches;
+    this.wildcardMatchers = new ArrayList<>(wildcardMatchers);
+    this.hasDefault = hasDefault;
+  }
+
+  public static MappingResolver build(Collection<String> mappings) {
     List<WildcardMatcher> wildcardMatchers = new ArrayList<>();
     Set<String> exactMatches = new HashSet<>();
     boolean hasDefault = false;
@@ -49,13 +56,7 @@ public final class MappingResolver {
       hasDefault = true;
     }
 
-    this.exactMatches = exactMatches.isEmpty() ? emptySet() : exactMatches;
-    this.wildcardMatchers = wildcardMatchers;
-    this.hasDefault = hasDefault;
-  }
-
-  public static MappingResolver build(Collection<String> mappings) {
-    return new MappingResolver(mappings);
+    return new MappingResolver(exactMatches, wildcardMatchers, hasDefault);
   }
 
   /** Find mapping for requested path. */

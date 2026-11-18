@@ -8,25 +8,16 @@ Apply these rules to Java code. The hot-path allocation rules also apply to Kotl
 
 ## Retained lists
 
-When an owner retains an incoming list as long-lived configuration or metadata, including in a
-private constructor:
+When a constructor stores a list, store `new ArrayList<>(list)`, whatever the source: a caller, a
+builder, a helper, `emptyList()`, or `collect(toList())`. The copy prevents outside mutation and gives
+loops a consistent `ArrayList`, which helps HotSpot avoid iterator allocations.
 
-- Take a private `ArrayList` snapshot of caller-supplied lists where the owner retains them,
-  preferably in its constructor, including empty inputs. Do not require callers to pass an
-  already-owned list. Declare the field as `List` and choose `ArrayList` where the snapshot is built.
-- For a known-empty value outside hot-path iteration, `emptyList()` is sufficient when there is no
-  input alias to break.
-- Use the owned list consistently internally, and treat it as read-only after initialization.
-- Do not retain a second field just for an unmodifiable view. If the list is not traversed on a hot
-  path, store an unmodifiable view over the owned snapshot. If hot-path code needs to iterate the
-  backing list directly, keep that list and wrap it at the exposure boundary.
+If the class exposes the list, wrap it once in the constructor, for example
+`unmodifiableList(new ArrayList<>(list))`, and return the field directly. Do not wrap a list that
+never leaves the class.
 
-If the owner builds the final list itself, build it directly as an `ArrayList` rather than copying it
-again.
-
-The snapshot isolates the list structure from caller mutation. Using one concrete list
-implementation at shared iteration sites enables HotSpot to eliminate iterator allocations.
-Mixing implementations at the same site can prevent that optimization.
+Copy only in the constructor. Leave helpers, builders, getters, accessors, and loops unchanged,
+including their `emptyList()`, `singletonList()`, and `collect(toList())` calls.
 
 ## Lambdas and method references
 

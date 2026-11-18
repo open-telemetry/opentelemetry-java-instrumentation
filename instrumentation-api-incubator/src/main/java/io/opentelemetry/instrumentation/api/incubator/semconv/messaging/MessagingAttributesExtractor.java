@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -96,9 +97,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   private final MessagingOperationType operationType;
   private final String operationName;
   @Nullable private final IncludeExclude headers;
-  // Exact header names that the selector includes, queried directly so that getters which only
-  // implement getMessageHeader() keep working. The cache is empty when no header selector is
-  // configured.
+  // exact header names that the selector includes, queried directly so that getters which only
+  // implement getMessageHeader() keep working
   private final List<String> exactHeaderNames;
   private final Map<String, AttributeKey<List<String>>> exactHeaderAttributeKeys;
   // whether the selector can match header names that are not listed in exactHeaderNames, which
@@ -178,7 +178,10 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
   }
 
   private Collection<String> headerNames(REQUEST request) {
-    if (headers == null || !enumerateHeaderNames) {
+    if (headers == null) {
+      return emptyList();
+    }
+    if (!enumerateHeaderNames) {
       return exactHeaderNames;
     }
     Set<String> names = new LinkedHashSet<>(exactHeaderNames);

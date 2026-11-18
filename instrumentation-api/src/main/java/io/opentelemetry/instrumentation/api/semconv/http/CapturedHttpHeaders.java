@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.semconv.http;
 
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -17,7 +18,6 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 /**
@@ -83,7 +83,7 @@ final class CapturedHttpHeaders {
         }
       }
     }
-    this.exactNames = new ArrayList<>(names);
+    this.exactNames = unmodifiableList(new ArrayList<>(names));
     this.exactAttributeKeys = createAttributeKeys(type, exactNames);
     this.enumerateNames = enumerate;
   }
@@ -96,10 +96,8 @@ final class CapturedHttpHeaders {
     return enumerateNames;
   }
 
-  void forEachExactName(Consumer<String> consumer) {
-    for (String name : exactNames) {
-      consumer.accept(name);
-    }
+  List<String> exactNames() {
+    return exactNames;
   }
 
   /** Returns the lowercase names of the captured headers among {@code enumeratedNames}. */

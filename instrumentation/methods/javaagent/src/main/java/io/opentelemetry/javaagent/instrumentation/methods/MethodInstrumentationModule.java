@@ -6,7 +6,9 @@
 package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -23,17 +25,17 @@ public class MethodInstrumentationModule extends InstrumentationModule {
 
   public MethodInstrumentationModule() {
     super("methods");
-    typeInstrumentations = createInstrumentations();
+    typeInstrumentations = unmodifiableList(new ArrayList<>(createInstrumentations()));
   }
 
   private static List<TypeInstrumentation> createInstrumentations() {
     MethodConfiguration config = new MethodConfiguration(GlobalOpenTelemetry.get());
-    List<TypeInstrumentation> list = new ArrayList<>(config.typeInstrumentations());
+    List<TypeInstrumentation> list = config.typeInstrumentations();
     // ensure that there is at least one instrumentation so that muzzle reference collection could
     // work
     if (list.isEmpty()) {
-      list.add(new MethodInstrumentation(null, singletonMap(SpanKind.INTERNAL, emptyList())));
-      return list;
+      return singletonList(
+          new MethodInstrumentation(null, singletonMap(SpanKind.INTERNAL, emptyList())));
     }
     return list;
   }

@@ -103,7 +103,6 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
         configProperties,
         emptyList(),
-        null,
         JAVA_DECLARATIVE_PREFIX,
         INSTRUMENTATION_PROPERTY_PREFIX,
         true);
@@ -112,21 +111,17 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   static DeclarativeConfigProperties createComponentProperties(
       ConfigProperties configProperties, String configPropertyPrefix) {
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, emptyList(), null, "", configPropertyPrefix, false);
+        configProperties, emptyList(), "", configPropertyPrefix, false);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
       ConfigProperties configProperties,
       List<String> path,
-      @Nullable String childName,
       String declarativePrefix,
       String configPropertyPrefix,
       boolean instrumentationConfig) {
     this.configProperties = configProperties;
     this.path = new ArrayList<>(path);
-    if (childName != null) {
-      this.path.add(childName);
-    }
     this.declarativePrefix = declarativePrefix;
     this.configPropertyPrefix = configPropertyPrefix;
     this.instrumentationConfig = instrumentationConfig;
@@ -230,13 +225,10 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
    */
   @Override
   public DeclarativeConfigProperties getStructured(String name) {
+    List<String> newPath = new ArrayList<>(path);
+    newPath.add(name);
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties,
-        path,
-        name,
-        declarativePrefix,
-        configPropertyPrefix,
-        instrumentationConfig);
+        configProperties, newPath, declarativePrefix, configPropertyPrefix, instrumentationConfig);
   }
 
   @Nullable

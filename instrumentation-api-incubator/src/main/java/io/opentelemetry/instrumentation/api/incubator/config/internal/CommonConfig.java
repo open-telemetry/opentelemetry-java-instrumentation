@@ -46,16 +46,22 @@ public final class CommonConfig {
 
     clientRequestHeaders =
         unmodifiableList(
-            new ArrayList<>(readCapturedHeaders(clientConfig, "request_captured_headers")));
+            new ArrayList<>(
+                clientConfig.getScalarList("request_captured_headers", String.class, emptyList())));
     clientResponseHeaders =
         unmodifiableList(
-            new ArrayList<>(readCapturedHeaders(clientConfig, "response_captured_headers")));
+            new ArrayList<>(
+                clientConfig.getScalarList(
+                    "response_captured_headers", String.class, emptyList())));
     serverRequestHeaders =
         unmodifiableList(
-            new ArrayList<>(readCapturedHeaders(serverConfig, "request_captured_headers")));
+            new ArrayList<>(
+                serverConfig.getScalarList("request_captured_headers", String.class, emptyList())));
     serverResponseHeaders =
         unmodifiableList(
-            new ArrayList<>(readCapturedHeaders(serverConfig, "response_captured_headers")));
+            new ArrayList<>(
+                serverConfig.getScalarList(
+                    "response_captured_headers", String.class, emptyList())));
     knownHttpRequestMethods =
         new HashSet<>(
             commonConfig
@@ -89,10 +95,6 @@ public final class CommonConfig {
     loggingSpanIdKey = logging.getString("span_id_key", LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
         logging.getString("trace_flags_key", LoggingContextConstants.TRACE_FLAGS);
-  }
-
-  private static List<String> readCapturedHeaders(DeclarativeConfigProperties config, String key) {
-    return config.getScalarList(key, String.class, emptyList());
   }
 
   public List<String> getClientRequestHeaders() {
