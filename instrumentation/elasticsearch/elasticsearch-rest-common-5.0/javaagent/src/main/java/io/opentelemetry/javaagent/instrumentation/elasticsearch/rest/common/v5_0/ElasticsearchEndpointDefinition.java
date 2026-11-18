@@ -6,8 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toCollection;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
@@ -24,18 +26,15 @@ public final class ElasticsearchEndpointDefinition {
 
   private final String endpointName;
   private final List<Route> routes;
-  private final List<Route> routesView;
 
   private final boolean isSearchEndpoint;
 
   public ElasticsearchEndpointDefinition(
       String endpointName, String[] routes, boolean isSearchEndpoint) {
     this.endpointName = endpointName;
-    this.routes = new ArrayList<>(routes.length);
-    for (String route : routes) {
-      this.routes.add(new Route(route));
-    }
-    this.routesView = unmodifiableList(this.routes);
+    ArrayList<Route> routeList =
+        Arrays.stream(routes).map(Route::new).collect(toCollection(ArrayList::new));
+    this.routes = unmodifiableList(routeList);
     this.isSearchEndpoint = isSearchEndpoint;
   }
 
@@ -67,7 +66,7 @@ public final class ElasticsearchEndpointDefinition {
   }
 
   public List<Route> getRoutes() {
-    return routesView;
+    return routes;
   }
 
   /**

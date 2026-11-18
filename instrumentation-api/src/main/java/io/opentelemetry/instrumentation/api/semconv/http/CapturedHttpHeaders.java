@@ -36,7 +36,6 @@ final class CapturedHttpHeaders {
   // the header names that the selector includes literally, which are looked up directly so that
   // getters which do not enumerate header names keep working
   private final List<String> exactNames;
-  private final List<String> exactNamesView;
   private final Map<String, AttributeKey<List<String>>> exactAttributeKeys;
   // whether the selector can match header names that are not listed in exactNames, which requires
   // enumerating the header names of each request or response
@@ -84,8 +83,7 @@ final class CapturedHttpHeaders {
         }
       }
     }
-    this.exactNames = new ArrayList<>(names);
-    this.exactNamesView = unmodifiableList(exactNames);
+    this.exactNames = unmodifiableList(new ArrayList<>(names));
     this.exactAttributeKeys = createAttributeKeys(type, exactNames);
     this.enumerateNames = enumerate;
   }
@@ -99,7 +97,7 @@ final class CapturedHttpHeaders {
   }
 
   List<String> exactNames() {
-    return exactNamesView;
+    return exactNames;
   }
 
   /** Returns the lowercase names of the captured headers among {@code enumeratedNames}. */

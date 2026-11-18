@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -166,30 +167,29 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
     attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
-    if (enumerateHeaderNames) {
-      IncludeExclude selector = requireNonNull(headers);
-      Set<String> names = new LinkedHashSet<>(exactHeaderNames);
-      for (String name : getter.getMessageHeaderNames(request)) {
-        if (selector.matches(name)) {
-          names.add(name);
-        }
-      }
-      for (String name : names) {
-        captureHeader(attributes, request, name);
-      }
-    } else {
-      for (String name : exactHeaderNames) {
-        captureHeader(attributes, request, name);
+    for (String name : headerNames(request)) {
+      List<String> values = getter.getMessageHeader(request, name);
+      if (!values.isEmpty()) {
+        attributes.put(
+            CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
       }
     }
   }
 
-  private void captureHeader(AttributesBuilder attributes, REQUEST request, String name) {
-    List<String> values = getter.getMessageHeader(request, name);
-    if (!values.isEmpty()) {
-      attributes.put(
-          CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
+  private Collection<String> headerNames(REQUEST request) {
+    if (headers == null) {
+      return exactHeaderNames;
     }
+    if (!enumerateHeaderNames) {
+      return exactHeaderNames;
+    }
+    Set<String> names = new LinkedHashSet<>(exactHeaderNames);
+    for (String name : getter.getMessageHeaderNames(request)) {
+      if (headers.matches(name)) {
+        names.add(name);
+      }
+    }
+    return names;
   }
 
   /**
