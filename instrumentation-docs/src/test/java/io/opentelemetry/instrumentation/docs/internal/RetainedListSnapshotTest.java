@@ -21,8 +21,18 @@ class RetainedListSnapshotTest {
     List<String> examples = new ArrayList<>(List.of("example"));
     ConfigurationOption option =
         new ConfigurationOption(
-            "name", null, "description", null, ConfigurationType.STRING, examples, null, null, null,
-            null, null, null);
+            "name",
+            null,
+            "description",
+            null,
+            ConfigurationType.STRING,
+            examples,
+            null,
+            null,
+            null,
+            null,
+            null,
+            null);
     examples.add("later");
 
     assertThat(option.examples()).containsExactly("example");

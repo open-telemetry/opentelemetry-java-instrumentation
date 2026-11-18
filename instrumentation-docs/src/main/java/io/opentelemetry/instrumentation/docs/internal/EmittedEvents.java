@@ -29,7 +29,7 @@ public class EmittedEvents {
 
   public EmittedEvents(String when, List<EventsByScope> eventsByScope) {
     this.when = when;
-    this.eventsByScope = new ArrayList<>(eventsByScope);
+    this.eventsByScope = copyList(eventsByScope);
   }
 
   public String getWhen() {
@@ -47,7 +47,11 @@ public class EmittedEvents {
 
   @JsonProperty("events_by_scope")
   public void setEventsByScope(List<EventsByScope> events) {
-    this.eventsByScope = new ArrayList<>(events);
+    this.eventsByScope = copyList(events);
+  }
+
+  private static <T> List<T> copyList(@Nullable List<T> values) {
+    return values == null ? new ArrayList<>() : new ArrayList<>(values);
   }
 
   /**
@@ -60,7 +64,7 @@ public class EmittedEvents {
 
     public EventsByScope(String scopeName, List<Event> events) {
       this.scope = scopeName;
-      this.events = new ArrayList<>(events);
+      this.events = copyList(events);
     }
 
     public EventsByScope() {
@@ -81,7 +85,7 @@ public class EmittedEvents {
     }
 
     public void setEvents(List<Event> events) {
-      this.events = new ArrayList<>(events);
+      this.events = copyList(events);
     }
   }
 
@@ -99,7 +103,7 @@ public class EmittedEvents {
     public Event(String name, @Nullable String severity, List<TelemetryAttribute> attributes) {
       this.name = name;
       this.severity = severity;
-      this.attributes = new ArrayList<>(attributes);
+      this.attributes = copyList(attributes);
     }
 
     public Event() {
@@ -129,7 +133,7 @@ public class EmittedEvents {
     }
 
     public void setAttributes(List<TelemetryAttribute> attributes) {
-      this.attributes = new ArrayList<>(attributes);
+      this.attributes = copyList(attributes);
     }
   }
 }

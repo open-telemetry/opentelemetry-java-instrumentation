@@ -7,9 +7,9 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -57,9 +57,7 @@ class CommonConfigTest {
             .get("server")
             .getScalarList(eq("response_captured_headers"), eq(String.class), anyList()))
         .thenReturn(serverResponse);
-    when(commonConfig
-            .get("http")
-            .getScalarList(eq("known_methods"), eq(String.class), anyList()))
+    when(commonConfig.get("http").getScalarList(eq("known_methods"), eq(String.class), anyList()))
         .thenReturn(new ArrayList<>());
 
     CommonConfig config = new CommonConfig(openTelemetry);

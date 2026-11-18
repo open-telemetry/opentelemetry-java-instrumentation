@@ -26,14 +26,16 @@ class ElasticsearchEndpointDefinitionTest {
     assertThat(definition.getRoutes())
         .extracting(ElasticsearchEndpointDefinition.Route::getName)
         .containsExactly("/first/{id}", "/second/{name}");
-    assertThatThrownBy(() -> definition.getRoutes().add(new ElasticsearchEndpointDefinition.Route("/other")))
+    assertThatThrownBy(
+            () -> definition.getRoutes().add(new ElasticsearchEndpointDefinition.Route("/other")))
         .isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
   void parameterNamesUseOwnedListsForParameterizedAndFixedRoutes() {
     ElasticsearchEndpointDefinition definition =
-        new ElasticsearchEndpointDefinition("endpoint", new String[] {"/fixed", "/item/{item_id}"}, false);
+        new ElasticsearchEndpointDefinition(
+            "endpoint", new String[] {"/fixed", "/item/{item_id}"}, false);
 
     assertThat(definition.getRoutes().get(0).getPathPartNames()).isEmpty();
     assertThat(definition.getRoutes().get(1).getPathPartNames()).containsExactly("item0id");
@@ -41,7 +43,8 @@ class ElasticsearchEndpointDefinitionTest {
         .isInstanceOf(UnsupportedOperationException.class);
 
     List<Map.Entry<String, String>> captures = new ArrayList<>();
-    definition.processPathParts("/item/42", (key, value) -> captures.add(new SimpleEntry<>(key, value)));
+    definition.processPathParts(
+        "/item/42", (key, value) -> captures.add(new SimpleEntry<>(key, value)));
     assertThat(captures).containsExactly(new SimpleEntry<>("item_id", "42"));
   }
 }

@@ -31,8 +31,7 @@ public class MethodInstrumentationModule extends InstrumentationModule {
     // ensure that there is at least one instrumentation so that muzzle reference collection could
     // work
     if (list.isEmpty()) {
-      list.add(
-          new MethodInstrumentation(null, singletonMap(SpanKind.INTERNAL, emptyList())));
+      list.add(new MethodInstrumentation(null, singletonMap(SpanKind.INTERNAL, emptyList())));
       return list;
     }
     return list;

@@ -21,6 +21,7 @@ public class EmittedMetrics {
   private String when;
 
   @JsonProperty("metrics_by_scope")
+  @Nullable
   private List<MetricsByScope> metricsByScope;
 
   public EmittedMetrics() {
@@ -28,9 +29,9 @@ public class EmittedMetrics {
     this.metricsByScope = new ArrayList<>();
   }
 
-  public EmittedMetrics(String when, List<MetricsByScope> metricsByScope) {
+  public EmittedMetrics(String when, @Nullable List<MetricsByScope> metricsByScope) {
     this.when = when;
-    this.metricsByScope = new ArrayList<>(metricsByScope);
+    this.metricsByScope = copyNullableList(metricsByScope);
   }
 
   public String getWhen() {
@@ -42,13 +43,23 @@ public class EmittedMetrics {
   }
 
   @JsonProperty("metrics_by_scope")
+  @Nullable
   public List<MetricsByScope> getMetricsByScope() {
     return metricsByScope;
   }
 
   @JsonProperty("metrics_by_scope")
-  public void setMetricsByScope(List<MetricsByScope> metricsByScope) {
-    this.metricsByScope = new ArrayList<>(metricsByScope);
+  public void setMetricsByScope(@Nullable List<MetricsByScope> metricsByScope) {
+    this.metricsByScope = copyNullableList(metricsByScope);
+  }
+
+  private static <T> List<T> copyList(@Nullable List<T> values) {
+    return values == null ? new ArrayList<>() : new ArrayList<>(values);
+  }
+
+  @Nullable
+  private static <T> List<T> copyNullableList(@Nullable List<T> values) {
+    return values == null ? null : new ArrayList<>(values);
   }
 
   /**
@@ -61,7 +72,7 @@ public class EmittedMetrics {
 
     public MetricsByScope(String scope, List<Metric> metrics) {
       this.scope = scope;
-      this.metrics = new ArrayList<>(metrics);
+      this.metrics = copyList(metrics);
     }
 
     public MetricsByScope() {
@@ -82,7 +93,7 @@ public class EmittedMetrics {
     }
 
     public void setMetrics(List<Metric> metrics) {
-      this.metrics = new ArrayList<>(metrics);
+      this.metrics = copyList(metrics);
     }
   }
 
@@ -113,7 +124,7 @@ public class EmittedMetrics {
       this.type = type;
       this.isMonotonic = null;
       this.unit = unit;
-      this.attributes = new ArrayList<>(attributes);
+      this.attributes = copyList(attributes);
     }
 
     public Metric(
@@ -128,7 +139,7 @@ public class EmittedMetrics {
       this.type = type;
       this.isMonotonic = isMonotonic;
       this.unit = unit;
-      this.attributes = new ArrayList<>(attributes);
+      this.attributes = copyList(attributes);
     }
 
     public Metric() {
@@ -222,7 +233,7 @@ public class EmittedMetrics {
     }
 
     public void setAttributes(List<TelemetryAttribute> attributes) {
-      this.attributes = new ArrayList<>(attributes);
+      this.attributes = copyList(attributes);
     }
 
     /**
