@@ -72,12 +72,6 @@ dependencies {
 
 testing.suites {
   register<JvmTestSuite>("testNewServerAt") {
-    sources {
-      java {
-        setSrcDirs(listOf("src/test/java"))
-      }
-    }
-
     dependencies {
       val scalaVersion = if (otelProps.testLatestDeps) "2.13" else "2.12"
       implementation("org.apache.pekko:pekko-http_$scalaVersion:${baseVersion("1.0.0").orLatest()}")
@@ -155,7 +149,7 @@ sourceSets.named("pekko11Test") {
 }
 
 // the scala 3 and pekko 2 suites run the same tests as the scala 2 suite, against other artifacts
-listOf("scala3Test", "pekko2Test", "pekko2Scala3Test").forEach {
+listOf("scala3Test", "pekko2Test", "pekko2Scala3Test", "testNewServerAt").forEach {
   sourceSets.named(it) {
     java.srcDir("src/test/java")
     resources.srcDir("src/test/resources")
@@ -165,7 +159,7 @@ listOf("scala3Test", "pekko2Test", "pekko2Scala3Test").forEach {
 
 // pekko-http 2.x removed the server binding methods the tests used, each suite gets the binding
 // shim for the pekko-http line it runs against
-listOf("test", "pekko11Test", "scala3Test").forEach {
+listOf("test", "pekko11Test", "scala3Test", "testNewServerAt").forEach {
   sourceSets.named(it) {
     extensions.getByType(ScalaSourceDirectorySet::class.java).srcDir("src/pekko1TestShim/scala")
   }
