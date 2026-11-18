@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toCollection;
 
@@ -132,13 +133,15 @@ public final class ElasticsearchEndpointDefinition {
     private EndpointPattern(Route route) {
       pattern = buildRegexPattern(route.getName());
 
-      pathPartNames = new ArrayList<>();
       if (route.hasParameters()) {
+        pathPartNames = new ArrayList<>();
         Matcher matcher = PATH_PART_NAMES_PATTERN.matcher(route.getName());
         while (matcher.find()) {
           String groupName = matcher.group(1).replace("_", UNDERSCORE_REPLACEMENT);
           pathPartNames.add(groupName);
         }
+      } else {
+        pathPartNames = emptyList();
       }
     }
 

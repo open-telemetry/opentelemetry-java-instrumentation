@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.rediscala.v1_8;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -30,10 +29,9 @@ class RediscalaRequest {
   // Redis commands that take a subcommand, e.g. CONFIG GET. Rediscala names the command class
   // after both tokens, e.g. ConfigGet.
   private static final List<String> CONTAINER_COMMANDS =
-      new ArrayList<>(
-          asList(
-              "ACL", "CLIENT", "CLUSTER", "COMMAND", "CONFIG", "DEBUG", "LATENCY", "MEMORY",
-              "OBJECT", "PUBSUB", "SCRIPT", "SLOWLOG", "XGROUP", "XINFO"));
+      asList(
+          "ACL", "CLIENT", "CLUSTER", "COMMAND", "CONFIG", "DEBUG", "LATENCY", "MEMORY", "OBJECT",
+          "PUBSUB", "SCRIPT", "SLOWLOG", "XGROUP", "XINFO");
 
   private final String operationName;
   @Nullable private final Long batchSize;
