@@ -5,7 +5,10 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.cpu;
 
+import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
+import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
@@ -13,6 +16,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
 import jdk.jfr.consumer.RecordedEvent;
@@ -36,12 +40,12 @@ public final class ContextSwitchRateHandler implements RecordedEventHandler {
   }
 
   public ContextSwitchRateHandler(Meter meter) {
+    DoubleUpDownCounterBuilder builder =
+        meter.upDownCounterBuilder(METRIC_NAME).ofDoubles().setUnit(Constants.HERTZ);
+    Consumer<ObservableDoubleMeasurement> callback = measurement -> measurement.record(value);
     observables.add(
-        meter
-            .upDownCounterBuilder(METRIC_NAME)
-            .ofDoubles()
-            .setUnit(Constants.HERTZ)
-            .buildWithCallback(codm -> codm.record(value)));
+        MetricCallbackRegistration.withoutContextClassLoader(
+            () -> builder.buildWithCallback(callback)));
   }
 
   @Override

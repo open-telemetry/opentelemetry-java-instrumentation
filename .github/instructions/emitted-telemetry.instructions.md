@@ -85,6 +85,19 @@ make an unbounded value safe. Follow applicable sanitization, redaction, and pri
 `Recommended` is not permission to expose sensitive values. Do not invent universal normalization
 or redaction rules where the domain has its own.
 
+## Observable metric callbacks
+
+The SDK bundled with the javaagent holds a strong reference to the registering thread's context
+class loader (TCCL) and sets it when running the callback.
+
+Use `MetricCallbackRegistration.withoutContextClassLoader(...)` only after verifying that the
+callback and its registration work with a null TCCL. Check lazy initialization and supported
+providers or overrides. Create builders and factories before calling the helper.
+
+Otherwise, preserve the existing TCCL behavior. A weak loader reference needs a policy for what
+the callback does if the loader is gone. Check who owns and unregisters the callback separately.
+A null TCCL does not weaken references to the callback, its resources, or its helpers.
+
 ## Constants
 
 Reuse semconv constants only when both key name and type match. Javaagent production code and
