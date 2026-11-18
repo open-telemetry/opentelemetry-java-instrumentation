@@ -48,7 +48,7 @@ class CountedInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CountedAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Origin Method method) {
       CountedSingletons.increment(method);
     }
