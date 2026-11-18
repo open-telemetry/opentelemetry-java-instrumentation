@@ -10,10 +10,13 @@ import static io.opentelemetry.instrumentation.grpc.v1_6.AbstractGrpcTest.addExt
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_RECEIVED_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.GRPC_SENT_MESSAGE_COUNT;
 import static io.opentelemetry.instrumentation.grpc.v1_6.ExperimentalTestHelper.experimentalSatisfies;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -250,6 +253,11 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -385,6 +393,11 @@ public abstract class AbstractGrpcStreamingTest {
                                 equalTo(stringKey("rpc.status_code"), "INTERNAL"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))));
