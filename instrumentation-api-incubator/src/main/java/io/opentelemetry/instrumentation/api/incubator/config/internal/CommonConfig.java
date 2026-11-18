@@ -6,13 +6,13 @@
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,37 +38,16 @@ public final class CommonConfig {
   public CommonConfig(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties generalConfig =
         DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
+    DeclarativeConfigProperties httpConfig = generalConfig.get("http");
+    DeclarativeConfigProperties clientConfig = httpConfig.get("client");
+    DeclarativeConfigProperties serverConfig = httpConfig.get("server");
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
 
-    clientRequestHeaders =
-        Collections.unmodifiableList(
-            new ArrayList<>(
-                generalConfig
-                    .get("http")
-                    .get("client")
-                    .getScalarList("request_captured_headers", String.class, emptyList())));
-    clientResponseHeaders =
-        Collections.unmodifiableList(
-            new ArrayList<>(
-                generalConfig
-                    .get("http")
-                    .get("client")
-                    .getScalarList("response_captured_headers", String.class, emptyList())));
-    serverRequestHeaders =
-        Collections.unmodifiableList(
-            new ArrayList<>(
-                generalConfig
-                    .get("http")
-                    .get("server")
-                    .getScalarList("request_captured_headers", String.class, emptyList())));
-    serverResponseHeaders =
-        Collections.unmodifiableList(
-            new ArrayList<>(
-                generalConfig
-                    .get("http")
-                    .get("server")
-                    .getScalarList("response_captured_headers", String.class, emptyList())));
+    clientRequestHeaders = readCapturedHeaders(clientConfig, "request_captured_headers");
+    clientResponseHeaders = readCapturedHeaders(clientConfig, "response_captured_headers");
+    serverRequestHeaders = readCapturedHeaders(serverConfig, "request_captured_headers");
+    serverResponseHeaders = readCapturedHeaders(serverConfig, "response_captured_headers");
     knownHttpRequestMethods =
         new HashSet<>(
             commonConfig
@@ -102,6 +81,10 @@ public final class CommonConfig {
     loggingSpanIdKey = logging.getString("span_id_key", LoggingContextConstants.SPAN_ID);
     loggingTraceFlagsKey =
         logging.getString("trace_flags_key", LoggingContextConstants.TRACE_FLAGS);
+  }
+
+  private static List<String> readCapturedHeaders(DeclarativeConfigProperties config, String key) {
+    return unmodifiableList(new ArrayList<>(config.getScalarList(key, String.class, emptyList())));
   }
 
   public List<String> getClientRequestHeaders() {

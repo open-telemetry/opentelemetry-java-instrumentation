@@ -12,9 +12,11 @@ When an owner retains an incoming list as long-lived configuration or metadata, 
 private constructor:
 
 - Take a private `ArrayList` snapshot, including for empty inputs. Do not require callers to pass an
-  already-owned list.
-- Use that owned copy consistently internally, and treat it as read-only after initialization.
-- Preserve unmodifiable views when exposing the list.
+  already-owned list. Declare the field as `List` and choose `ArrayList` where the snapshot is built.
+- Use the owned list consistently internally, and treat it as read-only after initialization.
+- Do not retain a second field just for an unmodifiable view. If the list is not traversed on a hot
+  path, store an unmodifiable view over the owned snapshot. If hot-path code needs to iterate the
+  backing list directly, keep that list and wrap it at the exposure boundary.
 
 If the owner builds the final list itself, build it directly as an `ArrayList` rather than copying it
 again.

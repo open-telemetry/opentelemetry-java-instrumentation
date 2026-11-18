@@ -25,8 +25,7 @@ public final class ElasticsearchEndpointDefinition {
   private static final String UNDERSCORE_REPLACEMENT = "0";
 
   private final String endpointName;
-  private final ArrayList<Route> routes;
-  private final List<Route> routesView;
+  private final List<Route> routes;
 
   private final boolean isSearchEndpoint;
 
@@ -36,7 +35,6 @@ public final class ElasticsearchEndpointDefinition {
     ArrayList<Route> routeList =
         Arrays.stream(routes).map(Route::new).collect(toCollection(ArrayList::new));
     this.routes = routeList;
-    this.routesView = unmodifiableList(this.routes);
     this.isSearchEndpoint = isSearchEndpoint;
   }
 
@@ -68,7 +66,7 @@ public final class ElasticsearchEndpointDefinition {
   }
 
   public List<Route> getRoutes() {
-    return routesView;
+    return unmodifiableList(routes);
   }
 
   /**
@@ -122,8 +120,7 @@ public final class ElasticsearchEndpointDefinition {
   public static final class EndpointPattern {
     private static final Pattern PATH_PART_NAMES_PATTERN = Pattern.compile("\\{([^}]+)}");
     private final Pattern pattern;
-    private final ArrayList<String> pathPartNames;
-    private final List<String> pathPartNamesView;
+    private final List<String> pathPartNames;
 
     /**
      * Creates, compiles and caches a regular expression pattern and retrieves a set of
@@ -143,7 +140,6 @@ public final class ElasticsearchEndpointDefinition {
           pathPartNames.add(groupName);
         }
       }
-      pathPartNamesView = unmodifiableList(pathPartNames);
     }
 
     /** Builds a regex pattern from the parameterized route pattern. */
@@ -182,7 +178,7 @@ public final class ElasticsearchEndpointDefinition {
     }
 
     List<String> getPathPartNames() {
-      return pathPartNamesView;
+      return unmodifiableList(pathPartNames);
     }
   }
 }
