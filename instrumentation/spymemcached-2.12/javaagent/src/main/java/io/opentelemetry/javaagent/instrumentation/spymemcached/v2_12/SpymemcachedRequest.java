@@ -9,8 +9,6 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -75,11 +73,7 @@ public abstract class SpymemcachedRequest {
     }
 
     handlingNode = node;
-    SocketAddress address = node.getSocketAddress();
-    handlingNodeAddress =
-        address instanceof InetSocketAddress || SocketAddressUtil.getAddress(address) != null
-            ? address
-            : null;
+    handlingNodeAddress = node.getSocketAddress();
   }
 
   public void setRetryHandlingNode(@Nullable MemcachedNode node) {

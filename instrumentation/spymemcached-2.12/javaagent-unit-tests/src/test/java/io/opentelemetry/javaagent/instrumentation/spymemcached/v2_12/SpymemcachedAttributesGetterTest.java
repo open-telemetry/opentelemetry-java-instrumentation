@@ -151,7 +151,6 @@ class SpymemcachedAttributesGetterTest {
             });
     request.setHandlingNode(node);
 
-    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
