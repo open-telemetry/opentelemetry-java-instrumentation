@@ -79,7 +79,8 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * <p>Implementing this method is equivalent to implementing both {@link
    * #getNetworkLocalAddress(Object, Object)} and {@link #getNetworkLocalPort(Object, Object)}.
    *
-   * @deprecated Use {@link #getNetworkLocalSocketAddress(Object, Object)} instead.
+   * @deprecated Use {@link #getNetworkLocalSocketAddress(Object, Object)} instead. To be removed in
+   *     the next major version.
    */
   @Deprecated
   @Nullable
@@ -91,10 +92,8 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns the local socket address.
    *
-   * <p>The default delegates to {@link #getNetworkLocalInetSocketAddress(Object, Object)} to
-   * preserve existing implementations. Override this method for all socket address types. Defaults
-   * for address, port, network type, and transport use this method; explicitly overridden attribute
-   * getters take precedence.
+   * <p>Defaults for address, port, network type, and transport use this method; explicitly
+   * overridden attribute getters take precedence.
    *
    * <p>Supported types are {@link InetSocketAddress} and JDK 16+ {@code UnixDomainSocketAddress}.
    * Unix socket addresses supply a path and {@code unix} transport, but no port or network type.
@@ -139,7 +138,8 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * <p>Implementing this method is equivalent to implementing both {@link
    * #getNetworkPeerAddress(Object, Object)} and {@link #getNetworkPeerPort(Object, Object)}.
    *
-   * @deprecated Use {@link #getNetworkPeerSocketAddress(Object, Object)} instead.
+   * @deprecated Use {@link #getNetworkPeerSocketAddress(Object, Object)} instead. To be removed in
+   *     the next major version.
    */
   @Deprecated
   @Nullable
@@ -151,10 +151,8 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns the peer socket address.
    *
-   * <p>The default delegates to {@link #getNetworkPeerInetSocketAddress(Object, Object)} to
-   * preserve existing implementations. Override this method for all socket address types. Defaults
-   * for address, port, network type, and transport use this method; explicitly overridden attribute
-   * getters take precedence.
+   * <p>Defaults for address, port, network type, and transport use this method; explicitly
+   * overridden attribute getters take precedence.
    *
    * <p>See {@link #getNetworkLocalSocketAddress(Object, Object)} for supported address types.
    */
