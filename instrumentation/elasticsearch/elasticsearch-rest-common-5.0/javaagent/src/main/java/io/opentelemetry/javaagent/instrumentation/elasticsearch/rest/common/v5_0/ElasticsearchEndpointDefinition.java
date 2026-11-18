@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toCollection;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -14,7 +15,6 @@ import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
 /**
@@ -33,11 +33,9 @@ public final class ElasticsearchEndpointDefinition {
   public ElasticsearchEndpointDefinition(
       String endpointName, String[] routes, boolean isSearchEndpoint) {
     this.endpointName = endpointName;
-    this.routes =
-        unmodifiableList(
-            Arrays.stream(routes)
-                .map(Route::new)
-                .collect(Collectors.<Route, ArrayList<Route>>toCollection(ArrayList::new)));
+    ArrayList<Route> routeList =
+        Arrays.stream(routes).map(Route::new).collect(toCollection(ArrayList::new));
+    this.routes = unmodifiableList(routeList);
     this.isSearchEndpoint = isSearchEndpoint;
   }
 
