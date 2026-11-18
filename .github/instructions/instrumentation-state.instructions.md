@@ -104,8 +104,19 @@ callback and its registration work with a null TCCL. Check lazy initialization a
 providers or overrides. Create builders and factories before calling the helper.
 
 Otherwise, preserve the existing TCCL behavior. A weak loader reference needs a policy for what
-the callback does if the loader is gone. Check who owns and unregisters the callback separately.
-A null TCCL does not weaken references to the callback, its resources, or its helpers.
+the callback does if the loader is gone.
+
+The SDK holds the callback strongly even with a null TCCL. A callback may hold a resource
+strongly if the resource is meant to live at least as long as the registration. For resources
+that require explicit shutdown, close the registration and remove any long-lived registry
+entries on every supported shutdown path.
+
+If the application can discard a measured object while the metric is still registered,
+instrumentation must not keep it alive. For example, a Micrometer gauge built with
+`Gauge.builder(name, queue, Queue::size)` holds the queue weakly by default so the queue can be
+garbage-collected without unregistering the gauge. Preserve that behavior in the bridge by holding
+the queue weakly and skipping recording once it is gone. Check indirect references too. A
+measurement function that captures the queue would defeat the weak reference.
 
 ## Temporary thread state
 
