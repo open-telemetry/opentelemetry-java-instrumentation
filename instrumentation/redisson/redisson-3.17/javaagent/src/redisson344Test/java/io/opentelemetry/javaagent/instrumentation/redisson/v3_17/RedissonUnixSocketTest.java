@@ -6,8 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -16,6 +24,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.condition.EnabledOnOs;
 import org.junit.jupiter.api.condition.OS;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -29,6 +38,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 @EnabledOnOs(OS.LINUX)
+@EnabledIfSystemProperty(named = "os.arch", matches = "amd64|x86_64")
 class RedissonUnixSocketTest {
 
   @RegisterExtension
@@ -68,10 +78,15 @@ class RedissonUnixSocketTest {
               trace.hasSpansSatisfyingExactly(
                   span ->
                       span.hasKind(CLIENT)
-                          .hasAttributesSatisfying(
-                              attributes ->
-                                  assertThat(attributes.asMap())
-                                      .containsEntry(NETWORK_PEER_ADDRESS, socketPath))));
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(NETWORK_PEER_ADDRESS, socketPath),
+                              equalTo(NETWORK_PEER_PORT, null),
+                              equalTo(SERVER_ADDRESS, null),
+                              equalTo(SERVER_PORT, null),
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_NAMESPACE, "0"),
+                              equalTo(DB_QUERY_TEXT, "SET uds-test ?"),
+                              equalTo(DB_OPERATION_NAME, "SET"))));
     } finally {
       try {
         if (client != null) {
