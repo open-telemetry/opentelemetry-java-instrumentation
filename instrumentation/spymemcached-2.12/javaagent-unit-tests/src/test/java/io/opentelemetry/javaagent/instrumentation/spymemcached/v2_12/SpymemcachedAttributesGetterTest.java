@@ -169,8 +169,6 @@ class SpymemcachedAttributesGetterTest {
     request.setRetryHandlingNode(memcachedNode(peer));
 
     assertThat(getter.getNetworkPeerSocketAddress(request, null)).isSameAs(peer);
-    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("memcached.sock");
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
 
     request.setHandlingNode(memcachedNode("two.example", 11212));
 

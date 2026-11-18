@@ -17,25 +17,19 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.protocol.internal.Frame;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.unix.DomainSocketAddress;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
 class CassandraResponsePeerTest {
 
   @Test
-  @EnabledForJreRange(min = JRE.JAVA_16)
-  void preservesUnixResponsePeerThroughTheLibraryBridge() throws ReflectiveOperationException {
-    SocketAddress peer =
-        (SocketAddress)
-            Class.forName("java.net.UnixDomainSocketAddress")
-                .getMethod("of", String.class)
-                .invoke(null, "cassandra.sock");
+  void preservesUnixResponsePeerThroughTheLibraryBridge() {
+    SocketAddress peer = new DomainSocketAddress("cassandra.sock");
     Frame response = frame(1);
     ExecutionInfo executionInfo = mock(ExecutionInfo.class);
 

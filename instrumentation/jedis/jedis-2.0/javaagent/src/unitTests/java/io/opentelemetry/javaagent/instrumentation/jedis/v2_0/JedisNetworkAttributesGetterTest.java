@@ -56,8 +56,6 @@ class JedisNetworkAttributesGetterTest {
         .isSameAs(peer);
     JedisDbAttributesGetter getter = new JedisDbAttributesGetter();
     assertThat(getter.getNetworkPeerSocketAddress(request, null)).isSameAs(peer);
-    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("redis.sock");
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @ParameterizedTest

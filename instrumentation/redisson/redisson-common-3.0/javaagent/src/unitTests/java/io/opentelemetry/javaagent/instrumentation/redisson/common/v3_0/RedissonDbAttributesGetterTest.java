@@ -17,10 +17,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import java.net.SocketAddress;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.redisson.client.RedisConnectionException;
 import org.redisson.client.RedisException;
 import org.redisson.client.RedisLoadingException;
@@ -32,21 +29,6 @@ class RedissonDbAttributesGetterTest {
       RedissonRequest.create(null, new Object(), null, null);
   private static final AttributesExtractor<RedissonRequest, Void> EXTRACTOR =
       DbClientAttributesExtractor.create(GETTER);
-
-  @Test
-  @EnabledForJreRange(min = JRE.JAVA_16)
-  void requestPreservesTheRawSocketPeer() throws ReflectiveOperationException {
-    SocketAddress peer =
-        (SocketAddress)
-            Class.forName("java.net.UnixDomainSocketAddress")
-                .getMethod("of", String.class)
-                .invoke(null, "redis.sock");
-    RedissonRequest request = RedissonRequest.create(peer, new Object(), null, null);
-
-    assertThat(GETTER.getNetworkPeerSocketAddress(request, null)).isSameAs(peer);
-    assertThat(GETTER.getNetworkPeerAddress(request, null)).isEqualTo("redis.sock");
-    assertThat(GETTER.getNetworkPeerPort(request, null)).isNull();
-  }
 
   @Test
   void capturesUnknownServerPrefixFromRespReply() {

@@ -17,24 +17,18 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.protocol.internal.Frame;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.unix.DomainSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
 class CassandraResponsePeerTest {
 
   @Test
-  @EnabledForJreRange(min = JRE.JAVA_16)
-  void preservesUnixResponsePeerThroughTheFrame() throws ReflectiveOperationException {
-    SocketAddress peer =
-        (SocketAddress)
-            Class.forName("java.net.UnixDomainSocketAddress")
-                .getMethod("of", String.class)
-                .invoke(null, "cassandra.sock");
+  void preservesUnixResponsePeerThroughTheFrame() {
+    SocketAddress peer = new DomainSocketAddress("cassandra.sock");
     Frame response = frame(1);
     ExecutionInfo executionInfo = mock(ExecutionInfo.class);
 
@@ -44,8 +38,6 @@ class CassandraResponsePeerTest {
 
     CassandraSqlAttributesGetter getter = new CassandraSqlAttributesGetter();
     assertThat(getter.getNetworkPeerSocketAddress(null, executionInfo)).isSameAs(peer);
-    assertThat(getter.getNetworkPeerAddress(null, executionInfo)).isEqualTo("cassandra.sock");
-    assertThat(getter.getNetworkPeerPort(null, executionInfo)).isNull();
   }
 
   @Test

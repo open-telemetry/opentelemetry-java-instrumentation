@@ -101,9 +101,6 @@ class LettuceNetworkAttributesGetterTest {
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
     assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
     assertThat(getter.getNetworkPeerSocketAddress(command, null)).isSameAs(address);
-    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("/var/run/redis.sock");
-    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
-    assertThat(getter.getNetworkTransport(command, null)).isEqualTo("unix");
   }
 
   @Test

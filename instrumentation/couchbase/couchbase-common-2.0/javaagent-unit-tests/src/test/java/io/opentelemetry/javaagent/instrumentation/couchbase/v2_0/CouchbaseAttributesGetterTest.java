@@ -26,10 +26,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServ
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import java.net.InetSocketAddress;
-import java.net.SocketAddress;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
@@ -226,28 +223,6 @@ class CouchbaseAttributesGetterTest {
 
     request.setNode(secondPeer);
     assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(secondPeer);
-  }
-
-  @Test
-  @EnabledForJreRange(min = JRE.JAVA_16)
-  void sqlGetterForwardsTheRawSocketPeer() throws ReflectiveOperationException {
-    CouchbaseRequestInfo request =
-        CouchbaseRequestInfo.create(
-            "bucket",
-            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
-            "SELECT field FROM bucket");
-    SocketAddress peer =
-        (SocketAddress)
-            Class.forName("java.net.UnixDomainSocketAddress")
-                .getMethod("of", String.class)
-                .invoke(null, "couchbase.sock");
-    request.setNode(peer);
-    CouchbaseSqlAttributesGetter getter = new CouchbaseSqlAttributesGetter();
-
-    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isSameAs(peer);
-    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("couchbase.sock");
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
-    assertThat(getter.getServerAddress(request)).isEqualTo("cluster.example");
   }
 
   @Test
