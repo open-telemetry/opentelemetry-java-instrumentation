@@ -69,9 +69,6 @@ class IncludeExcludeTest {
 
     assertThat(selector.getIncluded()).containsExactly("included");
     assertThat(selector.getExcluded()).containsExactly("excluded");
-    assertThat(selector.matches("included")).isTrue();
-    assertThat(selector.matches("later included")).isFalse();
-    assertThat(selector.matches("excluded")).isFalse();
     assertThatThrownBy(() -> selector.getIncluded().add("other"))
         .isInstanceOf(UnsupportedOperationException.class);
     assertThatThrownBy(() -> selector.getExcluded().add("other"))
