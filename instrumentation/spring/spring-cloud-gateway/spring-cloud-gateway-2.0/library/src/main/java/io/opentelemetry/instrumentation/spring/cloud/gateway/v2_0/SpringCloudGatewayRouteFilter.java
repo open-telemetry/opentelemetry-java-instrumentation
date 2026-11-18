@@ -20,7 +20,6 @@ import reactor.core.publisher.Mono;
 
 /** A Spring Cloud Gateway filter that records the matched route on HTTP server telemetry. */
 public final class SpringCloudGatewayRouteFilter implements GlobalFilter, Ordered {
-
   /** Creates a new route filter. */
   public SpringCloudGatewayRouteFilter() {}
 
