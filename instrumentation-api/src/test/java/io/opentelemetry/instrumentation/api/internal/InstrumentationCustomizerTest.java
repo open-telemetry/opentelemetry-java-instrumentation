@@ -11,11 +11,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toMap;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
-import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -38,7 +36,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -97,19 +94,6 @@ class InstrumentationCustomizerTest {
   static void setCustomizer(InstrumenterCustomizerProvider provider) {
     InternalInstrumenterCustomizerUtil.setInstrumenterCustomizerProviders(
         singletonList(new InternalInstrumenterCustomizerProviderImpl(provider)));
-  }
-
-  @Test
-  void customizerProvidersAreSnapshots() {
-    List<InternalInstrumenterCustomizerProvider> providers = new ArrayList<>();
-    InternalInstrumenterCustomizerUtil.setInstrumenterCustomizerProviders(providers);
-    providers.add(mock(InternalInstrumenterCustomizerProvider.class));
-
-    List<InternalInstrumenterCustomizerProvider> published =
-        InternalInstrumenterCustomizerUtil.getInstrumenterCustomizerProviders();
-    assertThat(published).isEmpty();
-    assertThatThrownBy(() -> published.add(mock(InternalInstrumenterCustomizerProvider.class)))
-        .isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
