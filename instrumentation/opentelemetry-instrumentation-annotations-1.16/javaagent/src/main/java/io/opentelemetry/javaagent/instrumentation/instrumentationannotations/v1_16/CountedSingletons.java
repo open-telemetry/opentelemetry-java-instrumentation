@@ -15,11 +15,13 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.ClassNames;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 public class CountedSingletons {
 
@@ -34,10 +36,39 @@ public class CountedSingletons {
           return new ConcurrentHashMap<>();
         }
       };
+  private static final ClassValue<Field> continuationLabels =
+      new ClassValue<Field>() {
+        @Override
+        @Nullable
+        protected Field computeValue(Class<?> type) {
+          try {
+            Field label = type.getDeclaredField("label");
+            if (label.getType() != int.class) {
+              return null;
+            }
+            label.setAccessible(true);
+            return label;
+          } catch (NoSuchFieldException ignored) {
+            // A caller's continuation need not have a state machine.
+            return null;
+          } catch (Throwable t) {
+            logger.log(FINE, "failed to read Kotlin continuation label for " + type, t);
+            return null;
+          }
+        }
+      };
   private static final Pattern INVALID_CHARACTERS = Pattern.compile("[^a-zA-Z0-9_./-]");
 
-  public static void increment(Method method) {
+  public static void increment(Method method, @Nullable Object continuation) {
     try {
+      if (continuation != null) {
+        Field label = continuationLabels.get(continuation.getClass());
+        // Kotlin sets the sign bit before reentering a suspend method on resumption. A recursive
+        // call has the sign bit cleared by the method's prologue and must still be counted.
+        if (label != null && label.getInt(continuation) < 0) {
+          return;
+        }
+      }
       counters
           .get(method.getDeclaringClass())
           .computeIfAbsent(method, CountedSingletons::createCounter)
