@@ -13,6 +13,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import java.util.ArrayList;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -27,7 +28,7 @@ public class MethodInstrumentationModule extends InstrumentationModule {
 
   private static List<TypeInstrumentation> createInstrumentations() {
     MethodConfiguration config = new MethodConfiguration(GlobalOpenTelemetry.get());
-    List<TypeInstrumentation> list = config.typeInstrumentations();
+    List<TypeInstrumentation> list = new ArrayList<>(config.typeInstrumentations());
     // ensure that there is at least one instrumentation so that muzzle reference collection could
     // work
     if (list.isEmpty()) {

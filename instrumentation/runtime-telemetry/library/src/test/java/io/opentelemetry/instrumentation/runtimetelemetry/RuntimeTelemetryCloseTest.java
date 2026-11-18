@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry;
 
+import static java.util.Collections.singletonList;
+
 import io.github.netmikey.logunit.api.LogCapturer;
-import java.util.ArrayList;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -21,9 +22,7 @@ class RuntimeTelemetryCloseTest {
           throw new RuntimeException("boom");
         };
 
-    ArrayList<AutoCloseable> observables = new ArrayList<>();
-    observables.add(observable);
-    RuntimeTelemetry runtimeTelemetry = new RuntimeTelemetry(observables, null);
+    RuntimeTelemetry runtimeTelemetry = new RuntimeTelemetry(singletonList(observable), null);
     runtimeTelemetry.close();
 
     logs.assertContains("Error closing runtime telemetry observable");

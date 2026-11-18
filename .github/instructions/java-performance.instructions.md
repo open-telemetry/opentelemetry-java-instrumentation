@@ -8,13 +8,16 @@ Apply these rules to Java code. The hot-path allocation rules also apply to Kotl
 
 ## Retained lists
 
-When retaining an incoming list as long-lived configuration or metadata:
+When an owner retains an incoming list as long-lived configuration or metadata, including in a
+private constructor:
 
-- Take a private `ArrayList` snapshot, including for empty inputs.
+- Take a private `ArrayList` snapshot, including for empty inputs. Do not require callers to pass an
+  already-owned list.
 - Use that owned copy consistently internally, and treat it as read-only after initialization.
 - Preserve unmodifiable views when exposing the list.
 
-A fresh `ArrayList` that is already privately owned does not need another copy.
+If the owner builds the final list itself, build it directly as an `ArrayList` rather than copying it
+again.
 
 The snapshot isolates the list structure from caller mutation. Using one concrete list
 implementation at shared iteration sites enables HotSpot to eliminate iterator allocations.

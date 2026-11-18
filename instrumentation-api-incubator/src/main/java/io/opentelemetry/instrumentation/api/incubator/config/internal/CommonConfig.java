@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static java.util.Collections.emptyList;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
@@ -45,28 +47,28 @@ public final class CommonConfig {
                 generalConfig
                     .get("http")
                     .get("client")
-                    .getScalarList("request_captured_headers", String.class, new ArrayList<>())));
+                    .getScalarList("request_captured_headers", String.class, emptyList())));
     clientResponseHeaders =
         Collections.unmodifiableList(
             new ArrayList<>(
                 generalConfig
                     .get("http")
                     .get("client")
-                    .getScalarList("response_captured_headers", String.class, new ArrayList<>())));
+                    .getScalarList("response_captured_headers", String.class, emptyList())));
     serverRequestHeaders =
         Collections.unmodifiableList(
             new ArrayList<>(
                 generalConfig
                     .get("http")
                     .get("server")
-                    .getScalarList("request_captured_headers", String.class, new ArrayList<>())));
+                    .getScalarList("request_captured_headers", String.class, emptyList())));
     serverResponseHeaders =
         Collections.unmodifiableList(
             new ArrayList<>(
                 generalConfig
                     .get("http")
                     .get("server")
-                    .getScalarList("response_captured_headers", String.class, new ArrayList<>())));
+                    .getScalarList("response_captured_headers", String.class, emptyList())));
     knownHttpRequestMethods =
         new HashSet<>(
             commonConfig

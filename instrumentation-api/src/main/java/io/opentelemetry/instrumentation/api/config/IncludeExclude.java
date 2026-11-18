@@ -27,8 +27,10 @@ import java.util.function.Predicate;
  */
 public final class IncludeExclude {
 
-  private final List<String> included;
-  private final List<String> excluded;
+  private final ArrayList<String> included;
+  private final ArrayList<String> excluded;
+  private final List<String> includedView;
+  private final List<String> excludedView;
   private final List<Predicate<String>> includedPredicates;
   private final List<Predicate<String>> excludedPredicates;
 
@@ -38,20 +40,22 @@ public final class IncludeExclude {
   }
 
   IncludeExclude(List<String> included, List<String> excluded) {
-    this.included = unmodifiableList(included);
-    this.excluded = unmodifiableList(excluded);
-    this.includedPredicates = createGlobPredicates(included);
-    this.excludedPredicates = createGlobPredicates(excluded);
+    this.included = new ArrayList<>(included);
+    this.excluded = new ArrayList<>(excluded);
+    this.includedView = unmodifiableList(this.included);
+    this.excludedView = unmodifiableList(this.excluded);
+    this.includedPredicates = createGlobPredicates(this.included);
+    this.excludedPredicates = createGlobPredicates(this.excluded);
   }
 
   /** Returns the included patterns. */
   public List<String> getIncluded() {
-    return included;
+    return includedView;
   }
 
   /** Returns the excluded patterns. */
   public List<String> getExcluded() {
-    return excluded;
+    return excludedView;
   }
 
   /**
