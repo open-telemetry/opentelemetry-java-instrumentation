@@ -5,9 +5,10 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import javax.annotation.Nonnull;
@@ -34,19 +35,19 @@ public class InstrumentationMetadata {
   @Nullable
   private String displayName;
 
-  private List<ConfigurationOption> configurations = new ArrayList<>();
+  private List<ConfigurationOption> configurations = emptyList();
 
   @JsonProperty("semantic_conventions")
-  private List<SemanticConvention> semanticConventions = new ArrayList<>();
+  private List<SemanticConvention> semanticConventions = emptyList();
 
   @JsonProperty("additional_telemetry")
-  private List<ManualTelemetryEntry> additionalTelemetry = new ArrayList<>();
+  private List<ManualTelemetryEntry> additionalTelemetry = emptyList();
 
   @JsonProperty("override_telemetry")
   @Nullable
   private Boolean overrideTelemetry;
 
-  private List<InstrumentationFeature> features = new ArrayList<>();
+  private List<InstrumentationFeature> features = emptyList();
 
   public InstrumentationMetadata() {
     this.classification = InstrumentationClassification.LIBRARY.name();
@@ -65,8 +66,8 @@ public class InstrumentationMetadata {
     this.description = description;
     this.libraryLink = libraryLink;
     this.displayName = displayName;
-    this.semanticConventions = copyList(semanticConventions);
-    this.configurations = copyList(configurations);
+    this.semanticConventions = Objects.requireNonNullElse(semanticConventions, emptyList());
+    this.configurations = Objects.requireNonNullElse(configurations, emptyList());
     this.overrideTelemetry = null;
   }
 
@@ -112,7 +113,7 @@ public class InstrumentationMetadata {
   }
 
   public void setConfigurations(@Nullable List<ConfigurationOption> configurations) {
-    this.configurations = copyList(configurations);
+    this.configurations = Objects.requireNonNullElse(configurations, emptyList());
   }
 
   public List<SemanticConvention> getSemanticConventions() {
@@ -120,7 +121,7 @@ public class InstrumentationMetadata {
   }
 
   public void setSemanticConventions(@Nullable List<SemanticConvention> semanticConventions) {
-    this.semanticConventions = copyList(semanticConventions);
+    this.semanticConventions = Objects.requireNonNullElse(semanticConventions, emptyList());
   }
 
   @Nullable
@@ -137,7 +138,7 @@ public class InstrumentationMetadata {
   }
 
   public void setAdditionalTelemetry(@Nullable List<ManualTelemetryEntry> additionalTelemetry) {
-    this.additionalTelemetry = copyList(additionalTelemetry);
+    this.additionalTelemetry = Objects.requireNonNullElse(additionalTelemetry, emptyList());
   }
 
   public Boolean getOverrideTelemetry() {
@@ -153,11 +154,7 @@ public class InstrumentationMetadata {
   }
 
   public void setFeatures(@Nullable List<InstrumentationFeature> features) {
-    this.features = copyList(features);
-  }
-
-  private static <T> List<T> copyList(@Nullable List<T> values) {
-    return values == null ? new ArrayList<>() : new ArrayList<>(values);
+    this.features = Objects.requireNonNullElse(features, emptyList());
   }
 
   /**
@@ -171,11 +168,11 @@ public class InstrumentationMetadata {
     @Nullable private String classification;
     @Nullable private String libraryLink;
     @Nullable private String displayName;
-    private List<ConfigurationOption> configurations = new ArrayList<>();
-    private List<SemanticConvention> semanticConventions = new ArrayList<>();
-    private List<ManualTelemetryEntry> additionalTelemetry = new ArrayList<>();
+    private List<ConfigurationOption> configurations = emptyList();
+    private List<SemanticConvention> semanticConventions = emptyList();
+    private List<ManualTelemetryEntry> additionalTelemetry = emptyList();
     @Nullable private Boolean overrideTelemetry;
-    private List<InstrumentationFeature> features = new ArrayList<>();
+    private List<InstrumentationFeature> features = emptyList();
 
     @CanIgnoreReturnValue
     public Builder description(@Nullable String description) {
@@ -209,21 +206,19 @@ public class InstrumentationMetadata {
 
     @CanIgnoreReturnValue
     public Builder configurations(@Nullable List<ConfigurationOption> configurations) {
-      this.configurations = configurations == null ? new ArrayList<>() : configurations;
+      this.configurations = Objects.requireNonNullElse(configurations, emptyList());
       return this;
     }
 
     @CanIgnoreReturnValue
     public Builder semanticConventions(@Nullable List<SemanticConvention> semanticConventions) {
-      this.semanticConventions =
-          semanticConventions == null ? new ArrayList<>() : semanticConventions;
+      this.semanticConventions = Objects.requireNonNullElse(semanticConventions, emptyList());
       return this;
     }
 
     @CanIgnoreReturnValue
     public Builder additionalTelemetry(@Nullable List<ManualTelemetryEntry> additionalTelemetry) {
-      this.additionalTelemetry =
-          additionalTelemetry == null ? new ArrayList<>() : additionalTelemetry;
+      this.additionalTelemetry = Objects.requireNonNullElse(additionalTelemetry, emptyList());
       return this;
     }
 
@@ -235,7 +230,7 @@ public class InstrumentationMetadata {
 
     @CanIgnoreReturnValue
     public Builder features(@Nullable List<InstrumentationFeature> features) {
-      this.features = features == null ? new ArrayList<>() : features;
+      this.features = Objects.requireNonNullElse(features, emptyList());
       return this;
     }
 

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
@@ -21,17 +23,16 @@ public class EmittedMetrics {
   private String when;
 
   @JsonProperty("metrics_by_scope")
-  @Nullable
   private List<MetricsByScope> metricsByScope;
 
   public EmittedMetrics() {
     this.when = "";
-    this.metricsByScope = new ArrayList<>();
+    this.metricsByScope = emptyList();
   }
 
-  public EmittedMetrics(String when, @Nullable List<MetricsByScope> metricsByScope) {
+  public EmittedMetrics(String when, List<MetricsByScope> metricsByScope) {
     this.when = when;
-    this.metricsByScope = copyNullableList(metricsByScope);
+    this.metricsByScope = metricsByScope;
   }
 
   public String getWhen() {
@@ -43,23 +44,13 @@ public class EmittedMetrics {
   }
 
   @JsonProperty("metrics_by_scope")
-  @Nullable
   public List<MetricsByScope> getMetricsByScope() {
     return metricsByScope;
   }
 
   @JsonProperty("metrics_by_scope")
-  public void setMetricsByScope(@Nullable List<MetricsByScope> metricsByScope) {
-    this.metricsByScope = copyNullableList(metricsByScope);
-  }
-
-  private static <T> List<T> copyList(@Nullable List<T> values) {
-    return values == null ? new ArrayList<>() : new ArrayList<>(values);
-  }
-
-  @Nullable
-  private static <T> List<T> copyNullableList(@Nullable List<T> values) {
-    return values == null ? null : new ArrayList<>(values);
+  public void setMetricsByScope(List<MetricsByScope> metricsByScope) {
+    this.metricsByScope = metricsByScope;
   }
 
   /**
@@ -72,7 +63,7 @@ public class EmittedMetrics {
 
     public MetricsByScope(String scope, List<Metric> metrics) {
       this.scope = scope;
-      this.metrics = copyList(metrics);
+      this.metrics = metrics;
     }
 
     public MetricsByScope() {
@@ -93,7 +84,7 @@ public class EmittedMetrics {
     }
 
     public void setMetrics(List<Metric> metrics) {
-      this.metrics = copyList(metrics);
+      this.metrics = metrics;
     }
   }
 
@@ -124,7 +115,7 @@ public class EmittedMetrics {
       this.type = type;
       this.isMonotonic = null;
       this.unit = unit;
-      this.attributes = copyList(attributes);
+      this.attributes = attributes;
     }
 
     public Metric(
@@ -139,7 +130,7 @@ public class EmittedMetrics {
       this.type = type;
       this.isMonotonic = isMonotonic;
       this.unit = unit;
-      this.attributes = copyList(attributes);
+      this.attributes = attributes;
     }
 
     public Metric() {
@@ -233,7 +224,7 @@ public class EmittedMetrics {
     }
 
     public void setAttributes(List<TelemetryAttribute> attributes) {
-      this.attributes = copyList(attributes);
+      this.attributes = attributes;
     }
 
     /**

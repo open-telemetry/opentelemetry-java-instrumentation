@@ -5,10 +5,11 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
+import static java.util.Collections.emptyList;
+
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 
 /**
  * Representation of spans emitted by an instrumentation. Includes context about whether emitted by
@@ -24,12 +25,12 @@ public class EmittedSpans {
 
   public EmittedSpans() {
     this.when = "";
-    this.spansByScope = new ArrayList<>();
+    this.spansByScope = emptyList();
   }
 
   public EmittedSpans(String when, List<SpansByScope> spansByScope) {
     this.when = when;
-    this.spansByScope = copyList(spansByScope);
+    this.spansByScope = spansByScope;
   }
 
   public String getWhen() {
@@ -47,11 +48,7 @@ public class EmittedSpans {
 
   @JsonProperty("spans_by_scope")
   public void setSpansByScope(List<SpansByScope> spans) {
-    this.spansByScope = copyList(spans);
-  }
-
-  private static <T> List<T> copyList(@Nullable List<T> values) {
-    return values == null ? new ArrayList<>() : new ArrayList<>(values);
+    this.spansByScope = spans;
   }
 
   /**
@@ -64,12 +61,12 @@ public class EmittedSpans {
 
     public SpansByScope(String scopeName, List<Span> spans) {
       this.scope = scopeName;
-      this.spans = copyList(spans);
+      this.spans = spans;
     }
 
     public SpansByScope() {
       this.scope = "";
-      this.spans = new ArrayList<>();
+      this.spans = emptyList();
     }
 
     public String getScope() {
@@ -85,7 +82,7 @@ public class EmittedSpans {
     }
 
     public void setSpans(List<Span> spans) {
-      this.spans = copyList(spans);
+      this.spans = spans;
     }
   }
 
@@ -101,7 +98,7 @@ public class EmittedSpans {
 
     public Span(String spanKind, List<TelemetryAttribute> attributes) {
       this.spanKind = spanKind;
-      this.attributes = copyList(attributes);
+      this.attributes = attributes;
     }
 
     public Span() {
@@ -124,7 +121,7 @@ public class EmittedSpans {
     }
 
     public void setAttributes(List<TelemetryAttribute> attributes) {
-      this.attributes = copyList(attributes);
+      this.attributes = attributes;
     }
   }
 }

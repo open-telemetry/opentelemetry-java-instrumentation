@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -21,7 +20,7 @@ public class EmittedScope {
   public EmittedScope() {}
 
   public EmittedScope(List<Scope> scopes) {
-    this.scopes = scopes == null ? null : new ArrayList<>(scopes);
+    this.scopes = scopes;
   }
 
   @Nullable
@@ -30,7 +29,7 @@ public class EmittedScope {
   }
 
   public void setScopes(List<Scope> scopes) {
-    this.scopes = scopes == null ? null : new ArrayList<>(scopes);
+    this.scopes = scopes;
   }
 
   /**
