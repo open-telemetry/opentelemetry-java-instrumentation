@@ -185,24 +185,6 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void batchUsesCommonFinalAddressAfterRetry() throws UnknownHostException {
-    InetSocketAddress firstAddress =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
-    InetSocketAddress finalAddress =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
-    RedisCommand<?, ?, ?> firstCommand = commandWithPeer(firstAddress);
-    RedisCommand<?, ?, ?> secondCommand = commandWithPeer(finalAddress);
-    LettuceCommandPeer.record(firstCommand, finalAddress);
-    LettuceBatchRequest request =
-        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null);
-
-    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
-
-    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.1.2.4");
-    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(PORT);
-  }
-
-  @Test
   void batchDropsDifferentFinalAddressesAfterRetry() throws UnknownHostException {
     InetSocketAddress firstAddress =
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);

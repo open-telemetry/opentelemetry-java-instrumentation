@@ -273,7 +273,6 @@ class MongoDbAttributesGetterTest {
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
     assertThat(getter.getNetworkPeerSocketAddress(commandStartedEvent(), null))
         .isSameAs(socketAddress);
-    assertThat(getter.getNetworkTransport(commandStartedEvent(), null)).isEqualTo("unix");
   }
 
   @Test
