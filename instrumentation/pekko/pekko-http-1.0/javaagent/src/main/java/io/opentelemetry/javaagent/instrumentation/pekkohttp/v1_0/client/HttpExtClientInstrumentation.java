@@ -19,7 +19,6 @@ import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.apache.pekko.http.scaladsl.HttpExt;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import scala.concurrent.Future;
@@ -68,7 +67,6 @@ class HttpExtClientInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Future<HttpResponse> methodExit(
         @Advice.Argument(0) HttpRequest request,
-        @Advice.This HttpExt thiz,
         @Advice.Return Future<HttpResponse> responseFuture,
         @Advice.Thrown Throwable throwable,
         @Advice.Enter Object[] enter) {
@@ -87,9 +85,9 @@ class HttpExtClientInstrumentation implements TypeInstrumentation {
         return null;
       }
       responseFuture.onComplete(
-          new OnCompleteHandler(context, request), thiz.system().dispatcher());
+          new OnCompleteHandler(context, request), DirectExecutionContext.INSTANCE);
 
-      return FutureWrapper.wrap(responseFuture, thiz.system().dispatcher(), Context.current());
+      return FutureWrapper.wrap(responseFuture, DirectExecutionContext.INSTANCE, Context.current());
     }
   }
 }
