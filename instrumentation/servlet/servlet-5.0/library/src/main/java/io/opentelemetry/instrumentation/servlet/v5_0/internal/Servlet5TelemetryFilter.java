@@ -39,6 +39,7 @@ public final class Servlet5TelemetryFilter implements Filter {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       instrumenter;
   private final boolean addTraceIdRequestAttribute;
+  private final boolean captureRequestBody;
   private final int captureRequestBodyMaxSize;
 
   public Servlet5TelemetryFilter(
@@ -47,9 +48,11 @@ public final class Servlet5TelemetryFilter implements Filter {
               ServletResponseContext<HttpServletResponse>>
           instrumenter,
       boolean addTraceIdRequestAttribute,
+      boolean captureRequestBody,
       int captureRequestBodyMaxSize) {
     this.instrumenter = instrumenter;
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
+    this.captureRequestBody = captureRequestBody;
     this.captureRequestBodyMaxSize = captureRequestBodyMaxSize;
   }
 
@@ -81,7 +84,7 @@ public final class Servlet5TelemetryFilter implements Filter {
 
     Context context = instrumenter.start(parentContext, requestContext);
 
-    if (captureRequestBodyMaxSize > 0 && Span.fromContext(context).isRecording()) {
+    if (captureRequestBody && Span.fromContext(context).isRecording()) {
       // only capture when enabled and span is being sampled
       httpRequest =
           Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(httpRequest, captureRequestBodyMaxSize);

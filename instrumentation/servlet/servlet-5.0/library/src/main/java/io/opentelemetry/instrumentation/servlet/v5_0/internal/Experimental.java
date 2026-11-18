@@ -30,6 +30,9 @@ public final class Experimental {
   private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
 
   @Nullable
+  private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureRequestBody;
+
+  @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, Integer> setCaptureRequestBodyMaxSize;
 
   /**
@@ -97,10 +100,25 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to capture the request body as a span attribute.
+   * Sets whether to capture the request body as a span attribute. Disabled by default.
    *
    * @param builder the telemetry builder
-   * @param maxSize the maximum size of the request body to capture, use {@code <=0} to disable.
+   * @param captureRequestBody {@code true} to capture the request body
+   */
+  public static void setCaptureRequestBody(
+      ServletTelemetryBuilder builder, boolean captureRequestBody) {
+    if (setCaptureRequestBody != null) {
+      setCaptureRequestBody.accept(builder, captureRequestBody);
+    }
+  }
+
+  /**
+   * Sets the maximum number of request body bytes to capture. This does not enable or disable
+   * capture, see {@link #setCaptureRequestBody}. A value {@code <=0} is invalid: a warning is
+   * logged and the default is used.
+   *
+   * @param builder the telemetry builder
+   * @param maxSize the maximum number of request body bytes to capture
    */
   public static void setCaptureRequestBodyMaxSize(ServletTelemetryBuilder builder, int maxSize) {
     if (setCaptureRequestBodyMaxSize != null) {
@@ -126,6 +144,11 @@ public final class Experimental {
   public static void internalSetRequestParameters(
       BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters) {
     Experimental.setRequestParameters = setRequestParameters;
+  }
+
+  public static void internalSetCaptureRequestBody(
+      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureRequestBody) {
+    Experimental.setCaptureRequestBody = setCaptureRequestBody;
   }
 
   public static void internalSetCaptureRequestBodyMaxSize(

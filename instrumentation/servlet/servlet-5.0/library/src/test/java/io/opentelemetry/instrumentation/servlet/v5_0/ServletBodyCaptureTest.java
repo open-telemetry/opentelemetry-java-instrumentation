@@ -55,21 +55,32 @@ class ServletBodyCaptureTest {
   @Test
   void capturesRequestBody_enabled() throws Exception {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, true);
     Experimental.setCaptureRequestBodyMaxSize(builder, 32);
     testCaptureRequestBody(builder, "request-body");
   }
 
+  @Test
+  void capturesRequestBody_disabledExplicitly() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, false);
+    Experimental.setCaptureRequestBodyMaxSize(builder, 32);
+    testCaptureRequestBody(builder, null);
+  }
+
   @ParameterizedTest
   @ValueSource(ints = {-1, 0})
-  void capturesRequestBody_disabled(int maxSize) throws Exception {
+  void capturesRequestBody_invalidMaxSizeUsesDefault(int maxSize) throws Exception {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, true);
     Experimental.setCaptureRequestBodyMaxSize(builder, maxSize);
-    testCaptureRequestBody(builder, null);
+    testCaptureRequestBody(builder, "request-body");
   }
 
   @Test
   void capturesRequestBody_truncated() throws Exception {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, true);
     Experimental.setCaptureRequestBodyMaxSize(builder, 7);
     testCaptureRequestBody(builder, "request");
   }
