@@ -8,9 +8,12 @@ package io.opentelemetry.spring.smoketest;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import static java.util.Objects.requireNonNull;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -70,5 +73,40 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
                                 ? "SELECT player.* FROM player WHERE player.id = $1 LIMIT 2"
                                 : "SELECT PLAYER.* FROM PLAYER WHERE PLAYER.ID = $1 LIMIT 2")
                         .hasAttribute(DB_SYSTEM_NAME, "h2database")));
+  }
+
+  @Test
+  void gatewayRouteEnrichesServerTelemetryWhenShortCircuited() {
+    // given
+    String routeId = "test-gateway-route";
+
+    // when
+    String response =
+        webClient.get().uri("/gateway/test").retrieve().bodyToMono(String.class).block();
+
+    // then
+    assertThat(response).isEqualTo("gateway");
+
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/gateway/test"),
+                span -> {
+                  span.hasName("GET " + routeId)
+                      .hasKind(SpanKind.SERVER)
+                      .hasAttribute(HTTP_ROUTE, routeId);
+                  instrumentationName.set(span.actual().getInstrumentationScopeInfo().getName());
+                }));
+
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metric ->
+            metric
+                .hasName("http.server.request.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> point.hasAttribute(HTTP_ROUTE, routeId))));
   }
 }

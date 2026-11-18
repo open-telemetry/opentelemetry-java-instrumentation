@@ -60,6 +60,11 @@ dependencies {
       configuration = "shadow"
     )
   )
+  implementation(
+    project(
+      ":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:library"
+    )
+  )
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library"))
@@ -101,6 +106,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-test:$springBootVersion") {
     exclude("org.junit.vintage", "junit-vintage-engine")
   }
+  testLibrary("org.springframework.cloud:spring-cloud-starter-gateway:3.1.8")
 
   testImplementation("javax.servlet:javax.servlet-api:3.1.0")
   testImplementation("jakarta.servlet:jakarta.servlet-api:5.0.0")
