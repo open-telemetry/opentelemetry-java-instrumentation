@@ -111,8 +111,7 @@ class NetworkAttributesExtractorSocketAddressTest {
   }
 
   @Test
-  @EnabledForJreRange(min = JRE.JAVA_16)
-  void newSocketGetterTakesPrecedenceOverInetGetter() throws Exception {
+  void newSocketGetterTakesPrecedenceOverInetGetter() {
     NetworkAttributesGetter<SocketAddress, SocketAddress> getter =
         new TestGetter() {
           @Override
@@ -127,7 +126,7 @@ class NetworkAttributesExtractorSocketAddressTest {
             return new InetSocketAddress("4.3.2.1", 9090);
           }
         };
-    assertThat(extract(getter, jdkUnixAddress("local.sock"), jdkUnixAddress("peer.sock")))
+    assertThat(extract(getter, nettyAddress(false, "local.sock"), nettyAddress(false, "peer.sock")))
         .containsOnly(
             entry(NETWORK_TRANSPORT, "unix"),
             entry(NETWORK_LOCAL_ADDRESS, "local.sock"),
@@ -135,8 +134,7 @@ class NetworkAttributesExtractorSocketAddressTest {
   }
 
   @Test
-  @EnabledForJreRange(min = JRE.JAVA_16)
-  void explicitAttributesTakePrecedence() throws Exception {
+  void explicitAttributesTakePrecedence() {
     NetworkAttributesGetter<SocketAddress, SocketAddress> getter =
         new TestGetter() {
           @Override
@@ -169,7 +167,7 @@ class NetworkAttributesExtractorSocketAddressTest {
             return 5678;
           }
         };
-    assertThat(extract(getter, jdkUnixAddress("local.sock"), jdkUnixAddress("peer.sock")))
+    assertThat(extract(getter, nettyAddress(false, "local.sock"), nettyAddress(false, "peer.sock")))
         .containsOnly(
             entry(NETWORK_TYPE, "custom-type"),
             entry(NETWORK_TRANSPORT, "custom-transport"),
