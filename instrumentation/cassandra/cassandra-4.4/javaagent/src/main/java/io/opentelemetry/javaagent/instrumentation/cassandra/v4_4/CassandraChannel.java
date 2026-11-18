@@ -57,13 +57,9 @@ public class CassandraChannel {
       }
       SocketAddress socketAddress = (SocketAddress) remoteAddress;
       if (socketAddress instanceof InetSocketAddress) {
-        if (((InetSocketAddress) socketAddress).isUnresolved()) {
-          return null;
-        }
-      } else if (SocketAddressUtil.getAddress(socketAddress) == null) {
-        return null;
+        return ((InetSocketAddress) socketAddress).isUnresolved() ? null : socketAddress;
       }
-      return socketAddress;
+      return SocketAddressUtil.getAddress(socketAddress) == null ? null : socketAddress;
     } catch (Throwable ignored) {
       return null;
     }
