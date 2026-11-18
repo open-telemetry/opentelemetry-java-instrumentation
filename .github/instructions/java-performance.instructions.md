@@ -11,8 +11,11 @@ Apply these rules to Java code. The hot-path allocation rules also apply to Kotl
 When an owner retains an incoming list as long-lived configuration or metadata, including in a
 private constructor:
 
-- Take a private `ArrayList` snapshot, including for empty inputs. Do not require callers to pass an
+- Take a private `ArrayList` snapshot of caller-supplied lists where the owner retains them,
+  preferably in its constructor, including empty inputs. Do not require callers to pass an
   already-owned list. Declare the field as `List` and choose `ArrayList` where the snapshot is built.
+- For a known-empty value outside hot-path iteration, `emptyList()` is sufficient when there is no
+  input alias to break.
 - Use the owned list consistently internally, and treat it as read-only after initialization.
 - Do not retain a second field just for an unmodifiable view. If the list is not traversed on a hot
   path, store an unmodifiable view over the owned snapshot. If hot-path code needs to iterate the

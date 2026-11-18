@@ -44,10 +44,18 @@ public final class CommonConfig {
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
 
-    clientRequestHeaders = readCapturedHeaders(clientConfig, "request_captured_headers");
-    clientResponseHeaders = readCapturedHeaders(clientConfig, "response_captured_headers");
-    serverRequestHeaders = readCapturedHeaders(serverConfig, "request_captured_headers");
-    serverResponseHeaders = readCapturedHeaders(serverConfig, "response_captured_headers");
+    clientRequestHeaders =
+        unmodifiableList(
+            new ArrayList<>(readCapturedHeaders(clientConfig, "request_captured_headers")));
+    clientResponseHeaders =
+        unmodifiableList(
+            new ArrayList<>(readCapturedHeaders(clientConfig, "response_captured_headers")));
+    serverRequestHeaders =
+        unmodifiableList(
+            new ArrayList<>(readCapturedHeaders(serverConfig, "request_captured_headers")));
+    serverResponseHeaders =
+        unmodifiableList(
+            new ArrayList<>(readCapturedHeaders(serverConfig, "response_captured_headers")));
     knownHttpRequestMethods =
         new HashSet<>(
             commonConfig
@@ -84,7 +92,7 @@ public final class CommonConfig {
   }
 
   private static List<String> readCapturedHeaders(DeclarativeConfigProperties config, String key) {
-    return unmodifiableList(new ArrayList<>(config.getScalarList(key, String.class, emptyList())));
+    return config.getScalarList(key, String.class, emptyList());
   }
 
   public List<String> getClientRequestHeaders() {
