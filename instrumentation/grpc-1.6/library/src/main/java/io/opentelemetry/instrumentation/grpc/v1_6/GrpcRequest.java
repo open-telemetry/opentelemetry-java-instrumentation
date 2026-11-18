@@ -22,6 +22,7 @@ public final class GrpcRequest {
   @Nullable private final String serverAddress;
   @Nullable private final Integer serverPort;
   @Nullable private volatile SocketAddress peerSocketAddress;
+  @Nullable private volatile SocketAddress localSocketAddress;
 
   @Nullable private volatile Long requestSize;
   @Nullable private volatile Long responseSize;
@@ -42,9 +43,9 @@ public final class GrpcRequest {
     ParsedTarget effective =
         parsedTarget != null ? parsedTarget : GrpcTargetParser.parseAuthority(authority);
     if (effective == null) {
-      return new GrpcRequest(method, null, null, null, null);
+      return new GrpcRequest(method, null, null, null, null, null);
     }
-    return new GrpcRequest(method, null, null, effective.getAddress(), effective.getPort());
+    return new GrpcRequest(method, null, null, null, effective.getAddress(), effective.getPort());
   }
 
   /**
@@ -53,18 +54,21 @@ public final class GrpcRequest {
    * @param method the gRPC method descriptor
    * @param metadata the request metadata
    * @param peerSocketAddress the peer socket address
+   * @param localSocketAddress the local socket address
    * @param authority the request authority
    */
   static GrpcRequest createServerRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
       @Nullable SocketAddress peerSocketAddress,
+      @Nullable SocketAddress localSocketAddress,
       @Nullable String authority) {
     ParsedTarget parsed = GrpcTargetParser.parseAuthority(authority);
     return new GrpcRequest(
         method,
         metadata,
         peerSocketAddress,
+        localSocketAddress,
         parsed != null ? parsed.getAddress() : null,
         parsed != null ? parsed.getPort() : null);
   }
@@ -73,6 +77,7 @@ public final class GrpcRequest {
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
       @Nullable SocketAddress peerSocketAddress,
+      @Nullable SocketAddress localSocketAddress,
       @Nullable String serverAddress,
       @Nullable Integer serverPort) {
     this.method = method;
@@ -80,6 +85,7 @@ public final class GrpcRequest {
     this.originalFullMethodName = null;
     this.metadata = metadata;
     this.peerSocketAddress = peerSocketAddress;
+    this.localSocketAddress = localSocketAddress;
     this.serverAddress = serverAddress;
     this.serverPort = serverPort;
   }
@@ -147,6 +153,15 @@ public final class GrpcRequest {
 
   void setPeerSocketAddress(@Nullable SocketAddress peerSocketAddress) {
     this.peerSocketAddress = peerSocketAddress;
+  }
+
+  @Nullable
+  public SocketAddress getLocalSocketAddress() {
+    return localSocketAddress;
+  }
+
+  void setLocalSocketAddress(@Nullable SocketAddress localSocketAddress) {
+    this.localSocketAddress = localSocketAddress;
   }
 
   @Nullable

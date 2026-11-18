@@ -34,6 +34,17 @@ public final class GrpcClientNetworkAttributesGetter
 
   @Override
   @Nullable
+  public InetSocketAddress getNetworkLocalInetSocketAddress(
+      GrpcRequest request, @Nullable Status response) {
+    SocketAddress address = request.getLocalSocketAddress();
+    if (address instanceof InetSocketAddress) {
+      return (InetSocketAddress) address;
+    }
+    return null;
+  }
+
+  @Override
+  @Nullable
   public InetSocketAddress getNetworkPeerInetSocketAddress(
       GrpcRequest request, @Nullable Status response) {
     SocketAddress address = request.getPeerSocketAddress();
