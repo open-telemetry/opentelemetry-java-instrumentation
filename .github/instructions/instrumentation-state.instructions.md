@@ -4,8 +4,9 @@ applyTo: "**/*.java,**/*.kt,**/*.scala,**/*.groovy"
 
 # Instrumentation state and synchronization
 
-Apply these rules when instrumentation stores per-object or temporary thread state, or synchronizes
-shared state. Virtual-field requirements apply to javaagent instrumentation, not library-only code.
+Apply these rules when instrumentation stores per-object or temporary thread state, synchronizes
+shared state, or registers observable metric callbacks. Virtual-field requirements apply to
+javaagent instrumentation, not library-only code.
 
 ## Choose storage by ownership
 
@@ -92,6 +93,19 @@ Field-backed storage can collect a carrier/value cycle, but fallback storage mus
 Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
 supported concurrent updates need an invariant before choosing synchronization or ownership.
 Do not choose a cache solely for `computeIfAbsent`.
+
+## Observable metric callbacks
+
+The SDK bundled with the javaagent holds a strong reference to the registering thread's context
+class loader (TCCL) and sets it when running the callback.
+
+Use `MetricCallbackRegistration.withoutContextClassLoader(...)` only after verifying that the
+callback and its registration work with a null TCCL. Check lazy initialization and supported
+providers or overrides. Create builders and factories before calling the helper.
+
+Otherwise, preserve the existing TCCL behavior. A weak loader reference needs a policy for what
+the callback does if the loader is gone. Check who owns and unregisters the callback separately.
+A null TCCL does not weaken references to the callback, its resources, or its helpers.
 
 ## Temporary thread state
 
