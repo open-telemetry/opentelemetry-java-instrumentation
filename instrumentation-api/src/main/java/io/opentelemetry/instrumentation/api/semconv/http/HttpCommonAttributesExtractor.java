@@ -109,17 +109,18 @@ abstract class HttpCommonAttributesExtractor<
 
   private void captureResponseHeaders(
       AttributesBuilder attributes, REQUEST request, RESPONSE response) {
-    if (!capturedResponseHeaders.isEmpty()) {
-      Collection<String> names =
-          capturedResponseHeaders.enumerateNames()
-              ? capturedResponseHeaders.matchingNames(
-                  getter.getHttpResponseHeaderNames(request, response))
-              : capturedResponseHeaders.exactNames();
-      for (String name : names) {
-        List<String> values = getter.getHttpResponseHeader(request, response, name);
-        if (!values.isEmpty()) {
-          attributes.put(capturedResponseHeaders.attributeKey(name), values);
-        }
+    if (capturedResponseHeaders.isEmpty()) {
+      return;
+    }
+    Collection<String> names =
+        capturedResponseHeaders.enumerateNames()
+            ? capturedResponseHeaders.matchingNames(
+                getter.getHttpResponseHeaderNames(request, response))
+            : capturedResponseHeaders.exactNames();
+    for (String name : names) {
+      List<String> values = getter.getHttpResponseHeader(request, response, name);
+      if (!values.isEmpty()) {
+        attributes.put(capturedResponseHeaders.attributeKey(name), values);
       }
     }
   }

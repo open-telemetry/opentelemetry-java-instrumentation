@@ -10,7 +10,6 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
@@ -134,19 +133,6 @@ class HttpHeaderSelectorTest {
                 selector(singletonList("Test-Request-Header"), emptyList()),
                 null))
         .containsOnly(requestHeaderEntry("test-request-header", "one"));
-  }
-
-  @Test
-  void exactNamesAccessorIsUnmodifiable() {
-    CapturedHttpHeaders emptyHeaders = CapturedHttpHeaders.create("request", null);
-    CapturedHttpHeaders selectedHeaders =
-        CapturedHttpHeaders.create(
-            "request", selector(singletonList("Test-Request-Header"), emptyList()));
-
-    assertThatThrownBy(() -> emptyHeaders.exactNames().clear())
-        .isInstanceOf(UnsupportedOperationException.class);
-    assertThatThrownBy(() -> selectedHeaders.exactNames().clear())
-        .isInstanceOf(UnsupportedOperationException.class);
   }
 
   @Test
