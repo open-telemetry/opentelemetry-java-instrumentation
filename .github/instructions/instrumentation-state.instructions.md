@@ -96,21 +96,41 @@ Do not choose a cache solely for `computeIfAbsent`.
 
 ## Observable metric callbacks
 
-The javaagent's SDK holds the callback and the registering thread's context class loader (TCCL)
-strongly. It uses that TCCL to run the callback.
+The SDK bundled with the javaagent holds the callback strongly. Separately, it saves the
+registering thread's context class loader (TCCL) and uses it to run the callback. Registering
+with a null TCCL does not weaken what the callback holds. Weak references in the callback do
+not remove the SDK's saved TCCL.
 
-- **Class loader.** Keep the existing TCCL unless registration and collection work with a null
-  TCCL, including lazy initialization and supported providers or overrides. Create builders and
-  factories before calling `MetricCallbackRegistration.withoutContextClassLoader(...)`. If using a
-  weak loader reference, define what happens when the loader is gone.
-- **Callback ownership.** Strongly capture a resource only if it should live at least as long as
-  the registration. On every supported shutdown path, close the registration and remove any
-  long-lived registry entries. If the measured object should be collectible while the metric stays
-  registered, do not keep it alive through the callback, measurement function, or other state.
+**Registration ownership.** Identify who owns the registration and when it ends. Verify that
+every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
+the returned handle and remove any long-lived registry entries for that registration.
+Dropping the handle does not unregister the callback.
 
-For example, a Micrometer gauge built with `Gauge.builder(name, queue, Queue::size)` holds the
-queue weakly by default. Preserve that behavior in the bridge and skip recording once the queue
-is gone.
+A callback can strongly hold state that should live as long as the registration. For example,
+the HikariCP callback captures `PoolStats`, which references the pool. When HikariCP shuts down
+the pool, it closes the tracker, and our tracker unregisters the callback. If a shutdown path
+misses that cleanup, fix the hook rather than weakening the reference.
+
+**Saved TCCL.** Use `MetricCallbackRegistration.withoutContextClassLoader(...)` only after
+verifying that registration and callback execution work with a null TCCL. Check lazy
+initialization and supported providers or overrides. Configure builders and obtain factories
+before calling the helper. Otherwise, preserve the existing TCCL behavior. If you hold the
+loader weakly, make sure the SDK does not also save it strongly and define what the callback
+does when the loader is gone.
+
+**Collection without explicit shutdown.** If an object or class loader should be collectible
+while the registration is live, trace every strong reference to it from the SDK or other
+long-lived state. Check what the callback and its measurement functions capture, the loaders
+that define the callback and its helpers, registry entries, and the saved TCCL.
+
+A weak reference to the measured object is different from a weak reference to the callback.
+If you hold the callback itself weakly, give it an owner that keeps it alive while it should
+still report. Decide whether to skip recording or unregister when the target disappears.
+
+For example, `Gauge.builder(name, queue, Queue::size)` in Micrometer observes the queue weakly
+by default. The queue can be collected while the gauge stays registered, so the bridge skips
+recording once the queue is gone. Capturing the queue in the measurement function would keep
+it alive and defeat the weak reference.
 
 ## Temporary thread state
 
