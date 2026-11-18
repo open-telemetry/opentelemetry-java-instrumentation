@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import static java.util.logging.Level.FINE;
 
+import com.mongodb.ServerAddress;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -22,27 +23,24 @@ import javax.annotation.Nullable;
 public class MongoNetworkPeer {
 
   private static final Logger logger = Logger.getLogger(MongoNetworkPeer.class.getName());
-  // Resolve optional socket types through their runtime class, not the helper's class loader.
-  private static final ClassValue<MethodHandle> jnrSocketPaths =
-      new ClassValue<MethodHandle>() {
-        @Override
-        @Nullable
-        protected MethodHandle computeValue(Class<?> type) {
-          if (!type.getName().equals("jnr.unixsocket.UnixSocketAddress")) {
-            return null;
-          }
-          try {
-            return MethodHandles.publicLookup()
-                .findVirtual(type, "path", MethodType.methodType(String.class));
-          } catch (NoSuchMethodException | IllegalAccessException ignored) {
-            return null;
-          }
-        }
-      };
+  @Nullable private static final MethodHandle JNR_UNIX_SOCKET_PATH = findJnrUnixSocketPath();
 
   private final String address;
   @Nullable private final Integer port;
   private final SocketAddress socketAddress;
+
+  @Nullable
+  private static MethodHandle findJnrUnixSocketPath() {
+    try {
+      Class<?> jnrUnixSocketAddress =
+          Class.forName(
+              "jnr.unixsocket.UnixSocketAddress", false, ServerAddress.class.getClassLoader());
+      return MethodHandles.publicLookup()
+          .findVirtual(jnrUnixSocketAddress, "path", MethodType.methodType(String.class));
+    } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException ignored) {
+      return null;
+    }
+  }
 
   @Nullable
   public static MongoNetworkPeer fromSocketAddress(@Nullable SocketAddress socketAddress) {
@@ -79,8 +77,8 @@ public class MongoNetworkPeer {
 
   @Nullable
   private static String getJnrSocketPath(SocketAddress socketAddress) {
-    MethodHandle path = jnrSocketPaths.get(socketAddress.getClass());
-    if (path == null) {
+    MethodHandle path = JNR_UNIX_SOCKET_PATH;
+    if (path == null || !path.type().parameterType(0).isInstance(socketAddress)) {
       return null;
     }
     try {

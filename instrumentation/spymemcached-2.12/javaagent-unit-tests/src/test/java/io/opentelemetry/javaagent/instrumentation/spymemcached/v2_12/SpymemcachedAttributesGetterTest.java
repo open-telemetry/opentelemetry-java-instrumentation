@@ -141,15 +141,22 @@ class SpymemcachedAttributesGetterTest {
   }
 
   @Test
-  void unsupportedHandlingNodeHasNoNetworkAddressOrPort() {
+  void unsupportedRetryHasNoNetworkAddressOrPort() throws UnknownHostException {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
-    MemcachedNode node = mock(MemcachedNode.class);
-    when(node.getSocketAddress())
+    InetSocketAddress peer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
+    request.setHandlingNode(memcachedNode(peer));
+
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.20.30.40");
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(11211);
+
+    MemcachedNode unsupportedNode = mock(MemcachedNode.class);
+    when(unsupportedNode.getSocketAddress())
         .thenReturn(
             new SocketAddress() {
               private static final long serialVersionUID = 1L;
             });
-    request.setHandlingNode(node);
+    request.setRetryHandlingNode(unsupportedNode);
 
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();
