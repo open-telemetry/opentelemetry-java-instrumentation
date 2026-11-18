@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddre
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext;
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -39,11 +38,7 @@ public final class OpenTelemetryCallUtil {
       return;
     }
 
-    if (remoteAddress instanceof InetSocketAddress) {
-      if (((InetSocketAddress) remoteAddress).isUnresolved()) {
-        return;
-      }
-    } else if (SocketAddressUtil.getAddress(remoteAddress) == null) {
+    if (!SocketAddressUtil.hasAddress(remoteAddress)) {
       return;
     }
     requestAndContext.getRequest().setNetworkPeer(remoteAddress);

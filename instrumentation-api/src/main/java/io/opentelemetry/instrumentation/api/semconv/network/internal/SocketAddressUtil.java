@@ -73,6 +73,13 @@ public final class SocketAddressUtil {
     return UnixSocketSupport.getAddress(address);
   }
 
+  public static boolean hasAddress(@Nullable SocketAddress address) {
+    if (address instanceof InetSocketAddress) {
+      return !((InetSocketAddress) address).isUnresolved();
+    }
+    return getAddress(address) != null;
+  }
+
   @Nullable
   public static Integer getPort(@Nullable SocketAddress address) {
     return address instanceof InetSocketAddress
