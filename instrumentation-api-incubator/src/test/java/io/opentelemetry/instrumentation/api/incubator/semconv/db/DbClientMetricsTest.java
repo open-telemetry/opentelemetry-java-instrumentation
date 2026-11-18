@@ -44,8 +44,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class DbClientMetricsTest {
 
-  static final double[] DURATION_BUCKETS =
-      DbClientMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+  static final double[] DURATION_BUCKETS = {
+    0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0
+  };
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 

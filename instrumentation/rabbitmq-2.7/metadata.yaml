@@ -3,6 +3,7 @@ display_name: RabbitMQ
 library_link: https://www.rabbitmq.com/client-libraries/java-api-guide
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 configurations:
   - name: otel.instrumentation.rabbitmq.experimental-span-attributes
     declarative_name: java.rabbitmq.experimental_span_attributes/development

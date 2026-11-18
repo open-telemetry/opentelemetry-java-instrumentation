@@ -2,6 +2,7 @@ display_name: NATS Client
 description: This instrumentation enables messaging spans for NATS message producers and consumers.
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 library_link: https://nats.io/
 configurations:
   - ref: messaging.headers.included

@@ -58,6 +58,7 @@ testing.suites {
 }
 
 dependencies {
+  bootstrap(project(":instrumentation:logback:bootstrap"))
   implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
 
   // pin the version strictly to avoid overriding by dependencyManagement versions

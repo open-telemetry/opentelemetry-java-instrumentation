@@ -20,6 +20,11 @@ Captured MDC, structured, logger context, Logstash marker, and Logstash structur
 attributes may contain sensitive information. Configure included and excluded patterns to limit
 the data exported as log attributes.
 
+MDC capture selects only the application's original event MDC. Trace IDs, span IDs, trace flags,
+resource attributes, and baggage added by the Java agent's Logback MDC instrumentation are available
+to application appenders and log patterns, but are not exported as MDC log attributes. Application-owned
+values under the same names, such as `trace_id`, `service.name`, or `baggage.foo`, remain selectable.
+
 Structured key-value pairs, Logstash markers, and structured arguments are captured by default.
 Use `otel.instrumentation.common.logging.structured-attributes.excluded` to exclude selected keys;
 `*` excludes all structured attributes.
