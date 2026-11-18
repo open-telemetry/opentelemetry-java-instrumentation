@@ -6,15 +6,6 @@ applyTo: "**/*.java,**/*.kt,**/*.scala"
 
 Apply these rules to Java code. The hot-path allocation rules also apply to Kotlin and Scala.
 
-## Hot-path allocation
-
-Avoid allocations on the hot path whenever possible, including iterators. A for-each loop over
-a plain Java array does not allocate an iterator.
-
-Non-allocating Stream API usage is acceptable, but it may not fit the surrounding code. When
-choosing an implementation, weigh the complexity of pre-sizing `collect` sinks and the
-allocations from capturing `forEach` lambdas.
-
 ## Retained lists
 
 When retaining an incoming list as long-lived configuration or metadata:
@@ -26,8 +17,10 @@ When retaining an incoming list as long-lived configuration or metadata:
 
 A fresh `ArrayList` that is already privately owned does not need another copy.
 
-The snapshot isolates the list structure from caller mutation and gives empty and nonempty
-inputs the same stored implementation.
+The snapshot isolates the list structure from caller mutation. Consistent `ArrayList` storage
+helps shared iteration sites see a single concrete list type, making iterator allocations easier
+for HotSpot to eliminate. Mixing list implementations at the same site can prevent that
+optimization.
 
 ## Lambdas and method references
 
