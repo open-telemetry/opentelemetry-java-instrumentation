@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -15,6 +16,10 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.management.DynamicMBean;
 import javax.management.MBeanAttributeInfo;
 import javax.management.MBeanInfo;
@@ -34,11 +39,14 @@ class KafkaProducerMetricsTest {
   @Test
   void collectsProducerAndTopicMetrics() throws Exception {
     MBeanServer server = MBeanServerFactory.newMBeanServer();
+    Map<String, Double> producerAttributes = new HashMap<>();
+    producerAttributes.put("request-latency-avg", 250.0);
+    producerAttributes.put("io-wait-time-ns-avg", 2_000_000_000.0);
     server.registerMBean(
-        numericBean("request-latency-avg", 250.0),
+        numericBean(producerAttributes),
         new ObjectName("kafka.producer:type=producer-metrics,client-id=example-producer"));
     server.registerMBean(
-        numericBean("record-send-rate", 5.5),
+        numericBean(singletonMap("record-send-rate", 5.5)),
         new ObjectName(
             "kafka.producer:type=producer-topic-metrics,client-id=example-producer,topic=events"));
 
@@ -53,6 +61,20 @@ class KafkaProducerMetricsTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
+        metric ->
+            metric
+                .hasName("kafka.producer.io.wait.time.average")
+                .hasUnit("s")
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(2.0)
+                                    .hasAttributes(
+                                        Attributes.of(
+                                            stringKey("messaging.client.id"),
+                                            "example-producer")))),
         metric ->
             metric
                 .hasName("kafka.producer.request.latency.average")
@@ -85,20 +107,23 @@ class KafkaProducerMetricsTest {
                                             "events")))));
   }
 
-  private static DynamicMBean numericBean(String attribute, double value) throws Exception {
+  private static DynamicMBean numericBean(Map<String, Double> attributes) throws Exception {
     DynamicMBean bean = mock(DynamicMBean.class);
+    List<MBeanAttributeInfo> attributeInfo = new ArrayList<>();
+    for (Map.Entry<String, Double> attribute : attributes.entrySet()) {
+      attributeInfo.add(
+          new MBeanAttributeInfo(attribute.getKey(), "double", null, true, false, false));
+      when(bean.getAttribute(attribute.getKey())).thenReturn(attribute.getValue());
+    }
     when(bean.getMBeanInfo())
         .thenReturn(
             new MBeanInfo(
                 DynamicMBean.class.getName(),
                 null,
-                new MBeanAttributeInfo[] {
-                  new MBeanAttributeInfo(attribute, "double", null, true, false, false)
-                },
+                attributeInfo.toArray(new MBeanAttributeInfo[0]),
                 null,
                 null,
                 null));
-    when(bean.getAttribute(attribute)).thenReturn(value);
     return bean;
   }
 }
