@@ -96,27 +96,21 @@ Do not choose a cache solely for `computeIfAbsent`.
 
 ## Observable metric callbacks
 
-The SDK bundled with the javaagent holds a strong reference to the registering thread's context
-class loader (TCCL) and sets it when running the callback.
+The javaagent's SDK holds the callback and the registering thread's context class loader (TCCL)
+strongly. It uses that TCCL to run the callback.
 
-Use `MetricCallbackRegistration.withoutContextClassLoader(...)` only after verifying that the
-callback and its registration work with a null TCCL. Check lazy initialization and supported
-providers or overrides. Create builders and factories before calling the helper.
+- **Class loader.** Keep the existing TCCL unless registration and collection work with a null
+  TCCL, including lazy initialization and supported providers or overrides. Create builders and
+  factories before calling `MetricCallbackRegistration.withoutContextClassLoader(...)`. If using a
+  weak loader reference, define what happens when the loader is gone.
+- **Callback ownership.** Strongly capture a resource only if it should live at least as long as
+  the registration. On every supported shutdown path, close the registration and remove any
+  long-lived registry entries. If the measured object should be collectible while the metric stays
+  registered, do not keep it alive through the callback, measurement function, or other state.
 
-Otherwise, preserve the existing TCCL behavior. A weak loader reference needs a policy for what
-the callback does if the loader is gone.
-
-The SDK holds the callback strongly even with a null TCCL. A callback may hold a resource
-strongly if the resource is meant to live at least as long as the registration. For resources
-that require explicit shutdown, close the registration and remove any long-lived registry
-entries on every supported shutdown path.
-
-If the application can discard a measured object while the metric is still registered,
-instrumentation must not keep it alive. For example, a Micrometer gauge built with
-`Gauge.builder(name, queue, Queue::size)` holds the queue weakly by default so the queue can be
-garbage-collected without unregistering the gauge. Preserve that behavior in the bridge by holding
-the queue weakly and skipping recording once it is gone. Check indirect references too. A
-measurement function that captures the queue would defeat the weak reference.
+For example, a Micrometer gauge built with `Gauge.builder(name, queue, Queue::size)` holds the
+queue weakly by default. Preserve that behavior in the bridge and skip recording once the queue
+is gone.
 
 ## Temporary thread state
 
