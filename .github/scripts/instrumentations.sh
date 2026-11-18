@@ -354,6 +354,7 @@ readonly TEST_LATEST_DEPS_INSTRUMENTATIONS=(
   "couchbase:couchbase-3.2:javaagent:testExceptionSignalLogs"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:test"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testExperimental"
+  "kafka:kafka-clients:kafka-clients-0.11:javaagent:testMetrics"
   "kafka:kafka-clients:kafka-clients-0.11:javaagent:testReceiveTelemetry"
   "kafka:kafka-streams-0.11:javaagent:test"
   "kafka:kafka-streams-0.11:javaagent:testExperimental"

@@ -17,6 +17,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -269,6 +271,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -386,6 +393,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -514,6 +526,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -619,6 +636,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), status.getCode().name()),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -731,6 +753,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), "UNKNOWN"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -1043,6 +1070,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -1169,6 +1201,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), "CANCELLED"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -1302,6 +1339,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -1402,6 +1444,11 @@ public abstract class AbstractGrpcTest {
                                 equalTo(stringKey("rpc.status_code"), "OK"),
                                 equalTo(SERVER_ADDRESS, "localhost"),
                                 equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(
+                                    NETWORK_LOCAL_ADDRESS, testLatestDeps() ? "127.0.0.1" : null),
+                                equalTo(
+                                    NETWORK_LOCAL_PORT,
+                                    testLatestDeps() ? (long) server.getPort() : null),
                                 equalTo(NETWORK_TYPE, "ipv4"),
                                 equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
                                 satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()))
@@ -1671,6 +1718,8 @@ public abstract class AbstractGrpcTest {
     List<AttributeAssertion> result = new ArrayList<>();
     result.addAll(asList(assertions));
     if (testLatestDeps()) {
+      result.add(equalTo(NETWORK_LOCAL_ADDRESS, "127.0.0.1"));
+      result.add(satisfies(NETWORK_LOCAL_PORT, val -> val.isPositive()));
       result.add(equalTo(NETWORK_TYPE, "ipv4"));
       result.add(equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"));
       result.add(satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()));
