@@ -10,6 +10,7 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -39,25 +40,33 @@ public final class CommonConfig {
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
 
     clientRequestHeaders =
-        generalConfig
-            .get("http")
-            .get("client")
-            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
+        Collections.unmodifiableList(
+            new ArrayList<>(
+                generalConfig
+                    .get("http")
+                    .get("client")
+                    .getScalarList("request_captured_headers", String.class, new ArrayList<>())));
     clientResponseHeaders =
-        generalConfig
-            .get("http")
-            .get("client")
-            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
+        Collections.unmodifiableList(
+            new ArrayList<>(
+                generalConfig
+                    .get("http")
+                    .get("client")
+                    .getScalarList("response_captured_headers", String.class, new ArrayList<>())));
     serverRequestHeaders =
-        generalConfig
-            .get("http")
-            .get("server")
-            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
+        Collections.unmodifiableList(
+            new ArrayList<>(
+                generalConfig
+                    .get("http")
+                    .get("server")
+                    .getScalarList("request_captured_headers", String.class, new ArrayList<>())));
     serverResponseHeaders =
-        generalConfig
-            .get("http")
-            .get("server")
-            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
+        Collections.unmodifiableList(
+            new ArrayList<>(
+                generalConfig
+                    .get("http")
+                    .get("server")
+                    .getScalarList("response_captured_headers", String.class, new ArrayList<>())));
     knownHttpRequestMethods =
         new HashSet<>(
             commonConfig

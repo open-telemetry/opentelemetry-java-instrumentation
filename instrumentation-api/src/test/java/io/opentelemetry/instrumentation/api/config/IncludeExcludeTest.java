@@ -49,6 +49,16 @@ class IncludeExcludeTest {
   }
 
   @Test
+  void reusingBuilderDoesNotChangeBuiltSelector() {
+    IncludeExcludeBuilder builder = IncludeExclude.builder().setIncluded("first");
+    IncludeExclude first = builder.build();
+    builder.setIncluded("second");
+
+    assertThat(first.getIncluded()).containsExactly("first");
+    assertThat(builder.build().getIncluded()).containsExactly("second");
+  }
+
+  @Test
   void selectorIsEmptyOnlyWithoutPatterns() {
     assertThat(IncludeExclude.builder().build().isEmpty()).isTrue();
     assertThat(IncludeExclude.builder().setIncluded(singletonList("included")).build().isEmpty())

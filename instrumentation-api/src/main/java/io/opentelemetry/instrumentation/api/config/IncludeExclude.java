@@ -38,8 +38,8 @@ public final class IncludeExclude {
   }
 
   IncludeExclude(List<String> included, List<String> excluded) {
-    this.included = unmodifiableList(new ArrayList<>(included));
-    this.excluded = unmodifiableList(new ArrayList<>(excluded));
+    this.included = unmodifiableList(included);
+    this.excluded = unmodifiableList(excluded);
     this.includedPredicates = createGlobPredicates(included);
     this.excludedPredicates = createGlobPredicates(excluded);
   }

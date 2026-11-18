@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.config;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
@@ -17,8 +16,8 @@ import java.util.List;
 /** A builder for {@link IncludeExclude}. */
 public final class IncludeExcludeBuilder {
 
-  private List<String> included = emptyList();
-  private List<String> excluded = emptyList();
+  private List<String> included = new ArrayList<>();
+  private List<String> excluded = new ArrayList<>();
 
   IncludeExcludeBuilder() {}
 

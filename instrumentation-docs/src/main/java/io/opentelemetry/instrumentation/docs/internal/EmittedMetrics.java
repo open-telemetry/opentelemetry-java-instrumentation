@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import static java.util.Collections.emptyList;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.util.ArrayList;
@@ -27,12 +25,12 @@ public class EmittedMetrics {
 
   public EmittedMetrics() {
     this.when = "";
-    this.metricsByScope = emptyList();
+    this.metricsByScope = new ArrayList<>();
   }
 
   public EmittedMetrics(String when, List<MetricsByScope> metricsByScope) {
     this.when = when;
-    this.metricsByScope = metricsByScope;
+    this.metricsByScope = new ArrayList<>(metricsByScope);
   }
 
   public String getWhen() {
@@ -50,7 +48,7 @@ public class EmittedMetrics {
 
   @JsonProperty("metrics_by_scope")
   public void setMetricsByScope(List<MetricsByScope> metricsByScope) {
-    this.metricsByScope = metricsByScope;
+    this.metricsByScope = new ArrayList<>(metricsByScope);
   }
 
   /**
@@ -63,7 +61,7 @@ public class EmittedMetrics {
 
     public MetricsByScope(String scope, List<Metric> metrics) {
       this.scope = scope;
-      this.metrics = metrics;
+      this.metrics = new ArrayList<>(metrics);
     }
 
     public MetricsByScope() {
@@ -84,7 +82,7 @@ public class EmittedMetrics {
     }
 
     public void setMetrics(List<Metric> metrics) {
-      this.metrics = metrics;
+      this.metrics = new ArrayList<>(metrics);
     }
   }
 
@@ -115,7 +113,7 @@ public class EmittedMetrics {
       this.type = type;
       this.isMonotonic = null;
       this.unit = unit;
-      this.attributes = attributes;
+      this.attributes = new ArrayList<>(attributes);
     }
 
     public Metric(
@@ -130,7 +128,7 @@ public class EmittedMetrics {
       this.type = type;
       this.isMonotonic = isMonotonic;
       this.unit = unit;
-      this.attributes = attributes;
+      this.attributes = new ArrayList<>(attributes);
     }
 
     public Metric() {
@@ -224,7 +222,7 @@ public class EmittedMetrics {
     }
 
     public void setAttributes(List<TelemetryAttribute> attributes) {
-      this.attributes = attributes;
+      this.attributes = new ArrayList<>(attributes);
     }
 
     /**

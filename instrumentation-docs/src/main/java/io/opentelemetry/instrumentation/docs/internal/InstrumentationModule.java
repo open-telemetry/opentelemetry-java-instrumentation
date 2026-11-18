@@ -11,6 +11,7 @@ import static java.util.Objects.requireNonNullElseGet;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -52,9 +53,9 @@ public class InstrumentationModule {
         requireNonNullElse(builder.srcPath, "instrumentation/" + builder.instrumentationName);
     this.namespace = requireNonNullElse(builder.namespace, builder.instrumentationName);
     this.group = requireNonNullElse(builder.group, builder.instrumentationName);
-    this.metrics = requireNonNullElseGet(builder.metrics, HashMap::new);
-    this.spans = requireNonNullElseGet(builder.spans, HashMap::new);
-    this.events = requireNonNullElseGet(builder.events, HashMap::new);
+    this.metrics = copyListMap(requireNonNullElseGet(builder.metrics, HashMap::new));
+    this.spans = copyListMap(requireNonNullElseGet(builder.spans, HashMap::new));
+    this.events = copyListMap(requireNonNullElseGet(builder.events, HashMap::new));
     this.hasStandaloneLibrary = builder.hasStandaloneLibrary;
     this.hasJavaAgent = builder.hasJavaAgent;
     this.metadata = builder.metadata;
@@ -149,15 +150,23 @@ public class InstrumentationModule {
   }
 
   public void setMetrics(Map<String, List<EmittedMetrics.Metric>> metrics) {
-    this.metrics = metrics;
+    this.metrics = copyListMap(metrics);
   }
 
   public void setSpans(Map<String, List<EmittedSpans.Span>> spans) {
-    this.spans = spans;
+    this.spans = copyListMap(spans);
   }
 
   public void setEvents(Map<String, List<EmittedEvents.Event>> events) {
-    this.events = events;
+    this.events = copyListMap(events);
+  }
+
+  private static <T> Map<String, List<T>> copyListMap(Map<String, List<T>> values) {
+    Map<String, List<T>> copy = new HashMap<>(values.size());
+    for (Map.Entry<String, List<T>> entry : values.entrySet()) {
+      copy.put(entry.getKey(), new ArrayList<>(entry.getValue()));
+    }
+    return copy;
   }
 
   /**

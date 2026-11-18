@@ -9,6 +9,8 @@ import static java.util.Objects.requireNonNull;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -39,6 +41,8 @@ public record ConfigurationOption(
     @JsonIgnore @Nullable String id) {
 
   public ConfigurationOption {
+    examples = examples == null ? null : Collections.unmodifiableList(new ArrayList<>(examples));
+
     // A reference entry (`- ref: <id>`) in a metadata.yaml carries only the ref id; it is resolved
     // against the shared configuration registry before use, so it skips the field validation that
     // applies to fully-specified options. Because resolve() replaces the entire entry with the

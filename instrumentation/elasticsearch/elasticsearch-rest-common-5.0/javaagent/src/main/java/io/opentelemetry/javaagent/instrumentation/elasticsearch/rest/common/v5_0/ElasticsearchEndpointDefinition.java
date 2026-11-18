@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.toCollection;
 
@@ -26,7 +25,8 @@ public final class ElasticsearchEndpointDefinition {
   private static final String UNDERSCORE_REPLACEMENT = "0";
 
   private final String endpointName;
-  private final List<Route> routes;
+  private final ArrayList<Route> routes;
+  private final List<Route> routesView;
 
   private final boolean isSearchEndpoint;
 
@@ -35,7 +35,8 @@ public final class ElasticsearchEndpointDefinition {
     this.endpointName = endpointName;
     ArrayList<Route> routeList =
         Arrays.stream(routes).map(Route::new).collect(toCollection(ArrayList::new));
-    this.routes = unmodifiableList(routeList);
+    this.routes = routeList;
+    this.routesView = unmodifiableList(this.routes);
     this.isSearchEndpoint = isSearchEndpoint;
   }
 
@@ -52,7 +53,7 @@ public final class ElasticsearchEndpointDefinition {
       if (route.hasParameters()) {
         Matcher matcher = route.createMatcher(urlPath);
         if (matcher.find()) {
-          for (String key : route.getPathPartNames()) {
+          for (String key : route.getEndpointPattern().pathPartNames) {
             String value = matcher.group(key);
             if (key.contains(UNDERSCORE_REPLACEMENT)) {
               // replace underscore back
@@ -67,7 +68,7 @@ public final class ElasticsearchEndpointDefinition {
   }
 
   public List<Route> getRoutes() {
-    return routes;
+    return routesView;
   }
 
   /**
@@ -121,7 +122,8 @@ public final class ElasticsearchEndpointDefinition {
   public static final class EndpointPattern {
     private static final Pattern PATH_PART_NAMES_PATTERN = Pattern.compile("\\{([^}]+)}");
     private final Pattern pattern;
-    private final List<String> pathPartNames;
+    private final ArrayList<String> pathPartNames;
+    private final List<String> pathPartNamesView;
 
     /**
      * Creates, compiles and caches a regular expression pattern and retrieves a set of
@@ -133,16 +135,15 @@ public final class ElasticsearchEndpointDefinition {
     private EndpointPattern(Route route) {
       pattern = buildRegexPattern(route.getName());
 
+      pathPartNames = new ArrayList<>();
       if (route.hasParameters()) {
-        pathPartNames = new ArrayList<>();
         Matcher matcher = PATH_PART_NAMES_PATTERN.matcher(route.getName());
         while (matcher.find()) {
           String groupName = matcher.group(1).replace("_", UNDERSCORE_REPLACEMENT);
           pathPartNames.add(groupName);
         }
-      } else {
-        pathPartNames = emptyList();
       }
+      pathPartNamesView = unmodifiableList(pathPartNames);
     }
 
     /** Builds a regex pattern from the parameterized route pattern. */
@@ -181,7 +182,7 @@ public final class ElasticsearchEndpointDefinition {
     }
 
     List<String> getPathPartNames() {
-      return pathPartNames;
+      return pathPartNamesView;
     }
   }
 }

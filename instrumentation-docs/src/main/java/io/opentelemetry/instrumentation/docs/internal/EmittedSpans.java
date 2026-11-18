@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import static java.util.Collections.emptyList;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,12 +23,12 @@ public class EmittedSpans {
 
   public EmittedSpans() {
     this.when = "";
-    this.spansByScope = emptyList();
+    this.spansByScope = new ArrayList<>();
   }
 
   public EmittedSpans(String when, List<SpansByScope> spansByScope) {
     this.when = when;
-    this.spansByScope = spansByScope;
+    this.spansByScope = new ArrayList<>(spansByScope);
   }
 
   public String getWhen() {
@@ -48,7 +46,7 @@ public class EmittedSpans {
 
   @JsonProperty("spans_by_scope")
   public void setSpansByScope(List<SpansByScope> spans) {
-    this.spansByScope = spans;
+    this.spansByScope = new ArrayList<>(spans);
   }
 
   /**
@@ -61,12 +59,12 @@ public class EmittedSpans {
 
     public SpansByScope(String scopeName, List<Span> spans) {
       this.scope = scopeName;
-      this.spans = spans;
+      this.spans = new ArrayList<>(spans);
     }
 
     public SpansByScope() {
       this.scope = "";
-      this.spans = emptyList();
+      this.spans = new ArrayList<>();
     }
 
     public String getScope() {
@@ -82,7 +80,7 @@ public class EmittedSpans {
     }
 
     public void setSpans(List<Span> spans) {
-      this.spans = spans;
+      this.spans = new ArrayList<>(spans);
     }
   }
 
@@ -98,7 +96,7 @@ public class EmittedSpans {
 
     public Span(String spanKind, List<TelemetryAttribute> attributes) {
       this.spanKind = spanKind;
-      this.attributes = attributes;
+      this.attributes = new ArrayList<>(attributes);
     }
 
     public Span() {
@@ -121,7 +119,7 @@ public class EmittedSpans {
     }
 
     public void setAttributes(List<TelemetryAttribute> attributes) {
-      this.attributes = attributes;
+      this.attributes = new ArrayList<>(attributes);
     }
   }
 }

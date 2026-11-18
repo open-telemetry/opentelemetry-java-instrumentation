@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.config.bridge;
 
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
 
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -102,7 +101,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
       ConfigProperties configProperties) {
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
         configProperties,
-        emptyList(),
+        new ArrayList<>(),
         JAVA_DECLARATIVE_PREFIX,
         INSTRUMENTATION_PROPERTY_PREFIX,
         true);
@@ -111,7 +110,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
   static DeclarativeConfigProperties createComponentProperties(
       ConfigProperties configProperties, String configPropertyPrefix) {
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
-        configProperties, emptyList(), "", configPropertyPrefix, false);
+        configProperties, new ArrayList<>(), "", configPropertyPrefix, false);
   }
 
   private ConfigPropertiesBackedDeclarativeConfigProperties(
@@ -225,7 +224,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
    */
   @Override
   public DeclarativeConfigProperties getStructured(String name) {
-    List<String> newPath = new ArrayList<>(path);
+    ArrayList<String> newPath = new ArrayList<>(path);
     newPath.add(name);
     return new ConfigPropertiesBackedDeclarativeConfigProperties(
         configProperties, newPath, declarativePrefix, configPropertyPrefix, instrumentationConfig);

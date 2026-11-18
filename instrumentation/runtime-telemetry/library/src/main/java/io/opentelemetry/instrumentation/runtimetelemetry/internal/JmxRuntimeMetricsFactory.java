@@ -17,7 +17,7 @@ import java.util.function.Predicate;
 public class JmxRuntimeMetricsFactory {
   public static List<AutoCloseable> buildObservables(
       boolean emitExperimentalMetrics, Predicate<String> metricNamePredicate, Meter meter) {
-    List<AutoCloseable> observables = new ArrayList<>();
+    ArrayList<AutoCloseable> observables = new ArrayList<>();
     observables.addAll(Classes.registerObservers(meter, metricNamePredicate));
     observables.addAll(Cpu.registerObservers(meter, metricNamePredicate));
     if (metricNamePredicate.test("jvm.cpu.count")) {

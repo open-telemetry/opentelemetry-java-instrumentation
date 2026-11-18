@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static java.util.Collections.emptyList;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 
 import com.google.auto.service.AutoService;
@@ -32,8 +31,9 @@ public class MethodInstrumentationModule extends InstrumentationModule {
     // ensure that there is at least one instrumentation so that muzzle reference collection could
     // work
     if (list.isEmpty()) {
-      return singletonList(
+      list.add(
           new MethodInstrumentation(null, singletonMap(SpanKind.INTERNAL, emptyList())));
+      return list;
     }
     return list;
   }

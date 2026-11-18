@@ -5,11 +5,9 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import static java.util.Collections.emptyList;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import javax.annotation.Nullable;
 
 /**
@@ -20,16 +18,16 @@ import javax.annotation.Nullable;
  */
 public class ManualTelemetryEntry {
   private String when = "default";
-  private List<ManualMetric> metrics = emptyList();
-  private List<ManualSpan> spans = emptyList();
+  private List<ManualMetric> metrics = new ArrayList<>();
+  private List<ManualSpan> spans = new ArrayList<>();
 
   public ManualTelemetryEntry() {}
 
   public ManualTelemetryEntry(
       String when, @Nullable List<ManualMetric> metrics, @Nullable List<ManualSpan> spans) {
     this.when = when;
-    this.metrics = Objects.requireNonNullElse(metrics, emptyList());
-    this.spans = Objects.requireNonNullElse(spans, emptyList());
+    this.metrics = copyList(metrics);
+    this.spans = copyList(spans);
   }
 
   public String getWhen() {
@@ -45,7 +43,7 @@ public class ManualTelemetryEntry {
   }
 
   public void setMetrics(@Nullable List<ManualMetric> metrics) {
-    this.metrics = Objects.requireNonNullElse(metrics, emptyList());
+    this.metrics = copyList(metrics);
   }
 
   public List<ManualSpan> getSpans() {
@@ -53,7 +51,7 @@ public class ManualTelemetryEntry {
   }
 
   public void setSpans(@Nullable List<ManualSpan> spans) {
-    this.spans = Objects.requireNonNullElse(spans, emptyList());
+    this.spans = copyList(spans);
   }
 
   /**
@@ -65,7 +63,7 @@ public class ManualTelemetryEntry {
     private String description = "";
     private String type = "";
     private String unit = "";
-    private List<TelemetryAttribute> attributes = emptyList();
+    private List<TelemetryAttribute> attributes = new ArrayList<>();
 
     public ManualMetric() {}
 
@@ -79,7 +77,7 @@ public class ManualTelemetryEntry {
       this.description = description;
       this.type = type;
       this.unit = unit;
-      this.attributes = Objects.requireNonNullElse(attributes, emptyList());
+      this.attributes = copyList(attributes);
     }
 
     public String getName() {
@@ -119,7 +117,7 @@ public class ManualTelemetryEntry {
     }
 
     public void setAttributes(@Nullable List<TelemetryAttribute> attributes) {
-      this.attributes = Objects.requireNonNullElse(attributes, emptyList());
+      this.attributes = copyList(attributes);
     }
   }
 
@@ -131,13 +129,13 @@ public class ManualTelemetryEntry {
     @JsonProperty("span_kind")
     private String spanKind = "";
 
-    private List<TelemetryAttribute> attributes = emptyList();
+    private List<TelemetryAttribute> attributes = new ArrayList<>();
 
     public ManualSpan() {}
 
     public ManualSpan(String spanKind, @Nullable List<TelemetryAttribute> attributes) {
       this.spanKind = spanKind;
-      this.attributes = Objects.requireNonNullElse(attributes, emptyList());
+      this.attributes = copyList(attributes);
     }
 
     @JsonProperty("span_kind")
@@ -155,7 +153,11 @@ public class ManualTelemetryEntry {
     }
 
     public void setAttributes(@Nullable List<TelemetryAttribute> attributes) {
-      this.attributes = Objects.requireNonNullElse(attributes, emptyList());
+      this.attributes = copyList(attributes);
     }
+  }
+
+  private static <T> List<T> copyList(@Nullable List<T> values) {
+    return values == null ? new ArrayList<>() : new ArrayList<>(values);
   }
 }

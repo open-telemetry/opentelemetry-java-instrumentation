@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 
 /**
@@ -35,7 +36,8 @@ final class CapturedHttpHeaders {
   @Nullable private final Set<String> exactOnlyNames;
   // the header names that the selector includes literally, which are looked up directly so that
   // getters which do not enumerate header names keep working
-  private final List<String> exactNames;
+  private final ArrayList<String> exactNames;
+  private final List<String> exactNamesView;
   private final Map<String, AttributeKey<List<String>>> exactAttributeKeys;
   // whether the selector can match header names that are not listed in exactNames, which requires
   // enumerating the header names of each request or response
@@ -83,7 +85,8 @@ final class CapturedHttpHeaders {
         }
       }
     }
-    this.exactNames = unmodifiableList(new ArrayList<>(names));
+    this.exactNames = new ArrayList<>(names);
+    this.exactNamesView = unmodifiableList(exactNames);
     this.exactAttributeKeys = createAttributeKeys(type, exactNames);
     this.enumerateNames = enumerate;
   }
@@ -97,7 +100,13 @@ final class CapturedHttpHeaders {
   }
 
   List<String> exactNames() {
-    return exactNames;
+    return exactNamesView;
+  }
+
+  void forEachExactName(Consumer<String> consumer) {
+    for (String name : exactNames) {
+      consumer.accept(name);
+    }
   }
 
   /** Returns the lowercase names of the captured headers among {@code enumeratedNames}. */

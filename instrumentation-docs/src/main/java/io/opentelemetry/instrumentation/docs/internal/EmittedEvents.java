@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.docs.internal;
 
-import static java.util.Collections.emptyList;
-
 import com.fasterxml.jackson.annotation.JsonProperty;
 import java.util.ArrayList;
 import java.util.List;
@@ -26,12 +24,12 @@ public class EmittedEvents {
 
   public EmittedEvents() {
     this.when = "";
-    this.eventsByScope = emptyList();
+    this.eventsByScope = new ArrayList<>();
   }
 
   public EmittedEvents(String when, List<EventsByScope> eventsByScope) {
     this.when = when;
-    this.eventsByScope = eventsByScope;
+    this.eventsByScope = new ArrayList<>(eventsByScope);
   }
 
   public String getWhen() {
@@ -49,7 +47,7 @@ public class EmittedEvents {
 
   @JsonProperty("events_by_scope")
   public void setEventsByScope(List<EventsByScope> events) {
-    this.eventsByScope = events;
+    this.eventsByScope = new ArrayList<>(events);
   }
 
   /**
@@ -62,12 +60,12 @@ public class EmittedEvents {
 
     public EventsByScope(String scopeName, List<Event> events) {
       this.scope = scopeName;
-      this.events = events;
+      this.events = new ArrayList<>(events);
     }
 
     public EventsByScope() {
       this.scope = "";
-      this.events = emptyList();
+      this.events = new ArrayList<>();
     }
 
     public String getScope() {
@@ -83,7 +81,7 @@ public class EmittedEvents {
     }
 
     public void setEvents(List<Event> events) {
-      this.events = events;
+      this.events = new ArrayList<>(events);
     }
   }
 
@@ -101,7 +99,7 @@ public class EmittedEvents {
     public Event(String name, @Nullable String severity, List<TelemetryAttribute> attributes) {
       this.name = name;
       this.severity = severity;
-      this.attributes = attributes;
+      this.attributes = new ArrayList<>(attributes);
     }
 
     public Event() {
@@ -131,7 +129,7 @@ public class EmittedEvents {
     }
 
     public void setAttributes(List<TelemetryAttribute> attributes) {
-      this.attributes = attributes;
+      this.attributes = new ArrayList<>(attributes);
     }
   }
 }

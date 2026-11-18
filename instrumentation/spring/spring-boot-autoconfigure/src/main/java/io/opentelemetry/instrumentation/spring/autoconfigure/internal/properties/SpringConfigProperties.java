@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.resources.internal.ResourceProviderPrope
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -68,36 +69,39 @@ public class SpringConfigProperties implements ConfigProperties {
     Map<String, List<String>> values = new HashMap<>();
 
     // SDK
-    values.put(ENABLED_KEY, otelSpringProperties.getJavaEnabledResourceProviders());
-    values.put(DISABLED_KEY, otelSpringProperties.getJavaDisabledResourceProviders());
+    values.put(
+        ENABLED_KEY, new ArrayList<>(otelSpringProperties.getJavaEnabledResourceProviders()));
+    values.put(
+        DISABLED_KEY, new ArrayList<>(otelSpringProperties.getJavaDisabledResourceProviders()));
     values.put(
         "otel.experimental.metrics.view.config",
-        otelSpringProperties.getExperimentalMetricsViewConfig());
+        new ArrayList<>(otelSpringProperties.getExperimentalMetricsViewConfig()));
     values.put(
         "otel.experimental.resource.disabled.keys",
-        otelSpringProperties.getExperimentalResourceDisabledKeys());
-    values.put("otel.propagators", otelSpringProperties.getPropagators());
+        new ArrayList<>(otelSpringProperties.getExperimentalResourceDisabledKeys()));
+    values.put("otel.propagators", new ArrayList<>(otelSpringProperties.getPropagators()));
 
     // exporters
-    values.put("otel.logs.exporter", otelSpringProperties.getLogsExporter());
-    values.put("otel.metrics.exporter", otelSpringProperties.getMetricsExporter());
-    values.put("otel.traces.exporter", otelSpringProperties.getTracesExporter());
+    values.put("otel.logs.exporter", new ArrayList<>(otelSpringProperties.getLogsExporter()));
+    values.put("otel.metrics.exporter", new ArrayList<>(otelSpringProperties.getMetricsExporter()));
+    values.put("otel.traces.exporter", new ArrayList<>(otelSpringProperties.getTracesExporter()));
 
     // instrumentations
     values.put(
         "otel.instrumentation.http.client.capture-request-headers",
-        otelSpringProperties.getHttpClientCaptureRequestHeaders());
+        new ArrayList<>(otelSpringProperties.getHttpClientCaptureRequestHeaders()));
     values.put(
         "otel.instrumentation.http.client.capture-response-headers",
-        otelSpringProperties.getHttpClientCaptureResponseHeaders());
+        new ArrayList<>(otelSpringProperties.getHttpClientCaptureResponseHeaders()));
     values.put(
         "otel.instrumentation.http.server.capture-request-headers",
-        otelSpringProperties.getHttpServerCaptureRequestHeaders());
+        new ArrayList<>(otelSpringProperties.getHttpServerCaptureRequestHeaders()));
     values.put(
         "otel.instrumentation.http.server.capture-response-headers",
-        otelSpringProperties.getHttpServerCaptureResponseHeaders());
+        new ArrayList<>(otelSpringProperties.getHttpServerCaptureResponseHeaders()));
     values.put(
-        "otel.instrumentation.http.known-methods", otelSpringProperties.getHttpKnownMethods());
+        "otel.instrumentation.http.known-methods",
+        new ArrayList<>(otelSpringProperties.getHttpKnownMethods()));
 
     return values;
   }

@@ -20,6 +20,7 @@ import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoCo
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -136,6 +137,22 @@ class SpringConfigPropertiesTest {
             context ->
                 assertThat(getConfig(context).getList(key))
                     .containsExactlyInAnyOrderElementsOf(expected));
+  }
+
+  @Test
+  void listPropertiesAreSnapshotsOfSpringBinderValues() {
+    this.contextRunner.run(
+        context -> {
+          OtelSpringProperties springProperties = context.getBean(OtelSpringProperties.class);
+          List<String> propagators = new ArrayList<>(singletonList("tracecontext"));
+          springProperties.setPropagators(propagators);
+
+          SpringConfigProperties config = getConfig(context, emptyMap());
+          propagators.add("baggage");
+
+          assertThat(config.getList("otel.propagators")).containsExactly("tracecontext");
+          assertThat(springProperties.getPropagators()).containsExactly("tracecontext", "baggage");
+        });
   }
 
   @Test

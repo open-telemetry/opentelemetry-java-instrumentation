@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.docs.internal;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -21,6 +23,10 @@ import javax.annotation.Nullable;
  */
 public record DeclarativeSchema(
     String type, @Nullable List<String> required, Map<String, Property> properties) {
+
+  public DeclarativeSchema {
+    required = required == null ? null : Collections.unmodifiableList(new ArrayList<>(required));
+  }
 
   /**
    * A single property within a {@link DeclarativeSchema}. This class is internal and is hence not

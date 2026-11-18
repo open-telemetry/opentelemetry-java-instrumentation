@@ -91,7 +91,7 @@ public final class RuntimeTelemetryBuilder {
 
     List<AutoCloseable> observables =
         disableJmx
-            ? emptyList()
+            ? new ArrayList<>()
             : JmxRuntimeMetricsFactory.buildObservables(
                 emitExperimentalMetrics,
                 metricName -> !jfrMetricNames.contains(metricName),
