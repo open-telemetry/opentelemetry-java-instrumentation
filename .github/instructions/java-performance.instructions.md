@@ -13,14 +13,12 @@ When retaining an incoming list as long-lived configuration or metadata:
 - Take a private `ArrayList` snapshot, including for empty inputs.
 - Use that owned copy consistently internally, and treat it as read-only after initialization.
 - Preserve unmodifiable views when exposing the list.
-- Enhanced-for traversal is fine; arrays or indexed loops are not required.
 
 A fresh `ArrayList` that is already privately owned does not need another copy.
 
-The snapshot isolates the list structure from caller mutation. Consistent `ArrayList` storage
-helps shared iteration sites see a single concrete list type, making iterator allocations easier
-for HotSpot to eliminate. Mixing list implementations at the same site can prevent that
-optimization.
+The snapshot isolates the list structure from caller mutation. Using one concrete list
+implementation at shared iteration sites enables HotSpot to eliminate iterator allocations.
+Mixing implementations at the same site can prevent that optimization.
 
 ## Lambdas and method references
 
