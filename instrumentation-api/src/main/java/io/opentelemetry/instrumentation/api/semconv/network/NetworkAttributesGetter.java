@@ -79,8 +79,7 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * <p>Implementing this method is equivalent to implementing both {@link
    * #getNetworkLocalAddress(Object, Object)} and {@link #getNetworkLocalPort(Object, Object)}.
    *
-   * @deprecated Use {@link #getNetworkLocalSocketAddress(Object, Object)} instead. This method will
-   *     be removed in the next major version.
+   * @deprecated Use {@link #getNetworkLocalSocketAddress(Object, Object)} instead.
    */
   @Deprecated
   @Nullable
@@ -140,8 +139,7 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * <p>Implementing this method is equivalent to implementing both {@link
    * #getNetworkPeerAddress(Object, Object)} and {@link #getNetworkPeerPort(Object, Object)}.
    *
-   * @deprecated Use {@link #getNetworkPeerSocketAddress(Object, Object)} instead. This method will
-   *     be removed in the next major version.
+   * @deprecated Use {@link #getNetworkPeerSocketAddress(Object, Object)} instead.
    */
   @Deprecated
   @Nullable
