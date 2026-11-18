@@ -2,6 +2,47 @@
 
 ## Unreleased
 
+### 📈 Enhancements
+
+- Update the OpenTelemetry SDK version to 1.68.0.
+  ([#21245](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21245))
+- Avoid redundant context propagation for executor tasks already wrapped by OpenTelemetry.
+  ([#21273](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21273))
+- Reduce span-context conversions in the Java agent's OpenTelemetry API bridge.
+  ([#21287](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21287))
+- Support Pekko 2.x and Pekko HTTP 2.0 milestones.
+  ([#21288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21288))
+
+### 🛠️ Bug fixes
+
+- Fix lost Apache HttpAsyncClient callbacks when a resolved target address has no explicit port.
+  ([#21062](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21062))
+- Fix `@SpanAttribute` parameter capture on top-level Kotlin suspend functions.
+  ([#21180](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21180))
+- Fix exceptions and resource leaks when OpenAI chat streams are closed before a finish reason arrives.
+  ([#21271](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21271))
+- Show metric names correctly in JMX metric-selection debug logs.
+  ([#21272](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21272))
+- Finish R2DBC query spans when filtered results complete, fail, or are cancelled.
+  ([#21274](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21274))
+- Preserve Kafka consumer next-offset metadata when wrapping records.
+  ([#21275](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21275))
+- Suppress internal receive spans when dispatching message listeners in Pulsar 4.2.5 and newer.
+  ([#21275](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21275))
+- Fix Pekko HTTP 1.1 server context propagation and prevent context leaks between concurrent
+  Pekko HTTP requests.
+  ([#21282](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21282),
+  [#21288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21288))
+- Prevent application context from propagating into HikariCP maintenance tasks.
+  ([#21283](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21283))
+- Fix duplicated Vert.x HTTP server routes in handler chains.
+  ([#21285](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21285))
+- Fix Spring MVC startup failures caused by conflicting Spring versions across Tomcat classloaders.
+  ([#21286](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21286))
+- Prevent Akka HTTP and Pekko HTTP client response futures from hanging when their dispatcher is
+  blocked or rejects callbacks.
+  ([#21288](https://github.com/open-telemetry/opentelemetry-java-instrumentation/pull/21288))
+
 ## Version 2.33.1 (2026-10-26)
 
 This release targets the OpenTelemetry SDK 1.67.0.
