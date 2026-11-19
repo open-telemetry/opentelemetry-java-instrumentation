@@ -223,7 +223,7 @@ class ApacheHttpClientTest {
     protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
       super.configure(optionsBuilder);
       // apparently apache http client does not report the 302 status code?
-      optionsBuilder.setResponseCodeOnRedirectError(null);
+      optionsBuilder.setExpectResponseCodeOnRedirectError(false);
 
       if (testLatestDeps()) {
         optionsBuilder.disableTestHttps();
