@@ -161,6 +161,10 @@ jobs:
         if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
         run: python3 -m unittest discover -s .github/scripts -p test_smoke_test_publication.py
 
+      - name: Test smoke-test image adoption
+        if: ${{ !cancelled() && steps.checkout.outcome == 'success' }}
+        run: python3 -m unittest discover -s .github/scripts -p test_smoke_test_image_adoption.py
+
   # every check runs even if an earlier one fails so all failures are visible
   repo-checks:
     runs-on: ubuntu-slim

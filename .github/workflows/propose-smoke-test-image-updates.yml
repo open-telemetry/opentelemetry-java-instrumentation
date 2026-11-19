@@ -1,0 +1,107 @@
+name: Propose smoke-test image updates
+
+on:
+  workflow_run:
+    workflows:
+      - Publish fake backend images for smoke tests
+      - Publish Servlet images for smoke tests
+      - Publish gRPC images for smoke tests
+      - Publish Play images for smoke tests
+      - Publish Quarkus images for smoke tests
+      - Publish Security Manager test app images for smoke tests
+      - Publish Spring Boot images for smoke tests
+    types:
+      - completed
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      run-id:
+        description: Publisher workflow run ID to validate
+        required: true
+        type: string
+      run-attempt:
+        description: Exact publisher run attempt to validate
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  actions: read
+  packages: read
+  pull-requests: read
+
+concurrency:
+  group: >-
+    ${{ github.event_name == 'workflow_run' &&
+    github.event.workflow_run.conclusion == 'success' &&
+    'smoke-test-image-adoption-main' ||
+    format('smoke-test-image-adoption-noop-{0}', github.run_id) }}
+  cancel-in-progress: false
+
+jobs:
+  propose:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      actions: read
+      packages: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Set up JDK for trusted servlet variant discovery
+        uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - name: Set up Gradle
+        uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
+        with:
+          cache-read-only: true
+
+      - name: Login to GitHub package registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - id: validate
+        name: Validate eligible publications (read-only)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_ID: ${{ inputs.run-id }}
+          RUN_ATTEMPT: ${{ inputs.run-attempt }}
+        run: |
+          if [[ "$GITHUB_EVENT_NAME" == "workflow_dispatch" ]]; then
+            python3 .github/scripts/smoke_test_image_adoption.py \
+              --run-id "$RUN_ID" --run-attempt "$RUN_ATTEMPT" --dry-run
+          else
+            python3 .github/scripts/smoke_test_image_adoption.py --dry-run
+          fi
+
+      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+        id: otelbot-token
+        if: steps.validate.outputs.has-updates == 'true' && github.event_name == 'workflow_run'
+        with:
+          client-id: ${{ vars.OTELBOT_JAVA_INSTRUMENTATION_CLIENT_ID }}
+          private-key: ${{ secrets.OTELBOT_JAVA_INSTRUMENTATION_PRIVATE_KEY }}
+          permission-contents: write
+          permission-pull-requests: write
+
+      - name: Update the shared adoption PR
+        if: steps.validate.outputs.has-updates == 'true' && github.event_name == 'workflow_run'
+        env:
+          GH_READ_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
+        run: python3 .github/scripts/smoke_test_image_adoption.py --apply
