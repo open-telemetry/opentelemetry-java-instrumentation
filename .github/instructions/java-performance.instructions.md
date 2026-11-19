@@ -9,13 +9,11 @@ Apply these rules to Java code. The hot-path allocation rules also apply to Kotl
 ## Hot-path iteration
 
 On a hot path, do not let one enhanced `for` loop iterate over different collection classes, such as
-an `ArrayList` on some calls and a `LinkedHashSet` or `emptyList()` on others. Choosing between
-collections through a variable, a parameter, or a helper's return value still sends them through
-the same loop. HotSpot can fail to eliminate the iterator allocation when a loop sees more than one
-class. This covers sets and map views too. It does not cover collections used only for lookup, such
-as `contains` or `get`.
+an `ArrayList` on some calls and a `LinkedHashSet` or `emptyList()` on others, whether the loop gets
+them from a field, a variable, a parameter, or a helper. HotSpot can fail to eliminate the iterator
+allocation when a loop sees more than one class. This covers sets and map views too.
 
-If the loop iterates a list the class retains, copy it where the constructor stores it:
+If the loop iterates a list field, copy the list where the constructor stores it:
 
 - Store `new ArrayList<>(list)`, whatever the source: a caller, a builder, a helper, `emptyList()`,
   or `collect(toList())`. Skip the copy when the constructor built the `ArrayList` itself.
