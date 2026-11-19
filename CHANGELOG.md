@@ -510,7 +510,8 @@
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.
 - Deprecate `SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS` in favor of `SqlDialect.UNKNOWN`, and
-  `SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS` in favor of `SqlDialect.forDbSystemName(String)`.
+  `SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS` in favor of `SqlDialect.forDbSystemName(String)`
+  or `SqlDialect.builder()`.
 
 ## Version 2.32.0 (2026-10-03)
 

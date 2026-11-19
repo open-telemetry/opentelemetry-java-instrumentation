@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
 import com.google.auto.value.AutoValue;
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import javax.annotation.Nullable;
 
 /** Describes SQL dialect options that affect how {@link SqlQueryAnalyzer} processes queries. */
@@ -34,8 +35,8 @@ public abstract class SqlDialect {
    * therefore left intact during sanitization. Use this only for databases where double quotes
    * always denote identifiers.
    *
-   * @deprecated Use {@link #forDbSystemName(String)} instead. May be removed in the next minor
-   *     release.
+   * @deprecated Use {@link #forDbSystemName(String)} or {@link #builder()} instead. May be removed
+   *     in the next minor release.
    */
   @Deprecated public static final SqlDialect DOUBLE_QUOTES_ARE_IDENTIFIERS = IDENTIFIERS;
 
@@ -94,11 +95,15 @@ public abstract class SqlDialect {
     }
   }
 
-  SqlDialect() {}
-
-  static Builder builder() {
+  /**
+   * Returns a builder for explicit dialect options. By default, double-quoted fragments are treated
+   * as string literals, as with {@link #UNKNOWN}.
+   */
+  public static Builder builder() {
     return new AutoValue_SqlDialect.Builder().setDoubleQuotesAreIdentifiers(false);
   }
+
+  SqlDialect() {}
 
   /**
    * Returns {@code true} if the dialect uses double quotes for identifiers, {@code false} if double
@@ -106,13 +111,20 @@ public abstract class SqlDialect {
    */
   abstract boolean doubleQuotesAreIdentifiers();
 
+  /** Builder for SQL dialect options. */
   @AutoValue.Builder
-  abstract static class Builder {
+  public abstract static class Builder {
 
     Builder() {}
 
-    abstract Builder setDoubleQuotesAreIdentifiers(boolean doubleQuotesAreIdentifiers);
+    /**
+     * Sets whether double-quoted fragments are identifiers and preserved, rather than string
+     * literals that are sanitized. Use {@code true} only when double quotes always denote
+     * identifiers.
+     */
+    @CanIgnoreReturnValue
+    public abstract Builder setDoubleQuotesAreIdentifiers(boolean doubleQuotesAreIdentifiers);
 
-    abstract SqlDialect build();
+    public abstract SqlDialect build();
   }
 }

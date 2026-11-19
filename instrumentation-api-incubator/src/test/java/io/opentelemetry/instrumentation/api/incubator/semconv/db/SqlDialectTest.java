@@ -9,11 +9,21 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import java.util.stream.Stream;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 
 class SqlDialectTest {
+
+  @Test
+  void builderDefaultsToStringLiterals() {
+    assertThat(
+            SqlQueryAnalyzer.create(true)
+                .analyze("SELECT \"name\" FROM catalog WHERE id = 42", SqlDialect.builder().build())
+                .getQueryText())
+        .isEqualTo("SELECT ? FROM catalog WHERE id = ?");
+  }
 
   @ParameterizedTest
   @MethodSource("doubleQuotedQueries")
