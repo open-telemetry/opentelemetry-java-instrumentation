@@ -18,7 +18,9 @@ from smoke_test_image_adoption import (
     latest_successful_run,
     no_window_flags,
     publication_id,
+    publication_id_matches,
     reconcile,
+    refresh_pr_body,
     replace_body_section,
     require_expected_remote_head,
     update_pin,
@@ -86,6 +88,20 @@ class AdoptionTest(unittest.TestCase):
         run["run_started_at"] = "2026-11-20T01:00:00Z"
         self.assertEqual(publication_id(run), "20261120.123456000002")
 
+    def test_publication_id_allows_the_tag_step_to_cross_utc_midnight(self):
+        run = run_record(run_id=123456, attempt=2)
+        run["run_started_at"] = "2026-11-19T23:59:30Z"
+        run["updated_at"] = "2026-11-20T00:02:00Z"
+        self.assertTrue(
+            publication_id_matches(run, "20261120.123456000002")
+        )
+        self.assertFalse(
+            publication_id_matches(run, "20261121.123456000002")
+        )
+        self.assertFalse(
+            publication_id_matches(run, "20261120.123456000003")
+        )
+
     def test_candidate_requires_complete_family_and_exact_provenance(self):
         run = run_record()
         expected = expected_references("fake-backend", publication_id(run))
@@ -106,17 +122,21 @@ class AdoptionTest(unittest.TestCase):
             with self.subTest(candidate=invalid), self.assertRaises(AdoptionError):
                 validate_candidate(invalid, run, "fake-backend", 123456, 1, expected)
 
-    def test_complete_candidates_for_each_non_servlet_family(self):
+    def test_complete_candidates_for_each_family(self):
         for family in FAMILIES:
-            if family == "servlet":
-                continue
             with self.subTest(family=family):
                 run = run_record(family)
-                expected = expected_references(family, publication_id(run))
+                if family == "servlet":
+                    expected = {
+                        f"ghcr.io/{REPOSITORY}/smoke-test-servlet-wildfly:"
+                        f"13.0.0.Final-jdk8-{publication_id(run)}"
+                    }
+                else:
+                    expected = expected_references(family, publication_id(run))
                 self.assertEqual(
                     set(
                         validate_candidate(
-                            candidate_record(run, family),
+                            candidate_record(run, family, expected),
                             run,
                             family,
                             run["id"],
@@ -222,6 +242,60 @@ class AdoptionTest(unittest.TestCase):
                 "fake-backend",
             )
 
+    def test_api_pagination_accepts_rest_array_responses(self):
+        from smoke_test_image_adoption import GitHub
+
+        api = GitHub.__new__(GitHub)
+        with patch.object(api, "request", return_value=[{"number": 123}]):
+            self.assertEqual(api.pages("pulls?state=open"), [{"number": 123}])
+
+    def test_manual_validation_verifies_the_requested_publication(self):
+        current = pin_files()
+        run = run_record(run_id=123456, attempt=2)
+        main_sha = "c" * 40
+
+        class FakeGitHub:
+            def main_sha(self):
+                return main_sha
+
+            def run_attempt(self, run_id, attempt):
+                self.assert_requested = (run_id, attempt)
+                return run
+
+            def workflow_runs(self, _family):
+                raise AssertionError("manual validation must not select another run")
+
+            def compare(self, _base, _head):
+                raise AssertionError("the mocked ordering check should be used")
+
+        api = FakeGitHub()
+        verified = (run, TAG, "https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/runs/123456")
+        previous = run_record(run_id=100, sha="b" * 40)
+        with (
+            patch(
+                "smoke_test_image_adoption.prepare_branch",
+                return_value=(main_sha, current, current, None, None),
+            ),
+            patch(
+                "smoke_test_image_adoption.verify_eligible_run",
+                return_value=verified,
+            ) as verify,
+            patch(
+                "smoke_test_image_adoption.resolve_pinned_run",
+                return_value=previous,
+            ),
+            patch("smoke_test_image_adoption.is_newer_run", return_value=True),
+        ):
+            message, has_updates = reconcile(
+                api, ROOT, (run["id"], run["run_attempt"], None), False
+            )
+
+        verify.assert_called_once_with(api, run, "fake-backend", main_sha, ROOT)
+        self.assertEqual(api.assert_requested, (run["id"], run["run_attempt"]))
+        self.assertTrue(has_updates)
+        self.assertIn(f"{image_pin(current, 'fake-backend')} -> {TAG}", message)
+        self.assertIn(verified[2], message)
+
     def test_unexpected_branch_edits_or_authors_are_rejected(self):
         base = pin_files()
         updated, _ = update_pin(base, "fake-backend", TAG)
@@ -312,6 +386,37 @@ class AdoptionTest(unittest.TestCase):
         self.assertTrue(updated.endswith("Human context after."))
         self.assertIn(BODY_START, updated)
         self.assertIn(BODY_END, updated)
+
+    def test_pr_body_refresh_preserves_or_refuses_concurrent_human_edits(self):
+        base = pin_files()
+        branch, _ = update_pin(base, "fake-backend", TAG)
+        original_body = (
+            "Human context before.\n\n"
+            + generated_body({"fake-backend": ("20260825.1", "20261119.1", "1")})
+            + "\n\nHuman context after."
+        )
+        pr = {"number": 123, "body": original_body}
+        family_links = {
+            "fake-backend": (
+                "https://github.com/open-telemetry/"
+                "opentelemetry-java-instrumentation/actions/runs/123456"
+            )
+        }
+
+        class FakeGitHub:
+            body = original_body
+
+            def get_pr(self, _number):
+                return {"number": 123, "body": self.body}
+
+        api = FakeGitHub()
+        refreshed = refresh_pr_body(api, pr, base, branch, family_links)
+        self.assertTrue(refreshed.startswith("Human context before."))
+        self.assertTrue(refreshed.endswith("Human context after."))
+
+        api.body = original_body.replace("Human context after.", "Updated by a human.")
+        with self.assertRaisesRegex(AdoptionError, "body changed during update"):
+            refresh_pr_body(api, pr, base, branch, family_links)
 
     def test_python_subprocesses_do_not_open_windows(self):
         with patch.object(sys, "platform", "win32"), patch.object(

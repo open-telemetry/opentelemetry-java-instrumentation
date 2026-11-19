@@ -148,7 +148,13 @@ class StripCrossHostAuthorization(HTTPRedirectHandler):
         redirected = super().redirect_request(
             request, file, code, message, headers, new_url
         )
-        if redirected and urlparse(request.full_url).netloc != urlparse(new_url).netloc:
+        source = urlparse(request.full_url)
+        target = urlparse(new_url)
+        if redirected and (
+            source.scheme != target.scheme
+            or source.netloc != target.netloc
+            or target.scheme != "https"
+        ):
             for name in ("Authorization", "Cookie", "Proxy-Authorization"):
                 redirected.remove_header(name)
         return redirected
@@ -189,7 +195,7 @@ class GitHub:
         except (URLError, TimeoutError) as error:
             raise AdoptionError(f"GitHub API request failed: {type(error).__name__}") from None
 
-    def pages(self, path, key):
+    def pages(self, path, key=None):
         page = 1
         values = []
         while True:
@@ -198,8 +204,9 @@ class GitHub:
                 "GET",
                 f"{path}{separator}{urlencode({'per_page': 100, 'page': page})}",
             )
-            values.extend(response[key])
-            if len(response[key]) < 100:
+            page_values = response if key is None else response[key]
+            values.extend(page_values)
+            if len(page_values) < 100:
                 return values
             page += 1
 
@@ -269,7 +276,7 @@ class GitHub:
         query = urlencode(
             {"state": "open", "head": f"open-telemetry:{ADOPTION_BRANCH}"}
         )
-        return self.pages(f"pulls?{query}", "pulls")
+        return self.pages(f"pulls?{query}")
 
     def create_pr(self, body):
         return self.request(
@@ -283,6 +290,9 @@ class GitHub:
                 "draft": True,
             },
         )
+
+    def get_pr(self, number):
+        return self.request("GET", f"pulls/{number}")
 
     def update_pr_body(self, number, body):
         return self.request("PATCH", f"pulls/{number}", {"body": body})
@@ -304,6 +314,36 @@ def publication_id(run):
     return (
         f"{created.astimezone(timezone.utc):%Y%m%d}."
         f"{run['id']}{int(run['run_attempt']):06d}"
+    )
+
+
+def publication_id_matches(run, value):
+    if not isinstance(value, str) or not VERSION_PATTERN.fullmatch(value):
+        return False
+    tag_date, suffix = value.split(".", 1)
+    if suffix != f"{run['id']}{int(run['run_attempt']):06d}":
+        return False
+    try:
+        published_date = datetime.strptime(tag_date, "%Y%m%d").date()
+        started = datetime.fromisoformat(
+            (run.get("run_started_at") or run["created_at"]).replace("Z", "+00:00")
+        )
+        finished = datetime.fromisoformat(
+            (
+                run.get("completed_at")
+                or run.get("updated_at")
+                or run.get("run_started_at")
+                or run["created_at"]
+            ).replace("Z", "+00:00")
+        )
+    except (AttributeError, KeyError, TypeError, ValueError):
+        return False
+    if started.tzinfo is None or finished.tzinfo is None:
+        return False
+    return (
+        started.astimezone(timezone.utc).date()
+        <= published_date
+        <= finished.astimezone(timezone.utc).date()
     )
 
 
@@ -403,7 +443,7 @@ def validate_candidate(candidate, run, family_name, run_id, attempt, expected_im
         or candidate["workflow"] != expected_workflow_ref(family_name)
         or str(candidate["run_id"]) != str(run_id)
         or str(candidate["run_attempt"]) != str(attempt)
-        or candidate["publication_id"] != publication_id(run)
+        or not publication_id_matches(run, candidate["publication_id"])
     ):
         raise AdoptionError("candidate provenance does not match the successful publisher run")
     if not isinstance(candidate["images"], list):
@@ -559,10 +599,13 @@ def replace_body_section(body, generated):
     return body[:start] + generated + body[end:]
 
 
-def expected_servlet_images(repo_root, source_sha, tag):
+def expected_servlet_images(repo_root, trusted_sha, tag):
     with tempfile.TemporaryDirectory(prefix="smoke-test-adoption-") as directory:
         source = Path(directory) / "source"
-        run_process(["git", "worktree", "add", "--detach", str(source), source_sha], cwd=repo_root)
+        run_process(
+            ["git", "worktree", "add", "--detach", str(source), trusted_sha],
+            cwd=repo_root,
+        )
         try:
             run_process(
                 [
@@ -583,16 +626,16 @@ def expected_servlet_images(repo_root, source_sha, tag):
             run_process(["git", "worktree", "remove", "--force", str(source)], cwd=repo_root)
 
 
-def expected_images_for(family_name, tag, repo_root, source_sha):
+def expected_images_for(family_name, tag, repo_root, trusted_sha):
     if family_name == "servlet":
-        return expected_servlet_images(repo_root, source_sha, tag)
+        return expected_servlet_images(repo_root, trusted_sha, tag)
     if family_name == "fake-backend":
         return expected_references(family_name, tag)
     reusable_workflow = run_process(
         [
             "git",
             "show",
-            f"{source_sha}:.github/workflows/reusable-publish-smoke-test-images.yml",
+            f"{trusted_sha}:.github/workflows/reusable-publish-smoke-test-images.yml",
         ],
         cwd=repo_root,
     )
@@ -603,7 +646,7 @@ def expected_images_for(family_name, tag, repo_root, source_sha):
         [
             "git",
             "show",
-            f"{source_sha}:.github/workflows/publish-smoke-test-{family_name}-images.yml",
+            f"{trusted_sha}:.github/workflows/publish-smoke-test-{family_name}-images.yml",
         ],
         cwd=repo_root,
     )
@@ -692,8 +735,13 @@ def resolve_pinned_run(api, family_name, version):
         date_from_run = datetime.fromisoformat(
             (run.get("run_started_at") or run["created_at"]).replace("Z", "+00:00")
         ).astimezone(timezone.utc).strftime("%Y%m%d")
-        expected = f"{date_from_run}.{run_id}" if legacy else publication_id(run)
-        if expected == version and date == date_from_run:
+        expected = f"{date_from_run}.{run_id}" if legacy else version
+        valid_version = (
+            date == date_from_run
+            if legacy
+            else publication_id_matches(run, version)
+        )
+        if expected == version and valid_version:
             return run
     raise AdoptionError(
         f"cannot verify provenance for currently pinned {family_name} version {version}"
@@ -704,13 +752,10 @@ def verify_eligible_run(api, run, family_name, main_sha, repo_root):
     run_id = run["id"]
     attempt = run["run_attempt"]
     exact_run = api.run_attempt(run_id, attempt)
-    tag = validate_run_identity(exact_run, family_name, run_id, attempt)
+    validate_run_identity(exact_run, family_name, run_id, attempt)
     if api.compare(exact_run["head_sha"], main_sha) not in ("ahead", "identical"):
         raise AdoptionError("publisher source commit is not on trusted main")
     verify_required_jobs(api.run_jobs(run_id, attempt), family_name)
-    expected = expected_images_for(
-        family_name, tag, repo_root, exact_run["head_sha"]
-    )
     artifact_name = f"smoke-test-publication-{family_name}-{attempt}"
     artifacts = [
         artifact
@@ -725,6 +770,10 @@ def verify_eligible_run(api, run, family_name, main_sha, repo_root):
             "exact publisher run/attempt has no unique unexpired candidate artifact"
         )
     candidate = api.download_artifact(artifacts[0]["id"])
+    tag = candidate.get("publication_id") if isinstance(candidate, dict) else None
+    if not publication_id_matches(exact_run, tag):
+        raise AdoptionError("candidate publication identifier does not match the exact run")
+    expected = expected_images_for(family_name, tag, repo_root, main_sha)
     image_digests = validate_candidate(
         candidate, exact_run, family_name, run_id, attempt, expected
     )
@@ -732,6 +781,50 @@ def verify_eligible_run(api, run, family_name, main_sha, repo_root):
         if manifest_digest(reference) != expected_digest:
             raise AdoptionError(f"registry manifest changed or is unavailable for {reference}")
     return exact_run, tag, f"https://github.com/{REPOSITORY}/actions/runs/{run_id}"
+
+
+def family_for_run(run):
+    family_name = next(
+        (
+            name
+            for name, family in FAMILIES.items()
+            if run.get("path") == f".github/workflows/{family.workflow_file}"
+            and run.get("name") == family.workflow_name
+        ),
+        None,
+    )
+    if family_name is None:
+        raise AdoptionError("workflow run does not use a supported publisher workflow")
+    return family_name
+
+
+def validate_manual_run(api, run_id, attempt, main_sha, repo_root, current_files):
+    run = api.run_attempt(run_id, attempt)
+    family_name = family_for_run(run)
+    validate_run_identity(run, family_name, run_id, attempt)
+    exact_run, tag, run_url = verify_eligible_run(
+        api, run, family_name, main_sha, repo_root
+    )
+    current_version = image_pin(current_files, family_name)
+    if current_version == tag:
+        return (
+            "Dry run; no branch or PR writes performed.\n"
+            f"{family_name}: {tag} is already selected by the open PR or main.",
+            False,
+        )
+    previous_run = resolve_pinned_run(api, family_name, current_version)
+    if not is_newer_run(previous_run, exact_run, api.compare):
+        return (
+            "Dry run; no branch or PR writes performed.\n"
+            f"{family_name}: run {run_id} is verified but older than the selected version.",
+            False,
+        )
+    return (
+        "Dry run; no branch or PR writes performed.\n"
+        f"{family_name}: {current_version} -> {tag} "
+        f"(verified publication {run_url}).",
+        True,
+    )
 
 
 def local_git(args, root, env=None):
@@ -844,6 +937,15 @@ def render_pr_body(existing_pr, base_files, branch_files, family_links):
     return replace_body_section(existing_pr.get("body") or "", rendered)
 
 
+def refresh_pr_body(api, pr, base_files, branch_files, family_links):
+    latest_pr = api.get_pr(pr["number"])
+    if (latest_pr.get("body") or "") != (pr.get("body") or ""):
+        raise AdoptionError(
+            "adoption PR body changed during update; no body was overwritten, inspect and retry"
+        )
+    return render_pr_body(latest_pr, base_files, branch_files, family_links)
+
+
 def publish_update(root, api, branch_files, base_files, pr, expected_head, family_links):
     new_body = render_pr_body(pr, base_files, branch_files, family_links)
     if new_body is None:
@@ -875,6 +977,7 @@ def publish_update(root, api, branch_files, base_files, pr, expected_head, famil
             "inspect the open PR and retry"
         ) from None
     if pr:
+        new_body = refresh_pr_body(api, pr, base_files, branch_files, family_links)
         api.update_pr_body(pr["number"], new_body)
         return f"Updated smoke-test adoption PR #{pr['number']}."
     created = api.create_pr(new_body)
@@ -908,27 +1011,25 @@ def reconcile(api, root, trigger, apply):
     main_sha = api.main_sha()
     _, base_files, current_files, pr, expected_head = prepare_branch(root, api)
     initial_files = dict(current_files)
+    verified_runs = {}
     if trigger is not None:
         event_run_id, event_attempt, event = trigger
         trigger_run = api.run_attempt(event_run_id, event_attempt)
-        family_name = next(
-            (
-                name
-                for name, family in FAMILIES.items()
-                if trigger_run.get("path") == f".github/workflows/{family.workflow_file}"
-                and trigger_run.get("name") == family.workflow_name
-            ),
-            None,
-        )
-        if family_name is None:
-            raise AdoptionError("workflow_run does not use a supported publisher workflow")
+        family_name = family_for_run(trigger_run)
         validate_run_identity(trigger_run, family_name, event_run_id, event_attempt)
+        if event is None:
+            return validate_manual_run(
+                api, event_run_id, event_attempt, main_sha, root, current_files
+            )
         if event and (
             event.get("head_sha") != trigger_run.get("head_sha")
             or event.get("name") != trigger_run.get("name")
             or event.get("run_attempt") != trigger_run.get("run_attempt")
         ):
             raise AdoptionError("workflow_run event does not match the exact publisher attempt")
+        verified_runs[(str(event_run_id), int(event_attempt))] = verify_eligible_run(
+            api, trigger_run, family_name, main_sha, root
+        )
 
     verified = {}
     for family_name in FAMILIES:
@@ -954,9 +1055,13 @@ def reconcile(api, root, trigger, apply):
         legacy_tag = f"{started:%Y%m%d}.{latest_attempt['id']}"
         if selected[family_name] in (tag, legacy_tag):
             continue
-        exact_run, tag, run_url = verify_eligible_run(
-            api, latest_attempt, family_name, main_sha, root
-        )
+        run_key = (str(latest_attempt["id"]), int(latest_attempt["run_attempt"]))
+        if run_key in verified_runs:
+            exact_run, tag, run_url = verified_runs[run_key]
+        else:
+            exact_run, tag, run_url = verify_eligible_run(
+                api, latest_attempt, family_name, main_sha, root
+            )
         old_run = resolve_pinned_run(api, family_name, selected[family_name])
         if not is_newer_run(old_run, exact_run, api.compare):
             continue
