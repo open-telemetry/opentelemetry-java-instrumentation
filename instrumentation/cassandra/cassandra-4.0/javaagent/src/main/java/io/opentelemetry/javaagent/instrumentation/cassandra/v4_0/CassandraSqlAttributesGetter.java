@@ -12,7 +12,6 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.InetSocketAddress;
@@ -26,11 +25,6 @@ final class CassandraSqlAttributesGetter
   @Override
   public String getDbSystemName(CassandraRequest request) {
     return DbSystemNameIncubatingValues.CASSANDRA;
-  }
-
-  @Override
-  public SqlDialect getSqlDialect(CassandraRequest request) {
-    return SqlDialect.forDbSystemName(getDbSystemName(request));
   }
 
   @Override

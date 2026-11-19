@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -26,11 +25,6 @@ class VertxSqlClientAttributesGetter
   @Override
   public String getDbSystemName(VertxSqlClientRequest request) {
     return request.getDbSystemName();
-  }
-
-  @Override
-  public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
-    return SqlDialect.forDbSystemName(request.getDbSystemName());
   }
 
   @Override

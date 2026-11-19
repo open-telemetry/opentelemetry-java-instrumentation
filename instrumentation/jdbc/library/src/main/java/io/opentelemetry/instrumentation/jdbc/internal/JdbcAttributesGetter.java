@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -31,11 +30,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getDbNamespace(DbRequest request) {
     return request.getDbInfo().getDbNamespace();
-  }
-
-  @Override
-  public SqlDialect getSqlDialect(DbRequest request) {
-    return SqlDialect.forDbSystemName(request.getDbInfo().getDbSystemName());
   }
 
   @Override

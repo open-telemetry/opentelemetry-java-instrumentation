@@ -24,6 +24,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -33,8 +34,11 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SqlClientAttributesExtractorTest {
@@ -123,13 +127,29 @@ class SqlClientAttributesExtractorTest {
         .containsOnly(entry(NETWORK_PEER_ADDRESS, "192.0.2.1"), entry(NETWORK_PEER_PORT, 5432L));
   }
 
+  @ParameterizedTest
+  @MethodSource("dbSystemNamesAndExpectedSanitizedQueries")
+  void shouldUseDbSystemNameForDefaultSqlDialect(String dbSystemName, String expectedQueryText) {
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.system.name", dbSystemName);
+    request.put("db.query.text", "SELECT \"name\" FROM catalog");
+    AttributesBuilder attributes = Attributes.builder();
+
+    SqlClientAttributesExtractor.create(new TestAttributesGetter())
+        .onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build().get(DB_QUERY_TEXT)).isEqualTo(expectedQueryText);
+  }
+
+  private static Stream<Arguments> dbSystemNamesAndExpectedSanitizedQueries() {
+    return Stream.of(
+        argumentSet("PostgreSQL", "postgresql", "SELECT \"name\" FROM catalog"),
+        argumentSet("unknown engine", "other_sql", "SELECT ? FROM catalog"),
+        argumentSet("missing system name", null, "SELECT ? FROM catalog"));
+  }
+
   static class TestAttributesGetter
       implements SqlClientAttributesGetter<Map<String, Object>, Void> {
-
-    @Override
-    public SqlDialect getSqlDialect(Map<String, Object> map) {
-      return SqlDialect.forDbSystemName(getDbSystemName(map));
-    }
 
     @Override
     public Collection<String> getRawQueryTexts(Map<String, Object> map) {

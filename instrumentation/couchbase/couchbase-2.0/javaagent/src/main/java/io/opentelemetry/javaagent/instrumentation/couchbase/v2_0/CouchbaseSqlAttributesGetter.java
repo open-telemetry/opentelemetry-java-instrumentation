@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -19,13 +18,6 @@ final class CouchbaseSqlAttributesGetter
     implements SqlClientAttributesGetter<CouchbaseRequestInfo, Void> {
 
   private final CouchbaseAttributesGetter dbGetter = new CouchbaseAttributesGetter();
-
-  @Override
-  public SqlDialect getSqlDialect(CouchbaseRequestInfo request) {
-    // SQL++ uses both single and double quotation marks for string literals.
-    // https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/literals.html
-    return SqlDialect.forDbSystemName(getDbSystemName(request));
-  }
 
   @Override
   public Collection<String> getRawQueryTexts(CouchbaseRequestInfo request) {

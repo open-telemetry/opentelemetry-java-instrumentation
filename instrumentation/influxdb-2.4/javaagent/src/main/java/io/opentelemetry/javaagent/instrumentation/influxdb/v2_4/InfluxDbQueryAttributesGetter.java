@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -33,11 +32,6 @@ final class InfluxDbQueryAttributesGetter
       return emptyList();
     }
     return singletonList(query);
-  }
-
-  @Override
-  public SqlDialect getSqlDialect(InfluxDbQuery request) {
-    return SqlDialect.forDbSystemName(getDbSystemName(request));
   }
 
   @Override
