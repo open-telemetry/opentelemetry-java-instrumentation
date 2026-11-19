@@ -16,7 +16,7 @@ import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
 
-  // &#34;String literals are delimited by single quotation marks.&#34;
+  // "String literals are delimited by single quotation marks."
   // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
   private static final SqlDialect OQL_DIALECT =
       SqlDialect.builder().setDoubleQuotesAreIdentifiers(true).build();
