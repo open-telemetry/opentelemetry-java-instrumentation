@@ -19,7 +19,7 @@ Implemented attributes:
 
 ### Host
 
-Provider: `io.opentelemetry.instrumentation.resources.HostResource`
+Provider: `io.opentelemetry.instrumentation.resources.HostResourceProvider`
 
 Specification: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/resource/host.md>
 
@@ -29,19 +29,11 @@ Implemented attributes:
 
 - `host.name`
 - `host.arch`
-
-Provider: `io.opentelemetry.instrumentation.resources.HostIdResourceProvider`
-
-Specification: <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/resource/host.md>
-
-Included in [declarative config].
-
-Implemented attributes:
-
 - `host.id`
 
-The Java agent disables this provider by default. Enable it by setting
-`otel.resource.providers.host-id.enabled=true`.
+Host ID detection is enabled by default. In property-based configuration, detection is skipped when `host.id` is already set by another resource provider or through `otel.resource.attributes`.
+
+For programmatic use, `HostResource.create(true)` includes host ID detection, while `HostResource.get()` omits it.
 
 ### Operating System
 
