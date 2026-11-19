@@ -158,7 +158,9 @@
     },
     {
       // Match pinned version_build tags, excluding rolling tags.
-      // Java 8 uses 8u<update>-b<build> tags instead, which need separate version parsing.
+      // Java 8's 8u<update>-b<build> tags are not matched. Supporting that format is a
+      // separate Renovate fix, outside this four-part security-tag workaround:
+      // https://github.com/renovatebot/renovate/issues/19678
       matchCurrentValue: '/^\\d+(?:\\.\\d+){0,3}_\\d+-.+$/',
       matchDatasources: [
         'docker',
