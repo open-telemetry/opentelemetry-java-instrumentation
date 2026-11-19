@@ -112,8 +112,8 @@ closed handle, for example by setting it to `null`.
 
 A callback can strongly hold state that should live as long as the registration. For example,
 the HikariCP callback captures `PoolStats`, which references the pool. When HikariCP shuts down
-the pool, it closes the tracker, and our tracker unregisters the callback. If a shutdown path
-misses that cleanup, fix the hook rather than weakening the reference.
+the pool, our tracker closes the callback handle and clears the field that held it.
+If a shutdown path misses that cleanup, fix the hook rather than weakening the reference.
 
 **Saved TCCL.** Use `MetricCallbackRegistration.withoutContextClassLoader(...)` only after
 verifying that registration and callback execution work with a null TCCL. Check lazy
