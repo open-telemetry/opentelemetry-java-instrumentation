@@ -241,37 +241,26 @@ class NetworkAttributesExtractorSocketAddressTest {
               addressJar, ObjectUtil.class.getProtectionDomain().getCodeSource().getLocation()
             };
     URL helperUrl = SocketAddressUtil.class.getProtectionDomain().getCodeSource().getLocation();
-    URLClassLoader helperLoader = new URLClassLoader(new URL[] {helperUrl}, null);
-    try {
-      URLClassLoader firstLoader = new URLClassLoader(addressUrls, null);
-      try {
-        URLClassLoader secondLoader = new URLClassLoader(addressUrls, null);
-        try {
-          Class<?> helper = helperLoader.loadClass(SocketAddressUtil.class.getName());
-          assertThat(helper.getClassLoader()).isNotSameAs(SocketAddressUtil.class.getClassLoader());
-          for (URLClassLoader addressLoader : new URLClassLoader[] {firstLoader, secondLoader}) {
-            Class<? extends SocketAddress> isolatedType =
-                addressLoader.loadClass(addressType.getName()).asSubclass(SocketAddress.class);
-            assertThat(isolatedType).isNotSameAs(addressType);
-            SocketAddress address =
-                isolatedType.getConstructor(String.class).newInstance("isolated.sock");
-            assertThat(SocketAddressUtil.getAddress(address)).isEqualTo("isolated.sock");
-            assertThat(helper.getMethod("getAddress", SocketAddress.class).invoke(null, address))
-                .isEqualTo("isolated.sock");
-            assertThat(
-                    helper
-                        .getMethod("getNetworkTransport", SocketAddress.class, SocketAddress.class)
-                        .invoke(null, null, address))
-                .isEqualTo("unix");
-          }
-        } finally {
-          close(secondLoader);
-        }
-      } finally {
-        close(firstLoader);
+    try (URLClassLoader helperLoader = new URLClassLoader(new URL[] {helperUrl}, null);
+        URLClassLoader firstLoader = new URLClassLoader(addressUrls, null);
+        URLClassLoader secondLoader = new URLClassLoader(addressUrls, null)) {
+      Class<?> helper = helperLoader.loadClass(SocketAddressUtil.class.getName());
+      assertThat(helper.getClassLoader()).isNotSameAs(SocketAddressUtil.class.getClassLoader());
+      for (URLClassLoader addressLoader : new URLClassLoader[] {firstLoader, secondLoader}) {
+        Class<? extends SocketAddress> isolatedType =
+            addressLoader.loadClass(addressType.getName()).asSubclass(SocketAddress.class);
+        assertThat(isolatedType).isNotSameAs(addressType);
+        SocketAddress address =
+            isolatedType.getConstructor(String.class).newInstance("isolated.sock");
+        assertThat(SocketAddressUtil.getAddress(address)).isEqualTo("isolated.sock");
+        assertThat(helper.getMethod("getAddress", SocketAddress.class).invoke(null, address))
+            .isEqualTo("isolated.sock");
+        assertThat(
+                helper
+                    .getMethod("getNetworkTransport", SocketAddress.class, SocketAddress.class)
+                    .invoke(null, null, address))
+            .isEqualTo("unix");
       }
-    } finally {
-      close(helperLoader);
     }
   }
 
@@ -279,8 +268,7 @@ class NetworkAttributesExtractorSocketAddressTest {
   @ValueSource(
       strings = {"java.lang.ClassValue", "java.lang.invoke.MethodHandle", "java.nio.file.Path"})
   void inetAddressesWorkWithoutUnixRuntimeSupport(String missingClass) throws Exception {
-    URLClassLoader helperLoader = helperLoaderWithout(missingClass);
-    try {
+    try (URLClassLoader helperLoader = helperLoaderWithout(missingClass)) {
       Class<?> helper = helperLoader.loadClass(SocketAddressUtil.class.getName());
       InetSocketAddress inet = new InetSocketAddress("1.2.3.4", 8080);
       assertThat(helper.getMethod("getAddress", SocketAddress.class).invoke(null, inet))
@@ -297,8 +285,6 @@ class NetworkAttributesExtractorSocketAddressTest {
                   .getMethod("getNetworkTransport", SocketAddress.class, SocketAddress.class)
                   .invoke(null, inet, inet))
           .isNull();
-    } finally {
-      close(helperLoader);
     }
   }
 
@@ -308,8 +294,7 @@ class NetworkAttributesExtractorSocketAddressTest {
   @EnabledForJreRange(min = JRE.JAVA_16)
   void jdkUnixAddressesAreUnavailableWithoutUnixRuntimeSupport(String missingClass)
       throws Exception {
-    URLClassLoader helperLoader = helperLoaderWithout(missingClass);
-    try {
+    try (URLClassLoader helperLoader = helperLoaderWithout(missingClass)) {
       Class<?> helper = helperLoader.loadClass(SocketAddressUtil.class.getName());
       SocketAddress unix = jdkUnixAddress("unavailable.sock");
       assertThat(helper.getMethod("getAddress", SocketAddress.class).invoke(null, unix)).isNull();
@@ -318,13 +303,7 @@ class NetworkAttributesExtractorSocketAddressTest {
                   .getMethod("getNetworkTransport", SocketAddress.class, SocketAddress.class)
                   .invoke(null, unix, unix))
           .isNull();
-    } finally {
-      close(helperLoader);
     }
-  }
-
-  private static void close(URLClassLoader classLoader) throws Exception {
-    classLoader.getClass().getMethod("close").invoke(classLoader);
   }
 
   private static URLClassLoader helperLoaderWithout(String missingClass) {
