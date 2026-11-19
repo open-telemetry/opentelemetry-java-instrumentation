@@ -138,6 +138,10 @@ public final class IncludeExclude {
         int patternCodePoint = pattern.codePointAt(patternIndex);
         if (patternCodePoint == '*') {
           patternIndex += Character.charCount(patternCodePoint);
+          if (patternIndex == pattern.length()) {
+            // trailing '*' matches whatever remains of the value
+            return true;
+          }
           patternIndexAfterStar = patternIndex;
           valueIndexAfterStar = valueIndex;
           continue;
