@@ -23,6 +23,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 class DbClientSpanNameExtractorTest {
+  private static final SqlDialect TEST_DIALECT =
+      SqlDialect.builder().setDoubleQuotesAreIdentifiers(false).build();
+
   @Mock DbClientAttributesGetter<DbRequest, Void> dbAttributesGetter;
 
   @Mock(answer = Answers.CALLS_REAL_METHODS)
@@ -30,7 +33,7 @@ class DbClientSpanNameExtractorTest {
 
   @BeforeEach
   void setUp() {
-    lenient().when(sqlAttributesGetter.getSqlDialect(any())).thenReturn(SqlDialect.UNKNOWN);
+    lenient().when(sqlAttributesGetter.getSqlDialect(any())).thenReturn(TEST_DIALECT);
     lenient().when(sqlAttributesGetter.getDbOperationBatchSize(any())).thenReturn(null);
   }
 

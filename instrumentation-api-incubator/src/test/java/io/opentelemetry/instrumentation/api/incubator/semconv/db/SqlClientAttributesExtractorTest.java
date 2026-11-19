@@ -128,7 +128,7 @@ class SqlClientAttributesExtractorTest {
 
     @Override
     public SqlDialect getSqlDialect(Map<String, Object> map) {
-      return SqlDialect.UNKNOWN;
+      return SqlDialect.forDbSystemName(getDbSystemName(map));
     }
 
     @Override
