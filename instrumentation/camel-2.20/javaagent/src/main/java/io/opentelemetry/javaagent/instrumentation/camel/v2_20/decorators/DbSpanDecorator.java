@@ -141,8 +141,7 @@ public class DbSpanDecorator extends BaseSpanDecorator {
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
-      // using the conservative default since the underlying database is unknown to camel
-      SqlQuery sqlQuery = analyzer.analyze(rawQueryText, SqlDialect.UNKNOWN);
+      SqlQuery sqlQuery = analyzer.analyze(rawQueryText, SqlDialect.forDbSystemName(system));
 
       if (sqlQuery != null) {
         attributes.put(DB_QUERY_TEXT, sqlQuery.getQueryText());

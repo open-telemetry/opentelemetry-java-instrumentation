@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.CASSANDRA;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -25,7 +27,7 @@ class SanitizationTest {
   @ParameterizedTest
   @MethodSource("sanitizeCqlArgs")
   void sanitizeCql(String original, String expectedQueryText, String expectedSummary) {
-    DbSpanDecorator decorator = new DbSpanDecorator("cql", "");
+    DbSpanDecorator decorator = new DbSpanDecorator("cql", CASSANDRA);
 
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
@@ -46,6 +48,10 @@ class SanitizationTest {
             "SELECT name, phone FROM contact WHERE state = ?",
             "SELECT contact"),
         Arguments.of(
+            "SELECT * FROM \"users\" WHERE name = 'secret'",
+            "SELECT * FROM \"users\" WHERE name = ?",
+            "SELECT \"users\""),
+        Arguments.of(
             "SELECT * FROM col WHERE tag='Something'",
             "SELECT * FROM col WHERE tag=?",
             "SELECT col"));
@@ -54,7 +60,7 @@ class SanitizationTest {
   @ParameterizedTest
   @MethodSource("sanitizeJdbcArgs")
   void sanitizeJdbc(String original, String expectedQueryText, String expectedSummary) {
-    DbSpanDecorator decorator = new DbSpanDecorator("jdbc", "");
+    DbSpanDecorator decorator = new DbSpanDecorator("jdbc", OTHER_SQL);
 
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
@@ -76,6 +82,10 @@ class SanitizationTest {
             "SELECT * FROM TABLE WHERE FIELD<?",
             "SELECT TABLE"),
         Arguments.of(
+            "SELECT * FROM users WHERE name = \"secret\"",
+            "SELECT * FROM users WHERE name = ?",
+            "SELECT users"),
+        Arguments.of(
             "SELECT col1 AS col2 FROM users WHERE field=1234",
             "SELECT col1 AS col2 FROM users WHERE field=?",
             "SELECT users"));
@@ -84,7 +94,7 @@ class SanitizationTest {
   @ParameterizedTest
   @MethodSource("sanitizeSqlArgs")
   void sanitizeSql(String original, String expectedQueryText, String expectedSummary) {
-    DbSpanDecorator decorator = new DbSpanDecorator("sql", "");
+    DbSpanDecorator decorator = new DbSpanDecorator("sql", OTHER_SQL);
 
     Exchange exchange = mock(Exchange.class);
     Message message = mock(Message.class);
@@ -100,6 +110,10 @@ class SanitizationTest {
             "SELECT * FROM table WHERE col1=1234 AND col2>3",
             "SELECT * FROM table WHERE col1=? AND col2>?",
             "SELECT table"),
+        Arguments.of(
+            "SELECT * FROM users WHERE name = \"secret\"",
+            "SELECT * FROM users WHERE name = ?",
+            "SELECT users"),
         Arguments.of("UPDATE table SET col=12", "UPDATE table SET col=?", "UPDATE table"),
         Arguments.of(
             "insert into table where col=321", "insert into table where col=?", "insert table"));
