@@ -17,14 +17,12 @@ If the loop iterates a list field, copy the list where the constructor stores it
 
 - Store `new ArrayList<>(list)`, whatever the source: a caller, a builder, a helper, `emptyList()`,
   or `collect(toList())`. Skip the copy when the constructor built the `ArrayList` itself.
-- If the class exposes the list, wrap it once, `unmodifiableList(new ArrayList<>(list))`, and
-  return the field. Do not wrap a list that never leaves the class, and do not feed both the view
-  and its backing list into the same loop.
+- If the class exposes the list, store `unmodifiableList(new ArrayList<>(list))` and return the
+  field, so loops and callers see one class. Do not loop over the backing list separately.
 - Leave helpers, builders, getters, and accessors unchanged, including their `emptyList()`,
   `singletonList()`, and `collect(toList())` calls.
 
-Otherwise, give each collection class its own loop and share the per-element work in a method. If
-a path has nothing to iterate, skip the loop instead of passing an empty collection.
+Otherwise, give each collection class its own loop and share the per-element work in a method.
 
 ## Lambdas and method references
 
