@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcSqlAttributesGetter;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
@@ -131,37 +131,32 @@ class R2dbcSqlAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("dialects")
-  void sqlDialect(String connectionFactoryUrl, SqlDialect expectedDialect) {
+  void sqlDialect(String connectionFactoryUrl, String expectedQueryText) {
+    String query = "SELECT * FROM \"customers\"";
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
-            .queryInfo(new QueryInfo("SELECT * FROM \"customers\""))
+            .queryInfo(new QueryInfo(query))
             .connectionInfo(MockConnectionInfo.builder().build())
             .build();
     DbExecution dbExecution =
         new DbExecution(queryExecutionInfo, ConnectionFactoryOptions.parse(connectionFactoryUrl));
 
-    assertThat(getter.getSqlDialect(dbExecution)).isEqualTo(expectedDialect);
+    assertThat(
+            SqlQueryAnalyzer.create(true)
+                .analyze(query, getter.getSqlDialect(dbExecution))
+                .getQueryText())
+        .isEqualTo(expectedQueryText);
   }
 
   private static Stream<Arguments> dialects() {
     return Stream.of(
-        argumentSet(
-            "PostgreSQL",
-            "r2dbc:postgresql://localhost/db",
-            SqlDialect.forDbSystemName("postgresql")),
-        argumentSet(
-            "Oracle", "r2dbc:oracle://localhost/db", SqlDialect.forDbSystemName("oracle.db")),
-        argumentSet("DB2", "r2dbc:db2://localhost/db", SqlDialect.forDbSystemName("ibm.db2")),
-        argumentSet(
-            "ClickHouse",
-            "r2dbc:clickhouse://localhost/db",
-            SqlDialect.forDbSystemName("clickhouse")),
-        argumentSet("MySQL", "r2dbc:mysql://localhost/db", SqlDialect.forDbSystemName("mysql")),
-        argumentSet(
-            "SQL Server",
-            "r2dbc:mssql://localhost/db",
-            SqlDialect.forDbSystemName("microsoft.sql_server")),
-        argumentSet("unknown", "r2dbc:unknown://localhost/db", SqlDialect.UNKNOWN));
+        argumentSet("PostgreSQL", "r2dbc:postgresql://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("Oracle", "r2dbc:oracle://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("DB2", "r2dbc:db2://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("ClickHouse", "r2dbc:clickhouse://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("MySQL", "r2dbc:mysql://localhost/db", "SELECT * FROM ?"),
+        argumentSet("SQL Server", "r2dbc:mssql://localhost/db", "SELECT * FROM ?"),
+        argumentSet("unknown", "r2dbc:unknown://localhost/db", "SELECT * FROM ?"));
   }
 
   @Test
