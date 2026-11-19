@@ -173,6 +173,7 @@
     },
     {
       // Java 27's initial release uses short tags; allow updates to its full patched tags.
+      // TODO remove once both Java 27 pins use dotted tags covered by the rule above.
       matchCurrentValue: '/^27_35-jdk(?:-windowsservercore-ltsc2022)?$/',
       matchDatasources: [
         'docker',
