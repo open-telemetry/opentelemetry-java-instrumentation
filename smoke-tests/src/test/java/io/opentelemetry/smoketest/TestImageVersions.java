@@ -18,7 +18,7 @@ public class TestImageVersions {
   public static final String PLAY_VERSION = "20260825.32803070850";
 
   // smoke-test-quarkus
-  public static final String QUARKUS_VERSION = "20260908.34191901987";
+  public static final String QUARKUS_VERSION = "20261119.44569965840";
 
   // smoke-test-security-manager
   public static final String SECURITY_MANAGER_VERSION = "20260825.32803070890";
