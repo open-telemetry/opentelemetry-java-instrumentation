@@ -19,12 +19,10 @@ import org.junit.jupiter.params.provider.MethodSource;
  */
 class SqlQuerySummaryEdgeCasesTest {
 
-  private static final SqlDialect TEST_DIALECT =
-      SqlDialect.builder().setDoubleQuotesAreIdentifiers(false).build();
   private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
 
   private static SqlQuery sanitize(String sql) {
-    return ANALYZER.analyze(sql, TEST_DIALECT);
+    return ANALYZER.analyze(sql, SqlDialect.builder().build());
   }
 
   // ===== DATABASE-SPECIFIC DML SYNTAX =====

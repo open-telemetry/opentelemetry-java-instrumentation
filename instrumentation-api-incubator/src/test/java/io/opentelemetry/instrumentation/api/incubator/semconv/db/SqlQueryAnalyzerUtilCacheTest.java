@@ -22,8 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SqlQueryAnalyzerUtilCacheTest {
-  private static final SqlDialect TEST_DIALECT =
-      SqlDialect.builder().setDoubleQuotesAreIdentifiers(false).build();
+  private static final SqlDialect DIALECT = SqlDialect.builder().build();
 
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -49,7 +48,7 @@ class SqlQueryAnalyzerUtilCacheTest {
 
           @Override
           public SqlDialect getSqlDialect(Object request) {
-            return TEST_DIALECT;
+            return DIALECT;
           }
         };
     SpanNameExtractor<Object> spanNameExtractor = DbClientSpanNameExtractor.create(getter);
@@ -61,8 +60,8 @@ class SqlQueryAnalyzerUtilCacheTest {
 
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
     // verify that analyzed query was cached
-    SqlQuery cached = SqlQueryAnalyzerUtil.analyze(testQuery, TEST_DIALECT);
-    assertThat(cached).isSameAs(SqlQueryAnalyzerUtil.analyze(testQuery, TEST_DIALECT));
+    SqlQuery cached = SqlQueryAnalyzerUtil.analyze(testQuery, DIALECT);
+    assertThat(cached).isSameAs(SqlQueryAnalyzerUtil.analyze(testQuery, DIALECT));
 
     // verify that the attributes extractor produces correct values
     AttributeKey<String> queryTextKey = DB_QUERY_TEXT;
@@ -79,13 +78,11 @@ class SqlQueryAnalyzerUtilCacheTest {
     InstrumenterContext.reset();
     cleanup.deferCleanup(InstrumenterContext::reset);
 
-    SqlQuery first = SqlQueryAnalyzerUtil.analyze(query, TEST_DIALECT);
-    assertThat(SqlQueryAnalyzer.isCached(query, TEST_DIALECT)).isFalse();
-    assertThat(SqlQueryAnalyzerUtil.analyze(query, TEST_DIALECT)).isSameAs(first);
+    SqlQuery first = SqlQueryAnalyzerUtil.analyze(query, DIALECT);
+    assertThat(SqlQueryAnalyzer.isCached(query, DIALECT)).isFalse();
+    assertThat(SqlQueryAnalyzerUtil.analyze(query, DIALECT)).isSameAs(first);
 
     InstrumenterContext.reset();
-    assertThat(SqlQueryAnalyzerUtil.analyze(query, TEST_DIALECT))
-        .isEqualTo(first)
-        .isNotSameAs(first);
+    assertThat(SqlQueryAnalyzerUtil.analyze(query, DIALECT)).isEqualTo(first).isNotSameAs(first);
   }
 }
