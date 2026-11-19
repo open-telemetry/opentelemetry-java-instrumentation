@@ -83,9 +83,6 @@ public abstract class SqlDialect {
       // "A string constant is an arbitrary sequence of characters enclosed by single-quote(')."
       // https://cassandra.apache.org/doc/stable/cassandra/developing/cql/definitions.html#constants
       case "cassandra":
-      // "String literals are delimited by single quotation marks."
-      // https://geode.apache.org/docs/guide/114/developing/query_additional/literals.html
-      case "geode":
       // "String literals must be surrounded by single quotes."
       // https://docs.influxdata.com/influxdb/v2/reference/syntax/influxql/spec/#strings
       case "influxdb":

@@ -16,6 +16,9 @@ import javax.annotation.Nullable;
 
 final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeRequest, Void> {
 
+  private static final SqlDialect OQL_DIALECT =
+      SqlDialect.builder().setDoubleQuotesAreIdentifiers(true).build();
+
   private static final SqlQueryAnalyzer analyzer =
       SqlQueryAnalyzer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "geode"));
@@ -40,11 +43,8 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getDbQueryText(GeodeRequest request) {
-    // Geode query language (OQL) is very different from SQL
-    // but SQL sanitization is still useful to mask literals
-    return analyzer
-        .analyze(request.getQueryText(), SqlDialect.forDbSystemName(getDbSystemName(request)))
-        .getQueryText();
+    // Geode uses OQL, but SQL sanitization is still useful to mask literals.
+    return analyzer.analyze(request.getQueryText(), OQL_DIALECT).getQueryText();
   }
 
   @Override

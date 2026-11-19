@@ -89,7 +89,10 @@ class PutGetTest {
         Arguments.of(
             "SELECT * FROM /test-region p WHERE p.cardNumber = '1234432156788765'"
                 + " AND p.expDate = '10/2020'",
-            "SELECT * FROM /test-region p WHERE p.cardNumber = ? AND p.expDate = ?"));
+            "SELECT * FROM /test-region p WHERE p.cardNumber = ? AND p.expDate = ?"),
+        Arguments.of(
+            "SELECT * FROM /test-region p WHERE p.\"cardNumber\" = '1234432156788765'",
+            "SELECT * FROM /test-region p WHERE p.\"cardNumber\" = ?"));
   }
 
   @Test
