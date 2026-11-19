@@ -5,7 +5,7 @@
 | `otel.instrumentation.micrometer.base-time-unit`                                 | String  | `s`     | Set the base time unit for the OpenTelemetry `MeterRegistry` implementation. <details><summary>Valid values</summary>`ns`, `nanoseconds`, `us`, `microseconds`, `ms`, `milliseconds`, `s`, `seconds`, `min`, `minutes`, `h`, `hours`, `d`, `days`</details> |
 | `otel.instrumentation.micrometer.prometheus-mode.enabled`                        | Boolean | `false` | Enable the "Prometheus mode" this will simulate the behavior of Micrometer's PrometheusMeterRegistry. The instruments will be renamed to match Micrometer instrument naming, and the base time unit will be set to seconds.                                 |
 | `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`          | Boolean | `false` | Enables the generation of gauge-based Micrometer histograms for `DistributionSummary` and `Timer` instruments.                                                                                                                                              |
-| `otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled` | Boolean | `true`  | Stops bridging supported standard JVM metrics in favor of agent runtime telemetry. Set to `false` to retain the Micrometer representation.                                                                                                                  |
+| `otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled` | Boolean | `true`  | Deprecated, will be removed in 4.0. Stops bridging supported standard JVM metrics in favor of agent runtime telemetry. Set to `false` to retain the Micrometer representation.                                                                                |
 
 ## JVM metrics deduplication
 
@@ -16,7 +16,8 @@ listed below in favor of the agent's runtime telemetry. Enable the bridge with:
 otel.instrumentation.micrometer.enabled=true
 ```
 
-Deduplication is enabled by default. To retain the Micrometer representation as well, disable it:
+Deduplication is enabled by default. To retain the Micrometer representation as well, disable it.
+This opt-out is deprecated, logs a warning when used, and will be removed in 4.0:
 
 ```properties
 otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled=false
