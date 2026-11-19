@@ -40,7 +40,7 @@ val tag = findProperty("tag")
 val latestRuntimeImage = providers.gradleProperty("smokeTestJavaImageLatest").get()
 val fromImage = providers.gradleProperty("smokeTestJavaImage$targetJDK").orNull
   ?: latestRuntimeImage.takeIf {
-    it.substringAfterLast(':').substringBefore('@').takeWhile(Char::isDigit) == targetJDK
+    it.substringBefore('@').substringAfterLast(':').takeWhile(Char::isDigit) == targetJDK
   }
   ?: error("Unsupported targetJDK: $targetJDK")
 
