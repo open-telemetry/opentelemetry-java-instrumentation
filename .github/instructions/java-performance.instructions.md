@@ -6,18 +6,27 @@ applyTo: "**/*.java,**/*.kt,**/*.scala"
 
 Apply these rules to Java code. The hot-path allocation rules also apply to Kotlin and Scala.
 
-## Retained lists
+## Hot-path iteration
 
-When a constructor stores a list, store `new ArrayList<>(list)`, whatever the source: a caller, a
-builder, a helper, `emptyList()`, or `collect(toList())`. The copy prevents outside mutation and gives
-loops a consistent `ArrayList`, which helps HotSpot avoid iterator allocations.
+On a hot path, do not let one enhanced `for` loop iterate over different collection classes, such as
+an `ArrayList` on some calls and a `LinkedHashSet` or `emptyList()` on others. Choosing between
+collections through a variable, a parameter, or a helper's return value still sends them through
+the same loop. HotSpot can fail to eliminate the iterator allocation when a loop sees more than one
+class. This covers sets and map views too. It does not cover collections used only for lookup, such
+as `contains` or `get`.
 
-If the class exposes the list, wrap it once in the constructor, for example
-`unmodifiableList(new ArrayList<>(list))`, and return the field directly. Do not wrap a list that
-never leaves the class.
+If the loop iterates a list the class retains, copy it where the constructor stores it:
 
-Copy only in the constructor. Leave helpers, builders, getters, accessors, and loops unchanged,
-including their `emptyList()`, `singletonList()`, and `collect(toList())` calls.
+- Store `new ArrayList<>(list)`, whatever the source: a caller, a builder, a helper, `emptyList()`,
+  or `collect(toList())`. Skip the copy when the constructor built the `ArrayList` itself.
+- If the class exposes the list, wrap it once, `unmodifiableList(new ArrayList<>(list))`, and
+  return the field. Do not wrap a list that never leaves the class, and do not feed both the view
+  and its backing list into the same loop.
+- Leave helpers, builders, getters, and accessors unchanged, including their `emptyList()`,
+  `singletonList()`, and `collect(toList())` calls.
+
+Otherwise, give each collection class its own loop and share the per-element work in a method. If
+a path has nothing to iterate, skip the loop instead of passing an empty collection.
 
 ## Lambdas and method references
 
