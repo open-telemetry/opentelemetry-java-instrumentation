@@ -6,23 +6,28 @@ import unittest
 from unittest.mock import patch
 
 from smoke_test_image_adoption import (
-    BODY_END,
-    BODY_START,
+    BOT_EMAIL,
+    BOT_NAME,
     FAMILIES,
     PIN_FILES,
+    PR_BODY,
     REPOSITORY,
+    TITLE,
     AdoptionError,
-    generated_body,
     image_pin,
     is_newer_run,
     latest_successful_run,
+    missing_publication_comments,
     no_window_flags,
     publication_id,
     publication_id_matches,
+    publication_comment,
+    post_publication_comments,
+    prepare_branch,
     reconcile,
-    refresh_pr_body,
-    replace_body_section,
+    remote_head,
     require_expected_remote_head,
+    run_process,
     update_pin,
     validate_bot_branch,
     validate_candidate,
@@ -40,6 +45,38 @@ def pin_files():
         path: (ROOT / path).read_text(encoding="utf-8")
         for path in PIN_FILES
     }
+
+
+def initialize_remote(root, remote):
+    root.mkdir()
+    run_process(["git", "init", "--bare", str(remote)])
+    run_process(["git", "init", "-b", "main"], cwd=root)
+    run_process(["git", "config", "user.name", "test"], cwd=root)
+    run_process(["git", "config", "user.email", "test@example.com"], cwd=root)
+    for path, content in pin_files().items():
+        destination = root / path
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(content, encoding="utf-8")
+    run_process(["git", "add", *PIN_FILES], cwd=root)
+    run_process(["git", "commit", "-m", "initial pins"], cwd=root)
+    run_process(["git", "remote", "add", "origin", str(remote)], cwd=root)
+    run_process(["git", "push", "--set-upstream", "origin", "main"], cwd=root)
+    return run_process(["git", "rev-parse", "HEAD"], cwd=root).strip()
+
+
+def create_adoption_branch(root, family, version):
+    run_process(["git", "checkout", "-b", "adoption"], cwd=root)
+    run_process(["git", "config", "user.name", BOT_NAME], cwd=root)
+    run_process(["git", "config", "user.email", BOT_EMAIL], cwd=root)
+    updated, _ = update_pin(pin_files(), family, version)
+    for path, content in updated.items():
+        (root / path).write_text(content, encoding="utf-8")
+    run_process(["git", "add", *PIN_FILES], cwd=root)
+    run_process(["git", "commit", "-m", TITLE], cwd=root)
+    run_process(
+        ["git", "push", "origin", "HEAD:refs/heads/otelbot/smoke-test-image-versions"],
+        cwd=root,
+    )
 
 
 def run_record(family="fake-backend", run_id=123456, attempt=1, sha="a" * 40):
@@ -328,25 +365,95 @@ class AdoptionTest(unittest.TestCase):
         with self.assertRaises(AdoptionError):
             require_expected_remote_head("abc123", "def456")
 
+    def test_concurrent_remote_update_is_rejected_by_non_force_push(self):
+        from smoke_test_image_adoption import publish_update
+
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "checkout"
+            remote = Path(directory) / "remote.git"
+            other = Path(directory) / "other-checkout"
+            initialize_remote(root, remote)
+            create_adoption_branch(root, "grpc", "20261120.987654000001")
+            run_process(
+                [
+                    "git",
+                    "clone",
+                    "--branch",
+                    "otelbot/smoke-test-image-versions",
+                    str(remote),
+                    str(other),
+                ]
+            )
+            run_process(["git", "config", "user.name", BOT_NAME], cwd=other)
+            run_process(["git", "config", "user.email", BOT_EMAIL], cwd=other)
+
+            expected_head = run_process(["git", "rev-parse", "HEAD"], cwd=root).strip()
+            branch_files = {
+                path: run_process(["git", "show", f"HEAD:{path}"], cwd=root)
+                for path in PIN_FILES
+            }
+            branch_files, _ = update_pin(
+                branch_files, "fake-backend", "20261120.123456000001"
+            )
+            concurrent_files, _ = update_pin(
+                branch_files, "play", "20261120.987655000001"
+            )
+            for path, content in concurrent_files.items():
+                (other / path).write_text(content, encoding="utf-8")
+            run_process(["git", "add", *PIN_FILES], cwd=other)
+            run_process(["git", "commit", "-m", TITLE], cwd=other)
+            concurrent_head = run_process(
+                ["git", "rev-parse", "HEAD"], cwd=other
+            ).strip()
+
+            real_run_process = run_process
+
+            def race_before_push(args, cwd=None, env=None, input_text=None):
+                if args == [".github/scripts/use-cla-approved-bot.sh"]:
+                    real_run_process(["git", "config", "user.name", BOT_NAME], cwd=cwd)
+                    return real_run_process(
+                        ["git", "config", "user.email", BOT_EMAIL], cwd=cwd
+                    )
+                if args[:3] == ["gh", "auth", "setup-git"]:
+                    real_run_process(
+                        [
+                            "git",
+                            "push",
+                            "origin",
+                            "HEAD:refs/heads/otelbot/smoke-test-image-versions",
+                        ],
+                        cwd=other,
+                    )
+                    return ""
+                return real_run_process(args, cwd=cwd, env=env, input_text=input_text)
+
+            with (
+                patch.dict("os.environ", {"GH_TOKEN": "test-token"}),
+                patch("smoke_test_image_adoption.run_process", side_effect=race_before_push),
+            ):
+                with self.assertRaisesRegex(AdoptionError, "non-force push refused"):
+                    publish_update(
+                        root,
+                        type("FakeGitHub", (), {"token": None})(),
+                        branch_files,
+                        {"number": 42},
+                        expected_head,
+                        [],
+                    )
+
+            self.assertEqual(
+                run_process(
+                    ["git", "ls-remote", "--heads", "origin", "otelbot/smoke-test-image-versions"],
+                    cwd=root,
+                ).split()[0],
+                concurrent_head,
+            )
     def test_read_only_reconciliation_dry_run_does_not_push(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory) / "checkout"
             remote = Path(directory) / "remote.git"
-            root.mkdir()
-            for path, content in pin_files().items():
-                destination = root / path
-                destination.parent.mkdir(parents=True, exist_ok=True)
-                destination.write_text(content, encoding="utf-8")
-            from smoke_test_image_adoption import run_process
 
-            run_process(["git", "init", "--bare", str(remote)])
-            run_process(["git", "init", "-b", "main"], cwd=root)
-            run_process(["git", "config", "user.name", "test"], cwd=root)
-            run_process(["git", "config", "user.email", "test@example.com"], cwd=root)
-            run_process(["git", "add", *PIN_FILES], cwd=root)
-            run_process(["git", "commit", "-m", "initial pins"], cwd=root)
-            run_process(["git", "remote", "add", "origin", str(remote)], cwd=root)
-            run_process(["git", "push", "--set-upstream", "origin", "main"], cwd=root)
+            initialize_remote(root, remote)
 
             class FakeGitHub:
                 token = None
@@ -371,52 +478,296 @@ class AdoptionTest(unittest.TestCase):
                 "",
             )
 
-    def test_pr_summary_replacement_preserves_human_context(self):
-        original = "Human context before.\n\n" + generated_body(
-            {"fake-backend": ("20260825.1", TAG, "123456")}
-        ) + "\n\nHuman context after."
-        replacement = generated_body(
-            {
-                "fake-backend": ("20260825.1", TAG, "123456"),
-                "grpc": ("20260825.2", "20261120.987654000001", "987654"),
-            }
-        )
-        updated = replace_body_section(original, replacement)
-        self.assertTrue(updated.startswith("Human context before."))
-        self.assertTrue(updated.endswith("Human context after."))
-        self.assertIn(BODY_START, updated)
-        self.assertIn(BODY_END, updated)
+    def test_dry_run_then_apply_creates_branch_in_same_checkout(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "checkout"
+            remote = Path(directory) / "remote.git"
+            main_sha = initialize_remote(root, remote)
+            run = run_record(sha=main_sha)
+            tag = publication_id(run)
+            run["created_at"] = "2026-11-19T12:00:00Z"
 
-    def test_pr_body_refresh_preserves_or_refuses_concurrent_human_edits(self):
-        base = pin_files()
-        branch, _ = update_pin(base, "fake-backend", TAG)
-        original_body = (
-            "Human context before.\n\n"
-            + generated_body({"fake-backend": ("20260825.1", "20261119.1", "1")})
-            + "\n\nHuman context after."
-        )
-        pr = {"number": 123, "body": original_body}
-        family_links = {
-            "fake-backend": (
-                "https://github.com/open-telemetry/"
-                "opentelemetry-java-instrumentation/actions/runs/123456"
+            class FakeGitHub:
+                token = None
+
+                def main_sha(self):
+                    return main_sha
+
+                def open_adoption_prs(self):
+                    return []
+
+                def workflow_runs(self, family):
+                    return [run] if family == "fake-backend" else []
+
+                def run_attempt(self, _run_id, _attempt):
+                    return run
+
+                def compare(self, _base, _head):
+                    return "identical"
+
+                def create_pr(self, body):
+                    self.created_body = body
+                    return {"number": 123}
+
+                def pr_comments(self, _number):
+                    return self.comments
+
+                def create_pr_comment(self, _number, body):
+                    self.comments.append({"body": body, "user": {"login": BOT_NAME}})
+
+                comments = []
+
+            api = FakeGitHub()
+            real_run_process = run_process
+
+            def run_process_with_auth(args, cwd=None, env=None, input_text=None):
+                if args == [".github/scripts/use-cla-approved-bot.sh"]:
+                    real_run_process(
+                        ["git", "config", "user.name", BOT_NAME], cwd=cwd
+                    )
+                    return real_run_process(
+                        ["git", "config", "user.email", BOT_EMAIL], cwd=cwd
+                    )
+                if args[:3] == ["gh", "auth", "setup-git"]:
+                    return ""
+                return real_run_process(args, cwd=cwd, env=env, input_text=input_text)
+
+            with (
+                patch.dict("os.environ", {"GH_TOKEN": "test-token"}),
+                patch(
+                    "smoke_test_image_adoption.verify_eligible_run",
+                    return_value=(
+                        run,
+                        tag,
+                        f"https://github.com/{REPOSITORY}/actions/runs/"
+                        f"{run['id']}/attempts/{run['run_attempt']}",
+                    ),
+                ),
+                patch(
+                    "smoke_test_image_adoption.resolve_pinned_run",
+                    return_value=run_record(run_id=100, sha=main_sha),
+                ),
+                patch("smoke_test_image_adoption.run_process", side_effect=run_process_with_auth),
+            ):
+                dry_message, has_updates = reconcile(api, root, None, False)
+                self.assertIn("Dry run", dry_message)
+                self.assertTrue(has_updates)
+                self.assertEqual(
+                    run_process(
+                        [
+                            "git",
+                            "ls-remote",
+                            "--heads",
+                            "origin",
+                            "otelbot/smoke-test-image-versions",
+                        ],
+                        cwd=root,
+                    ),
+                    "",
+                )
+
+                apply_message, applied = reconcile(api, root, None, True)
+
+            self.assertIn("Opened draft smoke-test adoption PR #123", apply_message)
+            self.assertTrue(applied)
+            self.assertEqual(api.created_body, PR_BODY)
+            self.assertEqual(len(api.comments), 1)
+            self.assertTrue(
+                run_process(
+                    [
+                        "git",
+                        "ls-remote",
+                        "--heads",
+                        "origin",
+                        "otelbot/smoke-test-image-versions",
+                    ],
+                    cwd=root,
+                )
             )
-        }
+
+    def test_main_advancement_merges_and_preserves_pending_family_pins(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "checkout"
+            remote = Path(directory) / "remote.git"
+            initial_sha = initialize_remote(root, remote)
+            grpc_tag = "20261120.987654000001"
+            create_adoption_branch(root, "grpc", grpc_tag)
+
+            run_process(["git", "checkout", "main"], cwd=root)
+            main_files = pin_files()
+            main_files, _ = update_pin(main_files, "play", "20261120.111111000001")
+            for path, content in main_files.items():
+                (root / path).write_text(content, encoding="utf-8")
+            (root / "main-advancement.txt").write_text("unrelated main change\n", encoding="utf-8")
+            run_process(["git", "add", *PIN_FILES, "main-advancement.txt"], cwd=root)
+            run_process(["git", "commit", "-m", "advance main"], cwd=root)
+            run_process(["git", "push", "origin", "main"], cwd=root)
+            current_main = run_process(["git", "rev-parse", "HEAD"], cwd=root).strip()
+
+            class FakeGitHub:
+                def open_adoption_prs(self):
+                    return [{"number": 42, "base": {"ref": "main"}}]
+
+            base_ref, base_files, branch_files, _pr, expected_head = prepare_branch(
+                root, FakeGitHub()
+            )
+            self.assertNotEqual(initial_sha, current_main)
+            self.assertEqual(image_pin(base_files, "play"), "20261120.111111000001")
+            self.assertEqual(image_pin(branch_files, "play"), "20261120.111111000001")
+            self.assertEqual(image_pin(branch_files, "grpc"), grpc_tag)
+            self.assertEqual(expected_head, remote_head(root, "otelbot/smoke-test-image-versions"))
+            self.assertEqual(
+                run_process(["git", "merge-base", "HEAD", base_ref], cwd=root).strip(),
+                current_main,
+            )
+            self.assertEqual(
+                run_process(["git", "show", "HEAD:main-advancement.txt"], cwd=root),
+                "unrelated main change\n",
+            )
+
+            run_process(
+                ["git", "push", "origin", "HEAD:refs/heads/otelbot/smoke-test-image-versions"],
+                cwd=root,
+            )
+            _, second_base, second_branch, _, _ = prepare_branch(root, FakeGitHub())
+            self.assertEqual(image_pin(second_base, "play"), image_pin(second_branch, "play"))
+            self.assertEqual(image_pin(second_branch, "grpc"), grpc_tag)
+
+    def test_conflicting_main_pin_change_is_aborted(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "checkout"
+            remote = Path(directory) / "remote.git"
+            initialize_remote(root, remote)
+            create_adoption_branch(root, "fake-backend", "20261120.987654000001")
+            run_process(["git", "checkout", "main"], cwd=root)
+            main_files, _ = update_pin(pin_files(), "fake-backend", "20261120.111111000001")
+            for path, content in main_files.items():
+                (root / path).write_text(content, encoding="utf-8")
+            run_process(["git", "add", *PIN_FILES], cwd=root)
+            run_process(["git", "commit", "-m", "advance fake-backend pin"], cwd=root)
+            run_process(["git", "push", "origin", "main"], cwd=root)
+
+            class FakeGitHub:
+                def open_adoption_prs(self):
+                    return [{"number": 42, "base": {"ref": "main"}}]
+
+            with self.assertRaisesRegex(AdoptionError, "conflicts with pending adoption pins"):
+                prepare_branch(root, FakeGitHub())
+            self.assertEqual(run_process(["git", "status", "--porcelain"], cwd=root), "")
+
+    def test_older_completion_does_not_replace_a_pending_pin(self):
+        current = pin_files()
+        newer = run_record(run_id=123457, sha="a" * 40)
+        newer["created_at"] = "2026-11-20T12:00:00Z"
+        newer_tag = publication_id(newer)
+        branch, _ = update_pin(current, "fake-backend", newer_tag)
+        older = run_record(run_id=123456, sha="a" * 40)
+        older["created_at"] = "2026-11-19T12:00:00Z"
+        older_tag = publication_id(older)
+        main_sha = "a" * 40
 
         class FakeGitHub:
-            body = original_body
+            def main_sha(self):
+                return main_sha
 
-            def get_pr(self, _number):
-                return {"number": 123, "body": self.body}
+            def workflow_runs(self, family):
+                return [older] if family == "fake-backend" else []
+
+            def run_attempt(self, _run_id, _attempt):
+                return older
+
+            def compare(self, _base, _head):
+                return "identical"
+
+            def pr_comments(self, _number):
+                update = (
+                    "fake-backend",
+                    image_pin(current, "fake-backend"),
+                    newer_tag,
+                    str(newer["id"]),
+                    newer["run_attempt"],
+                    f"https://github.com/{REPOSITORY}/actions/runs/"
+                    f"{newer['id']}/attempts/{newer['run_attempt']}",
+                )
+                return [{"body": publication_comment(update), "user": {"login": BOT_NAME}}]
+
+        pr = {"number": 42, "base": {"ref": "main"}}
+        head = run_process(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
+        with (
+            patch(
+                "smoke_test_image_adoption.prepare_branch",
+                return_value=(main_sha, current, branch, pr, head),
+            ),
+            patch(
+                "smoke_test_image_adoption.verify_eligible_run",
+                return_value=(
+                    older,
+                    older_tag,
+                    f"https://github.com/{REPOSITORY}/actions/runs/"
+                    f"{older['id']}/attempts/{older['run_attempt']}",
+                ),
+            ),
+            patch(
+                "smoke_test_image_adoption.resolve_pinned_run",
+                return_value=newer,
+            ),
+        ):
+            message, has_updates = reconcile(FakeGitHub(), ROOT, None, False)
+
+        self.assertIn("No newer verified image versions found.", message)
+        self.assertFalse(has_updates)
+
+    def test_publication_comments_are_append_only_and_idempotent(self):
+        original_body = "Human context before update."
+        pr = {"number": 123, "body": original_body}
+        update = (
+            "fake-backend",
+            "20260825.1",
+            TAG,
+            "123456",
+            1,
+            "https://github.com/open-telemetry/opentelemetry-java-instrumentation/"
+            "actions/runs/123456/attempts/1",
+        )
+
+        class FakeGitHub:
+            comments = [
+                {"body": "Existing human comment", "user": {"login": "human"}}
+            ]
+
+            def pr_comments(self, _number):
+                return list(self.comments)
+
+            def create_pr_comment(self, _number, body):
+                pr["body"] = "Human edit at final write boundary."
+                self.comments.append({"body": body, "user": {"login": BOT_NAME}})
 
         api = FakeGitHub()
-        refreshed = refresh_pr_body(api, pr, base, branch, family_links)
-        self.assertTrue(refreshed.startswith("Human context before."))
-        self.assertTrue(refreshed.endswith("Human context after."))
+        post_publication_comments(api, pr, [update])
+        post_publication_comments(api, pr, [update])
 
-        api.body = original_body.replace("Human context after.", "Updated by a human.")
-        with self.assertRaisesRegex(AdoptionError, "body changed during update"):
-            refresh_pr_body(api, pr, base, branch, family_links)
+        self.assertEqual(pr["body"], "Human edit at final write boundary.")
+        self.assertEqual(api.comments[0]["body"], "Existing human comment")
+        self.assertEqual(len(api.comments), 2)
+        self.assertIn(TAG, api.comments[1]["body"])
+        self.assertIn(f"/actions/runs/123456", api.comments[1]["body"])
+        self.assertEqual(missing_publication_comments(api.comments, [update]), [])
+
+    def test_non_bot_comment_cannot_claim_publication_identity(self):
+        update = (
+            "fake-backend",
+            "20260825.1",
+            TAG,
+            "123456",
+            1,
+            "https://github.com/open-telemetry/opentelemetry-java-instrumentation/"
+            "actions/runs/123456/attempts/1",
+        )
+        with self.assertRaisesRegex(AdoptionError, "non-bot PR comment"):
+            missing_publication_comments(
+                [{"body": publication_comment(update), "user": {"login": "human"}}],
+                [update],
+            )
 
     def test_python_subprocesses_do_not_open_windows(self):
         with patch.object(sys, "platform", "win32"), patch.object(

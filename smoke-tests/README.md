@@ -27,12 +27,13 @@ The early-JDK8 image is a historical fixture and is not part of this candidate m
 ## Reviewing image update PRs
 
 Successful maintained-family publications may produce one draft PR that updates the corresponding
-image-version constants. Review the linked publisher runs and image versions, then let the ordinary
+image-version constants. Bot-authored update comments record each exact previous and proposed
+version and link to the verified publisher run and attempt. Review those updates and let the ordinary
 smoke-test checks finish before manually merging; a failed check never changes the pins on `main`.
 
 If publication validation fails, use the exact run and attempt in the diagnostic. Re-run all jobs
 for servlet or fake-backend publications to get a fresh family identifier. If an adoption update
-is refused because its branch changed or contains unexpected edits, preserve that branch and
-resolve the open PR manually rather than force-pushing over it. The **Propose smoke-test image
-updates** workflow can also be started manually with a publisher run ID and attempt for read-only
-validation.
+is refused because its branch changed, conflicts with a main pin, or contains unexpected edits,
+preserve that branch and resolve the open PR manually rather than force-pushing over it. The
+**Propose smoke-test image updates** workflow can also be started manually with a publisher run ID
+and attempt for read-only validation.

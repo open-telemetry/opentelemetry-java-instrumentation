@@ -24,8 +24,13 @@ ADOPTION_BRANCH = "otelbot/smoke-test-image-versions"
 BOT_NAME = "otelbot"
 BOT_EMAIL = "197425009+otelbot@users.noreply.github.com"
 TITLE = "Update smoke-test image versions"
-BODY_START = "<!-- smoke-test-image-adoption:start -->"
-BODY_END = "<!-- smoke-test-image-adoption:end -->"
+MERGE_TITLE = "Sync smoke-test image adoption branch with main"
+PR_BODY = (
+    "Proposes verified smoke-test image pin updates. Exact previous and proposed "
+    "versions, along with links to their verified publisher runs, are recorded in "
+    "bot-authored update comments below. Review the updates and let the ordinary "
+    "smoke-test checks finish before manually merging."
+)
 API = "https://api.github.com"
 REGISTRY = "ghcr.io/open-telemetry/opentelemetry-java-instrumentation"
 MAX_CANDIDATE_SIZE = 1024 * 1024
@@ -291,11 +296,11 @@ class GitHub:
             },
         )
 
-    def get_pr(self, number):
-        return self.request("GET", f"pulls/{number}")
+    def pr_comments(self, number):
+        return self.pages(f"issues/{number}/comments")
 
-    def update_pr_body(self, number, body):
-        return self.request("PATCH", f"pulls/{number}", {"body": body})
+    def create_pr_comment(self, number, body):
+        return self.request("POST", f"issues/{number}/comments", {"body": body})
 
 
 def expected_workflow_ref(family_name):
@@ -570,33 +575,54 @@ def require_expected_remote_head(expected, actual):
         )
 
 
-def generated_body(rows):
-    lines = [
-        BODY_START,
-        "Verified smoke-test image publications:",
-        "",
-        "| Family | Previous | Proposed | Verified publication |",
-        "| --- | --- | --- | --- |",
-    ]
-    for family_name in sorted(rows):
-        old_version, new_version, run_id = rows[family_name]
-        run_url = f"https://github.com/{REPOSITORY}/actions/runs/{run_id}"
-        lines.append(
-            f"| {family_name} | {old_version} | {new_version} | "
-            f"[run {run_id}]({run_url}) |"
-        )
-    lines.append(BODY_END)
-    return "\n".join(lines)
+def publication_comment(update):
+    family, old_version, new_version, run_id, attempt, run_url = update
+    marker = (
+        f"<!-- smoke-test-image-adoption:{family}:{run_id}:"
+        f"{attempt}:{new_version} -->"
+    )
+    return (
+        f"{marker}\n"
+        f"Verified smoke-test image publication for **{family}**.\n\n"
+        f"- Previous version: `{old_version}`\n"
+        f"- Proposed version: `{new_version}`\n"
+        f"- Verified publication: [run {run_id}, attempt {attempt}]({run_url})"
+    )
 
 
-def replace_body_section(body, generated):
-    if BODY_START not in body or BODY_END not in body:
-        raise AdoptionError("open adoption PR is missing its generated section")
-    start = body.index(BODY_START)
-    end = body.index(BODY_END, start) + len(BODY_END)
-    if body.find(BODY_START, start + 1) != -1 or body.find(BODY_END, end) != -1:
-        raise AdoptionError("open adoption PR has duplicate generated section markers")
-    return body[:start] + generated + body[end:]
+def missing_publication_comments(comments, updates):
+    comments_by_body = {
+        comment.get("body", ""): comment
+        for comment in comments
+    }
+    missing = []
+    for update in updates:
+        body = publication_comment(update)
+        if body not in comments_by_body:
+            marker = body.splitlines()[0]
+            matching = [
+                comment
+                for comment in comments
+                if marker in comment.get("body", "")
+            ]
+            if matching:
+                raise AdoptionError(
+                    "publication identity already appears in a non-identical PR comment"
+                )
+            missing.append((update, body))
+            continue
+        author = (comments_by_body[body].get("user") or {}).get("login")
+        if author not in (BOT_NAME, f"{BOT_NAME}[bot]"):
+            raise AdoptionError(
+                "publication identity already appears in a non-bot PR comment"
+            )
+    return missing
+
+
+def post_publication_comments(api, pr, updates):
+    comments = api.pr_comments(pr["number"])
+    for _, body in missing_publication_comments(comments, updates):
+        api.create_pr_comment(pr["number"], body)
 
 
 def expected_servlet_images(repo_root, trusted_sha, tag):
@@ -780,7 +806,11 @@ def verify_eligible_run(api, run, family_name, main_sha, repo_root):
     for reference, expected_digest in image_digests.items():
         if manifest_digest(reference) != expected_digest:
             raise AdoptionError(f"registry manifest changed or is unavailable for {reference}")
-    return exact_run, tag, f"https://github.com/{REPOSITORY}/actions/runs/{run_id}"
+    return (
+        exact_run,
+        tag,
+        f"https://github.com/{REPOSITORY}/actions/runs/{run_id}/attempts/{attempt}",
+    )
 
 
 def family_for_run(run):
@@ -847,12 +877,51 @@ def commit_records(root, base_ref, branch_ref):
     output = local_git(
         [
             "log",
-            "--format=%an%x09%ae%x09%cn%x09%ce%x09%s",
+            "--first-parent",
+            "--format=%an%x09%ae%x09%cn%x09%ce%x09%s%x09%P",
             f"{base_ref}..{branch_ref}",
         ],
         root,
     )
-    return [tuple(line.split("\t", 4)) for line in output.splitlines() if line]
+    return [
+        tuple(line.split("\t", 5))
+        for line in output.splitlines()
+        if line
+    ]
+
+
+def validate_branch_commits(root, commits, base_ref):
+    bot_commits = []
+    for author, email, committer, committer_email, subject, parents in commits:
+        if (
+            author != BOT_NAME
+            or email != BOT_EMAIL
+            or committer != BOT_NAME
+            or committer_email != BOT_EMAIL
+        ):
+            raise AdoptionError(
+                "adoption branch contains an unexpected commit; preserve it and retry manually"
+            )
+        parent_shas = parents.split()
+        if len(parent_shas) == 1 and subject == TITLE:
+            bot_commits.append(
+                (author, email, committer, committer_email, subject)
+            )
+        elif len(parent_shas) == 2 and subject == MERGE_TITLE:
+            try:
+                local_git(
+                    ["merge-base", "--is-ancestor", parent_shas[1], base_ref],
+                    root,
+                )
+            except AdoptionError:
+                raise AdoptionError(
+                    "adoption branch contains a merge from unexpected history"
+                ) from None
+        else:
+            raise AdoptionError(
+                "adoption branch contains an unexpected commit; preserve it and retry manually"
+            )
+    return bot_commits
 
 
 def diff_paths(root, base_ref, branch_ref):
@@ -890,21 +959,43 @@ def prepare_branch(root, api):
             ["fetch", "--no-tags", "origin", f"refs/heads/{ADOPTION_BRANCH}:{branch_ref}"],
             root,
         )
-        try:
-            local_git(["merge-base", "--is-ancestor", base_ref, branch_ref], root)
-        except AdoptionError:
-            raise AdoptionError(
-                "adoption PR branch is behind main or has unexpected history; "
-                "preserve it and retry manually"
-            ) from None
-        paths = diff_paths(root, base_ref, branch_ref)
+        fork_point = local_git(["merge-base", base_ref, branch_ref], root).strip()
+        fork_files = read_pin_files(root, fork_point)
+        paths = diff_paths(root, fork_point, branch_ref)
         if not paths or not paths.issubset(set(PIN_FILES)):
             raise AdoptionError(
                 "adoption branch contains unexpected files; preserve it and retry manually"
             )
         branch_files = read_pin_files(root, branch_ref)
-        validate_bot_branch(base_files, branch_files, commit_records(root, base_ref, branch_ref))
+        commits = commit_records(root, fork_point, branch_ref)
+        bot_commits = validate_branch_commits(root, commits, base_ref)
+        validate_bot_branch(fork_files, branch_files, bot_commits)
         local_git(["checkout", "--detach", branch_ref], root)
+        try:
+            local_git(
+                [
+                    "-c",
+                    f"user.name={BOT_NAME}",
+                    "-c",
+                    f"user.email={BOT_EMAIL}",
+                    "merge",
+                    "--no-edit",
+                    "-m",
+                    MERGE_TITLE,
+                    base_ref,
+                ],
+                root,
+            )
+        except AdoptionError:
+            try:
+                local_git(["merge", "--abort"], root)
+            except AdoptionError:
+                pass
+            raise AdoptionError(
+                "main conflicts with pending adoption pins; preserve the branch and "
+                "resolve manually"
+            ) from None
+        branch_files = read_pin_files(root, "HEAD")
         expected_head = existing_head
     else:
         if pr:
@@ -912,44 +1003,35 @@ def prepare_branch(root, api):
                 "open adoption PR has no source branch; preserve it and inspect manually"
             )
         branch_files = dict(base_files)
-        local_git(["checkout", "-b", ADOPTION_BRANCH, base_ref], root)
+        local_git(["checkout", "--detach", base_ref], root)
         expected_head = None
     return base_ref, base_files, branch_files, pr, expected_head
 
 
-def render_pr_body(existing_pr, base_files, branch_files, family_links):
-    changed = {
-        family: (image_pin(base_files, family), image_pin(branch_files, family))
-        for family in FAMILIES
-        if image_pin(base_files, family) != image_pin(branch_files, family)
-    }
-    if not changed:
-        return None
-    if set(changed) != set(family_links):
-        raise AdoptionError("adoption PR summary is missing verified publication provenance")
-    rows = {
-        family: (old, new, family_links[family])
-        for family, (old, new) in changed.items()
-    }
-    rendered = generated_body(rows)
-    if not existing_pr:
-        return rendered
-    return replace_body_section(existing_pr.get("body") or "", rendered)
+def publication_updates(api, base_files, branch_files, verified):
+    updates = []
+    for family in FAMILIES:
+        old_version = image_pin(base_files, family)
+        new_version = image_pin(branch_files, family)
+        if old_version == new_version:
+            continue
+        if family in verified:
+            tag, run_url, run_id, attempt = verified[family]
+            if tag != new_version:
+                raise AdoptionError("verified publication does not match the proposed pin")
+        else:
+            run = resolve_pinned_run(api, family, new_version)
+            run_id = str(run["id"])
+            attempt = int(run["run_attempt"])
+            run_url = (
+                f"https://github.com/{REPOSITORY}/actions/runs/"
+                f"{run_id}/attempts/{attempt}"
+            )
+        updates.append((family, old_version, new_version, str(run_id), attempt, run_url))
+    return updates
 
 
-def refresh_pr_body(api, pr, base_files, branch_files, family_links):
-    latest_pr = api.get_pr(pr["number"])
-    if (latest_pr.get("body") or "") != (pr.get("body") or ""):
-        raise AdoptionError(
-            "adoption PR body changed during update; no body was overwritten, inspect and retry"
-        )
-    return render_pr_body(latest_pr, base_files, branch_files, family_links)
-
-
-def publish_update(root, api, branch_files, base_files, pr, expected_head, family_links):
-    new_body = render_pr_body(pr, base_files, branch_files, family_links)
-    if new_body is None:
-        return "No newer verified smoke-test image publications to propose."
+def publish_update(root, api, branch_files, pr, expected_head, updates):
     changed_paths = [
         path for path in PIN_FILES if branch_files[path] != read_pin_files(root, "HEAD")[path]
     ]
@@ -977,10 +1059,12 @@ def publish_update(root, api, branch_files, base_files, pr, expected_head, famil
             "inspect the open PR and retry"
         ) from None
     if pr:
-        new_body = refresh_pr_body(api, pr, base_files, branch_files, family_links)
-        api.update_pr_body(pr["number"], new_body)
+        post_publication_comments(api, pr, updates)
         return f"Updated smoke-test adoption PR #{pr['number']}."
-    created = api.create_pr(new_body)
+    if not updates:
+        return "No newer verified smoke-test image publications to propose."
+    created = api.create_pr(PR_BODY)
+    post_publication_comments(api, created, updates)
     return f"Opened draft smoke-test adoption PR #{created['number']}."
 
 
@@ -1067,7 +1151,23 @@ def reconcile(api, root, trigger, apply):
             continue
         updated, _ = update_pin(current_files, family_name, tag)
         current_files = updated
-        verified[family_name] = (tag, run_url)
+        verified[family_name] = (
+            tag,
+            run_url,
+            str(exact_run["id"]),
+            int(exact_run["run_attempt"]),
+        )
+    updates = publication_updates(api, base_files, current_files, verified)
+    missing_comments = (
+        missing_publication_comments(
+            api.pr_comments(pr["number"]) if pr else [],
+            updates,
+        )
+    )
+    branch_needs_push = (
+        pr is not None
+        and expected_head != local_git(["rev-parse", "HEAD"], root).strip()
+    )
     if not apply:
         changes = [
             f"{name}: {image_pin(initial_files, name)} -> {image_pin(current_files, name)}"
@@ -1078,46 +1178,17 @@ def reconcile(api, root, trigger, apply):
             image_pin(base_files, name) != image_pin(current_files, name)
             for name in FAMILIES
         )
-        links = {
-            family: url.rsplit("/", 1)[-1] for family, (_, url) in verified.items()
-        }
-        pending_families = {
-            family: image_pin(current_files, family)
-            for family in FAMILIES
-            if image_pin(base_files, family) != image_pin(current_files, family)
-        }
-        for family, version in pending_families.items():
-            if family not in links:
-                links[family] = str(resolve_pinned_run(api, family, version)["id"])
-        body = render_pr_body(pr, base_files, current_files, links)
-        body_needs_update = (
-            body is not None
-            and (pr is None or body != (pr.get("body") or ""))
-        )
         return (
             "Dry run; no branch or PR writes performed.\n"
             + ("\n".join(changes) if changes else "No newer verified image versions found."),
-            bool(verified) or body_needs_update or (pending and pr is None),
+            bool(missing_comments) or (pending and pr is None) or branch_needs_push,
         )
-    pending = {
-        family: image_pin(current_files, family)
-        for family in FAMILIES
-        if image_pin(base_files, family) != image_pin(current_files, family)
-    }
-    if not pending and not pr:
+    if not updates and not pr:
         return "No newer verified smoke-test image publications to propose.", False
-    links = {
-        family: url.rsplit("/", 1)[-1] for family, (_, url) in verified.items()
-    }
-    for family, version in pending.items():
-        if family not in links:
-            run = resolve_pinned_run(api, family, version)
-            links[family] = str(run["id"])
-    body = render_pr_body(pr, base_files, current_files, links)
-    if not verified and pr and body == (pr.get("body") or ""):
+    if pr and not missing_comments and not branch_needs_push:
         return "No newer verified smoke-test image publications to propose.", False
     return (
-        publish_update(root, api, current_files, base_files, pr, expected_head, links),
+        publish_update(root, api, current_files, pr, expected_head, updates),
         True,
     )
 
