@@ -23,7 +23,10 @@ class QuarkusSmokeTest extends AbstractSmokeTest<Integer> {
             jdk ->
                 String.format(
                     "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-%s",
-                    jdk, TestImageVersions.QUARKUS_VERSION))
+                    jdk,
+                    jdk == 17
+                        ? TestImageVersions.QUARKUS_JAVA_17_VERSION
+                        : TestImageVersions.QUARKUS_VERSION))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*"))
         .setServiceName(false);
   }
