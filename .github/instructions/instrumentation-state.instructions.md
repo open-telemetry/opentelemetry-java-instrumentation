@@ -104,7 +104,11 @@ not remove the SDK's saved TCCL.
 **Registration ownership.** Identify who owns the registration and when it ends. Verify that
 every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
 the returned handle and remove any long-lived registry entries for that registration.
-Dropping the handle does not unregister the callback.
+Clearing a reference to the handle without closing it does not unregister the callback.
+
+After `close()`, the SDK handle still holds the callback and the saved TCCL. If either
+should be collectible while the owner is still alive, clear the field that stores the
+closed handle, for example by setting it to `null`.
 
 A callback can strongly hold state that should live as long as the registration. For example,
 the HikariCP callback captures `PoolStats`, which references the pool. When HikariCP shuts down
