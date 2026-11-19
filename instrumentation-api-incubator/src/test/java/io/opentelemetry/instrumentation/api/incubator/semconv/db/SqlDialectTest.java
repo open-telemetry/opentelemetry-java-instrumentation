@@ -17,47 +17,42 @@ import org.junit.jupiter.params.provider.MethodSource;
 class SqlDialectTest {
 
   @Test
-  void builderDefaultsToStringLiterals() {
+  void builderDefaultsToSanitizingDoubleQuotedFragments() {
     assertThat(
             SqlQueryAnalyzer.create(true)
-                .analyze("SELECT \"name\" FROM catalog WHERE id = 42", SqlDialect.builder().build())
+                .analyze("SELECT \"name\" FROM catalog", SqlDialect.builder().build())
                 .getQueryText())
-        .isEqualTo("SELECT ? FROM catalog WHERE id = ?");
+        .isEqualTo("SELECT ? FROM catalog");
   }
 
   @ParameterizedTest
-  @MethodSource("doubleQuotedQueries")
-  void sanitizesDoubleQuotedQueries(String dbSystemName, boolean identifiers) {
+  @MethodSource("databaseNamesAndExpectedSanitizedQueries")
+  void selectsQuotingPolicyForDatabase(String dbSystemName, String expectedQueryText) {
     assertThat(
             SqlQueryAnalyzer.create(true)
-                .analyze(
-                    "SELECT \"name\" FROM catalog WHERE id = 42",
-                    SqlDialect.forDbSystemName(dbSystemName))
+                .analyze("SELECT \"name\" FROM catalog", SqlDialect.forDbSystemName(dbSystemName))
                 .getQueryText())
-        .isEqualTo(
-            identifiers
-                ? "SELECT \"name\" FROM catalog WHERE id = ?"
-                : "SELECT ? FROM catalog WHERE id = ?");
+        .isEqualTo(expectedQueryText);
   }
 
-  private static Stream<Arguments> doubleQuotedQueries() {
+  private static Stream<Arguments> databaseNamesAndExpectedSanitizedQueries() {
     return Stream.of(
-        argumentSet("PostgreSQL", "postgresql", true),
-        argumentSet("Oracle", "oracle.db", true),
-        argumentSet("DB2", "ibm.db2", true),
-        argumentSet("Derby", "derby", true),
-        argumentSet("HSQLDB", "hsqldb", true),
-        argumentSet("SAP HANA", "sap.hana", true),
-        argumentSet("ClickHouse", "clickhouse", true),
-        argumentSet("PolarDB", "polardb", true),
-        argumentSet("Cassandra", "cassandra", true),
-        argumentSet("Geode", "geode", true),
-        argumentSet("InfluxDB", "influxdb", true),
-        argumentSet("MySQL", "mysql", false),
-        argumentSet("MariaDB", "mariadb", false),
-        argumentSet("SQL Server", "microsoft.sql_server", false),
-        argumentSet("Couchbase", "couchbase", false),
-        argumentSet("unknown", "other_sql", false),
-        argumentSet("null", null, false));
+        argumentSet("PostgreSQL", "postgresql", "SELECT \"name\" FROM catalog"),
+        argumentSet("Oracle", "oracle.db", "SELECT \"name\" FROM catalog"),
+        argumentSet("DB2", "ibm.db2", "SELECT \"name\" FROM catalog"),
+        argumentSet("Derby", "derby", "SELECT \"name\" FROM catalog"),
+        argumentSet("HSQLDB", "hsqldb", "SELECT \"name\" FROM catalog"),
+        argumentSet("SAP HANA", "sap.hana", "SELECT \"name\" FROM catalog"),
+        argumentSet("ClickHouse", "clickhouse", "SELECT \"name\" FROM catalog"),
+        argumentSet("PolarDB", "polardb", "SELECT \"name\" FROM catalog"),
+        argumentSet("Cassandra", "cassandra", "SELECT \"name\" FROM catalog"),
+        argumentSet("Geode", "geode", "SELECT \"name\" FROM catalog"),
+        argumentSet("InfluxDB", "influxdb", "SELECT \"name\" FROM catalog"),
+        argumentSet("MySQL", "mysql", "SELECT ? FROM catalog"),
+        argumentSet("MariaDB", "mariadb", "SELECT ? FROM catalog"),
+        argumentSet("SQL Server", "microsoft.sql_server", "SELECT ? FROM catalog"),
+        argumentSet("Couchbase", "couchbase", "SELECT ? FROM catalog"),
+        argumentSet("unknown", "other_sql", "SELECT ? FROM catalog"),
+        argumentSet("null", null, "SELECT ? FROM catalog"));
   }
 }
