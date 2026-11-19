@@ -23,6 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.PointData;
@@ -270,6 +271,26 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
 
     produceRecords();
     consumeRecords();
+
+    testing()
+        .waitAndAssertMetrics(
+            testing() instanceof AgentInstrumentationExtension
+                ? "io.opentelemetry.kafka-clients-0.11"
+                : "io.opentelemetry.kafka-clients-2.6",
+            metric ->
+                metric
+                    .hasName("kafka.consumer.fetch_latency_avg")
+                    .satisfies(
+                        metricData ->
+                            assertThat(metricData.getData().getPoints())
+                                .anySatisfy(
+                                    point ->
+                                        assertThat(
+                                                point
+                                                    .getAttributes()
+                                                    .get(stringKey("kafka.cluster.id")))
+                                            .isNotEmpty())),
+            metric -> metric.hasName("kafka.consumer.records_lag"));
 
     Set<String> expectedMetricNames =
         new HashSet<>(
