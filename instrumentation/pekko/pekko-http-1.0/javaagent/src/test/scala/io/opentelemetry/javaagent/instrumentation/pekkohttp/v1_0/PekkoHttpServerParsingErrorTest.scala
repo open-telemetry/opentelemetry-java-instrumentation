@@ -13,8 +13,6 @@ import io.opentelemetry.instrumentation.testing.junit.{
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.trace.data.StatusData
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
-import io.opentelemetry.api.common.AttributeKey
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion
 import io.opentelemetry.semconv.{
   ErrorAttributes,
   HttpAttributes,
@@ -420,38 +418,8 @@ class PekkoHttpServerParsingErrorTest {
       query: Option[String] = None,
       protocolVersion: Option[String] = None
   ): SpanDataAssert = {
-    def ifRequestContext(
-        key: AttributeKey[String],
-        value: Option[String]
-    ): Option[AttributeAssertion] =
-      if (PekkoHttpServerParsingErrorTest.requestContextAvailable)
-        value.map(equalTo(key, _))
-      else None
-
-    val attributes = Seq(
-      Some(
-        equalTo(
-          HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
-          java.lang.Long.valueOf(statusCode)
-        )
-      ),
-      if (statusCode >= 500)
-        Some(equalTo(ErrorAttributes.ERROR_TYPE, statusCode.toString))
-      else None,
-      ifRequestContext(HttpAttributes.HTTP_REQUEST_METHOD, method),
-      ifRequestContext(UrlAttributes.URL_PATH, path),
-      ifRequestContext(UrlAttributes.URL_SCHEME, scheme),
-      ifRequestContext(UrlAttributes.URL_QUERY, query),
-      ifRequestContext(
-        NetworkAttributes.NETWORK_PROTOCOL_VERSION,
-        protocolVersion
-      )
-    ).flatten
-
-    val name =
-      if (PekkoHttpServerParsingErrorTest.requestContextAvailable)
-        method.getOrElse("HTTP")
-      else "HTTP"
+    val requestContext = PekkoHttpServerParsingErrorTest.requestContextAvailable
+    val name = if (requestContext) method.getOrElse("HTTP") else "HTTP"
     span
       .hasName(name)
       .hasKind(SpanKind.SERVER)
@@ -459,7 +427,36 @@ class PekkoHttpServerParsingErrorTest {
     if (statusCode >= 500) {
       span.hasStatus(StatusData.error())
     }
-    span.hasAttributesSatisfyingExactly(attributes: _*)
+    span.hasAttributesSatisfyingExactly(
+      equalTo(
+        HttpAttributes.HTTP_RESPONSE_STATUS_CODE,
+        java.lang.Long.valueOf(statusCode)
+      ),
+      equalTo(
+        ErrorAttributes.ERROR_TYPE,
+        if (statusCode >= 500) statusCode.toString else null
+      ),
+      equalTo(
+        HttpAttributes.HTTP_REQUEST_METHOD,
+        if (requestContext) method.orNull else null
+      ),
+      equalTo(
+        UrlAttributes.URL_PATH,
+        if (requestContext) path.orNull else null
+      ),
+      equalTo(
+        UrlAttributes.URL_SCHEME,
+        if (requestContext) scheme.orNull else null
+      ),
+      equalTo(
+        UrlAttributes.URL_QUERY,
+        if (requestContext) query.orNull else null
+      ),
+      equalTo(
+        NetworkAttributes.NETWORK_PROTOCOL_VERSION,
+        if (requestContext) protocolVersion.orNull else null
+      )
+    )
   }
 
   /** The response customizer runs on the rejection too, so the response carries
