@@ -157,7 +157,8 @@
       versioning: 'semver-partial',
     },
     {
-      // Match pinned build tags, excluding rolling tags and Java 8's 8u format.
+      // Match pinned version_build tags, excluding rolling tags.
+      // Java 8 uses 8u<update>-b<build> tags instead, which need separate version parsing.
       matchCurrentValue: '/^\\d+(?:\\.\\d+){0,3}_\\d+-.+$/',
       matchDatasources: [
         'docker',
