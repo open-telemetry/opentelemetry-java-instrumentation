@@ -157,8 +157,8 @@
       versioning: 'semver-partial',
     },
     {
-      // Match pinned version_build tags, excluding rolling tags.
-      matchCurrentValue: '/^\\d+(?:\\.\\d+){0,3}_\\d+-.+$/',
+      // Match version_build tags and four-component versions, excluding rolling tags.
+      matchCurrentValue: '/^\\d+(?:(?:\\.\\d+){0,3}_\\d+|(?:\\.\\d+){3})-.+$/',
       matchDatasources: [
         'docker',
       ],
@@ -173,7 +173,7 @@
       // Remove both overrides once the upstream preset handles these tags correctly:
       // https://github.com/renovatebot/renovate/discussions/47083
       versioning: 'loose',
-      versionCompatibility: '^(?<version>\\d+(?:\\.\\d+){0,3}_\\d+)(?<compatibility>-.+)$',
+      versionCompatibility: '^(?<version>\\d+(?:(?:\\.\\d+){0,3}_\\d+|(?:\\.\\d+){3}))(?<compatibility>-.+)$',
     },
     {
       // Java 8 uses update/build tags; Semeru can add a numeric build revision.
