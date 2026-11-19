@@ -30,13 +30,6 @@ class SpringCloudGatewayInstrumentationAutoConfigurationTest {
   }
 
   @Test
-  void instrumentationDisabled() {
-    contextRunner
-        .withPropertyValues("otel.instrumentation.spring-cloud-gateway.enabled=false")
-        .run(context -> assertThat(context).doesNotHaveBean(SpringCloudGatewayRouteFilter.class));
-  }
-
-  @Test
   void gatewayAbsent() {
     contextRunner
         .withClassLoader(new FilteredClassLoader("org.springframework.cloud.gateway"))

@@ -17,9 +17,7 @@ dependencies {
   testLibrary("org.springframework.boot:spring-boot-starter-webflux:2.7.18")
   testLibrary("org.springframework.cloud:spring-cloud-starter-gateway:3.1.8")
 
-  latestDepTestLibrary(
-    "org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:latest.release"
-  )
+  latestDepTestLibrary("org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:latest.release")
 }
 
 if (otelProps.testLatestDeps) {
