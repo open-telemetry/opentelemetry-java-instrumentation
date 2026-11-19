@@ -27,7 +27,7 @@ import org.apache.pekko.http.scaladsl.model.{
 }
 import org.apache.pekko.http.scaladsl.settings.ServerSettings
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.util.function.Consumer
@@ -42,6 +42,7 @@ import PekkoHttpServerParsingErrorTest.send
   * instrumented, so a rejection must still get exactly one span whichever of
   * the two a handler overrides.
   */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoHttpServerParsingErrorHandlerTest {
 
   @RegisterExtension val testing: InstrumentationExtension =
@@ -147,13 +148,4 @@ class OverloadDelegatingParsingErrorHandler extends ParsingErrorHandler {
       settings: ServerSettings
   ): jm.HttpResponse =
     HttpResponse(StatusCodes.ImATeapot)
-
-  override def handle(
-      status: StatusCode,
-      error: ErrorInfo,
-      log: LoggingAdapter,
-      settings: ServerSettings,
-      context: IllegalRequestContext
-  ): jm.HttpResponse =
-    handle(status, error, log, settings)
 }

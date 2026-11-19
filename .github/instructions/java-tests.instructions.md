@@ -121,7 +121,9 @@ fields give each concrete subclass its own state. Clients, containers, addresses
 helpers reading them must not be shared through static fields. An `AutoCleanupExtension` shared
 statically across concrete subclasses can retain the first lifecycle and miss later cleanup.
 True constants and pure helpers may remain static; `InstrumentationExtension` remains a
-`static final @RegisterExtension` so JUnit invokes its class-level callbacks.
+`static final @RegisterExtension` so JUnit invokes its class-level callbacks, which fail the class
+on suppressed advice errors. In Scala, use an instance `@RegisterExtension val` on a `PER_CLASS`
+test class. JUnit does not scan the companion object's fields for registration.
 
 ## Metrics
 
