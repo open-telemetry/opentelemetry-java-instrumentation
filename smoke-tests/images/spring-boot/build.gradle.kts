@@ -34,6 +34,16 @@ val targetJDK = project.findProperty("targetJDK") ?: "17"
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
+val runtimeImages = Properties().apply {
+  rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
+}
+val latestRuntimeImage = runtimeImages.getProperty("latest")
+val fromImage = runtimeImages.getProperty(targetJDK.toString())
+  ?: latestRuntimeImage?.takeIf {
+    it.substringAfterLast(':').substringBefore('@').takeWhile(Char::isDigit) == targetJDK.toString()
+  }
+  ?: error("Unsupported targetJDK: $targetJDK")
+
 java {
   // Jib detects the Java version from sourceCompatibility to determine the entrypoint format.
   // Java 8 doesn't support the @argfile syntax (added in Java 9), so Jib needs to know
@@ -77,9 +87,7 @@ val prepareBootJarForImage = tasks.register<Sync>("prepareBootJarForImage") {
 }
 
 jib {
-  from.image = Properties().apply {
-    rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
-  }.getProperty(targetJDK.toString()) ?: error("Unsupported targetJDK: $targetJDK")
+  from.image = fromImage
   to.image = "ghcr.io/$repo/smoke-test-spring-boot:jdk$targetJDK-$tag"
   container.ports = listOf("8080")
   if (useExecutableBootJarLayout) {

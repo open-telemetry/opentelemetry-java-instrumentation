@@ -38,6 +38,16 @@ val javaLanguageVersion = (targetJDK.toIntOrNull() ?: 17).coerceAtMost(17)
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
+val runtimeImages = Properties().apply {
+  rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
+}
+val latestRuntimeImage = runtimeImages.getProperty("latest")
+val fromImage = runtimeImages.getProperty(targetJDK)
+  ?: latestRuntimeImage?.takeIf {
+    it.substringAfterLast(':').substringBefore('@').takeWhile(Char::isDigit) == targetJDK
+  }
+  ?: error("Unsupported targetJDK: $targetJDK")
+
 java {
   toolchain.languageVersion.set(JavaLanguageVersion.of(javaLanguageVersion))
 }
@@ -45,9 +55,7 @@ java {
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
 jib {
-  from.image = Properties().apply {
-    rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
-  }.getProperty(targetJDK) ?: error("Unsupported targetJDK: $targetJDK")
+  from.image = fromImage
   to.image = "ghcr.io/$repo/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
 }

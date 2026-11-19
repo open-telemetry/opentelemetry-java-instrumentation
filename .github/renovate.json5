@@ -408,6 +408,16 @@
       enabled: true,
     },
     {
+      // this moving runtime tracks feature releases, not only Java LTS releases
+      matchDepNames: [
+        'eclipse-temurin-latest',
+      ],
+      matchDatasources: [
+        'docker',
+      ],
+      allowedVersions: '/.*/',
+    },
+    {
       // using old version of this obscure artifact to test instrumentation of Java 1.1 bytecode
       matchPackageNames: [
         'net.sf.jt400:jt400',
@@ -515,22 +525,23 @@
         'smoke-tests/images/java-runtime-images.properties',
       ],
       matchStrings: [
-        '(?<!\\d)(?<targetJDK>8|11|17|21|25)=(?<depName>eclipse-temurin):(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?',
+        '(?m)^(?<depName>8|11|17|21|25)=(?<packageName>eclipse-temurin):(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?$',
       ],
-      autoReplaceStringTemplate: '{{{targetJDK}}}={{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
+      autoReplaceStringTemplate: '{{{depName}}}={{{packageName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
     },
     {
       customType: 'regex',
       datasourceTemplate: 'docker',
       depNameTemplate: 'eclipse-temurin-latest',
       packageNameTemplate: 'eclipse-temurin',
+      versioningTemplate: 'docker',
       managerFilePatterns: [
         'smoke-tests/images/java-runtime-images.properties',
       ],
       matchStrings: [
-        '# renovate: latest-java-version=(?<currentValue>\\d+)\\n\\k<currentValue>=eclipse-temurin:\\k<currentValue>(?:@(?<currentDigest>sha256:[0-9a-f]+))?',
+        '(?m)^latest=eclipse-temurin:(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?$',
       ],
-      autoReplaceStringTemplate: '# renovate: latest-java-version={{{newValue}}}\n{{{newValue}}}=eclipse-temurin:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
+      autoReplaceStringTemplate: 'latest=eclipse-temurin:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
     },
     {
       customType: 'regex',

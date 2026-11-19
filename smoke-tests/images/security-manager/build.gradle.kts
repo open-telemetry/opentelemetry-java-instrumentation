@@ -20,6 +20,16 @@ val targetJDK = project.findProperty("targetJDK") ?: "11"
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
+val runtimeImages = Properties().apply {
+  rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
+}
+val latestRuntimeImage = runtimeImages.getProperty("latest")
+val fromImage = runtimeImages.getProperty(targetJDK.toString())
+  ?: latestRuntimeImage?.takeIf {
+    it.substringAfterLast(':').substringBefore('@').takeWhile(Char::isDigit) == targetJDK.toString()
+  }
+  ?: error("Unsupported targetJDK: $targetJDK")
+
 java {
   // needed by jib to detect java version used in project
   // for jdk9+ jib uses an entrypoint that doesn't work with jdk8
@@ -30,9 +40,7 @@ java {
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
 jib {
-  from.image = Properties().apply {
-    rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
-  }.getProperty(targetJDK.toString()) ?: error("Unsupported targetJDK: $targetJDK")
+  from.image = fromImage
   to.image = "ghcr.io/$repo/smoke-test-security-manager:jdk$targetJDK-$tag"
   container.mainClass = "io.opentelemetry.smoketest.securitymanager.Main"
   container.jvmFlags = listOf("-Djava.security.manager", "-Djava.security.policy=/app/resources/security.policy")

@@ -44,7 +44,10 @@ jobs:
 
       - name: Set latest Java version
         run: |
-          latest_java_version=$(sed -n 's/^# renovate: latest-java-version=//p' smoke-tests/images/java-runtime-images.properties)
+          latest_java_image=$(sed -n 's/^latest=//p' smoke-tests/images/java-runtime-images.properties)
+          latest_java_version=${latest_java_image#eclipse-temurin:}
+          latest_java_version=${latest_java_version%%@*}
+          latest_java_version=${latest_java_version%%[!0-9]*}
           [[ "$latest_java_version" =~ ^[0-9]+$ ]]
           echo "LATEST_JAVA_VERSION=$latest_java_version" >> "$GITHUB_ENV"
 
