@@ -3,7 +3,6 @@ import org.gradle.api.tasks.Sync
 import org.gradle.jvm.tasks.Jar
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Properties
 
 plugins {
   id("otel.java-conventions")
@@ -34,12 +33,9 @@ val targetJDK = project.findProperty("targetJDK") ?: "17"
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
-val runtimeImages = Properties().apply {
-  rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
-}
-val latestRuntimeImage = runtimeImages.getProperty("latest")
-val fromImage = runtimeImages.getProperty(targetJDK.toString())
-  ?: latestRuntimeImage?.takeIf {
+val latestRuntimeImage = providers.gradleProperty("smokeTestJavaImageLatest").get()
+val fromImage = providers.gradleProperty("smokeTestJavaImage$targetJDK").orNull
+  ?: latestRuntimeImage.takeIf {
     it.substringAfterLast(':').substringBefore('@').takeWhile(Char::isDigit) == targetJDK.toString()
   }
   ?: error("Unsupported targetJDK: $targetJDK")

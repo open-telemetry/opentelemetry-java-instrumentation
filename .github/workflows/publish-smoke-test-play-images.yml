@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "smoke-tests/images/play/**"
-      - "smoke-tests/images/java-runtime-images.properties"
+      - "gradle.properties"
       - ".github/workflows/publish-smoke-test-play-images.yml"
       - ".github/workflows/reusable-publish-smoke-test-images.yml"
     branches:

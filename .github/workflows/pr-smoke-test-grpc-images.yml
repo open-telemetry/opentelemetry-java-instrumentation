@@ -4,7 +4,7 @@ on:
   pull_request:
     paths:
       - "smoke-tests/images/grpc/**"
-      - "smoke-tests/images/java-runtime-images.properties"
+      - "gradle.properties"
       - ".github/workflows/pr-smoke-test-grpc-images.yml"
       - ".github/workflows/reusable-pr-smoke-test-images.yml"
     branches:

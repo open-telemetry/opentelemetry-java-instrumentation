@@ -367,26 +367,6 @@
       ],
     },
     {
-      matchDatasources: [
-        'docker',
-      ],
-      matchPackageNames: [
-        'eclipse-temurin',
-        'ibm-semeru-runtimes',
-        'ibmjava',
-      ],
-      pinDigests: true,
-    },
-    {
-      matchDepNames: [
-        'eclipse-temurin-latest',
-      ],
-      matchDatasources: [
-        'docker',
-      ],
-      pinDigests: true,
-    },
-    {
       // intentionally testing against specific major Java versions
       matchPackageNames: [
         'eclipse-temurin',
@@ -512,22 +492,14 @@
       managerFilePatterns: [
         '**/build.gradle.kts',
         '**/*.java',
+        '/^gradle\\.properties$/',
       ],
+      // Preserve the fixed property key in the same replacement template as quoted literals.
       matchStrings: [
         '"(?<depName>eclipse-temurin|ibm-semeru-runtimes|ibmjava):(?<currentValue>(?:open-)?\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?"',
+        '(?m)^(?<depType>smokeTestJavaImage(?:8|11|17|21|25))=(?<depName>eclipse-temurin):(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?$',
       ],
-      autoReplaceStringTemplate: '"{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}"',
-    },
-    {
-      customType: 'regex',
-      datasourceTemplate: 'docker',
-      managerFilePatterns: [
-        'smoke-tests/images/java-runtime-images.properties',
-      ],
-      matchStrings: [
-        '(?m)^(?<depName>8|11|17|21|25)=(?<packageName>eclipse-temurin):(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?$',
-      ],
-      autoReplaceStringTemplate: '{{{depName}}}={{{packageName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
+      autoReplaceStringTemplate: '{{#if depType}}{{{depType}}}={{else}}"{{/if}}{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}{{#unless depType}}"{{/unless}}',
     },
     {
       customType: 'regex',
@@ -536,12 +508,12 @@
       packageNameTemplate: 'eclipse-temurin',
       versioningTemplate: 'docker',
       managerFilePatterns: [
-        'smoke-tests/images/java-runtime-images.properties',
+        '/^gradle\\.properties$/',
       ],
       matchStrings: [
-        '(?m)^latest=eclipse-temurin:(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?$',
+        '(?m)^smokeTestJavaImageLatest=eclipse-temurin:(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?$',
       ],
-      autoReplaceStringTemplate: 'latest=eclipse-temurin:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
+      autoReplaceStringTemplate: 'smokeTestJavaImageLatest=eclipse-temurin:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
     },
     {
       customType: 'regex',

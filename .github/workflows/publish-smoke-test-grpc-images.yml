@@ -4,7 +4,7 @@ on:
   push:
     paths:
       - "smoke-tests/images/grpc/**"
-      - "smoke-tests/images/java-runtime-images.properties"
+      - "gradle.properties"
       - ".github/workflows/publish-smoke-test-grpc-images.yml"
       - ".github/workflows/reusable-publish-smoke-test-images.yml"
     branches:

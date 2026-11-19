@@ -47,7 +47,7 @@ jobs:
 
       - name: Set latest Java version
         run: |
-          latest_java_image=$(sed -n 's/^latest=//p' smoke-tests/images/java-runtime-images.properties)
+          latest_java_image=$(sed -n 's/^smokeTestJavaImageLatest=//p' gradle.properties)
           latest_java_version=${latest_java_image#eclipse-temurin:}
           latest_java_version=${latest_java_version%%@*}
           latest_java_version=${latest_java_version%%[!0-9]*}

@@ -3,7 +3,6 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import play.gradle.Language
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
-import java.util.Properties
 
 plugins {
   // Don't apply java-conventions since no Java in this project and it interferes with play plugin.
@@ -38,12 +37,9 @@ val javaLanguageVersion = (targetJDK.toIntOrNull() ?: 17).coerceAtMost(17)
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
-val runtimeImages = Properties().apply {
-  rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
-}
-val latestRuntimeImage = runtimeImages.getProperty("latest")
-val fromImage = runtimeImages.getProperty(targetJDK)
-  ?: latestRuntimeImage?.takeIf {
+val latestRuntimeImage = providers.gradleProperty("smokeTestJavaImageLatest").get()
+val fromImage = providers.gradleProperty("smokeTestJavaImage$targetJDK").orNull
+  ?: latestRuntimeImage.takeIf {
     it.substringAfterLast(':').substringBefore('@').takeWhile(Char::isDigit) == targetJDK
   }
   ?: error("Unsupported targetJDK: $targetJDK")
