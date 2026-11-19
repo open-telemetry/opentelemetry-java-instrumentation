@@ -176,20 +176,30 @@
       versionCompatibility: '^(?<version>\\d+(?:(?:\\.\\d+){0,3}_\\d+|(?:\\.\\d+){3}))(?<compatibility>-.+)$',
     },
     {
-      // Java 8 uses update/build tags; Semeru can add a numeric build revision.
-      matchCurrentValue: '/^(?:open-)?8u\\d+-b\\d+(?:\\.\\d+)?-.+$/',
+      // Temurin Java 8 uses update/build tags rather than dotted versions.
+      matchCurrentValue: '/^8u\\d+-b\\d+-.+$/',
       matchDatasources: [
         'docker',
       ],
       matchPackageNames: [
         'eclipse-temurin',
-        'ibm-semeru-runtimes',
       ],
       // Include 8u tags rejected by the preset's LTS-only allowlist.
-      allowedVersions: '/^(?:open-)?8u/',
+      allowedVersions: '/^8u/',
       // Workaround for Java 8 versioning:
       // https://github.com/renovatebot/renovate/issues/19678
-      versioning: 'regex:^(?:open-)?(?<major>8)u(?<patch>\\d+)-b(?<build>\\d+)(?:\\.(?<revision>\\d+))?-(?<compatibility>.+)$',
+      versioning: 'regex:^(?<major>8)u(?<patch>\\d+)-b(?<build>\\d+)-(?<compatibility>.+)$',
+    },
+    {
+      // Parse Semeru's dotted Java 8 tags while preserving the image variant.
+      matchCurrentValue: '/^open-8\\.\\d+\\.\\d+\\.\\d+-.+$/',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        'ibm-semeru-runtimes',
+      ],
+      versioning: 'regex:^open-(?<major>8)\\.(?<minor>\\d+)\\.(?<patch>\\d+)\\.(?<build>\\d+)-(?<compatibility>.+)$',
     },
     {
       // prevent 3.0.1u2 -> 3.0.1
