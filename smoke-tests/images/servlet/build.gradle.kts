@@ -209,6 +209,15 @@ tasks {
   val linuxImages = createDockerTasks(buildLinuxTestImages, false)
   val windowsImages = createDockerTasks(buildWindowsTestImages, true)
 
+  register("writePublicationImages") {
+    val images = (linuxImages + windowsImages).sorted()
+    val output = layout.buildDirectory.file("publication-images.txt")
+    outputs.file(output)
+    doLast {
+      output.get().asFile.writeText(images.joinToString("\n", postfix = "\n"))
+    }
+  }
+
   register<DockerPushImage>("pushLinuxImages") {
     dependsOn(buildLinuxTestImages)
     group = "publishing"

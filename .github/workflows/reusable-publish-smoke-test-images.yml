@@ -38,9 +38,16 @@ jobs:
     permissions:
       contents: read
       packages: write
+    outputs:
+      tag: ${{ steps.set-tag.outputs.tag }}
+      family: ${{ steps.set-tag.outputs.family }}
+      images: ${{ steps.build-images.outputs.images }}
     env:
       LATEST_JAVA_VERSION: 27 # renovate(java-version)
       PROJECT: ${{ inputs.project }}
+      SKIP_JAVA_8: ${{ inputs.skip-java-8 }}
+      SKIP_JAVA_11: ${{ inputs.skip-java-11 }}
+      SKIP_JAVA_17: ${{ inputs.skip-java-17 }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -63,30 +70,68 @@ jobs:
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Set tag
-        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
+        id: set-tag
+        run: |
+          tag="$(date -u '+%Y%m%d').${GITHUB_RUN_ID}$(printf '%06d' "$GITHUB_RUN_ATTEMPT")"
+          echo "TAG=$tag" >> "$GITHUB_ENV"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "family=${PROJECT##*:}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Gradle cache
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: ${{ inputs.cache-read-only }}
 
-      - name: Build Java 8 Docker image
-        if: "!inputs.skip-java-8"
-        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=8 -Djib.httpTimeout=120000 -Djib.console=plain
+      - name: Build Docker images
+        id: build-images
+        run: |
+          set -euo pipefail
+          family="${PROJECT##*:}"
+          versions=()
+          [[ "$SKIP_JAVA_8" == true ]] || versions+=(8)
+          [[ "$SKIP_JAVA_11" == true ]] || versions+=(11)
+          [[ "$SKIP_JAVA_17" == true ]] || versions+=(17)
+          versions+=(21 25 "$LATEST_JAVA_VERSION")
+          : > "$RUNNER_TEMP/publication-images.txt"
+          for version in "${versions[@]}"; do
+            ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK="$version" -Djib.httpTimeout=120000 -Djib.console=plain
+            printf 'ghcr.io/%s/smoke-test-%s:jdk%s-%s\n' "${GITHUB_REPOSITORY,,}" "$family" "$version" "$TAG" >> "$RUNNER_TEMP/publication-images.txt"
+          done
+          echo "images=$(paste -sd ',' "$RUNNER_TEMP/publication-images.txt")" >> "$GITHUB_OUTPUT"
 
-      - name: Build Java 11 Docker image
-        if: "!inputs.skip-java-11"
-        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=11 -Djib.httpTimeout=120000 -Djib.console=plain
+  verify:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Login to GitHub package registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify published image family
+        env:
+          FAMILY: ${{ needs.build.outputs.family }}
+          TAG: ${{ needs.build.outputs.tag }}
+          IMAGES: ${{ needs.build.outputs.images }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        run: |
+          printf '%s\n' "$IMAGES" | tr ',' '\n' > "$RUNNER_TEMP/publication-images.txt"
+          python3 .github/scripts/smoke_test_publication.py \
+            --family "$FAMILY" --tag "$TAG" \
+            --references "$RUNNER_TEMP/publication-images.txt" \
+            --results "$BUILD_RESULT" --output "$RUNNER_TEMP/publication-candidate.json"
 
-      - name: Build Java 17 Docker image
-        if: "!inputs.skip-java-17"
-        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=17 -Djib.httpTimeout=120000 -Djib.console=plain
-
-      - name: Build Java 21 Docker image
-        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=21 -Djib.httpTimeout=120000 -Djib.console=plain
-
-      - name: Build Java 25 Docker image
-        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK=25 -Djib.httpTimeout=120000 -Djib.console=plain
-
-      - name: Build Java ${{ env.LATEST_JAVA_VERSION }} Docker image
-        run: ./gradlew "$PROJECT:jib" -Ptag="$TAG" -PtargetJDK="$LATEST_JAVA_VERSION" -Djib.httpTimeout=120000 -Djib.console=plain
+      - name: Upload publication candidate
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: smoke-test-publication-${{ needs.build.outputs.family }}-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/publication-candidate.json
+          if-no-files-found: error
