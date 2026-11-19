@@ -157,31 +157,17 @@
       versioning: 'semver-partial',
     },
     {
-      // Workaround for Temurin security-tag parsing in workarounds:javaLTSVersions:
+      matchCurrentValue: '/^\\d+(?:\\.\\d+){0,3}_\\d+-.+$/',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        'eclipse-temurin',
+      ],
+      // Keep the explicitly pinned Java major, including non-LTS releases.
+      allowedVersions: '/^{{major}}(?:\\.|_|$)/',
+      // Temporary versioning workaround for Temurin security tags in workarounds:javaLTSVersions:
       // https://github.com/renovatebot/renovate/discussions/47083
-      matchCurrentValue: '/^(?:17|21|25|27)\\.0\\.\\d+(?:\\.\\d+)?_\\d+-.+$/',
-      matchDatasources: [
-        'docker',
-      ],
-      matchPackageNames: [
-        'eclipse-temurin',
-      ],
-      // Java 27 is not LTS but is already in the smoke-test matrix; major updates remain disabled below.
-      allowedVersions: '/^(?:17|21|25|27)(?:\\.|_|-|$)/',
-      versioning: 'loose',
-      versionCompatibility: '^(?<version>\\d+(?:\\.\\d+){0,3}_\\d+)(?<compatibility>-.+)$',
-    },
-    {
-      // Java 27's initial release uses short tags; allow updates to its full patched tags.
-      // TODO remove once both Java 27 pins use dotted tags covered by the rule above.
-      matchCurrentValue: '/^27_35-jdk(?:-windowsservercore-ltsc2022)?$/',
-      matchDatasources: [
-        'docker',
-      ],
-      matchPackageNames: [
-        'eclipse-temurin',
-      ],
-      allowedVersions: '/^27(?:\\.|_|-|$)/',
       versioning: 'loose',
       versionCompatibility: '^(?<version>\\d+(?:\\.\\d+){0,3}_\\d+)(?<compatibility>-.+)$',
     },
