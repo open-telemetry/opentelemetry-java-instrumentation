@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -129,7 +128,7 @@ class SqlClientAttributesExtractorTest {
 
     @Override
     public SqlDialect getSqlDialect(Map<String, Object> map) {
-      return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+      return SqlDialect.UNKNOWN;
     }
 
     @Override

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.influxdb.v2_4;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -38,9 +37,7 @@ final class InfluxDbQueryAttributesGetter
 
   @Override
   public SqlDialect getSqlDialect(InfluxDbQuery request) {
-    // "String literals must be surrounded by single quotes."
-    // https://docs.influxdata.com/influxdb/v2/reference/syntax/influxql/spec/#strings
-    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
+    return SqlDialect.forDbSystemName(getDbSystemName(request));
   }
 
   @Override

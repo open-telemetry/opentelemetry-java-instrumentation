@@ -509,6 +509,8 @@
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.
+- Deprecate `SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS` in favor of `SqlDialect.UNKNOWN`, and
+  `SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS` in favor of `SqlDialect.forDbSystemName(String)`.
 
 ## Version 2.32.0 (2026-10-03)
 

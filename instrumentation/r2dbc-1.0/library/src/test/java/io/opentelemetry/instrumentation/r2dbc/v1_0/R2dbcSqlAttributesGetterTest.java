@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -147,13 +145,23 @@ class R2dbcSqlAttributesGetterTest {
 
   private static Stream<Arguments> dialects() {
     return Stream.of(
-        argumentSet("PostgreSQL", "r2dbc:postgresql://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("Oracle", "r2dbc:oracle://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("DB2", "r2dbc:db2://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("ClickHouse", "r2dbc:clickhouse://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("MySQL", "r2dbc:mysql://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS),
-        argumentSet("SQL Server", "r2dbc:mssql://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS),
-        argumentSet("unknown", "r2dbc:unknown://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS));
+        argumentSet(
+            "PostgreSQL",
+            "r2dbc:postgresql://localhost/db",
+            SqlDialect.forDbSystemName("postgresql")),
+        argumentSet(
+            "Oracle", "r2dbc:oracle://localhost/db", SqlDialect.forDbSystemName("oracle.db")),
+        argumentSet("DB2", "r2dbc:db2://localhost/db", SqlDialect.forDbSystemName("ibm.db2")),
+        argumentSet(
+            "ClickHouse",
+            "r2dbc:clickhouse://localhost/db",
+            SqlDialect.forDbSystemName("clickhouse")),
+        argumentSet("MySQL", "r2dbc:mysql://localhost/db", SqlDialect.forDbSystemName("mysql")),
+        argumentSet(
+            "SQL Server",
+            "r2dbc:mssql://localhost/db",
+            SqlDialect.forDbSystemName("microsoft.sql_server")),
+        argumentSet("unknown", "r2dbc:unknown://localhost/db", SqlDialect.UNKNOWN));
   }
 
   @Test

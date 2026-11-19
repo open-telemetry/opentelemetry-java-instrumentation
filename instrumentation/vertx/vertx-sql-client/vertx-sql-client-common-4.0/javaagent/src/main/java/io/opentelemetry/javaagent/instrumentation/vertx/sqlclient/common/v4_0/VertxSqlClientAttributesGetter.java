@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
 import static java.util.Collections.singleton;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
@@ -31,7 +30,7 @@ class VertxSqlClientAttributesGetter
 
   @Override
   public SqlDialect getSqlDialect(VertxSqlClientRequest request) {
-    return fromDbSystemName(request.getDbSystemName());
+    return SqlDialect.forDbSystemName(request.getDbSystemName());
   }
 
   @Override

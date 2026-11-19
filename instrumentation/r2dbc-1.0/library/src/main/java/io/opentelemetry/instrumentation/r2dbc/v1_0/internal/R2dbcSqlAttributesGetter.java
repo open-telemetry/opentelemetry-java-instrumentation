@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
@@ -29,7 +27,7 @@ public final class R2dbcSqlAttributesGetter
 
   @Override
   public SqlDialect getSqlDialect(DbExecution request) {
-    return fromDbSystemName(request.getSystemName());
+    return SqlDialect.forDbSystemName(request.getSystemName());
   }
 
   @Override

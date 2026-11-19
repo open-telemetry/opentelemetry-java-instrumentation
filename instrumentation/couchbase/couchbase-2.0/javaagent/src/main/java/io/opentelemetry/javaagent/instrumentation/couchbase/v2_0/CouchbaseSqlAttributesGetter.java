@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
@@ -25,7 +24,7 @@ final class CouchbaseSqlAttributesGetter
   public SqlDialect getSqlDialect(CouchbaseRequestInfo request) {
     // SQL++ uses both single and double quotation marks for string literals.
     // https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/literals.html
-    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+    return SqlDialect.UNKNOWN;
   }
 
   @Override
