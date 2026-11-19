@@ -19,5 +19,7 @@ image references, and manifest digests. Treat a candidate as eligible only when 
 job and the required publishing jobs succeeded: an artifact alone is not proof of success if a job
 was cancelled during upload. Re-running a workflow can produce a new candidate; use its recorded
 run and attempt rather than selecting individual tags from the registry.
+To retry a servlet or fake-backend publication, re-run all jobs so that the family receives a
+fresh identifier; re-running only a publish job is rejected to avoid overwriting previous images.
 
 The early-JDK8 image is a historical fixture and is not part of this candidate mechanism.

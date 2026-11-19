@@ -212,6 +212,7 @@ tasks {
   register("writePublicationImages") {
     val images = (linuxImages + windowsImages).sorted()
     val output = layout.buildDirectory.file("publication-images.txt")
+    inputs.property("images", images)
     outputs.file(output)
     doLast {
       output.get().asFile.writeText(images.joinToString("\n", postfix = "\n"))

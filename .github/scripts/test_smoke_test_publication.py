@@ -56,6 +56,10 @@ class PublicationTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.candidate()
 
+    def test_servlet_tag_can_contain_uppercase_version(self):
+        reference = f"ghcr.io/example/project/smoke-test-servlet-wildfly:13.0.0.Final-jdk8-{self.tag}"
+        self.assertEqual(self.candidate(references=[reference])["images"][0]["reference"], reference)
+
     @patch("smoke_test_publication.subprocess.run")
     def test_registry_inspection_uses_exact_reference_without_shell(self, run):
         run.return_value.stdout = "sha256:" + "b" * 64 + "\n"

@@ -29,9 +29,12 @@ def create_candidate(family, repository, commit, run_id, run_attempt, workflow, 
 
     images = []
     for reference in sorted(references):
-        if (not reference.startswith(prefix)
-                or not re.fullmatch(r"[a-z0-9./:_-]+", reference)
-                or not (reference.endswith(f":{tag}") or reference.endswith(f"-{tag}"))):
+        image, separator, image_tag = reference.rpartition(":")
+        if (not image.startswith(prefix)
+                or not re.fullmatch(r"[a-z0-9./_-]+", image)
+                or not separator
+                or not re.fullmatch(r"[\w][\w.-]{0,127}", image_tag, re.ASCII)
+                or not (image_tag == tag or image_tag.endswith(f"-{tag}"))):
             raise ValueError(f"invalid image reference: {reference}")
         digest = inspect(reference)
         if not re.fullmatch(r"sha256:[0-9a-f]{64}", digest):
