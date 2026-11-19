@@ -367,11 +367,10 @@ class DeclarativeConfigValidationTest {
     };
   }
 
-  // The only structured_list config with a flat property is the common server-service-mapping. Its
-  // flat form is a target=service_name map, which the bridge turns into {target, service_name}
-  // entries. readServiceMappingAsMap below rebuilds the target -> service_name map from those
-  // entries, so the comparison exercises getStructuredList (what the consumer uses) rather than a
-  // string lookup.
+  // The common server-service-mapping and its deprecated service-peer-mapping alias both have flat
+  // map forms. The bridge turns those maps into structured entries; readServiceMappingAsMap below
+  // rebuilds the flat map from those entries, so the comparison exercises getStructuredList (what
+  // the consumer uses) rather than a string lookup.
   private static TestValue structuredListTestValue() {
     return new TestValue("host1=svc1,host2=svc2", Map.of("host1", "svc1", "host2", "svc2"));
   }
@@ -415,11 +414,10 @@ class DeclarativeConfigValidationTest {
   }
 
   /**
-   * Reads the server-service-mapping structured list through the bridge (the same {@code
-   * getStructuredList} call {@code ServiceMappingResolver} makes) and collapses its {@code {target,
-   * service_name}} entries back into a {@code target -> service_name} map, so it can be compared
-   * against the flat-property value the test fed in. This is specific to server-service-mapping,
-   * which is currently the only {@code structured_list} config.
+   * Reads a service-mapping structured list through the bridge (the same {@code getStructuredList}
+   * call {@code ServiceMappingResolver} makes) and collapses its {@code {target, service_name}} or
+   * {@code {peer, service_name}} entries back into a flat map, so it can be compared against the
+   * flat-property value the test fed in.
    */
   private static Object readServiceMappingAsMap(
       DeclarativeConfigProperties current, String lastSegment) {
@@ -427,9 +425,10 @@ class DeclarativeConfigValidationTest {
     if (entries == null) {
       return null;
     }
+    String targetField = lastSegment.equals("service_peer_mapping") ? "peer" : "target";
     Map<String, String> mapping = new HashMap<>();
     for (DeclarativeConfigProperties entry : entries) {
-      mapping.put(entry.getString("target"), entry.getString("service_name"));
+      mapping.put(entry.getString(targetField), entry.getString("service_name"));
     }
     return mapping;
   }

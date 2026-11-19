@@ -1,0 +1,405 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.config.bridge;
+
+import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.joining;
+
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.OpenTelemetryConfigurationModel;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.model.internal.ExperimentalGeneralInstrumentationModel;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Consumer;
+import javax.annotation.Nullable;
+
+/**
+ * Defines instrumentation defaults that work with both traditional property-based configuration and
+ * declarative configuration.
+ *
+ * <p>Java instrumentation navigation mirrors {@link
+ * io.opentelemetry.api.incubator.config.DeclarativeConfigProperties}: read-side uses {@code
+ * config.get(name).getString(key)}; write-side uses {@code defaults.get(name).setDefault(key,
+ * value)}. General instrumentation defaults use the explicit {@link #general()} namespace and
+ * support the same navigable API.
+ *
+ * <p>Usage:
+ *
+ * <pre>{@code
+ * DefaultInstrumentationConfig defaults = new DefaultInstrumentationConfig();
+ * defaults.get("micrometer").setDefault("base_time_unit", "s");
+ * defaults.get("log4j_appender").setDefault("experimental_log_attributes/development", true);
+ * defaults.addMapping("acme", "acme.full_name");
+ * defaults.get("acme").get("full_name").setDefault("preserved", true);
+ *
+ * autoConfiguration.addPropertiesSupplier(defaults::toConfigProperties);
+ * }</pre>
+ *
+ * <p>For declarative-config model integration, call {@link
+ * #applyToModel(OpenTelemetryConfigurationModel)}.
+ */
+public final class DefaultInstrumentationConfig {
+
+  private static final String COMMON_SERVICE_PEER_MAPPING = "common.service_peer_mapping";
+  private static final String COMMON_SERVER_SERVICE_MAPPING = "common.server_service_mapping";
+  private static final String LEGACY_SERVICE_MAPPING_PROPERTY =
+      "otel.instrumentation.common.peer-service-mapping";
+
+  private final Map<String, Object> defaults;
+  private final List<String> path;
+  private final boolean generalNamespace;
+  private final Map<String, String> propertyMappings;
+  private final GeneralDefaults generalDefaults;
+
+  public DefaultInstrumentationConfig() {
+    this(new HashMap<>(), emptyList(), false, new HashMap<>(), new GeneralDefaults());
+  }
+
+  private DefaultInstrumentationConfig(
+      Map<String, Object> defaults,
+      List<String> path,
+      boolean generalNamespace,
+      Map<String, String> propertyMappings,
+      GeneralDefaults generalDefaults) {
+    this.defaults = defaults;
+    this.path = path;
+    this.generalNamespace = generalNamespace;
+    this.propertyMappings = propertyMappings;
+    this.generalDefaults = generalDefaults;
+  }
+
+  /**
+   * Returns the defaults node for the given child, mirroring {@code
+   * DeclarativeConfigProperties.get(name)} on the read side.
+   */
+  public DefaultInstrumentationConfig get(String name) {
+    List<String> newPath = new ArrayList<>(path);
+    newPath.add(name);
+    return new DefaultInstrumentationConfig(
+        defaults, newPath, generalNamespace, propertyMappings, generalDefaults);
+  }
+
+  /** Returns the general instrumentation defaults namespace. */
+  public DefaultInstrumentationConfig general() {
+    return new DefaultInstrumentationConfig(
+        defaults, emptyList(), true, propertyMappings, generalDefaults);
+  }
+
+  /**
+   * Customizes general instrumentation defaults using the type-safe declarative model.
+   *
+   * <p>Only model properties with a corresponding traditional config property can be used when
+   * {@link #toConfigProperties()} is called. Declarative-only properties cause that method to throw
+   * an {@link IllegalArgumentException}. The typed customizer and navigable API update the same
+   * model; when both are used, the last write to a property takes effect.
+   */
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig customizeGeneral(
+      Consumer<ExperimentalGeneralInstrumentationModel> customizer) {
+    if (generalDefaults.model == null) {
+      generalDefaults.model = new ExperimentalGeneralInstrumentationModel();
+    }
+    customizer.accept(generalDefaults.model);
+    return this;
+  }
+
+  /**
+   * Adds a mapping used when {@link #toConfigProperties()} exports defaults to flat properties.
+   *
+   * <p>For example, mapping {@code acme} to {@code acme.full_name} makes {@code
+   * defaults.get("acme").get("full_name").setDefault("preserved", "true")} produce {@code
+   * acme.preserved=true}. This mapping does not change the declarative path used by {@link
+   * #applyToModel(OpenTelemetryConfigurationModel)}.
+   */
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig addMapping(String propertyPrefix, String declarativePath) {
+    propertyMappings.put(propertyPrefix, declarativePath);
+    return this;
+  }
+
+  /**
+   * Sets a default value for a property on the current node. Keys use the declarative config shape
+   * (e.g. {@code base_time_unit}); when producing config property keys, underscores are translated
+   * to hyphens and keys ending in {@code /development} follow the same {@code experimental.}
+   * translation as {@link ConfigPropertiesBackedDeclarativeConfigProperties}.
+   *
+   * @return {@code this} for chaining
+   */
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, String value) {
+    return setDefaultValue(key, value);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, boolean value) {
+    return setDefaultValue(key, value);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, int value) {
+    return setDefaultValue(key, value);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, long value) {
+    return setDefaultValue(key, value);
+  }
+
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, double value) {
+    return setDefaultValue(key, value);
+  }
+
+  /**
+   * Sets a list-valued default. Scalar lists are preserved when applying defaults to the
+   * declarative model, but only non-empty string scalar lists with non-empty, comma-free elements
+   * can be serialized as comma-separated values for traditional configuration properties; numeric
+   * and boolean scalar lists are declarative-only. Structured {@code common.service_peer_mapping}
+   * and {@code common.server_service_mapping} lists are also supported; they are exported through
+   * the legacy flat property so existing defaults continue to work. Other structured lists cannot
+   * be converted to traditional configuration properties. Empty lists cannot be exported as
+   * equivalent traditional configuration defaults and are rejected by {@link
+   * #toConfigProperties()}.
+   */
+  @CanIgnoreReturnValue
+  public DefaultInstrumentationConfig setDefault(String key, List<?> value) {
+    return setDefaultValue(key, value);
+  }
+
+  /**
+   * Translates defaults to config properties for auto-configuration.
+   *
+   * <p>Defaults use {@code otel.instrumentation.*} keys unless a custom mapping overrides the
+   * property prefix for a declarative path subtree.
+   */
+  public Map<String, String> toConfigProperties() {
+    HashMap<String, String> map = new HashMap<>();
+    boolean canonicalServiceMappingDefault = defaults.containsKey(COMMON_SERVER_SERVICE_MAPPING);
+    defaults.forEach(
+        (declarativePath, value) -> {
+          if (canonicalServiceMappingDefault
+              && declarativePath.equals(COMMON_SERVICE_PEER_MAPPING)) {
+            return;
+          }
+          map.put(toConfigProperty(declarativePath), toConfigPropertyValue(declarativePath, value));
+        });
+    ExperimentalGeneralInstrumentationModel general = generalDefaults.model;
+    if (general != null) {
+      DeclarativeModelUtil.forEachLeaf(
+          general,
+          (path, value) -> {
+            String propertyKey =
+                ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey("general." + path);
+            if (propertyKey.isEmpty()) {
+              throw new IllegalArgumentException(
+                  "general instrumentation default has no config property mapping: " + path);
+            }
+            map.put(propertyKey, toConfigPropertyValue("general." + path, value));
+          });
+    }
+    return map;
+  }
+
+  /**
+   * Applies defaults to the declarative configuration model under {@code
+   * instrumentation/development}. Existing values in the model take precedence; defaults are only
+   * set for properties not already present.
+   */
+  @CanIgnoreReturnValue
+  public OpenTelemetryConfigurationModel applyToModel(OpenTelemetryConfigurationModel model) {
+    return DefaultInstrumentationConfigApplier.applyToModel(this, model);
+  }
+
+  Map<String, Object> getDefaults() {
+    return defaults;
+  }
+
+  @Nullable
+  ExperimentalGeneralInstrumentationModel getGeneralDefaults() {
+    return generalDefaults.model;
+  }
+
+  private String pathWithName(String name) {
+    if (path.isEmpty()) {
+      return name;
+    }
+    return String.join(".", path) + "." + name;
+  }
+
+  private String toConfigProperty(String declarativePath) {
+    String propertyPrefix = null;
+    String declarativePrefix = null;
+    for (Map.Entry<String, String> entry : propertyMappings.entrySet()) {
+      String candidate = entry.getValue();
+      if (!matchesPrefix(declarativePath, candidate)) {
+        continue;
+      }
+      if (declarativePrefix == null || candidate.length() > declarativePrefix.length()) {
+        declarativePrefix = candidate;
+        propertyPrefix = entry.getKey();
+      }
+    }
+
+    if (propertyPrefix == null) {
+      if (isServiceMappingPath(declarativePath)) {
+        // Keep the original property as the default carrier. The bridge reads the canonical
+        // property first, so a user-supplied replacement still wins over this default.
+        return LEGACY_SERVICE_MAPPING_PROPERTY;
+      }
+      return ConfigPropertiesBackedDeclarativeConfigProperties.toPropertyKey(
+          "java." + declarativePath);
+    }
+    if (declarativePrefix == null) {
+      throw new IllegalStateException("missing declarative prefix for property mapping");
+    }
+
+    if (declarativePath.equals(declarativePrefix)) {
+      return propertyPrefix;
+    }
+
+    int matchedPrefixLength = declarativePrefix.length();
+    return propertyPrefix + "." + translatePath(declarativePath.substring(matchedPrefixLength + 1));
+  }
+
+  @CanIgnoreReturnValue
+  private DefaultInstrumentationConfig setDefaultValue(String key, Object value) {
+    if (generalNamespace) {
+      String generalPath = path.isEmpty() ? key : String.join(".", path) + "." + key;
+      if (generalDefaults.model == null) {
+        generalDefaults.model = new ExperimentalGeneralInstrumentationModel();
+      }
+      DeclarativeModelUtil.setDefault(generalDefaults.model, generalPath, value);
+      return this;
+    }
+    if (path.isEmpty()) {
+      throw new IllegalArgumentException(
+          "defaults must be set below an instrumentation node, e.g. get(\"micrometer\")");
+    }
+    String newPath = pathWithName(key);
+    for (String existingPath : defaults.keySet()) {
+      if (!existingPath.equals(newPath)
+          && (matchesPrefix(existingPath, newPath) || matchesPrefix(newPath, existingPath))) {
+        throw new IllegalArgumentException(
+            "default path conflicts with existing default: " + newPath + " and " + existingPath);
+      }
+    }
+    defaults.put(newPath, value);
+    return this;
+  }
+
+  private static String toConfigPropertyValue(String declarativePath, Object value) {
+    if (!(value instanceof List)) {
+      return String.valueOf(value);
+    }
+    List<?> list = (List<?>) value;
+    if (list.isEmpty()) {
+      throw new IllegalArgumentException("list default must not be empty: " + declarativePath);
+    }
+    if (isServiceMappingPath(declarativePath)) {
+      return serializeServiceMapping(declarativePath, list);
+    }
+    for (Object item : list) {
+      if (item instanceof String) {
+        String stringItem = (String) item;
+        if (stringItem.isEmpty()) {
+          throw new IllegalArgumentException(
+              "scalar list default must not contain empty strings: " + declarativePath);
+        }
+        if (stringItem.indexOf(',') >= 0) {
+          throw new IllegalArgumentException(
+              "scalar list default must not contain ',' in an element: " + declarativePath);
+        }
+        continue;
+      }
+      if (item instanceof Boolean
+          || item instanceof Integer
+          || item instanceof Long
+          || item instanceof Double) {
+        throw new IllegalArgumentException(
+            "scalar list default must contain only strings for traditional config: "
+                + declarativePath);
+      }
+      throw new IllegalArgumentException(
+          "structured list default has no traditional config serialization: " + declarativePath);
+    }
+    return list.stream().map(String::valueOf).collect(joining(","));
+  }
+
+  private static String serializeServiceMapping(String declarativePath, List<?> mappings) {
+    String fieldName = declarativePath.equals(COMMON_SERVER_SERVICE_MAPPING) ? "target" : "peer";
+    String displayPath = declarativePath;
+    return mappings.stream()
+        .map(
+            mapping -> {
+              if (!(mapping instanceof Map)) {
+                throw new IllegalArgumentException(displayPath + " entries must be maps");
+              }
+              Map<?, ?> fields = (Map<?, ?>) mapping;
+              Object target = fields.get(fieldName);
+              Object serviceName = fields.get("service_name");
+              if (!(target instanceof String) || !(serviceName instanceof String)) {
+                throw new IllegalArgumentException(
+                    displayPath
+                        + " entries require string "
+                        + fieldName
+                        + " and service_name fields");
+              }
+              String targetValue = (String) target;
+              if (targetValue.indexOf(',') >= 0 || targetValue.indexOf('=') >= 0) {
+                throw new IllegalArgumentException(
+                    displayPath + " " + fieldName + " must not contain ',' or '=': " + targetValue);
+              }
+              String serviceNameValue = (String) serviceName;
+              if (serviceNameValue.indexOf(',') >= 0) {
+                throw new IllegalArgumentException(
+                    displayPath + " service_name must not contain ',': " + serviceNameValue);
+              }
+              if (fields.get("service_namespace") != null) {
+                throw new IllegalArgumentException(
+                    displayPath
+                        + " service_namespace is not supported by traditional configuration");
+              }
+              return targetValue + "=" + serviceNameValue;
+            })
+        .collect(joining(","));
+  }
+
+  private static boolean isServiceMappingPath(String path) {
+    return path.equals(COMMON_SERVICE_PEER_MAPPING) || path.equals(COMMON_SERVER_SERVICE_MAPPING);
+  }
+
+  private static boolean matchesPrefix(String path, String prefix) {
+    return path.equals(prefix) || path.startsWith(prefix + ".");
+  }
+
+  private static String translatePath(String path) {
+    String[] segments = path.split("\\.");
+    StringBuilder translated = new StringBuilder();
+    for (int i = 0; i < segments.length; i++) {
+      if (i > 0) {
+        translated.append(".");
+      }
+      translated.append(translateName(segments[i]));
+    }
+    return translated.toString();
+  }
+
+  private static String translateName(String name) {
+    if (name.endsWith("/development")) {
+      name = name.substring(0, name.length() - "/development".length());
+      if (!name.contains("experimental")) {
+        name = "experimental." + name;
+      }
+    }
+    return name.replace('_', '-');
+  }
+
+  private static final class GeneralDefaults {
+    @Nullable private ExperimentalGeneralInstrumentationModel model;
+  }
+}

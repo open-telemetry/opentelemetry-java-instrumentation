@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.http;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
@@ -145,8 +144,7 @@ class HttpClientServerServiceAttributesExtractorTest {
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
     when(otel.getInstrumentationConfig("common")).thenReturn(commonConfig);
     List<DeclarativeConfigProperties> entryList = asList(entries);
-    when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
-        .thenReturn(entryList);
+    when(commonConfig.getStructuredList("server_service_mapping")).thenReturn(entryList);
     return otel;
   }
 

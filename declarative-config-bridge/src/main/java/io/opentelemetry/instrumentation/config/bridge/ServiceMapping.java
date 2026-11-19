@@ -15,6 +15,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -36,23 +38,49 @@ import javax.annotation.Nullable;
  *
  * <p>The flat property cannot express {@code service_namespace} or targets containing commas or
  * equals signs. Use declarative configuration for those cases.
+ *
+ * <p>The bridge also preserves the historical {@code service_peer_mapping} structure and {@code
+ * otel.instrumentation.common.peer-service-mapping} property. When both flat property names are
+ * supplied, {@code server-service-mapping} takes precedence.
  */
 final class ServiceMapping implements DeclarativeConfigProperties {
+
+  private static final Logger logger = Logger.getLogger(ServiceMapping.class.getName());
+  private static final AtomicBoolean legacyWarningLogged = new AtomicBoolean();
 
   private final Map<String, String> fields;
   private final ComponentLoader componentLoader;
 
   @Nullable
   static List<DeclarativeConfigProperties> getList(ConfigProperties configProperties) {
+    return getMappings(configProperties, false);
+  }
+
+  @Nullable
+  static List<DeclarativeConfigProperties> getLegacyList(ConfigProperties configProperties) {
+    return getMappings(configProperties, true);
+  }
+
+  @Nullable
+  private static List<DeclarativeConfigProperties> getMappings(
+      ConfigProperties configProperties, boolean legacyView) {
     Map<String, String> map =
         configProperties.getMap("otel.instrumentation.common.server-service-mapping");
+    if (map.isEmpty()) {
+      map = configProperties.getMap("otel.instrumentation.common.peer-service-mapping");
+      if (!map.isEmpty() && legacyWarningLogged.compareAndSet(false, true)) {
+        logger.warning(
+            "Deprecated configuration otel.instrumentation.common.peer-service-mapping is in use;"
+                + " use otel.instrumentation.common.server-service-mapping instead.");
+      }
+    }
     if (map.isEmpty()) {
       return null;
     }
     List<DeclarativeConfigProperties> result = new ArrayList<>();
     for (Map.Entry<String, String> entry : map.entrySet()) {
       Map<String, String> fields = new HashMap<>();
-      fields.put("target", entry.getKey());
+      fields.put(legacyView ? "peer" : "target", entry.getKey());
       fields.put("service_name", entry.getValue());
       // service_namespace is not supported in flat config, will be null
       result.add(new ServiceMapping(fields, configProperties.getComponentLoader()));

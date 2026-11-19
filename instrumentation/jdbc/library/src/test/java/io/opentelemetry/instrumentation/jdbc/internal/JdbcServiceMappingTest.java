@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQL;
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -91,7 +90,7 @@ class JdbcServiceMappingTest {
 
     List<DeclarativeConfigProperties> entries = asList(entry);
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
-    when(commonConfig.getStructuredList("server_service_mapping", emptyList())).thenReturn(entries);
+    when(commonConfig.getStructuredList("server_service_mapping")).thenReturn(entries);
 
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
     when(openTelemetry.getGeneralInstrumentationConfig())

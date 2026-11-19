@@ -15,7 +15,6 @@ import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSIO
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -68,7 +67,7 @@ class HttpClientProxyAssertionsTest {
     when(mapping.getString("service_name")).thenReturn("test-server-service");
 
     DeclarativeConfigProperties commonConfig = mock(DeclarativeConfigProperties.class);
-    when(commonConfig.getStructuredList("server_service_mapping", emptyList()))
+    when(commonConfig.getStructuredList("server_service_mapping"))
         .thenReturn(singletonList(mapping));
 
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);

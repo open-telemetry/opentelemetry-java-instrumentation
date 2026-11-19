@@ -49,6 +49,37 @@ configurations:
           description: "Logical server service namespace to record for matching targets."
           example: checkout
 
+  common.legacy-service-peer-mapping:
+    name: otel.instrumentation.common.peer-service-mapping
+    declarative_name: java.common.service_peer_mapping
+    description: >-
+      Deprecated: use `otel.instrumentation.common.server-service-mapping` or declarative
+      `java.common.server_service_mapping` instead. Maps server peers to logical server service
+      identities using `peer`, `service_name`, and optional `service_namespace` fields. The flat
+      property cannot express namespaces or targets containing commas or equals signs.
+    type: map
+    default: ""
+    deprecated: true
+    replaced_by: otel.instrumentation.common.server-service-mapping
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required:
+        - peer
+      properties:
+        peer:
+          type: string
+          description: "Server peer to match."
+          example: payments.example.com
+        service_name:
+          type: string
+          description: "Logical server service name to record for matching peers."
+          example: payments
+        service_namespace:
+          type: string
+          description: "Logical server service namespace to record for matching peers."
+          example: checkout
+
   http.client.capture-request-headers:
     name: otel.instrumentation.http.client.capture-request-headers
     declarative_name: general.http.client.request_captured_headers

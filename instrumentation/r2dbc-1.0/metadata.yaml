@@ -26,3 +26,4 @@ configurations:
     type: boolean
   - ref: common.db.sqlcommenter.enabled
   - ref: common.server-service-mapping
+  - ref: common.legacy-service-peer-mapping

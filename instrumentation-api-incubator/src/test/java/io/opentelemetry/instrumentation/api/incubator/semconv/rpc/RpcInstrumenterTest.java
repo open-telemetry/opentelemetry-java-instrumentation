@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -221,8 +220,7 @@ class RpcInstrumenterTest {
     when(mapping.getString("service_name")).thenReturn("payments");
     when(mapping.getString("service_namespace")).thenReturn("checkout");
     DeclarativeConfigProperties common = mock(DeclarativeConfigProperties.class);
-    when(common.getStructuredList("server_service_mapping", emptyList()))
-        .thenReturn(singletonList(mapping));
+    when(common.getStructuredList("server_service_mapping")).thenReturn(singletonList(mapping));
     ConfigProvider configProvider = mock(ConfigProvider.class);
     when(configProvider.getInstrumentationConfig("common")).thenReturn(common);
     ExtendedOpenTelemetry openTelemetry = mock(ExtendedOpenTelemetry.class);
