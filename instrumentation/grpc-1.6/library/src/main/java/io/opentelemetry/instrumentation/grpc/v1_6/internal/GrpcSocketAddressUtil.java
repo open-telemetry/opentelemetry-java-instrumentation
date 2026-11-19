@@ -79,7 +79,7 @@ public final class GrpcSocketAddressUtil {
       if (accessor != null) {
         try {
           // Unlike invokeExact, this ordinary call can be dexed for older Android versions.
-          return new UnixSocketAddress((String) accessor.invokeWithArguments(address));
+          return new UnixSocketAddress((String) accessor.invokeWithArguments(address), address);
         } catch (Throwable t) {
           logger.log(FINE, "Unable to read Netty Unix domain socket path", t);
         }
