@@ -272,26 +272,6 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
     produceRecords();
     consumeRecords();
 
-    testing()
-        .waitAndAssertMetrics(
-            testing() instanceof AgentInstrumentationExtension
-                ? "io.opentelemetry.kafka-clients-0.11"
-                : "io.opentelemetry.kafka-clients-2.6",
-            metric ->
-                metric
-                    .hasName("kafka.consumer.fetch_latency_avg")
-                    .satisfies(
-                        metricData ->
-                            assertThat(metricData.getData().getPoints())
-                                .anySatisfy(
-                                    point ->
-                                        assertThat(
-                                                point
-                                                    .getAttributes()
-                                                    .get(stringKey("kafka.cluster.id")))
-                                            .isNotEmpty())),
-            metric -> metric.hasName("kafka.consumer.records_lag"));
-
     Set<String> expectedMetricNames =
         new HashSet<>(
             asList(
@@ -443,44 +423,65 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                 "kafka.producer.byte_total",
                 "kafka.producer.compression_rate"));
 
-    List<MetricData> metrics = testing().metrics();
-    Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
-    assertThat(metricNames).containsAll(expectedMetricNames);
+    testing()
+        .waitAndAssertMetricsForInstrumentation(
+            testing() instanceof AgentInstrumentationExtension
+                ? "io.opentelemetry.kafka-clients-0.11"
+                : "io.opentelemetry.kafka-clients-2.6",
+            metrics -> {
+              metrics.extracting(MetricData::getName).containsAll(expectedMetricNames);
+              metrics
+                  .filteredOn(metric -> metric.getName().equals("kafka.consumer.fetch_latency_avg"))
+                  .allSatisfy(
+                      metricData ->
+                          assertThat(metricData.getData().getPoints())
+                              .anySatisfy(
+                                  point ->
+                                      assertThat(
+                                              point
+                                                  .getAttributes()
+                                                  .get(stringKey("kafka.cluster.id")))
+                                          .isNotEmpty()));
 
-    // After a real produce/consume cycle the broker fires onUpdate() on each reporter; all
-    // metric points must carry the resulting cluster id.
-    assertThat(
-            metrics.stream()
-                .filter(metric -> metric.getName().startsWith("kafka."))
-                .flatMap(m -> m.getData().getPoints().stream())
-                .allMatch(
-                    p -> {
-                      String id = p.getAttributes().get(stringKey("kafka.cluster.id"));
-                      return id != null && !id.isEmpty();
-                    }))
-        .isTrue();
+              // After a real produce/consume cycle the broker fires onUpdate() on each reporter;
+              // all metric points must carry the resulting cluster id.
+              metrics
+                  .filteredOn(metric -> metric.getName().startsWith("kafka."))
+                  .allSatisfy(
+                      metricData ->
+                          assertThat(metricData.getData().getPoints())
+                              .allSatisfy(
+                                  point ->
+                                      assertThat(
+                                              point
+                                                  .getAttributes()
+                                                  .get(stringKey("kafka.cluster.id")))
+                                          .isNotEmpty()));
 
-    // All data points for a given metric must carry the same set of attribute keys
-    assertThat(metrics.stream().filter(metric -> metric.getName().startsWith("kafka.")))
-        .allSatisfy(
-            metricData -> {
-              Set<String> expectedKeys =
-                  metricData.getData().getPoints().stream()
-                      .findFirst()
-                      .map(
-                          point ->
-                              point.getAttributes().asMap().keySet().stream()
-                                  .map(AttributeKey::getKey)
-                                  .collect(toSet()))
-                      .orElse(emptySet());
-              assertThat(metricData.getData().getPoints())
-                  .extracting(PointData::getAttributes)
-                  .extracting(
-                      attributes ->
-                          attributes.asMap().keySet().stream()
-                              .map(AttributeKey::getKey)
-                              .collect(toSet()))
-                  .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+              // All data points for a given metric must carry the same set of attribute keys.
+              metrics
+                  .filteredOn(metric -> metric.getName().startsWith("kafka."))
+                  .allSatisfy(
+                      metricData -> {
+                        Set<String> expectedKeys =
+                            metricData.getData().getPoints().stream()
+                                .findFirst()
+                                .map(
+                                    point ->
+                                        point.getAttributes().asMap().keySet().stream()
+                                            .map(AttributeKey::getKey)
+                                            .collect(toSet()))
+                                .orElse(emptySet());
+                        assertThat(metricData.getData().getPoints())
+                            .extracting(PointData::getAttributes)
+                            .extracting(
+                                attributes ->
+                                    attributes.asMap().keySet().stream()
+                                        .map(AttributeKey::getKey)
+                                        .collect(toSet()))
+                            .allSatisfy(
+                                attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+                      });
             });
 
     // Print mapping table

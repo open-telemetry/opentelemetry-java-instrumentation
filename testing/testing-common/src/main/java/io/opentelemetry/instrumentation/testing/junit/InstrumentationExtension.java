@@ -101,6 +101,12 @@ public abstract class InstrumentationExtension
     testRunner.waitAndAssertMetrics(instrumentationName, assertions);
   }
 
+  /** Waits for the assertion applied to all metrics of the given instrumentation to pass. */
+  public final void waitAndAssertMetricsForInstrumentation(
+      String instrumentationName, Consumer<ListAssert<MetricData>> assertion) {
+    testRunner.waitAndAssertMetricsForInstrumentation(instrumentationName, assertion);
+  }
+
   /**
    * Removes all captured telemetry data. After calling this method {@link #spans()} and {@link
    * #metrics()} will return empty lists until more telemetry data is captured.
