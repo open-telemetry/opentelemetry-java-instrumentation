@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
 import io.opentelemetry.instrumentation.lettuce.common.LettuceArgSplitter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.SocketAddress;
@@ -89,6 +90,6 @@ final class LettuceDbAttributesGetter
   @Override
   public SocketAddress getNetworkPeerSocketAddress(
       RedisCommand<?, ?, ?> request, @Nullable Void unused) {
-    return LettuceCommandPeer.address(request);
+    return SocketAddressUtil.normalizeNettyUnixSocketAddress(LettuceCommandPeer.address(request));
   }
 }

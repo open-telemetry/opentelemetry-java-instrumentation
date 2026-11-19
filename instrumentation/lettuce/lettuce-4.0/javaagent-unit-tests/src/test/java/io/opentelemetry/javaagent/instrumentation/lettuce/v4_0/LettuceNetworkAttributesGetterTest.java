@@ -19,6 +19,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -99,8 +100,16 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandHandlerInstrumentation.WriteAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
-    assertThat(getter.getNetworkPeerSocketAddress(command, null)).isSameAs(address);
+    assertThat(LettuceSingletons.commandPeerAddress(command)).isSameAs(address);
+    assertThat(getter.getNetworkPeerSocketAddress(command, null))
+        .isInstanceOfSatisfying(
+            UnixSocketAddress.class,
+            normalized -> {
+              assertThat(normalized.getPath()).isEqualTo("/var/run/redis.sock");
+              assertThat(normalized.getOriginalAddress()).isSameAs(address);
+            });
+    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("/var/run/redis.sock");
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
 
   @Test

@@ -26,6 +26,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -228,8 +229,16 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(LettuceCommandPeer.address(command)).isEqualTo(address);
-    assertThat(getter.getNetworkPeerSocketAddress(command, null)).isSameAs(address);
+    assertThat(LettuceCommandPeer.address(command)).isSameAs(address);
+    assertThat(getter.getNetworkPeerSocketAddress(command, null))
+        .isInstanceOfSatisfying(
+            UnixSocketAddress.class,
+            normalized -> {
+              assertThat(normalized.getPath()).isEqualTo("/var/run/redis.sock");
+              assertThat(normalized.getOriginalAddress()).isSameAs(address);
+            });
+    assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("/var/run/redis.sock");
+    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }
 
   @Test
@@ -242,9 +251,19 @@ class LettuceNetworkAttributesGetterTest {
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
     assertThat(getter.getNetworkPeerSocketAddress(request, null)).isNull();
+    assertThat(LettuceCommandPeer.address(first)).isSameAs(initialPeer);
     LettuceCommandPeer.record(first, finalPeer);
 
-    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isSameAs(finalPeer);
+    assertThat(LettuceCommandPeer.address(first)).isSameAs(finalPeer);
+    assertThat(getter.getNetworkPeerSocketAddress(request, null))
+        .isInstanceOfSatisfying(
+            UnixSocketAddress.class,
+            normalized -> {
+              assertThat(normalized.getPath()).isEqualTo("/var/run/redis-2.sock");
+              assertThat(normalized.getOriginalAddress()).isSameAs(finalPeer);
+            });
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("/var/run/redis-2.sock");
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @Test
