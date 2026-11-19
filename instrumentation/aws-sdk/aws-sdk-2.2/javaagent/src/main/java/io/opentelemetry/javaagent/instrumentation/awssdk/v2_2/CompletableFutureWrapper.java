@@ -29,6 +29,14 @@ public class CompletableFutureWrapper {
             }
           }
         });
+    // the sdk aborts a request when the future returned from the client handler completes
+    // exceptionally, which includes cancellation
+    result.whenComplete(
+        (T value, Throwable throwable) -> {
+          if (throwable != null) {
+            future.completeExceptionally(throwable);
+          }
+        });
 
     return result;
   }
