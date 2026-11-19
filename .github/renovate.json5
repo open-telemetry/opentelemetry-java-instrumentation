@@ -157,7 +157,8 @@
       versioning: 'semver-partial',
     },
     {
-      // Temurin security releases add a fourth numeric component before the build number.
+      // Workaround for Temurin security-tag parsing in workarounds:javaLTSVersions:
+      // https://github.com/renovatebot/renovate/discussions/47083
       matchCurrentValue: '/^(?:17|21|25|27)\\.0\\.\\d+(?:\\.\\d+)?_\\d+-.+$/',
       matchDatasources: [
         'docker',
@@ -167,13 +168,11 @@
       ],
       // Java 27 is not LTS but is already in the smoke-test matrix; major updates remain disabled below.
       allowedVersions: '/^(?:17|21|25|27)(?:\\.|_|-|$)/',
-      // The underscore build is a numeric prerelease so build-only updates compare; a missing
-      // security component sorts as zero.
-      ignoreUnstable: false,
-      versioning: 'regex:^(?<major>\\d+)\\.(?<minor>\\d+)\\.(?<patch>\\d+)(?:\\.(?<build>\\d+))?_(?<prerelease>\\d+)-(?<compatibility>.+)$',
+      versioning: 'loose',
+      versionCompatibility: '^(?<version>\\d+(?:\\.\\d+){0,3}_\\d+)(?<compatibility>-.+)$',
     },
     {
-      // Let the fixed Java 27 short pins advance to full patched tags without changing the pins.
+      // Java 27's initial release uses short tags; allow updates to its full patched tags.
       matchCurrentValue: '/^27_35-jdk(?:-windowsservercore-ltsc2022)?$/',
       matchDatasources: [
         'docker',
@@ -182,8 +181,8 @@
         'eclipse-temurin',
       ],
       allowedVersions: '/^27(?:\\.|_|-|$)/',
-      ignoreUnstable: false,
-      versioning: 'regex:^(?<major>\\d+)(?:\\.(?<minor>\\d+))?(?:\\.(?<patch>\\d+))?(?:\\.(?<build>\\d+))?_(?<prerelease>\\d+)-(?<compatibility>.+)$',
+      versioning: 'loose',
+      versionCompatibility: '^(?<version>\\d+(?:\\.\\d+){0,3}_\\d+)(?<compatibility>-.+)$',
     },
     {
       // prevent 3.0.1u2 -> 3.0.1
