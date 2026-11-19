@@ -17,7 +17,7 @@ import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.protocol.internal.Frame;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.unix.DomainSocketAddress;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -28,7 +28,7 @@ class CassandraResponsePeerTest {
 
   @Test
   void preservesUnixResponsePeerThroughTheFrame() {
-    SocketAddress peer = new DomainSocketAddress("cassandra.sock");
+    SocketAddress peer = new UnixSocketAddress("cassandra.sock");
     Frame response = frame(1);
     ExecutionInfo executionInfo = mock(ExecutionInfo.class);
 
