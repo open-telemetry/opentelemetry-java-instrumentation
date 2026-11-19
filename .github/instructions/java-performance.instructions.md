@@ -22,7 +22,8 @@ If the loop iterates a list field, copy the list where the constructor stores it
 - Leave helpers, builders, getters, and accessors unchanged, including their `emptyList()`,
   `singletonList()`, and `collect(toList())` calls.
 
-Otherwise, give each collection class its own loop and share the per-element work in a method.
+When a constructor copy does not apply, one fix is to give each collection class its own loop and
+share the per-element work in a method.
 
 ## Lambdas and method references
 
