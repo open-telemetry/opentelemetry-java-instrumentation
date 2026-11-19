@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static java.util.Collections.emptyList;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -17,7 +16,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -168,22 +166,21 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
     attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
-    for (String name : headerNames(request)) {
-      List<String> values = getter.getMessageHeader(request, name);
-      if (!values.isEmpty()) {
-        attributes.put(
-            CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
+    if (headers == null) {
+      return;
+    }
+    if (enumerateHeaderNames) {
+      for (String name : matchingHeaderNames(request, headers)) {
+        captureHeader(attributes, request, name);
+      }
+    } else {
+      for (String name : exactHeaderNames) {
+        captureHeader(attributes, request, name);
       }
     }
   }
 
-  private Collection<String> headerNames(REQUEST request) {
-    if (headers == null) {
-      return emptyList();
-    }
-    if (!enumerateHeaderNames) {
-      return exactHeaderNames;
-    }
+  private Set<String> matchingHeaderNames(REQUEST request, IncludeExclude headers) {
     Set<String> names = new LinkedHashSet<>(exactHeaderNames);
     for (String name : getter.getMessageHeaderNames(request)) {
       if (headers.matches(name)) {
@@ -191,6 +188,14 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       }
     }
     return names;
+  }
+
+  private void captureHeader(AttributesBuilder attributes, REQUEST request, String name) {
+    List<String> values = getter.getMessageHeader(request, name);
+    if (!values.isEmpty()) {
+      attributes.put(
+          CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
+    }
   }
 
   /**

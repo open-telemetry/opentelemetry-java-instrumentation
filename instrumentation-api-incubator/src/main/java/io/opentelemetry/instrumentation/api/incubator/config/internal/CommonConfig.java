@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -81,7 +82,7 @@ public final class CommonConfig {
             .getScalarList("sensitive_query_parameters", String.class);
     sensitiveQueryParameters =
         sensitiveQueryParameterList != null
-            ? new HashSet<>(sensitiveQueryParameterList)
+            ? unmodifiableSet(new HashSet<>(sensitiveQueryParameterList))
             : HttpConstants.SENSITIVE_QUERY_PARAMETERS;
 
     emitExperimentalHttpServerTelemetry =
