@@ -55,6 +55,7 @@ public abstract class MetricStructure {
   @Nullable private String sourceUnit;
   @Nullable private String unit;
   @Nullable private Boolean dropNegativeValues;
+  @Nullable private Boolean dropExtremeValues;
 
   private MetricInfo.Type metricType;
   private List<MetricAttribute> metricAttributes;
@@ -96,6 +97,15 @@ public abstract class MetricStructure {
   @Nullable
   public Boolean getDropNegativeValues() {
     return dropNegativeValues;
+  }
+
+  public void setDropExtremeValues(Boolean dropExtremeValues) {
+    this.dropExtremeValues = dropExtremeValues;
+  }
+
+  @Nullable
+  public Boolean getDropExtremeValues() {
+    return dropExtremeValues;
   }
 
   private static void addMappedValue(

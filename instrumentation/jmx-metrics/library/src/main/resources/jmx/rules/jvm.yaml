@@ -62,6 +62,7 @@ rules:
   - bean: java.lang:type=OperatingSystem
     prefix: jvm.
     dropNegativeValues: true
+    dropExtremeValues: true
     mapping:
       # jvm.cpu.count
       AvailableProcessors:
