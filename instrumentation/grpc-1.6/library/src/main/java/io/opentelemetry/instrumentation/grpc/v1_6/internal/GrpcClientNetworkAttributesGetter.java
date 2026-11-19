@@ -35,12 +35,12 @@ public final class GrpcClientNetworkAttributesGetter
   @Nullable
   public SocketAddress getNetworkLocalSocketAddress(
       GrpcRequest request, @Nullable Status response) {
-    return request.getLocalSocketAddress();
+    return GrpcSocketAddressUtil.normalize(request.getLocalSocketAddress());
   }
 
   @Override
   @Nullable
   public SocketAddress getNetworkPeerSocketAddress(GrpcRequest request, @Nullable Status response) {
-    return request.getPeerSocketAddress();
+    return GrpcSocketAddressUtil.normalize(request.getPeerSocketAddress());
   }
 }

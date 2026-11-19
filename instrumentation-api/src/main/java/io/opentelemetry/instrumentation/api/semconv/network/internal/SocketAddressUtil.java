@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.instrumentation.api.semconv.network.UnixSocketAddress;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -56,13 +57,18 @@ public final class SocketAddressUtil {
   }
 
   private static boolean isUnixSocket(@Nullable SocketAddress address) {
-    return address != null && unixSocketSupported && UnixSocketSupport.isUnixSocket(address);
+    return address instanceof UnixSocketAddress
+        || (address != null && unixSocketSupported && UnixSocketSupport.isUnixSocket(address));
   }
 
   @Nullable
   public static String getAddress(@Nullable SocketAddress address) {
     if (address instanceof InetSocketAddress) {
       return InetSocketAddressUtil.getIpAddress((InetSocketAddress) address);
+    }
+    if (address instanceof UnixSocketAddress) {
+      String path = ((UnixSocketAddress) address).getPath();
+      return path.isEmpty() ? null : path;
     }
     if (address == null || !unixSocketSupported) {
       return null;
@@ -84,39 +90,22 @@ public final class SocketAddressUtil {
   private static final class UnixSocketSupport {
     private static final Logger logger = Logger.getLogger(UnixSocketSupport.class.getName());
 
-    // This helper is shared across application loaders, so optional types must be resolved and
-    // cached by their runtime class rather than by the helper's defining loader.
     private static final ClassValue<MethodHandle> unixSocketAccessors =
         new ClassValue<MethodHandle>() {
           @Override
           @Nullable
           protected MethodHandle computeValue(Class<?> type) {
-            return createAccessor(type);
+            if (!type.getName().equals("java.net.UnixDomainSocketAddress")) {
+              return null;
+            }
+            try {
+              return MethodHandles.publicLookup()
+                  .findVirtual(type, "getPath", MethodType.methodType(Path.class));
+            } catch (NoSuchMethodException | IllegalAccessException ignored) {
+              return null;
+            }
           }
         };
-
-    @Nullable
-    private static MethodHandle createAccessor(Class<?> type) {
-      String name = type.getName();
-      String method;
-      Class<?> returnType;
-      if (name.equals("java.net.UnixDomainSocketAddress")) {
-        method = "getPath";
-        returnType = Path.class;
-      } else if (name.equals("io.netty.channel.unix.DomainSocketAddress")
-          || name.equals("io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress")) {
-        method = "path";
-        returnType = String.class;
-      } else {
-        return null;
-      }
-      try {
-        return MethodHandles.publicLookup()
-            .findVirtual(type, method, MethodType.methodType(returnType));
-      } catch (NoSuchMethodException | IllegalAccessException ignored) {
-        return null;
-      }
-    }
 
     private static boolean isUnixSocket(SocketAddress address) {
       @Nullable MethodHandle path = unixSocketAccessors.get(address.getClass());
@@ -131,9 +120,9 @@ public final class SocketAddressUtil {
       }
       try {
         // Unlike invokeExact, this ordinary call can be dexed for older Android versions.
-        Object value = path.invokeWithArguments(address);
-        String name = value instanceof Path ? value.toString() : (String) value;
-        return name == null || name.isEmpty() ? null : name;
+        Path value = (Path) path.invokeWithArguments(address);
+        String name = value.toString();
+        return name.isEmpty() ? null : name;
       } catch (Throwable t) {
         logger.log(FINE, "Unable to read Unix domain socket path", t);
         return null;
