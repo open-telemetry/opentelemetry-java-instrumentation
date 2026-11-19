@@ -157,6 +157,30 @@
       versioning: 'semver-partial',
     },
     {
+      // Temurin security releases add a fourth numeric component before the build number.
+      matchCurrentValue: '/^(?:(?:17|21|25)(?:\\.\\d+){1,3}|27(?:\\.\\d+){1,3})_\\d+-.+$/',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        'eclipse-temurin',
+      ],
+      // Java 27 is not LTS but is already in the smoke-test matrix; major updates remain disabled below.
+      allowedVersions: '/^(?:17|21|25|27)(?:\\.|_|-|$)/',
+      versioning: 'regex:^(?<major>\\d+)(?:\\.(?<minor>\\d+)(?:\\.(?<patch>\\d+))?)?(?:\\.(?<build>\\d+))?_(?<revision>\\d+)-(?<compatibility>.+)$',
+    },
+    {
+      // Preserve the inherited versioning for the intentional short 27_35 matrix tags.
+      matchCurrentValue: '/^27_\\d+-.+$/',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        'eclipse-temurin',
+      ],
+      allowedVersions: '/^27(?:\\.|_|-|$)/',
+    },
+    {
       // prevent 3.0.1u2 -> 3.0.1
       matchPackageNames: [
         'com.google.code.findbugs:annotations',
