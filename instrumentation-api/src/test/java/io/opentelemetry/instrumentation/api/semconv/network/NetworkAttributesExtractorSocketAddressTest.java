@@ -221,8 +221,7 @@ class NetworkAttributesExtractorSocketAddressTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-      strings = {"java.lang.ClassValue", "java.lang.invoke.MethodHandle", "java.nio.file.Path"})
+  @ValueSource(strings = {"java.lang.invoke.MethodHandle", "java.nio.file.Path"})
   void inetAndWrappedUnixAddressesWorkWithoutUnixRuntimeSupport(String missingClass)
       throws Exception {
     try (URLClassLoader helperLoader = helperLoaderWithout(missingClass)) {
@@ -260,7 +259,11 @@ class NetworkAttributesExtractorSocketAddressTest {
 
   @ParameterizedTest
   @ValueSource(
-      strings = {"java.lang.ClassValue", "java.lang.invoke.MethodHandle", "java.nio.file.Path"})
+      strings = {
+        "java.lang.invoke.MethodHandle",
+        "java.nio.file.Path",
+        "java.net.UnixDomainSocketAddress"
+      })
   @EnabledForJreRange(min = JRE.JAVA_16)
   void jdkUnixAddressesAreUnavailableWithoutUnixRuntimeSupport(String missingClass)
       throws Exception {

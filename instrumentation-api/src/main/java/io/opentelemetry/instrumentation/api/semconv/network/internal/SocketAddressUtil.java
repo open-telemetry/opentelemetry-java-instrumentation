@@ -24,11 +24,9 @@ import org.codehaus.mojo.animal_sniffer.IgnoreJRERequirement;
  */
 public final class SocketAddressUtil {
 
-  // ClassValue, MethodHandle, and Path are unavailable on older Android runtimes.
+  // MethodHandle and Path are unavailable on older Android runtimes.
   private static final boolean unixSocketSupported =
-      isPresent("java.lang.ClassValue")
-          && isPresent("java.lang.invoke.MethodHandle")
-          && isPresent("java.nio.file.Path");
+      isPresent("java.lang.invoke.MethodHandle") && isPresent("java.nio.file.Path");
 
   private static boolean isPresent(String name) {
     try {
@@ -90,41 +88,50 @@ public final class SocketAddressUtil {
   private static final class UnixSocketSupport {
     private static final Logger logger = Logger.getLogger(UnixSocketSupport.class.getName());
 
-    private static final ClassValue<MethodHandle> unixSocketAccessors =
-        new ClassValue<MethodHandle>() {
-          @Override
-          @Nullable
-          protected MethodHandle computeValue(Class<?> type) {
-            if (!type.getName().equals("java.net.UnixDomainSocketAddress")) {
-              return null;
-            }
-            try {
-              return MethodHandles.publicLookup()
-                  .findVirtual(type, "getPath", MethodType.methodType(Path.class));
-            } catch (NoSuchMethodException | IllegalAccessException ignored) {
-              return null;
-            }
-          }
-        };
+    @Nullable private static final Class<?> unixSocketAddressClass = findUnixSocketAddressClass();
+
+    @Nullable
+    private static final MethodHandle pathAccessor = findPathAccessor(unixSocketAddressClass);
 
     private static boolean isUnixSocket(SocketAddress address) {
-      @Nullable MethodHandle path = unixSocketAccessors.get(address.getClass());
-      return path != null;
+      return pathAccessor != null && address.getClass() == unixSocketAddressClass;
     }
 
     @Nullable
     private static String getAddress(SocketAddress address) {
-      @Nullable MethodHandle path = unixSocketAccessors.get(address.getClass());
-      if (path == null) {
+      if (pathAccessor == null || address.getClass() != unixSocketAddressClass) {
         return null;
       }
       try {
         // Unlike invokeExact, this ordinary call can be dexed for older Android versions.
-        Path value = (Path) path.invokeWithArguments(address);
+        Path value = (Path) pathAccessor.invokeWithArguments(address);
         String name = value.toString();
         return name.isEmpty() ? null : name;
       } catch (Throwable t) {
         logger.log(FINE, "Unable to read Unix domain socket path", t);
+        return null;
+      }
+    }
+
+    @Nullable
+    private static Class<?> findUnixSocketAddressClass() {
+      try {
+        return Class.forName(
+            "java.net.UnixDomainSocketAddress", false, SocketAddressUtil.class.getClassLoader());
+      } catch (ClassNotFoundException ignored) {
+        return null;
+      }
+    }
+
+    @Nullable
+    private static MethodHandle findPathAccessor(@Nullable Class<?> type) {
+      if (type == null) {
+        return null;
+      }
+      try {
+        return MethodHandles.publicLookup()
+            .findVirtual(type, "getPath", MethodType.methodType(Path.class));
+      } catch (ReflectiveOperationException ignored) {
         return null;
       }
     }
