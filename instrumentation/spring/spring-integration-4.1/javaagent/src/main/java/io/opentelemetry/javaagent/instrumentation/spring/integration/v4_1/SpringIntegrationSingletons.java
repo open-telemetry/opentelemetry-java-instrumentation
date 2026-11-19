@@ -11,18 +11,15 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.spring.integration.v4_1.SpringIntegrationTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
-import java.util.ArrayList;
 import java.util.List;
 import org.springframework.messaging.support.ChannelInterceptor;
 
 public class SpringIntegrationSingletons {
 
   private static final List<String> patterns =
-      new ArrayList<>(
-          DeclarativeConfigUtil.getInstrumentationConfig(
-                  GlobalOpenTelemetry.get(), "spring_integration")
-              .getScalarList(
-                  "global_channel_interceptor_patterns", String.class, singletonList("*")));
+      DeclarativeConfigUtil.getInstrumentationConfig(
+              GlobalOpenTelemetry.get(), "spring_integration")
+          .getScalarList("global_channel_interceptor_patterns", String.class, singletonList("*"));
 
   private static final ChannelInterceptor interceptor =
       SpringIntegrationTelemetry.builder(GlobalOpenTelemetry.get())

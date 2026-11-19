@@ -5,8 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.common.v5_0;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
-import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toList;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -32,9 +33,7 @@ public final class ElasticsearchEndpointDefinition {
   public ElasticsearchEndpointDefinition(
       String endpointName, String[] routes, boolean isSearchEndpoint) {
     this.endpointName = endpointName;
-    ArrayList<Route> routeList =
-        Arrays.stream(routes).map(Route::new).collect(toCollection(ArrayList::new));
-    this.routes = unmodifiableList(routeList);
+    this.routes = unmodifiableList(Arrays.stream(routes).map(Route::new).collect(toList()));
     this.isSearchEndpoint = isSearchEndpoint;
   }
 
@@ -132,15 +131,16 @@ public final class ElasticsearchEndpointDefinition {
     private EndpointPattern(Route route) {
       pattern = buildRegexPattern(route.getName());
 
-      ArrayList<String> pathPartNames = new ArrayList<>();
       if (route.hasParameters()) {
+        pathPartNames = new ArrayList<>();
         Matcher matcher = PATH_PART_NAMES_PATTERN.matcher(route.getName());
         while (matcher.find()) {
           String groupName = matcher.group(1).replace("_", UNDERSCORE_REPLACEMENT);
           pathPartNames.add(groupName);
         }
+      } else {
+        pathPartNames = emptyList();
       }
-      this.pathPartNames = unmodifiableList(pathPartNames);
     }
 
     /** Builds a regex pattern from the parameterized route pattern. */
