@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - "smoke-tests/images/quarkus/**"
-      - "gradle.properties"
       - ".github/workflows/publish-smoke-test-quarkus-images.yml"
       - ".github/workflows/reusable-publish-smoke-test-images.yml"
     branches:

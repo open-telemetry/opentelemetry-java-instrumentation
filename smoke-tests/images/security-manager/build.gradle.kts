@@ -19,13 +19,6 @@ val targetJDK = project.findProperty("targetJDK") ?: "11"
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
-val latestRuntimeImage = providers.gradleProperty("smokeTestJavaImageLatest").get()
-val fromImage = providers.gradleProperty("smokeTestJavaImage$targetJDK").orNull
-  ?: latestRuntimeImage.takeIf {
-    it.substringBefore('@').substringAfterLast(':').takeWhile(Char::isDigit) == targetJDK.toString()
-  }
-  ?: error("Unsupported targetJDK: $targetJDK")
-
 java {
   // needed by jib to detect java version used in project
   // for jdk9+ jib uses an entrypoint that doesn't work with jdk8
@@ -36,7 +29,7 @@ java {
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
 jib {
-  from.image = fromImage
+  from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-security-manager:jdk$targetJDK-$tag"
   container.mainClass = "io.opentelemetry.smoketest.securitymanager.Main"
   container.jvmFlags = listOf("-Djava.security.manager", "-Djava.security.policy=/app/resources/security.policy")

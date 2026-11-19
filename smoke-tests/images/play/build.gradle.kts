@@ -37,13 +37,6 @@ val javaLanguageVersion = (targetJDK.toIntOrNull() ?: 17).coerceAtMost(17)
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
-val latestRuntimeImage = providers.gradleProperty("smokeTestJavaImageLatest").get()
-val fromImage = providers.gradleProperty("smokeTestJavaImage$targetJDK").orNull
-  ?: latestRuntimeImage.takeIf {
-    it.substringBefore('@').substringAfterLast(':').takeWhile(Char::isDigit) == targetJDK
-  }
-  ?: error("Unsupported targetJDK: $targetJDK")
-
 java {
   toolchain.languageVersion.set(JavaLanguageVersion.of(javaLanguageVersion))
 }
@@ -51,7 +44,7 @@ java {
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
 jib {
-  from.image = fromImage
+  from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
 }

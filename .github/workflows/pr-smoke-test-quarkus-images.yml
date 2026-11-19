@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - "smoke-tests/images/quarkus/**"
-      - "gradle.properties"
       - ".github/workflows/pr-smoke-test-quarkus-images.yml"
       - ".github/workflows/reusable-pr-smoke-test-images.yml"
     branches:

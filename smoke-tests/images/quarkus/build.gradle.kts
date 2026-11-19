@@ -31,13 +31,6 @@ val targetJDK = project.findProperty("targetJDK") ?: "21"
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
-val latestRuntimeImage = providers.gradleProperty("smokeTestJavaImageLatest").get()
-val fromImage = providers.gradleProperty("smokeTestJavaImage$targetJDK").orNull
-  ?: latestRuntimeImage.takeIf {
-    it.substringBefore('@').substringAfterLast(':').takeWhile(Char::isDigit) == targetJDK.toString()
-  }
-  ?: error("Unsupported targetJDK: $targetJDK")
-
 java {
   // this is needed to avoid jib failing with
   // "Your project is using Java 21 but the base image is for Java 17"
@@ -49,7 +42,7 @@ java {
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
 jib {
-  from.image = fromImage
+  from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-quarkus:jdk$targetJDK-$tag"
   container {
     mainClass = "bogus" // to suppress Jib warning about missing main class

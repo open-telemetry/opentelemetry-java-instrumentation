@@ -36,20 +36,12 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
+      LATEST_JAVA_VERSION: 27 # renovate(java-version)
       PROJECT: ${{ inputs.project }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Set latest Java version
-        run: |
-          latest_java_image=$(sed -n 's/^smokeTestJavaImageLatest=//p' gradle.properties)
-          latest_java_version=${latest_java_image#eclipse-temurin:}
-          latest_java_version=${latest_java_version%%@*}
-          latest_java_version=${latest_java_version%%[!0-9]*}
-          [[ "$latest_java_version" =~ ^[0-9]+$ ]]
-          echo "LATEST_JAVA_VERSION=$latest_java_version" >> "$GITHUB_ENV"
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -86,5 +78,5 @@ jobs:
       - name: Build Java 25 Docker image
         run: ./gradlew "$PROJECT:jibDockerBuild" -Ptag="$TAG" -PtargetJDK=25 -Djib.httpTimeout=120000 -Djib.console=plain
 
-      - name: Build latest Java Docker image
+      - name: Build Java ${{ env.LATEST_JAVA_VERSION }} Docker image
         run: ./gradlew "$PROJECT:jibDockerBuild" -Ptag="$TAG" -PtargetJDK="$LATEST_JAVA_VERSION" -Djib.httpTimeout=120000 -Djib.console=plain

@@ -33,13 +33,6 @@ val targetJDK = project.findProperty("targetJDK") ?: "17"
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
 
-val latestRuntimeImage = providers.gradleProperty("smokeTestJavaImageLatest").get()
-val fromImage = providers.gradleProperty("smokeTestJavaImage$targetJDK").orNull
-  ?: latestRuntimeImage.takeIf {
-    it.substringBefore('@').substringAfterLast(':').takeWhile(Char::isDigit) == targetJDK.toString()
-  }
-  ?: error("Unsupported targetJDK: $targetJDK")
-
 java {
   // Jib detects the Java version from sourceCompatibility to determine the entrypoint format.
   // Java 8 doesn't support the @argfile syntax (added in Java 9), so Jib needs to know
@@ -83,7 +76,7 @@ val prepareBootJarForImage = tasks.register<Sync>("prepareBootJarForImage") {
 }
 
 jib {
-  from.image = fromImage
+  from.image = "eclipse-temurin:$targetJDK"
   to.image = "ghcr.io/$repo/smoke-test-spring-boot:jdk$targetJDK-$tag"
   container.ports = listOf("8080")
   if (useExecutableBootJarLayout) {

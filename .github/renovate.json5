@@ -378,26 +378,6 @@
       enabled: false,
     },
     {
-      // the Java runtime image tagged as latest tracks the feature release selected by smoke tests
-      matchDepNames: [
-        'eclipse-temurin-latest',
-      ],
-      matchUpdateTypes: [
-        'major',
-      ],
-      enabled: true,
-    },
-    {
-      // this moving runtime tracks feature releases, not only Java LTS releases
-      matchDepNames: [
-        'eclipse-temurin-latest',
-      ],
-      matchDatasources: [
-        'docker',
-      ],
-      allowedVersions: '/.*/',
-    },
-    {
       // using old version of this obscure artifact to test instrumentation of Java 1.1 bytecode
       matchPackageNames: [
         'net.sf.jt400:jt400',
@@ -492,28 +472,11 @@
       managerFilePatterns: [
         '**/build.gradle.kts',
         '**/*.java',
-        '/^gradle\\.properties$/',
       ],
-      // Preserve the fixed property key in the same replacement template as quoted literals.
       matchStrings: [
         '"(?<depName>eclipse-temurin|ibm-semeru-runtimes|ibmjava):(?<currentValue>(?:open-)?\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?"',
-        '(?m)^(?<depType>smokeTestJavaImage(?:8|11|17|21|25))=(?<depName>eclipse-temurin):(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?$',
       ],
-      autoReplaceStringTemplate: '{{#if depType}}{{{depType}}}={{else}}"{{/if}}{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}{{#unless depType}}"{{/unless}}',
-    },
-    {
-      customType: 'regex',
-      datasourceTemplate: 'docker',
-      depNameTemplate: 'eclipse-temurin-latest',
-      packageNameTemplate: 'eclipse-temurin',
-      versioningTemplate: 'docker',
-      managerFilePatterns: [
-        '/^gradle\\.properties$/',
-      ],
-      matchStrings: [
-        '(?m)^smokeTestJavaImageLatest=eclipse-temurin:(?<currentValue>\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?$',
-      ],
-      autoReplaceStringTemplate: 'smokeTestJavaImageLatest=eclipse-temurin:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}',
+      autoReplaceStringTemplate: '"{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}"',
     },
     {
       customType: 'regex',

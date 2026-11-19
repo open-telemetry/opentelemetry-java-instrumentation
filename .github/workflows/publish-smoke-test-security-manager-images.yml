@@ -4,7 +4,6 @@ on:
   push:
     paths:
       - "smoke-tests/images/security-manager/**"
-      - "gradle.properties"
       - ".github/workflows/publish-smoke-test-security-manager-images.yml"
       - ".github/workflows/reusable-publish-smoke-test-images.yml"
     branches:

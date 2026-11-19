@@ -4,7 +4,6 @@ on:
   pull_request:
     paths:
       - "smoke-tests/images/play/**"
-      - "gradle.properties"
       - ".github/workflows/pr-smoke-test-play-images.yml"
       - ".github/workflows/reusable-pr-smoke-test-images.yml"
     branches:
