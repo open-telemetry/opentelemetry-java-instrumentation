@@ -82,8 +82,8 @@ testing.suites {
     }
   }
 
-  // pekko 2.x has only milestone releases so far, which latest dep testing skips, run the tests
-  // against them explicitly, pekko 2.x requires java 17 and has no scala 2.12 artifacts
+  // pekko 2.x requires java 17 and has no scala 2.12 artifacts, so it is tested in separate suites
+  // instead of latest dep testing
   register<JvmTestSuite>("pekko2Test") {
     sources {
       java.srcDir("src/test/java")
@@ -92,8 +92,8 @@ testing.suites {
     }
 
     dependencies {
-      implementation("org.apache.pekko:pekko-actor_2.13:${baseVersion("2.0.0-M4").orLatest()}")
-      implementation("org.apache.pekko:pekko-actor-typed_2.13:${baseVersion("2.0.0-M4").orLatest()}")
+      implementation("org.apache.pekko:pekko-actor_2.13:${baseVersion("2.0.0").orLatest()}")
+      implementation("org.apache.pekko:pekko-actor-typed_2.13:${baseVersion("2.0.0").orLatest()}")
       implementation(project(":instrumentation:executors:testing"))
     }
   }
@@ -106,8 +106,8 @@ testing.suites {
     }
     dependencies {
       implementation("org.scala-lang:scala3-library_3:3.3.8")
-      implementation("org.apache.pekko:pekko-actor_3:${baseVersion("2.0.0-M4").orLatest()}")
-      implementation("org.apache.pekko:pekko-actor-typed_3:${baseVersion("2.0.0-M4").orLatest()}")
+      implementation("org.apache.pekko:pekko-actor_3:${baseVersion("2.0.0").orLatest()}")
+      implementation("org.apache.pekko:pekko-actor-typed_3:${baseVersion("2.0.0").orLatest()}")
       implementation(project(":instrumentation:executors:testing"))
     }
 

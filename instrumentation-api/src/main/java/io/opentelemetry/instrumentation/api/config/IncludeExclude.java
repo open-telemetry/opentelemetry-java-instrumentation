@@ -41,8 +41,8 @@ public final class IncludeExclude {
   IncludeExclude(List<String> included, List<String> excluded) {
     this.included = unmodifiableList(new ArrayList<>(included));
     this.excluded = unmodifiableList(new ArrayList<>(excluded));
-    this.includedPredicates = createGlobPredicates(included);
-    this.excludedPredicates = createGlobPredicates(excluded);
+    this.includedPredicates = new ArrayList<>(createGlobPredicates(this.included));
+    this.excludedPredicates = new ArrayList<>(createGlobPredicates(this.excluded));
   }
 
   /** Returns the included patterns. */
@@ -172,10 +172,8 @@ public final class IncludeExclude {
   }
 
   private static boolean matchesAny(List<Predicate<String>> predicates, String value) {
-    // Index loop rather than for-each: matches() runs per attribute key on hot paths such as
-    // per-log-record attribute capture, and the iterator is not reliably scalar-replaced there.
-    for (int i = 0; i < predicates.size(); i++) {
-      if (predicates.get(i).test(value)) {
+    for (Predicate<String> predicate : predicates) {
+      if (predicate.test(value)) {
         return true;
       }
     }

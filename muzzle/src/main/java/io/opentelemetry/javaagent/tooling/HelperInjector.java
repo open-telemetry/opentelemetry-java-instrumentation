@@ -40,6 +40,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -140,7 +141,7 @@ public class HelperInjector implements Transformer {
             .collect(toList());
 
     this.helperClassesGenerator = (cl) -> helpers;
-    this.helperResources = helperResources;
+    this.helperResources = new ArrayList<>(helperResources);
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
@@ -154,7 +155,7 @@ public class HelperInjector implements Transformer {
     this.requestingName = requestingName;
 
     this.helperClassesGenerator = helperClassesGenerators;
-    this.helperResources = helperResources;
+    this.helperResources = new ArrayList<>(helperResources);
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
