@@ -24,7 +24,7 @@ final class CouchbaseSqlAttributesGetter
   public SqlDialect getSqlDialect(CouchbaseRequestInfo request) {
     // SQL++ uses both single and double quotation marks for string literals.
     // https://docs.couchbase.com/server/current/n1ql/n1ql-language-reference/literals.html
-    return SqlDialect.UNKNOWN;
+    return SqlDialect.forDbSystemName(getDbSystemName(request));
   }
 
   @Override
