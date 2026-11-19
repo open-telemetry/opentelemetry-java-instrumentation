@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.grpc.v1_6.internal;
 
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.api.semconv.network.UnixSocketAddress;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;

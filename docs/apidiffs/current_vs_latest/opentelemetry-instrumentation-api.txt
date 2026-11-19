@@ -50,9 +50,3 @@ Comparing source compatibility of opentelemetry-instrumentation-api-3.0.0-SNAPSH
 		+++  NEW ANNOTATION: javax.annotation.Nullable
 	+++  NEW METHOD: PUBLIC(+) java.net.SocketAddress getNetworkPeerSocketAddress(java.lang.Object, java.lang.Object)
 		+++  NEW ANNOTATION: javax.annotation.Nullable
-+++  NEW CLASS: PUBLIC(+) FINAL(+) io.opentelemetry.instrumentation.api.semconv.network.UnixSocketAddress  (compatible)
-	+++  CLASS FILE FORMAT VERSION: 52.0 <- n.a.
-	+++  NEW INTERFACE: java.io.Serializable
-	+++  NEW SUPERCLASS: java.net.SocketAddress
-	+++  NEW CONSTRUCTOR: PUBLIC(+) UnixSocketAddress(java.lang.String)
-	+++  NEW METHOD: PUBLIC(+) java.lang.String getPath()

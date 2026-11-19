@@ -3,13 +3,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.semconv.network;
+package io.opentelemetry.instrumentation.api.semconv.network.internal;
 
 import static java.util.Objects.requireNonNull;
 
 import java.net.SocketAddress;
 
-/** A Unix domain socket address for use with {@link NetworkAttributesGetter}. */
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
 public final class UnixSocketAddress extends SocketAddress {
 
   private static final long serialVersionUID = 1L;

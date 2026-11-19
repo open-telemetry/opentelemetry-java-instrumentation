@@ -19,6 +19,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

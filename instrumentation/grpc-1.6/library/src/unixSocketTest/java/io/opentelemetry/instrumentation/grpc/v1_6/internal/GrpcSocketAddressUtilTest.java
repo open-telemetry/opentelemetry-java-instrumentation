@@ -9,7 +9,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import io.netty.channel.unix.DomainSocketAddress;
 import io.netty.util.internal.ObjectUtil;
-import io.opentelemetry.instrumentation.api.semconv.network.UnixSocketAddress;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;

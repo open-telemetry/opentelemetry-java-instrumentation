@@ -92,10 +92,9 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * this method to expose other socket address types. Defaults for address, port, network type, and
    * transport use this method; explicitly overridden attribute getters take precedence.
    *
-   * <p>Supported types are {@link InetSocketAddress}, {@link UnixSocketAddress}, and JDK 16+ {@code
-   * UnixDomainSocketAddress}. To report a library-specific Unix socket address, return a {@link
-   * UnixSocketAddress} with its path. Unix socket addresses supply a path and {@code unix}
-   * transport, but no port or network type. Empty Unix paths are omitted.
+   * <p>Supported types are {@link InetSocketAddress} and JDK 16+ {@code UnixDomainSocketAddress}.
+   * Unix socket addresses supply a path and {@code unix} transport, but no port or network type.
+   * Empty Unix paths are omitted.
    */
   @Nullable
   default SocketAddress getNetworkLocalSocketAddress(REQUEST request, @Nullable RESPONSE response) {
