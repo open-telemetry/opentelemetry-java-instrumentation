@@ -47,7 +47,7 @@ val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-j
 jib {
   from.image = Properties().apply {
     rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
-  }.getProperty(targetJDK.toString()) ?: error("Unsupported targetJDK: $targetJDK")
+  }.getProperty(targetJDK) ?: error("Unsupported targetJDK: $targetJDK")
   to.image = "ghcr.io/$repo/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
 }
