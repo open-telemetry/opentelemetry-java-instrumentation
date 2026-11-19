@@ -158,9 +158,6 @@
     },
     {
       // Match pinned version_build tags, excluding rolling tags.
-      // Java 8's 8u<update>-b<build> tags are not matched. Supporting that format is a
-      // separate Renovate fix, outside this four-part security-tag workaround:
-      // https://github.com/renovatebot/renovate/issues/19678
       matchCurrentValue: '/^\\d+(?:\\.\\d+){0,3}_\\d+-.+$/',
       matchDatasources: [
         'docker',
@@ -177,6 +174,22 @@
       // https://github.com/renovatebot/renovate/discussions/47083
       versioning: 'loose',
       versionCompatibility: '^(?<version>\\d+(?:\\.\\d+){0,3}_\\d+)(?<compatibility>-.+)$',
+    },
+    {
+      // Java 8 uses update/build tags; Semeru can add a numeric build revision.
+      matchCurrentValue: '/^(?:open-)?8u\\d+-b\\d+(?:\\.\\d+)?-.+$/',
+      matchDatasources: [
+        'docker',
+      ],
+      matchPackageNames: [
+        'eclipse-temurin',
+        'ibm-semeru-runtimes',
+      ],
+      // Include 8u tags rejected by the preset's LTS-only allowlist.
+      allowedVersions: '/^(?:open-)?8u/',
+      // Workaround for Java 8 versioning:
+      // https://github.com/renovatebot/renovate/issues/19678
+      versioning: 'regex:^(?:open-)?(?<major>8)u(?<patch>\\d+)-b(?<build>\\d+)(?:\\.(?<revision>\\d+))?-(?<compatibility>.+)$',
     },
     {
       // prevent 3.0.1u2 -> 3.0.1
