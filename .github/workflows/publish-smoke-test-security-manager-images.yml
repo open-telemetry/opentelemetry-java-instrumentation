@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - "smoke-tests/images/security-manager/**"
+      - "smoke-tests/images/java-runtime-images.properties"
       - ".github/workflows/publish-smoke-test-security-manager-images.yml"
       - ".github/workflows/reusable-publish-smoke-test-images.yml"
     branches:

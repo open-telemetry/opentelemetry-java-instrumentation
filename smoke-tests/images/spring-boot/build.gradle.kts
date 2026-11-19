@@ -3,6 +3,7 @@ import org.gradle.api.tasks.Sync
 import org.gradle.jvm.tasks.Jar
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Properties
 
 plugins {
   id("otel.java-conventions")
@@ -76,7 +77,9 @@ val prepareBootJarForImage = tasks.register<Sync>("prepareBootJarForImage") {
 }
 
 jib {
-  from.image = "eclipse-temurin:$targetJDK"
+  from.image = Properties().apply {
+    rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
+  }.getProperty(targetJDK.toString()) ?: error("Unsupported targetJDK: $targetJDK")
   to.image = "ghcr.io/$repo/smoke-test-spring-boot:jdk$targetJDK-$tag"
   container.ports = listOf("8080")
   if (useExecutableBootJarLayout) {

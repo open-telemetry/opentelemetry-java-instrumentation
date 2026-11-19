@@ -3,6 +3,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion
 import play.gradle.Language
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Properties
 
 plugins {
   // Don't apply java-conventions since no Java in this project and it interferes with play plugin.
@@ -44,7 +45,9 @@ java {
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
 
 jib {
-  from.image = "eclipse-temurin:$targetJDK"
+  from.image = Properties().apply {
+    rootProject.file("smoke-tests/images/java-runtime-images.properties").inputStream().use { load(it) }
+  }.getProperty(targetJDK.toString()) ?: error("Unsupported targetJDK: $targetJDK")
   to.image = "ghcr.io/$repo/smoke-test-play:jdk$targetJDK-$tag"
   container.mainClass = "play.core.server.ProdServerStart"
 }

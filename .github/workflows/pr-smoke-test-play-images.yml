@@ -4,6 +4,7 @@ on:
   pull_request:
     paths:
       - "smoke-tests/images/play/**"
+      - "smoke-tests/images/java-runtime-images.properties"
       - ".github/workflows/pr-smoke-test-play-images.yml"
       - ".github/workflows/reusable-pr-smoke-test-images.yml"
     branches:
