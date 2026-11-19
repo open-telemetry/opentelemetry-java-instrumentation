@@ -25,7 +25,6 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.PointData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -423,66 +422,52 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                 "kafka.producer.byte_total",
                 "kafka.producer.compression_rate"));
 
-    testing()
-        .waitAndAssertMetricsForInstrumentation(
-            testing() instanceof AgentInstrumentationExtension
-                ? "io.opentelemetry.kafka-clients-0.11"
-                : "io.opentelemetry.kafka-clients-2.6",
-            metrics -> {
-              metrics.extracting(MetricData::getName).containsAll(expectedMetricNames);
-              metrics
-                  .filteredOn(metric -> metric.getName().equals("kafka.consumer.fetch_latency_avg"))
-                  .allSatisfy(
-                      metricData ->
-                          assertThat(metricData.getData().getPoints())
-                              .anySatisfy(
-                                  point ->
-                                      assertThat(
-                                              point
-                                                  .getAttributes()
-                                                  .get(stringKey("kafka.cluster.id")))
-                                          .isNotEmpty()));
+    String instrumentationName =
+        testing() instanceof AgentInstrumentationExtension
+            ? "io.opentelemetry.kafka-clients-0.11"
+            : "io.opentelemetry.kafka-clients-2.6";
+    for (String metricName : expectedMetricNames) {
+      testing()
+          .waitAndAssertMetrics(
+              instrumentationName,
+              metricName,
+              metrics -> {
+                metrics.isNotEmpty();
+                metrics.allSatisfy(
+                    metricData -> {
+                      // After a real produce/consume cycle the broker fires onUpdate() on each
+                      // reporter; all metric points must carry the resulting cluster id.
+                      assertThat(metricData.getData().getPoints())
+                          .isNotEmpty()
+                          .allSatisfy(
+                              point ->
+                                  assertThat(
+                                          point.getAttributes().get(stringKey("kafka.cluster.id")))
+                                      .isNotEmpty());
 
-              // After a real produce/consume cycle the broker fires onUpdate() on each reporter;
-              // all metric points must carry the resulting cluster id.
-              metrics
-                  .filteredOn(metric -> metric.getName().startsWith("kafka."))
-                  .allSatisfy(
-                      metricData ->
-                          assertThat(metricData.getData().getPoints())
-                              .allSatisfy(
+                      // All data points for a given metric must carry the same set of attribute
+                      // keys.
+                      Set<String> expectedKeys =
+                          metricData.getData().getPoints().stream()
+                              .findFirst()
+                              .map(
                                   point ->
-                                      assertThat(
-                                              point
-                                                  .getAttributes()
-                                                  .get(stringKey("kafka.cluster.id")))
-                                          .isNotEmpty()));
-
-              // All data points for a given metric must carry the same set of attribute keys.
-              metrics
-                  .filteredOn(metric -> metric.getName().startsWith("kafka."))
-                  .allSatisfy(
-                      metricData -> {
-                        Set<String> expectedKeys =
-                            metricData.getData().getPoints().stream()
-                                .findFirst()
-                                .map(
-                                    point ->
-                                        point.getAttributes().asMap().keySet().stream()
-                                            .map(AttributeKey::getKey)
-                                            .collect(toSet()))
-                                .orElse(emptySet());
-                        assertThat(metricData.getData().getPoints())
-                            .extracting(PointData::getAttributes)
-                            .extracting(
-                                attributes ->
-                                    attributes.asMap().keySet().stream()
-                                        .map(AttributeKey::getKey)
-                                        .collect(toSet()))
-                            .allSatisfy(
-                                attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
-                      });
-            });
+                                      point.getAttributes().asMap().keySet().stream()
+                                          .map(AttributeKey::getKey)
+                                          .collect(toSet()))
+                              .orElse(emptySet());
+                      assertThat(metricData.getData().getPoints())
+                          .extracting(PointData::getAttributes)
+                          .extracting(
+                              attributes ->
+                                  attributes.asMap().keySet().stream()
+                                      .map(AttributeKey::getKey)
+                                      .collect(toSet()))
+                          .allSatisfy(
+                              attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+                    });
+              });
+    }
 
     // Print mapping table
     printMappingTable();

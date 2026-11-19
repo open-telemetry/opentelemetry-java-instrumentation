@@ -231,22 +231,6 @@ public abstract class InstrumentationTestRunner {
     }
   }
 
-  /** Waits for the assertion applied to all metrics of the given instrumentation to pass. */
-  public void waitAndAssertMetricsForInstrumentation(
-      String instrumentationName, Consumer<ListAssert<MetricData>> assertion) {
-    awaitUntilAsserted(
-        () ->
-            assertion.accept(
-                assertThat(instrumentationMetrics(instrumentationName))
-                    .describedAs("Metrics for instrumentation %s", instrumentationName)));
-
-    TelemetryDataUtil.assertMetricScopeVersion(metricsForScope(instrumentationName));
-
-    if (Boolean.getBoolean("collectMetadata")) {
-      collectEmittedMetrics(getExportedMetrics());
-    }
-  }
-
   private List<MetricData> metricsForScope(String instrumentationName) {
     return getExportedMetrics().stream()
         .filter(m -> m.getInstrumentationScopeInfo().getName().equals(instrumentationName))
