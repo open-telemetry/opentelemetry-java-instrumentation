@@ -24,7 +24,6 @@ class RdsDataSqlAttributesGetter
   @Override
   public String getDbSystemName(ExecutionAttributes request) {
     // RDS Data requests do not identify whether the engine is Aurora MySQL or PostgreSQL.
-    // Use other_sql to retain conservative SQL sanitization.
     return OTHER_SQL;
   }
 
