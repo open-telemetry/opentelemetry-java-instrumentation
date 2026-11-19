@@ -1,8 +1,10 @@
 import subprocess
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import Mock, patch
 
-from smoke_test_publication import create_candidate, inspect_manifest
+from smoke_test_publication import create_candidate, inspect_manifest, main
 
 
 class PublicationTest(unittest.TestCase):
@@ -59,6 +61,26 @@ class PublicationTest(unittest.TestCase):
     def test_servlet_tag_can_contain_uppercase_version(self):
         reference = f"ghcr.io/example/project/smoke-test-servlet-wildfly:13.0.0.Final-jdk8-{self.tag}"
         self.assertEqual(self.candidate(references=[reference])["images"][0]["reference"], reference)
+
+    def test_failed_publication_removes_stale_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            references = Path(directory) / "references.txt"
+            references.write_text("\n".join(self.references))
+            output = Path(directory) / "candidate.json"
+            output.write_text("stale")
+            args = [
+                "publication", "--family", "fake-backend", "--tag", self.tag,
+                "--references", str(references), "--results", "success", "failure",
+                "--output", str(output),
+            ]
+            env = {
+                "GITHUB_REPOSITORY": "example/project", "GITHUB_SHA": "a" * 40,
+                "GITHUB_RUN_ID": "123", "GITHUB_RUN_ATTEMPT": "1",
+                "GITHUB_WORKFLOW_REF": "workflow",
+            }
+            with patch("sys.argv", args), patch.dict("os.environ", env), self.assertRaises(SystemExit):
+                main()
+            self.assertFalse(output.exists())
 
     @patch("smoke_test_publication.subprocess.run")
     def test_registry_inspection_uses_exact_reference_without_shell(self, run):
