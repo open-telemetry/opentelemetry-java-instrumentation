@@ -18,9 +18,7 @@ public class TestImageVersions {
   public static final String PLAY_VERSION = "20261007.37549989769";
 
   // smoke-test-quarkus
-  // Update QUARKUS_VERSION after the Quarkus 4 images for Java 21+ have been published.
   public static final String QUARKUS_VERSION = "20261007.37549989866";
-  public static final String QUARKUS_JAVA_17_VERSION = "20261007.37549989866";
 
   // smoke-test-security-manager
   public static final String SECURITY_MANAGER_VERSION = "20260825.32803070890";
