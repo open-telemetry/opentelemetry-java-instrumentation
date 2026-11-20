@@ -4,8 +4,9 @@ applyTo: "**/*.java,**/*.kt,**/*.scala,**/*.groovy"
 
 # Instrumentation state and synchronization
 
-Apply these rules when instrumentation stores per-object or temporary thread state, or synchronizes
-shared state. Virtual-field requirements apply to javaagent instrumentation, not library-only code.
+Apply these rules when instrumentation stores per-object or temporary thread state, synchronizes
+shared state, or registers observable metric callbacks. Virtual-field requirements apply to
+javaagent instrumentation, not library-only code.
 
 ## Choose storage by ownership
 
@@ -92,6 +93,48 @@ Field-backed storage can collect a carrier/value cycle, but fallback storage mus
 Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
 supported concurrent updates need an invariant before choosing synchronization or ownership.
 Do not choose a cache solely for `computeIfAbsent`.
+
+## Observable metric callbacks
+
+The SDK bundled with the javaagent holds the callback strongly. Separately, it saves the
+registering thread's context class loader (TCCL) and uses it to run the callback. Registering
+with a null TCCL does not weaken what the callback holds. Weak references in the callback do
+not remove the SDK's saved TCCL.
+
+**Registration ownership.** Identify who owns the registration and when it ends. Verify that
+every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
+the returned handle and remove any long-lived registry entries for that registration.
+Clearing a reference to the handle without closing it does not unregister the callback.
+
+After `close()`, the SDK handle still holds the callback and the saved TCCL. If either
+should be collectible while the owner is still alive, clear the field that stores the
+closed handle, for example by setting it to `null`.
+
+A callback can strongly hold state that should live as long as the registration. For example,
+the HikariCP callback may capture `PoolStats`, which references the pool. When HikariCP shuts down
+the pool, the tracker must close the callback handle and clear the field that held it. If a
+shutdown path misses that cleanup, fix the hook rather than weakening the reference.
+
+**Saved TCCL.** Use `MetricCallbackRegistration.withoutContextClassLoader(...)` only after
+verifying that registration and callback execution work with a null TCCL. Check lazy
+initialization and supported providers or overrides. Configure builders and obtain factories
+before calling the helper. Otherwise, preserve the existing TCCL behavior. If you hold the
+loader weakly, make sure the SDK does not also save it strongly and define what the callback
+does when the loader is gone.
+
+**Collection without explicit shutdown.** If an object or class loader should be collectible
+while the registration is live, trace every strong reference to it from the SDK or other
+long-lived state. Check what the callback and its measurement functions capture, the loaders
+that define the callback and its helpers, registry entries, and the saved TCCL.
+
+A weak reference to the measured object is different from a weak reference to the callback.
+If you hold the callback itself weakly, give it an owner that keeps it alive while it should
+still report. Decide whether to skip recording or unregister when the target disappears.
+
+For example, `Gauge.builder(name, queue, Queue::size)` in Micrometer observes the queue weakly
+by default. The queue can be collected while the gauge stays registered, so the bridge skips
+recording once the queue is gone. Capturing the queue in the measurement function would keep
+it alive and defeat the weak reference.
 
 ## Temporary thread state
 
