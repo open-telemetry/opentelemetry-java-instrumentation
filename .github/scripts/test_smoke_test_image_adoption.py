@@ -16,6 +16,8 @@ from smoke_test_image_adoption import (
     REPOSITORY,
     TITLE,
     AdoptionError,
+    NotFound,
+    expected_references,
     image_pin,
     is_newer_run,
     latest_successful_run,
@@ -33,8 +35,8 @@ from smoke_test_image_adoption import (
     update_pin,
     validate_bot_branch,
     validate_candidate,
+    verify_eligible_run,
     verify_required_jobs,
-    expected_references,
 )
 
 
@@ -319,6 +321,128 @@ class AdoptionTest(unittest.TestCase):
                 ],
                 "fake-backend",
             )
+
+    def test_verify_eligible_run_checks_publication_artifact_and_registry(self):
+        main_sha = run_process(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
+        run = run_record(sha=main_sha)
+        expected = expected_references("fake-backend", publication_id(run))
+        digest = "sha256:" + "a" * 64
+
+        class FakeGitHub:
+            def __init__(self):
+                self.exact_run = dict(run)
+                self.artifacts = [
+                    {
+                        "id": 456,
+                        "name": (
+                            "smoke-test-publication-fake-backend-"
+                            f"{run['run_attempt']}"
+                        ),
+                        "expired": False,
+                        "workflow_run": {"id": run["id"], "head_sha": main_sha},
+                    }
+                ]
+                self.candidate = candidate_record(run)
+
+            def run_attempt(self, run_id, attempt):
+                self.assert_requested = (run_id, attempt)
+                return self.exact_run
+
+            def compare(self, _source, _main):
+                return "identical"
+
+            def run_jobs(self, _run_id, _attempt):
+                return [
+                    {"name": name, "status": "completed", "conclusion": "success"}
+                    for name in ("prepare", "publishLinux", "publishWindows", "verify")
+                ]
+
+            def run_artifacts(self, _run_id):
+                return self.artifacts
+
+            def download_artifact(self, artifact_id):
+                self.downloaded_artifact = artifact_id
+                return self.candidate
+
+        def verify(api):
+            return verify_eligible_run(api, run, "fake-backend", main_sha, ROOT)
+
+        api = FakeGitHub()
+        with patch("smoke_test_image_adoption.manifest_digest", return_value=digest) as manifest:
+            exact_run, tag, run_url = verify(api)
+
+        self.assertEqual(exact_run, run)
+        self.assertEqual(tag, publication_id(run))
+        self.assertEqual(api.assert_requested, (run["id"], run["run_attempt"]))
+        self.assertEqual(api.downloaded_artifact, 456)
+        self.assertEqual(
+            {call.args[0] for call in manifest.call_args_list},
+            expected,
+        )
+        self.assertIn(
+            f"/actions/runs/{run['id']}/attempts/{run['run_attempt']}",
+            run_url,
+        )
+
+        with patch(
+            "smoke_test_image_adoption.manifest_digest",
+            return_value="sha256:" + "b" * 64,
+        ):
+            with self.assertRaisesRegex(AdoptionError, "registry manifest changed"):
+                verify(FakeGitHub())
+
+        invalid_cases = (
+            (
+                "expired artifact",
+                lambda api: api.artifacts[0].update(expired=True),
+                "no unique unexpired candidate artifact",
+            ),
+            (
+                "wrong artifact run",
+                lambda api: api.artifacts[0]["workflow_run"].update(id=654321),
+                "no unique unexpired candidate artifact",
+            ),
+            (
+                "wrong artifact source",
+                lambda api: api.artifacts[0]["workflow_run"].update(head_sha="b" * 40),
+                "no unique unexpired candidate artifact",
+            ),
+            (
+                "wrong candidate run",
+                lambda api: api.candidate.update(run_id="654321"),
+                "candidate provenance does not match",
+            ),
+            (
+                "wrong candidate attempt",
+                lambda api: api.candidate.update(run_attempt="2"),
+                "candidate provenance does not match",
+            ),
+            (
+                "wrong candidate source",
+                lambda api: api.candidate.update(source_commit="b" * 40),
+                "candidate provenance does not match",
+            ),
+            (
+                "wrong exact attempt",
+                lambda api: api.exact_run.update(run_attempt=2),
+                "publisher run identity",
+            ),
+            (
+                "duplicate artifacts",
+                lambda api: api.artifacts.append(dict(api.artifacts[0])),
+                "no unique unexpired candidate artifact",
+            ),
+        )
+        for name, mutate, message in invalid_cases:
+            with self.subTest(case=name):
+                api = FakeGitHub()
+                mutate(api)
+                with patch(
+                    "smoke_test_image_adoption.manifest_digest",
+                    return_value=digest,
+                ):
+                    with self.assertRaisesRegex(AdoptionError, message):
+                        verify(api)
 
     def test_api_pagination_accepts_rest_array_responses(self):
         from smoke_test_image_adoption import GitHub
@@ -880,6 +1004,93 @@ class AdoptionTest(unittest.TestCase):
         self.assertEqual(verified_families, ["play"])
         self.assertTrue(has_updates)
         self.assertIn("play:", message)
+
+    def test_older_successful_run_with_unavailable_artifact_does_not_block_updates(self):
+        main_sha = run_process(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
+        selected_fake_backend = run_record(run_id=123456, sha=main_sha)
+        expired_fake_backend = run_record(run_id=123455, sha=main_sha)
+        selected_play = run_record("play", run_id=200, sha=main_sha)
+        newer_play = run_record("play", run_id=234567, sha=main_sha)
+        base = pin_files()
+        current, _ = update_pin(
+            base, "fake-backend", publication_id(selected_fake_backend)
+        )
+        current, _ = update_pin(current, "play", publication_id(selected_play))
+        play_candidate = candidate_record(newer_play, "play")
+        play_artifact = {
+            "id": 789,
+            "name": f"smoke-test-publication-play-{newer_play['run_attempt']}",
+            "expired": False,
+            "workflow_run": {
+                "id": newer_play["id"],
+                "head_sha": main_sha,
+            },
+        }
+
+        class FakeGitHub:
+            def __init__(self):
+                self.runs = {
+                    ("fake-backend", expired_fake_backend["id"]): expired_fake_backend,
+                    ("fake-backend", selected_fake_backend["id"]): selected_fake_backend,
+                    ("play", selected_play["id"]): selected_play,
+                    ("play", newer_play["id"]): newer_play,
+                }
+                self.artifact_requests = []
+
+            def main_sha(self):
+                return main_sha
+
+            def workflow_runs(self, family):
+                if family == "fake-backend":
+                    return [expired_fake_backend]
+                if family == "play":
+                    return [newer_play]
+                return []
+
+            def run_attempt(self, run_id, _attempt):
+                for run in self.runs.values():
+                    if str(run["id"]) == str(run_id):
+                        return run
+                raise NotFound("run not found")
+
+            def compare(self, _base, _head):
+                return "identical"
+
+            def run_jobs(self, run_id, _attempt):
+                return [
+                    {"name": name, "status": "completed", "conclusion": "success"}
+                    for name in ("publish / build", "publish / verify")
+                ]
+
+            def run_artifacts(self, run_id):
+                self.artifact_requests.append(str(run_id))
+                if str(run_id) == str(expired_fake_backend["id"]):
+                    return []
+                return [play_artifact]
+
+            def download_artifact(self, _artifact_id):
+                return play_candidate
+
+            def pr_comments(self, _number):
+                return []
+
+        api = FakeGitHub()
+        with (
+            patch(
+                "smoke_test_image_adoption.prepare_branch",
+                return_value=(main_sha, base, current, None, None),
+            ),
+            patch(
+                "smoke_test_image_adoption.manifest_digest",
+                return_value="sha256:" + "a" * 64,
+            ),
+        ):
+            message, has_updates = reconcile(api, ROOT, None, False)
+
+        self.assertEqual(api.artifact_requests, [str(newer_play["id"])])
+        self.assertTrue(has_updates)
+        self.assertIn("play:", message)
+        self.assertNotIn("fake-backend:", message)
 
     def test_python_subprocesses_do_not_open_windows(self):
         with patch.object(sys, "platform", "win32"), patch.object(

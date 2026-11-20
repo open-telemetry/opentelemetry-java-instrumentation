@@ -1181,6 +1181,9 @@ def reconcile(api, root, trigger, apply):
             latest_attempt, selected[family_name]
         ):
             continue
+        old_run = resolve_pinned_run(api, family_name, selected[family_name])
+        if not is_newer_run(old_run, latest_attempt, api.compare):
+            continue
         run_key = (str(latest_attempt["id"]), int(latest_attempt["run_attempt"]))
         if run_key in verified_runs:
             exact_run, tag, run_url = verified_runs[run_key]
@@ -1188,9 +1191,6 @@ def reconcile(api, root, trigger, apply):
             exact_run, tag, run_url = verify_eligible_run(
                 api, latest_attempt, family_name, main_sha, root
             )
-        old_run = resolve_pinned_run(api, family_name, selected[family_name])
-        if not is_newer_run(old_run, exact_run, api.compare):
-            continue
         updated, _ = update_pin(current_files, family_name, tag)
         current_files = updated
         verified[family_name] = (
