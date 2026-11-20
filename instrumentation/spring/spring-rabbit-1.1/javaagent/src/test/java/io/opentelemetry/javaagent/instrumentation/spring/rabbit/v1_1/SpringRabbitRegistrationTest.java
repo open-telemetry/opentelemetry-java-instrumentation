@@ -377,9 +377,7 @@ class SpringRabbitRegistrationTest {
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(metric ->
-                assertThat(metric)
-                    .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(count)))));
+                assertThat(metric).hasLongSumPointsSatisfying(point -> point.hasValue(count))));
   }
 
   private static class TestContainer extends SimpleMessageListenerContainer {
