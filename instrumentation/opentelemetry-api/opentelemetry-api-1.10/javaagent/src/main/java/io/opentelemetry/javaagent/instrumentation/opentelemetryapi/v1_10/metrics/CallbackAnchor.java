@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Utility for preventing class loader leaks when bridging async instrument callbacks from the
@@ -50,7 +51,7 @@ public class CallbackAnchor {
     callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
     try {
       WeakRefConsumer<T> weak = new WeakRefConsumer<>(new WeakReference<>(callback));
-      R instrument = buildFn.apply(weak);
+      R instrument = withoutContextClassLoader(() -> buildFn.apply(weak));
       weak.closeWhenCollected(instrument);
       return instrument;
     } catch (Throwable t) {
@@ -64,7 +65,7 @@ public class CallbackAnchor {
     callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
     try {
       WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(callback));
-      R instrument = buildFn.apply(weak);
+      R instrument = withoutContextClassLoader(() -> buildFn.apply(weak));
       weak.closeWhenCollected(instrument);
       return instrument;
     } catch (Throwable t) {
@@ -82,6 +83,17 @@ public class CallbackAnchor {
         release(callback);
       }
     };
+  }
+
+  private static <T> T withoutContextClassLoader(Supplier<T> supplier) {
+    Thread thread = Thread.currentThread();
+    ClassLoader originalClassLoader = thread.getContextClassLoader();
+    thread.setContextClassLoader(null);
+    try {
+      return supplier.get();
+    } finally {
+      thread.setContextClassLoader(originalClassLoader);
+    }
   }
 
   private static void release(Object callback) {

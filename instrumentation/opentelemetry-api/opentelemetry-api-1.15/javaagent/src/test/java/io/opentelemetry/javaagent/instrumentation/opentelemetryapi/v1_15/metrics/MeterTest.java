@@ -19,6 +19,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
 import java.lang.ref.WeakReference;
 import java.time.Duration;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -344,5 +345,48 @@ class MeterTest {
 
     GcUtils.awaitGc(callbackRef, Duration.ofSeconds(10));
     assertThat(callbackRef.get()).isNull();
+  }
+
+  @Test
+  void batchCallbackUsesWeakRegistrationContext() throws Exception {
+    ObservableLongMeasurement measurement = meter.counterBuilder("test").buildObserver();
+    ClassLoader registrationClassLoader = new ClassLoader() {};
+    WeakReference<ClassLoader> registrationClassLoaderRef =
+        new WeakReference<>(registrationClassLoader);
+    AtomicBoolean callbackUsedRegistrationClassLoader = new AtomicBoolean();
+    Runnable callback =
+        () -> {
+          callbackUsedRegistrationClassLoader.set(
+              Thread.currentThread().getContextClassLoader() == registrationClassLoaderRef.get());
+          measurement.record(42);
+        };
+
+    Thread thread = Thread.currentThread();
+    ClassLoader originalClassLoader = thread.getContextClassLoader();
+    BatchCallback callbackHandle;
+    thread.setContextClassLoader(registrationClassLoader);
+    try {
+      callbackHandle = meter.batchCallback(callback, measurement);
+    } finally {
+      thread.setContextClassLoader(originalClassLoader);
+    }
+
+    try {
+      testing.waitAndAssertMetrics(
+          instrumentationName,
+          metric ->
+              metric
+                  .hasName("test")
+                  .hasLongSumSatisfying(
+                      sum -> sum.isMonotonic().hasPointsSatisfying(point -> point.hasValue(42))));
+      assertThat(callbackUsedRegistrationClassLoader.get()).isTrue();
+      assertThat(thread.getContextClassLoader()).isSameAs(originalClassLoader);
+
+      registrationClassLoader = null;
+      GcUtils.awaitGc(registrationClassLoaderRef, Duration.ofSeconds(10));
+      assertThat(registrationClassLoaderRef.get()).isNull();
+    } finally {
+      callbackHandle.close();
+    }
   }
 }

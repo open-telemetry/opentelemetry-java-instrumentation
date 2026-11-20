@@ -22,7 +22,18 @@ public class GaugeRegistrar {
   public static void register(String instrumentationName, String gaugeName) {
     Meter meter =
         GlobalOpenTelemetry.get().getMeterProvider().meterBuilder(instrumentationName).build();
-    meter.gaugeBuilder(gaugeName).ofLongs().buildWithCallback(m -> m.record(42));
+    meter
+        .gaugeBuilder(gaugeName)
+        .ofLongs()
+        .buildWithCallback(
+            m -> {
+              System.setProperty(
+                  instrumentationName + ".callbackTccL",
+                  Boolean.toString(
+                      Thread.currentThread().getContextClassLoader()
+                          == GaugeRegistrar.class.getClassLoader()));
+              m.record(42);
+            });
   }
 
   private GaugeRegistrar() {}

@@ -6,10 +6,12 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.Test;
 
@@ -26,6 +28,38 @@ class WeakRefConsumerTest {
     assertThat(count.get()).isEqualTo(2);
 
     // prevent delegate from being collected during the test
+    assertThat(delegate).isNotNull();
+  }
+
+  @Test
+  void restoresContextClassLoaderAfterCallbackAndFailure() {
+    Thread thread = Thread.currentThread();
+    ClassLoader currentClassLoader = thread.getContextClassLoader();
+    ClassLoader registrationClassLoader = new ClassLoader() {};
+    AtomicReference<ClassLoader> callbackClassLoader = new AtomicReference<>();
+    AtomicBoolean fail = new AtomicBoolean();
+    Consumer<String> delegate =
+        value -> {
+          callbackClassLoader.set(thread.getContextClassLoader());
+          if (fail.get()) {
+            throw new IllegalStateException("boom");
+          }
+        };
+    WeakRefConsumer<String> weak;
+    thread.setContextClassLoader(registrationClassLoader);
+    try {
+      weak = new WeakRefConsumer<>(new WeakReference<>(delegate));
+    } finally {
+      thread.setContextClassLoader(currentClassLoader);
+    }
+
+    weak.accept("value");
+    assertThat(callbackClassLoader.get()).isSameAs(registrationClassLoader);
+    assertThat(thread.getContextClassLoader()).isSameAs(currentClassLoader);
+    fail.set(true);
+    assertThatThrownBy(() -> weak.accept("value")).isInstanceOf(IllegalStateException.class);
+    assertThat(callbackClassLoader.get()).isSameAs(registrationClassLoader);
+    assertThat(thread.getContextClassLoader()).isSameAs(currentClassLoader);
     assertThat(delegate).isNotNull();
   }
 

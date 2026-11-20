@@ -11,10 +11,12 @@ import java.util.concurrent.atomic.AtomicReference;
 public final class WeakRefRunnable implements Runnable {
 
   private final WeakReference<Runnable> ref;
+  private final WeakReference<ClassLoader> contextClassLoader;
   private final AtomicReference<AutoCloseable> closeOnCollect = new AtomicReference<>();
 
   public WeakRefRunnable(WeakReference<Runnable> ref) {
     this.ref = ref;
+    contextClassLoader = new WeakReference<>(Thread.currentThread().getContextClassLoader());
   }
 
   // Not a constructor parameter because of a chicken-and-egg problem: the SDK builder needs
@@ -27,7 +29,14 @@ public final class WeakRefRunnable implements Runnable {
   public void run() {
     Runnable runnable = ref.get();
     if (runnable != null) {
-      runnable.run();
+      Thread thread = Thread.currentThread();
+      ClassLoader originalClassLoader = thread.getContextClassLoader();
+      thread.setContextClassLoader(contextClassLoader.get());
+      try {
+        runnable.run();
+      } finally {
+        thread.setContextClassLoader(originalClassLoader);
+      }
     } else {
       close();
     }

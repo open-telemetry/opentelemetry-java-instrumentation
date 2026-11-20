@@ -20,6 +20,7 @@ import java.net.URLClassLoader;
 import java.time.Duration;
 import java.util.function.Consumer;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInfo;
@@ -61,6 +62,11 @@ class CallbackGcCloseTest {
     meter = testing.getOpenTelemetry().getMeterProvider().meterBuilder(instrumentationName).build();
   }
 
+  @AfterEach
+  void clearCallbackContextProperty() {
+    System.clearProperty(instrumentationName + ".callbackTccL");
+  }
+
   @Test
   void instrumentClosedWhenClassLoaderCollected() throws Exception {
     // 1. Build a child-first URLClassLoader that loads its own copy of the OTel API.
@@ -76,9 +82,16 @@ class CallbackGcCloseTest {
     //    Because the child CL loads its own copy of the OTel API, the bridge creates an
     //    CallbackAnchor instance in the child CL with its own callbacks map.
     Class<?> registrar = childCl.loadClass(GaugeRegistrar.class.getName());
-    registrar
-        .getMethod("register", String.class, String.class)
-        .invoke(null, instrumentationName, "test.gc.close");
+    Thread thread = Thread.currentThread();
+    ClassLoader originalClassLoader = thread.getContextClassLoader();
+    thread.setContextClassLoader(childCl);
+    try {
+      registrar
+          .getMethod("register", String.class, String.class)
+          .invoke(null, instrumentationName, "test.gc.close");
+    } finally {
+      thread.setContextClassLoader(originalClassLoader);
+    }
 
     // 3. Verify the gauge is producing metrics.
     testing.waitAndAssertMetrics(
@@ -88,6 +101,7 @@ class CallbackGcCloseTest {
                 .hasName("test.gc.close")
                 .hasLongGaugeSatisfying(
                     gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
+    assertThat(System.getProperty(instrumentationName + ".callbackTccL")).isEqualTo("true");
 
     // 4. Release the classloader — simulates app undeploy.
     WeakReference<ClassLoader> clRef = new WeakReference<>(childCl);
