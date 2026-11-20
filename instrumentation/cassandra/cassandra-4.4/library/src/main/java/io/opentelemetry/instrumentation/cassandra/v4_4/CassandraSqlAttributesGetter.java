@@ -14,7 +14,7 @@ import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetSocketAddress;
 import java.util.Collection;
@@ -57,14 +57,14 @@ final class CassandraSqlAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CassandraRequest request) {
-    DbServerTarget serverTarget = request.getServerTarget();
+    ServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CassandraRequest request) {
-    DbServerTarget serverTarget = request.getServerTarget();
+    ServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getPort();
   }
 

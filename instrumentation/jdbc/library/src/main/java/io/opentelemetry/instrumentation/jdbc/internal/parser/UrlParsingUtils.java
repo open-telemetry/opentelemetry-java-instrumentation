@@ -8,8 +8,8 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 import static java.util.Collections.emptyMap;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
@@ -319,7 +319,7 @@ public final class UrlParsingUtils {
     int firstColon = value.indexOf(':');
     int lastColon = value.lastIndexOf(':');
     if (firstColon != lastColon) {
-      return DbServerTargetBuilder.isValidHost(value);
+      return ServerTargetBuilder.isValidHost(value);
     }
     return firstColon < 0 || (firstColon > 0 && isValidPort(value.substring(firstColon + 1)));
   }
@@ -363,7 +363,7 @@ public final class UrlParsingUtils {
 
   /** Parse and normalize a comma-separated configured server group. */
   @Nullable
-  public static DbServerTarget parseServerTargetGroup(
+  public static ServerTarget parseServerTargetGroup(
       String authority, @Nullable Integer defaultPort) {
     String sanitized = sanitizeHostList(authority);
     if (sanitized == null) {
@@ -384,7 +384,7 @@ public final class UrlParsingUtils {
       }
     }
     if (!hasSpecialTarget) {
-      DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort);
+      ServerTargetBuilder builder = ServerTarget.builder(defaultPort);
       for (HostPort endpoint : endpoints) {
         builder.addEndpoint(endpoint.host(), endpoint.port() == null ? -1 : endpoint.port());
       }
@@ -394,18 +394,18 @@ public final class UrlParsingUtils {
     for (HostPort endpoint : endpoints) {
       String host = endpoint.host();
       if (host.startsWith("/")) {
-        if (DbServerTarget.unixSocket(host) == null) {
+        if (ServerTarget.unixSocket(host) == null) {
           return null;
         }
         continue;
       }
       int instanceStart = host.indexOf('\\');
       String networkHost = instanceStart < 0 ? host : host.substring(0, instanceStart);
-      if (!DbServerTargetBuilder.isValidHost(networkHost)) {
+      if (!ServerTargetBuilder.isValidHost(networkHost)) {
         return null;
       }
     }
-    return DbServerTarget.create(
+    return ServerTarget.create(
         renderSpecialServerAddressGroup(entries, endpoints, defaultPort), null);
   }
 
@@ -429,7 +429,7 @@ public final class UrlParsingUtils {
       }
     }
     StringBuilder address = new StringBuilder();
-    for (int i = 0; i < endpoints.size() && i < DbServerTargetBuilder.MAX_ENDPOINTS; i++) {
+    for (int i = 0; i < endpoints.size() && i < ServerTargetBuilder.MAX_ENDPOINTS; i++) {
       HostPort endpoint = endpoints.get(i);
       if (address.length() > 0) {
         address.append(',');
@@ -444,7 +444,7 @@ public final class UrlParsingUtils {
 
   private static String joinFirstEndpoints(List<String> entries) {
     StringBuilder address = new StringBuilder();
-    for (int i = 0; i < entries.size() && i < DbServerTargetBuilder.MAX_ENDPOINTS; i++) {
+    for (int i = 0; i < entries.size() && i < ServerTargetBuilder.MAX_ENDPOINTS; i++) {
       if (address.length() > 0) {
         address.append(',');
       }

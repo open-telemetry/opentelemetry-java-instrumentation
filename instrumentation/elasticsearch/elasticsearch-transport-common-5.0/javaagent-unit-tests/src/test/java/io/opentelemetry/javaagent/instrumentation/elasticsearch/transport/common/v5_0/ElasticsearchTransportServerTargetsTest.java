@@ -10,7 +10,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget.Endpoint;
 import org.elasticsearch.client.support.AbstractClient;
 import org.junit.jupiter.api.Test;
@@ -26,7 +26,7 @@ class ElasticsearchTransportServerTargetsTest {
     ElasticsearchTransportServerTargets.update(
         client, singletonList(new Endpoint("10.0.0.2", 9301)));
 
-    DbServerTarget target = ElasticsearchTransportServerTargets.get(client);
+    ServerTarget target = ElasticsearchTransportServerTargets.get(client);
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("10.0.0.2");
     assertThat(target.getPort()).isEqualTo(9301);
@@ -47,8 +47,8 @@ class ElasticsearchTransportServerTargetsTest {
     ElasticsearchTransportServerTargets.update(
         secondClient, secondToken, singletonList(new Endpoint("10.0.0.2", 9300)));
 
-    DbServerTarget firstTarget = ElasticsearchTransportServerTargets.get(firstClient);
-    DbServerTarget secondTarget = ElasticsearchTransportServerTargets.get(secondClient);
+    ServerTarget firstTarget = ElasticsearchTransportServerTargets.get(firstClient);
+    ServerTarget secondTarget = ElasticsearchTransportServerTargets.get(secondClient);
     assertThat(firstTarget).isNotNull();
     assertThat(secondTarget).isNotNull();
     assertThat(firstTarget.getAddress()).isEqualTo("10.0.0.1");
@@ -65,7 +65,7 @@ class ElasticsearchTransportServerTargetsTest {
     ElasticsearchTransportServerTargets.update(
         client, token, singletonList(new Endpoint("10.0.0.1", 9300)));
 
-    DbServerTarget target = ElasticsearchTransportServerTargets.get(client);
+    ServerTarget target = ElasticsearchTransportServerTargets.get(client);
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("10.0.0.1");
   }
@@ -94,7 +94,7 @@ class ElasticsearchTransportServerTargetsTest {
     ElasticsearchTransportServerTargets.update(
         client, firstToken, singletonList(new Endpoint("10.0.0.1", 9300)));
 
-    DbServerTarget target = ElasticsearchTransportServerTargets.get(client);
+    ServerTarget target = ElasticsearchTransportServerTargets.get(client);
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("10.0.0.2");
     assertThat(target.getPort()).isEqualTo(9301);
@@ -126,7 +126,7 @@ class ElasticsearchTransportServerTargetsTest {
     ElasticsearchTransportServerTargets.update(
         delegate, singletonList(new Endpoint("10.0.0.1", 9301)));
 
-    DbServerTarget target = ElasticsearchTransportServerTargets.get(client);
+    ServerTarget target = ElasticsearchTransportServerTargets.get(client);
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("10.0.0.1");
     assertThat(target.getPort()).isEqualTo(9301);
@@ -143,7 +143,7 @@ class ElasticsearchTransportServerTargetsTest {
     ElasticsearchTransportServerTargets.update(
         nestedDelegate, singletonList(new Endpoint("10.0.0.1", 9301)));
 
-    DbServerTarget target = ElasticsearchTransportServerTargets.get(client);
+    ServerTarget target = ElasticsearchTransportServerTargets.get(client);
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("10.0.0.1");
     assertThat(target.getPort()).isEqualTo(9301);

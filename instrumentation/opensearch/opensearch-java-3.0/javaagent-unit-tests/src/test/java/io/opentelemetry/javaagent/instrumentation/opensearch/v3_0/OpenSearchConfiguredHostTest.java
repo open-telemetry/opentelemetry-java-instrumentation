@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -22,7 +22,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void bareHostKeepsItsNameAndHasNoPort() {
-    DbServerTarget target =
+    ServerTarget target =
         OpenSearchConfiguredHost.parse("search-domain.us-east-1.es.amazonaws.com", "https");
 
     assertThat(target).isNotNull();
@@ -32,7 +32,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void schemeAndPortAreRead() {
-    DbServerTarget target = OpenSearchConfiguredHost.parse("https://os.example:9200");
+    ServerTarget target = OpenSearchConfiguredHost.parse("https://os.example:9200");
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("os.example");
@@ -41,7 +41,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void defaultPortIsOmitted() {
-    DbServerTarget target = OpenSearchConfiguredHost.parse("https://os.example:443");
+    ServerTarget target = OpenSearchConfiguredHost.parse("https://os.example:443");
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("os.example");
@@ -50,7 +50,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void credentialsPathQueryAndFragmentAreRemoved() {
-    DbServerTarget target =
+    ServerTarget target =
         OpenSearchConfiguredHost.parse("https://user:secret@os.example:9200/prefix?token=secret#f");
 
     assertThat(target).isNotNull();
@@ -60,7 +60,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void credentialsWithoutAPortAreRemoved() {
-    DbServerTarget target = OpenSearchConfiguredHost.parse("user:secret@os.example", "https");
+    ServerTarget target = OpenSearchConfiguredHost.parse("user:secret@os.example", "https");
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("os.example");
@@ -69,7 +69,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void pathPrefixWithoutAPortIsRemoved() {
-    DbServerTarget target = OpenSearchConfiguredHost.parse("os.example/prefix", "https");
+    ServerTarget target = OpenSearchConfiguredHost.parse("os.example/prefix", "https");
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("os.example");
@@ -78,7 +78,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void urlInQueryDoesNotReplaceTarget() {
-    DbServerTarget target =
+    ServerTarget target =
         OpenSearchConfiguredHost.parse("os.example?token=https://secret.example", "https");
 
     assertThat(target).isNotNull();
@@ -94,7 +94,7 @@ class OpenSearchConfiguredHostTest {
         "os.example#user@secret"
       })
   void atSignsInEndpointSuffixAreIgnored(String host) {
-    DbServerTarget target = OpenSearchConfiguredHost.parse(host, "https");
+    ServerTarget target = OpenSearchConfiguredHost.parse(host, "https");
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("os.example");
@@ -103,7 +103,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void literalIpv6AddressDropsItsBrackets() {
-    DbServerTarget target = OpenSearchConfiguredHost.parse("https://[::1]:9200");
+    ServerTarget target = OpenSearchConfiguredHost.parse("https://[::1]:9200");
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("::1");
@@ -112,7 +112,7 @@ class OpenSearchConfiguredHostTest {
 
   @Test
   void literalIpv6AddressWithoutAPortHasNoPort() {
-    DbServerTarget target = OpenSearchConfiguredHost.parse("https://[::1]");
+    ServerTarget target = OpenSearchConfiguredHost.parse("https://[::1]");
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("::1");

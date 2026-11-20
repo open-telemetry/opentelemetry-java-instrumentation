@@ -3,22 +3,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
+package io.opentelemetry.instrumentation.api.incubator.semconv.net.internal;
 
 import java.net.URI;
 import java.net.URISyntaxException;
 import javax.annotation.Nullable;
 
 /**
- * Utilities for validating textual database server endpoints.
+ * Utilities for validating textual server endpoints.
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public final class DbServerEndpointUtil {
+public final class ServerEndpointUtil {
 
   /**
-   * Returns whether {@code host} is an IPv6 literal accepted as a database server endpoint.
+   * Returns whether {@code host} is an IPv6 literal accepted as a server endpoint.
    *
    * <p>The value is validated as text and is never resolved as a host name.
    *
@@ -138,5 +138,5 @@ public final class DbServerEndpointUtil {
     return port >= 1 && port <= 65535 ? port : null;
   }
 
-  private DbServerEndpointUtil() {}
+  private ServerEndpointUtil() {}
 }

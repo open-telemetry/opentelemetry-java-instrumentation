@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import org.junit.jupiter.api.Test;
 
 class CouchbaseSpanNameTest {
@@ -17,7 +17,7 @@ class CouchbaseSpanNameTest {
     CouchbaseSpanName spanName = new CouchbaseSpanName("get");
     spanName.captureServerTarget(
         CouchbaseServerTarget.direct(
-            DbServerTarget.builder(11210).addEndpoint("node.example", 11211).build()));
+            ServerTarget.builder(11210).addEndpoint("node.example", 11211).build()));
 
     assertThat(spanName.spanName()).isEqualTo("get node.example:11211");
   }
@@ -45,7 +45,7 @@ class CouchbaseSpanNameTest {
     CouchbaseSpanName spanName = new CouchbaseSpanName("get");
     spanName.captureServerTarget(
         CouchbaseServerTarget.direct(
-            DbServerTarget.builder(11210).addEndpoint("node.example", 11211).build()));
+            ServerTarget.builder(11210).addEndpoint("node.example", 11211).build()));
     spanName.captureAttribute("db.namespace", "bucket");
     spanName.captureAttribute("couchbase.collection.name", "collection");
     spanName.captureAttribute("db.operation.name", "upsert");
@@ -80,7 +80,7 @@ class CouchbaseSpanNameTest {
     spanName.captureAttribute("db.statement", "SELECT 1");
     spanName.captureServerTarget(
         CouchbaseServerTarget.direct(
-            DbServerTarget.builder(11210).addEndpoint("node.example", 11210).build()));
+            ServerTarget.builder(11210).addEndpoint("node.example", 11210).build()));
 
     assertThat(spanName.spanName()).isEqualTo("query node.example");
   }

@@ -29,7 +29,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetAddress;
@@ -232,7 +232,7 @@ class CassandraEndpointAttributesTest {
     assertThat(result.get(NETWORK_TYPE)).isEqualTo(null);
   }
 
-  private Attributes serverAttributes(DbServerTarget serverTarget) {
+  private Attributes serverAttributes(ServerTarget serverTarget) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, "SELECT 1");
     AttributesBuilder startAttributes = Attributes.builder();
     ServerAttributesExtractor.create(new CassandraSqlAttributesGetter())

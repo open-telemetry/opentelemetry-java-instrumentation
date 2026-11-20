@@ -18,7 +18,7 @@ import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.lang.reflect.Proxy;
 import java.net.InetSocketAddress;
@@ -39,22 +39,22 @@ final class TracingCqlSession {
   }
 
   CqlSession wrapSession(CqlSession session) {
-    return wrapSession(session, (DbServerTarget) null);
+    return wrapSession(session, (ServerTarget) null);
   }
 
   CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {
     // The driver configuration can be reloaded, so read the configured target once here and keep
     // that snapshot for the life of the session.
-    DbServerTarget serverTarget = CassandraServerTarget.of(session, programmaticContactPoints);
+    ServerTarget serverTarget = CassandraServerTarget.of(session, programmaticContactPoints);
     return wrapSession(session, serverTarget);
   }
 
   CqlSession wrapSession(CqlSession session, Collection<InetSocketAddress> contactPoints) {
-    DbServerTarget serverTarget = CassandraServerTarget.ofAddresses(contactPoints);
+    ServerTarget serverTarget = CassandraServerTarget.ofAddresses(contactPoints);
     return wrapSession(session, serverTarget);
   }
 
-  private CqlSession wrapSession(CqlSession session, @Nullable DbServerTarget serverTarget) {
+  private CqlSession wrapSession(CqlSession session, @Nullable ServerTarget serverTarget) {
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {
@@ -101,8 +101,7 @@ final class TracingCqlSession {
             });
   }
 
-  private ResultSet execute(
-      CqlSession session, @Nullable DbServerTarget serverTarget, String query) {
+  private ResultSet execute(CqlSession session, @Nullable ServerTarget serverTarget, String query) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
@@ -117,7 +116,7 @@ final class TracingCqlSession {
   }
 
   private ResultSet execute(
-      CqlSession session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
+      CqlSession session, @Nullable ServerTarget serverTarget, Statement<?> statement) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     Context context = instrumenter.start(Context.current(), request);
     ResultSet resultSet;
@@ -132,13 +131,13 @@ final class TracingCqlSession {
   }
 
   private CompletionStage<AsyncResultSet> executeAsync(
-      CqlSession session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
+      CqlSession session, @Nullable ServerTarget serverTarget, Statement<?> statement) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     return executeAsync(request, () -> session.executeAsync(statement));
   }
 
   private CompletionStage<AsyncResultSet> executeAsync(
-      CqlSession session, @Nullable DbServerTarget serverTarget, String query) {
+      CqlSession session, @Nullable ServerTarget serverTarget, String query) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     return executeAsync(request, () -> session.executeAsync(query));
   }
@@ -159,12 +158,12 @@ final class TracingCqlSession {
   }
 
   private ReactiveResultSet executeReactive(
-      CqlSession session, @Nullable DbServerTarget serverTarget, String query) {
+      CqlSession session, @Nullable ServerTarget serverTarget, String query) {
     return new DefaultReactiveResultSet(() -> executeAsync(session, serverTarget, query));
   }
 
   private ReactiveResultSet executeReactive(
-      CqlSession session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
+      CqlSession session, @Nullable ServerTarget serverTarget, Statement<?> statement) {
     return new DefaultReactiveResultSet(() -> executeAsync(session, serverTarget, statement));
   }
 
