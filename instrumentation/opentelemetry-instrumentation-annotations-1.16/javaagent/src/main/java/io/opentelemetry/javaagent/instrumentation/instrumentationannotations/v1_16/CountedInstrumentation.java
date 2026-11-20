@@ -6,14 +6,19 @@
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16;
 
 import static io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16.KotlinCoroutineUtil.isKotlinSuspendMethod;
+import static java.util.Collections.singleton;
+import static java.util.Objects.requireNonNull;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
 
+import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.tooling.ModuleOpener;
+import io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationClassLoaderRegistry;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -24,6 +29,7 @@ import net.bytebuddy.implementation.bytecode.StackManipulation;
 import net.bytebuddy.implementation.bytecode.constant.NullConstant;
 import net.bytebuddy.implementation.bytecode.member.MethodVariableAccess;
 import net.bytebuddy.matcher.ElementMatcher;
+import net.bytebuddy.utility.JavaModule;
 import org.objectweb.asm.ClassWriter;
 
 class CountedInstrumentation implements TypeInstrumentation {
@@ -53,6 +59,15 @@ class CountedInstrumentation implements TypeInstrumentation {
         (builder, typeDescription, classLoader, javaModule, protectionDomain) -> {
           if (declaresMethod(countedMethods.and(isKotlinSuspendMethod()))
               .matches(typeDescription)) {
+            if (JavaModule.isSupported() && javaModule != null && javaModule.isNamed()) {
+              // Allow the isolated Counted helper to read the generated continuation's label.
+              ModuleOpener.open(
+                  requireNonNull(InstrumentationHolder.getInstrumentation()),
+                  javaModule,
+                  InstrumentationClassLoaderRegistry.getInstrumentationClassLoader(
+                      AnnotationInstrumentationModule.class.getName(), classLoader),
+                  singleton(typeDescription.getPackage().getName()));
+            }
             // Counted advice can be combined with coroutine bytecode rewriting on this class.
             return builder.visit(
                 new AsmVisitorWrapper.ForDeclaredMethods().writerFlags(ClassWriter.COMPUTE_FRAMES));

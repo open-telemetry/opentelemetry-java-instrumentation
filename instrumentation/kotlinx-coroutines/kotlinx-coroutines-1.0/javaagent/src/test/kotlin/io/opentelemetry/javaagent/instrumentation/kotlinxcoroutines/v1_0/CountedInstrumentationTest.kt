@@ -16,7 +16,19 @@ import kotlinx.coroutines.cancelAndJoin
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.EnabledForJreRange
+import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.extension.RegisterExtension
+import org.junit.jupiter.api.io.TempDir
+import org.objectweb.asm.ClassWriter
+import org.objectweb.asm.Opcodes
+import java.lang.module.ModuleFinder
+import java.nio.file.Files
+import java.nio.file.Path
+import java.util.jar.JarEntry
+import java.util.jar.JarOutputStream
+import kotlin.coroutines.Continuation
+import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 
 class CountedInstrumentationTest {
   companion object {
@@ -52,6 +64,58 @@ class CountedInstrumentationTest {
     second.complete(Unit)
     assertThat(result.await()).isEqualTo(42)
     assertCounter("suspending.count", 1)
+  }
+
+  @Test
+  @EnabledForJreRange(min = JRE.JAVA_9)
+  fun `counts a suspend method in a closed module once`(@TempDir directory: Path) = runBlocking<Unit> {
+    val packageName = "io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.closedmodule"
+    val className = "$packageName.ClosedModuleCountedMethods"
+    val classResource = className.replace('.', '/')
+    val moduleName = "counted.fixture"
+    val moduleInfo = ClassWriter(0)
+    moduleInfo.visit(Opcodes.V9, Opcodes.ACC_MODULE, "module-info", null, null, null)
+    moduleInfo.visitModule(moduleName, 0, null).apply {
+      visitRequire("java.base", Opcodes.ACC_MANDATED, null)
+      visitExport(packageName.replace('.', '/'), 0)
+      visitEnd()
+    }
+    moduleInfo.visitEnd()
+    val moduleJar = directory.resolve("counted-fixture.jar")
+    JarOutputStream(Files.newOutputStream(moduleJar)).use { jar ->
+      jar.putNextEntry(JarEntry("module-info.class"))
+      jar.write(moduleInfo.toByteArray())
+      jar.closeEntry()
+      for (resource in listOf("$classResource.class", "$classResource\$suspending\$1.class")) {
+        jar.putNextEntry(JarEntry(resource))
+        javaClass.classLoader.getResourceAsStream(resource)!!.use { it.copyTo(jar) }
+        jar.closeEntry()
+      }
+    }
+
+    val parent = ModuleLayer.boot()
+    val configuration = parent.configuration().resolve(ModuleFinder.of(moduleJar), ModuleFinder.of(), setOf(moduleName))
+    val controller = ModuleLayer.defineModulesWithOneLoader(configuration, listOf(parent), javaClass.classLoader)
+    val layer = controller.layer()
+    val fixtureModule = layer.findModule(moduleName).get()
+    controller.addReads(fixtureModule, javaClass.module)
+    val fixture = layer.findLoader(moduleName).loadClass(className)
+    assertThat(fixture.module).isSameAs(fixtureModule)
+    assertThat(fixtureModule.isOpen(packageName, javaClass.module)).isFalse()
+
+    val instance = fixture.getConstructor().newInstance()
+    val method = fixture.getMethod("suspending", CompletableDeferred::class.java, Continuation::class.java)
+    val gate = CompletableDeferred<Unit>()
+    val result = async(start = CoroutineStart.UNDISPATCHED) {
+      suspendCoroutineUninterceptedOrReturn<Int> { continuation ->
+        method.invoke(instance, gate, continuation)
+      }
+    }
+    assertCounter("closed.module.count", 1)
+    gate.complete(Unit)
+    assertThat(result.await()).isEqualTo(42)
+    assertCounter("closed.module.count", 1)
+    assertThat(fixtureModule.isOpen(packageName, javaClass.module)).isFalse()
   }
 
   @Test
