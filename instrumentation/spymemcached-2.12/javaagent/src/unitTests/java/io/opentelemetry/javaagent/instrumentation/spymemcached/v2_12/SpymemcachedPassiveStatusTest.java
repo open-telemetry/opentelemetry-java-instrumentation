@@ -56,11 +56,10 @@ class SpymemcachedPassiveStatusTest {
 
     for (Object future : futures) {
       Future<String> result =
-          executor.submit(
-              () -> {
-                assertThat(getter.getErrorType(null, future, null)).isNull();
-                return getter.getDbResponseStatusCode(null, future, null);
-              });
+          executor.submit(() -> {
+            assertThat(getter.getErrorType(null, future, null)).isNull();
+            return getter.getDbResponseStatusCode(null, future, null);
+          });
 
       assertThat(result.get(1, SECONDS)).isNull();
       assertThat(latch.getCount()).isEqualTo(1);
@@ -82,18 +81,17 @@ class SpymemcachedPassiveStatusTest {
 
     for (Object future : futures) {
       Future<String> result =
-          executor.submit(
-              () -> {
-                Thread.currentThread().interrupt();
-                try {
-                  String statusCode = getter.getDbResponseStatusCode(null, future, null);
-                  assertThat(getter.getErrorType(null, future, null)).isNull();
-                  assertThat(Thread.currentThread().isInterrupted()).isTrue();
-                  return statusCode;
-                } finally {
-                  Thread.interrupted();
-                }
-              });
+          executor.submit(() -> {
+            Thread.currentThread().interrupt();
+            try {
+              String statusCode = getter.getDbResponseStatusCode(null, future, null);
+              assertThat(getter.getErrorType(null, future, null)).isNull();
+              assertThat(Thread.currentThread().isInterrupted()).isTrue();
+              return statusCode;
+            } finally {
+              Thread.interrupted();
+            }
+          });
 
       assertThat(result.get(1, SECONDS)).isNull();
       assertThat(latch.getCount()).isEqualTo(1);

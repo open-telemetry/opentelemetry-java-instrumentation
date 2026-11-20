@@ -25,13 +25,12 @@ class ResourceProviderRegistrationTest {
     assertThat(ServiceLoader.load(ResourceProvider.class))
         .filteredOn(provider -> provider instanceof SpringBootServiceNameDetector)
         .singleElement()
-        .satisfies(
-            provider -> {
-              assertThat(provider).isExactlyInstanceOf(SpringBootServiceNameDetector.class);
-              assertThat(provider.order()).isEqualTo(100);
-              assertThat(provider.createResource(mock(ConfigProperties.class)))
-                  .isEqualTo(Resource.builder().put(SERVICE_NAME, "dog-store").build());
-            });
+        .satisfies(provider -> {
+          assertThat(provider).isExactlyInstanceOf(SpringBootServiceNameDetector.class);
+          assertThat(provider.order()).isEqualTo(100);
+          assertThat(provider.createResource(mock(ConfigProperties.class)))
+              .isEqualTo(Resource.builder().put(SERVICE_NAME, "dog-store").build());
+        });
   }
 
   @Test
@@ -39,13 +38,12 @@ class ResourceProviderRegistrationTest {
     assertThat(ServiceLoader.load(ResourceProvider.class))
         .filteredOn(provider -> provider instanceof SpringBootServiceVersionDetector)
         .singleElement()
-        .satisfies(
-            provider -> {
-              assertThat(provider).isExactlyInstanceOf(SpringBootServiceVersionDetector.class);
-              assertThat(provider.order()).isZero();
-              assertThat(provider.createResource(mock(ConfigProperties.class)))
-                  .isEqualTo(Resource.builder().put(SERVICE_VERSION, "0.0.2").build());
-            });
+        .satisfies(provider -> {
+          assertThat(provider).isExactlyInstanceOf(SpringBootServiceVersionDetector.class);
+          assertThat(provider.order()).isZero();
+          assertThat(provider.createResource(mock(ConfigProperties.class)))
+              .isEqualTo(Resource.builder().put(SERVICE_VERSION, "0.0.2").build());
+        });
   }
 
   @Test
@@ -54,15 +52,14 @@ class ResourceProviderRegistrationTest {
         .filteredOn(
             provider -> provider.getType() == Resource.class && provider.getName().equals("spring"))
         .singleElement()
-        .satisfies(
-            provider -> {
-              assertThat(provider).isExactlyInstanceOf(SpringResourceComponentProvider.class);
-              assertThat(provider.create(DeclarativeConfigProperties.empty()))
-                  .isEqualTo(
-                      Resource.builder()
-                          .put(SERVICE_NAME, "dog-store")
-                          .put(SERVICE_VERSION, "0.0.2")
-                          .build());
-            });
+        .satisfies(provider -> {
+          assertThat(provider).isExactlyInstanceOf(SpringResourceComponentProvider.class);
+          assertThat(provider.create(DeclarativeConfigProperties.empty()))
+              .isEqualTo(
+                  Resource.builder()
+                      .put(SERVICE_NAME, "dog-store")
+                      .put(SERVICE_VERSION, "0.0.2")
+                      .build());
+        });
   }
 }

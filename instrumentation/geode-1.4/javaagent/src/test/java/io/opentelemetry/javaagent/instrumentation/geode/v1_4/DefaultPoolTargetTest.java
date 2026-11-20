@@ -60,16 +60,14 @@ class DefaultPoolTargetTest {
 
     region.putAll(emptyMap());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("putAll default-pool-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "default-pool-region"),
-                            equalTo(DB_OPERATION_NAME, "putAll"),
-                            equalTo(SERVER_ADDRESS, "localhost"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("putAll default-pool-region")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, GEODE),
+                    equalTo(DB_COLLECTION_NAME, "default-pool-region"),
+                    equalTo(DB_OPERATION_NAME, "putAll"),
+                    equalTo(SERVER_ADDRESS, "localhost"))));
   }
 }

@@ -239,13 +239,12 @@ class HttpHeaderSelectorTest {
 
   private static Map<AttributeKey<?>, Object> headerAttributes(Attributes attributes) {
     Map<AttributeKey<?>, Object> headers = new LinkedHashMap<>();
-    attributes.forEach(
-        (key, value) -> {
-          if (key.getKey().startsWith("http.request.header.")
-              || key.getKey().startsWith("http.response.header.")) {
-            headers.put(key, value);
-          }
-        });
+    attributes.forEach((key, value) -> {
+      if (key.getKey().startsWith("http.request.header.")
+          || key.getKey().startsWith("http.response.header.")) {
+        headers.put(key, value);
+      }
+    });
     return headers;
   }
 

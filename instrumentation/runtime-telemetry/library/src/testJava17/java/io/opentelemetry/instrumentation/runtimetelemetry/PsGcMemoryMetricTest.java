@@ -83,19 +83,16 @@ class PsGcMemoryMetricTest {
         Attributes.of(JVM_GC_NAME, "PS Scavenge", JVM_GC_ACTION, END_OF_MINOR_GC);
     Attributes majorGcAttributes =
         Attributes.of(JVM_GC_NAME, "PS MarkSweep", JVM_GC_ACTION, END_OF_MAJOR_GC);
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName(METRIC_NAME_GC_DURATION)
-                .hasUnit(SECONDS)
-                .hasDescription(METRIC_DESCRIPTION_GC_DURATION)
-                .satisfies(
-                    data ->
-                        assertThat(data.getHistogramData().getPoints())
-                            .anyMatch(
-                                p ->
-                                    p.getSum() > 0
-                                        && (p.getAttributes().equals(minorGcAttributes)
-                                            || p.getAttributes().equals(majorGcAttributes)))));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName(METRIC_NAME_GC_DURATION)
+            .hasUnit(SECONDS)
+            .hasDescription(METRIC_DESCRIPTION_GC_DURATION)
+            .satisfies(data ->
+                assertThat(data.getHistogramData().getPoints())
+                    .anyMatch(p ->
+                        p.getSum() > 0
+                            && (p.getAttributes().equals(minorGcAttributes)
+                                || p.getAttributes().equals(majorGcAttributes)))));
   }
 }

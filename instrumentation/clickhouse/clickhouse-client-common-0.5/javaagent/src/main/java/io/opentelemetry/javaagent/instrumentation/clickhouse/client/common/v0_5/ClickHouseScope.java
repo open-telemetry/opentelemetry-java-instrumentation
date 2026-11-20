@@ -63,14 +63,13 @@ public class ClickHouseScope {
 
   public void endOnCompletion(CompletableFuture<?> future, Runnable beforeEnd) {
     scope.close();
-    future.whenComplete(
-        (result, throwable) -> {
-          try {
-            beforeEnd.run();
-          } finally {
-            instrumenter.end(context, clickHouseDbRequest, null, throwable);
-          }
-        });
+    future.whenComplete((result, throwable) -> {
+      try {
+        beforeEnd.run();
+      } finally {
+        instrumenter.end(context, clickHouseDbRequest, null, throwable);
+      }
+    });
   }
 
   public void setPeer(@Nullable DbServerTarget peer) {

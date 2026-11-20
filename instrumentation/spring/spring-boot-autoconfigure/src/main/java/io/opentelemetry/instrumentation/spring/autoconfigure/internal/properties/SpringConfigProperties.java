@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.propertie
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableList;
 
 import io.opentelemetry.common.impl.ConfigUtil;
 import io.opentelemetry.exporter.otlp.internal.OtlpConfigUtil;
@@ -14,6 +15,7 @@ import io.opentelemetry.instrumentation.resources.internal.ResourceProviderPrope
 import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -60,7 +62,11 @@ public class SpringConfigProperties implements ConfigProperties {
     this.customizedListProperties =
         createCustomizedListProperties(otelSdkProperties, otelSpringProperties);
 
-    listPropertyValues = createListPropertyValues(otelSpringProperties);
+    Map<String, List<String>> listPropertyValues = createListPropertyValues(otelSpringProperties);
+    for (Map.Entry<String, List<String>> entry : listPropertyValues.entrySet()) {
+      entry.setValue(unmodifiableList(new ArrayList<>(entry.getValue())));
+    }
+    this.listPropertyValues = listPropertyValues;
   }
 
   private static Map<String, List<String>> createListPropertyValues(

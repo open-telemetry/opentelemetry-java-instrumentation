@@ -64,14 +64,12 @@ class AwsLambdaStreamHandlerTest {
     RequestStreamHandlerTestImpl handler = new RequestStreamHandlerTestImpl();
     handler.handleRequest(input, output, context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -83,25 +81,22 @@ class AwsLambdaStreamHandlerTest {
     Throwable thrown = catchThrowable(() -> handler.handleRequest(input, output, context));
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.error())
+                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
-      testing.waitAndAssertLogRecords(
-          logRecord ->
-              logRecord
-                  .hasSeverity(Severity.ERROR)
-                  .hasEventName("faas.invocation.exception")
-                  .hasException(thrown)
-                  .hasTotalAttributeCount(3));
+      testing.waitAndAssertLogRecords(logRecord ->
+          logRecord
+              .hasSeverity(Severity.ERROR)
+              .hasEventName("faas.invocation.exception")
+              .hasException(thrown)
+              .hasTotalAttributeCount(3));
     }
   }
 

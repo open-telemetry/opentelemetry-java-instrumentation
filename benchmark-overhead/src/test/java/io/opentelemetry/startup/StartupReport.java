@@ -148,13 +148,12 @@ final class StartupReport {
 
   private static List<Double> values(List<StartupSample> samples, Metric metric) {
     return samples.stream()
-        .map(
-            sample ->
-                switch (metric) {
-                  case JVM -> sample.jvmSeconds();
-                  case SPRING -> sample.springSeconds();
-                  case HTTP -> sample.httpSeconds();
-                })
+        .map(sample ->
+            switch (metric) {
+              case JVM -> sample.jvmSeconds();
+              case SPRING -> sample.springSeconds();
+              case HTTP -> sample.httpSeconds();
+            })
         .toList();
   }
 

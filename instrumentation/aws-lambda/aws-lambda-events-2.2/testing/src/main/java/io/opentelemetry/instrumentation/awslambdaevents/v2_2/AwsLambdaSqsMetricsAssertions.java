@@ -50,82 +50,65 @@ public class AwsLambdaSqsMetricsAssertions {
         instrumentationName,
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(
-                            histogram -> {
-                              if (failedProcessCount == 0) {
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .satisfies(
-                                                data ->
-                                                    assertThat(data.getCount())
-                                                        .isEqualTo(processCount))
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "aws.sqs"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(ERROR_TYPE, errorType)));
-                              } else {
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .satisfies(
-                                                data ->
-                                                    assertThat(data.getCount())
-                                                        .isEqualTo(processCount))
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "aws.sqs"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(ERROR_TYPE, errorType)),
-                                    point ->
-                                        point
-                                            .satisfies(
-                                                data ->
-                                                    assertThat(data.getCount())
-                                                        .isEqualTo(failedProcessCount))
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "aws.sqs"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(ERROR_TYPE, failedProcessErrorType)));
-                              }
-                            })));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasUnit("s")
+                    .hasDescription("Duration of processing operation.")
+                    .hasHistogramSatisfying(histogram -> {
+                      if (failedProcessCount == 0) {
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .satisfies(
+                                    data -> assertThat(data.getCount()).isEqualTo(processCount))
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                    equalTo(ERROR_TYPE, errorType)));
+                      } else {
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .satisfies(
+                                        data -> assertThat(data.getCount()).isEqualTo(processCount))
+                                    .hasSumGreaterThan(0.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        equalTo(ERROR_TYPE, errorType)),
+                            point ->
+                                point
+                                    .satisfies(data ->
+                                        assertThat(data.getCount()).isEqualTo(failedProcessCount))
+                                    .hasSumGreaterThan(0.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                        equalTo(ERROR_TYPE, failedProcessErrorType)));
+                      }
+                    })));
     testing.waitAndAssertMetrics(
         instrumentationName,
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(consumedMessageCount)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "aws.sqs"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(ERROR_TYPE, errorType))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application.")
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(consumedMessageCount)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                    equalTo(ERROR_TYPE, errorType))))));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> metric.getInstrumentationScopeInfo().getName().equals(instrumentationName))

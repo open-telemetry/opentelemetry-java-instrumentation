@@ -67,11 +67,10 @@ class GuavaAsyncOperationEndStrategyTest {
             eq(Context.root()),
             eq("request"),
             isNull(),
-            argThat(
-                val -> {
-                  assertThat(val).hasCause(error);
-                  return true;
-                }));
+            argThat(val -> {
+              assertThat(val).hasCause(error);
+              return true;
+            }));
   }
 
   @Test
@@ -127,10 +126,9 @@ class GuavaAsyncOperationEndStrategyTest {
             eq(Context.root()),
             eq("request"),
             isNull(),
-            argThat(
-                val -> {
-                  assertThat(val).hasCause(error);
-                  return true;
-                }));
+            argThat(val -> {
+              assertThat(val).hasCause(error);
+              return true;
+            }));
   }
 }

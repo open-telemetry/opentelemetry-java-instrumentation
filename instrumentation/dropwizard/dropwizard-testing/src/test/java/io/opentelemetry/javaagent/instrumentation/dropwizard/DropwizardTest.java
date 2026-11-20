@@ -74,20 +74,19 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
     options.setResponseCodeOnNonStandardHttpMethod(405);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
 
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + "/*";
-          }
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + "/*";
+      }
 
-          if (NOT_FOUND.equals(endpoint)) {
-            return getContextPath() + "/*";
-          } else if (PATH_PARAM.equals(endpoint)) {
-            return getContextPath() + "/path/{id}/param";
-          } else {
-            return super.expectedHttpRoute(endpoint, method);
-          }
-        });
+      if (NOT_FOUND.equals(endpoint)) {
+        return getContextPath() + "/*";
+      } else if (PATH_PARAM.equals(endpoint)) {
+        return getContextPath() + "/path/{id}/param";
+      } else {
+        return super.expectedHttpRoute(endpoint, method);
+      }
+    });
   }
 
   Class<? extends Application<Configuration>> testApp() {

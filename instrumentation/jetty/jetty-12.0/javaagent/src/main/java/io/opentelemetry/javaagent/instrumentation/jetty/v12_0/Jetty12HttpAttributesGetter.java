@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -83,17 +82,13 @@ class Jetty12HttpAttributesGetter implements HttpServerAttributesGetter<Request,
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      Request request, @Nullable Response unused) {
-    SocketAddress address = request.getConnectionMetaData().getRemoteSocketAddress();
-    return address instanceof InetSocketAddress inetSocketAddress ? inetSocketAddress : null;
+  public SocketAddress getNetworkPeerSocketAddress(Request request, @Nullable Response unused) {
+    return request.getConnectionMetaData().getRemoteSocketAddress();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
-      Request request, @Nullable Response unused) {
-    SocketAddress address = request.getConnectionMetaData().getLocalSocketAddress();
-    return address instanceof InetSocketAddress inetSocketAddress ? inetSocketAddress : null;
+  public SocketAddress getNetworkLocalSocketAddress(Request request, @Nullable Response unused) {
+    return request.getConnectionMetaData().getLocalSocketAddress();
   }
 }

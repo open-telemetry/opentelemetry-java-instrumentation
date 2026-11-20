@@ -59,31 +59,27 @@ public abstract class AbstractRatpackRoutesTest {
   @BeforeAll
   void setUp() throws Exception {
     app =
-        RatpackServer.start(
-            ratpackServerSpec -> {
-              ratpackServerSpec.serverConfig(
-                  serverConfigBuilder -> {
-                    serverConfigBuilder.port(0);
-                    serverConfigBuilder.address(InetAddress.getByName("localhost"));
-                  });
+        RatpackServer.start(ratpackServerSpec -> {
+          ratpackServerSpec.serverConfig(serverConfigBuilder -> {
+            serverConfigBuilder.port(0);
+            serverConfigBuilder.address(InetAddress.getByName("localhost"));
+          });
 
-              Action<? super Chain> action =
-                  chain ->
-                      chain.all(
-                          context ->
-                              context.render(context.get(PathBinding.class).getDescription()));
-              ratpackServerSpec.handlers(
-                  chain -> {
-                    chain.prefix("a", action);
-                    chain.prefix("b/::\\d+", action);
-                    chain.prefix("c/:val?", action);
-                    chain.prefix("d/:val", action);
-                    chain.prefix("e/:val?:\\d+", action);
-                    chain.prefix("f/:val:\\d+", action);
-                  });
+          Action<? super Chain> action =
+              chain ->
+                  chain.all(
+                      context -> context.render(context.get(PathBinding.class).getDescription()));
+          ratpackServerSpec.handlers(chain -> {
+            chain.prefix("a", action);
+            chain.prefix("b/::\\d+", action);
+            chain.prefix("c/:val?", action);
+            chain.prefix("d/:val", action);
+            chain.prefix("e/:val?:\\d+", action);
+            chain.prefix("f/:val:\\d+", action);
+          });
 
-              configure(ratpackServerSpec);
-            });
+          configure(ratpackServerSpec);
+        });
 
     // Force HTTP/1 with h1c to prevent tracing of upgrade request.
     client = WebClient.of("h1c://localhost:" + app.getBindPort());
@@ -118,46 +114,43 @@ public abstract class AbstractRatpackRoutesTest {
     assertThat(response.contentUtf8()).isEqualTo(route);
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span ->
-                      span.hasName("GET /" + route)
-                          .hasKind(SpanKind.SERVER)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              equalTo(SERVER_PORT, app.getBindPort()),
-                              equalTo(CLIENT_ADDRESS, hasHandlerSpan() ? "127.0.0.1" : null),
-                              equalTo(NETWORK_PEER_ADDRESS, hasHandlerSpan() ? "127.0.0.1" : null),
-                              satisfies(
-                                  NETWORK_PEER_PORT,
-                                  val -> {
-                                    if (hasHandlerSpan()) {
-                                      val.isInstanceOf(Long.class);
-                                    } else {
-                                      val.isNull();
-                                    }
-                                  }),
-                              equalTo(HTTP_REQUEST_METHOD, "GET"),
-                              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                              satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                              equalTo(URL_SCHEME, "http"),
-                              equalTo(URL_PATH, "/" + path),
-                              satisfies(URL_QUERY, val -> val.isNullOrEmpty()),
-                              equalTo(HTTP_ROUTE, "/" + route)));
-              if (hasHandlerSpan()) {
-                assertions.add(
-                    span ->
-                        span.hasName("/" + route)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasTotalAttributeCount(0));
-              }
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(span ->
+              span.hasName("GET /" + route)
+                  .hasKind(SpanKind.SERVER)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      equalTo(SERVER_PORT, app.getBindPort()),
+                      equalTo(CLIENT_ADDRESS, hasHandlerSpan() ? "127.0.0.1" : null),
+                      equalTo(NETWORK_PEER_ADDRESS, hasHandlerSpan() ? "127.0.0.1" : null),
+                      satisfies(
+                          NETWORK_PEER_PORT,
+                          val -> {
+                            if (hasHandlerSpan()) {
+                              val.isInstanceOf(Long.class);
+                            } else {
+                              val.isNull();
+                            }
+                          }),
+                      equalTo(HTTP_REQUEST_METHOD, "GET"),
+                      equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                      satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                      equalTo(URL_SCHEME, "http"),
+                      equalTo(URL_PATH, "/" + path),
+                      satisfies(URL_QUERY, val -> val.isNullOrEmpty()),
+                      equalTo(HTTP_ROUTE, "/" + route)));
+          if (hasHandlerSpan()) {
+            assertions.add(span ->
+                span.hasName("/" + route)
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasTotalAttributeCount(0));
+          }
 
-              trace.hasSpansSatisfyingExactly(assertions);
-            });
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 }

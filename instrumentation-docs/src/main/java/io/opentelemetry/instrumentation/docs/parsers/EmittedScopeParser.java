@@ -180,24 +180,23 @@ public class EmittedScopeParser {
       try (Stream<Path> files = Files.list(telemetryDir)) {
         files
             .filter(path -> path.getFileName().toString().startsWith("scope-"))
-            .forEach(
-                path -> {
-                  String content = FileManager.readFileToString(path);
-                  if (content != null) {
-                    EmittedScope parsed;
-                    try {
-                      parsed = YamlHelper.emittedScopeParser(content);
-                    } catch (RuntimeException e) {
-                      logger.severe("Error parsing scope file (" + path + "): " + e.getMessage());
-                      return;
-                    }
+            .forEach(path -> {
+              String content = FileManager.readFileToString(path);
+              if (content != null) {
+                EmittedScope parsed;
+                try {
+                  parsed = YamlHelper.emittedScopeParser(content);
+                } catch (RuntimeException e) {
+                  logger.severe("Error parsing scope file (" + path + "): " + e.getMessage());
+                  return;
+                }
 
-                    List<EmittedScope.Scope> scopes = parsed.getScopes();
-                    if (scopes != null) {
-                      allScopes.addAll(scopes);
-                    }
-                  }
-                });
+                List<EmittedScope.Scope> scopes = parsed.getScopes();
+                if (scopes != null) {
+                  allScopes.addAll(scopes);
+                }
+              }
+            });
       } catch (IOException e) {
         logger.severe("Error reading scope files: " + e.getMessage());
       }

@@ -86,10 +86,9 @@ class IbmHttpsUrlConnectionTest {
     assertThat(result.getExitCode()).isZero();
 
     assertThat(telemetryRetriever.waitForTraces())
-        .hasTracesSatisfyingExactly(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent()));
+        .hasTracesSatisfyingExactly(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasNoParent()));
   }
 
   @AfterEach
