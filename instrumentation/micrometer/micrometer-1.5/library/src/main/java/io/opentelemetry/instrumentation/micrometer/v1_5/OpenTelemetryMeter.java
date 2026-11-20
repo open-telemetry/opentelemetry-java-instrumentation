@@ -104,16 +104,20 @@ final class OpenTelemetryMeter extends AbstractMeter
   }
 
   @Override
-  public synchronized void onRemove() {
-    if (observableInstruments == null) {
-      return;
-    }
+  public void onRemove() {
+    List<AutoCloseable> observableInstruments;
     try {
+      synchronized (this) {
+        observableInstruments = this.observableInstruments;
+        this.observableInstruments = null;
+        measurements = null;
+      }
+      if (observableInstruments == null) {
+        return;
+      }
       for (AutoCloseable observableInstrument : observableInstruments) {
         observableInstrument.close();
       }
-      observableInstruments = null;
-      measurements = null;
     } catch (Exception e) {
       throw new IllegalStateException("SDK instruments should never throw on close()", e);
     }

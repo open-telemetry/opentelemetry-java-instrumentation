@@ -78,14 +78,20 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
   }
 
   @Override
-  public synchronized void onRemove() {
-    if (observableActiveTasks != null) {
-      observableActiveTasks.close();
+  public void onRemove() {
+    ObservableLongUpDownCounter activeTasks;
+    ObservableDoubleUpDownCounter duration;
+    synchronized (this) {
+      activeTasks = observableActiveTasks;
       observableActiveTasks = null;
-    }
-    if (observableDuration != null) {
-      observableDuration.close();
+      duration = observableDuration;
       observableDuration = null;
+    }
+    if (activeTasks != null) {
+      activeTasks.close();
+    }
+    if (duration != null) {
+      duration.close();
     }
   }
 

@@ -106,14 +106,20 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
   }
 
   @Override
-  public synchronized void onRemove() {
-    if (observableCount != null) {
-      observableCount.close();
+  public void onRemove() {
+    ObservableLongCounter count;
+    ObservableDoubleCounter totalTime;
+    synchronized (this) {
+      count = observableCount;
       observableCount = null;
-    }
-    if (observableTotalTime != null) {
-      observableTotalTime.close();
+      totalTime = observableTotalTime;
       observableTotalTime = null;
+    }
+    if (count != null) {
+      count.close();
+    }
+    if (totalTime != null) {
+      totalTime.close();
     }
   }
 }
