@@ -312,14 +312,13 @@ class MessageProducerSupportInstrumentationTest {
         metrics ->
             metrics.satisfiesExactly(metric ->
                 assertThat(metric)
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                    equalTo(stringKey("messaging.system.name"), "test"),
-                                    equalTo(MESSAGING_DESTINATION_NAME, "input"))))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "test"),
+                                equalTo(MESSAGING_DESTINATION_NAME, "input")))));
   }
 
   private static void assertSpringRabbitProcessMetrics() {
@@ -329,9 +328,7 @@ class MessageProducerSupportInstrumentationTest {
         "messaging.process.duration",
         metrics ->
             metrics.satisfiesExactly(metric ->
-                assertThat(metric)
-                    .hasHistogramSatisfying(
-                        histogram -> histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
+                assertThat(metric).hasHistogramPointsSatisfying(point -> point.hasCount(1))));
   }
 
   private static Message newRawMessage() {
