@@ -77,24 +77,20 @@ public abstract class AbstractLongTaskTimerTest {
             metric ->
                 metric
                     .hasName("testLongTaskTimer.active")
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(0)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
                     .hasName("testLongTaskTimer.duration")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumPointsSatisfying(point ->
+                        point
+                            .hasValue(0)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when timer is removed from the registry
     Metrics.globalRegistry.remove(timer);
