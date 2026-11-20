@@ -24,14 +24,23 @@ class GrpcSocketAddressUtilTest {
   @ParameterizedTest
   @ValueSource(strings = {"peer.sock", ""})
   void normalizesBothNettyTransports(String path) {
-    assertThat(GrpcSocketAddressUtil.normalize(new DomainSocketAddress(path)))
+    DomainSocketAddress address = new DomainSocketAddress(path);
+    assertThat(GrpcSocketAddressUtil.normalize(address))
         .isInstanceOfSatisfying(
-            UnixSocketAddress.class, address -> assertThat(address.getPath()).isEqualTo(path));
-    assertThat(
-            GrpcSocketAddressUtil.normalize(
-                new io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress(path)))
+            UnixSocketAddress.class,
+            normalized -> {
+              assertThat(normalized.getPath()).isEqualTo(path);
+              assertThat(normalized.getOriginalAddress()).isSameAs(address);
+            });
+    SocketAddress shadedAddress =
+        new io.grpc.netty.shaded.io.netty.channel.unix.DomainSocketAddress(path);
+    assertThat(GrpcSocketAddressUtil.normalize(shadedAddress))
         .isInstanceOfSatisfying(
-            UnixSocketAddress.class, address -> assertThat(address.getPath()).isEqualTo(path));
+            UnixSocketAddress.class,
+            normalized -> {
+              assertThat(normalized.getPath()).isEqualTo(path);
+              assertThat(normalized.getOriginalAddress()).isSameAs(shadedAddress);
+            });
   }
 
   @ParameterizedTest
@@ -60,7 +69,10 @@ class GrpcSocketAddressUtilTest {
         assertThat(GrpcSocketAddressUtil.normalize(address))
             .isInstanceOfSatisfying(
                 UnixSocketAddress.class,
-                normalized -> assertThat(normalized.getPath()).isEqualTo("isolated.sock"));
+                normalized -> {
+                  assertThat(normalized.getPath()).isEqualTo("isolated.sock");
+                  assertThat(normalized.getOriginalAddress()).isSameAs(address);
+                });
       }
     }
   }

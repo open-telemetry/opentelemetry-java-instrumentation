@@ -208,7 +208,7 @@ class CouchbaseAttributesGetterTest {
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
     assertThat(getter.getServerAddress(request)).isNull();
     assertThat(getter.getServerPort(request)).isNull();
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isNull();
   }
 
   @Test
@@ -219,10 +219,10 @@ class CouchbaseAttributesGetterTest {
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
     request.setNode(firstPeer);
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(firstPeer);
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(firstPeer);
 
     request.setNode(secondPeer);
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(secondPeer);
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(secondPeer);
   }
 
   @Test
@@ -241,8 +241,8 @@ class CouchbaseAttributesGetterTest {
     copy.setNode(firstPeer);
 
     CouchbaseAttributesGetter getter = new CouchbaseAttributesGetter();
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(secondPeer);
-    assertThat(getter.getNetworkPeerInetSocketAddress(copy, null)).isEqualTo(firstPeer);
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(secondPeer);
+    assertThat(getter.getNetworkPeerSocketAddress(copy, null)).isEqualTo(firstPeer);
   }
 
   @Test

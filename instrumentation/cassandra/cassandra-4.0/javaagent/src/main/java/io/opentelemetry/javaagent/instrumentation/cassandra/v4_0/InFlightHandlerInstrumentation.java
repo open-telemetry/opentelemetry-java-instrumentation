@@ -11,7 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 import com.datastax.oss.protocol.internal.Frame;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -38,7 +38,7 @@ class InFlightHandlerInstrumentation implements TypeInstrumentation {
       if (!(message instanceof Frame)) {
         return;
       }
-      InetSocketAddress remoteAddress = CassandraChannel.getRemoteAddress(context);
+      SocketAddress remoteAddress = CassandraChannel.getRemoteAddress(context);
       if (remoteAddress != null) {
         CassandraResponsePeers.setFramePeer((Frame) message, remoteAddress);
       }
