@@ -5,22 +5,26 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static java.util.Collections.unmodifiableList;
+
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.messaging.Message;
 
 class SpringAwsSqsBatchProcessRequest {
-  private final Collection<? extends Message<?>> messages;
+  private final List<Message<?>> messages;
   private final List<SqsMessage> sqsMessages;
 
   SpringAwsSqsBatchProcessRequest(
       Collection<? extends Message<?>> messages, List<SqsMessage> sqsMessages) {
-    this.messages = messages;
+    // the listener receives the same collection and may modify it before processing completes
+    this.messages = unmodifiableList(new ArrayList<>(messages));
     this.sqsMessages = sqsMessages;
   }
 
-  Collection<? extends Message<?>> getMessages() {
+  List<Message<?>> getMessages() {
     return messages;
   }
 

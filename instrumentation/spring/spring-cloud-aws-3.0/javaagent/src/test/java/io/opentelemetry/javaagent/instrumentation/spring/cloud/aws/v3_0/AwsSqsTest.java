@@ -46,6 +46,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -355,6 +356,26 @@ class AwsSqsTest {
                     .equals("io.opentelemetry.spring-cloud-aws-3.0")
                 && metric.getName().equals("messaging.client.consumed.messages"))
         .isEmpty();
+
+    // a listener that empties the batch before completing does not change the reported batch size
+    testing.clearData();
+    testing.runWithSpan(
+        "ambient",
+        () ->
+            processMessages(
+                new ArrayList<>(messages),
+                batch -> {
+                  batch.clear();
+                  return completedFuture(null);
+                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("ambient").hasNoParent(),
+            span ->
+                span.hasName("process batch-queue")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttribute(MESSAGING_BATCH_MESSAGE_COUNT, 2L)
+                    .hasLinksSatisfying(links -> assertLinksToCreate(links, createSpanIds, 2))));
   }
 
   private static void assertBatchConsumedMessages(long expected) {
