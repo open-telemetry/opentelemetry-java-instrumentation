@@ -8,71 +8,49 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.ObservableCallbackRegistrar;
 import io.opentelemetry.javaagent.bootstrap.WeakRefConsumer;
 import java.lang.ref.WeakReference;
-import java.lang.reflect.Method;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 final class MicrometerCallbackRegistrar implements ObservableCallbackRegistrar {
 
   static final MicrometerCallbackRegistrar INSTANCE = new MicrometerCallbackRegistrar();
 
-  private static final String CALLBACK_ANCHOR = MicrometerCallbackAnchor.class.getName();
+  private static final ClassValue<ConcurrentMap<IdentityKey, Integer>> callbacks =
+      new ClassValue<ConcurrentMap<IdentityKey, Integer>>() {
+        @Override
+        protected ConcurrentMap<IdentityKey, Integer> computeValue(Class<?> type) {
+          return new ConcurrentHashMap<>();
+        }
+      };
 
   @Override
-  // The injected helper returns a weak wrapper around the same Consumer<T> passed to anchor().
-  @SuppressWarnings("unchecked")
   public <T, H extends AutoCloseable> Registration<H> register(
-      Consumer<T> callback,
-      @Nullable ClassLoader callbackClassLoader,
-      Function<Consumer<T>, H> buildWithCallback) {
-    if (callbackClassLoader == null) {
-      return ObservableCallbackRegistrar.direct().register(callback, null, buildWithCallback);
-    }
+      Consumer<T> callback, Class<?> ownerClass, Function<Consumer<T>, H> buildWithCallback) {
+    callbacks.get(ownerClass).merge(new IdentityKey(callback), 1, Integer::sum);
 
-    Class<?> callbackAnchorClass;
-    try {
-      callbackAnchorClass = Class.forName(CALLBACK_ANCHOR, true, callbackClassLoader);
-    } catch (ClassNotFoundException e) {
-      return ObservableCallbackRegistrar.direct()
-          .register(callback, callbackClassLoader, buildWithCallback);
-    }
-    if (callbackAnchorClass.getClassLoader() != callbackClassLoader) {
-      return ObservableCallbackRegistrar.direct()
-          .register(callback, callbackClassLoader, buildWithCallback);
-    }
-
-    WeakRefConsumer<T> weakCallback;
-    try {
-      Method anchorMethod = callbackAnchorClass.getMethod("anchor", Consumer.class);
-      callbackAnchorClass.getMethod("release", Consumer.class);
-      weakCallback = (WeakRefConsumer<T>) anchorMethod.invoke(null, callback);
-    } catch (ReflectiveOperationException e) {
-      return ObservableCallbackRegistrar.direct()
-          .register(callback, callbackClassLoader, buildWithCallback);
-    }
-
-    MicrometerCallbackAnchorToken anchor =
-        new MicrometerCallbackAnchorToken(callbackClassLoader, callback);
+    WeakRefConsumer<T> weakCallback = new WeakRefConsumer<>(new WeakReference<>(callback));
+    CallbackToken token = new CallbackToken(ownerClass, callback);
     try {
       H instrument = buildWithCallback.apply(weakCallback);
       weakCallback.closeWhenCollected(instrument);
-      return new Registration<>(instrument, anchor::release);
+      return new Registration<>(instrument, token::release);
     } catch (RuntimeException | Error e) {
-      anchor.release();
+      token.release();
       throw e;
     }
   }
 
-  private static final class MicrometerCallbackAnchorToken {
+  private static final class CallbackToken {
 
-    private final WeakReference<ClassLoader> callbackClassLoader;
+    private final WeakReference<Class<?>> ownerClass;
     private final WeakReference<Consumer<?>> callback;
     private final AtomicBoolean released = new AtomicBoolean();
 
-    private MicrometerCallbackAnchorToken(ClassLoader callbackClassLoader, Consumer<?> callback) {
-      this.callbackClassLoader = new WeakReference<>(callbackClassLoader);
+    private CallbackToken(Class<?> ownerClass, Consumer<?> callback) {
+      this.ownerClass = new WeakReference<>(ownerClass);
       this.callback = new WeakReference<>(callback);
     }
 
@@ -80,21 +58,33 @@ final class MicrometerCallbackRegistrar implements ObservableCallbackRegistrar {
       if (!released.compareAndSet(false, true)) {
         return;
       }
-      ClassLoader classLoader = callbackClassLoader.get();
+      Class<?> ownerClass = this.ownerClass.get();
       Consumer<?> callback = this.callback.get();
-      if (classLoader == null || callback == null) {
-        return;
+      if (ownerClass != null && callback != null) {
+        callbacks
+            .get(ownerClass)
+            .computeIfPresent(
+                new IdentityKey(callback), (key, count) -> count == 1 ? null : count - 1);
       }
-      try {
-        Class<?> callbackAnchorClass = Class.forName(CALLBACK_ANCHOR, true, classLoader);
-        if (callbackAnchorClass.getClassLoader() != classLoader) {
-          return;
-        }
-        Method releaseMethod = callbackAnchorClass.getMethod("release", Consumer.class);
-        releaseMethod.invoke(null, callback);
-      } catch (ReflectiveOperationException ignored) {
-        // The helper is defined in the callback's class loader and should remain available.
-      }
+    }
+  }
+
+  private static final class IdentityKey {
+
+    private final Object callback;
+
+    private IdentityKey(Object callback) {
+      this.callback = callback;
+    }
+
+    @Override
+    public boolean equals(Object other) {
+      return other instanceof IdentityKey && callback == ((IdentityKey) other).callback;
+    }
+
+    @Override
+    public int hashCode() {
+      return System.identityHashCode(callback);
     }
   }
 

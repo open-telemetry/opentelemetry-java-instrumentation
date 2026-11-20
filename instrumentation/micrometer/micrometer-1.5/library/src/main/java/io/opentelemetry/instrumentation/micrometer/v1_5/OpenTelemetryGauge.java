@@ -47,8 +47,7 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
     DoubleMeasurementRecorder<T> callback =
         new DoubleMeasurementRecorder<>(obj, objMetric, tagsAsAttributes(id, namingConvention));
     observableGauge =
-        callbackRegistrar.register(
-            callback, CallbackClassLoader.find(obj, objMetric, id), builder::buildWithCallback);
+        callbackRegistrar.register(callback, id.getClass(), builder::buildWithCallback);
   }
 
   @Override

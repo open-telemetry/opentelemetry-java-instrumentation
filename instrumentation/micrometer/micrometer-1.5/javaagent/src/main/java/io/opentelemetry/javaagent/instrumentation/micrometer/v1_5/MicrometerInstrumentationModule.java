@@ -45,18 +45,4 @@ public class MicrometerInstrumentationModule extends InstrumentationModule {
     return singletonList(
         "io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.MicrometerSingletons");
   }
-
-  @Override
-  public List<String> getAdditionalHelperClassNames() {
-    return asList(
-        "io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.MicrometerCallbackAnchor",
-        "io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.MicrometerCallbackAnchor$IdentityKey");
-  }
-
-  @Override
-  public List<String> injectedClassNames() {
-    return asList(
-        "io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.MicrometerCallbackAnchor",
-        "io.opentelemetry.javaagent.instrumentation.micrometer.v1_5.MicrometerCallbackAnchor$IdentityKey");
-  }
 }

@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.micrometer.v1_5.internal;
 
 import java.util.function.Consumer;
 import java.util.function.Function;
-import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -16,9 +15,7 @@ import javax.annotation.Nullable;
 public interface ObservableCallbackRegistrar {
 
   <T, H extends AutoCloseable> Registration<H> register(
-      Consumer<T> callback,
-      @Nullable ClassLoader callbackClassLoader,
-      Function<Consumer<T>, H> buildWithCallback);
+      Consumer<T> callback, Class<?> ownerClass, Function<Consumer<T>, H> buildWithCallback);
 
   static ObservableCallbackRegistrar direct() {
     return Direct.INSTANCE;
@@ -69,9 +66,7 @@ public interface ObservableCallbackRegistrar {
 
     @Override
     public <T, H extends AutoCloseable> Registration<H> register(
-        Consumer<T> callback,
-        @Nullable ClassLoader callbackClassLoader,
-        Function<Consumer<T>, H> buildWithCallback) {
+        Consumer<T> callback, Class<?> ownerClass, Function<Consumer<T>, H> buildWithCallback) {
       return new Registration<>(buildWithCallback.apply(callback), () -> {});
     }
 

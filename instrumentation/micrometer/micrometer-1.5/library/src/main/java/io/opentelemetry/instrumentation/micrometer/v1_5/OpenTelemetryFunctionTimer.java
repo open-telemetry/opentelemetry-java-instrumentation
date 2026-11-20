@@ -56,11 +56,8 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
             .setUnit("{invocation}");
     LongMeasurementRecorder<T> countCallback =
         new LongMeasurementRecorder<>(obj, countFunction, attributes);
-    ClassLoader callbackClassLoader =
-        CallbackClassLoader.find(obj, countFunction, totalTimeFunction, id);
     observableCount =
-        callbackRegistrar.register(
-            countCallback, callbackClassLoader, countBuilder::buildWithCallback);
+        callbackRegistrar.register(countCallback, id.getClass(), countBuilder::buildWithCallback);
 
     DoubleCounterBuilder totalTimeBuilder =
         otelMeter
@@ -77,7 +74,7 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
             attributes);
     observableTotalTime =
         callbackRegistrar.register(
-            totalTimeCallback, callbackClassLoader, totalTimeBuilder::buildWithCallback);
+            totalTimeCallback, id.getClass(), totalTimeBuilder::buildWithCallback);
   }
 
   @Override

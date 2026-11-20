@@ -25,16 +25,46 @@ class MicrometerCallbackGcCloseTest {
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
-  void callbackDoesNotRetainApplicationClassLoader() throws Exception {
+  void callbackDoesNotRetainDelegatedMicrometerClassLoaders() throws Exception {
     String metricName = "test.micrometer.gc.close";
     String instrumentationName = "io.opentelemetry.micrometer-1.5";
     URL micrometerJar = Metrics.class.getProtectionDomain().getCodeSource().getLocation();
     URL testClasses = GaugeRegistrar.class.getProtectionDomain().getCodeSource().getLocation();
-    URLClassLoader childLoader =
-        new ChildFirstMicrometerClassLoader(
-            new URL[] {micrometerJar, testClasses}, getClass().getClassLoader());
+    LoaderReferences loaderReferences =
+        registerGaugeAndAssert(
+            metricName,
+            instrumentationName,
+            micrometerJar,
+            testClasses,
+            getClass().getClassLoader());
 
-    Class<?> registrar = childLoader.loadClass(GaugeRegistrar.class.getName());
+    GcUtils.awaitGc(loaderReferences.pluginLoader, Duration.ofSeconds(10));
+    GcUtils.awaitGc(loaderReferences.micrometerLoader, Duration.ofSeconds(10));
+    assertThat(loaderReferences.pluginLoader.get()).isNull();
+    assertThat(loaderReferences.micrometerLoader.get()).isNull();
+
+    testing.clearData();
+    testing.waitAndAssertMetrics(instrumentationName, metricName, AbstractIterableAssert::isEmpty);
+  }
+
+  private static LoaderReferences registerGaugeAndAssert(
+      String metricName,
+      String instrumentationName,
+      URL micrometerJar,
+      URL testClasses,
+      ClassLoader parent)
+      throws Exception {
+    URLClassLoader micrometerLoader =
+        new ChildFirstMicrometerClassLoader(new URL[] {micrometerJar}, parent);
+    URLClassLoader pluginLoader =
+        new ChildFirstGaugeClassLoader(new URL[] {testClasses}, micrometerLoader);
+    Class<?> registrar = pluginLoader.loadClass(GaugeRegistrar.class.getName());
+    assertThat(registrar.getClassLoader()).isSameAs(pluginLoader);
+    assertThat(
+            Class.forName("io.micrometer.core.instrument.Metrics", false, pluginLoader)
+                .getClassLoader())
+        .isSameAs(micrometerLoader);
+
     Thread thread = Thread.currentThread();
     ClassLoader originalContextClassLoader = thread.getContextClassLoader();
     try {
@@ -43,10 +73,6 @@ class MicrometerCallbackGcCloseTest {
     } finally {
       thread.setContextClassLoader(originalContextClassLoader);
     }
-    Class<?> callbackAnchor =
-        Class.forName(MicrometerCallbackAnchor.class.getName(), false, childLoader);
-    assertThat(callbackAnchor.getClassLoader()).isSameAs(childLoader);
-    callbackAnchor = null;
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -56,15 +82,24 @@ class MicrometerCallbackGcCloseTest {
                 .hasDoubleGaugeSatisfying(
                     gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
 
-    WeakReference<ClassLoader> loaderReference = new WeakReference<>(childLoader);
-    childLoader.close();
-    childLoader = null;
-    registrar = null;
-    GcUtils.awaitGc(loaderReference, Duration.ofSeconds(10));
-    assertThat(loaderReference.get()).isNull();
+    LoaderReferences references =
+        new LoaderReferences(
+            new WeakReference<>(micrometerLoader), new WeakReference<>(pluginLoader));
+    pluginLoader.close();
+    micrometerLoader.close();
+    return references;
+  }
 
-    testing.clearData();
-    testing.waitAndAssertMetrics(instrumentationName, metricName, AbstractIterableAssert::isEmpty);
+  private static final class LoaderReferences {
+
+    private final WeakReference<ClassLoader> micrometerLoader;
+    private final WeakReference<ClassLoader> pluginLoader;
+
+    private LoaderReferences(
+        WeakReference<ClassLoader> micrometerLoader, WeakReference<ClassLoader> pluginLoader) {
+      this.micrometerLoader = micrometerLoader;
+      this.pluginLoader = pluginLoader;
+    }
   }
 
   private static class ChildFirstMicrometerClassLoader extends URLClassLoader {
@@ -80,8 +115,36 @@ class MicrometerCallbackGcCloseTest {
         if (loaded != null) {
           return loaded;
         }
-        if (name.startsWith("io.micrometer.")
-            || name.equals(GaugeRegistrar.class.getName())
+        if (name.startsWith("io.micrometer.")) {
+          try {
+            Class<?> type = findClass(name);
+            if (resolve) {
+              resolveClass(type);
+            }
+            return type;
+          } catch (ClassNotFoundException ignored) {
+            // fall through to parent
+          }
+        }
+        return super.loadClass(name, resolve);
+      }
+    }
+  }
+
+  private static class ChildFirstGaugeClassLoader extends URLClassLoader {
+
+    ChildFirstGaugeClassLoader(URL[] urls, ClassLoader parent) {
+      super(urls, parent);
+    }
+
+    @Override
+    protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+      synchronized (getClassLoadingLock(name)) {
+        Class<?> loaded = findLoadedClass(name);
+        if (loaded != null) {
+          return loaded;
+        }
+        if (name.equals(GaugeRegistrar.class.getName())
             || name.startsWith(GaugeRegistrar.class.getName() + "$")) {
           try {
             Class<?> type = findClass(name);
