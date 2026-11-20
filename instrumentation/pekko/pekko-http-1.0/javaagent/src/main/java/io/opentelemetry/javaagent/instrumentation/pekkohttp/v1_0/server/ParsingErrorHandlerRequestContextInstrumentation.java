@@ -18,7 +18,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
-import net.bytebuddy.implementation.bytecode.assign.Assigner;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.pekko.http.IllegalRequestContext;
 import org.apache.pekko.http.javadsl.model.HttpResponse;
@@ -73,7 +72,7 @@ class ParsingErrorHandlerRequestContextInstrumentation implements TypeInstrument
     }
 
     // see ParsingErrorHandlerInstrumentation for why the return value is written back
-    @Advice.AssignReturned.ToReturned(typing = Assigner.Typing.DYNAMIC)
+    @Advice.AssignReturned.ToReturned
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static Object onExit(
         @Advice.Return Object response,
