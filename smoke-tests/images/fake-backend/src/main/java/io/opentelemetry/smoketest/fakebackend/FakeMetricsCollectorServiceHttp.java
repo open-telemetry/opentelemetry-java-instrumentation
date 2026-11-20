@@ -28,19 +28,18 @@ class FakeMetricsCollectorServiceHttp implements HttpService {
     return HttpResponse.of(
         request
             .aggregate()
-            .thenApply(
-                aggregatedRequest -> {
-                  try {
-                    storage.addMetricsRequest(
-                        ExportMetricsServiceRequest.parseFrom(aggregatedRequest.content().array()));
-                    return HttpResponse.of(
-                        HttpStatus.OK,
-                        MediaType.X_PROTOBUF,
-                        ExportMetricsServiceResponse.getDefaultInstance().toByteArray());
-                  } catch (InvalidProtocolBufferException e) {
-                    return HttpResponse.of(
-                        HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, e.getMessage());
-                  }
-                }));
+            .thenApply(aggregatedRequest -> {
+              try {
+                storage.addMetricsRequest(
+                    ExportMetricsServiceRequest.parseFrom(aggregatedRequest.content().array()));
+                return HttpResponse.of(
+                    HttpStatus.OK,
+                    MediaType.X_PROTOBUF,
+                    ExportMetricsServiceResponse.getDefaultInstance().toByteArray());
+              } catch (InvalidProtocolBufferException e) {
+                return HttpResponse.of(
+                    HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, e.getMessage());
+              }
+            }));
   }
 }

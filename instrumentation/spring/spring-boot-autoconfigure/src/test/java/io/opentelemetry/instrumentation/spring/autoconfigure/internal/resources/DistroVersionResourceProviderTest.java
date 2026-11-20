@@ -28,22 +28,20 @@ class DistroVersionResourceProviderTest {
   @DisplayName("distro version should be set")
   void hasAttributes() {
 
-    this.contextRunner.run(
-        context -> {
-          ResourceProvider resource =
-              context.getBean("otelDistroVersionResourceProvider", ResourceProvider.class);
+    this.contextRunner.run(context -> {
+      ResourceProvider resource =
+          context.getBean("otelDistroVersionResourceProvider", ResourceProvider.class);
 
-          assertThat(
-                  resource
-                      .createResource(DefaultConfigProperties.createFromMap(emptyMap()))
-                      .getAttributes()
-                      .asMap())
-              .containsEntry(TELEMETRY_DISTRO_NAME, "opentelemetry-spring-boot-starter")
-              .anySatisfy(
-                  (key, val) -> {
-                    assertThat(key.getKey()).isEqualTo("telemetry.distro.version");
-                    assertThat(val).asString().isNotBlank();
-                  });
-        });
+      assertThat(
+              resource
+                  .createResource(DefaultConfigProperties.createFromMap(emptyMap()))
+                  .getAttributes()
+                  .asMap())
+          .containsEntry(TELEMETRY_DISTRO_NAME, "opentelemetry-spring-boot-starter")
+          .anySatisfy((key, val) -> {
+            assertThat(key.getKey()).isEqualTo("telemetry.distro.version");
+            assertThat(val).asString().isNotBlank();
+          });
+    });
   }
 }

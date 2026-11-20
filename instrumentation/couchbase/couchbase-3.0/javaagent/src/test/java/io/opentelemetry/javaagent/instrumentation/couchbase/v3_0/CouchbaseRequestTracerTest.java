@@ -69,26 +69,24 @@ class CouchbaseRequestTracerTest {
     requestSpan.finish();
     parent.finish();
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                CouchbaseRequestTracerTest::assertParentSpan,
-                span -> assertRequestSpan(span, trace.getSpan(0)),
-                span ->
-                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(longKey("peer.latency"), experimental(42L))));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                CouchbaseRequestTracerTest::assertParentSpan,
-                span -> assertRequestSpan(span, trace.getSpan(0)));
-          }
-        });
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            CouchbaseRequestTracerTest::assertParentSpan,
+            span -> assertRequestSpan(span, trace.getSpan(0)),
+            span -> span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(1)),
+            span ->
+                span.hasName("dispatch_to_server")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(longKey("peer.latency"), experimental(42L))));
+      } else {
+        trace.hasSpansSatisfyingExactly(
+            CouchbaseRequestTracerTest::assertParentSpan,
+            span -> assertRequestSpan(span, trace.getSpan(0)));
+      }
+    });
   }
 
   @Test
@@ -112,22 +110,21 @@ class CouchbaseRequestTracerTest {
     requestSpan.finish();
     parent.finish();
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("get").hasParent(trace.getSpan(0)),
-                span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
-                span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
-                span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)),
-                span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("get").hasParent(trace.getSpan(0)));
-          }
-        });
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> span.hasName("get").hasParent(trace.getSpan(0)),
+            span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
+            span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
+            span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)),
+            span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)));
+      } else {
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> span.hasName("get").hasParent(trace.getSpan(0)));
+      }
+    });
   }
 
   private static void assertParentSpan(SpanDataAssert span) {

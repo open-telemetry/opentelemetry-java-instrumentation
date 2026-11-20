@@ -94,11 +94,10 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
 
     if (addBaggage) {
       Baggage baggage = Baggage.fromContext(context);
-      baggage.forEach(
-          (key, value) ->
-              contextData.put(
-                  // prefix all baggage values to avoid clashes with existing context
-                  "baggage." + key, value.getValue()));
+      baggage.forEach((key, value) ->
+          contextData.put(
+              // prefix all baggage values to avoid clashes with existing context
+              "baggage." + key, value.getValue()));
     }
 
     try {

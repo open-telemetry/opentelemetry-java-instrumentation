@@ -26,11 +26,10 @@ public abstract class AbstractSubscriptionTest {
     testing.runWithSpan(
         "parent", () -> connection.delayElement(Duration.ofMillis(1)).subscribe(Connection::query));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("Connection.query").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("Connection.query").hasParent(trace.getSpan(0))));
   }
 
   private class Connection {

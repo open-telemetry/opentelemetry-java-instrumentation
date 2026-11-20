@@ -51,21 +51,19 @@ abstract class AbstractOpenTelemetryAppenderTest {
     }
 
     getTesting()
-        .waitAndAssertLogRecords(
-            logRecord ->
-                logRecord
-                    .hasResource(RESOURCE)
-                    .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
-                    .hasBody("log message 1")
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            CODE_FILE_PATH,
-                            AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
-                        satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
-                        equalTo(
-                            CODE_FUNCTION_NAME,
-                            AbstractOpenTelemetryAppenderTest.class.getName()
-                                + ".logLoggerContext"),
-                        equalTo(stringKey("test-property"), "test-value")));
+        .waitAndAssertLogRecords(logRecord ->
+            logRecord
+                .hasResource(RESOURCE)
+                .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
+                .hasBody("log message 1")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FILE_PATH,
+                        AbstractOpenTelemetryAppenderTest.class.getSimpleName() + ".java"),
+                    satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        AbstractOpenTelemetryAppenderTest.class.getName() + ".logLoggerContext"),
+                    equalTo(stringKey("test-property"), "test-value")));
   }
 }

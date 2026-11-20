@@ -223,11 +223,10 @@ class ChatModelTest {
     testing.runWithSpan("parent", () -> chatModel.call(prompt()));
 
     assertThat(TestAgentListenerAccess.getAndResetAdviceFailureCount()).isZero();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
     assertMetrics();
   }
 
@@ -235,11 +234,10 @@ class ChatModelTest {
   void optionalPromptProcessingFailureStillTracesCall() {
     testing.runWithSpan("parent", () -> chatModel.call(promptWithFailingInstructions()));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
     assertMetrics();
   }
 
@@ -248,11 +246,10 @@ class ChatModelTest {
     testing.runWithSpan(
         "parent", () -> chatModel.stream(promptWithFailingInstructions()).blockLast());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
     assertMetrics();
   }
 
@@ -272,16 +269,14 @@ class ChatModelTest {
     Context parentContext = testing.runWithSpan("parent", Context::current);
 
     chatModel.stream(prompt())
-        .contextWrite(
-            reactorContext ->
-                ContextPropagationOperator.storeOpenTelemetryContext(reactorContext, parentContext))
+        .contextWrite(reactorContext ->
+            ContextPropagationOperator.storeOpenTelemetryContext(reactorContext, parentContext))
         .blockLast();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -324,22 +319,20 @@ class ChatModelTest {
                 .flatMap(response -> chatModel.stream(new Prompt("Tell me more about traces")))
                 .blockLast());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0)),
-                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0)),
+            span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void streamNestedInDownstreamCallbackWithoutParentIsInstrumented() {
     chatModel.stream(prompt())
-        .flatMap(
-            response -> {
-              assertThat(Span.current().getSpanContext().isValid()).isFalse();
-              return chatModel.stream(new Prompt("Tell me more about traces"));
-            })
+        .flatMap(response -> {
+          assertThat(Span.current().getSpanContext().isValid()).isFalse();
+          return chatModel.stream(new Prompt("Tell me more about traces"));
+        })
         .blockLast();
 
     testing.waitAndAssertTraces(
@@ -366,15 +359,13 @@ class ChatModelTest {
         .onErrorComplete(failure::equals)
         .blockLast();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasStatus(fails ? StatusData.error() : StatusData.unset())
-                        .hasException(fails ? failure : null)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("chat " + MODEL)
+                .hasKind(CLIENT)
+                .hasNoParent()
+                .hasStatus(fails ? StatusData.error() : StatusData.unset())
+                .hasException(fails ? failure : null)));
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
   }
 
@@ -399,11 +390,10 @@ class ChatModelTest {
     assertThat(cancellationContexts)
         .singleElement()
         .satisfies(current -> assertCurrentSpanContext(current, spanContext));
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -433,31 +423,30 @@ class ChatModelTest {
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).blockLast());
 
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
-                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
-                            equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
-                            equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
-                            equalTo(GEN_AI_REQUEST_STREAM, true),
-                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
-                            equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
-                            equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
-                            equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("stop", "length")),
-                            equalTo(GEN_AI_RESPONSE_ID, "response-id"),
-                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3L),
-                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("chat " + MODEL)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
+                        equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
+                        equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
+                        equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                        equalTo(GEN_AI_REQUEST_STREAM, true),
+                        equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
+                        equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
+                        equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("stop", "length")),
+                        equalTo(GEN_AI_RESPONSE_ID, "response-id"),
+                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3L),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
     assertMetrics();
     assertMultiChoiceEvents(spanContext);
   }
@@ -530,27 +519,26 @@ class ChatModelTest {
 
     testing.runWithSpan("parent", () -> chatModel.call(prompt()));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
-                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
-                            equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
-                            equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
-                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
-                            equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
-                            equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
-                            equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("stop")),
-                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("chat " + MODEL)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
+                        equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
+                        equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
+                        equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                        equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
+                        equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
+                        equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("stop")),
+                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL))));
     assertMetricsWithoutTokenUsage();
   }
 
@@ -749,15 +737,14 @@ class ChatModelTest {
           subscription.dispose();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("chat " + MODEL)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.unset())));
   }
 
   @ParameterizedTest
@@ -768,27 +755,26 @@ class ChatModelTest {
 
     testing.runWithSpan("parent", () -> chatModel.stream(prompt()).take(1).blockLast());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
-                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
-                            equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
-                            equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
-                            equalTo(GEN_AI_REQUEST_STREAM, true),
-                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
-                            equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
-                            equalTo(GEN_AI_REQUEST_TOP_P, 0.5))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("chat " + MODEL)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
+                        equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
+                        equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
+                        equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                        equalTo(GEN_AI_REQUEST_STREAM, true),
+                        equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
+                        equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
+                        equalTo(GEN_AI_REQUEST_TOP_P, 0.5))));
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(1).getSpanContext();
     assertMessageEvents(
         spanContext,
@@ -796,62 +782,60 @@ class ChatModelTest {
   }
 
   private static void assertTraces(String provider, boolean streaming) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, provider),
-                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
-                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
-                            equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
-                            equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
-                            equalTo(GEN_AI_REQUEST_STREAM, streaming ? true : null),
-                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
-                            equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
-                            equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
-                            equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("stop")),
-                            equalTo(GEN_AI_RESPONSE_ID, "response-id"),
-                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3L),
-                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("chat " + MODEL)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, provider),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
+                        equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
+                        equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
+                        equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                        equalTo(GEN_AI_REQUEST_STREAM, streaming ? true : null),
+                        equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
+                        equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
+                        equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("stop")),
+                        equalTo(GEN_AI_RESPONSE_ID, "response-id"),
+                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 3L),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 2L))));
   }
 
   private static void assertErrorTrace(IllegalStateException error, boolean streaming) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(error),
-                span ->
-                    span.hasName("chat " + MODEL)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(error)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
-                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
-                            equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
-                            equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
-                            equalTo(GEN_AI_REQUEST_STREAM, streaming ? true : null),
-                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
-                            equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
-                            equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
-                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasKind(INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error),
+            span ->
+                span.hasName("chat " + MODEL)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                        equalTo(GEN_AI_REQUEST_FREQUENCY_PENALTY, 0.1),
+                        equalTo(GEN_AI_REQUEST_MAX_TOKENS, 42L),
+                        equalTo(GEN_AI_REQUEST_PRESENCE_PENALTY, 0.2),
+                        equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("stop-sequence")),
+                        equalTo(GEN_AI_REQUEST_STREAM, streaming ? true : null),
+                        equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.3),
+                        equalTo(GEN_AI_REQUEST_TOP_K, 4.0),
+                        equalTo(GEN_AI_REQUEST_TOP_P, 0.5),
+                        equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
   }
 
   private static void assertMetrics() {
@@ -860,41 +844,38 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasSumGreaterThan(0.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
         metric ->
             metric
                 .hasName("gen_ai.client.token.usage")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(3.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
-                            point ->
-                                point
-                                    .hasSum(2.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(
+                        point ->
+                            point
+                                .hasSum(3.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                    equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+                        point ->
+                            point
+                                .hasSum(2.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                    equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
   }
 
   private static void assertMetricsWithoutTokenUsage() {
@@ -903,17 +884,15 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasSumGreaterThan(0.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "gen_ai.client.token.usage", metrics -> metrics.isEmpty());
   }

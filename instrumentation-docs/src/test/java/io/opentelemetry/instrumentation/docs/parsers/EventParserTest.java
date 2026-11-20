@@ -38,23 +38,23 @@ class EventParserTest {
     Files.writeString(
         telemetryDir.resolve("events-1.yaml"),
         """
-        when: default
-        events_by_scope:
-          - scope: io.opentelemetry.openai-java-1.1
-            events:
-              - name: gen_ai.choice
-                attributes:
-                  - name: gen_ai.provider.name
-                    type: STRING
-          - scope: io.opentelemetry.sdk.metrics
-            events:
-              - name: some.sdk.event
-                attributes:
-          - scope: test
-            events:
-              - name: test.event
-                attributes:
-      """);
+          when: default
+          events_by_scope:
+            - scope: io.opentelemetry.openai-java-1.1
+              events:
+                - name: gen_ai.choice
+                  attributes:
+                    - name: gen_ai.provider.name
+                      type: STRING
+            - scope: io.opentelemetry.sdk.metrics
+              events:
+                - name: some.sdk.event
+                  attributes:
+            - scope: test
+              events:
+                - name: test.event
+                  attributes:
+        """);
 
     Map<String, List<EmittedEvents.Event>> result =
         EventParser.getEvents(
@@ -73,20 +73,20 @@ class EventParserTest {
     Files.writeString(
         telemetryDir.resolve("events-1.yaml"),
         """
-        when: otel.semconv.exception.signal.preview=logs
-        events_by_scope:
-          - scope: io.opentelemetry.grpc-1.6
-            events:
-              - name: rpc.client.operation.exception
-                severity: WARN
-                attributes:
-                  - name: exception.type
-                    type: STRING
-                  - name: test-baggage-key-1
-                    type: STRING
-                  - name: x-test-request
-                    type: STRING_ARRAY
-      """);
+          when: otel.semconv.exception.signal.preview=logs
+          events_by_scope:
+            - scope: io.opentelemetry.grpc-1.6
+              events:
+                - name: rpc.client.operation.exception
+                  severity: WARN
+                  attributes:
+                    - name: exception.type
+                      type: STRING
+                    - name: test-baggage-key-1
+                      type: STRING
+                    - name: x-test-request
+                      type: STRING_ARRAY
+        """);
 
     Map<String, List<EmittedEvents.Event>> result =
         EventParser.getEvents(
@@ -108,16 +108,16 @@ class EventParserTest {
     Files.writeString(
         telemetryDir.resolve("events-1.yaml"),
         """
-        when: default
-        events_by_scope:
-          - scope: io.opentelemetry.grpc-1.6
-            events:
-              - name: rpc.client.operation.exception
-                severity: WARN
-                attributes:
-                  - name: exception.type
-                    type: STRING
-      """);
+          when: default
+          events_by_scope:
+            - scope: io.opentelemetry.grpc-1.6
+              events:
+                - name: rpc.client.operation.exception
+                  severity: WARN
+                  attributes:
+                    - name: exception.type
+                      type: STRING
+        """);
 
     Map<String, List<EmittedEvents.Event>> result =
         EventParser.getEvents(
@@ -138,21 +138,21 @@ class EventParserTest {
     Files.writeString(
         telemetryDir.resolve("events-1.yaml"),
         """
-        when: otel.semconv.exception.signal.preview=logs
-        events_by_scope:
-          - scope: io.opentelemetry.sofa-rpc-5.4
-            events:
-              - name: rpc.call.exception
-                severity: WARN
-                attributes:
-                  - name: exception.type
-                    type: STRING
-              - name: rpc.call.exception
-                severity: ERROR
-                attributes:
-                  - name: rpc.method
-                    type: STRING
-      """);
+          when: otel.semconv.exception.signal.preview=logs
+          events_by_scope:
+            - scope: io.opentelemetry.sofa-rpc-5.4
+              events:
+                - name: rpc.call.exception
+                  severity: WARN
+                  attributes:
+                    - name: exception.type
+                      type: STRING
+                - name: rpc.call.exception
+                  severity: ERROR
+                  attributes:
+                    - name: rpc.method
+                      type: STRING
+        """);
 
     Map<String, List<EmittedEvents.Event>> result =
         EventParser.getEvents(
@@ -177,34 +177,34 @@ class EventParserTest {
     Files.writeString(
         telemetryDir.resolve("events-1.yaml"),
         """
-        when: otel.semconv.exception.signal.preview=logs
-        events_by_scope:
-          - scope: io.opentelemetry.jdbc
-            events:
-              - name: exception
-                severity: WARN
-                attributes:
-                  - name: exception.type
-                    type: STRING
-              - name: db.client.operation.exception
-                severity: WARN
-                attributes:
-                  - name: exception.type
-                    type: STRING
-      """);
+          when: otel.semconv.exception.signal.preview=logs
+          events_by_scope:
+            - scope: io.opentelemetry.jdbc
+              events:
+                - name: exception
+                  severity: WARN
+                  attributes:
+                    - name: exception.type
+                      type: STRING
+                - name: db.client.operation.exception
+                  severity: WARN
+                  attributes:
+                    - name: exception.type
+                      type: STRING
+        """);
     Files.writeString(
         telemetryDir.resolve("events-2.yaml"),
         """
-        when: otel.semconv-stability.opt-in=database,otel.semconv.exception.signal.preview=logs
-        events_by_scope:
-          - scope: io.opentelemetry.jdbc
-            events:
-              - name: exception
-                severity: ERROR
-                attributes:
-                  - name: exception.type
-                    type: STRING
-      """);
+          when: otel.semconv-stability.opt-in=database,otel.semconv.exception.signal.preview=logs
+          events_by_scope:
+            - scope: io.opentelemetry.jdbc
+              events:
+                - name: exception
+                  severity: ERROR
+                  attributes:
+                    - name: exception.type
+                      type: STRING
+        """);
 
     Map<String, List<EmittedEvents.Event>> result =
         EventParser.getEvents(module("jdbc", "io.opentelemetry.jdbc"), new FileManager(tempDir));

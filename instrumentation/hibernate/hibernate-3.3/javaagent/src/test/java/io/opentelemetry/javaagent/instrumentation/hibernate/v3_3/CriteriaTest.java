@@ -40,24 +40,23 @@ class CriteriaTest extends AbstractHibernateTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Criteria."
-                            + methodName
-                            + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
-                span -> assertClientSpan(span, trace.getSpan(1), "select"),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Criteria."
+                        + methodName
+                        + " io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
+            span -> assertClientSpan(span, trace.getSpan(1), "select"),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Transaction.commit",
+                    experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))));
   }
 
   private static Stream<Arguments> provideArguments() {

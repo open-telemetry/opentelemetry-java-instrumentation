@@ -9,12 +9,15 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.protocol.internal.Frame;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -23,6 +26,19 @@ import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
 
 class CassandraResponsePeerTest {
+
+  @Test
+  void preservesUnixResponsePeerThroughTheLibraryBridge() {
+    SocketAddress peer = new UnixSocketAddress("cassandra.sock");
+    Frame response = frame(1);
+    ExecutionInfo executionInfo = mock(ExecutionInfo.class);
+
+    InFlightHandlerInstrumentation.ChannelReadAdvice.onEnter(
+        new TestContext(new TestChannel(peer)), response);
+    DefaultExecutionInfoInstrumentation.ConstructorAdvice.onExit(executionInfo, response);
+
+    assertThat(CassandraNetworkPeer.getExecutionInfoPeer(executionInfo)).isSameAs(peer);
+  }
 
   @Test
   void correlatesMultiplexedResponsesWithTheirChannels() throws UnknownHostException {
@@ -45,6 +61,16 @@ class CassandraResponsePeerTest {
     assertThat(CassandraNetworkPeer.getExecutionInfoPeer(firstExecutionInfo)).isEqualTo(firstPeer);
     assertThat(CassandraNetworkPeer.getExecutionInfoPeer(secondExecutionInfo))
         .isEqualTo(secondPeer);
+  }
+
+  @Test
+  void doesNotFormatResolvedInetAddressWhileCapturing() {
+    InetAddress address = mock(InetAddress.class);
+    InetSocketAddress peer = new InetSocketAddress(address, 19042);
+
+    assertThat(CassandraChannel.getRemoteAddress(new TestContext(new TestChannel(peer))))
+        .isSameAs(peer);
+    verify(address, never()).getHostAddress();
   }
 
   @Test

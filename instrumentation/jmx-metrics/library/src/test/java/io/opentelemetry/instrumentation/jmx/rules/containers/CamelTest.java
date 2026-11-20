@@ -140,12 +140,11 @@ class CamelTest extends TargetSystemTest {
                 attributeWithAnyValue("camel.route"),
                 attributeWithAnyValue("camel.processor"),
                 attributeWithAnyValue("camel.destination"))
-            .applicableWhen(
-                (attributes) ->
-                    Optional.ofNullable(attributes.get("camel.processor"))
-                        // Test application uses only "to" destination-aware processor
-                        .filter((processorId) -> processorId.startsWith("to"))
-                        .isPresent());
+            .applicableWhen(attributes ->
+                Optional.ofNullable(attributes.get("camel.processor"))
+                    // Test application uses only "to" destination-aware processor
+                    .filter(processorId -> processorId.startsWith("to"))
+                    .isPresent());
 
     AttributeMatcherGroup threadPoolAttributes =
         attributeGroup(

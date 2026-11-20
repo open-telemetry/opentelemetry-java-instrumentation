@@ -77,10 +77,9 @@ class DemoServlet3InstrumentationTest {
     assertThat(response.code()).isEqualTo(200);
     assertThat(response.body().string()).isEqualTo("result");
 
-    instrumentation.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /servlet").hasKind(SpanKind.SERVER)));
+    instrumentation.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("GET /servlet").hasKind(SpanKind.SERVER)));
 
     var traceId = instrumentation.spans().get(0).getTraceId();
     assertThat(response.header("X-server-id")).isEqualTo(traceId);

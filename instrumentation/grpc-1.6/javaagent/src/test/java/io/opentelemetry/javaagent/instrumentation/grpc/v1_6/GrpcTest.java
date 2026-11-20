@@ -122,20 +122,19 @@ class GrpcTest extends AbstractGrpcTest {
     testing.runWithSpan(
         "parent", () -> client.sayHello(Helloworld.Request.newBuilder().setName("test").build()));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttribute(SERVER_ADDRESS, "consul:1234")
-                        .hasAttributesSatisfying(equalTo(SERVER_PORT, null)),
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttribute(SERVER_ADDRESS, "consul:1234")
+                    .hasAttributesSatisfying(equalTo(SERVER_PORT, null)),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(1))));
   }
 
   private static void usePlainText(ManagedChannelBuilder<?> channelBuilder) throws Exception {

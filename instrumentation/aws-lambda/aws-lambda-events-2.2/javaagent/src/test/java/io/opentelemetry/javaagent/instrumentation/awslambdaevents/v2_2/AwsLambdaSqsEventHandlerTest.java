@@ -81,10 +81,9 @@ class AwsLambdaSqsEventHandlerTest extends AbstractAwsLambdaSqsEventHandlerTest 
     public Void handleRequest(SQSEvent input, Context context) {
       CompletableFuture.runAsync(
               io.opentelemetry.context.Context.current()
-                  .wrap(
-                      () -> {
-                        delegate.handleRequest(nestedEvent, context);
-                      }))
+                  .wrap(() -> {
+                    delegate.handleRequest(nestedEvent, context);
+                  }))
           .join();
       return null;
     }

@@ -62,6 +62,16 @@
       schedule: [],
     },
     {
+      matchFileNames: [
+        'smoke-tests/images/quarkus/build.gradle.kts',
+      ],
+      matchDepNames: [
+        'io.quarkus',
+        'io.quarkus:quarkus-bom',
+      ],
+      groupName: 'Quarkus plugin and BOM',
+    },
+    {
       // gh-aw updates need a dedicated branch so CI can regenerate their workflow lockfiles
       matchPackageNames: [
         'github/gh-aw',
@@ -360,6 +370,7 @@
       // intentionally testing against specific major Java versions
       matchPackageNames: [
         'eclipse-temurin',
+        'ibmjava',
       ],
       matchUpdateTypes: [
         'major',
@@ -460,11 +471,12 @@
       datasourceTemplate: 'docker',
       managerFilePatterns: [
         '**/build.gradle.kts',
+        '**/*.java',
       ],
       matchStrings: [
-        '"(?<depName>eclipse-temurin):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
-        '"(?<depName>ibm-semeru-runtimes):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
+        '"(?<depName>eclipse-temurin|ibm-semeru-runtimes|ibmjava):(?<currentValue>(?:open-)?\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?"',
       ],
+      autoReplaceStringTemplate: '"{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}"',
     },
     {
       customType: 'regex',

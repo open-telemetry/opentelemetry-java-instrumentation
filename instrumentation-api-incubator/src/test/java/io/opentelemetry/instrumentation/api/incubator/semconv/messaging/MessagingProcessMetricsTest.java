@@ -62,26 +62,21 @@ class MessagingProcessMetricsTest {
     listener.onEnd(context, endAttributes, nanos(350));
 
     assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactly(
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.process.duration")
-                    .hasUnit("s")
-                    .hasDescription("Duration of processing operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.25)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                            equalTo(stringKey("messaging.system.name"), "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                            equalTo(
-                                                ERROR_TYPE,
-                                                IllegalStateException.class.getName())))));
+        .satisfiesExactly(metric ->
+            assertThat(metric)
+                .hasName("messaging.process.duration")
+                .hasUnit("s")
+                .hasDescription("Duration of processing operation.")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasSum(0.25)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                equalTo(ERROR_TYPE, IllegalStateException.class.getName())))));
   }
 
   @Test

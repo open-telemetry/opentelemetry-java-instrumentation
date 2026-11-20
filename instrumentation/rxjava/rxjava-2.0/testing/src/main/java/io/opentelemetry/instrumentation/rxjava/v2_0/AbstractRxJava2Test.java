@@ -104,14 +104,11 @@ public abstract class AbstractRxJava2Test {
     int result = createParentSpan(() -> Maybe.just(1).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(2);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -120,18 +117,13 @@ public abstract class AbstractRxJava2Test {
         createParentSpan(() -> Maybe.just(2).map(this::addOne).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(4);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -141,41 +133,32 @@ public abstract class AbstractRxJava2Test {
             () -> Maybe.just(3).delay(100, MILLISECONDS).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(4);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void delayedTwiceMaybe() {
     int result =
-        createParentSpan(
-            () ->
-                Maybe.just(4)
-                    .delay(100, MILLISECONDS)
-                    .map(this::addOne)
-                    .delay(100, MILLISECONDS)
-                    .map(this::addOne)
-                    .blockingGet());
+        createParentSpan(() ->
+            Maybe.just(4)
+                .delay(100, MILLISECONDS)
+                .map(this::addOne)
+                .delay(100, MILLISECONDS)
+                .map(this::addOne)
+                .blockingGet());
     assertThat(result).isEqualTo(6);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -185,114 +168,83 @@ public abstract class AbstractRxJava2Test {
             () -> Flowable.fromIterable(asList(5, 6)).map(this::addOne).toList().blockingGet());
     assertThat(result).contains(6, 7);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void twoOperationsFlowable() {
     List<Integer> result =
-        createParentSpan(
-            () ->
-                Flowable.fromIterable(asList(6, 7))
-                    .map(this::addOne)
-                    .map(this::addOne)
-                    .toList()
-                    .blockingGet());
+        createParentSpan(() ->
+            Flowable.fromIterable(asList(6, 7))
+                .map(this::addOne)
+                .map(this::addOne)
+                .toList()
+                .blockingGet());
     assertThat(result).contains(8, 9);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void delayedFlowable() {
     List<Integer> result =
-        createParentSpan(
-            () ->
-                Flowable.fromIterable(asList(7, 8))
-                    .delay(100, MILLISECONDS)
-                    .map(this::addOne)
-                    .toList()
-                    .blockingGet());
+        createParentSpan(() ->
+            Flowable.fromIterable(asList(7, 8))
+                .delay(100, MILLISECONDS)
+                .map(this::addOne)
+                .toList()
+                .blockingGet());
     assertThat(result).contains(8, 9);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void delayedTwiceFlowable() {
     List<Integer> result =
-        createParentSpan(
-            () ->
-                Flowable.fromIterable(asList(8, 9))
-                    .delay(100, MILLISECONDS)
-                    .map(this::addOne)
-                    .delay(100, MILLISECONDS)
-                    .map(this::addOne)
-                    .toList()
-                    .blockingGet());
+        createParentSpan(() ->
+            Flowable.fromIterable(asList(8, 9))
+                .delay(100, MILLISECONDS)
+                .map(this::addOne)
+                .delay(100, MILLISECONDS)
+                .map(this::addOne)
+                .toList()
+                .blockingGet());
     assertThat(result).contains(10, 11);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -302,18 +254,13 @@ public abstract class AbstractRxJava2Test {
             () -> Maybe.fromCallable(() -> addOne(10)).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(12);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -321,14 +268,11 @@ public abstract class AbstractRxJava2Test {
     Integer result = createParentSpan(() -> Single.just(0).map(this::addOne).blockingGet());
     assertThat(result).isEqualTo(1);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -337,14 +281,11 @@ public abstract class AbstractRxJava2Test {
         createParentSpan(() -> Observable.just(0).map(this::addOne).toList().blockingGet());
     assertThat(result).contains(1);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -354,24 +295,22 @@ public abstract class AbstractRxJava2Test {
     AtomicReference<String> innerObservableTraceId = new AtomicReference<>();
     AtomicReference<String> endObservableTraceId = new AtomicReference<>();
 
-    createParentSpan(
-        () -> {
-          traceId.set(Span.current().getSpanContext().getTraceId());
-          Disposable unused =
-              Observable.fromCallable(
-                      () -> {
-                        innerObservableTraceId.set(Span.current().getSpanContext().getTraceId());
-                        return "success";
-                      })
-                  .subscribeOn(Schedulers.io())
-                  .observeOn(Schedulers.single())
-                  .subscribe(
-                      data -> {
-                        endObservableTraceId.set(Span.current().getSpanContext().getTraceId());
-                        latch.countDown();
-                      });
-          assertThat(unused).isNotNull();
-        });
+    createParentSpan(() -> {
+      traceId.set(Span.current().getSpanContext().getTraceId());
+      Disposable unused =
+          Observable.fromCallable(
+                  () -> {
+                    innerObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                    return "success";
+                  })
+              .subscribeOn(Schedulers.io())
+              .observeOn(Schedulers.single())
+              .subscribe(data -> {
+                endObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                latch.countDown();
+              });
+      assertThat(unused).isNotNull();
+    });
 
     assertThat(latch.await(10, SECONDS)).isTrue();
     assertThat(innerObservableTraceId.get()).isEqualTo(traceId.get());
@@ -381,45 +320,37 @@ public abstract class AbstractRxJava2Test {
   @Test
   void connectableFlowable() {
     List<Integer> result =
-        createParentSpan(
-            () ->
-                FlowablePublish.just(0)
-                    .delay(100, MILLISECONDS)
-                    .map(this::addOne)
-                    .toList()
-                    .blockingGet());
+        createParentSpan(() ->
+            FlowablePublish.just(0)
+                .delay(100, MILLISECONDS)
+                .map(this::addOne)
+                .toList()
+                .blockingGet());
     assertThat(result).contains(1);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void connectableObservable() {
     List<Integer> result =
-        createParentSpan(
-            () ->
-                ObservablePublish.just(0)
-                    .delay(100, MILLISECONDS)
-                    .map(this::addOne)
-                    .toList()
-                    .blockingGet());
+        createParentSpan(() ->
+            ObservablePublish.just(0)
+                .delay(100, MILLISECONDS)
+                .map(this::addOne)
+                .toList()
+                .blockingGet());
     assertThat(result).contains(1);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -428,10 +359,9 @@ public abstract class AbstractRxJava2Test {
     assertThatThrownBy(() -> createParentSpan(() -> Maybe.error(error).blockingGet()))
         .isEqualTo(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -440,10 +370,9 @@ public abstract class AbstractRxJava2Test {
     assertThatThrownBy(() -> createParentSpan(() -> Flowable.error(error)).toList().blockingGet())
         .isEqualTo(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -452,10 +381,9 @@ public abstract class AbstractRxJava2Test {
     assertThatThrownBy(() -> createParentSpan(() -> Single.error(error)).blockingGet())
         .isEqualTo(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -464,10 +392,9 @@ public abstract class AbstractRxJava2Test {
     assertThatThrownBy(() -> createParentSpan(() -> Observable.error(error).toList().blockingGet()))
         .isEqualTo(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -477,196 +404,151 @@ public abstract class AbstractRxJava2Test {
             () -> createParentSpan(() -> Completable.error(error).toMaybe().blockingGet()))
         .isEqualTo(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
   void basicMaybeFailure() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
-    assertThatThrownBy(
-            () ->
-                createParentSpan(
-                    () ->
-                        Maybe.just(1)
-                            .map(this::addOne)
-                            .map(
-                                i -> {
-                                  throw error;
-                                })
-                            .blockingGet()))
+    assertThatThrownBy(() ->
+            createParentSpan(() ->
+                Maybe.just(1)
+                    .map(this::addOne)
+                    .map(i -> {
+                      throw error;
+                    })
+                    .blockingGet()))
         .isEqualTo(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void basicFlowableFailure() {
     IllegalStateException error = new IllegalStateException(EXCEPTION_MESSAGE);
-    assertThatThrownBy(
-            () ->
-                createParentSpan(
-                    () ->
-                        Flowable.fromIterable(asList(5, 6))
-                            .map(this::addOne)
-                            .map(
-                                i -> {
-                                  throw error;
-                                })
-                            .toList()
-                            .blockingGet()))
+    assertThatThrownBy(() ->
+            createParentSpan(() ->
+                Flowable.fromIterable(asList(5, 6))
+                    .map(this::addOne)
+                    .map(i -> {
+                      throw error;
+                    })
+                    .toList()
+                    .blockingGet()))
         .isEqualTo(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void basicMaybeCancel() {
-    createParentSpan(
-        () ->
-            Maybe.just(1).toFlowable().map(this::addOne).subscribe(CancellingSubscriber.INSTANCE));
+    createParentSpan(() ->
+        Maybe.just(1).toFlowable().map(this::addOne).subscribe(CancellingSubscriber.INSTANCE));
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
   void basicFlowableCancel() {
-    createParentSpan(
-        () ->
-            Flowable.fromIterable(asList(5, 6))
-                .map(this::addOne)
-                .subscribe(CancellingSubscriber.INSTANCE));
+    createParentSpan(() ->
+        Flowable.fromIterable(asList(5, 6))
+            .map(this::addOne)
+            .subscribe(CancellingSubscriber.INSTANCE));
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
   void basicSingleCancel() {
-    createParentSpan(
-        () ->
-            Single.just(1).toFlowable().map(this::addOne).subscribe(CancellingSubscriber.INSTANCE));
+    createParentSpan(() ->
+        Single.just(1).toFlowable().map(this::addOne).subscribe(CancellingSubscriber.INSTANCE));
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
   void basicCompletableCancel() {
-    createParentSpan(
-        () ->
-            Completable.fromCallable(() -> 1)
-                .toFlowable()
-                .subscribe(CancellingSubscriber.INSTANCE));
+    createParentSpan(() ->
+        Completable.fromCallable(() -> 1).toFlowable().subscribe(CancellingSubscriber.INSTANCE));
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
   void basicObservableCancel() {
-    createParentSpan(
-        () ->
-            Observable.just(1)
-                .toFlowable(BackpressureStrategy.LATEST)
-                .map(this::addOne)
-                .subscribe(CancellingSubscriber.INSTANCE));
+    createParentSpan(() ->
+        Observable.just(1)
+            .toFlowable(BackpressureStrategy.LATEST)
+            .map(this::addOne)
+            .subscribe(CancellingSubscriber.INSTANCE));
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
   void basicMaybeChain() {
-    createParentSpan(
-        () ->
-            Maybe.just(1)
-                .map(this::addOne)
-                .map(this::addOne)
-                .concatWith(Maybe.just(1).map(this::addOne))
-                .toList()
-                .blockingGet());
+    createParentSpan(() ->
+        Maybe.just(1)
+            .map(this::addOne)
+            .map(this::addOne)
+            .concatWith(Maybe.just(1).map(this::addOne))
+            .toList()
+            .blockingGet());
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void basicFlowableChain() {
-    createParentSpan(
-        () ->
-            Flowable.fromIterable(asList(5, 6))
-                .map(this::addOne)
-                .map(this::addOne)
-                .concatWith(Maybe.just(1).map(this::addOne).toFlowable())
-                .toList()
-                .blockingGet());
+    createParentSpan(() ->
+        Flowable.fromIterable(asList(5, 6))
+            .map(this::addOne)
+            .map(this::addOne)
+            .concatWith(Maybe.just(1).map(this::addOne).toFlowable())
+            .toList()
+            .blockingGet());
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   // Publisher chain spans have the correct parents from subscription time
@@ -675,148 +557,113 @@ public abstract class AbstractRxJava2Test {
     Maybe<Integer> maybe = Maybe.just(42).map(this::addOne).map(this::addTwo);
     testing().runWithSpan("trace-parent", () -> maybe.blockingGet());
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("trace-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_TWO)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("trace-parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_TWO).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void maybeChainHasSubscriptionContext() {
     Integer result =
-        createParentSpan(
-            () -> {
-              Maybe<Integer> maybe = Maybe.just(1).map(this::addOne);
-              return testing()
-                  .runWithSpan("intermediate", () -> maybe.map(this::addTwo))
-                  .blockingGet();
-            });
+        createParentSpan(() -> {
+          Maybe<Integer> maybe = Maybe.just(1).map(this::addOne);
+          return testing().runWithSpan("intermediate", () -> maybe.map(this::addTwo)).blockingGet();
+        });
     assertThat(result).isEqualTo(4);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("intermediate")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_TWO)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("intermediate")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_TWO).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void flowableChainHasSubscriptionContext() {
     List<Integer> result =
-        createParentSpan(
-            () -> {
-              Flowable<Integer> flowable = Flowable.fromIterable(asList(1, 2)).map(this::addOne);
-              return testing()
-                  .runWithSpan("intermediate", () -> flowable.map(this::addTwo))
-                  .toList()
-                  .blockingGet();
-            });
+        createParentSpan(() -> {
+          Flowable<Integer> flowable = Flowable.fromIterable(asList(1, 2)).map(this::addOne);
+          return testing()
+              .runWithSpan("intermediate", () -> flowable.map(this::addTwo))
+              .toList()
+              .blockingGet();
+        });
     assertThat(result).contains(4, 5);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("intermediate")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_TWO)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_TWO)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("intermediate")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_TWO).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_TWO).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void singleChainHasSubscriptionContext() {
     Integer result =
-        createParentSpan(
-            () -> {
-              Single<Integer> single = Single.just(1).map(this::addOne);
-              return testing()
-                  .runWithSpan("intermediate", () -> single.map(this::addTwo))
-                  .blockingGet();
-            });
+        createParentSpan(() -> {
+          Single<Integer> single = Single.just(1).map(this::addOne);
+          return testing()
+              .runWithSpan("intermediate", () -> single.map(this::addTwo))
+              .blockingGet();
+        });
     assertThat(result).isEqualTo(4);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("intermediate")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_TWO)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("intermediate")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_TWO).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
   void observableChainHasSubscriptionContext() {
     List<Integer> result =
-        createParentSpan(
-            () -> {
-              Observable<Integer> observable = Observable.just(1).map(this::addOne);
-              return testing()
-                  .runWithSpan("intermediate", () -> observable.map(this::addTwo))
-                  .toList()
-                  .blockingGet();
-            });
+        createParentSpan(() -> {
+          Observable<Integer> observable = Observable.just(1).map(this::addOne);
+          return testing()
+              .runWithSpan("intermediate", () -> observable.map(this::addTwo))
+              .toList()
+              .blockingGet();
+        });
     assertThat(result).contains(4);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("intermediate")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_TWO)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("intermediate")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_TWO).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @MethodSource("schedulers")
@@ -837,26 +684,17 @@ public abstract class AbstractRxJava2Test {
                 });
     assertThat(result).hasSize(4);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("flowable root").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName(ADD_ONE)
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("flowable root").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName(ADD_ONE).hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @ParameterizedTest
@@ -914,18 +752,17 @@ public abstract class AbstractRxJava2Test {
       AtomicBoolean observableExecuted = new AtomicBoolean(false);
       AtomicReference<String> traceId = new AtomicReference<>();
 
-      createParentSpan(
-          () -> {
-            traceId.set(Span.current().getSpanContext().getTraceId());
-            Disposable unused =
-                Observable.fromCallable(
-                        () -> {
-                          observableExecuted.set(true);
-                          return "test";
-                        })
-                    .subscribeOn(Schedulers.io())
-                    .subscribe(result -> latch.countDown());
-          });
+      createParentSpan(() -> {
+        traceId.set(Span.current().getSpanContext().getTraceId());
+        Disposable unused =
+            Observable.fromCallable(
+                    () -> {
+                      observableExecuted.set(true);
+                      return "test";
+                    })
+                .subscribeOn(Schedulers.io())
+                .subscribe(result -> latch.countDown());
+      });
 
       assertThat(latch.await(10, SECONDS)).isTrue();
       assertThat(observableExecuted.get()).isTrue();

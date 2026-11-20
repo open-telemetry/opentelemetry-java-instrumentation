@@ -79,7 +79,7 @@ final class LettuceDbAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       LettuceRequest request, @Nullable LettuceResponse unused) {
     return request.getAddress();
   }

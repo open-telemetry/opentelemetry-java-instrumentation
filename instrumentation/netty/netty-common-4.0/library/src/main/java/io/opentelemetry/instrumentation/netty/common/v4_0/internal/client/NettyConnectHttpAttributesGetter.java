@@ -78,15 +78,8 @@ final class NettyConnectHttpAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       NettyConnectionRequest request, @Nullable Channel channel) {
-    if (channel == null) {
-      return null;
-    }
-    SocketAddress remoteAddress = channel.remoteAddress();
-    if (remoteAddress instanceof InetSocketAddress) {
-      return (InetSocketAddress) remoteAddress;
-    }
-    return null;
+    return channel != null ? channel.remoteAddress() : null;
   }
 }

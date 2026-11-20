@@ -26,16 +26,13 @@ class InitializationTest {
     // TODO: This should just check actual context propagation instead of implementation
     // but couldn't figure out how.
     assertThat(((Scannable) mono).parents().collect(toList()))
-        .anySatisfy(
-            op -> {
-              assertThat(op.getClass().getSimpleName()).isEqualTo("MonoFlatMap");
-              assertThat(op)
-                  .extracting("source")
-                  .satisfies(
-                      source ->
-                          assertThat(source.getClass().getSimpleName())
-                              .isEqualTo("ScalarPropagatingMono"));
-            });
+        .anySatisfy(op -> {
+          assertThat(op.getClass().getSimpleName()).isEqualTo("MonoFlatMap");
+          assertThat(op)
+              .extracting("source")
+              .satisfies(source ->
+                  assertThat(source.getClass().getSimpleName()).isEqualTo("ScalarPropagatingMono"));
+        });
 
     assertThat(mono.block()).isEqualTo("foo");
   }
