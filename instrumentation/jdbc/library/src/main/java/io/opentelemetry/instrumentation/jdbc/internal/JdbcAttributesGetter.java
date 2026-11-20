@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -21,9 +22,22 @@ import javax.annotation.Nullable;
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
 
+  private static final String POLARDB = "polardb";
+
   @Override
   public String getDbSystemName(DbRequest request) {
     return request.getDbInfo().getDbSystemName();
+  }
+
+  @Override
+  public SqlDialect getSqlDialect(DbRequest request) {
+    String dbSystemName = getDbSystemName(request);
+    if (POLARDB.equals(dbSystemName)) {
+      // The JDBC driver for PolarDB's Oracle-compatible edition uses PostgreSQL's wire protocol.
+      // https://www.alibabacloud.com/help/en/polardb/polardb-for-oracle/jdbc-o-1-0
+      return SqlDialect.forDbSystemName("postgresql");
+    }
+    return SqlDialect.forDbSystemName(dbSystemName);
   }
 
   @Nullable

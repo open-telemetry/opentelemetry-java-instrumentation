@@ -77,9 +77,6 @@ public abstract class SqlDialect {
       // Double quotes are not supported."
       // https://clickhouse.com/docs/en/sql-reference/syntax#string
       case "clickhouse":
-      // PostgreSQL-compatible fork, inherits PG string literal rules
-      // (not a semantic convention value, produced by the JDBC PolarDB connection url parser)
-      case "polardb":
       // "A string constant is an arbitrary sequence of characters enclosed by single-quote(')."
       // https://cassandra.apache.org/doc/stable/cassandra/developing/cql/definitions.html#constants
       case "cassandra":

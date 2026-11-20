@@ -44,7 +44,7 @@ class SqlDialectTest {
         argumentSet("HSQLDB", "hsqldb", "SELECT \"name\" FROM catalog"),
         argumentSet("SAP HANA", "sap.hana", "SELECT \"name\" FROM catalog"),
         argumentSet("ClickHouse", "clickhouse", "SELECT \"name\" FROM catalog"),
-        argumentSet("PolarDB", "polardb", "SELECT \"name\" FROM catalog"),
+        argumentSet("PolarDB", "polardb", "SELECT ? FROM catalog"),
         argumentSet("Cassandra", "cassandra", "SELECT \"name\" FROM catalog"),
         argumentSet("Geode", "geode", "SELECT ? FROM catalog"),
         argumentSet("InfluxDB", "influxdb", "SELECT \"name\" FROM catalog"),

@@ -36,7 +36,7 @@ class JdbcAttributesGetterTest {
   private static final String POLARDB = "polardb";
 
   private static Stream<String> identifierDialectDbSystemNames() {
-    return Stream.of(POSTGRESQL, ORACLE_DB, IBM_DB2, DERBY, HSQLDB, SAP_HANA, CLICKHOUSE, POLARDB);
+    return Stream.of(POSTGRESQL, ORACLE_DB, IBM_DB2, DERBY, HSQLDB, SAP_HANA, CLICKHOUSE);
   }
 
   private static Stream<String> stringLiteralDialectDbSystemNames() {
@@ -77,6 +77,20 @@ class JdbcAttributesGetterTest {
                 .analyze(query, attributesGetter.getSqlDialect(request))
                 .getQueryText())
         .isEqualTo("SELECT ? FROM catalog");
+  }
+
+  @Test
+  void getSqlDialectUsesPostgresqlDialectForPolardbJdbcUrl() {
+    String query = "SELECT \"name\", 'sensitive' FROM catalog";
+    DbInfo dbInfo = JdbcConnectionUrlParser.parse("jdbc:polardb://example.com/db", null);
+    DbRequest request = DbRequest.create(dbInfo, query, false);
+
+    assertThat(attributesGetter.getDbSystemName(request)).isEqualTo(POLARDB);
+    assertThat(
+            SqlQueryAnalyzer.create(true)
+                .analyze(query, attributesGetter.getSqlDialect(request))
+                .getQueryText())
+        .isEqualTo("SELECT \"name\", ? FROM catalog");
   }
 
   @ParameterizedTest
