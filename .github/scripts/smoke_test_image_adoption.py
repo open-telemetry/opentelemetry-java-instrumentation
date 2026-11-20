@@ -767,21 +767,18 @@ def resolve_pinned_run(api, family_name, version):
     date, suffix = version.split(".", 1)
     if len(suffix) > 6:
         run_id, attempt = suffix[:-6], int(suffix[-6:])
-        if not run_id.isdecimal() or attempt == 0:
-            raise AdoptionError(
-                f"cannot verify provenance for currently pinned {family_name} version {version}"
-            )
-        try:
-            run = api.run_attempt(run_id, attempt)
-        except NotFound:
-            pass
-        else:
+        if run_id.isdecimal() and attempt > 0:
             try:
-                validate_run_identity(run, family_name, run_id, attempt)
-                if publication_id_matches(run, version):
-                    return run
-            except AdoptionError:
+                run = api.run_attempt(run_id, attempt)
+            except NotFound:
                 pass
+            else:
+                try:
+                    validate_run_identity(run, family_name, run_id, attempt)
+                    if publication_id_matches(run, version):
+                        return run
+                except AdoptionError:
+                    pass
 
     try:
         run_summary = api.workflow_run(suffix)

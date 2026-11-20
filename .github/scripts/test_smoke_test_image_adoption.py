@@ -385,6 +385,27 @@ class AdoptionTest(unittest.TestCase):
             [("123456", 789012), ("123456789012", "2")],
         )
 
+    def test_legacy_run_id_ending_in_six_zeroes_resolves_as_legacy_pin(self):
+        run = run_record(run_id=37550000000)
+        requested = []
+
+        class FakeGitHub:
+            def workflow_run(self, run_id):
+                self.assert_run_id = run_id
+                return run
+
+            def run_attempt(self, run_id, attempt):
+                requested.append((run_id, attempt))
+                return run
+
+        api = FakeGitHub()
+        self.assertEqual(
+            resolve_pinned_run(api, "fake-backend", "20261119.37550000000"),
+            run,
+        )
+        self.assertEqual(api.assert_run_id, "37550000000")
+        self.assertEqual(requested, [("37550000000", "1")])
+
     def test_legacy_pin_requires_a_matching_verified_successful_attempt(self):
         run = run_record(run_id=123456, attempt=2)
 
