@@ -11,6 +11,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.smoketest.ResourceMapping;
 import io.opentelemetry.smoketest.SmokeTestOptions;
 import io.opentelemetry.smoketest.TargetWaitStrategy;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.net.Socket;
 import java.time.Duration;
 import org.apache.hc.core5.http.ClassicHttpResponse;
@@ -19,6 +20,7 @@ import org.apache.hc.core5.http.impl.io.HttpRequestExecutor;
 import org.apache.hc.core5.http.io.entity.EntityUtils;
 import org.apache.hc.core5.http.message.BasicClassicHttpRequest;
 import org.apache.hc.core5.http.protocol.HttpCoreContext;
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 
 abstract class JettySmokeTest extends AppServerTest {
@@ -81,6 +83,116 @@ abstract class JettySmokeTest extends AppServerTest {
     testing.waitForTraces(1);
   }
 
+  @Test
+  void jspInjectionSurvivesForwardAndRawAsyncReset() {
+    Assumptions.assumeTrue(serverVersion.startsWith("10.") || serverVersion.startsWith("11."));
+
+    assertJspScenario("stream-forward");
+    assertJspScenario("async-reset");
+
+    testing.waitForTraces(2);
+  }
+
+  @Test
+  void errorDispatchReplacesSnippetResponse() {
+    Assumptions.assumeTrue(serverVersion.startsWith("10.") || serverVersion.startsWith("11."));
+
+    var response = client().get("/app/jsp?snippetScenario=error-dispatch").aggregate().join();
+    byte[] payload = response.content().array();
+    String body = new String(payload, UTF_8);
+    String snippet = "<script>console.log(hi)</script>";
+    String expected =
+        "<!doctype html>\n"
+            + "<html>\n"
+            + "  <head>"
+            + snippet
+            + "\n"
+            + "    <title>Error page</title>\n"
+            + "  </head>\n"
+            + "  <body>Error page</body>\n"
+            + "</html>\n";
+
+    assertThat(response.status().code()).isEqualTo(500);
+    assertThat(response.headers().get("X-Snippet-Scenario")).isEqualTo("error-dispatch");
+    assertThat(response.headers().get("X-Snippet-Dispatcher")).isEqualTo("ERROR");
+    assertThat(response.headers().get("X-Snippet-Source-Content-Length")).isEqualTo("1032");
+    assertThat(response.headers().get("X-Snippet-Source-Committed")).isEqualTo("false");
+    assertThat(body).isEqualTo(expected);
+    assertThat(body).containsOnlyOnce(snippet);
+    long contentLength = response.headers().contentLength();
+    if (contentLength >= 0) {
+      assertThat(contentLength).isEqualTo(payload.length);
+    }
+
+    testing.waitForTraces(1);
+  }
+
+  @Test
+  void cachedWriterRejectsStreamAfterRawAsyncReset() {
+    Assumptions.assumeTrue(serverVersion.startsWith("10.") || serverVersion.startsWith("11."));
+
+    var response = assertAsyncResetScenario("async-reset-stream");
+    assertThat(response.headers().get("X-Snippet-Writer-Rejected")).isEqualTo("true");
+    testing.waitForTraces(1);
+  }
+
+  @Test
+  void cachedWriterReacquiresChangedEncodingAfterRawAsyncReset() {
+    Assumptions.assumeTrue(serverVersion.startsWith("10.") || serverVersion.startsWith("11."));
+
+    var response = assertAsyncResetScenario("async-reset-writer");
+    assertThat(response.headers().get("X-Snippet-Native-Writer-Changed")).isEqualTo("true");
+    assertThat(response.headers().get("X-Snippet-Writer-Reused")).isEqualTo("true");
+    testing.waitForTraces(1);
+  }
+
+  private AggregatedHttpResponse assertAsyncResetScenario(String scenario) {
+    var response = client().get("/app/jsp?snippetScenario=" + scenario).aggregate().join();
+    byte[] payload = response.content().array();
+    String body = new String(payload, UTF_8);
+    String snippet = "<script>console.log(hi)</script>";
+
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.headers().get("X-Snippet-Scenario")).isEqualTo(scenario);
+    assertThat(response.headers().get("X-Snippet-Source-Content-Length")).isEqualTo("1032");
+    assertThat(response.headers().get("X-Snippet-Source-Committed")).isEqualTo("false");
+    assertThat(body)
+        .isEqualTo("<html><head>" + snippet + "</head><body>Replacement café</body></html>");
+    assertThat(body).containsOnlyOnce(snippet);
+    assertThat(response.headers().contentLength()).isEqualTo(payload.length);
+    return response;
+  }
+
+  private void assertJspScenario(String scenario) {
+    var response = client().get("/app/jsp?snippetScenario=" + scenario).aggregate().join();
+    String jspBody =
+        "\n\n<html>\n"
+            + "  <head>\n"
+            + "    <title>Successful JSP test</title>\n"
+            + "  </head>\n"
+            + "  <body>\n"
+            + "    This JSP demonstrates that Otel instrumentation agent does not break JSP compilation and loading.\n"
+            + "  </body>\n"
+            + "</html>\n";
+    String snippet = "<script>console.log(hi)</script>";
+    String expected = jspBody.replace("<head>", "<head>" + snippet);
+    byte[] payload = response.content().array();
+    String body = new String(payload, UTF_8).replace("\r\n", "\n");
+
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.headers().get("X-Snippet-Scenario")).isEqualTo(scenario);
+    assertThat(body).isEqualTo(expected);
+    assertThat(body).containsOnlyOnce(snippet);
+    if (!isWindows) {
+      assertThat(jspBody.getBytes(UTF_8)).hasSize(196);
+      assertThat(payload).hasSize(228);
+    }
+    long contentLength = response.headers().contentLength();
+    if (contentLength >= 0) {
+      assertThat(contentLength).isEqualTo(payload.length);
+    }
+  }
+
   private static void assertContentLength(ClassicHttpResponse response, byte[] body) {
     var contentLength = response.getFirstHeader("Content-Length");
     if (contentLength != null) {
@@ -90,22 +202,28 @@ abstract class JettySmokeTest extends AppServerTest {
 
   @Override
   protected void configure(SmokeTestOptions<AppServerImage> options) {
-    AppServer appServer = getClass().getAnnotation(AppServer.class);
-    String servletWar =
-        appServer.version().startsWith("9.") || appServer.version().startsWith("10.")
-            ? "servlet-3.0.war"
-            : "servlet-5.0.war";
-    configureOptions(options)
-        .extraResources(ResourceMapping.of(servletWar, "/base/webapps/app.war"));
+    configureOptions(options, getClass().getAnnotation(AppServer.class).version());
   }
 
   static SmokeTestOptions<AppServerImage> configureOptions(
       SmokeTestOptions<AppServerImage> options) {
-    return options
+    return configureOptions(options, null);
+  }
+
+  private static SmokeTestOptions<AppServerImage> configureOptions(
+      SmokeTestOptions<AppServerImage> options, String version) {
+    options
         .image(
             appServerImage(
                 "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-servlet-jetty"))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Started Server.*"));
+    if (version != null) {
+      String servletVersion = version.startsWith("9.") || version.startsWith("10.") ? "3.0" : "5.0";
+      options.extraResources(
+          ResourceMapping.of(
+              "servlet/servlet-" + servletVersion + ".war", "/base/webapps/app.war"));
+    }
+    return options;
   }
 
   @AppServer(version = "9.4.58", jdk = "8", inLimitedMatrix = true)

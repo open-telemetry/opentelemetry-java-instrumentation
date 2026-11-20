@@ -37,7 +37,7 @@ public class OutputStreamSnippetInjectionHelper {
   public boolean handleWrite(
       InjectionState state, OutputStream out, byte[] original, int off, int length)
       throws IOException {
-    if (!state.shouldProcessWrite()) {
+    if (!state.shouldProcessStreamWrite()) {
       return false;
     }
     int endOfHeadTagPosition;
@@ -72,7 +72,7 @@ public class OutputStreamSnippetInjectionHelper {
   }
 
   public boolean handleWrite(InjectionState state, OutputStream out, int b) throws IOException {
-    if (!state.shouldProcessWrite()) {
+    if (!state.shouldProcessStreamWrite()) {
       return false;
     }
     if (!state.processByte(b)) {

@@ -15,13 +15,19 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   public SnippetInjectingPrintWriter(
       PrintWriter writer, String snippet, SnippetInjectingResponseWrapper wrapper) {
+    this(writer, snippet, new InjectionState(wrapper));
+  }
+
+  public SnippetInjectingPrintWriter(PrintWriter writer, String snippet, InjectionState state) {
     super(writer);
-    state = new InjectionState(wrapper);
+    this.state = state;
+    state.useWriter();
     this.snippet = snippet;
   }
 
   @Override
   public void write(String s, int off, int len) {
+    state.useWriter();
     if (!state.shouldProcessWrite()) {
       super.write(s, off, len);
       return;
@@ -34,6 +40,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(int b) {
+    state.useWriter();
     super.write(b);
     if (!state.shouldProcessWrite()) {
       return;
@@ -43,6 +50,7 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
 
   @Override
   public void write(char[] buf, int off, int len) {
+    state.useWriter();
     if (!state.shouldProcessWrite()) {
       super.write(buf, off, len);
       return;
