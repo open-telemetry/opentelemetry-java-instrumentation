@@ -96,11 +96,10 @@ class SimpleConsumerReceiveOperationTest {
     SettableFuture<List<MessageView>> original = SettableFuture.create();
     CompletableFuture<List<MessageView>> returned = toCompletableFuture(operation().wrap(original));
     CompletableFuture<List<MessageView>> observed =
-        returned.thenApply(
-            result -> {
-              assertThat(testing.spans()).hasSize(1);
-              return result;
-            });
+        returned.thenApply(result -> {
+          assertThat(testing.spans()).hasSize(1);
+          return result;
+        });
     original.set(messages);
 
     assertThat(observed.get(10, SECONDS)).isSameAs(messages);
@@ -167,41 +166,36 @@ class SimpleConsumerReceiveOperationTest {
   }
 
   private static void assertSuccessfulReceive() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("receive topic")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "consumer-group"),
-                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
-                            equalTo(stringKey("rocketmq.message.tag"), "tag"),
-                            equalTo(
-                                stringArrayKey("rocketmq.message.keys"), singletonList("key")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("receive topic")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.unset())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, "consumer-group"),
+                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
+                    equalTo(stringKey("rocketmq.message.tag"), "tag"),
+                    equalTo(stringArrayKey("rocketmq.message.keys"), singletonList("key")))));
   }
 
   private static void assertCancelledReceive() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("receive")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "consumer-group"),
-                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                            equalTo(ERROR_TYPE, CancellationException.class.getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("receive")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, "consumer-group"),
+                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                    equalTo(ERROR_TYPE, CancellationException.class.getName()))));
   }
 
   private static final class CancellationTrackingFuture extends AbstractFuture<List<MessageView>> {
