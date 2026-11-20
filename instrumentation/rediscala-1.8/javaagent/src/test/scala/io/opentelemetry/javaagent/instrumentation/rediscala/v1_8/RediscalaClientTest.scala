@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.{
-  HistogramAssert,
   HistogramPointAssert,
   MetricAssert,
   SpanDataAssert,
@@ -518,18 +517,14 @@ class RediscalaClientTest {
         override def accept(metric: MetricAssert): Unit = {
           metric
             .hasName("db.client.operation.duration")
-            .hasHistogramSatisfying(new Consumer[HistogramAssert] {
-              override def accept(histogram: HistogramAssert): Unit = {
-                histogram.hasPointsSatisfying(
-                  new Consumer[HistogramPointAssert] {
-                    override def accept(point: HistogramPointAssert): Unit = {
-                      point
-                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))
-                    }
-                  }
-                )
+            .hasHistogramPointsSatisfying(
+              new Consumer[HistogramPointAssert] {
+                override def accept(point: HistogramPointAssert): Unit = {
+                  point
+                    .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))
+                }
               }
-            })
+            )
         }
       }
     )

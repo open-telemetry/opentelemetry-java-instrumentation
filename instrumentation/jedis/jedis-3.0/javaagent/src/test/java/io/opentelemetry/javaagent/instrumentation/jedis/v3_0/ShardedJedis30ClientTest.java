@@ -154,11 +154,10 @@ class ShardedJedis30ClientTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasAttribute(SERVER_ADDRESS, configuredTarget)
-                            .hasAttributesSatisfying(attributes ->
-                                assertThat(attributes.asMap()).doesNotContainKey(SERVER_PORT)))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasAttribute(SERVER_ADDRESS, configuredTarget)
+                        .hasAttributesSatisfying(attributes ->
+                            assertThat(attributes.asMap()).doesNotContainKey(SERVER_PORT))));
   }
 }
