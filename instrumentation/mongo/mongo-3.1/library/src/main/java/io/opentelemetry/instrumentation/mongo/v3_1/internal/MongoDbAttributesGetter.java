@@ -71,7 +71,7 @@ class MongoDbAttributesGetter
   @Nullable private final MongoConnectionPeerResolver connectionPeerResolver;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
-  // visible for testing
+  // only used by tests
   MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
     this(querySanitizationEnabled, maxNormalizedQueryLength, null);
   }

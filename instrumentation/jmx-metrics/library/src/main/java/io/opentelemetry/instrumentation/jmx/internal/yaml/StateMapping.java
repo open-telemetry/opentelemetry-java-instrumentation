@@ -64,7 +64,7 @@ public class StateMapping {
    *
    * @return default state key, {@literal null} when empty
    */
-  // visible for testing
+  // only used by tests
   @Nullable
   public String getDefaultStateKey() {
     return defaultStateKey;
