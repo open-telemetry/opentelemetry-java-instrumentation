@@ -70,9 +70,7 @@ final class OpenTelemetryMeter extends AbstractMeter
                   .setUnit(baseUnit);
           observableInstruments.add(
               callbackRegistrar.register(
-                  callback,
-                  CallbackClassLoader.find(measurement, id),
-                  counterBuilder::buildWithCallback));
+                  callback, id.getClass(), counterBuilder::buildWithCallback));
           break;
 
         case ACTIVE_TASKS:
@@ -84,9 +82,7 @@ final class OpenTelemetryMeter extends AbstractMeter
                   .setUnit(baseUnit);
           observableInstruments.add(
               callbackRegistrar.register(
-                  callback,
-                  CallbackClassLoader.find(measurement, id),
-                  upDownCounterBuilder::buildWithCallback));
+                  callback, id.getClass(), upDownCounterBuilder::buildWithCallback));
           break;
 
         case DURATION:
@@ -97,10 +93,7 @@ final class OpenTelemetryMeter extends AbstractMeter
           DoubleGaugeBuilder gaugeBuilder =
               otelMeter.gaugeBuilder(name).setDescription(description).setUnit(baseUnit);
           observableInstruments.add(
-              callbackRegistrar.register(
-                  callback,
-                  CallbackClassLoader.find(measurement, id),
-                  gaugeBuilder::buildWithCallback));
+              callbackRegistrar.register(callback, id.getClass(), gaugeBuilder::buildWithCallback));
           break;
       }
     }

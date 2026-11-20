@@ -59,9 +59,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
         new LongMeasurementRecorder<>(this, DefaultLongTaskTimer::activeTasks, attributes);
     observableActiveTasks =
         callbackRegistrar.register(
-            activeTasksCallback,
-            CallbackClassLoader.find(id),
-            activeTasksBuilder::buildWithCallback);
+            activeTasksCallback, id.getClass(), activeTasksBuilder::buildWithCallback);
 
     DoubleUpDownCounterBuilder durationBuilder =
         otelMeter
@@ -73,7 +71,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
         new DoubleMeasurementRecorder<>(this, t -> t.duration(t.baseTimeUnit()), attributes);
     observableDuration =
         callbackRegistrar.register(
-            durationCallback, CallbackClassLoader.find(id), durationBuilder::buildWithCallback);
+            durationCallback, id.getClass(), durationBuilder::buildWithCallback);
   }
 
   @Override
