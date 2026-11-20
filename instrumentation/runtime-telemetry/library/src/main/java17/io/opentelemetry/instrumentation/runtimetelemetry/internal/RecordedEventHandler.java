@@ -84,6 +84,7 @@ public interface RecordedEventHandler
             // Ignore
           }
         });
+    observables.clear();
   }
 
   @Override
