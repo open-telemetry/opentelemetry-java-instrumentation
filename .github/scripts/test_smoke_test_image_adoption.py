@@ -38,6 +38,7 @@ from smoke_test_image_adoption import (
     update_pin,
     validate_bot_branch,
     validate_candidate,
+    validate_current_main,
     verify_eligible_run,
     verify_required_jobs,
 )
@@ -341,6 +342,28 @@ class AdoptionTest(unittest.TestCase):
             run,
         )
         self.assertEqual(requested, [("123456", "2")])
+
+    def test_legacy_pin_resolves_an_earlier_success_after_a_failed_rerun(self):
+        latest = run_record(run_id=123456, attempt=2)
+        latest["conclusion"] = "failure"
+        earlier = run_record(run_id=123456, attempt=1)
+        requested = []
+
+        class FakeGitHub:
+            def workflow_run(self, _run_id):
+                return latest
+
+            def run_attempt(self, run_id, attempt):
+                requested.append((run_id, attempt))
+                if attempt == "2":
+                    return latest
+                return earlier
+
+        self.assertEqual(
+            resolve_pinned_run(FakeGitHub(), "fake-backend", "20261119.123456"),
+            earlier,
+        )
+        self.assertEqual(requested, [("123456", "2"), ("123456", "1")])
 
     def test_modern_pin_does_not_query_a_concatenated_legacy_run_id(self):
         run = run_record(run_id=123456, attempt=2)
@@ -1301,6 +1324,92 @@ class AdoptionTest(unittest.TestCase):
             _, second_base, second_branch, _, _ = prepare_branch(root, FakeGitHub())
             self.assertEqual(image_pin(second_base, "play"), image_pin(second_branch, "play"))
             self.assertEqual(image_pin(second_branch, "grpc"), grpc_tag)
+
+    def test_main_snapshot_for_verification_is_the_fetched_main_commit(self):
+        stale_main_sha = "a" * 40
+        prepared_main_sha = "b" * 40
+        run = run_record("grpc", sha=prepared_main_sha)
+        current = pin_files()
+        candidate = candidate_record(run, "grpc")
+        required_images = expected_references("grpc", publication_id(run))
+        image_name = next(iter(required_images)).split(":", 1)[0]
+        required_images.add(f"{image_name}:jdk29-{publication_id(run)}")
+
+        class FakeGitHub:
+            main_sha_calls = 0
+
+            def main_sha(self):
+                self.main_sha_calls += 1
+                return stale_main_sha
+
+            def run_attempt(self, _run_id, _attempt):
+                return run
+
+            def compare(self, _source, _main):
+                return "identical"
+
+            def run_jobs(self, _run_id, _attempt):
+                return [
+                    {"name": name, "status": "completed", "conclusion": "success"}
+                    for name in ("publish / build", "publish / verify")
+                ]
+
+            def run_artifacts(self, _run_id):
+                return [
+                    {
+                        "id": 456,
+                        "name": (
+                            "smoke-test-publication-grpc-"
+                            f"{run['run_attempt']}"
+                        ),
+                        "expired": False,
+                        "workflow_run": {
+                            "id": run["id"],
+                            "head_sha": prepared_main_sha,
+                        },
+                    }
+                ]
+
+            def download_artifact(self, _artifact_id):
+                return candidate
+
+        api = FakeGitHub()
+        with (
+            patch(
+                "smoke_test_image_adoption.prepare_branch",
+                return_value=(prepared_main_sha, current, current, None, None),
+            ),
+            patch(
+                "smoke_test_image_adoption.expected_images_for",
+                return_value=required_images,
+            ) as expected_images,
+            self.assertRaisesRegex(
+                AdoptionError, "complete expected image family"
+            ),
+        ):
+            reconcile(
+                api,
+                ROOT,
+                (run["id"], run["run_attempt"], run),
+                False,
+            )
+
+        expected_images.assert_called_once_with(
+            "grpc", publication_id(run), ROOT, prepared_main_sha
+        )
+        self.assertEqual(api.main_sha_calls, 0)
+
+    def test_publication_requires_main_to_match_the_verified_snapshot(self):
+        live_main_sha = "b" * 40
+
+        class FakeGitHub:
+            def main_sha(self):
+                return live_main_sha
+
+        with self.assertRaisesRegex(AdoptionError, "main changed during adoption"):
+            validate_current_main(
+                ROOT, FakeGitHub(), live_main_sha, expected_main_sha="a" * 40
+            )
 
     def test_conflicting_main_pin_change_is_aborted(self):
         with tempfile.TemporaryDirectory() as directory:
