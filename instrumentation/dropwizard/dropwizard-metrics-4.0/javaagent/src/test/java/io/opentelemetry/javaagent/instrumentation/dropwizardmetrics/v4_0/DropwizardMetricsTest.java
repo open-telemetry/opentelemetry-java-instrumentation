@@ -11,12 +11,21 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -57,6 +66,119 @@ class DropwizardMetricsTest {
   }
 
   @Test
+  void gaugeDoesNotRetainApplicationClassLoader()
+      throws IOException, ReflectiveOperationException, InterruptedException, TimeoutException {
+    WeakReference<ClassLoader> classLoaderRef = registerGaugeFromDisposableClassLoader();
+
+    GcUtils.awaitGc(classLoaderRef, Duration.ofSeconds(10));
+    assertThat(classLoaderRef.get()).isNull();
+
+    testing.clearData();
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME, "test.gc.disposable.gauge", AbstractIterableAssert::isEmpty);
+  }
+
+  private WeakReference<ClassLoader> registerGaugeFromDisposableClassLoader()
+      throws IOException, ReflectiveOperationException {
+    MetricRegistry metricRegistry = new MetricRegistry();
+    URL testClasses = getClass().getProtectionDomain().getCodeSource().getLocation();
+    String gaugeClassName = getClass().getName() + "$DisposableGauge";
+    URLClassLoader appClassLoader =
+        new URLClassLoader(new URL[] {testClasses}, getClass().getClassLoader()) {
+          @Override
+          protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (!name.equals(gaugeClassName)) {
+              return super.loadClass(name, resolve);
+            }
+            synchronized (getClassLoadingLock(name)) {
+              Class<?> loadedClass = findLoadedClass(name);
+              if (loadedClass == null) {
+                loadedClass = findClass(name);
+              }
+              if (resolve) {
+                resolveClass(loadedClass);
+              }
+              return loadedClass;
+            }
+          }
+        };
+    try {
+      Constructor<?> gaugeConstructor =
+          appClassLoader.loadClass(gaugeClassName).getDeclaredConstructor();
+      gaugeConstructor.setAccessible(true);
+      Gauge<?> gauge = (Gauge<?>) gaugeConstructor.newInstance();
+      Thread thread = Thread.currentThread();
+      ClassLoader previousContextClassLoader = thread.getContextClassLoader();
+      try {
+        thread.setContextClassLoader(getClass().getClassLoader());
+        metricRegistry.register("test.gc.disposable.gauge", gauge);
+      } finally {
+        thread.setContextClassLoader(previousContextClassLoader);
+      }
+
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          metric ->
+              metric
+                  .hasName("test.gc.disposable.gauge")
+                  .hasDoubleGaugeSatisfying(
+                      result -> result.hasPointsSatisfying(point -> point.hasValue(42))));
+      // Keep the registry and its listener alive through the gauge assertion.
+      assertThat(metricRegistry.getGauges()).containsEntry("test.gc.disposable.gauge", gauge);
+      return new WeakReference<>(appClassLoader);
+    } finally {
+      appClassLoader.close();
+    }
+  }
+
+  public static class DisposableGauge implements Gauge<Integer> {
+
+    @Override
+    public Integer getValue() {
+      return 42;
+    }
+  }
+
+  @Test
+  void sameGaugeNameInSeparateRegistriesKeepsOtherRegistrationWhenFirstIsRemoved() {
+    verifySeparateRegistryGaugeRemoval(true);
+  }
+
+  @Test
+  void sameGaugeNameInSeparateRegistriesKeepsOtherRegistrationWhenSecondIsRemoved() {
+    verifySeparateRegistryGaugeRemoval(false);
+  }
+
+  private static void verifySeparateRegistryGaugeRemoval(boolean removeFirst) {
+    MetricRegistry firstRegistry = new MetricRegistry();
+    MetricRegistry secondRegistry = new MetricRegistry();
+    AtomicLong firstValue = new AtomicLong(41);
+    AtomicLong secondValue = new AtomicLong(42);
+    firstRegistry.gauge("test.multi.registry.gauge", () -> firstValue::get);
+    secondRegistry.gauge("test.multi.registry.gauge", () -> secondValue::get);
+
+    MetricRegistry removedRegistry = removeFirst ? firstRegistry : secondRegistry;
+    MetricRegistry remainingRegistry = removeFirst ? secondRegistry : firstRegistry;
+    AtomicLong remainingValue = removeFirst ? secondValue : firstValue;
+    double expectedValue = (double) remainingValue.get();
+    removedRegistry.remove("test.multi.registry.gauge");
+    testing.clearData();
+
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("test.multi.registry.gauge")
+                .hasDoubleGaugeSatisfying(
+                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(expectedValue))));
+
+    remainingRegistry.remove("test.multi.registry.gauge");
+    testing.clearData();
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME, "test.multi.registry.gauge", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
   void counter() {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();
@@ -92,6 +214,25 @@ class DropwizardMetricsTest {
                     assertThat(metric)
                         .hasLongSumSatisfying(sum ->
                             sum.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(7)))));
+  }
+
+  @Test
+  void removingSameNamedCounterFromAnotherRegistryKeepsRecordingAssociation() {
+    MetricRegistry removedRegistry = new MetricRegistry();
+    MetricRegistry remainingRegistry = new MetricRegistry();
+    removedRegistry.counter("test.multi.registry.counter");
+    Counter remainingCounter = remainingRegistry.counter("test.multi.registry.counter");
+
+    removedRegistry.remove("test.multi.registry.counter");
+    remainingCounter.inc(5);
+
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("test.multi.registry.counter")
+                .hasLongSumSatisfying(
+                    sum -> sum.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(5))));
   }
 
   @Test
