@@ -1,0 +1,59 @@
+---
+rules:
+
+  - bean: kafka.producer:type=producer-metrics,client-id=*
+    prefix: kafka.producer.
+    type: gauge
+    metricAttribute:
+      messaging.client.id: param(client-id)
+    mapping:
+      io-wait-time-ns-avg:
+        metric: io.wait.time.average
+        sourceUnit: ns
+        unit: "s"
+        desc: The average time the producer I/O thread waits for a socket to be ready.
+      outgoing-byte-rate:
+        metric: outgoing.byte.rate
+        unit: "By/s"
+        desc: The average number of bytes sent per second to all brokers.
+      request-latency-avg:
+        metric: request.latency.average
+        sourceUnit: ms
+        unit: "s"
+        desc: The average request latency.
+      request-rate:
+        metric: request.rate
+        unit: "{request}/s"
+        desc: The average number of requests sent per second.
+      response-rate:
+        metric: response.rate
+        unit: "{response}/s"
+        desc: The average number of responses received per second.
+
+  - bean: kafka.producer:type=producer-topic-metrics,client-id=*,topic=*
+    prefix: kafka.producer.
+    type: gauge
+    metricAttribute:
+      messaging.client.id: param(client-id)
+      messaging.destination.name: param(topic)
+    mapping:
+      byte-rate:
+        metric: topic.byte.rate
+        unit: "By/s"
+        desc: The average number of bytes sent per second to the topic.
+      compression-rate:
+        metric: topic.compression.ratio
+        unit: "1"
+        desc: The average ratio of compressed to uncompressed record batch size for the topic.
+      record-error-rate:
+        metric: topic.record.error.rate
+        unit: "{record}/s"
+        desc: The average number of record send errors per second for the topic.
+      record-retry-rate:
+        metric: topic.record.retry.rate
+        unit: "{record}/s"
+        desc: The average number of retried record sends per second for the topic.
+      record-send-rate:
+        metric: topic.record.send.rate
+        unit: "{record}/s"
+        desc: The average number of records sent per second to the topic.

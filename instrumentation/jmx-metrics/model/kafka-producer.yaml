@@ -1,0 +1,105 @@
+groups:
+  - id: metric.kafka.producer.io.wait.time.average
+    metric_name: kafka.producer.io.wait.time.average
+    type: metric
+    stability: development
+    brief: The average time the producer I/O thread waits for a socket to be ready.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+
+  - id: metric.kafka.producer.outgoing.byte.rate
+    metric_name: kafka.producer.outgoing.byte.rate
+    type: metric
+    stability: development
+    brief: The average number of bytes sent per second to all brokers.
+    unit: "By/s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+
+  - id: metric.kafka.producer.request.latency.average
+    metric_name: kafka.producer.request.latency.average
+    type: metric
+    stability: development
+    brief: The average request latency.
+    unit: "s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+
+  - id: metric.kafka.producer.request.rate
+    metric_name: kafka.producer.request.rate
+    type: metric
+    stability: development
+    brief: The average number of requests sent per second.
+    unit: "{request}/s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+
+  - id: metric.kafka.producer.response.rate
+    metric_name: kafka.producer.response.rate
+    type: metric
+    stability: development
+    brief: The average number of responses received per second.
+    unit: "{response}/s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+
+  - id: metric.kafka.producer.topic.byte.rate
+    metric_name: kafka.producer.topic.byte.rate
+    type: metric
+    stability: development
+    brief: The average number of bytes sent per second to the topic.
+    unit: "By/s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+      - ref: messaging.destination.name
+
+  - id: metric.kafka.producer.topic.compression.ratio
+    metric_name: kafka.producer.topic.compression.ratio
+    type: metric
+    stability: development
+    brief: The average ratio of compressed to uncompressed record batch size for the topic.
+    unit: "1"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+      - ref: messaging.destination.name
+
+  - id: metric.kafka.producer.topic.record.error.rate
+    metric_name: kafka.producer.topic.record.error.rate
+    type: metric
+    stability: development
+    brief: The average number of record send errors per second for the topic.
+    unit: "{record}/s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+      - ref: messaging.destination.name
+
+  - id: metric.kafka.producer.topic.record.retry.rate
+    metric_name: kafka.producer.topic.record.retry.rate
+    type: metric
+    stability: development
+    brief: The average number of retried record sends per second for the topic.
+    unit: "{record}/s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+      - ref: messaging.destination.name
+
+  - id: metric.kafka.producer.topic.record.send.rate
+    metric_name: kafka.producer.topic.record.send.rate
+    type: metric
+    stability: development
+    brief: The average number of records sent per second to the topic.
+    unit: "{record}/s"
+    instrument: gauge
+    attributes:
+      - ref: messaging.client.id
+      - ref: messaging.destination.name
