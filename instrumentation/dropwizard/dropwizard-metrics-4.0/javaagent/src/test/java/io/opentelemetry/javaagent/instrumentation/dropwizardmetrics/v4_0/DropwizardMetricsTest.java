@@ -123,6 +123,8 @@ class DropwizardMetricsTest {
                   .hasName("test.gc.disposable.gauge")
                   .hasDoubleGaugeSatisfying(
                       result -> result.hasPointsSatisfying(point -> point.hasValue(42))));
+      // Keep the registry and its listener alive through the gauge assertion.
+      assertThat(metricRegistry.getGauges()).containsEntry("test.gc.disposable.gauge", gauge);
       return new WeakReference<>(appClassLoader);
     } finally {
       appClassLoader.close();
