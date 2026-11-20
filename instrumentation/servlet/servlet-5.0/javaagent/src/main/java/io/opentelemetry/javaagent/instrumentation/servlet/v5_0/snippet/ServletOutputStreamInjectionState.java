@@ -7,25 +7,42 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateReference;
 import jakarta.servlet.ServletOutputStream;
 import javax.annotation.Nullable;
 
 public class ServletOutputStreamInjectionState {
-  private static final VirtualField<ServletOutputStream, InjectionState> VIRTUAL_FIELD =
-      VirtualField.find(ServletOutputStream.class, InjectionState.class);
+  private static final VirtualField<ServletOutputStream, InjectionStateReference> VIRTUAL_FIELD =
+      VirtualField.find(ServletOutputStream.class, InjectionStateReference.class);
 
   public static void initializeInjectionStateIfNeeded(
-      ServletOutputStream servletOutputStream, Servlet5SnippetInjectingResponseWrapper wrapper) {
-    InjectionState state = VIRTUAL_FIELD.get(servletOutputStream);
-    if (state == null || state.getWrapper() != wrapper) {
-      state = new InjectionState(wrapper);
-      VIRTUAL_FIELD.set(servletOutputStream, state);
+      ServletOutputStream servletOutputStream, InjectionState state) {
+    InjectionStateReference reference = VIRTUAL_FIELD.get(servletOutputStream);
+    if (reference != null && reference.get() == state) {
+      return;
     }
+    VIRTUAL_FIELD.set(servletOutputStream, new InjectionStateReference(state));
   }
 
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
-    return VIRTUAL_FIELD.get(servletOutputStream);
+    InjectionStateReference reference = VIRTUAL_FIELD.get(servletOutputStream);
+    if (reference == null) {
+      return null;
+    }
+    InjectionState state = reference.get();
+    if (state == null) {
+      VIRTUAL_FIELD.set(servletOutputStream, null);
+      return null;
+    }
+    if (state.isHeadTagWritten()) {
+      return state;
+    }
+    if (!state.isCurrentRequest()) {
+      VIRTUAL_FIELD.set(servletOutputStream, null);
+      return null;
+    }
+    return state;
   }
 
   private ServletOutputStreamInjectionState() {}

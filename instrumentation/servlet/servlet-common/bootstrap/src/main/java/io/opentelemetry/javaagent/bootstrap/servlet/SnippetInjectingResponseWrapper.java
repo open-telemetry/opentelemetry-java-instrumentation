@@ -9,6 +9,8 @@ public interface SnippetInjectingResponseWrapper {
 
   boolean isContentTypeTextHtml();
 
+  boolean isCurrentRequest();
+
   void updateContentLengthIfPreviouslySet();
 
   boolean isNotSafeToInject();
