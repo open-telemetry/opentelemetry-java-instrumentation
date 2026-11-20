@@ -387,7 +387,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             trace.hasSpansSatisfyingExactly(
                 span ->
                     assertClientSpan(
-                            span, uri, method, options.getResponseCodeOnRedirectError(), null)
+                            span,
+                            uri,
+                            method,
+                            options.getExpectResponseCodeOnRedirectError()
+                                ? FOUND_STATUS_CODE
+                                : null,
+                            null)
                         .hasNoParent(),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           },
@@ -426,7 +432,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             trace.hasSpansSatisfyingExactly(
                 span ->
                     assertClientSpan(
-                            span, uri, method, options.getResponseCodeOnRedirectError(), null)
+                            span,
+                            uri,
+                            method,
+                            options.getExpectResponseCodeOnRedirectError()
+                                ? FOUND_STATUS_CODE
+                                : null,
+                            null)
                         .hasNoParent(),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           },
@@ -437,7 +449,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                             span,
                             uri.resolve("/redirect"),
                             method,
-                            options.getResponseCodeOnRedirectError(),
+                            options.getExpectResponseCodeOnRedirectError()
+                                ? FOUND_STATUS_CODE
+                                : null,
                             1)
                         .hasNoParent(),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
@@ -570,7 +584,12 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
       testing.waitAndAssertTraces(trace -> {
         List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
         assertions.add(span ->
-            assertClientSpan(span, uri, method, options.getResponseCodeOnRedirectError(), null)
+            assertClientSpan(
+                    span,
+                    uri,
+                    method,
+                    options.getExpectResponseCodeOnRedirectError() ? FOUND_STATUS_CODE : null,
+                    null)
                 .hasNoParent()
                 .hasException(emitExceptionAsSpanEvents() ? clientError : null));
         for (int i = 0; i < options.getMaxRedirects(); i++) {
@@ -595,7 +614,11 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
         trace.hasSpansSatisfyingExactly(
             span ->
                 assertClientSpan(
-                    span, uri, method, options.getResponseCodeOnRedirectError(), resendCountValue),
+                    span,
+                    uri,
+                    method,
+                    options.getExpectResponseCodeOnRedirectError() ? FOUND_STATUS_CODE : null,
+                    resendCountValue),
             span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
   }
 
@@ -617,7 +640,13 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
             trace.hasSpansSatisfyingExactly(
                 span ->
                     assertClientSpan(
-                            span, uri, method, options.getResponseCodeOnRedirectError(), null)
+                            span,
+                            uri,
+                            method,
+                            options.getExpectResponseCodeOnRedirectError()
+                                ? FOUND_STATUS_CODE
+                                : null,
+                            null)
                         .hasNoParent(),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
           },

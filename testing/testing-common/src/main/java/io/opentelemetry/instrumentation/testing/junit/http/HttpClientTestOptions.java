@@ -47,8 +47,7 @@ public abstract class HttpClientTestOptions {
 
   public abstract Function<URI, Set<AttributeKey<?>>> getHttpAttributes();
 
-  @Nullable
-  public abstract Integer getResponseCodeOnRedirectError();
+  public abstract boolean getExpectResponseCodeOnRedirectError();
 
   public abstract boolean getExpectResponseCodeOnRedirectConnectionError();
 
@@ -131,7 +130,7 @@ public abstract class HttpClientTestOptions {
     @CanIgnoreReturnValue
     default Builder withDefaults() {
       return setHttpAttributes(x -> DEFAULT_HTTP_ATTRIBUTES)
-          .setResponseCodeOnRedirectError(FOUND_STATUS_CODE)
+          .setExpectResponseCodeOnRedirectError(true)
           .setExpectResponseCodeOnRedirectConnectionError(false)
           .setClientSpanErrorMapper((uri, exception) -> exception)
           .setSingleConnectionFactory((host, port) -> null)
@@ -164,7 +163,7 @@ public abstract class HttpClientTestOptions {
 
     Builder setHttpAttributes(Function<URI, Set<AttributeKey<?>>> value);
 
-    Builder setResponseCodeOnRedirectError(Integer value);
+    Builder setExpectResponseCodeOnRedirectError(boolean value);
 
     Builder setExpectResponseCodeOnRedirectConnectionError(boolean value);
 

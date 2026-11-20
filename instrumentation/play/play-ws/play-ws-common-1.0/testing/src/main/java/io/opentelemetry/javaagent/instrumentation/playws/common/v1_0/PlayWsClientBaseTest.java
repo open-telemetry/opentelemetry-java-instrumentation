@@ -71,7 +71,7 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
     super.configure(optionsBuilder);
     // apparently play ws does not report the 302 status code
-    optionsBuilder.setResponseCodeOnRedirectError(null);
+    optionsBuilder.setExpectResponseCodeOnRedirectError(false);
     optionsBuilder.setMaxRedirects(3);
     optionsBuilder.spanEndsAfterBody();
     optionsBuilder.setHttpAttributes(uri -> {
