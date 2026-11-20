@@ -107,18 +107,16 @@ class SpringKafkaMockConsumerTest {
     assertThat(listenerFailure.get()).isNull();
     assertThat(testing.spans()).filteredOn(span -> span.getKind() == SpanKind.CONSUMER).hasSize(1);
     assertThat(testing.spans())
-        .filteredOn(
-            span ->
-                span.getInstrumentationScopeInfo()
-                    .getName()
-                    .equals("io.opentelemetry.spring-kafka-2.7"))
+        .filteredOn(span ->
+            span.getInstrumentationScopeInfo()
+                .getName()
+                .equals("io.opentelemetry.spring-kafka-2.7"))
         .hasSize(springDisabled ? 0 : 1);
     assertThat(testing.spans())
-        .filteredOn(
-            span ->
-                span.getInstrumentationScopeInfo()
-                    .getName()
-                    .equals("io.opentelemetry.kafka-clients-0.11"))
+        .filteredOn(span ->
+            span.getInstrumentationScopeInfo()
+                .getName()
+                .equals("io.opentelemetry.kafka-clients-0.11"))
         .hasSize(springDisabled ? 1 : 0);
   }
 }

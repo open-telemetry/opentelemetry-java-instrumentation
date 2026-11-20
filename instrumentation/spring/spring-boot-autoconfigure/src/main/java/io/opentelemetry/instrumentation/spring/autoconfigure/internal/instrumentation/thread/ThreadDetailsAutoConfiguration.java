@@ -22,10 +22,9 @@ public class ThreadDetailsAutoConfiguration {
   @Bean
   public AutoConfigurationCustomizerProvider threadDetailOtelCustomizer() {
     return p ->
-        p.addTracerProviderCustomizer(
-            (builder, config) -> {
-              builder.addSpanProcessor(new ThreadDetailsSpanProcessor());
-              return builder;
-            });
+        p.addTracerProviderCustomizer((builder, config) -> {
+          builder.addSpanProcessor(new ThreadDetailsSpanProcessor());
+          return builder;
+        });
   }
 }

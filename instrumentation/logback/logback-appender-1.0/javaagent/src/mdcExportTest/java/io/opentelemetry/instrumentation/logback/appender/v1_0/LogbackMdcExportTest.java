@@ -206,11 +206,10 @@ class LogbackMdcExportTest {
   }
 
   private static void assertExportedMdc(String message, Attributes expected) {
-    testing.waitAndAssertLogRecords(
-        record -> {
-          record.hasBody(message);
-          record.hasAttributes(expected);
-        });
+    testing.waitAndAssertLogRecords(record -> {
+      record.hasBody(message);
+      record.hasAttributes(expected);
+    });
   }
 
   private static class MdcAppender extends AppenderBase<ILoggingEvent> {

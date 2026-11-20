@@ -244,25 +244,22 @@ public final class InstrumentationModuleInstaller {
           setTypeMatcher(agentBuilder, instrumentationModule, typeInstrumentation)
               .and(muzzleMatcher)
               .transform(ConstantAdjuster.instance())
-              .transform(
-                  (builder, typeDescription, classLoader, module, protectionDomain) -> {
-                    if (JavaModule.isSupported()
-                        && instrumentationModule instanceof ExperimentalInstrumentationModule
-                        && !openerRun.get()) {
-                      ExperimentalInstrumentationModule experimentalModule =
-                          (ExperimentalInstrumentationModule) instrumentationModule;
-                      experimentalModule
-                          .jpmsModulesToOpen()
-                          .forEach(
-                              (javaModule, packages) -> {
-                                ModuleOpener.open(
-                                    instrumentation, javaModule, classLoader, packages);
-                              });
-                      openerRun.set(true);
-                    }
+              .transform((builder, typeDescription, classLoader, module, protectionDomain) -> {
+                if (JavaModule.isSupported()
+                    && instrumentationModule instanceof ExperimentalInstrumentationModule
+                    && !openerRun.get()) {
+                  ExperimentalInstrumentationModule experimentalModule =
+                      (ExperimentalInstrumentationModule) instrumentationModule;
+                  experimentalModule
+                      .jpmsModulesToOpen()
+                      .forEach((javaModule, packages) -> {
+                        ModuleOpener.open(instrumentation, javaModule, classLoader, packages);
+                      });
+                  openerRun.set(true);
+                }
 
-                    return builder;
-                  })
+                return builder;
+              })
               .transform(helperInjector);
       extendableAgentBuilder = contextProvider.injectHelperClasses(extendableAgentBuilder);
       extendableAgentBuilder = contextProvider.rewriteVirtualFieldsCalls(extendableAgentBuilder);
@@ -306,8 +303,7 @@ public final class InstrumentationModuleInstaller {
             new LoggingFailSafeMatcher<>(
                 classLoaderMatcher,
                 "Instrumentation class loader matcher unexpected exception: " + classLoaderMatcher))
-        .and(
-            (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
-                classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription));
+        .and((typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
+            classLoader == null || NOT_DECORATOR_MATCHER.matches(typeDescription));
   }
 }

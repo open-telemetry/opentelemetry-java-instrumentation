@@ -27,10 +27,9 @@ class FieldInjectionDisabledTest {
 
   @BeforeAll
   static void setUp() {
-    TestAgentListenerAccess.addSkipErrorCondition(
-        (typeName, throwable) ->
-            typeName.startsWith(ContextTestInstrumentationModule.class.getName() + "$Incorrect")
-                && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."));
+    TestAgentListenerAccess.addSkipErrorCondition((typeName, throwable) ->
+        typeName.startsWith(ContextTestInstrumentationModule.class.getName() + "$Incorrect")
+            && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."));
   }
 
   @Test

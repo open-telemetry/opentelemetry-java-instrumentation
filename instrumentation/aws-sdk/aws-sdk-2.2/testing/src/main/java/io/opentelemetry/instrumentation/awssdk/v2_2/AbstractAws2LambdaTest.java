@@ -69,9 +69,8 @@ public abstract class AbstractAws2LambdaTest {
     assertThat(clientContextJson).contains("traceparent");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("Lambda.Invoke").hasKind(SpanKind.CLIENT).hasNoParent()));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("Lambda.Invoke").hasKind(SpanKind.CLIENT).hasNoParent()));
   }
 }

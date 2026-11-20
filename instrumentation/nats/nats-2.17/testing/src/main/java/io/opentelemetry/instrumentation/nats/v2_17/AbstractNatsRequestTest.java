@@ -53,16 +53,15 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
     // then
     assertThat(message).isNull();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span ->
-                        span.hasName("request sub")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                messagingAttributes("request", "sub", clientId))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("request sub")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes("request", "sub", clientId))));
     assertTraceparentHeader(subscription);
     assertProducerMetrics("request", "sub", null);
   }
@@ -299,38 +298,37 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
 
   private void assertPublishReceiveSpansSameTrace() {
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> asserts =
-                  new ArrayList<>(
-                      asList(
-                          // publisher: parent + publish
-                          span -> span.hasName("parent").hasNoParent(),
-                          span ->
-                              span.hasName("request sub")
-                                  .hasKind(SpanKind.PRODUCER)
-                                  .hasParent(trace.getSpan(0))
-                                  .hasAttributesSatisfyingExactly(
-                                      messagingAttributes("request", "sub", clientId)),
-                          // subscriber: process + publish(response)
-                          span ->
-                              span.hasName("process sub")
-                                  .hasKind(SpanKind.CONSUMER)
-                                  .hasParent(trace.getSpan(1)),
-                          span ->
-                              span.hasName("publish _INBOX.")
-                                  .hasKind(SpanKind.PRODUCER)
-                                  .hasParent(trace.getSpan(2)),
-                          // publisher: process
-                          span ->
-                              span.hasName("process _INBOX.")
-                                  .hasKind(SpanKind.CONSUMER)
-                                  .hasParent(trace.getSpan(3))
-                                  .hasAttributesSatisfyingExactly(
-                                      messagingAttributes("process", "(temporary)", clientId))));
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> asserts =
+              new ArrayList<>(
+                  asList(
+                      // publisher: parent + publish
+                      span -> span.hasName("parent").hasNoParent(),
+                      span ->
+                          span.hasName("request sub")
+                              .hasKind(SpanKind.PRODUCER)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  messagingAttributes("request", "sub", clientId)),
+                      // subscriber: process + publish(response)
+                      span ->
+                          span.hasName("process sub")
+                              .hasKind(SpanKind.CONSUMER)
+                              .hasParent(trace.getSpan(1)),
+                      span ->
+                          span.hasName("publish _INBOX.")
+                              .hasKind(SpanKind.PRODUCER)
+                              .hasParent(trace.getSpan(2)),
+                      // publisher: process
+                      span ->
+                          span.hasName("process _INBOX.")
+                              .hasKind(SpanKind.CONSUMER)
+                              .hasParent(trace.getSpan(3))
+                              .hasAttributesSatisfyingExactly(
+                                  messagingAttributes("process", "(temporary)", clientId))));
 
-              trace.hasSpansSatisfyingExactly(asserts);
-            });
+          trace.hasSpansSatisfyingExactly(asserts);
+        });
   }
 
   private void assertCancellationPublishSpan() {
@@ -341,20 +339,19 @@ public abstract class AbstractNatsRequestTest extends AbstractNatsTest {
 
   private void assertExceptionPublishSpan(Throwable exception) {
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasNoParent(),
-                    span ->
-                        span.hasName("request sub")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0))
-                            .hasException(exception)
-                            .hasAttributesSatisfyingExactly(
-                                messagingAttributes(
-                                    "request",
-                                    "sub",
-                                    clientId,
-                                    equalTo(ERROR_TYPE, exception.getClass().getName())))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span ->
+                    span.hasName("request sub")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasException(exception)
+                        .hasAttributesSatisfyingExactly(
+                            messagingAttributes(
+                                "request",
+                                "sub",
+                                clientId,
+                                equalTo(ERROR_TYPE, exception.getClass().getName())))));
   }
 }

@@ -72,12 +72,11 @@ public abstract class AbstractJvmKafkaSpringStarterSmokeTest
   @SuppressWarnings("unchecked") // we lose parameter types for the KafkaTemplate
   @Override
   protected void runProducerTest(Runnable runnable) {
-    contextRunner.run(
-        applicationContext -> {
-          testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
-          kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
+    contextRunner.run(applicationContext -> {
+      testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
+      kafkaTemplate = applicationContext.getBean(KafkaTemplate.class);
 
-          runnable.run();
-        });
+      runnable.run();
+    });
   }
 }

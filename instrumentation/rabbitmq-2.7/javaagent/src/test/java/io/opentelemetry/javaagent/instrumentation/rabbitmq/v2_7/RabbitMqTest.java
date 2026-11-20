@@ -155,10 +155,9 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     channel.abort();
 
     Throwable error =
-        catchThrowable(
-            () ->
-                channel.basicPublish(
-                    "", "metrics", null, "Hello, world!".getBytes(Charset.defaultCharset())));
+        catchThrowable(() ->
+            channel.basicPublish(
+                "", "metrics", null, "Hello, world!".getBytes(Charset.defaultCharset())));
 
     assertThat(error).isInstanceOf(AlreadyClosedException.class);
     assertProducerMetrics(testing, "metrics", error.getClass().getName());
@@ -353,11 +352,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
     testing.runWithSpan("parent", () -> channel.basicGet(queueName, true));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -484,38 +482,33 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     String resource = queueName;
 
     List<java.util.function.Consumer<TraceAssert>> traceAssertions = new ArrayList<>();
-    traceAssertions.add(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> verifySpan(trace, span, 0, "exchange.declare")));
-    traceAssertions.add(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "queue.declare")));
+    traceAssertions.add(trace ->
+        trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "exchange.declare")));
+    traceAssertions.add(trace ->
+        trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "queue.declare")));
     traceAssertions.add(
         trace -> trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "queue.bind")));
-    traceAssertions.add(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "basic.consume")));
+    traceAssertions.add(trace ->
+        trace.hasSpansSatisfyingExactly(span -> verifySpan(trace, span, 0, "basic.consume")));
 
     for (int i = 1; i <= messageCount; i++) {
-      traceAssertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName),
-                  span ->
-                      verifySpan(
-                          trace,
-                          span,
-                          1,
-                          exchangeName,
-                          null,
-                          "process",
-                          resource,
-                          trace.getSpan(0),
-                          null,
-                          null,
-                          null,
-                          setTimestamp)));
+      traceAssertions.add(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> verifySpan(trace, span, 0, exchangeName, null, "publish", exchangeName),
+              span ->
+                  verifySpan(
+                      trace,
+                      span,
+                      1,
+                      exchangeName,
+                      null,
+                      "process",
+                      resource,
+                      trace.getSpan(0),
+                      null,
+                      null,
+                      null,
+                      setTimestamp)));
     }
 
     testing.waitAndAssertTraces(traceAssertions);
@@ -599,23 +592,21 @@ class RabbitMqTest extends AbstractRabbitMqTest {
     }
 
     Throwable finalThrown = thrown;
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    verifySpan(
-                        trace,
-                        span,
-                        0,
-                        null,
-                        null,
-                        accessor.getString(3),
-                        accessor.getString(0),
-                        null,
-                        null,
-                        finalThrown,
-                        accessor.getString(2),
-                        false)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            verifySpan(
+                trace,
+                span,
+                0,
+                null,
+                null,
+                accessor.getString(3),
+                accessor.getString(0),
+                null,
+                null,
+                finalThrown,
+                accessor.getString(2),
+                false)));
     if ("receive".equals(accessor.getString(3))) {
       assertReceiveMetrics(testing, null, finalThrown.getClass().getName(), 0);
     }
@@ -766,11 +757,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> verifySettleSpan(span, trace.getSpan(0), operation, deliveryTag)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> verifySettleSpan(span, trace.getSpan(0), operation, deliveryTag)));
     assertSettleMetrics(testing, operation, null);
   }
 
@@ -810,11 +800,10 @@ class RabbitMqTest extends AbstractRabbitMqTest {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> verifySettleSpan(span, trace.getSpan(0), operation, lastDeliveryTag)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> verifySettleSpan(span, trace.getSpan(0), operation, lastDeliveryTag)));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv
@@ -1129,14 +1118,13 @@ class RabbitMqTest extends AbstractRabbitMqTest {
 
   private static void verifyException(SpanDataAssert span, Throwable exception, String errorMsg) {
     span.hasStatus(StatusData.error())
-        .hasEventsSatisfying(
-            events ->
-                assertThat(events.get(0))
-                    .hasName("exception")
-                    .hasAttributesSatisfying(
-                        equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
-                        equalTo(EXCEPTION_MESSAGE, errorMsg),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+        .hasEventsSatisfying(events ->
+            assertThat(events.get(0))
+                .hasName("exception")
+                .hasAttributesSatisfying(
+                    equalTo(EXCEPTION_TYPE, exception.getClass().getName()),
+                    equalTo(EXCEPTION_MESSAGE, errorMsg),
+                    satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
   }
 
   private static void verifyParentAndLink(

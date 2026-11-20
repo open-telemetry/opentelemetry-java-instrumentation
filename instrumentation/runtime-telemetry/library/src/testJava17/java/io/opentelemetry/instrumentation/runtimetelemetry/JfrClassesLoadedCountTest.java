@@ -24,27 +24,24 @@ class JfrClassesLoadedCountTest {
                 .hasName("jvm.class.loaded")
                 .hasDescription("Number of classes loaded since JVM start.")
                 .hasUnit(UNIT_CLASSES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))),
+                .hasLongSumSatisfying(sum ->
+                    sum.hasPointsSatisfying(
+                        point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))),
         metric ->
             metric
                 .hasName("jvm.class.count")
                 .hasDescription("Number of classes currently loaded.")
                 .hasUnit(UNIT_CLASSES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))),
+                .hasLongSumSatisfying(sum ->
+                    sum.hasPointsSatisfying(
+                        point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))),
         metric ->
             metric
                 .hasName("jvm.class.unloaded")
                 .hasDescription("Number of classes unloaded since JVM start.")
                 .hasUnit(UNIT_CLASSES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))));
+                .hasLongSumSatisfying(sum ->
+                    sum.hasPointsSatisfying(
+                        point -> point.hasValueSatisfying(v -> v.isGreaterThanOrEqualTo(0)))));
   }
 }

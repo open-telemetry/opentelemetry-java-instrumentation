@@ -62,23 +62,21 @@ public final class SupportabilityMetrics {
 
   // visible for testing
   void report() {
-    suppressionCounters.forEach(
-        (instrumentationName, countsByKind) -> {
-          for (SpanKind kind : SpanKind.values()) {
-            long value = countsByKind.getAndReset(kind);
-            if (value > 0) {
-              reporter.accept(
-                  "Suppressed Spans by '" + instrumentationName + "' (" + kind + ") : " + value);
-            }
-          }
-        });
-    counters.forEach(
-        (counterName, counter) -> {
-          long value = counter.getAndSet(0);
-          if (value > 0) {
-            reporter.accept("Counter '" + counterName + "' : " + value);
-          }
-        });
+    suppressionCounters.forEach((instrumentationName, countsByKind) -> {
+      for (SpanKind kind : SpanKind.values()) {
+        long value = countsByKind.getAndReset(kind);
+        if (value > 0) {
+          reporter.accept(
+              "Suppressed Spans by '" + instrumentationName + "' (" + kind + ") : " + value);
+        }
+      }
+    });
+    counters.forEach((counterName, counter) -> {
+      long value = counter.getAndSet(0);
+      if (value > 0) {
+        reporter.accept("Counter '" + counterName + "' : " + value);
+      }
+    });
   }
 
   // this private method is designed for assignment of the return value
@@ -89,13 +87,12 @@ public final class SupportabilityMetrics {
           Executors.newScheduledThreadPool(
               1,
               runnable ->
-                  doPrivileged(
-                      () -> {
-                        Thread result = new Thread(runnable, "supportability_metrics_reporter");
-                        result.setDaemon(true);
-                        result.setContextClassLoader(null);
-                        return result;
-                      }));
+                  doPrivileged(() -> {
+                    Thread result = new Thread(runnable, "supportability_metrics_reporter");
+                    result.setDaemon(true);
+                    result.setContextClassLoader(null);
+                    return result;
+                  }));
       executor.scheduleAtFixedRate(this::report, 5, 5, SECONDS);
       // the condition below will always be false, but by referencing the executor it ensures the
       // executor can't become unreachable in the middle of the scheduleAtFixedRate() method

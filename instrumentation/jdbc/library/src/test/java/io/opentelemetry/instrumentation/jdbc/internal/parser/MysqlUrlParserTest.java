@@ -79,11 +79,10 @@ class MysqlUrlParserTest {
   void parsedHostAndOptionalPort(String authority, String host, Integer port) {
     assertThat(MysqlHostParser.parseHostList(authority, true))
         .isNotNull()
-        .satisfies(
-            hosts ->
-                assertThat(hosts.hosts())
-                    .extracting(HostPort::host, HostPort::port)
-                    .containsExactly(tuple(host, port)));
+        .satisfies(hosts ->
+            assertThat(hosts.hosts())
+                .extracting(HostPort::host, HostPort::port)
+                .containsExactly(tuple(host, port)));
   }
 
   @Test
@@ -109,11 +108,10 @@ class MysqlUrlParserTest {
   void mariaDbUsesTheSameOrdinaryAndAddressHostParsing(String authority) {
     assertThat(MysqlHostParser.parseHostList(authority, false))
         .isNotNull()
-        .satisfies(
-            hosts ->
-                assertThat(hosts.hosts())
-                    .extracting(HostPort::host, HostPort::port)
-                    .containsExactly(tuple("h1", 1111)));
+        .satisfies(hosts ->
+            assertThat(hosts.hosts())
+                .extracting(HostPort::host, HostPort::port)
+                .containsExactly(tuple("h1", 1111)));
   }
 
   @ParameterizedTest
@@ -140,15 +138,13 @@ class MysqlUrlParserTest {
 
     assertThat(MysqlHostParser.parseHostList(authority, true))
         .isNotNull()
-        .satisfies(
-            hosts ->
-                assertThat(hosts.hosts())
-                    .extracting(
-                        host -> tuple(host.host(), host.port() == null ? 3306 : host.port()))
-                    .containsExactlyElementsOf(
-                        expected.getHostsList().stream()
-                            .map(host -> tuple(normalizeHost(host.getHost()), host.getPort()))
-                            .collect(toList())));
+        .satisfies(hosts ->
+            assertThat(hosts.hosts())
+                .extracting(host -> tuple(host.host(), host.port() == null ? 3306 : host.port()))
+                .containsExactlyElementsOf(
+                    expected.getHostsList().stream()
+                        .map(host -> tuple(normalizeHost(host.getHost()), host.getPort()))
+                        .collect(toList())));
 
     DbServerTargetBuilder target = DbServerTarget.builder(3306);
     for (HostInfo host : expected.getHostsList()) {
@@ -228,11 +224,10 @@ class MysqlUrlParserTest {
   @MethodSource("credentialUrls")
   void credentialsDoNotAffectConnectionAttributes(String url, String withoutCredentials) {
     assertThat(ConnectionUrl.getConnectionUrlInstance(url, new Properties()).getHostsList())
-        .allSatisfy(
-            host -> {
-              assertThat(host.getUser()).isEqualTo("alice@example.com");
-              assertThat(host.getPassword()).isEqualTo("p/a?s#s@word,=(value)");
-            });
+        .allSatisfy(host -> {
+          assertThat(host.getUser()).isEqualTo("alice@example.com");
+          assertThat(host.getPassword()).isEqualTo("p/a?s#s@word,=(value)");
+        });
     DbInfo info = JdbcConnectionUrlParser.parse(url, null);
 
     assertThat(info.getConfiguredServerTarget()).isNotNull();

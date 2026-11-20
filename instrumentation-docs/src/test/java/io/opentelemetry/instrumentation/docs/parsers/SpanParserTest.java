@@ -30,45 +30,45 @@ class SpanParserTest {
 
     String file1Content =
         """
-        when: default
-        spans_by_scope:
-          - scope: test
-            spans:
-              - span_kind: INTERNAL
-                attributes:
-          - scope: io.opentelemetry.clickhouse-client-0.5
-            spans:
-              - span_kind: SERVER
-                attributes:
-                  - name: server.address
-                    type: STRING
-      """;
+          when: default
+          spans_by_scope:
+            - scope: test
+              spans:
+                - span_kind: INTERNAL
+                  attributes:
+            - scope: io.opentelemetry.clickhouse-client-0.5
+              spans:
+                - span_kind: SERVER
+                  attributes:
+                    - name: server.address
+                      type: STRING
+        """;
 
     String file2Content =
         """
-        when: default
-        spans_by_scope:
-          - scope: test
-            spans:
-              - span_kind: INTERNAL
-                attributes:
-          - scope: io.opentelemetry.clickhouse-client-0.5
-            spans:
-              - span_kind: CLIENT
-                attributes:
-                  - name: db.statement
-                    type: STRING
-                  - name: server.port
-                    type: LONG
-                  - name: db.system
-                    type: STRING
-                  - name: server.address
-                    type: STRING
-                  - name: db.name
-                    type: STRING
-                  - name: db.operation
-                    type: STRING
-      """;
+          when: default
+          spans_by_scope:
+            - scope: test
+              spans:
+                - span_kind: INTERNAL
+                  attributes:
+            - scope: io.opentelemetry.clickhouse-client-0.5
+              spans:
+                - span_kind: CLIENT
+                  attributes:
+                    - name: db.statement
+                      type: STRING
+                    - name: server.port
+                      type: LONG
+                    - name: db.system
+                      type: STRING
+                    - name: server.address
+                      type: STRING
+                    - name: db.name
+                      type: STRING
+                    - name: db.operation
+                      type: STRING
+        """;
 
     Files.writeString(telemetryDir.resolve("spans-1.yaml"), file1Content);
     Files.writeString(telemetryDir.resolve("spans-2.yaml"), file2Content);
@@ -202,39 +202,39 @@ class SpanParserTest {
 
     String file1Content =
         """
-        when: default
-        spans_by_scope:
-          - scope: io.opentelemetry.grpc-1.6
-            spans:
-              - span_kind: CLIENT
-                attributes:
-                  - name: rpc.system
-                    type: STRING
-                  - name: rpc.grpc.status_code
-                    type: LONG
-                  - name: server.port
-                    type: LONG
-                  - name: rpc.method
-                    type: STRING
-                  - name: rpc.service
-                    type: STRING
-                  - name: server.address
-                    type: STRING
-              - span_kind: SERVER
-                attributes:
-                  - name: rpc.system
-                    type: STRING
-                  - name: rpc.grpc.status_code
-                    type: LONG
-                  - name: server.port
-                    type: LONG
-                  - name: rpc.method
-                    type: STRING
-                  - name: rpc.service
-                    type: STRING
-                  - name: server.address
-                    type: STRING
-      """;
+          when: default
+          spans_by_scope:
+            - scope: io.opentelemetry.grpc-1.6
+              spans:
+                - span_kind: CLIENT
+                  attributes:
+                    - name: rpc.system
+                      type: STRING
+                    - name: rpc.grpc.status_code
+                      type: LONG
+                    - name: server.port
+                      type: LONG
+                    - name: rpc.method
+                      type: STRING
+                    - name: rpc.service
+                      type: STRING
+                    - name: server.address
+                      type: STRING
+                - span_kind: SERVER
+                  attributes:
+                    - name: rpc.system
+                      type: STRING
+                    - name: rpc.grpc.status_code
+                      type: LONG
+                    - name: server.port
+                      type: LONG
+                    - name: rpc.method
+                      type: STRING
+                    - name: rpc.service
+                      type: STRING
+                    - name: server.address
+                      type: STRING
+        """;
 
     Files.writeString(telemetryDir.resolve("spans-1.yaml"), file1Content);
 

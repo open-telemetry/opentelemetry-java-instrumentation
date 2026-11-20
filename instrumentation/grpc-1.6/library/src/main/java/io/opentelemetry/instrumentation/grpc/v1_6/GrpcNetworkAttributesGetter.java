@@ -3,21 +3,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.grpc.v1_6.internal;
+package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import io.opentelemetry.instrumentation.grpc.v1_6.GrpcRequest;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-/**
- * This class is internal and is hence not for public use. Its APIs are unstable and can change at
- * any time.
- */
-public final class GrpcClientNetworkAttributesGetter
+final class GrpcNetworkAttributesGetter
     implements ServerAttributesGetter<GrpcRequest>, NetworkAttributesGetter<GrpcRequest, Status> {
 
   @Nullable
@@ -32,14 +26,15 @@ public final class GrpcClientNetworkAttributesGetter
     return grpcRequest.getServerPort();
   }
 
+  @Nullable
+  @Override
+  public SocketAddress getNetworkLocalSocketAddress(GrpcRequest request, @Nullable Status status) {
+    return request.getNormalizedLocalSocketAddress();
+  }
+
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      GrpcRequest request, @Nullable Status response) {
-    SocketAddress address = request.getPeerSocketAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+  public SocketAddress getNetworkPeerSocketAddress(GrpcRequest request, @Nullable Status status) {
+    return request.getNormalizedPeerSocketAddress();
   }
 }

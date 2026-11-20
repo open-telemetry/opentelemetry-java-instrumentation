@@ -129,14 +129,13 @@ class ApacheHttpAsyncClientTest {
 
       assertThat(getResponseCode(response)).isEqualTo(200);
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      assertClientSpan(span, uri, "GET", 200, null)
-                          .hasNoParent()
-                          .hasStatus(StatusData.unset()),
-                  span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  assertClientSpan(span, uri, "GET", 200, null)
+                      .hasNoParent()
+                      .hasStatus(StatusData.unset()),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
     }
 
     @Override

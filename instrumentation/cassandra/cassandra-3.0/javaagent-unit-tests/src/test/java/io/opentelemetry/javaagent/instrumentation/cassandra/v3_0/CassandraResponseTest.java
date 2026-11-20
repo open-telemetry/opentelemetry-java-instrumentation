@@ -99,6 +99,6 @@ class CassandraResponseTest {
   }
 
   private static InetSocketAddress peerAddress(CassandraResponse response) {
-    return new CassandraSqlAttributesGetter().getNetworkPeerInetSocketAddress(null, response);
+    return new CassandraSqlAttributesGetter().getNetworkPeerSocketAddress(null, response);
   }
 }

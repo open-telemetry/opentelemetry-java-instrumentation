@@ -9,8 +9,11 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.lang.System.lineSeparator;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.singletonList;
 import static java.util.Comparator.comparing;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
@@ -20,13 +23,14 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.metrics.data.PointData;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -35,13 +39,20 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 import org.apache.kafka.clients.CommonClientConfigs;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
+import org.apache.kafka.clients.consumer.ConsumerRebalanceListener;
 import org.apache.kafka.clients.consumer.KafkaConsumer;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.common.MetricName;
+import org.apache.kafka.common.TopicPartition;
 import org.apache.kafka.common.metrics.KafkaMetric;
 import org.apache.kafka.common.metrics.Metrics;
 import org.apache.kafka.common.metrics.MetricsReporter;
@@ -70,6 +81,8 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
   private static final List<String> TOPICS = asList("foo", "bar", "baz", "qux");
   private static final Random RANDOM = new Random();
 
+  private static final String SHARED_TOPIC = "shared.topic";
+
   private static KafkaContainer kafka;
   private static KafkaProducer<byte[], byte[]> producer;
   private static KafkaConsumer<byte[], byte[]> consumer;
@@ -82,7 +95,7 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
   }
 
   @BeforeEach
-  void beforeAll() {
+  void beforeAll() throws ExecutionException, InterruptedException, TimeoutException {
     // only start the kafka container the first time this runs
     if (kafka != null) {
       return;
@@ -96,10 +109,62 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
             .withStartupTimeout(Duration.ofMinutes(1));
     cleanup.deferAfterAll(kafka::stop);
     kafka.start();
+
+    // create test topic
+    HashMap<String, Object> adminProps = new HashMap<>();
+    adminProps.put("bootstrap.servers", kafka.getBootstrapServers());
+
+    try (AdminClient admin = AdminClient.create(adminProps)) {
+      admin
+          .createTopics(singletonList(new NewTopic(SHARED_TOPIC, 1, (short) 1)))
+          .all()
+          .get(30, SECONDS);
+    }
+
     producer = new KafkaProducer<>(producerConfig());
     cleanup.deferAfterAll(producer);
     consumer = new KafkaConsumer<>(consumerConfig());
     cleanup.deferAfterAll(consumer);
+
+    // send and receive a message to ensure that cluster metadata is update before the actual tests
+    // ant that kafka.cluster.id attribute is pesent on metrics
+    CountDownLatch consumerReady = new CountDownLatch(1);
+    consumer.subscribe(
+        singletonList(SHARED_TOPIC),
+        new ConsumerRebalanceListener() {
+          @Override
+          public void onPartitionsRevoked(Collection<TopicPartition> collection) {}
+
+          @Override
+          public void onPartitionsAssigned(Collection<TopicPartition> collection) {
+            consumerReady.countDown();
+          }
+        });
+    awaitUntilConsumerIsReady(consumerReady);
+
+    consumer.seekToBeginning(emptyList());
+
+    producer.partitionsFor(SHARED_TOPIC);
+    producer.send(new ProducerRecord<>(SHARED_TOPIC, "value".getBytes(UTF_8)));
+
+    assertThat(KafkaTestUtil.poll(consumer, Duration.ofSeconds(10))).isNotEmpty();
+  }
+
+  private static void awaitUntilConsumerIsReady(CountDownLatch consumerReady)
+      throws InterruptedException {
+    if (consumerReady.await(0, SECONDS)) {
+      return;
+    }
+    for (int i = 0; i < 10; i++) {
+      KafkaTestUtil.poll(consumer, Duration.ofMillis(100));
+      if (consumerReady.await(1, SECONDS)) {
+        break;
+      }
+    }
+    if (consumerReady.getCount() != 0) {
+      throw new AssertionError("Consumer wasn't assigned any partitions!");
+    }
+    consumer.seekToBeginning(emptyList());
   }
 
   @AfterEach
@@ -357,48 +422,47 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
                 "kafka.producer.byte_total",
                 "kafka.producer.compression_rate"));
 
-    List<MetricData> metrics = testing().metrics();
-    Set<String> metricNames = metrics.stream().map(MetricData::getName).collect(toSet());
-    assertThat(metricNames).containsAll(expectedMetricNames);
+    String instrumentationName =
+        testing() instanceof AgentInstrumentationExtension
+            ? "io.opentelemetry.kafka-clients-0.11"
+            : "io.opentelemetry.kafka-clients-2.6";
+    for (String metricName : expectedMetricNames) {
+      testing()
+          .waitAndAssertMetrics(
+              instrumentationName,
+              metricName,
+              metrics -> {
+                metrics.isNotEmpty();
+                metrics.allSatisfy(metricData -> {
+                  // After a real produce/consume cycle the broker fires onUpdate() on each
+                  // reporter; all metric points must carry the resulting cluster id.
+                  assertThat(metricData.getData().getPoints())
+                      .isNotEmpty()
+                      .allSatisfy(point ->
+                          assertThat(point.getAttributes().get(stringKey("kafka.cluster.id")))
+                              .isNotEmpty());
 
-    // After a real produce/consume cycle the broker fires onUpdate() on each reporter; at least one
-    // metric point must carry the resulting cluster id.
-    assertThat(
-            metrics.stream()
-                .flatMap(m -> m.getData().getPoints().stream())
-                .anyMatch(
-                    p -> {
-                      String id = p.getAttributes().get(stringKey("kafka.cluster.id"));
-                      return id != null && !id.isEmpty();
-                    }))
-        .isTrue();
-
-    // All data points for a given metric must carry the same set of attribute keys, with the
-    // exception of kafka.cluster.id which may be absent on points emitted before
-    // onUpdate() fires (lazy metadata fetch on first broker contact).
-    assertThat(metrics.stream().filter(metric -> metric.getName().startsWith("kafka.")))
-        .allSatisfy(
-            metricData -> {
-              Set<String> expectedKeys =
-                  metricData.getData().getPoints().stream()
-                      .findFirst()
-                      .map(
-                          point ->
+                  // All data points for a given metric must carry the same set of attribute
+                  // keys.
+                  Set<String> expectedKeys =
+                      metricData.getData().getPoints().stream()
+                          .findFirst()
+                          .map(point ->
                               point.getAttributes().asMap().keySet().stream()
                                   .map(AttributeKey::getKey)
-                                  .filter(k -> !k.equals("kafka.cluster.id"))
                                   .collect(toSet()))
-                      .orElse(emptySet());
-              assertThat(metricData.getData().getPoints())
-                  .extracting(PointData::getAttributes)
-                  .extracting(
-                      attributes ->
+                          .orElse(emptySet());
+                  assertThat(metricData.getData().getPoints())
+                      .extracting(PointData::getAttributes)
+                      .extracting(attributes ->
                           attributes.asMap().keySet().stream()
                               .map(AttributeKey::getKey)
-                              .filter(k -> !k.equals("kafka.cluster.id"))
                               .collect(toSet()))
-                  .allSatisfy(attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
-            });
+                      .allSatisfy(
+                          attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+                });
+              });
+    }
 
     // Print mapping table
     printMappingTable();
@@ -455,10 +519,9 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
         // Find first (there may be multiple) registered instrument that matches the kafkaMetricId
         Optional<InstrumentDescriptor> descriptor =
             registeredObservables.stream()
-                .filter(
-                    registeredObservable ->
-                        KafkaMetricId.create(registeredObservable.getKafkaMetricName())
-                            .equals(kafkaMetricId))
+                .filter(registeredObservable ->
+                    KafkaMetricId.create(registeredObservable.getKafkaMetricName())
+                        .equals(kafkaMetricId))
                 .findFirst()
                 .map(RegisteredObservable::getInstrumentDescriptor);
         if (!descriptor.isPresent()) {

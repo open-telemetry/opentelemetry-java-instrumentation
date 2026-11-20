@@ -8,12 +8,14 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableList;
 
 import com.google.auto.service.AutoService;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import java.util.ArrayList;
 import java.util.List;
 
 @AutoService(InstrumentationModule.class)
@@ -23,7 +25,7 @@ public class MethodInstrumentationModule extends InstrumentationModule {
 
   public MethodInstrumentationModule() {
     super("methods");
-    typeInstrumentations = createInstrumentations();
+    typeInstrumentations = unmodifiableList(new ArrayList<>(createInstrumentations()));
   }
 
   private static List<TypeInstrumentation> createInstrumentations() {

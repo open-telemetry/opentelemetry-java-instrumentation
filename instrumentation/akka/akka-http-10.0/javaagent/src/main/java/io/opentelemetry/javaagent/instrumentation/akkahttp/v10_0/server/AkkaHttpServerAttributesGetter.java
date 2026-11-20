@@ -71,7 +71,7 @@ class AkkaHttpServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
     return AkkaHttpServerRequestPeer.get(request);
   }
