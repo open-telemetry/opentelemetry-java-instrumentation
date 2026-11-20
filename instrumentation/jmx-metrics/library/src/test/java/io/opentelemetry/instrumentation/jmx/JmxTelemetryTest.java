@@ -9,6 +9,9 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonList;
+import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -25,6 +28,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -81,6 +87,37 @@ class JmxTelemetryTest {
 
     assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
         .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void rulesFromMapsCanBeReused(boolean immutable) {
+    Map<String, Object> metricDefinition = new HashMap<>();
+    metricDefinition.put("metric", "custom.map.thread.count");
+    metricDefinition.put("type", "gauge");
+    metricDefinition.put("unit", "{thread}");
+    metricDefinition.put("desc", "Current number of threads.");
+
+    Map<String, Object> rule = new HashMap<>();
+    rule.put("bean", "java.lang:type=Threading");
+    rule.put(
+        "mapping",
+        singletonMap(
+            "ThreadCount", immutable ? unmodifiableMap(metricDefinition) : metricDefinition));
+    List<Map<String, Object>> rules = singletonList(immutable ? unmodifiableMap(rule) : rule);
+
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry()).addRules(rules);
+    JmxTelemetryBuilder anotherBuilder = JmxTelemetry.builder(OpenTelemetry.noop()).addRules(rules);
+    assertThat(anotherBuilder.getRegisteredMetrics()).containsExactly("custom.map.thread.count");
+    cleanup.deferCleanup(builder.build().start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric ->
+            metric
+                .hasName("custom.map.thread.count")
+                .hasUnit("{thread}")
+                .hasDescription("Current number of threads."));
   }
 
   private static Collection<String> getFilteredMetrics(

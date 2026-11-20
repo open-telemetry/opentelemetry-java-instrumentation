@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -114,6 +115,32 @@ public final class JmxTelemetryBuilder {
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to load JMX rules from: " + path, e);
     }
+  }
+
+  /**
+   * Adds JMX rules from a list of maps. Each map uses the same syntax as an individual rule in a
+   * YAML configuration file. All metrics are included unless filtered out by the {@link
+   * #setMetrics(IncludeExclude)} method.
+   *
+   * <p>The supplied list and maps are not modified.
+   *
+   * @param rules rule definitions to add
+   * @return builder instance
+   * @throws IllegalArgumentException when rules is {@literal null} or can't be parsed
+   */
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder addRules(List<Map<String, Object>> rules) {
+    if (rules == null) {
+      throw new IllegalArgumentException("missing JMX rules");
+    }
+    List<MetricDef> metricDefs = RuleParser.get().createMetricDefs(rules);
+
+    for (MetricDef metricDef : metricDefs) {
+      userMetricDefs.add(metricDef);
+      registeredMetrics.addAll(metricDef.getMetricNames());
+      registeredHandlers.addAll(metricDef.getHandlerNames());
+    }
+    return this;
   }
 
   /**

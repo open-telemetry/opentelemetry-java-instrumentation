@@ -18,6 +18,7 @@ testing.suites {
       implementation(project(":declarative-config-bridge"))
       implementation(project(":testing:testing-common"))
       implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+      implementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
       implementation("io.opentelemetry:opentelemetry-sdk-testing")
     }
   }
