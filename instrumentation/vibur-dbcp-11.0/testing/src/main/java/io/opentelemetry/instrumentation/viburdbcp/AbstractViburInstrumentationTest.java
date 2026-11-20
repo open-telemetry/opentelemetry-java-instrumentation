@@ -22,7 +22,7 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractViburInstrumentationTest {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
+  protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
 
   @Mock protected DataSource dataSourceMock;
   @Mock protected Connection connectionMock;

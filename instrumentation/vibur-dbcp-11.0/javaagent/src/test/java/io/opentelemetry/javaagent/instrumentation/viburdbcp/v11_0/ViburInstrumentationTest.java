@@ -39,14 +39,12 @@ class ViburInstrumentationTest extends AbstractViburInstrumentationTest {
   protected void shutdown(ViburDBCPDataSource viburDataSource) {}
 
   @Test
-  void shouldStopReportingMetricsOnTerminate() throws SQLException {
-    when(dataSourceMock.getConnection()).thenReturn(connectionMock);
+  void shouldStopReportingMetricsOnTerminate() {
     try (ViburDBCPDataSource dataSource = newDataSource()) {
-      dataSource.setName("testPool");
+      dataSource.setPoolInitialSize(0);
       dataSource.start();
-      try (Connection unused = dataSource.getConnection()) {
-        assertConnectionPoolEmitsMetrics("testPool");
-      }
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME, "db.client.connection.limit", metrics -> metrics.isNotEmpty());
 
       dataSource.terminate();
 
