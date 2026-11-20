@@ -407,12 +407,16 @@ public class AgentStarterImpl implements AgentStarter {
 
             @Override
             public void visitEnd() {
-              visitField(
-                  Opcodes.ACC_PRIVATE | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC,
-                  "__applicationSpan",
-                  "Ljava/lang/Object;",
-                  null,
-                  null);
+              FieldVisitor fv =
+                  visitField(
+                      Opcodes.ACC_PRIVATE | Opcodes.ACC_VOLATILE | Opcodes.ACC_SYNTHETIC,
+                      "__applicationSpan",
+                      "Ljava/lang/Object;",
+                      null,
+                      null);
+              if (fv != null) {
+                fv.visitEnd();
+              }
 
               // generate getter
               {
