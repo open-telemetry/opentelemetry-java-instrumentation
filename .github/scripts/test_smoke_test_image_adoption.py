@@ -1,3 +1,4 @@
+import io
 import tempfile
 from pathlib import Path
 import subprocess
@@ -9,6 +10,7 @@ from smoke_test_image_adoption import (
     APP_LOGIN,
     BOT_EMAIL,
     BOT_NAME,
+    CandidateArtifactUnavailable,
     FAMILIES,
     GitHistory,
     PIN_FILES,
@@ -521,6 +523,15 @@ class AdoptionTest(unittest.TestCase):
             f"/actions/runs/{run['id']}/attempts/{run['run_attempt']}",
             run_url,
         )
+
+        expired_api = FakeGitHub()
+        expired_api.artifacts[0]["expired"] = True
+        with patch(
+            "smoke_test_image_adoption.manifest_digest",
+            return_value=digest,
+        ):
+            with self.assertRaises(CandidateArtifactUnavailable):
+                verify(expired_api)
 
         with patch(
             "smoke_test_image_adoption.manifest_digest",
@@ -1582,6 +1593,108 @@ class AdoptionTest(unittest.TestCase):
         self.assertTrue(has_updates)
         self.assertIn("play:", message)
         self.assertNotIn("fake-backend:", message)
+
+    def test_unavailable_optional_catch_up_does_not_block_verified_trigger(self):
+        main_sha = run_process(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
+        trigger_run = run_record("fake-backend", run_id=123456, sha=main_sha)
+        unavailable_run = run_record("play", run_id=234567, sha=main_sha)
+        old_fake_backend = run_record("fake-backend", run_id=100, sha=main_sha)
+        old_play = run_record("play", run_id=200, sha=main_sha)
+        base = pin_files()
+        base, _ = update_pin(base, "fake-backend", publication_id(old_fake_backend))
+        base, _ = update_pin(base, "play", publication_id(old_play))
+
+        class FakeGitHub:
+            def main_sha(self):
+                return main_sha
+
+            def workflow_runs(self, family):
+                if family == "fake-backend":
+                    return [trigger_run]
+                if family == "play":
+                    return [unavailable_run]
+                return []
+
+            def run_attempt(self, run_id, _attempt):
+                return {
+                    str(trigger_run["id"]): trigger_run,
+                    str(unavailable_run["id"]): unavailable_run,
+                }[str(run_id)]
+
+            def compare(self, _old, _new):
+                return "identical"
+
+            def pr_comments(self, _number):
+                return []
+
+        def verify(_api, run, family, _main_sha, _root):
+            if family == "play":
+                raise CandidateArtifactUnavailable("candidate artifact is missing or expired")
+            return (
+                run,
+                publication_id(run),
+                f"https://github.com/{REPOSITORY}/actions/runs/{run['id']}",
+            )
+
+        api = FakeGitHub()
+        diagnostics = io.StringIO()
+        with (
+            patch(
+                "smoke_test_image_adoption.prepare_branch",
+                return_value=(main_sha, base, base, None, None),
+            ),
+            patch("smoke_test_image_adoption.verify_eligible_run", side_effect=verify),
+            patch("smoke_test_image_adoption.resolve_pinned_run", return_value=old_fake_backend),
+            patch("smoke_test_image_adoption.is_newer_run", return_value=True),
+            patch("smoke_test_image_adoption.sys.stderr", diagnostics),
+        ):
+            message, has_updates = reconcile(
+                api,
+                ROOT,
+                (trigger_run["id"], trigger_run["run_attempt"], trigger_run),
+                False,
+            )
+
+        self.assertTrue(has_updates)
+        self.assertIn("fake-backend:", message)
+        self.assertNotIn("play:", message)
+        self.assertEqual(image_pin(base, "play"), publication_id(old_play))
+        self.assertIn(
+            f"play catch-up: publication artifact for run {unavailable_run['id']} "
+            f"attempt {unavailable_run['run_attempt']} is unavailable",
+            diagnostics.getvalue(),
+        )
+
+    def test_unavailable_trigger_publication_is_not_skipped(self):
+        main_sha = run_process(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
+        trigger_run = run_record(sha=main_sha)
+        current = pin_files()
+
+        class FakeGitHub:
+            def main_sha(self):
+                return main_sha
+
+            def run_attempt(self, _run_id, _attempt):
+                return trigger_run
+
+        unavailable = CandidateArtifactUnavailable("candidate artifact is missing or expired")
+        with (
+            patch(
+                "smoke_test_image_adoption.prepare_branch",
+                return_value=(main_sha, current, current, None, None),
+            ),
+            patch(
+                "smoke_test_image_adoption.verify_eligible_run",
+                side_effect=unavailable,
+            ),
+            self.assertRaises(CandidateArtifactUnavailable),
+        ):
+            reconcile(
+                FakeGitHub(),
+                ROOT,
+                (trigger_run["id"], trigger_run["run_attempt"], trigger_run),
+                False,
+            )
 
     def test_python_subprocesses_do_not_open_windows(self):
         with patch.object(sys, "platform", "win32"), patch.object(

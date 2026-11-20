@@ -128,6 +128,10 @@ class NotFound(AdoptionError):
     """A requested GitHub resource does not exist."""
 
 
+class CandidateArtifactUnavailable(AdoptionError):
+    """A publisher candidate artifact is missing or expired."""
+
+
 def no_window_flags():
     if sys.platform == "win32":
         return getattr(subprocess, "CREATE_NO_WINDOW", 0x08000000)
@@ -253,6 +257,10 @@ class GitHub:
             with self.opener.open(request, timeout=30) as response:
                 payload = response.read(MAX_CANDIDATE_SIZE * 3 + 1)
         except HTTPError as error:
+            if error.code in (404, 410):
+                raise CandidateArtifactUnavailable(
+                    "candidate artifact is missing or expired"
+                ) from None
             raise AdoptionError(f"artifact download failed with HTTP {error.code}") from None
         except (URLError, TimeoutError) as error:
             raise AdoptionError(f"artifact download failed: {type(error).__name__}") from None
@@ -817,14 +825,28 @@ def verify_eligible_run(api, run, family_name, main_sha, repo_root):
         raise AdoptionError("publisher source commit is not on trusted main")
     verify_required_jobs(api.run_jobs(run_id, attempt), family_name)
     artifact_name = f"smoke-test-publication-{family_name}-{attempt}"
-    artifacts = [
+    named_artifacts = [
         artifact
         for artifact in api.run_artifacts(run_id)
         if artifact.get("name") == artifact_name
-        and not artifact.get("expired")
-        and artifact.get("workflow_run", {}).get("id") == run_id
-        and artifact.get("workflow_run", {}).get("head_sha") == exact_run["head_sha"]
     ]
+    if not named_artifacts:
+        raise CandidateArtifactUnavailable(
+            "exact publisher run/attempt has no unique unexpired candidate artifact"
+        )
+    if any(
+        artifact.get("workflow_run", {}).get("id") != run_id
+        or artifact.get("workflow_run", {}).get("head_sha") != exact_run["head_sha"]
+        for artifact in named_artifacts
+    ):
+        raise AdoptionError(
+            "exact publisher run/attempt has no unique unexpired candidate artifact"
+        )
+    artifacts = [artifact for artifact in named_artifacts if not artifact.get("expired")]
+    if not artifacts:
+        raise CandidateArtifactUnavailable(
+            "exact publisher run/attempt has no unique unexpired candidate artifact"
+        )
     if len(artifacts) != 1:
         raise AdoptionError(
             "exact publisher run/attempt has no unique unexpired candidate artifact"
@@ -1289,9 +1311,19 @@ def reconcile(api, root, trigger, apply):
         if run_key in verified_runs:
             exact_run, tag, run_url = verified_runs[run_key]
         else:
-            exact_run, tag, run_url = verify_eligible_run(
-                api, latest_attempt, family_name, main_sha, root
-            )
+            try:
+                exact_run, tag, run_url = verify_eligible_run(
+                    api, latest_attempt, family_name, main_sha, root
+                )
+            except CandidateArtifactUnavailable:
+                print(
+                    f"Skipping optional {family_name} catch-up: publication artifact "
+                    f"for run {latest_attempt['id']} attempt "
+                    f"{latest_attempt['run_attempt']} is unavailable; leaving its "
+                    "selected pin unchanged.",
+                    file=sys.stderr,
+                )
+                continue
         updated, _ = update_pin(current_files, family_name, tag)
         current_files = updated
         verified[family_name] = (
