@@ -6,9 +6,11 @@ import unittest
 from unittest.mock import patch
 
 from smoke_test_image_adoption import (
+    APP_LOGIN,
     BOT_EMAIL,
     BOT_NAME,
     FAMILIES,
+    GitHistory,
     PIN_FILES,
     PR_BODY,
     REPOSITORY,
@@ -258,6 +260,45 @@ class AdoptionTest(unittest.TestCase):
             latest_successful_run(FakeGitHub(), "fake-backend", "c" * 40),
             newer,
         )
+
+    def test_latest_run_selection_uses_git_history_without_per_source_api_comparisons(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory) / "checkout"
+            remote = Path(directory) / "remote.git"
+            main_sha = initialize_remote(root, remote)
+            source_shas = [main_sha]
+            for index in range(40):
+                (root / "history.txt").write_text(f"{index}\n", encoding="utf-8")
+                run_process(["git", "add", "history.txt"], cwd=root)
+                run_process(["git", "commit", "-m", f"history {index}"], cwd=root)
+                source_shas.append(
+                    run_process(["git", "rev-parse", "HEAD"], cwd=root).strip()
+                )
+            main_sha = source_shas[-1]
+            runs = [
+                run_record(run_id=2000 + index, sha=sha)
+                for index, sha in enumerate(source_shas)
+            ]
+            for index, run in enumerate(runs):
+                run["created_at"] = f"2026-11-20T12:{59 - index:02}:00Z"
+
+            class FakeGitHub:
+                compare_calls = 0
+
+                def workflow_runs(self, _family):
+                    return runs
+
+                def compare(self, _base, _head):
+                    self.compare_calls += 1
+                    raise AssertionError("historical comparisons must use local Git history")
+
+            api = FakeGitHub()
+            latest = latest_successful_run(
+                api, "fake-backend", main_sha, GitHistory(root).compare
+            )
+
+        self.assertEqual(latest["head_sha"], main_sha)
+        self.assertEqual(api.compare_calls, 0)
 
     def test_required_jobs_fail_closed_for_partial_or_cancelled_runs(self):
         verify_required_jobs(
@@ -513,7 +554,9 @@ class AdoptionTest(unittest.TestCase):
                     return self.comments
 
                 def create_pr_comment(self, _number, body):
-                    self.comments.append({"body": body, "user": {"login": BOT_NAME}})
+                    self.comments.append(
+                        {"body": body, "user": {"login": APP_LOGIN, "type": "Bot"}}
+                    )
 
                 comments = []
 
@@ -689,7 +732,12 @@ class AdoptionTest(unittest.TestCase):
                     f"https://github.com/{REPOSITORY}/actions/runs/"
                     f"{newer['id']}/attempts/{newer['run_attempt']}",
                 )
-                return [{"body": publication_comment(update), "user": {"login": BOT_NAME}}]
+                return [
+                    {
+                        "body": publication_comment(update),
+                        "user": {"login": APP_LOGIN, "type": "Bot"},
+                    }
+                ]
 
         pr = {"number": 42, "base": {"ref": "main"}}
         head = run_process(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
@@ -740,7 +788,9 @@ class AdoptionTest(unittest.TestCase):
 
             def create_pr_comment(self, _number, body):
                 pr["body"] = "Human edit at final write boundary."
-                self.comments.append({"body": body, "user": {"login": BOT_NAME}})
+                self.comments.append(
+                    {"body": body, "user": {"login": APP_LOGIN, "type": "Bot"}}
+                )
 
         api = FakeGitHub()
         post_publication_comments(api, pr, [update])
@@ -763,11 +813,73 @@ class AdoptionTest(unittest.TestCase):
             "https://github.com/open-telemetry/opentelemetry-java-instrumentation/"
             "actions/runs/123456/attempts/1",
         )
-        with self.assertRaisesRegex(AdoptionError, "non-bot PR comment"):
-            missing_publication_comments(
-                [{"body": publication_comment(update), "user": {"login": "human"}}],
-                [update],
+        for author in (
+            {"login": "human", "type": "User"},
+            {"login": "another-app[bot]", "type": "Bot"},
+            {"login": APP_LOGIN, "type": "User"},
+        ):
+            with self.subTest(author=author), self.assertRaisesRegex(
+                AdoptionError, "non-bot PR comment"
+            ):
+                missing_publication_comments(
+                    [{"body": publication_comment(update), "user": author}],
+                    [update],
+                )
+
+    def test_selected_cross_midnight_pin_skips_expired_artifact_and_other_family_updates(self):
+        current = pin_files()
+        selected_version = "20261120.123456000001"
+        current, _ = update_pin(current, "fake-backend", selected_version)
+        main_sha = run_process(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
+        selected = run_record(run_id=123456, sha=main_sha)
+        selected["run_started_at"] = "2026-11-19T23:59:30Z"
+        selected["completed_at"] = "2026-11-20T00:02:00Z"
+        next_family = run_record("play", run_id=234567, sha=main_sha)
+        verified_families = []
+
+        class FakeGitHub:
+            def main_sha(self):
+                return main_sha
+
+            def workflow_runs(self, family):
+                if family == "fake-backend":
+                    return [selected]
+                if family == "play":
+                    return [next_family]
+                return []
+
+            def run_attempt(self, run_id, _attempt):
+                return {str(selected["id"]): selected, str(next_family["id"]): next_family}[
+                    str(run_id)
+                ]
+
+            def compare(self, _base, _head):
+                return "ahead"
+
+        def verify(_api, run, family, _main_sha, _root):
+            verified_families.append(family)
+            if family == "fake-backend":
+                raise AssertionError("an already selected pin must not need its artifact")
+            return (
+                run,
+                publication_id(run),
+                f"https://github.com/{REPOSITORY}/actions/runs/{run['id']}",
             )
+
+        old_run = run_record(run_id=100, sha="a" * 40)
+        with (
+            patch(
+                "smoke_test_image_adoption.prepare_branch",
+                return_value=(main_sha, current, current, None, None),
+            ),
+            patch("smoke_test_image_adoption.verify_eligible_run", side_effect=verify),
+            patch("smoke_test_image_adoption.resolve_pinned_run", return_value=old_run),
+        ):
+            message, has_updates = reconcile(FakeGitHub(), ROOT, None, False)
+
+        self.assertEqual(verified_families, ["play"])
+        self.assertTrue(has_updates)
+        self.assertIn("play:", message)
 
     def test_python_subprocesses_do_not_open_windows(self):
         with patch.object(sys, "platform", "win32"), patch.object(

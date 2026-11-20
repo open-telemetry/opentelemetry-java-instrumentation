@@ -4,6 +4,7 @@
 import argparse
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from functools import lru_cache
 import io
 import json
 import os
@@ -23,6 +24,7 @@ BASE_BRANCH = "main"
 ADOPTION_BRANCH = "otelbot/smoke-test-image-versions"
 BOT_NAME = "otelbot"
 BOT_EMAIL = "197425009+otelbot@users.noreply.github.com"
+APP_LOGIN = "otelbot-java-instrumentation[bot]"
 TITLE = "Update smoke-test image versions"
 MERGE_TITLE = "Sync smoke-test image adoption branch with main"
 PR_BODY = (
@@ -611,8 +613,8 @@ def missing_publication_comments(comments, updates):
                 )
             missing.append((update, body))
             continue
-        author = (comments_by_body[body].get("user") or {}).get("login")
-        if author not in (BOT_NAME, f"{BOT_NAME}[bot]"):
+        author = comments_by_body[body].get("user") or {}
+        if author.get("login") != APP_LOGIN or author.get("type") != "Bot":
             raise AdoptionError(
                 "publication identity already appears in a non-bot PR comment"
             )
@@ -722,7 +724,9 @@ def run_is_from_family(run, family_name):
     )
 
 
-def latest_successful_run(api, family_name, main_sha):
+def latest_successful_run(api, family_name, main_sha, compare=None):
+    if compare is None:
+        compare = api.compare
     runs = [
         run
         for run in api.workflow_runs(family_name)
@@ -736,12 +740,12 @@ def latest_successful_run(api, family_name, main_sha):
             if run_order(run) > run_order(winner):
                 winner = run
             continue
-        status = api.compare(winner["head_sha"], run["head_sha"])
+        status = compare(winner["head_sha"], run["head_sha"])
         if status == "ahead":
             winner = run
         elif status == "diverged":
             raise AdoptionError("successful publication runs do not share a trusted source lineage")
-    if api.compare(winner["head_sha"], main_sha) not in ("ahead", "identical"):
+    if compare(winner["head_sha"], main_sha) not in ("ahead", "identical"):
         raise AdoptionError("latest publication source is not an ancestor of trusted main")
     return winner
 
@@ -859,6 +863,41 @@ def validate_manual_run(api, run_id, attempt, main_sha, repo_root, current_files
 
 def local_git(args, root, env=None):
     return run_process(["git", *args], cwd=root, env=env)
+
+
+class GitHistory:
+    def __init__(self, root):
+        self.root = root
+        self.compare = lru_cache(maxsize=4096)(self._compare)
+
+    def _compare(self, base, head):
+        if (
+            not isinstance(base, str)
+            or not isinstance(head, str)
+            or not SHA_PATTERN.fullmatch(base)
+            or not SHA_PATTERN.fullmatch(head)
+        ):
+            raise AdoptionError("publication source has an invalid commit identifier")
+        if base == head:
+            return "identical"
+        if self._is_ancestor(base, head):
+            return "ahead"
+        if self._is_ancestor(head, base):
+            return "behind"
+        return "diverged"
+
+    def _is_ancestor(self, base, head):
+        result = subprocess.run(
+            ["git", "merge-base", "--is-ancestor", base, head],
+            cwd=self.root,
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+            creationflags=no_window_flags(),
+        )
+        if result.returncode not in (0, 1):
+            raise AdoptionError("could not compare commits in trusted Git history")
+        return result.returncode == 0
 
 
 def read_pin_files(root, ref):
@@ -1115,13 +1154,14 @@ def reconcile(api, root, trigger, apply):
             api, trigger_run, family_name, main_sha, root
         )
 
+    history = GitHistory(root)
     verified = {}
     for family_name in FAMILIES:
         selected = {
             family: image_pin(current_files, family)
             for family in FAMILIES
         }
-        latest = latest_successful_run(api, family_name, main_sha)
+        latest = latest_successful_run(api, family_name, main_sha, history.compare)
         if latest is None:
             continue
         try:
@@ -1137,7 +1177,9 @@ def reconcile(api, root, trigger, apply):
             )
         ).astimezone(timezone.utc)
         legacy_tag = f"{started:%Y%m%d}.{latest_attempt['id']}"
-        if selected[family_name] in (tag, legacy_tag):
+        if selected[family_name] == legacy_tag or publication_id_matches(
+            latest_attempt, selected[family_name]
+        ):
             continue
         run_key = (str(latest_attempt["id"]), int(latest_attempt["run_attempt"]))
         if run_key in verified_runs:
