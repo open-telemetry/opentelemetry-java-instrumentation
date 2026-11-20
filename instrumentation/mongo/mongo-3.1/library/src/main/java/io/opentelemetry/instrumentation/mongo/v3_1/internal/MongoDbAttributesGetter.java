@@ -71,6 +71,7 @@ class MongoDbAttributesGetter
   @Nullable private final MongoConnectionPeerResolver connectionPeerResolver;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
+  // visible for testing
   MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
     this(querySanitizationEnabled, maxNormalizedQueryLength, null);
   }
@@ -271,6 +272,7 @@ class MongoDbAttributesGetter
     return value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE ? (int) value : null;
   }
 
+  // visible for testing
   String sanitizeQuery(BsonDocument command) {
     StringBuilderWriter stringWriter = new StringBuilderWriter(128);
     // jsonWriterSettings is generally not null but could be due to security manager or unknown

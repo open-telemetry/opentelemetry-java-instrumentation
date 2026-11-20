@@ -16,6 +16,7 @@ public class OpenSearchConfiguredHost {
   private static final int NO_PORT = -1;
   private static final int INVALID = -2;
 
+  // only used by tests
   @Nullable
   public static DbServerTarget parse(@Nullable String host) {
     return parse(host, "");

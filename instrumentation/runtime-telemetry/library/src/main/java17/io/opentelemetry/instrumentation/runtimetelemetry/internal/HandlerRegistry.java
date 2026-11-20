@@ -71,6 +71,7 @@ final class HandlerRegistry {
         availableEventNames);
   }
 
+  // visible for testing
   static List<RecordedEventHandler> getHandlers(
       Meter meter,
       Predicate<String> metricNamePredicate,

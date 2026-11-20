@@ -102,6 +102,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
         new StringMatcher("io.opentelemetry.javaagent", StringMatcher.Mode.STARTS_WITH));
   }
 
+  // visible for testing
   InstrumentationModuleClassLoader(
       @Nullable ClassLoader instrumentedCl,
       ClassLoader agentOrExtensionCl,
@@ -406,6 +407,7 @@ public class InstrumentationModuleClassLoader extends ClassLoader {
    * @param name the name of the package find
    * @return the found package or null if it was not found.
    */
+  // visible for testing
   @SuppressWarnings({"deprecation", "InvalidLink"})
   Package findPackage(String name) {
     try {

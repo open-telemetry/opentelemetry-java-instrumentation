@@ -106,6 +106,7 @@ public class SpymemcachedSingletons {
     return null;
   }
 
+  // visible for testing
   @Nullable
   static DbServerTarget createServerTarget(@Nullable List<InetSocketAddress> nodes) {
     if (nodes == null) {

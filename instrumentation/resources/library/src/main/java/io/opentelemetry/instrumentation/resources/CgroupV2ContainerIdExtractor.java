@@ -24,6 +24,7 @@ class CgroupV2ContainerIdExtractor {
   private static final Logger logger =
       Logger.getLogger(CgroupV2ContainerIdExtractor.class.getName());
 
+  // visible for testing
   static final Path V2_CGROUP_PATH = Paths.get("/proc/self/mountinfo");
   private static final Pattern CONTAINER_ID_RE =
       Pattern.compile("^\\d+ \\d+ \\d+:\\d+ [^ ]*/containers/[^ ]*?([0-9a-f]{64})");

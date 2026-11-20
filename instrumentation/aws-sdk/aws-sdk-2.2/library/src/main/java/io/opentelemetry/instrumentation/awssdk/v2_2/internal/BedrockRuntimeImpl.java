@@ -1209,6 +1209,7 @@ public final class BedrockRuntimeImpl {
     }
   }
 
+  // visible for testing
   abstract static class BedrockRuntimeStreamResponseHandler<R, S>
       implements EventStreamResponseHandler<R, S>, ImplicitContextKeyed {
     @Nullable
@@ -1230,6 +1231,7 @@ public final class BedrockRuntimeImpl {
     List<String> stopReasons;
     TokenUsage usage;
 
+    // visible for testing
     BedrockRuntimeStreamResponseHandler(EventStreamResponseHandler<R, S> delegate) {
       this.delegate = delegate;
     }
