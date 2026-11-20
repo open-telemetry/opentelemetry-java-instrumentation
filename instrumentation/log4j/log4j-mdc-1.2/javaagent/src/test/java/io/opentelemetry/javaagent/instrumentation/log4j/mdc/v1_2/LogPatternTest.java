@@ -1,0 +1,153 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
+
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.Base64;
+import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
+import org.apache.log4j.PatternLayout;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+class LogPatternTest {
+  @RegisterExtension
+  static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  private static final boolean ENABLED =
+      Boolean.parseBoolean(
+          System.getProperty(
+              "otel.instrumentation.logging.pattern-injection.enabled",
+              System.getenv("OTEL_INSTRUMENTATION_LOGGING_PATTERN_INJECTION_ENABLED")));
+  private static final String TRACE =
+      System.getProperty("otel.instrumentation.common.logging.trace-id-key", "trace_id");
+  private static final String SPAN =
+      System.getProperty("otel.instrumentation.common.logging.span-id-key", "span_id");
+
+  @Test
+  void rendersCorrelationAndPreservesApplicationValues() {
+    PatternLayout layout = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] prefix: %m%n");
+    PatternLayout wholeMdc = new PatternLayout("%d{yyyy-MM-dd HH:mm:ss} %X %m%n");
+    if (ENABLED && testLatestDeps()) {
+      assertThat(wholeMdc.getConversionPattern()).isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %X %m%n");
+    }
+    PatternLayout control =
+        new PatternLayout(
+            "%X{otel.pattern-injection.log4j1.trace.app} service.name=%X{service.name}");
+    String pattern = layout.getConversionPattern();
+    layout.setConversionPattern(pattern);
+    layout.activateOptions();
+    assertThat(layout.getConversionPattern()).isEqualTo(pattern);
+    Logger logger = Logger.getLogger("pattern-test");
+    ListAppender appender = new ListAppender();
+    boolean additive = logger.getAdditivity();
+    logger.setAdditivity(false);
+    logger.addAppender(appender);
+    ListAppender.clearEvents();
+    try {
+      logger.info("outside");
+      String outside = layout.format(ListAppender.getEvents().get(0));
+      if (ENABLED) {
+        assertThat(layout.getConversionPattern())
+            .startsWith("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] ")
+            .endsWith(" prefix: %m%n");
+        assertThat(layout.getConversionPattern()).doesNotContain("service.name");
+        assertThat(outside).contains(TRACE + "= ", SPAN + "= prefix: outside");
+      } else {
+        assertThat(layout.getConversionPattern())
+            .isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] prefix: %m%n");
+      }
+      testing.runWithSpan(
+          "log",
+          () -> {
+            logger.info("inside");
+            if (ENABLED) {
+              assertThat(wholeMdc.format(ListAppender.getEvents().get(1)))
+                  .contains(
+                      Span.current().getSpanContext().getTraceId(),
+                      Span.current().getSpanContext().getSpanId());
+              assertThat(layout.format(ListAppender.getEvents().get(1)))
+                  .contains(
+                      TRACE + "=" + Span.current().getSpanContext().getTraceId(),
+                      SPAN + "=" + Span.current().getSpanContext().getSpanId());
+            }
+          });
+      MDC.put("otel.pattern-injection.log4j1.trace.app", "application-placeholder");
+      MDC.put("service.name", "application-service");
+      MDC.put(SPAN, "application-span");
+      testing.runWithSpan("override", () -> logger.info("application"));
+      assertThat(control.format(ListAppender.getEvents().get(2)))
+          .containsOnlyOnce("application-placeholder")
+          .contains("service.name=application-service");
+      if (ENABLED) {
+        assertThat(layout.format(ListAppender.getEvents().get(2)))
+            .contains(SPAN + "=application-span")
+            .doesNotContain("service.name=");
+      }
+    } finally {
+      MDC.remove("otel.pattern-injection.log4j1.trace.app");
+      MDC.remove("service.name");
+      MDC.remove(SPAN);
+      logger.removeAppender(appender);
+      logger.setAdditivity(additive);
+      ListAppender.clearEvents();
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preservesExactAliasKeys(boolean withMessage) {
+    String traceAlias =
+        "otel.pattern-injection.log4j1.trace."
+            + Base64.getUrlEncoder().withoutPadding().encodeToString(TRACE.getBytes(UTF_8));
+    String spanAlias =
+        "otel.pattern-injection.log4j1.span."
+            + Base64.getUrlEncoder().withoutPadding().encodeToString(SPAN.getBytes(UTF_8));
+    String pattern = "%X{" + traceAlias + "} %X{" + spanAlias + "}" + (withMessage ? " %m%n" : "");
+    PatternLayout layout = new PatternLayout(pattern);
+    layout.setConversionPattern(layout.getConversionPattern());
+    assertThat(layout.getConversionPattern()).isEqualTo(pattern);
+    Logger logger = Logger.getLogger("alias-regression");
+    ListAppender appender = new ListAppender();
+    boolean additive = logger.getAdditivity();
+    logger.setAdditivity(false);
+    logger.addAppender(appender);
+    ListAppender.clearEvents();
+    try {
+      logger.info("initialize");
+      MDC.put(traceAlias, "application-trace-alias");
+      MDC.put(spanAlias, "application-span-alias");
+      testing.runWithSpan(
+          "alias",
+          () -> {
+            logger.info("message");
+            String rendered = layout.format(ListAppender.getEvents().get(1));
+            assertThat(rendered)
+                .containsOnlyOnce("application-trace-alias")
+                .containsOnlyOnce("application-span-alias");
+            if (ENABLED && withMessage) {
+              assertThat(rendered)
+                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+            }
+          });
+    } finally {
+      MDC.remove(traceAlias);
+      MDC.remove(spanAlias);
+      logger.removeAppender(appender);
+      logger.setAdditivity(additive);
+      ListAppender.clearEvents();
+    }
+  }
+}

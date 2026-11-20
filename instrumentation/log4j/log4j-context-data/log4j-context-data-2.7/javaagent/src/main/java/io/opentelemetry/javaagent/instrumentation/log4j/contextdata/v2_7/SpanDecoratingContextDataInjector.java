@@ -58,9 +58,17 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
 
     StringMap newContextData = newContextData(contextData);
     if (currentContext.isValid()) {
-      newContextData.putValue(TRACE_ID_KEY, currentContext.getTraceId());
-      newContextData.putValue(SPAN_ID_KEY, currentContext.getSpanId());
-      newContextData.putValue(TRACE_FLAGS_KEY, currentContext.getTraceFlags().asHex());
+      // Only application MDC can override span identifiers; the copy also contains resource
+      // attributes.
+      if (!contextData.containsKey(TRACE_ID_KEY)) {
+        newContextData.putValue(TRACE_ID_KEY, currentContext.getTraceId());
+      }
+      if (!contextData.containsKey(SPAN_ID_KEY)) {
+        newContextData.putValue(SPAN_ID_KEY, currentContext.getSpanId());
+      }
+      if (!contextData.containsKey(TRACE_FLAGS_KEY)) {
+        newContextData.putValue(TRACE_FLAGS_KEY, currentContext.getTraceFlags().asHex());
+      }
     }
 
     if (addBaggage) {
@@ -80,7 +88,12 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
 
   private static StringMap newContextData(StringMap contextData) {
     StringMap newContextData = new SortedArrayStringMap(contextData);
-    newContextData.putAll(staticContextData);
+    for (Map.Entry<String, String> entry :
+        ConfiguredResourceAttributesHolder.getResourceAttributes().entrySet()) {
+      if (!newContextData.containsKey(entry.getKey())) {
+        newContextData.putValue(entry.getKey(), entry.getValue());
+      }
+    }
     return newContextData;
   }
 

@@ -240,6 +240,10 @@ testing.suites {
       jvmArgs("-Dotel.service.name=mdc-export-test")
     }
 
+    register("PatternInjection") {
+      jvmArgs("-Dotel.instrumentation.logging.pattern-injection.enabled=true")
+    }
+
     register("LoggingKeys") {
       jvmArgs("-Dotel.instrumentation.common.logging.trace-id-key=custom_trace_id")
       jvmArgs("-Dotel.instrumentation.common.logging.span-id-key=custom_span_id")

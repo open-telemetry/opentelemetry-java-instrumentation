@@ -70,13 +70,13 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
     // checking baggage.isEmpty() first to avoid initializing Configuration when possible
     boolean addBaggage = !baggage.isEmpty() && Configuration.baggageEnabled;
     if (!spanContext.isValid() && !addBaggage) {
-      return staticContextData;
+      return preserveApplicationValues(staticContextData);
     }
 
     ContextDataKeys contextDataKeys = Configuration.contextDataKeys;
     if (ThreadContext.containsKey(contextDataKeys.getTraceIdKey())) {
       // Assume already instrumented event if traceId is present.
-      return staticContextData;
+      return preserveApplicationValues(staticContextData);
     }
 
     Map<String, String> contextData = new HashMap<>(staticContextData);
@@ -93,7 +93,23 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
       }
     }
 
-    return contextData;
+    return preserveApplicationValues(contextData);
+  }
+
+  private static Map<String, String> preserveApplicationValues(Map<String, String> data) {
+    if (data.isEmpty() || ThreadContext.isEmpty()) {
+      return data;
+    }
+    Map<String, String> result = data;
+    for (String key : data.keySet()) {
+      if (ThreadContext.containsKey(key)) {
+        if (result == data) {
+          result = new HashMap<>(data);
+        }
+        result.put(key, ThreadContext.get(key));
+      }
+    }
+    return result;
   }
 
   private static class Configuration {
