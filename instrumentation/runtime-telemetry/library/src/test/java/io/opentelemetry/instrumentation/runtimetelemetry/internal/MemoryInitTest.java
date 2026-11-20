@@ -64,18 +64,17 @@ class MemoryInitTest {
                 .hasName("jvm.memory.init")
                 .hasDescription("Measure of initial memory requested.")
                 .hasUnit("By")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(11)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "heap"),
-                            point ->
-                                point
-                                    .hasValue(15)
-                                    .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
-                                    .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
+                .hasLongSumSatisfying(sum ->
+                    sum.hasPointsSatisfying(
+                        point ->
+                            point
+                                .hasValue(11)
+                                .hasAttribute(JVM_MEMORY_POOL_NAME, "heap_pool")
+                                .hasAttribute(JVM_MEMORY_TYPE, "heap"),
+                        point ->
+                            point
+                                .hasValue(15)
+                                .hasAttribute(JVM_MEMORY_POOL_NAME, "non_heap_pool")
+                                .hasAttribute(JVM_MEMORY_TYPE, "non_heap"))));
   }
 }

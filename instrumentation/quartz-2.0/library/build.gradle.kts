@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
@@ -9,16 +11,14 @@ dependencies {
   testImplementation(project(":instrumentation:quartz-2.0:testing"))
 }
 
-tasks {
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.quartz.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.quartz.experimental-span-attributes=true")
-  }
-
-  check {
-    dependsOn(testExperimental)
+testing.suites {
+  executions("test") {
+    register("Experimental") {
+      systemProperty("test.captureExperimentalSpanAttributes", "true")
+      systemProperty(
+        "metadataConfig",
+        "QuartzTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)"
+      )
+    }
   }
 }

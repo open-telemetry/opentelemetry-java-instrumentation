@@ -38,10 +38,9 @@ class ClassLoadingTest {
   void instrumentClassloaderWithoutAgentClasses() throws Exception {
     URLClassLoader loader = new URLClassLoader(classpath, null);
 
-    assertThatThrownBy(
-            () ->
-                loader.loadClass(
-                    "io.opentelemetry.javaagent.instrumentation.trace_annotation.TraceAdvice"))
+    assertThatThrownBy(() ->
+            loader.loadClass(
+                "io.opentelemetry.javaagent.instrumentation.trace_annotation.TraceAdvice"))
         .isInstanceOf(ClassNotFoundException.class);
 
     Class<?> instrumentedClass = loader.loadClass(ClassToInstrument.class.getName());

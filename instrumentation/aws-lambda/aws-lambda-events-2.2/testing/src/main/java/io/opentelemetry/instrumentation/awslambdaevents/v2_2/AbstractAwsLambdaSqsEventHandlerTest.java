@@ -5,17 +5,15 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
@@ -89,32 +87,31 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
     handler().handleRequest(event, context);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333")),
-                    span ->
-                        span.hasName("process queue1")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
-                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .satisfiesExactly(
-                                            link(
-                                                "53995c3f42cd8ad8",
-                                                Attributes.of(
-                                                    MESSAGING_MESSAGE_ID, "message1"))))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("my_function")
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333")),
+                span ->
+                    span.hasName("process queue1")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParentSpanId(trace.getSpan(0).getSpanId())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "queue1"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .satisfiesExactly(
+                                    link(
+                                        "53995c3f42cd8ad8",
+                                        Attributes.of(MESSAGING_MESSAGE_ID, "message1")),
+                                    invalidLink(
+                                        Attributes.of(MESSAGING_MESSAGE_ID, "message2"))))));
     assertMetrics(testing(), instrumentationName(), "queue1", 1, 2, null);
   }
 
@@ -138,48 +135,54 @@ public abstract class AbstractAwsLambdaSqsEventHandlerTest {
     handler().handleRequest(event, context);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333")),
-                    span ->
-                        span.hasName("process")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParentSpanId(trace.getSpan(0).getSpanId())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                equalTo(MESSAGING_DESTINATION_NAME, null),
-                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                                equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .satisfiesExactly(
-                                            link(
-                                                "53995c3f42cd8ad8",
-                                                Attributes.of(
-                                                    MESSAGING_MESSAGE_ID,
-                                                    "message1",
-                                                    MESSAGING_DESTINATION_NAME,
-                                                    "queue1")),
-                                            link(
-                                                "53995c3f42cd8ad9",
-                                                Attributes.of(
-                                                    MESSAGING_MESSAGE_ID,
-                                                    "message2",
-                                                    MESSAGING_DESTINATION_NAME,
-                                                    "queue2"))))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("my_function")
+                        .hasKind(SpanKind.SERVER)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("faas.invocation.id"), "1-22-333")),
+                span ->
+                    span.hasName("process")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParentSpanId(trace.getSpan(0).getSpanId())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                            equalTo(MESSAGING_DESTINATION_NAME, null),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(2)))
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .satisfiesExactly(
+                                    link(
+                                        "53995c3f42cd8ad8",
+                                        Attributes.of(
+                                            MESSAGING_MESSAGE_ID,
+                                            "message1",
+                                            MESSAGING_DESTINATION_NAME,
+                                            "queue1")),
+                                    link(
+                                        "53995c3f42cd8ad9",
+                                        Attributes.of(
+                                            MESSAGING_MESSAGE_ID,
+                                            "message2",
+                                            MESSAGING_DESTINATION_NAME,
+                                            "queue2"))))));
   }
 
   private static Consumer<LinkData> link(String spanId, Attributes attributes) {
     return linkData -> {
+      assertThat(linkData.getSpanContext().isValid()).isTrue();
       assertThat(linkData.getSpanContext().getTraceId()).isEqualTo(TRACE_ID);
       assertThat(linkData.getSpanContext().getSpanId()).isEqualTo(spanId);
+      assertThat(linkData.getAttributes()).isEqualTo(attributes);
+    };
+  }
+
+  private static Consumer<LinkData> invalidLink(Attributes attributes) {
+    return linkData -> {
+      assertThat(linkData.getSpanContext().isValid()).isFalse();
       assertThat(linkData.getAttributes()).isEqualTo(attributes);
     };
   }

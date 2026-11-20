@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.concurrent.ExecutorService;
@@ -26,9 +27,26 @@ import net.spy.memcached.ops.KeyedOperation;
 import net.spy.memcached.ops.Operation;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SpymemcachedRequestTest {
+
+  @ParameterizedTest
+  @CsvSource({
+    "asyncGet, get, get",
+    "asyncGets, gets, gets",
+    "asyncCAS, cas, cas",
+    "asyncGetBulk, getBulk, get",
+    "asyncGetAndTouch, getAndTouch, gat"
+  })
+  void normalizesOperationNames(String method, String operation, String stableOperation) {
+    SpymemcachedRequest request =
+        SpymemcachedRequest.create(mock(MemcachedConnection.class), method);
+
+    assertThat(request.getOperationName()).isEqualTo(operation);
+    assertThat(request.getStableOperationName()).isEqualTo(stableOperation);
+  }
 
   @Test
   void requestCarriesTheTargetItsConnectionWasCreatedFor() {
@@ -65,15 +83,16 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void nonInetHandlingNodeIsIgnored() {
+  void unsupportedHandlingNodeIsPreserved() {
     MemcachedConnection connection = mock(MemcachedConnection.class);
     SpymemcachedRequest request = SpymemcachedRequest.create(connection, "asyncGet");
     MemcachedNode node = mock(MemcachedNode.class);
-    when(node.getSocketAddress()).thenReturn(mock(SocketAddress.class));
+    SocketAddress peer = mock(SocketAddress.class);
+    when(node.getSocketAddress()).thenReturn(peer);
 
     request.setHandlingNode(node);
 
-    assertThat(request.getHandlingNodeAddress()).isNull();
+    assertThat(request.getHandlingNodeAddress()).isSameAs(peer);
   }
 
   @Test
@@ -141,17 +160,15 @@ class SpymemcachedRequestTest {
     ExecutorService ioThread = Executors.newSingleThreadExecutor();
     try {
       when(node.getSocketAddress())
-          .thenAnswer(
-              invocation -> {
-                ioThread
-                    .submit(
-                        () -> {
-                          request.suppressHandlingNodeAddress();
-                          assertThat(request.getHandlingNodeAddress()).isNull();
-                        })
-                    .get(10, SECONDS);
-                return address;
-              });
+          .thenAnswer(invocation -> {
+            ioThread
+                .submit(() -> {
+                  request.suppressHandlingNodeAddress();
+                  assertThat(request.getHandlingNodeAddress()).isNull();
+                })
+                .get(10, SECONDS);
+            return address;
+          });
 
       request.setHandlingNode(node);
     } finally {
@@ -276,16 +293,22 @@ class SpymemcachedRequestTest {
   }
 
   @Test
-  void retryWithUnsupportedAddressClearsPreviousAddress() {
+  void retryWithUnsupportedAddressPreservesRawPeer() {
     SpymemcachedRequest request =
         SpymemcachedRequest.create(mock(MemcachedConnection.class), "asyncGet");
-    request.setHandlingNode(memcachedNode("first", 11211));
+    InetSocketAddress firstPeer = new InetSocketAddress(InetAddress.getLoopbackAddress(), 11211);
+    MemcachedNode firstNode = mock(MemcachedNode.class);
+    when(firstNode.getSocketAddress()).thenReturn(firstPeer);
+    request.setHandlingNode(firstNode);
+    assertThat(request.getHandlingNodeAddress()).isSameAs(firstPeer);
+
     MemcachedNode unsupportedNode = mock(MemcachedNode.class);
-    when(unsupportedNode.getSocketAddress()).thenReturn(mock(SocketAddress.class));
+    SocketAddress unsupportedPeer = mock(SocketAddress.class);
+    when(unsupportedNode.getSocketAddress()).thenReturn(unsupportedPeer);
 
     request.setRetryHandlingNode(unsupportedNode);
 
-    assertThat(request.getHandlingNodeAddress()).isNull();
+    assertThat(request.getHandlingNodeAddress()).isSameAs(unsupportedPeer);
   }
 
   @Test

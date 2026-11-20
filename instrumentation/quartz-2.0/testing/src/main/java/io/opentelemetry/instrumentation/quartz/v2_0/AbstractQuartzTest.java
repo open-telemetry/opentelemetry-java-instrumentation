@@ -36,10 +36,14 @@ import org.quartz.impl.StdSchedulerFactory;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public abstract class AbstractQuartzTest {
 
-  protected static final boolean EXPERIMENTAL_ATTRIBUTES =
+  private static final boolean EXPERIMENTAL_ATTRIBUTES =
       Boolean.getBoolean("otel.instrumentation.quartz.experimental-span-attributes");
 
   private Scheduler scheduler;
+
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
 
   protected abstract void configureScheduler(Scheduler scheduler);
 
@@ -66,24 +70,20 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("jobs.test")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CODE_FUNCTION_NAME, SuccessfulJob.class.getName() + ".execute"),
-                                equalTo(
-                                    stringKey("job.system"),
-                                    EXPERIMENTAL_ATTRIBUTES ? "quartz" : null)),
-                    span ->
-                        span.hasName("child")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("jobs.test")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, SuccessfulJob.class.getName() + ".execute"),
+                            equalTo(
+                                stringKey("job.system"),
+                                captureExperimentalSpanAttributes() ? "quartz" : null)),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -95,21 +95,18 @@ public abstract class AbstractQuartzTest {
     scheduler.scheduleJob(jobDetail, trigger);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("jobs.fail")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(new IllegalStateException("Bad job"))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CODE_FUNCTION_NAME, FailingJob.class.getName() + ".execute"),
-                                equalTo(
-                                    stringKey("job.system"),
-                                    EXPERIMENTAL_ATTRIBUTES ? "quartz" : null))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("jobs.fail")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(new IllegalStateException("Bad job"))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, FailingJob.class.getName() + ".execute"),
+                        equalTo(
+                            stringKey("job.system"),
+                            captureExperimentalSpanAttributes() ? "quartz" : null))));
   }
 
   private static Scheduler createScheduler() throws Exception {

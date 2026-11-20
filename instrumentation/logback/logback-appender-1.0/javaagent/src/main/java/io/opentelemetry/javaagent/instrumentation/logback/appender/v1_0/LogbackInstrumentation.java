@@ -5,11 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.logback.appender.v1_0.LogbackSingletons.mapper;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -17,6 +16,7 @@ import io.opentelemetry.api.logs.LoggerProvider;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -33,8 +33,7 @@ class LogbackInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("callAppenders"))
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("ch.qos.logback.classic.spi.ILoggingEvent"))),
+            .and(takesArguments(named("ch.qos.logback.classic.spi.ILoggingEvent"))),
         getClass().getName() + "$CallAppendersAdvice");
   }
 
@@ -42,20 +41,28 @@ class LogbackInstrumentation implements TypeInstrumentation {
   public static class CallAppendersAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static CallDepth methodEnter(@Advice.Argument(0) ILoggingEvent event) {
+    public static CallDepth methodEnter(@Advice.Argument(0) ILoggingEvent event) throws Throwable {
       // need to track call depth across all loggers in order to avoid double capture when one
       // logging framework delegates to another
       CallDepth callDepth = CallDepth.forClass(LoggerProvider.class);
-      if (callDepth.getAndIncrement() == 0) {
+      if (callDepth.getAndIncrement() != 0) {
+        return callDepth;
+      }
+      try {
         mapper()
             .emit(GlobalOpenTelemetry.get().getLogsBridge(), event, Thread.currentThread().getId());
+      } catch (Throwable t) {
+        callDepth.decrementAndGet();
+        throw t;
       }
       return callDepth;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter CallDepth callDepth) {
-      callDepth.decrementAndGet();
+    public static void methodExit(@Advice.Enter @Nullable CallDepth callDepth) {
+      if (callDepth != null) {
+        callDepth.decrementAndGet();
+      }
     }
   }
 }

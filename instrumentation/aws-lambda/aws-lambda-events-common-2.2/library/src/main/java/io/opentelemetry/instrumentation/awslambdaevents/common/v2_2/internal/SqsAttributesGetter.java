@@ -14,7 +14,7 @@ abstract class SqsAttributesGetter<REQUEST, RESPONSE>
 
   @Override
   public final String getSystem(REQUEST request) {
-    return "aws_sqs";
+    return "aws.sqs";
   }
 
   @Nullable

@@ -88,19 +88,18 @@ class StartupReportTest {
     List<StartupSample> samples = samples();
     samples =
         samples.stream()
-            .map(
-                sample ->
-                    sample.variant() == Variant.AOT_NO_AGENT && !sample.discarded()
-                        ? new StartupSample(
-                            sample.variant(),
-                            sample.round(),
-                            sample.order(),
-                            false,
-                            "ok",
-                            sample.springSeconds(),
-                            3.0,
-                            sample.httpSeconds())
-                        : sample)
+            .map(sample ->
+                sample.variant() == Variant.AOT_NO_AGENT && !sample.discarded()
+                    ? new StartupSample(
+                        sample.variant(),
+                        sample.round(),
+                        sample.order(),
+                        false,
+                        "ok",
+                        sample.springSeconds(),
+                        3.0,
+                        sample.httpSeconds())
+                    : sample)
             .toList();
 
     report.writeSummary(samples, new Properties());
@@ -143,14 +142,15 @@ class StartupReportTest {
     return samples;
   }
 
-  private static List<StartupSample> fasterSamples(double agentAot) {
+  private static List<StartupSample> fasterSamples(double aotWithAgentJvmSeconds) {
     List<StartupSample> samples = new ArrayList<>();
     for (Variant variant : Variant.values()) {
-      double normal = variant.agent() ? 10 : 4;
-      double aot = variant.aot() ? (variant.agent() ? agentAot : 2) : normal;
-      samples.add(new StartupSample(variant, 0, 1, true, "ok", 1, normal, 2));
-      samples.add(new StartupSample(variant, 1, 1, false, "ok", 1, aot, 2));
-      samples.add(new StartupSample(variant, 2, 1, false, "ok", 1, aot, 2));
+      double normalJvmSeconds = variant.agent() ? 10 : 4;
+      double aotJvmSeconds = variant.agent() ? aotWithAgentJvmSeconds : 2;
+      double jvmSeconds = variant.aot() ? aotJvmSeconds : normalJvmSeconds;
+      samples.add(new StartupSample(variant, 0, 1, true, "ok", 1, normalJvmSeconds, 2));
+      samples.add(new StartupSample(variant, 1, 1, false, "ok", 1, jvmSeconds, 2));
+      samples.add(new StartupSample(variant, 2, 1, false, "ok", 1, jvmSeconds, 2));
     }
     return samples;
   }

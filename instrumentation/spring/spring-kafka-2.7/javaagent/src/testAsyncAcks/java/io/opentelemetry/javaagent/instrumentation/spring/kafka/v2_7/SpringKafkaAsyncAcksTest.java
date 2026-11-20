@@ -78,18 +78,16 @@ class SpringKafkaAsyncAcksTest {
     }
 
     assertThat(testing.spans())
-        .filteredOn(
-            span ->
-                span.getInstrumentationScopeInfo()
-                    .getName()
-                    .equals("io.opentelemetry.kafka-clients-0.11"))
+        .filteredOn(span ->
+            span.getInstrumentationScopeInfo()
+                .getName()
+                .equals("io.opentelemetry.kafka-clients-0.11"))
         .isEmpty();
     assertThat(testing.spans())
         .filteredOn(span -> span.getKind() == SpanKind.CONSUMER)
         .singleElement()
-        .satisfies(
-            span ->
-                assertThat(span.getInstrumentationScopeInfo().getName())
-                    .isEqualTo("io.opentelemetry.spring-kafka-2.7"));
+        .satisfies(span ->
+            assertThat(span.getInstrumentationScopeInfo().getName())
+                .isEqualTo("io.opentelemetry.spring-kafka-2.7"));
   }
 }

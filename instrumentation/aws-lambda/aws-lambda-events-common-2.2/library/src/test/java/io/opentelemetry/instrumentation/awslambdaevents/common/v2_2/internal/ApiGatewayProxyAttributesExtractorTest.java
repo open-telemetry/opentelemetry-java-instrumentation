@@ -5,12 +5,12 @@
 
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -167,15 +167,13 @@ class ApiGatewayProxyAttributesExtractorTest {
     Context context = instrumenter.start(Context.root(), request);
     instrumenter.end(context, request, response, error);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(error == null ? StatusData.unset() : StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(FAAS_INVOCATION_ID, "request-id"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test_function")
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(error == null ? StatusData.unset() : StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "request-id"))));
   }
 
   private static AwsLambdaRequest awsRequest(Object input) {

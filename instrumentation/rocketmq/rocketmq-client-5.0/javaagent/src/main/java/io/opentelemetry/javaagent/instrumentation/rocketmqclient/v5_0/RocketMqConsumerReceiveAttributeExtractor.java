@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
 
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -18,12 +18,16 @@ import org.apache.rocketmq.client.apis.message.MessageView;
 class RocketMqConsumerReceiveAttributeExtractor
     implements AttributesExtractor<RocketMqReceiveRequest, List<MessageView>> {
 
+  // copied from semconv
+  private static final AttributeKey<String> ROCKETMQ_NAMESPACE =
+      AttributeKey.stringKey("rocketmq.namespace");
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, RocketMqReceiveRequest request) {
     String consumerGroup = request.getConsumerGroup();
     attributes.put(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup);
-    attributes.put(MESSAGING_ROCKETMQ_NAMESPACE, request.getNamespace());
+    attributes.put(ROCKETMQ_NAMESPACE, request.getNamespace());
   }
 
   @Override

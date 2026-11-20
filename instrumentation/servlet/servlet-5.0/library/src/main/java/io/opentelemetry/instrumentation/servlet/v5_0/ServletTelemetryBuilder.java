@@ -48,9 +48,8 @@ public final class ServletTelemetryBuilder {
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
     Experimental.internalSetAddTraceIdRequestAttribute(
         (builder, value) -> builder.addTraceIdRequestAttribute = value);
-    Experimental.internalSetRequestParameters(
-        (builder, requestParameters) ->
-            builder.servletBuilder.setRequestParameters(requestParameters));
+    Experimental.internalSetRequestParameters((builder, requestParameters) ->
+        builder.servletBuilder.setRequestParameters(requestParameters));
     Experimental.internalSetCaptureUserName(
         (builder, value) -> builder.servletBuilder.setCaptureUserName(value));
   }

@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.spring.webmvc.v6_0.SpringWebMvcSingletons.modelAndViewInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isProtected;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -23,7 +23,6 @@ import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.context.ApplicationContext;
 import org.springframework.web.servlet.HandlerMapping;
 import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.v6_0.OpenTelemetryHandlerMappingFilter;
 
 class DispatcherServletInstrumentation implements TypeInstrumentation {
 
@@ -37,8 +36,7 @@ class DispatcherServletInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isProtected()
             .and(named("onRefresh"))
-            .and(takesArgument(0, named("org.springframework.context.ApplicationContext")))
-            .and(takesArguments(1)),
+            .and(takesArguments(named("org.springframework.context.ApplicationContext"))),
         getClass().getName() + "$HandlerMappingAdvice");
     transformer.applyAdviceToMethod(
         isProtected()

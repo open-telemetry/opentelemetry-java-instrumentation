@@ -15,11 +15,11 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_S3_BUCKET;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Collections.singletonList;
@@ -135,38 +135,35 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
     }
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.GetObject")
-                            .hasKind(CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(emitExceptionAsSpanEvents() ? error : null)
-                            .hasNoParent()
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, endpoint.getServiceEndpoint()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, null),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, server.httpPort()),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, AmazonS3Exception.class.getName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("S3.GetObject")
+                    .hasKind(CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? error : null)
+                    .hasNoParent()
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_FULL, endpoint.getServiceEndpoint()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, null),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_PORT, server.httpPort()),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "Amazon S3"),
+                        equalTo(RPC_METHOD, "GetObject"),
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                        equalTo(AWS_S3_BUCKET, "someBucket"),
+                        equalTo(ERROR_TYPE, AmazonS3Exception.class.getName()))));
 
     if (emitExceptionAsLogs()) {
       testing()
-          .waitAndAssertLogRecords(
-              logRecord ->
-                  logRecord
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("exception")
-                      .hasException(error)
-                      .hasTotalAttributeCount(3));
+          .waitAndAssertLogRecords(logRecord ->
+              logRecord
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("exception")
+                  .hasException(error)
+                  .hasTotalAttributeCount(3));
     }
   }
 
@@ -190,36 +187,33 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
     assertThat(caught).isInstanceOf(SdkClientException.class);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.GetObject")
-                            .hasKind(CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(emitExceptionAsSpanEvents() ? caught : null)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, "http://127.0.0.1:" + UNUSABLE_PORT),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(SERVER_PORT, 61),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("S3.GetObject")
+                    .hasKind(CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? caught : null)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_FULL, "http://127.0.0.1:" + UNUSABLE_PORT),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_PORT, 61),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "Amazon S3"),
+                        equalTo(RPC_METHOD, "GetObject"),
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                        equalTo(AWS_S3_BUCKET, "someBucket"),
+                        equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
 
     if (emitExceptionAsLogs()) {
       testing()
-          .waitAndAssertLogRecords(
-              logRecord ->
-                  logRecord
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("exception")
-                      .hasException(caught)
-                      .hasTotalAttributeCount(3));
+          .waitAndAssertLogRecords(logRecord ->
+              logRecord
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("exception")
+                  .hasException(caught)
+                  .hasTotalAttributeCount(3));
     }
   }
 
@@ -247,36 +241,33 @@ public abstract class AbstractS3ClientTest extends AbstractBaseAwsClientTest {
             "Unable to execute HTTP request: Request did not complete before the request timeout configuration.");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.GetObject")
-                            .hasKind(CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasNoParent()
-                            .hasException(emitExceptionAsSpanEvents() ? error : null)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, server.httpUri().toString()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(SERVER_PORT, server.httpPort()),
-                                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "GetObject"),
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("S3.GetObject")
+                    .hasKind(CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasNoParent()
+                    .hasException(emitExceptionAsSpanEvents() ? error : null)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_FULL, server.httpUri().toString()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(SERVER_PORT, server.httpPort()),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "Amazon S3"),
+                        equalTo(RPC_METHOD, "GetObject"),
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                        equalTo(AWS_S3_BUCKET, "someBucket"),
+                        equalTo(ERROR_TYPE, SdkClientException.class.getName()))));
 
     if (emitExceptionAsLogs()) {
       testing()
-          .waitAndAssertLogRecords(
-              logRecord ->
-                  logRecord
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("exception")
-                      .hasException(error)
-                      .hasTotalAttributeCount(3));
+          .waitAndAssertLogRecords(logRecord ->
+              logRecord
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("exception")
+                  .hasException(error)
+                  .hasTotalAttributeCount(3));
     }
   }
 }

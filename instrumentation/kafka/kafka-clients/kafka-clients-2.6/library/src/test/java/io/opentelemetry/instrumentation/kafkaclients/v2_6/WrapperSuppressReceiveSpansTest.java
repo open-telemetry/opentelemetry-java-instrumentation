@@ -23,30 +23,28 @@ class WrapperSuppressReceiveSpansTest extends AbstractWrapperTest {
 
   @Override
   void assertTraces(boolean testHeaders, boolean testExperimental) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("send " + SHARED_TOPIC)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            sendAttributes(testHeaders, testExperimental)),
-                span ->
-                    span.hasName("process " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(greeting, testHeaders, testExperimental)),
-                span ->
-                    span.hasName("process child")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(2)),
-                span ->
-                    span.hasName("producer callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("send " + SHARED_TOPIC)
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(sendAttributes(testHeaders, testExperimental)),
+            span ->
+                span.hasName("process " + SHARED_TOPIC)
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        processAttributes(greeting, testHeaders, testExperimental)),
+            span ->
+                span.hasName("process child")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(2)),
+            span ->
+                span.hasName("producer callback")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
     String instrumentationName = "io.opentelemetry.kafka-clients-2.6";
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
     assertProcessMetricsWithConsumedMessages(

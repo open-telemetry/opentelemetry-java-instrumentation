@@ -9,7 +9,6 @@ import static java.util.Collections.emptyList;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -101,13 +100,7 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
-   * Returns a description of a class of error the operation ended with.
-   *
-   * <p>This method is called if no valid response status code was sent or received, or if the
-   * request failed with an exception after a non-error response status code was sent or received.
-   *
-   * <p>If this method is not implemented, or if it returns {@code null}, the exception class name
-   * (if any was caught) or the value {@value HttpConstants#_OTHER} will be used as error type.
+   * Returns the {@code error.type} value for the operation.
    *
    * <p>The cardinality of the error type should be low. The instrumentations implementing this
    * method are recommended to document the custom values they support.
@@ -118,6 +111,6 @@ public interface HttpCommonAttributesGetter<REQUEST, RESPONSE> {
   @Nullable
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 }

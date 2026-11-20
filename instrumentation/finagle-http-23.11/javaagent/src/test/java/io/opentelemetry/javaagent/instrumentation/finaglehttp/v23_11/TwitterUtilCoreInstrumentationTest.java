@@ -53,11 +53,10 @@ class TwitterUtilCoreInstrumentationTest {
         () -> {
           Future.value("v")
               .respond(
-                  fn1(
-                      t -> {
-                        testing.runWithSpan("respond-child", () -> {});
-                        return BoxedUnit.UNIT;
-                      }));
+                  fn1(t -> {
+                    testing.runWithSpan("respond-child", () -> {});
+                    return BoxedUnit.UNIT;
+                  }));
         });
     assertParentAndChild("parent", "respond-child");
   }
@@ -70,11 +69,10 @@ class TwitterUtilCoreInstrumentationTest {
             () ->
                 Future.value("v")
                     .transform(
-                        fn1(
-                            t -> {
-                              testing.runWithSpan("transform-child", () -> {});
-                              return Future.value("transformed");
-                            })));
+                        fn1(t -> {
+                          testing.runWithSpan("transform-child", () -> {});
+                          return Future.value("transformed");
+                        })));
     assertThat(Await.result(result, AWAIT)).isEqualTo("transformed");
     assertParentAndChild("parent", "transform-child");
   }
@@ -86,11 +84,10 @@ class TwitterUtilCoreInstrumentationTest {
         () -> {
           Future.exception(new RuntimeException("boom"))
               .respond(
-                  fn1(
-                      t -> {
-                        testing.runWithSpan("respond-child", () -> {});
-                        return BoxedUnit.UNIT;
-                      }));
+                  fn1(t -> {
+                    testing.runWithSpan("respond-child", () -> {});
+                    return BoxedUnit.UNIT;
+                  }));
         });
     assertParentAndChild("parent", "respond-child");
   }
@@ -106,11 +103,10 @@ class TwitterUtilCoreInstrumentationTest {
             "parent",
             () ->
                 pool.apply(
-                    fn0(
-                        () -> {
-                          testing.runWithSpan("pool-child", () -> {});
-                          return 1;
-                        })));
+                    fn0(() -> {
+                      testing.runWithSpan("pool-child", () -> {});
+                      return 1;
+                    })));
 
     assertThat(Await.result(f, AWAIT)).isEqualTo(1);
     assertParentAndChild("parent", "pool-child");
@@ -138,43 +134,37 @@ class TwitterUtilCoreInstrumentationTest {
             () ->
                 pool1
                     .apply(
-                        fn0(
-                            () -> {
-                              threadsSeen.add(Thread.currentThread().getName());
-                              testing.runWithSpan("stage-1", () -> {});
-                              return "a";
-                            }))
+                        fn0(() -> {
+                          threadsSeen.add(Thread.currentThread().getName());
+                          testing.runWithSpan("stage-1", () -> {});
+                          return "a";
+                        }))
                     // hop to pool2: the flatMap continuation runs on exec1 (completion thread)
                     // via the Promise$Transformer advice, and pool2.apply() re-captures context
                     // to dispatch the Function0 onto exec2
                     .flatMap(
-                        fn1(
-                            a ->
-                                pool2.apply(
-                                    fn0(
-                                        () -> {
-                                          threadsSeen.add(Thread.currentThread().getName());
-                                          testing.runWithSpan("stage-2", () -> {});
-                                          return a + "b";
-                                        }))))
+                        fn1(a ->
+                            pool2.apply(
+                                fn0(() -> {
+                                  threadsSeen.add(Thread.currentThread().getName());
+                                  testing.runWithSpan("stage-2", () -> {});
+                                  return a + "b";
+                                }))))
                     // hop to pool3
                     .flatMap(
-                        fn1(
-                            ab ->
-                                pool3.apply(
-                                    fn0(
-                                        () -> {
-                                          threadsSeen.add(Thread.currentThread().getName());
-                                          testing.runWithSpan("stage-3", () -> {});
-                                          return ab + "c";
-                                        }))))
+                        fn1(ab ->
+                            pool3.apply(
+                                fn0(() -> {
+                                  threadsSeen.add(Thread.currentThread().getName());
+                                  testing.runWithSpan("stage-3", () -> {});
+                                  return ab + "c";
+                                }))))
                     // terminal continuation — no FuturePool, Promise$Transformer only
                     .map(
-                        fn1(
-                            abc -> {
-                              testing.runWithSpan("stage-4-terminal", () -> {});
-                              return abc + "d";
-                            })));
+                        fn1(abc -> {
+                          testing.runWithSpan("stage-4-terminal", () -> {});
+                          return abc + "d";
+                        })));
 
     assertThat(Await.result(chain, AWAIT)).isEqualTo("abcd");
 
@@ -185,14 +175,13 @@ class TwitterUtilCoreInstrumentationTest {
     assertThat(threadsSeen).anyMatch(n -> n.startsWith("pool-2"));
     assertThat(threadsSeen).anyMatch(n -> n.startsWith("pool-3"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("stage-1").hasParent(trace.getSpan(0)),
-                span -> span.hasName("stage-2").hasParent(trace.getSpan(0)),
-                span -> span.hasName("stage-3").hasParent(trace.getSpan(0)),
-                span -> span.hasName("stage-4-terminal").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("stage-1").hasParent(trace.getSpan(0)),
+            span -> span.hasName("stage-2").hasParent(trace.getSpan(0)),
+            span -> span.hasName("stage-3").hasParent(trace.getSpan(0)),
+            span -> span.hasName("stage-4-terminal").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -211,38 +200,32 @@ class TwitterUtilCoreInstrumentationTest {
             () ->
                 pool1
                     .apply(
-                        fn0(
-                            () -> {
-                              testing.runWithSpan("pool1-stage", () -> {});
-                              return "a";
-                            }))
+                        fn0(() -> {
+                          testing.runWithSpan("pool1-stage", () -> {});
+                          return "a";
+                        }))
                     // ConstFuture.flatMap exercises FutureInstrumentation.transform
                     .flatMap(
-                        fn1(
-                            a ->
-                                Future.value(a + "b")
-                                    .flatMap(
-                                        fn1(
-                                            ab -> {
-                                              testing.runWithSpan("const-stage", () -> {});
-                                              return pool2.apply(
-                                                  fn0(
-                                                      () -> {
-                                                        testing.runWithSpan(
-                                                            "pool2-stage", () -> {});
-                                                        return ab + "c";
-                                                      }));
-                                            })))));
+                        fn1(a ->
+                            Future.value(a + "b")
+                                .flatMap(
+                                    fn1(ab -> {
+                                      testing.runWithSpan("const-stage", () -> {});
+                                      return pool2.apply(
+                                          fn0(() -> {
+                                            testing.runWithSpan("pool2-stage", () -> {});
+                                            return ab + "c";
+                                          }));
+                                    })))));
 
     assertThat(Await.result(chain, AWAIT)).isEqualTo("abc");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("pool1-stage").hasParent(trace.getSpan(0)),
-                span -> span.hasName("const-stage").hasParent(trace.getSpan(0)),
-                span -> span.hasName("pool2-stage").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("pool1-stage").hasParent(trace.getSpan(0)),
+            span -> span.hasName("const-stage").hasParent(trace.getSpan(0)),
+            span -> span.hasName("pool2-stage").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -264,17 +247,16 @@ class TwitterUtilCoreInstrumentationTest {
           () -> {
             Future<Integer> f =
                 pool.apply(
-                    fn0(
-                        () -> {
-                          try {
-                            gate.await();
-                          } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new AssertionError(e);
-                          }
-                          testing.runWithSpan(childName, () -> {});
-                          return idx;
-                        }));
+                    fn0(() -> {
+                      try {
+                        gate.await();
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new AssertionError(e);
+                      }
+                      testing.runWithSpan(childName, () -> {});
+                      return idx;
+                    }));
             futures.add(f);
           });
     }
@@ -289,11 +271,10 @@ class TwitterUtilCoreInstrumentationTest {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < n; i++) {
       int idx = i;
-      assertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent-" + idx).hasNoParent(),
-                  span -> span.hasName("child-" + idx).hasParent(trace.getSpan(0))));
+      assertions.add(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent-" + idx).hasNoParent(),
+              span -> span.hasName("child-" + idx).hasParent(trace.getSpan(0))));
     }
     testing.waitAndAssertTraces(assertions);
   }
@@ -312,19 +293,17 @@ class TwitterUtilCoreInstrumentationTest {
         "parent",
         () -> {
           pool.apply(
-              fn0(
-                  () -> {
-                    // on exec thread; scheduler is active here
-                    Future.value("inner")
-                        .respond(
-                            fn1(
-                                t -> {
-                                  testing.runWithSpan("nested-child", () -> {});
-                                  nestedDone.countDown();
-                                  return BoxedUnit.UNIT;
-                                }));
-                    return BoxedUnit.UNIT;
-                  }));
+              fn0(() -> {
+                // on exec thread; scheduler is active here
+                Future.value("inner")
+                    .respond(
+                        fn1(t -> {
+                          testing.runWithSpan("nested-child", () -> {});
+                          nestedDone.countDown();
+                          return BoxedUnit.UNIT;
+                        }));
+                return BoxedUnit.UNIT;
+              }));
         });
 
     assertThat(nestedDone.await(5, SECONDS)).isTrue();
@@ -340,34 +319,30 @@ class TwitterUtilCoreInstrumentationTest {
             "parent",
             () ->
                 pool.apply(
-                        fn0(
-                            () -> {
-                              testing.runWithSpan("immediate-body", () -> {});
-                              return 1;
-                            }))
+                        fn0(() -> {
+                          testing.runWithSpan("immediate-body", () -> {});
+                          return 1;
+                        }))
                     .map(
-                        fn1(
-                            v -> {
-                              testing.runWithSpan("immediate-map", () -> {});
-                              return v + 1;
-                            })));
+                        fn1(v -> {
+                          testing.runWithSpan("immediate-map", () -> {});
+                          return v + 1;
+                        })));
 
     assertThat((int) Await.result(f, AWAIT)).isEqualTo(2);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("immediate-body").hasParent(trace.getSpan(0)),
-                span -> span.hasName("immediate-map").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("immediate-body").hasParent(trace.getSpan(0)),
+            span -> span.hasName("immediate-map").hasParent(trace.getSpan(0))));
   }
 
   private static void assertParentAndChild(String parentName, String childName) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(parentName).hasNoParent(),
-                span -> span.hasName(childName).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName(parentName).hasNoParent(),
+            span -> span.hasName(childName).hasParent(trace.getSpan(0))));
   }
 
   private static <T> Function0<T> fn0(Supplier<T> s) {

@@ -17,10 +17,6 @@ public class ServletOutputStreamInjectionState {
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet3SnippetInjectingResponseWrapper wrapper) {
     InjectionState state = INJECTION_STATE.get(servletOutputStream);
-    if (!wrapper.isContentTypeTextHtml()) {
-      INJECTION_STATE.set(servletOutputStream, null);
-      return;
-    }
     if (state == null || state.getWrapper() != wrapper) {
       state = new InjectionState(wrapper);
       INJECTION_STATE.set(servletOutputStream, state);

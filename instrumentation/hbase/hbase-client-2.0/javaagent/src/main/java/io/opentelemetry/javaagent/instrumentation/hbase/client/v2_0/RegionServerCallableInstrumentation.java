@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.resetTableName;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.HbaseClientState.setTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.resetTableName;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.setTableName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 

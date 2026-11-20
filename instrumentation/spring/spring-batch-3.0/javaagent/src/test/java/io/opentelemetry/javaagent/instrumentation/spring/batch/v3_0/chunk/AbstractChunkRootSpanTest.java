@@ -36,11 +36,10 @@ abstract class AbstractChunkRootSpanTest {
 
     Consumer<TraceAssert> chunk =
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasLinks(LinkData.create(itemStepSpan.get().getSpanContext())));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("BatchJob itemsAndTaskletJob.itemStep.Chunk")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasLinks(LinkData.create(itemStepSpan.get().getSpanContext())));
     testing.waitAndAssertTraces(
         trace -> {
           itemStepSpan.set(trace.getSpan(1));
@@ -61,10 +60,9 @@ abstract class AbstractChunkRootSpanTest {
         chunk,
         chunk,
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("BatchJob itemsAndTaskletJob.taskletStep.Tasklet")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasLinks(LinkData.create(taskletStepSpan.get().getSpanContext()))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("BatchJob itemsAndTaskletJob.taskletStep.Tasklet")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasLinks(LinkData.create(taskletStepSpan.get().getSpanContext()))));
   }
 }

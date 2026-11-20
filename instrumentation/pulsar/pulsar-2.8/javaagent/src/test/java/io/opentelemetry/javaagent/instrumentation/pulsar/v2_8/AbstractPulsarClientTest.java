@@ -22,7 +22,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MINUTES;
@@ -219,13 +218,12 @@ abstract class AbstractPulsarClientTest {
             () ->
                 consumer
                     .batchReceiveAsync()
-                    .whenComplete(
-                        (messages, throwable) -> {
-                          if (messages != null) {
-                            testing.runWithSpan(
-                                "callback", () -> acknowledgeMessages(consumer, messages));
-                          }
-                        }));
+                    .whenComplete((messages, throwable) -> {
+                      if (messages != null) {
+                        testing.runWithSpan(
+                            "callback", () -> acknowledgeMessages(consumer, messages));
+                      }
+                    }));
 
     assertThat(result.get(1, MINUTES)).hasSize(1);
 
@@ -271,10 +269,9 @@ abstract class AbstractPulsarClientTest {
 
     assertThatThrownBy(() -> receive.get(1, MINUTES))
         .hasCauseInstanceOf(PulsarClientException.class);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -290,10 +287,9 @@ abstract class AbstractPulsarClientTest {
 
     assertThatThrownBy(() -> receive.get(1, MINUTES))
         .hasCauseInstanceOf(PulsarClientException.class);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   static List<AttributeAssertion> sendAttributes(
@@ -301,7 +297,7 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(stringKey("messaging.system.name"), "pulsar"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
@@ -310,7 +306,7 @@ abstract class AbstractPulsarClientTest {
                 equalTo(MESSAGING_MESSAGE_ID, messageId),
                 // messaging.message.body.size requires opt-in
                 equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
-                equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal"))));
+                equalTo(stringKey("pulsar.message.type"), experimental("normal"))));
     if (testHeaders) {
       assertions.add(equalTo(headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
@@ -339,7 +335,7 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(stringKey("messaging.system.name"), "pulsar"),
                 equalTo(SERVER_ADDRESS, brokerHost),
                 equalTo(SERVER_PORT, brokerPort),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
@@ -364,7 +360,7 @@ abstract class AbstractPulsarClientTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "pulsar"),
+                equalTo(stringKey("messaging.system.name"), "pulsar"),
                 equalTo(MESSAGING_DESTINATION_NAME, destinationName(destination)),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),

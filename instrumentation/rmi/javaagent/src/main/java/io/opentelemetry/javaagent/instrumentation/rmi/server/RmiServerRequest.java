@@ -47,10 +47,6 @@ final class RmiServerRequest {
     this.method = method;
   }
 
-  Method method() {
-    return method;
-  }
-
   @Nullable
   String rpcMethodName() {
     return rpcMethodNames.get(serverClass).get(method);

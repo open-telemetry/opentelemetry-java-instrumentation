@@ -135,10 +135,10 @@ public class ClickHouseClientV2Singletons {
       }
       String endpoint = endpoints.iterator().next();
       EndpointTarget extracted = EndpointTarget.parse(endpoint);
-      int peerPort =
-          extracted == null
-              ? -1
-              : extracted.port == null ? extracted.defaultPort() : extracted.port;
+      int peerPort = -1;
+      if (extracted != null) {
+        peerPort = extracted.port == null ? extracted.defaultPort() : extracted.port;
+      }
       DbServerTarget peer =
           extracted == null
               ? null

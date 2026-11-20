@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -118,35 +119,34 @@ class Netty41ConnectionSpanTest {
     int responseCode = testing.runWithSpan("parent", () -> sendRequest(request, uri));
 
     assertThat(responseCode).isEqualTo(200);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("RESOLVE")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
-                span ->
-                    span.hasName("CONNECT")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TRANSPORT, "tcp"),
-                            equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(NETWORK_PEER_PORT, uri.getPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(3))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("RESOLVE")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, uri.getHost()),
+                        equalTo(SERVER_PORT, uri.getPort()),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+            span ->
+                span.hasName("CONNECT")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_TRANSPORT, "tcp"),
+                        equalTo(NETWORK_TYPE, "ipv4"),
+                        equalTo(SERVER_ADDRESS, uri.getHost()),
+                        equalTo(SERVER_PORT, uri.getPort()),
+                        equalTo(NETWORK_PEER_PORT, uri.getPort()),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+            span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("test-http-server")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(3))));
   }
 
   @Test
@@ -156,37 +156,35 @@ class Netty41ConnectionSpanTest {
     DefaultFullHttpRequest request = buildRequest("GET", uri, new HashMap<>());
     Throwable finalThrownException =
         catchThrowable(() -> testing.runWithSpan("parent", () -> sendRequest(request, uri)));
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(finalThrownException),
-                span ->
-                    span.hasName("RESOLVE")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService())),
-                span ->
-                    span.hasName("CONNECT")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(finalThrownException)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TRANSPORT, "tcp"),
-                            satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", null)),
-                            equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            satisfies(
-                                NETWORK_PEER_PORT, val -> val.isIn((long) uri.getPort(), null)),
-                            satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn("127.0.0.1", null)),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(finalThrownException),
+            span ->
+                span.hasName("RESOLVE")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, uri.getHost()),
+                        equalTo(SERVER_PORT, uri.getPort()),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+            span ->
+                span.hasName("CONNECT")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(finalThrownException)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_TRANSPORT, "tcp"),
+                        satisfies(NETWORK_TYPE, val -> val.isIn("ipv4", null)),
+                        equalTo(SERVER_ADDRESS, uri.getHost()),
+                        equalTo(SERVER_PORT, uri.getPort()),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isIn((long) uri.getPort(), null)),
+                        satisfies(NETWORK_PEER_ADDRESS, val -> val.isIn("127.0.0.1", null)),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 }

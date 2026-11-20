@@ -130,11 +130,10 @@ final class TestPgDriver extends PgDriver {
   }
 
   private static <T> Future<T> propagateFailure(Future<?> future) {
-    return future.transform(
-        result ->
-            Future.failedFuture(
-                result.failed()
-                    ? result.cause()
-                    : new AssertionError("Test connection unexpectedly succeeded")));
+    return future.transform(result ->
+        Future.failedFuture(
+            result.failed()
+                ? result.cause()
+                : new AssertionError("Test connection unexpectedly succeeded")));
   }
 }

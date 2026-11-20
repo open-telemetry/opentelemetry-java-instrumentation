@@ -34,11 +34,11 @@ class RocketMqConsumerInstrumenterTest {
   private Instrumenter<RocketMqConsumerRequest, ConsumeMessageContext> batchProcessInstrumenter;
 
   @Test
-  void usesEmptyNamespaceByDefault() {
+  void omitsNamespaceByDefault() {
     RocketMqConsumerRequest request =
         new RocketMqConsumerRequest(mock(MessageExt.class), "consumer-group", 1, null);
 
-    assertThat(request.getNamespace()).isEmpty();
+    assertThat(request.getNamespace()).isNull();
   }
 
   @Test

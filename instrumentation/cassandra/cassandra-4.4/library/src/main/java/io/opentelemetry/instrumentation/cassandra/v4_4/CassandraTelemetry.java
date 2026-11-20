@@ -44,16 +44,16 @@ public final class CassandraTelemetry {
   }
 
   /**
-   * Construct a new tracing-enabled CqlSession using the provided {@link CqlSession} instance.
+   * Returns an instrumented {@link CqlSession} based on the provided session.
    *
    * <p>This overload omits {@code server.address} and {@code server.port} attributes because the
-   * session does not expose the complete original contact points. Use {@link #wrap(CqlSession,
-   * Collection)} when the configured contact points are available.
+   * session does not expose the complete original contact points. Use {@link
+   * #instrument(CqlSession, Collection)} when the configured contact points are available.
    *
    * @param session An instance of CqlSession configured as desired.
-   * @return a {@link TracingCqlSession}.
+   * @return an instrumented {@link CqlSession}.
    */
-  public CqlSession wrap(CqlSession session) {
+  public CqlSession instrument(CqlSession session) {
     return tracingCqlSession.wrapSession(requireNonNull(session, "session"));
   }
 
@@ -65,19 +65,19 @@ public final class CassandraTelemetry {
    * were supplied through the session builder, a driver configuration file, or a {@link
    * com.datastax.oss.driver.api.core.config.DriverConfigLoader}.
    *
-   * <p>The contact points are captured when the session is wrapped and are used only to derive
+   * <p>The contact points are captured when the session is instrumented and are used only to derive
    * database server attributes. They do not change the session's connections or configuration.
    *
    * <p>{@code contactPoints} must contain every original contact point from every source, including
    * the session builder and driver configuration. Do not pass the current coordinator, discovered
    * cluster nodes, or only a subset of the configured contact points.
    *
-   * @param session the configured session to wrap
+   * @param session the configured session
    * @param contactPoints all original contact points from every configuration source
-   * @return a tracing-enabled session
+   * @return an instrumented session
    * @throws NullPointerException if {@code session} or {@code contactPoints} is {@code null}
    */
-  public CqlSession wrap(CqlSession session, Collection<InetSocketAddress> contactPoints) {
+  public CqlSession instrument(CqlSession session, Collection<InetSocketAddress> contactPoints) {
     return tracingCqlSession.wrapSession(
         requireNonNull(session, "session"), requireNonNull(contactPoints, "contactPoints"));
   }

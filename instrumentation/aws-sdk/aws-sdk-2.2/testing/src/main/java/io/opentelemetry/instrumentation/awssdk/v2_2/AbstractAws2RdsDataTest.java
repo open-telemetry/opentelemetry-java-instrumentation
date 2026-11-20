@@ -17,11 +17,11 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -192,21 +192,19 @@ public abstract class AbstractAws2RdsDataTest extends AbstractAwsSdkTest {
     assertThat(error).isInstanceOf(BadRequestException.class);
     assertRequestPath("/Execute");
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      List<AttributeAssertion> attributes =
-                          commonAttributes("ExecuteStatement", "/Execute", null, null);
-                      addDatabaseAttributes(attributes, sql, "SELECT missing_customers", null);
-                      attributes.add(equalTo(ERROR_TYPE, BadRequestException.class.getName()));
-                      span.hasName("SELECT missing_customers")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasStatus(StatusData.error())
-                          .hasException(emitExceptionAsSpanEvents() ? error : null)
-                          .hasAttributesSatisfyingExactly(attributes);
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              List<AttributeAssertion> attributes =
+                  commonAttributes("ExecuteStatement", "/Execute", null, null);
+              addDatabaseAttributes(attributes, sql, "SELECT missing_customers", null);
+              attributes.add(equalTo(ERROR_TYPE, BadRequestException.class.getName()));
+              span.hasName("SELECT missing_customers")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasNoParent()
+                  .hasStatus(StatusData.error())
+                  .hasException(emitExceptionAsSpanEvents() ? error : null)
+                  .hasAttributesSatisfyingExactly(attributes);
+            }));
   }
 
   @Test
@@ -222,16 +220,14 @@ public abstract class AbstractAws2RdsDataTest extends AbstractAwsSdkTest {
 
     assertRequestPath("/BeginTransaction");
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(AWS_SERVICE + ".BeginTransaction")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                commonAttributes(
-                                    "BeginTransaction", "/BeginTransaction", 200, REQUEST_ID))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(AWS_SERVICE + ".BeginTransaction")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        commonAttributes(
+                            "BeginTransaction", "/BeginTransaction", 200, REQUEST_ID))));
   }
 
   private static ExecuteStatementRequest executeStatementRequest(String sql) {
@@ -246,18 +242,16 @@ public abstract class AbstractAws2RdsDataTest extends AbstractAwsSdkTest {
   private void assertSqlSpan(
       String operation, String path, String queryText, String querySummary, Long batchSize) {
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      List<AttributeAssertion> attributes =
-                          commonAttributes(operation, path, 200, REQUEST_ID);
-                      addDatabaseAttributes(attributes, queryText, querySummary, batchSize);
-                      span.hasName(querySummary)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(attributes);
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              List<AttributeAssertion> attributes =
+                  commonAttributes(operation, path, 200, REQUEST_ID);
+              addDatabaseAttributes(attributes, queryText, querySummary, batchSize);
+              span.hasName(querySummary)
+                  .hasKind(SpanKind.CLIENT)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(attributes);
+            }));
   }
 
   @SuppressWarnings("deprecation") // using deprecated semconv

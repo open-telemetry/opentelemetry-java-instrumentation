@@ -26,7 +26,6 @@ import com.couchbase.mock.Bucket.BucketType;
 import com.couchbase.mock.BucketConfiguration;
 import com.couchbase.mock.CouchbaseMock;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -56,10 +55,10 @@ class CouchbaseBaselineTest {
 
   @BeforeAll
   void setUp() throws Exception {
-    int httpPort = PortUtils.findOpenPort();
-    CouchbaseMock mock = new CouchbaseMock("127.0.0.1", httpPort, 1, 1);
+    CouchbaseMock mock = new CouchbaseMock("127.0.0.1", 0, 1, 1);
     cleanup.deferAfterAll(mock::stop);
     mock.start();
+    int httpPort = mock.getHttpPort();
 
     BucketConfiguration configuration = new BucketConfiguration();
     configuration.name = BUCKET_NAME;
@@ -110,12 +109,11 @@ class CouchbaseBaselineTest {
           assertThat(found.content().getString("hello")).isEqualTo("world");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertKeyValueSpan(span, "Bucket.upsert").hasParent(trace.getSpan(0)),
-                span -> assertKeyValueSpan(span, "Bucket.get").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertKeyValueSpan(span, "Bucket.upsert").hasParent(trace.getSpan(0)),
+            span -> assertKeyValueSpan(span, "Bucket.get").hasParent(trace.getSpan(0))));
     assertKeyValueDurationMetric();
   }
 
@@ -139,12 +137,11 @@ class CouchbaseBaselineTest {
         .extracting(result -> result.content().getString("hello"))
         .isEqualTo("world");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertKeyValueSpan(span, "Bucket.upsert").hasParent(trace.getSpan(0)),
-                span -> assertKeyValueSpan(span, "Bucket.get").hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertKeyValueSpan(span, "Bucket.upsert").hasParent(trace.getSpan(0)),
+            span -> assertKeyValueSpan(span, "Bucket.get").hasParent(trace.getSpan(1))));
     assertKeyValueDurationMetric();
   }
 
@@ -169,11 +166,10 @@ class CouchbaseBaselineTest {
             metric
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> assertKeyValueDurationPoint(point, "Bucket.upsert"),
-                            point -> assertKeyValueDurationPoint(point, "Bucket.get"))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(
+                        point -> assertKeyValueDurationPoint(point, "Bucket.upsert"),
+                        point -> assertKeyValueDurationPoint(point, "Bucket.get"))));
   }
 
   private void assertKeyValueDurationPoint(HistogramPointAssert point, String operation) {

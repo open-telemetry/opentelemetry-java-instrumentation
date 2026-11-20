@@ -29,22 +29,20 @@ public abstract class AbstractRxJava3SubscriptionTest {
               Single<Connection> connectionSingle =
                   Single.create(emitter -> emitter.onSuccess(new Connection()));
               Disposable unused =
-                  connectionSingle.subscribe(
-                      connection -> {
-                        connection.query();
-                        countDownLatch.countDown();
-                      });
+                  connectionSingle.subscribe(connection -> {
+                    connection.query();
+                    countDownLatch.countDown();
+                  });
             });
     countDownLatch.await();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("Connection.query")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("Connection.query")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   static class Connection {

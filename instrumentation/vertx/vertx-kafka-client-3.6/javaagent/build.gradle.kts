@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -23,26 +25,21 @@ dependencies {
   compileOnly("io.vertx:vertx-codegen:3.6.0")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
-        implementation("io.vertx:vertx-kafka-client:3.6.0")
-      }
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.vertx:vertx-kafka-client:3.6.0")
+    }
+  }
 
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-          }
-        }
-      }
+  executions("unitTests") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
   }
 }

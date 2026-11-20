@@ -1,7 +1,15 @@
 #!/bin/bash -e
+# Current runners often start with around 90 GB free, but GitHub only guarantees 14 GB of disk space.
+# Keep cleanup conditional and revisit removing this script when the documented minimum increases.
+# https://docs.github.com/en/actions/reference/runners/github-hosted-runners#standard-github-hosted-runners-for-public-repositories
 
-# GitHub Actions runners have only provide 14 GB of disk space which we have been exceeding regularly
-# https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources
+set -o pipefail
+
+available_kb=$(df -k --output=avail . | tail -n 1)
+if (( available_kb >= 20 * 1024 * 1024 )); then
+  echo "At least 20 GiB of disk space is available; skipping cleanup."
+  exit 0
+fi
 
 df -h
 sudo rm -rf /usr/local/lib/android

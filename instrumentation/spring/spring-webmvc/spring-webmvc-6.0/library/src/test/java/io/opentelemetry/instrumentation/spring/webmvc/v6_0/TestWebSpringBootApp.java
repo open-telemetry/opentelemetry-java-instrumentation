@@ -130,20 +130,19 @@ class TestWebSpringBootApp {
     @ResponseBody
     CompletableFuture<String> async() {
       Context context = Context.current();
-      return CompletableFuture.supplyAsync(
-          () -> {
-            // Sleep a bit so that the future completes after the controller method. This helps to
-            // verify whether request ends after the future has completed not after when the
-            // controller method has completed.
-            try {
-              Thread.sleep(100);
-            } catch (InterruptedException e) {
-              Thread.currentThread().interrupt();
-            }
-            try (Scope ignored = context.makeCurrent()) {
-              return controller(ASYNC_ENDPOINT, ASYNC_ENDPOINT::getBody);
-            }
-          });
+      return CompletableFuture.supplyAsync(() -> {
+        // Sleep a bit so that the future completes after the controller method. This helps to
+        // verify whether request ends after the future has completed not after when the
+        // controller method has completed.
+        try {
+          Thread.sleep(100);
+        } catch (InterruptedException e) {
+          Thread.currentThread().interrupt();
+        }
+        try (Scope ignored = context.makeCurrent()) {
+          return controller(ASYNC_ENDPOINT, ASYNC_ENDPOINT::getBody);
+        }
+      });
     }
 
     @ExceptionHandler

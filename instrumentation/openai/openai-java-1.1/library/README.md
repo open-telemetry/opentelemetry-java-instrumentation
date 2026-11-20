@@ -29,7 +29,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-openai-java-1.1:O
 
 ### Usage
 
-The instrumentation library provides a wrapper for `OpenAIClient` that provide OpenTelemetry-based
+The instrumentation library instruments `OpenAIClient` instances to provide OpenTelemetry-based
 spans, metrics and logs.
 
 ```java
@@ -41,7 +41,7 @@ public class OpenAIClientConfiguration {
 
   //Use this client to capture telemetry.
   public OpenAIClient createOtelClient(OpenTelemetry openTelemetry) {
-    return OpenAITelemetry.builder(openTelemetry).build().wrap(createClient());
+    return OpenAITelemetry.builder(openTelemetry).build().instrument(createClient());
   }
 
   //your configuration of the OpenAIClient goes here:

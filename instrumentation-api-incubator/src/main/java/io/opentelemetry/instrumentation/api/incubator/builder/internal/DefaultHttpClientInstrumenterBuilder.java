@@ -15,7 +15,7 @@ import io.opentelemetry.context.propagation.TextMapSetter;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.CommonConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalMetrics;
-import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpExperimentalAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.http.internal.HttpClientUrlTemplateUtil;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -311,7 +311,7 @@ public final class DefaultHttpClientInstrumenterBuilder<REQUEST, RESPONSE> {
         this::setEmitExperimentalHttpClientTelemetry);
     set(config::getSensitiveQueryParameters, this::setSensitiveQueryParameters);
     addAttributesExtractor(
-        HttpClientServicePeerAttributesExtractor.create(attributesGetter, openTelemetry));
+        HttpClientServerServiceAttributesExtractor.create(attributesGetter, openTelemetry));
     return this;
   }
 

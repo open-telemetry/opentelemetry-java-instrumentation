@@ -30,14 +30,10 @@ dependencies {
   latestDepTestLibrary("io.reactivex.rxjava3:rxjava:3.1.0") // see rxjava-3.1.1 module
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("Experimental") {
-          jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
-        }
-      }
+testing.suites {
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.rxjava.experimental-span-attributes=true")
     }
   }
 }

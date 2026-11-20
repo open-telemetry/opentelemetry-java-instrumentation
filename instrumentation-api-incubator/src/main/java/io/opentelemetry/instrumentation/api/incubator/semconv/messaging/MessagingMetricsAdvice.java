@@ -28,8 +28,8 @@ final class MessagingMetricsAdvice {
           asList(0.005, 0.01, 0.025, 0.05, 0.075, 0.1, 0.25, 0.5, 0.75, 1.0, 2.5, 5.0, 7.5, 10.0));
 
   // copied from MessagingIncubatingAttributes
-  private static final AttributeKey<String> MESSAGING_SYSTEM =
-      AttributeKey.stringKey("messaging.system");
+  private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+      AttributeKey.stringKey("messaging.system.name");
   private static final AttributeKey<String> MESSAGING_DESTINATION_NAME =
       AttributeKey.stringKey("messaging.destination.name");
   private static final AttributeKey<Boolean> MESSAGING_DESTINATION_ANONYMOUS =
@@ -62,7 +62,7 @@ final class MessagingMetricsAdvice {
       boolean includeConsumerAttributes, boolean includeOperationType, boolean includeErrorType) {
     List<AttributeKey<?>> attributes = new ArrayList<>();
     attributes.add(MESSAGING_OPERATION_NAME);
-    attributes.add(MESSAGING_SYSTEM);
+    attributes.add(MESSAGING_SYSTEM_NAME);
     if (includeErrorType) {
       attributes.add(ERROR_TYPE);
     }

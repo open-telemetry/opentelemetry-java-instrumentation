@@ -233,23 +233,24 @@ the `transform()` method.
 
 ## Use advice classes to write instrumentation code
 
-## Non-inlined instrumentation
-
-Non-inlined (indy) advice is the repository default. In production javaagent modules, explicitly set
-`inline = false` on every `@Advice.OnMethodEnter` and `@Advice.OnMethodExit` annotation. The only
-exceptions are `instrumentation/internal/internal-class-loader` and
+In production javaagent modules, explicitly set `inline = false` on every
+`@Advice.OnMethodEnter` and `@Advice.OnMethodExit` method. The only exceptions are
+`instrumentation/internal/internal-class-loader` and
 `instrumentation/internal/internal-lambda`.
 
-The `inline` attribute defaults to `true`, which copies advice code into the instrumented method.
-Set `inline = false` to load advice as regular classes and use indy instrumentation.
+Byte Buddy's `inline` attribute defaults to `true`, which copies advice code into the instrumented
+method.
 
-With indy, advice classes are loaded alongside all helper classes
-into a special `InstrumentationModuleClassloader`, which sees the classes from both the instrumented
-application classloader and the agent classloader.
-The instrumented classes call the advice classes residing in the `InstrumentationModuleClassloader` via
-invokedynamic bytecode instructions.
+These exceptions use inlined advice. Static interface calls from it cannot be copied into pre-Java-8
+class files, so call them through a Java-8-compiled helper.
 
-Using indy instrumentation has these advantages:
+By default, the agent loads advice into a special `InstrumentationModuleClassLoader`,
+which can see classes from both the instrumented application classloader and the agent classloader.
+Helper placement is a separate choice: helpers can be loaded in that isolated classloader or
+injected into the instrumented classloader. Instrumented classes call advice in the isolated
+classloader via invokedynamic bytecode instructions.
+
+When advice is loaded in isolation, this has several advantages:
 
 - allows instrumentation to have breakpoints set in them and be debugged using standard debugging techniques.
 - provides clean isolation of instrumentation advice from the application and other instrumentations
@@ -257,9 +258,9 @@ Using indy instrumentation has these advantages:
 - advice classes have access to agent code so communicating between advice and agent does not need an api in boot loader
 - advice classes code does not require to be compatible with instrumented class, for example we can call a static interface method in advice when instrumented class is compiled for Java 7 or older.
 
-Advice classes and their static entry points must remain public for indy method-handle dispatch.
+Advice classes and their static entry points must remain public for invokedynamic method-handle dispatch.
 Ordinary helper methods may be private when their callers and classloader boundaries permit it;
-non-inlined advice may also use lambdas.
+advice loaded separately may also use lambdas.
 
 ### Shared classes and common classloader
 
@@ -303,12 +304,8 @@ caught and handled by the javaagent's exception handler, which logs unexpected e
 
 ### Modifying method arguments
 
-With inlined advices, using the `@Advice.Argument` annotation on method parameter with `readOnly = false`
-allows modifying instrumented method arguments.
-
-When using non-inlined advices, reading the argument values is still done with `@Advice.Argument`
-annotated parameters, however modifying the values is done through the advice method return value
-and `@Advice.AssignReturned.ToArguments` annotation:
+Use `@Advice.Argument` to read method arguments. To modify them, return the replacement value from
+advice and use `@Advice.AssignReturned.ToArguments`:
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -323,12 +320,8 @@ It is possible to modify multiple arguments at once by using an array, see usage
 
 ### Modifying method return value
 
-With inlined advices, using the `@Advice.Return` annotation on method parameter with `readOnly = false`
-allows modifying instrumented method return value on exit advice.
-
-When using non-inlined advices, reading the original return value is still done with the `@Advice.Return`
-annotated parameter, however modifying the value is done through the advice method return value
-and `@Advice.AssignReturned.ToReturned`.
+Use `@Advice.Return` to read the original return value. To modify it, return the replacement value
+from exit advice and use `@Advice.AssignReturned.ToReturned`:
 
 ```java
 @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
@@ -340,12 +333,8 @@ public static Object onExit(@Advice.Return Object returnValue) {
 
 ### Writing to internal class fields
 
-With inlined advices, using the `@Advice.FieldValue(value = "fieldName", readOnly = false)` annotation
-on advice method parameters allows modifying the `fieldName` field of the instrumented class.
-
-When using non-inlined advices, reading the original field value is still done with the `@Advice.FieldValue`
-annotated parameter, however modifying the value is done through the advice method return value
-and `@Advice.AssignReturned.ToFields` annotation.
+Use `@Advice.FieldValue` to read an internal field. To modify it, return the replacement value from
+advice and use `@Advice.AssignReturned.ToFields`:
 
 ```java
 @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -357,6 +346,9 @@ public static Object onEnter(@Advice.FieldValue("fieldName") Object originalFiel
 
 It is possible to modify multiple fields at once by using an array, see usages of
 `@Advice.AssignReturned.ToFields` for detailed examples.
+
+Only `internal-class-loader` and `internal-lambda` may use inlined advice with `readOnly = false` on
+`@Advice.Argument`, `@Advice.Return`, or `@Advice.FieldValue`.
 
 [suppress]: https://opentelemetry.io/docs/zero-code/java/agent/disable/#suppressing-specific-agent-instrumentation
 

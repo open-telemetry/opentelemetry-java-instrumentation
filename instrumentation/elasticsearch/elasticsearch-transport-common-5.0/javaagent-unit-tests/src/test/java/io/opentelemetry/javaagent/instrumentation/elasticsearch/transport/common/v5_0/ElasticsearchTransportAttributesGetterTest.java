@@ -81,6 +81,14 @@ class ElasticsearchTransportAttributesGetterTest {
         .isEqualTo(IndexNotFoundException.class.getName());
   }
 
+  @Test
+  void remoteTransportExceptionWithoutCauseUsesExceptionClassErrorType() {
+    RemoteTransportException error = new RemoteTransportException("remote error", null);
+
+    assertThat(extractEndAttributes(error).get(ERROR_TYPE))
+        .isEqualTo(RemoteTransportException.class.getName());
+  }
+
   private static Attributes extractEndAttributes(Throwable error) {
     AttributesExtractor<ElasticTransportRequest, ActionResponse> extractor =
         DbClientAttributesExtractor.create(new ElasticsearchTransportAttributesGetter());

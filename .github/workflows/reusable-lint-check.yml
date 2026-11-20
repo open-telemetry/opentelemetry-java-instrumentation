@@ -15,7 +15,7 @@ jobs:
           fetch-depth: 0 # needed for merge-base used in modified-files mode
           persist-credentials: false
 
-      - uses: jdx/mise-action@fc42bcc7ddbf51124c30f95a877a0c5168a3bfde # v5.2.1
+      - uses: jdx/mise-action@236a21c3b91f5db6d4e174b348674a0f0caac06d # v5.2.9
 
       - name: Lint for pull requests
         if: github.event_name == 'pull_request'

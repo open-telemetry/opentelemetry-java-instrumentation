@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CONSUMER;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.instrumentation.testing.junit.MessagingMetricsAssertions.assertCounter;
@@ -18,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.trace.data.LinkData;
@@ -28,40 +28,39 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
 
   @Override
   void assertSpringJmsListener() {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("send spring-jms-listener")
-                        .hasKind(PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
-                span -> {
-                  span.hasName("process spring-jms-listener")
-                      .hasKind(CONSUMER)
-                      .hasParent(trace.getSpan(1))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(MESSAGING_SYSTEM, "jms"),
-                          equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                          equalTo(MESSAGING_OPERATION_NAME, "process"),
-                          equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                          satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                          equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"));
-                  span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
-                },
-                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("send spring-jms-listener")
+                    .hasKind(PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                        satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank)),
+            span -> {
+              span.hasName("process spring-jms-listener")
+                  .hasKind(CONSUMER)
+                  .hasParent(trace.getSpan(1))
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(stringKey("messaging.system.name"), "jms"),
+                      equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                      equalTo(MESSAGING_OPERATION_NAME, "process"),
+                      equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                      satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                      equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"));
+              span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
+            },
+            span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
 
     Attributes sendAttributes =
         Attributes.of(
             MESSAGING_OPERATION_NAME,
             "send",
-            MESSAGING_SYSTEM,
+            stringKey("messaging.system.name"),
             "jms",
             MESSAGING_DESTINATION_NAME,
             "spring-jms-listener");
@@ -75,7 +74,7 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractSpringJmsListenerTe
     Attributes processAttributes =
         Attributes.builder()
             .put(MESSAGING_OPERATION_NAME, "process")
-            .put(MESSAGING_SYSTEM, "jms")
+            .put(stringKey("messaging.system.name"), "jms")
             .put(MESSAGING_DESTINATION_NAME, "spring-jms-listener")
             .put(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription")
             .build();

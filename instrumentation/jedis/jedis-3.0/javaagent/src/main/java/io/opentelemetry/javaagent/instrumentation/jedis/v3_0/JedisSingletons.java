@@ -12,15 +12,18 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadSuppression;
 
 public class JedisSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jedis-3.0";
 
   private static final Instrumenter<JedisRequest, Void> instrumenter;
+  private static final ScopedThreadSuppression transactionFramingSuppression =
+      new ScopedThreadSuppression();
 
   static {
     JedisDbAttributesGetter dbAttributesGetter = new JedisDbAttributesGetter();
@@ -32,7 +35,7 @@ public class JedisSingletons {
                 RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(
+                ServerServiceAttributesExtractor.create(
                     dbAttributesGetter, GlobalOpenTelemetry.get()))
             .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
@@ -43,6 +46,10 @@ public class JedisSingletons {
 
   public static Instrumenter<JedisRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static ScopedThreadSuppression transactionFramingSuppression() {
+    return transactionFramingSuppression;
   }
 
   private JedisSingletons() {}

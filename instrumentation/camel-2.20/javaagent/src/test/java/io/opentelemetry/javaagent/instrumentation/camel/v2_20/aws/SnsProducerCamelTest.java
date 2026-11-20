@@ -18,7 +18,6 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.io.ByteStreams;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -46,7 +45,7 @@ class SnsProducerCamelTest {
 
   @BeforeAll
   static void setUp() throws IOException {
-    server = HttpServer.create(new InetSocketAddress("localhost", PortUtils.findOpenPort()), 0);
+    server = HttpServer.create(new InetSocketAddress("localhost", 0), 0);
     server.createContext("/", SnsProducerCamelTest::handleRequest);
     server.start();
 
@@ -76,28 +75,26 @@ class SnsProducerCamelTest {
         new CamelSpringApplication(
             awsConnector, SnsProducerConfig.class, ImmutableMap.of("topicName", topicName));
     camelApp.start();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, "SNS.ListTopics", null, null).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> AwsSpanAssertions.sns(span, "SNS.ListTopics", null, null).hasNoParent()));
     testing.clearData();
 
     camelApp.producerTemplate().sendBody("direct:input", "{\"type\": \"hello\"}");
 
     AtomicReference<SpanData> camelSend = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> CamelSpanAssertions.direct(span, "input"),
-                span -> {
-                  camelSend.set(trace.getSpan(1));
-                  CamelSpanAssertions.snsPublish(span, topicName).hasParent(trace.getSpan(0));
-                  span.hasAttribute(MESSAGING_MESSAGE_ID, "message-id");
-                },
-                span -> {
-                  AwsSpanAssertions.sns(span, "SNS.Publish", topicArn, topicArn)
-                      .hasParent(trace.getSpan(1));
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> CamelSpanAssertions.direct(span, "input"),
+            span -> {
+              camelSend.set(trace.getSpan(1));
+              CamelSpanAssertions.snsPublish(span, topicName).hasParent(trace.getSpan(0));
+              span.hasAttribute(MESSAGING_MESSAGE_ID, "message-id");
+            },
+            span -> {
+              AwsSpanAssertions.sns(span, "SNS.Publish", topicArn, topicArn)
+                  .hasParent(trace.getSpan(1));
+            }));
 
     assertThat(publishRequest.get())
         .contains("Name=traceparent")

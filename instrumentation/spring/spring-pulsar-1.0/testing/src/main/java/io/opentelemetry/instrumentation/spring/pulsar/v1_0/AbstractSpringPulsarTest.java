@@ -18,7 +18,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
@@ -116,78 +115,65 @@ public abstract class AbstractSpringPulsarTest {
         "io.opentelemetry.spring-pulsar-1.0",
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("s")
+                    .hasDescription("Duration of processing operation.")
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.pulsar-2.8",
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                    OTEL_SUBSCRIPTION),
-                                                equalTo(SERVER_ADDRESS, brokerHost),
-                                                equalTo(SERVER_PORT, brokerPort))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application.")
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                    equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
+                                    equalTo(
+                                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, OTEL_SUBSCRIPTION),
+                                    equalTo(SERVER_ADDRESS, brokerHost),
+                                    equalTo(SERVER_PORT, brokerPort))))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-pulsar-1.0",
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
   }
 
   protected List<AttributeAssertion> publishAttributes() {
     return asList(
-        equalTo(MESSAGING_SYSTEM, "pulsar"),
+        equalTo(stringKey("messaging.system.name"), "pulsar"),
         equalTo(MESSAGING_OPERATION_NAME, "send"),
         equalTo(MESSAGING_OPERATION_TYPE, "send"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
         satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotEmpty),
         equalTo(SERVER_ADDRESS, brokerHost),
         equalTo(SERVER_PORT, brokerPort),
-        equalTo(stringKey("messaging.pulsar.message.type"), experimental("normal")));
+        equalTo(stringKey("pulsar.message.type"), experimental("normal")));
   }
 
   private static <T> T experimental(T value) {
@@ -196,7 +182,7 @@ public abstract class AbstractSpringPulsarTest {
 
   protected List<AttributeAssertion> processAttributes() {
     return asList(
-        equalTo(MESSAGING_SYSTEM, "pulsar"),
+        equalTo(stringKey("messaging.system.name"), "pulsar"),
         equalTo(MESSAGING_OPERATION_NAME, "process"),
         equalTo(MESSAGING_OPERATION_TYPE, "process"),
         equalTo(MESSAGING_MESSAGE_BODY_SIZE, null),
@@ -206,7 +192,7 @@ public abstract class AbstractSpringPulsarTest {
 
   protected List<AttributeAssertion> receiveAttributes() {
     return asList(
-        equalTo(MESSAGING_SYSTEM, "pulsar"),
+        equalTo(stringKey("messaging.system.name"), "pulsar"),
         equalTo(MESSAGING_OPERATION_NAME, "receive"),
         equalTo(MESSAGING_OPERATION_TYPE, "receive"),
         equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),

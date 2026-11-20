@@ -22,12 +22,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -87,39 +84,37 @@ class WrapperTest extends AbstractWrapperTest {
             producerSpanContext.set(asRemote(trace.getSpan(1).getSpanContext()));
           },
           trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("poll " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasNoParent()
-                          .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
-                          .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName("poll " + SHARED_TOPIC)
+                      .hasKind(SpanKind.CLIENT)
+                      .hasNoParent()
+                      .hasLinks(batchRecordLink(producerSpanContext.get(), consumedOffset))
+                      .hasAttributesSatisfyingExactly(receiveAttributes(testHeaders))));
       assertMessagingMetrics();
     } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      span.hasName("send " + SHARED_TOPIC)
-                          .hasKind(SpanKind.PRODUCER)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              sendAttributes(testHeaders, testExperimental)),
-                  span ->
-                      span.hasName("process " + SHARED_TOPIC)
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              processAttributes(greeting, testHeaders, testExperimental)),
-                  span ->
-                      span.hasName("process child")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(2)),
-                  span ->
-                      span.hasName("producer callback")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  span.hasName("send " + SHARED_TOPIC)
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          sendAttributes(testHeaders, testExperimental)),
+              span ->
+                  span.hasName("process " + SHARED_TOPIC)
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(
+                          processAttributes(greeting, testHeaders, testExperimental)),
+              span ->
+                  span.hasName("process child")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(2)),
+              span ->
+                  span.hasName("producer callback")
+                      .hasKind(SpanKind.INTERNAL)
+                      .hasParent(trace.getSpan(0))));
       assertMessagingMetricsWithoutReceiveTelemetry();
     }
   }
@@ -149,7 +144,7 @@ class WrapperTest extends AbstractWrapperTest {
   }
 
   private static LinkData batchRecordLink(SpanContext producerSpanContext, long offset) {
-    return LinkData.create(producerSpanContext, Attributes.of(MESSAGING_KAFKA_OFFSET, offset));
+    return LinkData.create(producerSpanContext, Attributes.of(longKey("kafka.offset"), offset));
   }
 
   protected static List<AttributeAssertion> sendAttributes(
@@ -157,23 +152,23 @@ class WrapperTest extends AbstractWrapperTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send"),
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty)));
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("producer")));
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
+    assertions.add(satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative));
     if (testHeaders) {
       assertions.add(
           equalTo(
               MessageHeaderUtil.headerAttributeKey("Test-Message-Header"), singletonList("test")));
     }
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testExperimental) {
       assertions.add(
           satisfies(
-              stringKey("messaging.kafka.bootstrap.servers"),
+              stringKey("kafka.bootstrap.servers"),
               val -> val.matches("^localhost:\\d+(,localhost:\\d+)*$")));
     }
     return assertions;
@@ -184,7 +179,7 @@ class WrapperTest extends AbstractWrapperTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "process"),
                 equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -192,8 +187,8 @@ class WrapperTest extends AbstractWrapperTest {
                 satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test")));
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
           equalTo(
@@ -210,14 +205,14 @@ class WrapperTest extends AbstractWrapperTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, SHARED_TOPIC),
                 equalTo(MESSAGING_OPERATION_NAME, "poll"),
                 equalTo(MESSAGING_OPERATION_TYPE, "receive"),
                 equalTo(MESSAGING_CONSUMER_GROUP_NAME, "test"),
                 equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)));
     assertions.add(satisfies(MESSAGING_CLIENT_ID, val -> val.startsWith("consumer")));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
     if (testHeaders) {
       assertions.add(
@@ -236,33 +231,30 @@ class WrapperTest extends AbstractWrapperTest {
     Consumer<?, ?> mockConsumer = mock();
     IllegalStateException error = new IllegalStateException("test");
     when(mockConsumer.poll(Duration.ofSeconds(10))).thenThrow(error);
-    Consumer<?, ?> wrappedConsumer = telemetry.wrap(mockConsumer);
+    Consumer<?, ?> wrappedConsumer = telemetry.instrument(mockConsumer);
     assertThatThrownBy(() -> wrappedConsumer.poll(Duration.ofSeconds(10))).isSameAs(error);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? error : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM, "kafka"),
-                            equalTo(MESSAGING_OPERATION_NAME, "poll"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("poll")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasException(emitExceptionAsSpanEvents() ? error : null)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "kafka"),
+                    equalTo(MESSAGING_OPERATION_NAME, "poll"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 0))));
 
     if (emitExceptionAsLogs()) {
-      testing.waitAndAssertLogRecords(
-          logRecord ->
-              logRecord
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("messaging.receive.exception")
-                  .hasException(error)
-                  .hasTotalAttributeCount(3));
+      testing.waitAndAssertLogRecords(logRecord ->
+          logRecord
+              .hasSeverity(Severity.WARN)
+              .hasEventName("messaging.receive.exception")
+              .hasException(error)
+              .hasTotalAttributeCount(3));
     }
   }
 }

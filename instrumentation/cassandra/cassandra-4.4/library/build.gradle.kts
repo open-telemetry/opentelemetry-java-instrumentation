@@ -1,5 +1,6 @@
 plugins {
   id("otel.library-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 dependencies {
@@ -13,10 +14,4 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation(project(":instrumentation:cassandra:cassandra-4.4:testing"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

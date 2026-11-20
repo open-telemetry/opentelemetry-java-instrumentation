@@ -28,51 +28,41 @@ public final class OpenTelemetryHttpClient {
   }
 
   public HttpClient instrument(HttpClient httpClient) throws Exception {
-    return httpClient.copyWith(
-        httpClientSpec -> {
-          httpClientSpec.requestIntercept(
-              requestSpec -> {
-                Context parentOtelCtx =
-                    Execution.current().maybeGet(Context.class).orElse(Context.current());
-                if (!instrumenter.shouldStart(parentOtelCtx, requestSpec)) {
-                  return;
-                }
+    return httpClient.copyWith(httpClientSpec -> {
+      httpClientSpec.requestIntercept(requestSpec -> {
+        Context parentOtelCtx =
+            Execution.current().maybeGet(Context.class).orElse(Context.current());
+        if (!instrumenter.shouldStart(parentOtelCtx, requestSpec)) {
+          return;
+        }
 
-                Context otelCtx = instrumenter.start(parentOtelCtx, requestSpec);
-                Span span = Span.fromContext(otelCtx);
-                String path = requestSpec.getUri().getPath();
-                span.setAttribute(HTTP_ROUTE, path);
-                Execution.current().add(new ContextHolder(otelCtx, requestSpec));
-              });
+        Context otelCtx = instrumenter.start(parentOtelCtx, requestSpec);
+        Span span = Span.fromContext(otelCtx);
+        String path = requestSpec.getUri().getPath();
+        span.setAttribute(HTTP_ROUTE, path);
+        Execution.current().add(new ContextHolder(otelCtx, requestSpec));
+      });
 
-          httpClientSpec.responseIntercept(
-              httpResponse -> {
-                Execution execution = Execution.current();
-                execution
-                    .maybeGet(ContextHolder.class)
-                    .ifPresent(
-                        contextHolder -> {
-                          execution.remove(ContextHolder.class);
-                          instrumenter.end(
-                              contextHolder.context(),
-                              contextHolder.requestSpec(),
-                              httpResponse,
-                              null);
-                        });
-              });
+      httpClientSpec.responseIntercept(httpResponse -> {
+        Execution execution = Execution.current();
+        execution
+            .maybeGet(ContextHolder.class)
+            .ifPresent(contextHolder -> {
+              execution.remove(ContextHolder.class);
+              instrumenter.end(
+                  contextHolder.context(), contextHolder.requestSpec(), httpResponse, null);
+            });
+      });
 
-          httpClientSpec.errorIntercept(
-              ex -> {
-                Execution execution = Execution.current();
-                execution
-                    .maybeGet(ContextHolder.class)
-                    .ifPresent(
-                        contextHolder -> {
-                          execution.remove(ContextHolder.class);
-                          instrumenter.end(
-                              contextHolder.context(), contextHolder.requestSpec(), null, ex);
-                        });
-              });
-        });
+      httpClientSpec.errorIntercept(ex -> {
+        Execution execution = Execution.current();
+        execution
+            .maybeGet(ContextHolder.class)
+            .ifPresent(contextHolder -> {
+              execution.remove(ContextHolder.class);
+              instrumenter.end(contextHolder.context(), contextHolder.requestSpec(), null, ex);
+            });
+      });
+    });
   }
 }

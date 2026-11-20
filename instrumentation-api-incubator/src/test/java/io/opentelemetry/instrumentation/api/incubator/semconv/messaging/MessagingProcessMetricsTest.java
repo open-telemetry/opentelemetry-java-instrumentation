@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingOperationType.PROCESS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetrySignal.PROCESS_DURATION;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingTelemetryState.contains;
@@ -16,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_TEMPLATE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
 import io.opentelemetry.api.common.Attributes;
@@ -47,7 +47,7 @@ class MessagingProcessMetricsTest {
 
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_SYSTEM, "pulsar")
+            .put(stringKey("messaging.system.name"), "pulsar")
             .put(MESSAGING_DESTINATION_NAME, "topic")
             .put(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}")
             .put(MESSAGING_OPERATION_NAME, "process")
@@ -62,26 +62,21 @@ class MessagingProcessMetricsTest {
     listener.onEnd(context, endAttributes, nanos(350));
 
     assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactly(
-            metric ->
-                assertThat(metric)
-                    .hasName("messaging.process.duration")
-                    .hasUnit("s")
-                    .hasDescription("Duration of processing operation.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.25)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                            equalTo(MESSAGING_SYSTEM, "pulsar"),
-                                            equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
-                                            equalTo(
-                                                ERROR_TYPE,
-                                                IllegalStateException.class.getName())))));
+        .satisfiesExactly(metric ->
+            assertThat(metric)
+                .hasName("messaging.process.duration")
+                .hasUnit("s")
+                .hasDescription("Duration of processing operation.")
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasSum(0.25)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                equalTo(MESSAGING_DESTINATION_TEMPLATE, "topic-{id}"),
+                                equalTo(ERROR_TYPE, IllegalStateException.class.getName())))));
   }
 
   @Test
@@ -94,7 +89,7 @@ class MessagingProcessMetricsTest {
     OperationListener inner = MessagingProcessMetrics.get().create(meterProvider.get("inner"));
     Attributes attributes =
         Attributes.builder()
-            .put(MESSAGING_SYSTEM, "kafka")
+            .put(stringKey("messaging.system.name"), "kafka")
             .put(MESSAGING_OPERATION_NAME, "process")
             .put(MESSAGING_OPERATION_TYPE, "process")
             .build();

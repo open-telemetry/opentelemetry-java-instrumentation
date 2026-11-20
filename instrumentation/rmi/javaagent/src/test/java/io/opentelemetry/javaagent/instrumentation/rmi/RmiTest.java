@@ -5,8 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.rmi;
 
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitOldRpcSemconv;
-import static io.opentelemetry.instrumentation.testing.junit.rpc.SemconvRpcStabilityUtil.emitPreviewRpcSemconv;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
@@ -14,16 +13,15 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Method;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
@@ -44,7 +42,6 @@ import rmi.app.NumericGreeter;
 import rmi.app.ParentGreeter;
 import rmi.app.Server;
 
-@SuppressWarnings("deprecation") // using deprecated semconv
 class RmiTest {
 
   @RegisterExtension
@@ -80,34 +77,26 @@ class RmiTest {
 
     assertThat(response).contains("Hello you");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("rmi.app.Greeter/hello")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Greeter" : null),
-                            equalTo(
-                                RPC_METHOD,
-                                emitPreviewRpcSemconv() ? "rmi.app.Greeter/hello" : "hello")),
-                span ->
-                    span.hasName(
-                            emitPreviewRpcSemconv()
-                                ? "rmi.app.Greeter/hello"
-                                : "rmi.app.Server/hello")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
-                            equalTo(
-                                RPC_METHOD,
-                                emitPreviewRpcSemconv() ? "rmi.app.Greeter/hello" : "hello"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("rmi.app.Greeter/hello")
+                    .hasKind(SpanKind.CLIENT)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "java_rmi"),
+                        equalTo(RPC_METHOD, "rmi.app.Greeter/hello")),
+            span ->
+                span.hasName("rmi.app.Greeter/hello")
+                    .hasKind(SpanKind.SERVER)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "java_rmi"),
+                        equalTo(RPC_METHOD, "rmi.app.Greeter/hello"))));
+
+    assertDurationMetrics("rmi.app.Greeter/hello", "rmi.app.Greeter/hello", null);
   }
 
   @Test
@@ -145,62 +134,43 @@ class RmiTest {
 
     assertThat(thrown).isNotNull();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("rmi.app.Greeter/exceptional")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
-                                        equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Greeter" : null),
-                            equalTo(
-                                RPC_METHOD,
-                                emitPreviewRpcSemconv()
-                                    ? "rmi.app.Greeter/exceptional"
-                                    : "exceptional"),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitPreviewRpcSemconv() ? thrown.getClass().getName() : null)),
-                span ->
-                    span.hasName(
-                            emitPreviewRpcSemconv()
-                                ? "rmi.app.Greeter/exceptional"
-                                : "rmi.app.Server/exceptional")
-                        .hasKind(SpanKind.SERVER)
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
-                                        equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
-                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
-                            equalTo(
-                                RPC_METHOD,
-                                emitPreviewRpcSemconv()
-                                    ? "rmi.app.Greeter/exceptional"
-                                    : "exceptional"),
-                            equalTo(
-                                ERROR_TYPE,
-                                emitPreviewRpcSemconv() ? thrown.getClass().getName() : null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("rmi.app.Greeter/exceptional")
+                    .hasKind(SpanKind.CLIENT)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasParent(trace.getSpan(0))
+                    .hasEventsSatisfyingExactly(event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
+                                equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                                satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "java_rmi"),
+                        equalTo(RPC_METHOD, "rmi.app.Greeter/exceptional"),
+                        equalTo(ERROR_TYPE, thrown.getClass().getName())),
+            span ->
+                span.hasName("rmi.app.Greeter/exceptional")
+                    .hasKind(SpanKind.SERVER)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasEventsSatisfyingExactly(event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, thrown.getClass().getCanonicalName()),
+                                equalTo(EXCEPTION_MESSAGE, thrown.getMessage()),
+                                satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "java_rmi"),
+                        equalTo(RPC_METHOD, "rmi.app.Greeter/exceptional"),
+                        equalTo(ERROR_TYPE, thrown.getClass().getName()))));
+
+    assertDurationMetrics(
+        "rmi.app.Greeter/exceptional", "rmi.app.Greeter/exceptional", thrown.getClass().getName());
   }
 
   @ParameterizedTest
@@ -227,35 +197,54 @@ class RmiTest {
     String methodName = method.getName();
     String clientService = method.getDeclaringClass().getName();
     String rpcMethod = remoteService == null ? null : remoteService + "/" + methodName;
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(clientService + "/" + methodName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? clientService : null),
-                            equalTo(
-                                RPC_METHOD,
-                                emitPreviewRpcSemconv()
-                                    ? clientService + "/" + methodName
-                                    : methodName)),
-                span ->
-                    span.hasName(
-                            emitPreviewRpcSemconv()
-                                ? (rpcMethod == null ? "java_rmi" : rpcMethod)
-                                : "rmi.app.Server/" + methodName)
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM, emitOldRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SYSTEM_NAME, emitPreviewRpcSemconv() ? "java_rmi" : null),
-                            equalTo(RPC_SERVICE, emitOldRpcSemconv() ? "rmi.app.Server" : null),
-                            equalTo(
-                                RPC_METHOD, emitPreviewRpcSemconv() ? rpcMethod : methodName))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName(clientService + "/" + methodName)
+                    .hasKind(SpanKind.CLIENT)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "java_rmi"),
+                        equalTo(RPC_METHOD, clientService + "/" + methodName)),
+            span ->
+                span.hasName((rpcMethod == null ? "java_rmi" : rpcMethod))
+                    .hasKind(SpanKind.SERVER)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "java_rmi"), equalTo(RPC_METHOD, rpcMethod))));
+
+    assertDurationMetrics(clientService + "/" + methodName, rpcMethod, null);
+  }
+
+  private static void assertDurationMetrics(
+      String clientMethod, String serverMethod, String errorType) {
+    assertDurationMetric("rpc.client.call.duration", clientMethod, errorType);
+    assertDurationMetric("rpc.server.call.duration", serverMethod, errorType);
+  }
+
+  private static void assertDurationMetric(String metricName, String rpcMethod, String errorType) {
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.rmi",
+        metricName,
+        metrics ->
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasName(metricName)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasUnit("s")
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasCount(1)
+                                .hasBucketBoundaries(
+                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
+                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(RPC_SYSTEM_NAME, "java_rmi"),
+                                    equalTo(RPC_METHOD, rpcMethod),
+                                    equalTo(ERROR_TYPE, errorType))))));
   }
 
   private static Stream<Arguments> remoteMethods() throws NoSuchMethodException {

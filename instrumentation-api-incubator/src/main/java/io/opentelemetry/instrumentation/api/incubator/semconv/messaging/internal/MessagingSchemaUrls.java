@@ -13,7 +13,7 @@ import io.opentelemetry.semconv.SchemaUrls;
  */
 public final class MessagingSchemaUrls {
 
-  public static final String SCHEMA_URL = SchemaUrls.V1_43_0;
+  public static final String SCHEMA_URL = SchemaUrls.V1_45_0;
 
   private MessagingSchemaUrls() {}
 }

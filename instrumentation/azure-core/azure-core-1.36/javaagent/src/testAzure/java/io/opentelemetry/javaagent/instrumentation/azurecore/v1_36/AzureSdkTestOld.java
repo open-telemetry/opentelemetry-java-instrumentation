@@ -43,15 +43,13 @@ class AzureSdkTestOld {
     Context context = azTracer.start("hello", Context.NONE);
     azTracer.end(null, null, context);
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("hello")
-                        .satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.23.1"))
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasStatus(StatusData.unset())
-                        .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("hello")
+                .satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.23.1"))
+                .hasKind(SpanKind.INTERNAL)
+                .hasStatus(StatusData.unset())
+                .hasTotalAttributeCount(0)));
   }
 
   private static Tracer createAzTracer() {

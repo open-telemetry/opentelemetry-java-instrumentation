@@ -81,6 +81,25 @@ public final class AgentElementMatchers {
   }
 
   /**
+   * Matches a method with exactly the provided ordered parameter type matchers.
+   *
+   * <p>Each matcher is applied to the erased type of the corresponding parameter. Use {@code
+   * is(Type.class)} for types safely accessible from the agent class loader and {@code
+   * named("fully.qualified.Type")} for types that should not be loaded. Passing no matchers matches
+   * only methods with no parameters. Prefer Byte Buddy's class-based {@code takesArguments} matcher
+   * when every parameter type can be safely referenced by class literal.
+   *
+   * @param matchers the exact ordered parameter type matchers.
+   * @return a matcher for methods with the specified parameter types.
+   */
+  @SafeVarargs
+  @SuppressWarnings("varargs")
+  public static <T extends MethodDescription> ElementMatcher.Junction<T> takesArguments(
+      ElementMatcher<? super TypeDescription>... matchers) {
+    return new TakesArgumentsMatcher<>(matchers);
+  }
+
+  /**
    * Matches a class loader that contains all classes that are passed as the {@code classNames}
    * parameter. Does not match the bootstrap classpath. Don't use this matcher with classes expected
    * to be on the bootstrap.

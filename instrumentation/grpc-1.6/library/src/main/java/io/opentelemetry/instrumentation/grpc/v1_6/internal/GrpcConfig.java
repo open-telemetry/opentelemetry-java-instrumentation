@@ -20,34 +20,33 @@ import javax.annotation.Nullable;
  */
 public class GrpcConfig {
 
-  @Nullable private final IncludeExclude clientRequestMetadata;
-  @Nullable private final IncludeExclude serverRequestMetadata;
+  @Nullable private final IncludeExclude clientRequestHeaders;
+  @Nullable private final IncludeExclude serverRequestHeaders;
 
   public static GrpcConfig create(OpenTelemetry openTelemetry) {
     return new GrpcConfig(DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "grpc"));
   }
 
   GrpcConfig(DeclarativeConfigProperties config) {
-    clientRequestMetadata = getRequestMetadata(config, "client");
-    serverRequestMetadata = getRequestMetadata(config, "server");
+    clientRequestHeaders = getRequestHeaders(config, "client");
+    serverRequestHeaders = getRequestHeaders(config, "server");
   }
 
   @Nullable
-  public IncludeExclude getClientRequestMetadata() {
-    return clientRequestMetadata;
+  public IncludeExclude getClientRequestHeaders() {
+    return clientRequestHeaders;
   }
 
   @Nullable
-  public IncludeExclude getServerRequestMetadata() {
-    return serverRequestMetadata;
+  public IncludeExclude getServerRequestHeaders() {
+    return serverRequestHeaders;
   }
 
   @Nullable
-  private static IncludeExclude getRequestMetadata(
-      DeclarativeConfigProperties config, String side) {
-    DeclarativeConfigProperties requestMetadata = config.get(side).get("request_metadata");
-    List<String> included = requestMetadata.getScalarList("included", String.class);
-    List<String> excluded = requestMetadata.getScalarList("excluded", String.class);
+  private static IncludeExclude getRequestHeaders(DeclarativeConfigProperties config, String side) {
+    DeclarativeConfigProperties requestHeaders = config.get(side).get("request_headers");
+    List<String> included = requestHeaders.getScalarList("included", String.class);
+    List<String> excluded = requestHeaders.getScalarList("excluded", String.class);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(included == null ? emptyList() : included)

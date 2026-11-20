@@ -34,6 +34,13 @@ final class InstrumentedChatServiceAsync extends DelegatingInvocationHandler<Cha
   }
 
   @Override
+  protected ChatServiceAsync wrap(ChatServiceAsync delegate) {
+    return new InstrumentedChatServiceAsync(
+            delegate, instrumenter, eventLogger, captureMessageContent)
+        .createProxy();
+  }
+
+  @Override
   public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
     String methodName = method.getName();
     Class<?>[] parameterTypes = method.getParameterTypes();

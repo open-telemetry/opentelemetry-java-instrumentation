@@ -38,7 +38,7 @@ final class StreamedMessageBuffer {
     if (finishReason != null) {
       choice.finishReason(ChatCompletion.Choice.FinishReason.of(finishReason));
     } else {
-      // Can't happen in practice, mostly to satisfy null check
+      // The caller may close the stream before the finish reason arrives.
       choice.finishReason(JsonField.ofNullable(null));
     }
     if (message != null) {
@@ -90,21 +90,19 @@ final class StreamedMessageBuffer {
         toolCall.type().ifPresent(type -> buffer.type = type.toString());
         toolCall
             .function()
-            .ifPresent(
-                function -> {
-                  function.name().ifPresent(name -> buffer.function.name = name);
-                  if (captureMessageContent) {
-                    function
-                        .arguments()
-                        .ifPresent(
-                            args -> {
-                              if (buffer.function.arguments == null) {
-                                buffer.function.arguments = new StringBuilder();
-                              }
-                              buffer.function.arguments.append(args);
-                            });
-                  }
-                });
+            .ifPresent(function -> {
+              function.name().ifPresent(name -> buffer.function.name = name);
+              if (captureMessageContent) {
+                function
+                    .arguments()
+                    .ifPresent(args -> {
+                      if (buffer.function.arguments == null) {
+                        buffer.function.arguments = new StringBuilder();
+                      }
+                      buffer.function.arguments.append(args);
+                    });
+              }
+            });
       }
     }
   }

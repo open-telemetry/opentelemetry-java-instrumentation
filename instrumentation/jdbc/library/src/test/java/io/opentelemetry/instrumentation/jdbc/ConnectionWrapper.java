@@ -17,7 +17,7 @@ class ConnectionWrapper {
 
   // hack since JdbcTelemetry only supports wrapping data sources
   static Connection wrap(Connection connection, JdbcTelemetry telemetry) throws SQLException {
-    DataSource dataSource = telemetry.wrap(new SingleConnectionDataSource(connection));
+    DataSource dataSource = telemetry.instrument(new SingleConnectionDataSource(connection));
     return dataSource.getConnection();
   }
 

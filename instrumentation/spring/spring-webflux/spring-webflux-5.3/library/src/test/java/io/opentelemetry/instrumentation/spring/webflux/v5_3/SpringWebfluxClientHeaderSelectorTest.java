@@ -82,14 +82,13 @@ class SpringWebfluxClientHeaderSelectorTest {
   private static void sendRequest(SpringWebfluxClientTelemetry telemetry) {
     WebClient client =
         WebClient.builder()
-            .filters(telemetry::addFilter)
-            .exchangeFunction(
-                request ->
-                    Mono.just(
-                        ClientResponse.create(HttpStatus.OK)
-                            .header("X-Test-Response", "response-value")
-                            .header("X-Secret-Token", "secret-value")
-                            .build()))
+            .filter(telemetry.createFilter())
+            .exchangeFunction(request ->
+                Mono.just(
+                    ClientResponse.create(HttpStatus.OK)
+                        .header("X-Test-Response", "response-value")
+                        .header("X-Secret-Token", "secret-value")
+                        .build()))
             .build();
 
     client

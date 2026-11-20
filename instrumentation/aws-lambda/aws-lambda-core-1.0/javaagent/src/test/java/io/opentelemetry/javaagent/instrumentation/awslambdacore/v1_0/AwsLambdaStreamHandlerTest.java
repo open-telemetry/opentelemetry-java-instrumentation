@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -64,13 +64,12 @@ class AwsLambdaStreamHandlerTest {
     RequestStreamHandlerTestImpl handler = new RequestStreamHandlerTestImpl();
     handler.handleRequest(input, output, context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -82,24 +81,22 @@ class AwsLambdaStreamHandlerTest {
     Throwable thrown = catchThrowable(() -> handler.handleRequest(input, output, context));
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.error())
+                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
-      testing.waitAndAssertLogRecords(
-          logRecord ->
-              logRecord
-                  .hasSeverity(Severity.ERROR)
-                  .hasEventName("faas.invocation.exception")
-                  .hasException(thrown)
-                  .hasTotalAttributeCount(3));
+      testing.waitAndAssertLogRecords(logRecord ->
+          logRecord
+              .hasSeverity(Severity.ERROR)
+              .hasEventName("faas.invocation.exception")
+              .hasException(thrown)
+              .hasTotalAttributeCount(3));
     }
   }
 

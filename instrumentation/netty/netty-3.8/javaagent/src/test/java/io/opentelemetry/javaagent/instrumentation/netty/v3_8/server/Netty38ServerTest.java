@@ -87,13 +87,12 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setHttpAttributes(
-        serverEndpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HTTP_ROUTE);
-          return attributes;
-        });
+    options.setHttpAttributes(serverEndpoint -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(HTTP_ROUTE);
+      return attributes;
+    });
 
     options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(serverEndpoint -> true);
@@ -129,10 +128,9 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                         } else if (INDEXED_CHILD.equals(endpoint)) {
                           responseContent =
                               ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
-                          endpoint.collectSpanAttributes(
-                              name ->
-                                  new QueryStringDecoder(uri)
-                                      .getParameters().get(name).stream().findFirst().orElse(null));
+                          endpoint.collectSpanAttributes(name ->
+                              new QueryStringDecoder(uri)
+                                  .getParameters().get(name).stream().findFirst().orElse(null));
                           response =
                               new DefaultHttpResponse(
                                   HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));
@@ -186,10 +184,12 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
 
           @Override
           public void exceptionCaught(ChannelHandlerContext ctx, ExceptionEvent ex) {
-            String message =
-                ex.getCause() == null
-                    ? "<no cause>"
-                    : ex.getCause().getMessage() == null ? "<null>" : ex.getCause().getMessage();
+            String message;
+            if (ex.getCause() == null) {
+              message = "<no cause>";
+            } else {
+              message = ex.getCause().getMessage() == null ? "<null>" : ex.getCause().getMessage();
+            }
             ChannelBuffer buffer = ChannelBuffers.copiedBuffer(message, CharsetUtil.UTF_8);
             HttpResponse response =
                 new DefaultHttpResponse(HTTP_1_1, HttpResponseStatus.INTERNAL_SERVER_ERROR);

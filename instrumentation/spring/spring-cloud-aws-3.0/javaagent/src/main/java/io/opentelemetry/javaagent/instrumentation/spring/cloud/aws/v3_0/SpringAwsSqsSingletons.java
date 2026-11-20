@@ -86,22 +86,20 @@ final class SpringAwsSqsSingletons {
                     .build())
             // a batch has no single creation context to use as a parent, so the creation context
             // of every message is linked instead
-            .addSpanLinksExtractor(
-                (spanLinks, parentContext, request) -> {
-                  for (SqsMessage message : request.getSqsMessages()) {
-                    spanLinks.addLink(
-                        Span.fromContext(message.getCreationContext()).getSpanContext(),
-                        Attributes.of(MESSAGING_MESSAGE_ID, message.getMessageId()));
-                  }
-                })
+            .addSpanLinksExtractor((spanLinks, parentContext, request) -> {
+              for (SqsMessage message : request.getSqsMessages()) {
+                spanLinks.addLink(
+                    Span.fromContext(message.getCreationContext()).getSpanContext(),
+                    Attributes.of(MESSAGING_MESSAGE_ID, message.getMessageId()));
+              }
+            })
             .addOperationMetrics(MessagingProcessMetrics.get());
     // without receive telemetry, deliveries are counted by the process operation, like the sdk does
     // for single messages; a delivery is only counted the first time it is processed
     if (!ExperimentalConfig.get().messagingReceiveInstrumentationEnabled()) {
       builder
-          .addContextCustomizer(
-              (context, request, startAttributes) ->
-                  context.with(CONSUMED_MESSAGES_COUNT_KEY, claimDeliveries(request)))
+          .addContextCustomizer((context, request, startAttributes) ->
+              context.with(CONSUMED_MESSAGES_COUNT_KEY, claimDeliveries(request)))
           .addOperationMetrics(consumedMessagesMetrics);
     }
     setMessagingProcessExceptionEventExtractor(builder);

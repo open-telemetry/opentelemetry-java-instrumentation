@@ -12,6 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.rabbitmq.client.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
@@ -39,22 +40,33 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
                     .or(takesArgument(1, named("org.springframework.amqp.core.Message")))),
         getClass().getName() + "$ExecuteListenerAdvice");
     transformer.applyAdviceToMethod(
-        named("invokeListener"), getClass().getName() + "$InvokeListenerAdvice");
+        named("invokeListener")
+            .and(
+                takesArgument(1, Object.class)
+                    .or(takesArgument(1, named("org.springframework.amqp.core.Message")))),
+        getClass().getName() + "$InvokeListenerAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ExecuteListenerAdvice {
 
-    public static class AdviceScope {
-      private final Context context;
-      private final Scope scope;
-      private final SpringRabbitRequest request;
+    private static final ScopedThreadValue<SpringRabbitRequest> currentRequest =
+        new ScopedThreadValue<>();
 
-      @Nullable
+    public static ScopedThreadValue<SpringRabbitRequest> currentRequest() {
+      return currentRequest;
+    }
+
+    public static class AdviceScope {
+      @Nullable private final Context context;
+      @Nullable private final Scope scope;
+      @Nullable final SpringRabbitRequest request;
+      @Nullable SpringRabbitRequest previousRequest;
+
       public static AdviceScope start(
           AbstractMessageListenerContainer container, Channel channel, Object data) {
         if (!SpringRabbitListenerUtil.canTraceListenerProcessing(container)) {
-          return null;
+          return new AdviceScope();
         }
 
         SpringRabbitRequest request;
@@ -66,18 +78,18 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
           List<Message> messages = new ArrayList<>();
           for (Object message : (List<?>) data) {
             if (!(message instanceof Message)) {
-              return null;
+              return new AdviceScope();
             }
             messages.add((Message) message);
           }
           request = new SpringRabbitRequest(channel, messages);
         } else {
-          return null;
+          return new AdviceScope();
         }
 
         Context parentContext = Context.current();
         if (!instrumenter().shouldStart(parentContext, request)) {
-          return null;
+          return new AdviceScope();
         }
         Context context;
         // Span-start callbacks should not observe an ambient RabbitMQ process context.
@@ -89,6 +101,12 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         return new AdviceScope(context, request);
       }
 
+      private AdviceScope() {
+        this.context = null;
+        this.scope = null;
+        this.request = null;
+      }
+
       private AdviceScope(Context context, SpringRabbitRequest request) {
         this.context = context;
         this.request = request;
@@ -96,6 +114,12 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
       }
 
       public void end(@Nullable Throwable throwable) {
+        Context context = this.context;
+        Scope scope = this.scope;
+        SpringRabbitRequest request = this.request;
+        if (context == null || scope == null || request == null) {
+          return;
+        }
         scope.close();
         request.restoreProcessingContext(context);
         instrumenter()
@@ -103,28 +127,34 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
       }
     }
 
-    @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static AdviceScope onEnter(
         @Advice.This AbstractMessageListenerContainer container,
         @Advice.Argument(0) Channel channel,
         @Advice.Argument(1) Object data) {
-      return AdviceScope.start(container, channel, data);
+      AdviceScope adviceScope = AdviceScope.start(container, channel, data);
+      adviceScope.previousRequest = currentRequest.set(adviceScope.request);
+      return adviceScope;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable AdviceScope adviceScope) {
-      if (adviceScope == null) {
-        return;
-      }
+        @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
+      currentRequest.restore(adviceScope.previousRequest);
       adviceScope.end(throwable);
     }
   }
 
   @SuppressWarnings("unused")
   public static class InvokeListenerAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static void onEnter(@Advice.Argument(1) Object data) {
+      SpringRabbitRequest request = ExecuteListenerAdvice.currentRequest().get();
+      if (request != null) {
+        request.recordDelivery(data);
+      }
+    }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.Thrown @Nullable Throwable throwable) {

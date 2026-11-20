@@ -23,6 +23,8 @@ dependencies {
   annotationProcessor("com.google.auto.service:auto-service")
   compileOnly("com.google.auto.service:auto-service-annotations")
   testCompileOnly("com.google.auto.service:auto-service-annotations")
+  testImplementation("io.github.netmikey.logunit:logunit-jul")
+  testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-declarative-config")
 }
 
@@ -79,15 +81,13 @@ tasks {
   }
 }
 
-testing {
-  suites {
-    // Security Manager tests involve setup that can poison the environment for other tests
-    register<JvmTestSuite>("testSecurityManager") {
-      dependencies {
-        implementation(project(":instrumentation:resources:library"))
-        implementation("io.opentelemetry:opentelemetry-sdk-common")
-        implementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
-      }
+testing.suites {
+  // Security Manager tests involve setup that can poison the environment for other tests
+  register<JvmTestSuite>("testSecurityManager") {
+    dependencies {
+      implementation(project(":instrumentation:resources:library"))
+      implementation("io.opentelemetry:opentelemetry-sdk-common")
+      implementation("io.opentelemetry.semconv:opentelemetry-semconv-incubating")
     }
   }
 }

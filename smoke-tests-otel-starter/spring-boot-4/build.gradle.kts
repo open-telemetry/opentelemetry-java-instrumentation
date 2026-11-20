@@ -2,6 +2,7 @@ plugins {
   id("otel.java-conventions")
   alias(springBoot40.plugins.versions)
   id("otel.spring-native-test-conventions")
+  id("otel.testcontainers-testing")
 }
 
 description = "smoke-tests-otel-starter-spring-boot-4"
@@ -24,7 +25,7 @@ dependencies {
 
   testImplementation(project(":smoke-tests-otel-starter:spring-boot-common"))
 
-  testImplementation("org.springframework:spring-test:7.0.9")
+  testImplementation("org.springframework:spring-test:7.0.10")
   testImplementation("org.springframework.boot:spring-boot-resttestclient")
   testImplementation("org.springframework.boot:spring-boot-restclient")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
@@ -50,9 +51,6 @@ tasks.withType<JavaCompile>().configureEach {
 tasks {
   bootJar {
     enabled = false
-  }
-  test {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }
 

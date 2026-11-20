@@ -8,15 +8,20 @@ package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.pekko.http.Version;
+import org.apache.pekko.http.scaladsl.HttpExt;
 import org.apache.pekko.http.scaladsl.model.HttpRequest;
 import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import org.apache.pekko.stream.scaladsl.Flow;
+import scala.Function1;
+import scala.concurrent.Future;
 
 class HttpExtServerInstrumentation implements TypeInstrumentation {
   @Override
@@ -30,6 +35,14 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
         named("bindAndHandle")
             .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
         getClass().getName() + "$PekkoBindAndHandleAdvice");
+    // Call depth prevents these binding paths from wrapping the same handler twice.
+    transformer.applyAdviceToMethod(
+        named("bindAndHandleImpl")
+            .and(takesArgument(0, named("org.apache.pekko.stream.scaladsl.Flow"))),
+        getClass().getName() + "$PekkoBindAndHandleAdvice");
+    transformer.applyAdviceToMethod(
+        named("bindAndHandleAsync").and(takesArgument(0, named("scala.Function1"))),
+        getClass().getName() + "$PekkoBindAndHandleAsyncAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -39,7 +52,31 @@ class HttpExtServerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Flow<HttpRequest, HttpResponse, ?> wrapHandler(
         @Advice.Argument(value = 0) Flow<HttpRequest, HttpResponse, ?> handler) {
+      if (CallDepth.forClass(HttpExt.class).getAndIncrement() > 0) {
+        return handler;
+      }
       return PekkoFlowWrapper.wrap(handler);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit() {
+      CallDepth.forClass(HttpExt.class).decrementAndGet();
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class PekkoBindAndHandleAsyncAdvice {
+    private static final boolean SHOULD_WRAP_HANDLER = Version.current().startsWith("1.1.");
+
+    @Advice.AssignReturned.ToArguments(@ToArgument(0))
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Function1<HttpRequest, Future<HttpResponse>> wrapHandler(
+        @Advice.Argument(0) Function1<HttpRequest, Future<HttpResponse>> handler,
+        @Advice.This HttpExt thiz) {
+      if (!SHOULD_WRAP_HANDLER) {
+        return handler;
+      }
+      return PekkoHttpServerHandlerWrapper.wrap(handler, thiz.system().dispatcher());
     }
   }
 }

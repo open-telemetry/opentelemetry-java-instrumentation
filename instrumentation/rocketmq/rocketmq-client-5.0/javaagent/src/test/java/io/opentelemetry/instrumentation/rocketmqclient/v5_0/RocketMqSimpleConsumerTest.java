@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -15,13 +17,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_KEYS;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_MESSAGE_TAG;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_ROCKETMQ_NAMESPACE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeFalse;
 
@@ -175,9 +172,8 @@ class RocketMqSimpleConsumerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("sync empty parent").hasKind(SpanKind.INTERNAL).hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("async empty parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("async empty parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -198,49 +194,40 @@ class RocketMqSimpleConsumerTest {
         INSTRUMENTATION_NAME,
         "messaging.client.operation.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(MESSAGING_OPERATION_TYPE, "receive"))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasCount(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "receive"))))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-                                                equalTo(MESSAGING_OPERATION_NAME, "receive"))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"))))));
   }
 
   @Test
   void shouldInstrumentSynchronousReceiveError() {
-    assertThatThrownBy(
-            () ->
-                testing.runWithSpan(
-                    "sync error parent", () -> consumer.receive(0, Duration.ofSeconds(1))))
+    assertThatThrownBy(() ->
+            testing.runWithSpan(
+                "sync error parent", () -> consumer.receive(0, Duration.ofSeconds(1))))
         .isInstanceOf(IllegalArgumentException.class);
 
     assertReceiveErrorTrace("sync error parent");
@@ -248,11 +235,9 @@ class RocketMqSimpleConsumerTest {
 
   @Test
   void shouldInstrumentAsynchronousReceiveError() {
-    assertThatThrownBy(
-            () ->
-                testing.runWithSpan(
-                    "async error parent",
-                    () -> consumer.receiveAsync(0, Duration.ofSeconds(1)).join()))
+    assertThatThrownBy(() ->
+            testing.runWithSpan(
+                "async error parent", () -> consumer.receiveAsync(0, Duration.ofSeconds(1)).join()))
         .isInstanceOf(CompletionException.class)
         .hasCauseInstanceOf(IllegalArgumentException.class);
 
@@ -270,43 +255,39 @@ class RocketMqSimpleConsumerTest {
             .build();
     SendReceipt receipt = producer.send(message);
     AtomicReference<SpanData> sendSpan = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasKind(SpanKind.PRODUCER)
-                      .hasName("send " + TOPIC)
-                      .hasAttribute(MESSAGING_MESSAGE_ID, receipt.getMessageId().toString());
-                  sendSpan.set(span.actual());
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> {
+          span.hasKind(SpanKind.PRODUCER)
+              .hasName("send " + TOPIC)
+              .hasAttribute(MESSAGING_MESSAGE_ID, receipt.getMessageId().toString());
+          sendSpan.set(span.actual());
+        }));
     testing.clearData();
     return sendSpan.get();
   }
 
   private static void assertSuccessfulReceiveTrace(String parentName, SpanData sendSpan) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertReceiveSpan(span, sendSpan).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertReceiveSpan(span, sendSpan).hasParent(trace.getSpan(0))));
   }
 
   private static void assertReceiveErrorTrace(String parentName) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("receive")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                            equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName(parentName).hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("receive")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                        equalTo(ERROR_TYPE, IllegalArgumentException.class.getName()))));
   }
 
   private static SpanDataAssert assertReceiveSpan(SpanDataAssert span, SpanData sendSpan) {
@@ -315,14 +296,13 @@ class RocketMqSimpleConsumerTest {
         .hasStatus(StatusData.unset())
         .hasAttributesSatisfyingExactly(
             equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-            equalTo(MESSAGING_SYSTEM, "rocketmq"),
-            equalTo(MESSAGING_ROCKETMQ_NAMESPACE, ""),
+            equalTo(stringKey("messaging.system.name"), "rocketmq"),
             equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
             equalTo(MESSAGING_OPERATION_NAME, "receive"),
             equalTo(MESSAGING_OPERATION_TYPE, "receive"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
-            equalTo(MESSAGING_ROCKETMQ_MESSAGE_TAG, TAG),
-            equalTo(MESSAGING_ROCKETMQ_MESSAGE_KEYS, asList(KEYS)))
+            equalTo(stringKey("rocketmq.message.tag"), TAG),
+            equalTo(stringArrayKey("rocketmq.message.keys"), asList(KEYS)))
         .hasLinks(
             LinkData.create(
                 asRemote(sendSpan.getSpanContext()),

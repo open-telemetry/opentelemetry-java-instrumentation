@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
@@ -74,15 +75,23 @@ class DropwizardMetricsTest {
                 .hasName("testcounter")
                 .hasLongSumSatisfying(
                     sum -> sum.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(7))));
-    testing.clearData();
 
     // when
     metricRegistry.remove("test@counter");
     counter.inc(123);
+    testing.clearData();
 
     // then
     testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "testcounter", AbstractIterableAssert::isEmpty);
+        INSTRUMENTATION_NAME,
+        "testcounter",
+        metrics ->
+            metrics
+                .isNotEmpty()
+                .allSatisfy(metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(sum ->
+                            sum.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(7)))));
   }
 
   @Test
@@ -101,10 +110,8 @@ class DropwizardMetricsTest {
         metric ->
             metric
                 .hasName("testhistogram")
-                .hasHistogramSatisfying(
-                    histogramMetric ->
-                        histogramMetric.hasPointsSatisfying(
-                            point -> point.hasSum(42).hasCount(2))));
+                .hasHistogramSatisfying(histogramMetric ->
+                    histogramMetric.hasPointsSatisfying(point -> point.hasSum(42).hasCount(2))));
     testing.clearData();
 
     // when
@@ -163,9 +170,8 @@ class DropwizardMetricsTest {
             metric
                 .hasName("testtimer")
                 .hasUnit("ms")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(point -> point.hasSum(1.234).hasCount(2))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point -> point.hasSum(1.234).hasCount(2))));
     testing.clearData();
 
     // when

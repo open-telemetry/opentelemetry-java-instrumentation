@@ -54,23 +54,21 @@ class AgentClassLoaderTest {
     getClassLoadingLockMethod.setAccessible(true);
 
     Thread thread1 =
-        new Thread(
-            () -> {
-              synchronized (getClassLoadingLock(loader, className1)) {
-                threadHoldLockPhase.arrive();
-                acquireLockFromMainThreadPhase.arriveAndAwaitAdvance();
-              }
-            });
+        new Thread(() -> {
+          synchronized (getClassLoadingLock(loader, className1)) {
+            threadHoldLockPhase.arrive();
+            acquireLockFromMainThreadPhase.arriveAndAwaitAdvance();
+          }
+        });
     thread1.start();
 
     Thread thread2 =
-        new Thread(
-            () -> {
-              threadHoldLockPhase.arriveAndAwaitAdvance();
-              synchronized (getClassLoadingLock(loader, className2)) {
-                acquireLockFromMainThreadPhase.arrive();
-              }
-            });
+        new Thread(() -> {
+          threadHoldLockPhase.arriveAndAwaitAdvance();
+          synchronized (getClassLoadingLock(loader, className2)) {
+            acquireLockFromMainThreadPhase.arrive();
+          }
+        });
     thread2.start();
 
     thread1.join();
