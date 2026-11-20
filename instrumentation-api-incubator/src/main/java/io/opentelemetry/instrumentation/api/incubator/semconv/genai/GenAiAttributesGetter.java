@@ -69,6 +69,11 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   }
 
   @Nullable
+  default Long getUsageCacheCreationInputTokens(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
   Long getUsageOutputTokens(REQUEST request, @Nullable RESPONSE response);
 
   /**

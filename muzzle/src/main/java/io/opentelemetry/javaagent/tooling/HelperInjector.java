@@ -40,6 +40,7 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.security.ProtectionDomain;
 import java.security.SecureClassLoader;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -133,14 +134,12 @@ public class HelperInjector implements Transformer {
     List<HelperClassDefinition> helpers =
         helperClassNames.stream()
             .distinct()
-            .map(
-                className ->
-                    HelperClassDefinition.create(
-                        className, helpersSource, InjectionMode.CLASS_ONLY))
+            .map(className ->
+                HelperClassDefinition.create(className, helpersSource, InjectionMode.CLASS_ONLY))
             .collect(toList());
 
-    this.helperClassesGenerator = (cl) -> helpers;
-    this.helperResources = helperResources;
+    this.helperClassesGenerator = cl -> helpers;
+    this.helperResources = new ArrayList<>(helperResources);
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
@@ -154,7 +153,7 @@ public class HelperInjector implements Transformer {
     this.requestingName = requestingName;
 
     this.helperClassesGenerator = helperClassesGenerators;
-    this.helperResources = helperResources;
+    this.helperResources = new ArrayList<>(helperResources);
     this.helpersSource = helpersSource;
     this.instrumentation = instrumentation;
   }
@@ -295,7 +294,7 @@ public class HelperInjector implements Transformer {
       }
 
       Map<String, HelperClass> map =
-          helperClasses.computeIfAbsent(classLoader, (unused) -> new ConcurrentHashMap<>());
+          helperClasses.computeIfAbsent(classLoader, unused -> new ConcurrentHashMap<>());
       for (Map.Entry<String, Supplier<byte[]>> entry : classnameToBytes.entrySet()) {
         // for boot loader we use a placeholder injector, we only need these classes to be
         // in the injected classes map to later tell which of the classes are injected
@@ -336,7 +335,7 @@ public class HelperInjector implements Transformer {
     }
 
     Map<String, HelperClass> map =
-        helperClasses.computeIfAbsent(classLoader, (unused) -> new ConcurrentHashMap<>());
+        helperClasses.computeIfAbsent(classLoader, unused -> new ConcurrentHashMap<>());
     for (Map.Entry<String, Supplier<byte[]>> entry : classNameToBytes.entrySet()) {
       HelperClass injector = new HelperClass(entry.getValue());
       map.put(entry.getKey(), injector);
@@ -544,7 +543,7 @@ public class HelperInjector implements Transformer {
     }
 
     Map<String, Supplier<Class<?>>> map =
-        exposedClasses.computeIfAbsent(classLoader, (unused) -> new ConcurrentHashMap<>());
+        exposedClasses.computeIfAbsent(classLoader, unused -> new ConcurrentHashMap<>());
     map.putIfAbsent(className, classSupplier);
   }
 

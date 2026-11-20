@@ -5,7 +5,7 @@ applyTo: "**/*.java,**/*.kt,**/*.scala"
 # Java conventions
 
 Apply these rules to Java code, using the stated exceptions for advice, tests, and public APIs.
-The null-comparison and hot-path allocation rules also apply to Kotlin and Scala.
+The null-comparison rules also apply to Kotlin and Scala.
 
 - **Visibility**: use the narrowest access that works. Static fields should be private,
   except for constant-like fields with uppercase names. Add `// visible for
@@ -47,33 +47,12 @@ The null-comparison and hot-path allocation rules also apply to Kotlin and Scala
   `String` or boxed primitive, is redundant, except when an `Integer`
   passed for `AttributeKey<Long>` selects the `int` overload and would
   unbox null. Retain a guard protecting a dereference or derived computation.
-- **Regular expressions**: precompile literal Java regexes when a
-  production call may repeatedly compile them. `String.split` has a fast
-  path for simple separators such as `","` and `"\\."`; no `Pattern` is needed
-  there, in test code, or for one-time initialization.
-- **Hot-path allocation**: avoid allocations on the hot path whenever possible, including iterators.
-  A for-each loop over a plain Java array does not allocate an iterator.
-  Non-allocating Stream API usage is acceptable but may not fit the surrounding code.
-  Consider the complexity of pre-sizing `collect` sinks and allocations from
-  capturing `forEach` lambdas when choosing an implementation.
-- **Lambda allocation**: do not hoist a non-capturing lambda or
-  method reference into a field to avoid allocation. HotSpot caches it at
-  the `invokedynamic` call site.
-- **Byte buffers**: `Value<ByteBuffer>.getValue()` returns a fresh read-only
-  buffer on each call. Do not add `.duplicate()` solely to get independent
-  position and limit state.
 - **Nullability**: `TextMapGetter.get`/`getAll` and `TextMapSetter.set`
   receive a nullable carrier under the upstream SDK contract. Annotate
   it and guard carrier-specific logic; pure delegation to another
   getter/setter needs the annotation but not another guard. `keys` does
   not have this nullable-carrier contract. Do not add `@Nullable` in
   test code.
-- **Stateless telemetry collaborators**: prefer constructing Java
-  `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
-  `AttributesExtractor`, `SpanNameExtractor`, and
-  `HttpServerResponseMutator` implementations at registration instead
-  of singleton `INSTANCE` fields. Retain singletons on per-request hot
-  paths; Kotlin `object` is unrelated.
 - **Class organization**: order static fields (final before non-final),
   static initializers, instance fields (final before non-final),
   constructors, methods, then nested classes. Place callers before

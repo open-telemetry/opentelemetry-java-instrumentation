@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.bootstrap;
 
 import io.opentelemetry.instrumentation.api.internal.Initializer;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -31,7 +32,7 @@ public final class BootstrapPackagePrefixesHolder {
       // Only possible by misuse of this API, just ignore.
       return;
     }
-    bootstrapPackagePrefixes = Collections.unmodifiableList(prefixes);
+    bootstrapPackagePrefixes = Collections.unmodifiableList(new ArrayList<>(prefixes));
   }
 
   private BootstrapPackagePrefixesHolder() {}

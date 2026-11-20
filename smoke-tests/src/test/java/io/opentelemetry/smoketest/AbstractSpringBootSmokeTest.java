@@ -29,21 +29,19 @@ abstract class AbstractSpringBootSmokeTest extends AbstractSmokeTest<Integer> {
     var response = client().get("/greeting").aggregate().join();
     assertThat(response.contentUtf8()).isEqualTo("Hi!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /greeting")
-                        .hasResourceSatisfying(
-                            resource ->
-                                resource
-                                    .hasAttribute(TELEMETRY_DISTRO_NAME, "opentelemetry-javaagent")
-                                    .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
-                                    .hasAttribute(satisfies(OS_TYPE, val -> val.isNotNull()))
-                                    .hasAttribute(stringKey("foo"), "bar")
-                                    .hasAttribute(SERVICE_NAME, "otel-spring-test-app")
-                                    .hasAttribute(SERVICE_VERSION, "1.2.3")),
-                span -> span.hasName("WebController.withSpan")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET /greeting")
+                    .hasResourceSatisfying(resource ->
+                        resource
+                            .hasAttribute(TELEMETRY_DISTRO_NAME, "opentelemetry-javaagent")
+                            .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
+                            .hasAttribute(satisfies(OS_TYPE, val -> val.isNotNull()))
+                            .hasAttribute(stringKey("foo"), "bar")
+                            .hasAttribute(SERVICE_NAME, "otel-spring-test-app")
+                            .hasAttribute(SERVICE_VERSION, "1.2.3")),
+            span -> span.hasName("WebController.withSpan")));
 
     output.assertAgentVersionLogged();
     assertThat(output.getLoggedTraceIds()).isEqualTo(getSpanTraceIds());

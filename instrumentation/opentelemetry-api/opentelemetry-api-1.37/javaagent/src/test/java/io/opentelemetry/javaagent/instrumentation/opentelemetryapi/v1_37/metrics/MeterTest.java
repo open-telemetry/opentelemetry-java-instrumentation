@@ -74,15 +74,12 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(11.0)
-                                    .hasBucketBoundaries(10.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test"), "test")))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasSum(11.0)
+                            .hasBucketBoundaries(10.0)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test")))));
   }
 
   @Test
@@ -108,14 +105,11 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(12.1)
-                                    .hasBucketBoundaries(10.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test"), "test")))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasSum(12.1)
+                            .hasBucketBoundaries(10.0)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test")))));
   }
 }

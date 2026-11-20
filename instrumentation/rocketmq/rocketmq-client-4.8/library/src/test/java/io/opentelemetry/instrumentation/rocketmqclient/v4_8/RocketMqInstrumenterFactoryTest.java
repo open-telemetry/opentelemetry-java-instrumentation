@@ -86,24 +86,22 @@ class RocketMqInstrumenterFactoryTest {
     Context context = instrumenter.start(parentContext, request);
     instrumenter.end(context, request, null, null);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("send topic")
-                        .hasKind(PRODUCER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(SERVER_ADDRESS, "ns.example"),
-                            equalTo(SERVER_PORT, 9876),
-                            equalTo(NETWORK_PEER_ADDRESS, "broker.example"),
-                            equalTo(NETWORK_PEER_PORT, 10911),
-                            equalTo(
-                                stringKey("rocketmq.message.tag"),
-                                captureExperimentalSpanAttributes ? "tag" : null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("send topic")
+                .hasKind(PRODUCER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                    equalTo(SERVER_ADDRESS, "ns.example"),
+                    equalTo(SERVER_PORT, 9876),
+                    equalTo(NETWORK_PEER_ADDRESS, "broker.example"),
+                    equalTo(NETWORK_PEER_PORT, 10911),
+                    equalTo(
+                        stringKey("rocketmq.message.tag"),
+                        captureExperimentalSpanAttributes ? "tag" : null))));
   }
 
   @ParameterizedTest
@@ -173,21 +171,19 @@ class RocketMqInstrumenterFactoryTest {
   }
 
   private static void assertSendSpan(String expectedAddress, Long expectedPort, Long batchCount) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("send topic")
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM_NAME, "rocketmq"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchCount),
-                            equalTo(SERVER_ADDRESS, "ns.example"),
-                            equalTo(SERVER_PORT, 9876),
-                            equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
-                            equalTo(NETWORK_PEER_PORT, expectedPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("send topic")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM_NAME, "rocketmq"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchCount),
+                    equalTo(SERVER_ADDRESS, "ns.example"),
+                    equalTo(SERVER_PORT, 9876),
+                    equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
+                    equalTo(NETWORK_PEER_PORT, expectedPort))));
   }
 
   @ParameterizedTest
@@ -209,24 +205,22 @@ class RocketMqInstrumenterFactoryTest {
     response.setSuccess(true);
     instrumenter.end(context, response);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process topic")
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MESSAGING_SYSTEM_NAME, "rocketmq"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            equalTo(MESSAGING_CONSUMER_GROUP_NAME, "consumer-group"),
-                            equalTo(
-                                MESSAGING_BATCH_MESSAGE_COUNT,
-                                messages.size() > 1 ? (long) messages.size() : null),
-                            equalTo(SERVER_ADDRESS, "ns.example"),
-                            equalTo(SERVER_PORT, 9876),
-                            equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
-                            equalTo(NETWORK_PEER_PORT, expectedPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("process topic")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(MESSAGING_SYSTEM_NAME, "rocketmq"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, "consumer-group"),
+                    equalTo(
+                        MESSAGING_BATCH_MESSAGE_COUNT,
+                        messages.size() > 1 ? (long) messages.size() : null),
+                    equalTo(SERVER_ADDRESS, "ns.example"),
+                    equalTo(SERVER_PORT, 9876),
+                    equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
+                    equalTo(NETWORK_PEER_PORT, expectedPort))));
   }
 
   private static Stream<Arguments> consumerCases() throws UnknownHostException {
@@ -293,13 +287,11 @@ class RocketMqInstrumenterFactoryTest {
                 Attributes.empty()));
     instrumenter.end(consumerContext, response);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process topic")
-                        .hasKind(CONSUMER)
-                        .hasStatus(StatusData.error())
-                        .hasAttribute(ERROR_TYPE, ConsumeReturnType.TIME_OUT.name())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("process topic")
+                .hasKind(CONSUMER)
+                .hasStatus(StatusData.error())
+                .hasAttribute(ERROR_TYPE, ConsumeReturnType.TIME_OUT.name())));
   }
 }

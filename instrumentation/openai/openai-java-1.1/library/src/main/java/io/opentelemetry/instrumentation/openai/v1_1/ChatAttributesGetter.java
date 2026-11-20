@@ -83,16 +83,15 @@ final class ChatAttributesGetter
     return request
         .getRequest()
         .stop()
-        .map(
-            s -> {
-              if (s.isString()) {
-                return singletonList(s.asString());
-              }
-              if (s.isStrings()) {
-                return s.asStrings();
-              }
-              return null;
-            })
+        .map(s -> {
+          if (s.isString()) {
+            return singletonList(s.asString());
+          }
+          if (s.isStrings()) {
+            return s.asStrings();
+          }
+          return null;
+        })
         .orElse(null);
   }
 

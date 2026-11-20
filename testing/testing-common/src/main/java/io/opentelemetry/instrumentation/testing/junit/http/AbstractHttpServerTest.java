@@ -447,12 +447,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.anySatisfy(
-              spanData -> assertServerSpan(assertThat(spanData), method, SUCCESS, SUCCESS.status));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+      trace.anySatisfy(
+          spanData -> assertServerSpan(assertThat(spanData), method, SUCCESS, SUCCESS.status));
+    });
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
@@ -461,9 +460,8 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                 .hasName("http.server.request.duration")
                 .hasDescription("Duration of HTTP server requests.")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
   }
 
   /**
@@ -506,22 +504,20 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
             client
                 .execute(request.build())
                 .aggregate()
-                .whenComplete(
-                    (result, throwable) -> {
-                      if (throwable != null) {
-                        responses.add(throwable.toString());
-                      } else {
-                        responses.add(result.status().code() + " " + result.contentUtf8());
-                      }
-                      latch.countDown();
-                    });
+                .whenComplete((result, throwable) -> {
+                  if (throwable != null) {
+                    responses.add(throwable.toString());
+                  } else {
+                    responses.add(result.status().code() + " " + result.contentUtf8());
+                  }
+                  latch.countDown();
+                });
           });
     }
     latch.await();
     assertThat(responses)
-        .allSatisfy(
-            response ->
-                assertThat(response).isEqualTo(endpoint.getStatus() + " " + endpoint.getBody()));
+        .allSatisfy(response ->
+            assertThat(response).isEqualTo(endpoint.getStatus() + " " + endpoint.getBody()));
 
     assertHighConcurrency(count);
   }
@@ -790,16 +786,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
       // TODO: add stricter assertions; could be difficult with the groovy code still in place
       // though
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.anySatisfy(
-                  span ->
-                      assertServerSpan(
-                              assertThat(span),
-                              HttpConstants._OTHER,
-                              SUCCESS,
-                              options.responseCodeOnNonStandardHttpMethod)
-                          .hasAttribute(HTTP_REQUEST_METHOD_ORIGINAL, method)));
+      testing.waitAndAssertTraces(trace ->
+          trace.anySatisfy(span ->
+              assertServerSpan(
+                      assertThat(span),
+                      HttpConstants._OTHER,
+                      SUCCESS,
+                      options.responseCodeOnNonStandardHttpMethod)
+                  .hasAttribute(HTTP_REQUEST_METHOD_ORIGINAL, method)));
     } finally {
       eventLoopGroup.shutdownGracefully().await(10, SECONDS);
     }
@@ -819,12 +813,10 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.anySatisfy(
-                span ->
-                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
-                        .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")));
+    testing.waitAndAssertTraces(trace ->
+        trace.anySatisfy(span ->
+            assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")));
   }
 
   @Test
@@ -842,13 +834,11 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.anySatisfy(
-                span ->
-                    assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
-                        .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")
-                        .hasAttribute(stringKey("test-baggage-key-2"), "test-baggage-value-2")));
+    testing.waitAndAssertTraces(trace ->
+        trace.anySatisfy(span ->
+            assertServerSpan(assertThat(span), method, SUCCESS, SUCCESS.status)
+                .hasAttribute(stringKey("test-baggage-key-1"), "test-baggage-value-1")
+                .hasAttribute(stringKey("test-baggage-key-2"), "test-baggage-value-2")));
   }
 
   private static Bootstrap buildBootstrap(EventLoopGroup eventLoopGroup) {
@@ -872,36 +862,31 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     ServerEndpoint endpoint = INDEXED_CHILD;
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      assertions.add(
-          trace -> {
-            SpanData rootSpan = trace.getSpan(0);
-            // Traces can be in arbitrary order, let us find out the request id of the current one
-            int requestId = Integer.parseInt(rootSpan.getName().substring("client ".length()));
+      assertions.add(trace -> {
+        SpanData rootSpan = trace.getSpan(0);
+        // Traces can be in arbitrary order, let us find out the request id of the current one
+        int requestId = Integer.parseInt(rootSpan.getName().substring("client ".length()));
 
-            List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-            spanAssertions.add(
-                span ->
-                    span.hasName(rootSpan.getName())
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId)));
-            spanAssertions.add(
-                span -> assertIndexedServerSpan(span, requestId).hasParent(rootSpan));
+        List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
+        spanAssertions.add(span ->
+            span.hasName(rootSpan.getName())
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId)));
+        spanAssertions.add(span -> assertIndexedServerSpan(span, requestId).hasParent(rootSpan));
 
-            if (options.hasHandlerSpan.test(endpoint)) {
-              spanAssertions.add(
-                  span -> assertHandlerSpan(span, "GET", endpoint).hasParent(trace.getSpan(1)));
-            }
+        if (options.hasHandlerSpan.test(endpoint)) {
+          spanAssertions.add(
+              span -> assertHandlerSpan(span, "GET", endpoint).hasParent(trace.getSpan(1)));
+        }
 
-            int parentIndex = spanAssertions.size() - 1;
-            spanAssertions.add(
-                span ->
-                    assertIndexedControllerSpan(span, requestId)
-                        .hasParent(trace.getSpan(parentIndex)));
+        int parentIndex = spanAssertions.size() - 1;
+        spanAssertions.add(span ->
+            assertIndexedControllerSpan(span, requestId).hasParent(trace.getSpan(parentIndex)));
 
-            trace.hasSpansSatisfyingExactly(spanAssertions);
-          });
+        trace.hasSpansSatisfyingExactly(spanAssertions);
+      });
     }
     testing.waitAndAssertTraces(assertions);
   }
@@ -910,38 +895,34 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     ServerEndpoint endpoint = INDEXED_CHILD_FROM_REQUEST_BODY;
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      assertions.add(
-          trace -> {
-            SpanData rootSpan = trace.getSpan(0);
-            int requestId = Integer.parseInt(rootSpan.getName().substring("client ".length()));
+      assertions.add(trace -> {
+        SpanData rootSpan = trace.getSpan(0);
+        int requestId = Integer.parseInt(rootSpan.getName().substring("client ".length()));
 
-            List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-            spanAssertions.add(
-                span ->
-                    span.hasName(rootSpan.getName())
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId)));
-            spanAssertions.add(span -> assertIndexedBodyServerSpan(span).hasParent(rootSpan));
+        List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
+        spanAssertions.add(span ->
+            span.hasName(rootSpan.getName())
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME), requestId)));
+        spanAssertions.add(span -> assertIndexedBodyServerSpan(span).hasParent(rootSpan));
 
-            if (options.hasHandlerSpan.test(endpoint)) {
-              spanAssertions.add(
-                  span -> assertHandlerSpan(span, "POST", endpoint).hasParent(trace.getSpan(1)));
-            }
+        if (options.hasHandlerSpan.test(endpoint)) {
+          spanAssertions.add(
+              span -> assertHandlerSpan(span, "POST", endpoint).hasParent(trace.getSpan(1)));
+        }
 
-            int parentIndex = spanAssertions.size() - 1;
-            int controllerIndex = spanAssertions.size();
-            spanAssertions.add(
-                span ->
-                    assertIndexedBodyControllerSpan(span).hasParent(trace.getSpan(parentIndex)));
-            spanAssertions.add(
-                span ->
-                    assertIndexedBodyConsumerSpan(span, requestId)
-                        .hasParent(trace.getSpan(controllerIndex)));
+        int parentIndex = spanAssertions.size() - 1;
+        int controllerIndex = spanAssertions.size();
+        spanAssertions.add(
+            span -> assertIndexedBodyControllerSpan(span).hasParent(trace.getSpan(parentIndex)));
+        spanAssertions.add(span ->
+            assertIndexedBodyConsumerSpan(span, requestId)
+                .hasParent(trace.getSpan(controllerIndex)));
 
-            trace.hasSpansSatisfyingExactly(spanAssertions);
-          });
+        trace.hasSpansSatisfyingExactly(spanAssertions);
+      });
     }
     testing.waitAndAssertTraces(assertions);
   }
@@ -994,83 +975,77 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       Consumer<SpanDataAssert> serverSpanAssertion) {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < size; i++) {
-      assertions.add(
-          trace -> {
-            List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-            spanAssertions.add(
-                span -> {
-                  serverSpanAssertion.accept(span);
-                  if (traceId != null) {
-                    span.hasTraceId(traceId);
-                  }
-                  if (spanId != null) {
-                    span.hasSpanId(spanId);
-                  }
-                  if (parentId != null) {
-                    span.hasParentSpanId(parentId);
-                  } else {
-                    span.hasNoParent();
-                  }
-                });
+      assertions.add(trace -> {
+        List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
+        spanAssertions.add(span -> {
+          serverSpanAssertion.accept(span);
+          if (traceId != null) {
+            span.hasTraceId(traceId);
+          }
+          if (spanId != null) {
+            span.hasSpanId(spanId);
+          }
+          if (parentId != null) {
+            span.hasParentSpanId(parentId);
+          } else {
+            span.hasNoParent();
+          }
+        });
 
-            if (options.hasHandlerSpan.test(endpoint)) {
-              spanAssertions.add(
-                  span -> {
-                    assertHandlerSpan(span, method, endpoint);
-                    span.hasParent(trace.getSpan(0));
-                  });
-            }
-
-            int handlerIndex = -1;
-            if (endpoint != NOT_FOUND) {
-              int parentIndex = 0;
-              if (options.hasHandlerSpan.test(endpoint)) {
-                handlerIndex = spanAssertions.size() - 1;
-                parentIndex = handlerIndex;
-              }
-              int finalParentIndex = parentIndex;
-              spanAssertions.add(
-                  span -> {
-                    assertControllerSpan(
-                        span, endpoint == EXCEPTION ? options.expectedException : null);
-                    span.hasParent(trace.getSpan(finalParentIndex));
-                  });
-              if (options.hasRenderSpan.test(endpoint)) {
-                spanAssertions.add(span -> assertRenderSpan(span, method, endpoint));
-              }
-            }
-
-            if (options.hasResponseSpan.test(endpoint)) {
-              int parentIndex = spanAssertions.size() - 1;
-              int finalHandlerIndex = handlerIndex;
-              spanAssertions.add(
-                  span ->
-                      assertResponseSpan(
-                          span,
-                          trace.getSpan(0),
-                          trace.getSpan(parentIndex),
-                          finalHandlerIndex >= 0 ? trace.getSpan(finalHandlerIndex) : null,
-                          method,
-                          endpoint));
-            }
-
-            if (options.hasErrorPageSpans.test(endpoint)) {
-              spanAssertions.addAll(errorPageSpanAssertions(method, endpoint));
-            }
-
-            trace.hasSpansSatisfyingExactly(spanAssertions);
-
-            if (options.verifyServerSpanEndTime) {
-              List<SpanData> spanData = trace.actual();
-              if (spanData.size() > 1) {
-                SpanData rootSpan = spanData.get(0);
-                for (int j = 1; j < spanData.size(); j++) {
-                  assertThat(rootSpan.getEndEpochNanos())
-                      .isGreaterThanOrEqualTo(spanData.get(j).getEndEpochNanos());
-                }
-              }
-            }
+        if (options.hasHandlerSpan.test(endpoint)) {
+          spanAssertions.add(span -> {
+            assertHandlerSpan(span, method, endpoint);
+            span.hasParent(trace.getSpan(0));
           });
+        }
+
+        int handlerIndex = -1;
+        if (endpoint != NOT_FOUND) {
+          int parentIndex = 0;
+          if (options.hasHandlerSpan.test(endpoint)) {
+            handlerIndex = spanAssertions.size() - 1;
+            parentIndex = handlerIndex;
+          }
+          int finalParentIndex = parentIndex;
+          spanAssertions.add(span -> {
+            assertControllerSpan(span, endpoint == EXCEPTION ? options.expectedException : null);
+            span.hasParent(trace.getSpan(finalParentIndex));
+          });
+          if (options.hasRenderSpan.test(endpoint)) {
+            spanAssertions.add(span -> assertRenderSpan(span, method, endpoint));
+          }
+        }
+
+        if (options.hasResponseSpan.test(endpoint)) {
+          int parentIndex = spanAssertions.size() - 1;
+          int finalHandlerIndex = handlerIndex;
+          spanAssertions.add(span ->
+              assertResponseSpan(
+                  span,
+                  trace.getSpan(0),
+                  trace.getSpan(parentIndex),
+                  finalHandlerIndex >= 0 ? trace.getSpan(finalHandlerIndex) : null,
+                  method,
+                  endpoint));
+        }
+
+        if (options.hasErrorPageSpans.test(endpoint)) {
+          spanAssertions.addAll(errorPageSpanAssertions(method, endpoint));
+        }
+
+        trace.hasSpansSatisfyingExactly(spanAssertions);
+
+        if (options.verifyServerSpanEndTime) {
+          List<SpanData> spanData = trace.actual();
+          if (spanData.size() > 1) {
+            SpanData rootSpan = spanData.get(0);
+            for (int j = 1; j < spanData.size(); j++) {
+              assertThat(rootSpan.getEndEpochNanos())
+                  .isGreaterThanOrEqualTo(spanData.get(j).getEndEpochNanos());
+            }
+          }
+        }
+      });
     }
 
     testing.waitAndAssertTraces(assertions);
@@ -1095,28 +1070,27 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
   protected final void assertExceptionLogs(Throwable expectedException, String expectedEventName) {
     Awaitility.await()
-        .untilAsserted(
-            () -> {
-              List<LogRecordData> logs =
-                  testing.getExportedLogRecords().stream()
-                      .filter(log -> expectedEventName.equals(log.getEventName()))
-                      .collect(toList());
+        .untilAsserted(() -> {
+          List<LogRecordData> logs =
+              testing.getExportedLogRecords().stream()
+                  .filter(log -> expectedEventName.equals(log.getEventName()))
+                  .collect(toList());
 
-              assertThat(logs).hasSize(1);
-              assertThat(logs.get(0))
-                  .hasSeverity(Severity.ERROR)
-                  .hasEventName(expectedEventName)
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, expectedException.getClass().getName()),
-                      satisfies(
-                          EXCEPTION_MESSAGE,
-                          val -> {
-                            if (expectedException.getMessage() != null) {
-                              val.isEqualTo(expectedException.getMessage());
-                            }
-                          }),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
-            });
+          assertThat(logs).hasSize(1);
+          assertThat(logs.get(0))
+              .hasSeverity(Severity.ERROR)
+              .hasEventName(expectedEventName)
+              .hasAttributesSatisfyingExactly(
+                  equalTo(EXCEPTION_TYPE, expectedException.getClass().getName()),
+                  satisfies(
+                      EXCEPTION_MESSAGE,
+                      val -> {
+                        if (expectedException.getMessage() != null) {
+                          val.isEqualTo(expectedException.getMessage());
+                        }
+                      }),
+                  satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull()));
+        });
   }
 
   protected SpanDataAssert assertHandlerSpan(
@@ -1189,88 +1163,84 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
       span.hasException(emitExceptionAsSpanEvents() ? options.expectedException : null);
     }
 
-    span.hasAttributesSatisfying(
-        attrs -> {
-          // we're opting out of these attributes in the new semconv
+    span.hasAttributesSatisfying(attrs -> {
+      // we're opting out of these attributes in the new semconv
+      assertThat(attrs)
+          .doesNotContainKey(NETWORK_TRANSPORT)
+          .doesNotContainKey(NETWORK_TYPE)
+          .doesNotContainKey(NETWORK_PROTOCOL_NAME);
+
+      if (attrs.get(NETWORK_PROTOCOL_VERSION) != null) {
+        assertThat(attrs).containsEntry(NETWORK_PROTOCOL_VERSION, options.useHttp2 ? "2" : "1.1");
+      }
+
+      assertThat(attrs).containsEntry(SERVER_ADDRESS, "localhost");
+      // TODO: Move to test knob rather than always treating as optional
+      // TODO: once httpAttributes test knob is used, verify default port values
+      if (attrs.get(SERVER_PORT) != null) {
+        assertThat(attrs).containsEntry(SERVER_PORT, port);
+      }
+
+      if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
+        assertThat(attrs).containsEntry(NETWORK_PEER_ADDRESS, expectedNetworkPeerAddress);
+      }
+      if (attrs.get(NETWORK_PEER_PORT) != null) {
+        assertThat(attrs)
+            .hasEntrySatisfying(
+                NETWORK_PEER_PORT,
+                value ->
+                    assertThat(value).isInstanceOf(Long.class).isNotEqualTo(Long.valueOf(port)));
+      }
+
+      assertThat(attrs).containsEntry(CLIENT_ADDRESS, expectedClientAddress);
+      // client.port is opt-in
+      assertThat(attrs).doesNotContainKey(CLIENT_PORT);
+
+      assertThat(attrs).containsEntry(HTTP_REQUEST_METHOD, method);
+
+      if (statusCode > 0) {
+        assertThat(attrs).containsEntry(HTTP_RESPONSE_STATUS_CODE, statusCode);
+      } else {
+        assertThat(attrs).doesNotContainKey(HTTP_RESPONSE_STATUS_CODE);
+      }
+      if (statusCode >= 500) {
+        assertThat(attrs).containsEntry(ERROR_TYPE, String.valueOf(statusCode));
+      }
+
+      assertThat(attrs).containsEntry(USER_AGENT_ORIGINAL, TEST_USER_AGENT);
+
+      assertThat(attrs).containsEntry(URL_SCHEME, "http");
+      if (endpoint != INDEXED_CHILD) {
+        assertThat(attrs).containsEntry(URL_PATH, endpoint.resolvePath(address).getPath());
+        if (endpoint.getQuery() != null) {
+          assertThat(attrs).containsEntry(URL_QUERY, endpoint.getQuery());
+        }
+      }
+
+      if (httpAttributes.contains(HTTP_ROUTE) && expectedRoute != null) {
+        assertThat(attrs).containsEntry(HTTP_ROUTE, expectedRoute);
+      }
+
+      if (endpoint == CAPTURE_HEADERS) {
+        assertThat(attrs)
+            .containsEntry(
+                stringArrayKey("http.request.header.x-test-request"), singletonList("test"));
+        assertThat(attrs)
+            .containsEntry(
+                stringArrayKey("http.response.header.x-test-response"), singletonList("test"));
+      }
+      if (endpoint == CAPTURE_PARAMETERS) {
+        if (options.expectCapturedRequestParameters) {
           assertThat(attrs)
-              .doesNotContainKey(NETWORK_TRANSPORT)
-              .doesNotContainKey(NETWORK_TYPE)
-              .doesNotContainKey(NETWORK_PROTOCOL_NAME);
-
-          if (attrs.get(NETWORK_PROTOCOL_VERSION) != null) {
-            assertThat(attrs)
-                .containsEntry(NETWORK_PROTOCOL_VERSION, options.useHttp2 ? "2" : "1.1");
-          }
-
-          assertThat(attrs).containsEntry(SERVER_ADDRESS, "localhost");
-          // TODO: Move to test knob rather than always treating as optional
-          // TODO: once httpAttributes test knob is used, verify default port values
-          if (attrs.get(SERVER_PORT) != null) {
-            assertThat(attrs).containsEntry(SERVER_PORT, port);
-          }
-
-          if (attrs.get(NETWORK_PEER_ADDRESS) != null) {
-            assertThat(attrs).containsEntry(NETWORK_PEER_ADDRESS, expectedNetworkPeerAddress);
-          }
-          if (attrs.get(NETWORK_PEER_PORT) != null) {
-            assertThat(attrs)
-                .hasEntrySatisfying(
-                    NETWORK_PEER_PORT,
-                    value ->
-                        assertThat(value)
-                            .isInstanceOf(Long.class)
-                            .isNotEqualTo(Long.valueOf(port)));
-          }
-
-          assertThat(attrs).containsEntry(CLIENT_ADDRESS, expectedClientAddress);
-          // client.port is opt-in
-          assertThat(attrs).doesNotContainKey(CLIENT_PORT);
-
-          assertThat(attrs).containsEntry(HTTP_REQUEST_METHOD, method);
-
-          if (statusCode > 0) {
-            assertThat(attrs).containsEntry(HTTP_RESPONSE_STATUS_CODE, statusCode);
-          } else {
-            assertThat(attrs).doesNotContainKey(HTTP_RESPONSE_STATUS_CODE);
-          }
-          if (statusCode >= 500) {
-            assertThat(attrs).containsEntry(ERROR_TYPE, String.valueOf(statusCode));
-          }
-
-          assertThat(attrs).containsEntry(USER_AGENT_ORIGINAL, TEST_USER_AGENT);
-
-          assertThat(attrs).containsEntry(URL_SCHEME, "http");
-          if (endpoint != INDEXED_CHILD) {
-            assertThat(attrs).containsEntry(URL_PATH, endpoint.resolvePath(address).getPath());
-            if (endpoint.getQuery() != null) {
-              assertThat(attrs).containsEntry(URL_QUERY, endpoint.getQuery());
-            }
-          }
-
-          if (httpAttributes.contains(HTTP_ROUTE) && expectedRoute != null) {
-            assertThat(attrs).containsEntry(HTTP_ROUTE, expectedRoute);
-          }
-
-          if (endpoint == CAPTURE_HEADERS) {
-            assertThat(attrs)
-                .containsEntry(
-                    stringArrayKey("http.request.header.x-test-request"), singletonList("test"));
-            assertThat(attrs)
-                .containsEntry(
-                    stringArrayKey("http.response.header.x-test-response"), singletonList("test"));
-          }
-          if (endpoint == CAPTURE_PARAMETERS) {
-            if (options.expectCapturedRequestParameters) {
-              assertThat(attrs)
-                  .containsEntry(
-                      stringArrayKey("servlet.request.parameter.test-parameter"),
-                      singletonList("test value õäöü"));
-            } else {
-              assertThat(attrs)
-                  .doesNotContainKey(stringArrayKey("servlet.request.parameter.test-parameter"));
-            }
-          }
-        });
+              .containsEntry(
+                  stringArrayKey("servlet.request.parameter.test-parameter"),
+                  singletonList("test value õäöü"));
+        } else {
+          assertThat(attrs)
+              .doesNotContainKey(stringArrayKey("servlet.request.parameter.test-parameter"));
+        }
+      }
+    });
 
     return span;
   }
@@ -1307,10 +1277,9 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     span.hasName("controller")
         .hasKind(SpanKind.INTERNAL)
         // The request id belongs on the nested body-consumer span only, not on the controller.
-        .satisfies(
-            spanData ->
-                assertThat(spanData.getAttributes().get(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME)))
-                    .isNull());
+        .satisfies(spanData ->
+            assertThat(spanData.getAttributes().get(longKey(ServerEndpoint.ID_ATTRIBUTE_NAME)))
+                .isNull());
     return span;
   }
 

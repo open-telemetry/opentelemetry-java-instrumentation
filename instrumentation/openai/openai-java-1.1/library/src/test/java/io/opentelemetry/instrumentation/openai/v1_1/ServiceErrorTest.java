@@ -259,45 +259,39 @@ class ServiceErrorTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private static void assertTelemetry(
       Operation operation, String expectedErrorType, boolean hasResponse) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(operation.name + " " + MODEL)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(ERROR_TYPE, expectedErrorType),
-                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                            equalTo(GEN_AI_OPERATION_NAME, operation.name),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(
-                                GEN_AI_REQUEST_ENCODING_FORMATS,
-                                operation == Operation.EMBEDDINGS ? singletonList("base64") : null),
-                            equalTo(
-                                GEN_AI_REQUEST_STREAM,
-                                operation == Operation.CHAT_STREAM ? true : null),
-                            equalTo(GEN_AI_RESPONSE_ID, hasResponse ? "chat-1" : null),
-                            equalTo(GEN_AI_RESPONSE_MODEL, hasResponse ? MODEL : null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(operation.name + " " + MODEL)
+                .hasKind(SpanKind.CLIENT)
+                .hasStatusSatisfying(status -> status.hasCode(StatusCode.ERROR))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(ERROR_TYPE, expectedErrorType),
+                    equalTo(GEN_AI_PROVIDER_NAME, "openai"),
+                    equalTo(GEN_AI_OPERATION_NAME, operation.name),
+                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                    equalTo(
+                        GEN_AI_REQUEST_ENCODING_FORMATS,
+                        operation == Operation.EMBEDDINGS ? singletonList("base64") : null),
+                    equalTo(
+                        GEN_AI_REQUEST_STREAM, operation == Operation.CHAT_STREAM ? true : null),
+                    equalTo(GEN_AI_RESPONSE_ID, hasResponse ? "chat-1" : null),
+                    equalTo(GEN_AI_RESPONSE_MODEL, hasResponse ? MODEL : null))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasSumGreaterThan(0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(ERROR_TYPE, expectedErrorType),
-                                        equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                        equalTo(GEN_AI_OPERATION_NAME, operation.name),
-                                        equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                        equalTo(
-                                            GEN_AI_RESPONSE_MODEL, hasResponse ? MODEL : null)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(ERROR_TYPE, expectedErrorType),
+                                equalTo(GEN_AI_PROVIDER_NAME, "openai"),
+                                equalTo(GEN_AI_OPERATION_NAME, operation.name),
+                                equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                equalTo(GEN_AI_RESPONSE_MODEL, hasResponse ? MODEL : null)))));
   }
 }

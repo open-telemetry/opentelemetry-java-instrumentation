@@ -96,25 +96,23 @@ class AgentInstrumentationTest {
       throws Exception {
     testing.runWithSpan("parent", () -> subject.getConstructor().newInstance().run());
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-          assertions.add(span -> span.hasName("parent").hasNoParent());
-          if (spanName != null) {
-            assertions.add(span -> span.hasName(spanName).hasParent(trace.getSpan(0)));
-          }
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
+    testing.waitAndAssertTraces(trace -> {
+      List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+      assertions.add(span -> span.hasName("parent").hasNoParent());
+      if (spanName != null) {
+        assertions.add(span -> span.hasName(spanName).hasParent(trace.getSpan(0)));
+      }
+      trace.hasSpansSatisfyingExactly(assertions);
+    });
   }
 
   @Test
   void testUnblockedByCompletedSpan() {
     testing.runWithSpan("parent", () -> testing.runWithSpan("child", () -> {}));
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("child").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("child").hasParent(trace.getSpan(0))));
   }
 
   private static ClassPath getTestClasspath() {

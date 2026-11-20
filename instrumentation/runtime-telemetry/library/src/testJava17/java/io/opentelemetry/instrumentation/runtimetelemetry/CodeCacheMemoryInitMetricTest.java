@@ -19,18 +19,13 @@ class CodeCacheMemoryInitMetricTest {
 
   @Test
   void shouldHaveMemoryInitMetrics() {
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName(METRIC_NAME_MEMORY_INIT)
-                .hasDescription(METRIC_DESCRIPTION_MEMORY_INIT)
-                .hasUnit(BYTES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.containsPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributes(ATTR_CODE_CACHE)
-                                    .hasValueSatisfying(v -> v.isPositive()))));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName(METRIC_NAME_MEMORY_INIT)
+            .hasDescription(METRIC_DESCRIPTION_MEMORY_INIT)
+            .hasUnit(BYTES)
+            .hasLongSumSatisfying(sum ->
+                sum.containsPointsSatisfying(point ->
+                    point.hasAttributes(ATTR_CODE_CACHE).hasValueSatisfying(v -> v.isPositive()))));
   }
 }

@@ -73,21 +73,18 @@ class CassandraTest extends AbstractCassandraTest {
         Stream.of(cassandraIp + ':' + cassandraPort, cassandraHost + ':' + cassandraPort)
             .sorted()
             .collect(joining(","));
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("DROP KEYSPACE")
-                        .satisfies(
-                            spanData -> {
-                              assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
-                                  .isEqualTo(configuredTarget);
-                              assertThat(spanData.getAttributes().get(SERVER_PORT)).isEqualTo(null);
-                              assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
-                                  .isEqualTo(cassandraIp);
-                              assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
-                                  .isEqualTo((long) cassandraPort);
-                            })));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("DROP KEYSPACE")
+                .satisfies(spanData -> {
+                  assertThat(spanData.getAttributes().get(SERVER_ADDRESS))
+                      .isEqualTo(configuredTarget);
+                  assertThat(spanData.getAttributes().get(SERVER_PORT)).isEqualTo(null);
+                  assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
+                      .isEqualTo(cassandraIp);
+                  assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
+                      .isEqualTo((long) cassandraPort);
+                })));
   }
 
   @Test
@@ -99,29 +96,26 @@ class CassandraTest extends AbstractCassandraTest {
 
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(cassandraIp);
-              assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo(cassandraPort);
-              assertThat(span.getAttributes().get(NETWORK_TYPE)).isEqualTo(null);
-            });
+        .satisfies(span -> {
+          assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(cassandraIp);
+          assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo(cassandraPort);
+          assertThat(span.getAttributes().get(NETWORK_TYPE)).isEqualTo(null);
+        });
     testing.waitAndAssertMetrics(
         getInstrumentationName(),
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfyingExactly(
-                                    equalTo(DB_COLLECTION_NAME, "system.local"),
-                                    equalTo(DB_OPERATION_NAME, "SELECT"),
-                                    equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
-                                    equalTo(DB_SYSTEM_NAME, "cassandra"),
-                                    equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                    equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                    equalTo(SERVER_ADDRESS, cassandraHost),
-                                    equalTo(SERVER_PORT, cassandraPort)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(DB_COLLECTION_NAME, "system.local"),
+                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT system.local"),
+                            equalTo(DB_SYSTEM_NAME, "cassandra"),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort)))));
   }
 }

@@ -55,11 +55,10 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
       BasicCredentialsProvider credentialsProvider) {
     RestClient restClient =
         RestClient.builder(host)
-            .setHttpClientConfigCallback(
-                httpClientBuilder ->
-                    httpClientBuilder
-                        .setDefaultCredentialsProvider(credentialsProvider)
-                        .setConnectionManager(connectionManager))
+            .setHttpClientConfigCallback(httpClientBuilder ->
+                httpClientBuilder
+                    .setDefaultCredentialsProvider(credentialsProvider)
+                    .setConnectionManager(connectionManager))
             .build();
 
     return new RestClientTransport(restClient, new JsonbJsonpMapper());
@@ -68,52 +67,47 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
   @Test
   void shouldCaptureSearchQueryBodyWithJsonbMapper() throws IOException {
     SearchRequest searchRequest =
-        SearchRequest.of(
-            s ->
-                s.index(INDEX_NAME)
-                    .query(
-                        Query.of(
-                            q ->
-                                q.match(
-                                    m -> m.field("message").query(v -> v.stringValue("test"))))));
+        SearchRequest.of(s ->
+            s.index(INDEX_NAME)
+                .query(
+                    Query.of(
+                        q -> q.match(m -> m.field("message").query(v -> v.stringValue("test"))))));
 
     SearchResponse<TestDocument> searchResponse =
         openSearchClient.search(searchRequest, TestDocument.class);
     assertThat(searchResponse.hits().total().value()).isGreaterThan(0);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, "opensearch"),
-                                equalTo(DB_OPERATION_NAME, "POST"),
-                                equalTo(
-                                    DB_QUERY_TEXT,
-                                    "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
-                    span ->
-                        span.hasName("POST")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                satisfies(
-                                    URL_FULL,
-                                    val ->
-                                        val.asString()
-                                            .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(
-                                    stringKey("server.service.name"),
-                                    expectedMappedServiceName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "opensearch"),
+                            equalTo(DB_OPERATION_NAME, "POST"),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "{\"query\":{\"match\":{\"message\":{\"query\":\"?\"}}}}"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
+                span ->
+                    span.hasName("POST")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.asString()
+                                        .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 
   @Test
@@ -122,51 +116,44 @@ class OpenSearchCaptureSearchQueryJsonbTest extends AbstractOpenSearchQueryTest 
         "a".repeat(MAX_QUERY_BODY_LENGTH - JSON_PREFIX.length() - JSON_SUFFIX.length() + 1);
     String expected = (JSON_PREFIX + field + JSON_SUFFIX).substring(0, MAX_QUERY_BODY_LENGTH);
     SearchRequest searchRequest =
-        SearchRequest.of(
-            request ->
-                request
-                    .index(INDEX_NAME)
-                    .query(
-                        Query.of(
-                            query ->
-                                query.match(
-                                    match ->
-                                        match
-                                            .field(field)
-                                            .query(value -> value.stringValue("value"))))));
+        SearchRequest.of(request ->
+            request
+                .index(INDEX_NAME)
+                .query(
+                    Query.of(query ->
+                        query.match(match ->
+                            match.field(field).query(value -> value.stringValue("value"))))));
 
     openSearchClient.search(searchRequest, TestDocument.class);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, "opensearch"),
-                                equalTo(DB_OPERATION_NAME, "POST"),
-                                equalTo(DB_QUERY_TEXT, expected),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
-                    span ->
-                        span.hasName("POST")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "POST"),
-                                satisfies(
-                                    URL_FULL,
-                                    val ->
-                                        val.asString()
-                                            .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(
-                                    stringKey("server.service.name"),
-                                    expectedMappedServiceName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("POST " + httpHost.getHost() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "opensearch"),
+                            equalTo(DB_OPERATION_NAME, "POST"),
+                            equalTo(DB_QUERY_TEXT, expected),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
+                span ->
+                    span.hasName("POST")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "POST"),
+                            satisfies(
+                                URL_FULL,
+                                val ->
+                                    val.asString()
+                                        .startsWith(httpHost + "/" + INDEX_NAME + "/_search")),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 }

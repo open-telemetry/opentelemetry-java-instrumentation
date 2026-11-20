@@ -61,19 +61,18 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
     // server spans are ended inside of the controller spans
     options.setVerifyServerSpanEndTime(false);
     options.setContextPath("/vertx-app");
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (Objects.equals(method, HttpConstants._OTHER)) {
-            return getContextPath() + endpoint.getPath();
-          }
-          if (Objects.equals(endpoint, ServerEndpoint.NOT_FOUND)) {
-            return getContextPath();
-          }
-          if (Objects.equals(endpoint, SUB_ROUTER_PATH_PARAM)) {
-            return getContextPath() + "/child/path/:id/param";
-          }
-          return super.expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (Objects.equals(method, HttpConstants._OTHER)) {
+        return getContextPath() + endpoint.getPath();
+      }
+      if (Objects.equals(endpoint, ServerEndpoint.NOT_FOUND)) {
+        return getContextPath();
+      }
+      if (Objects.equals(endpoint, SUB_ROUTER_PATH_PARAM)) {
+        return getContextPath() + "/child/path/:id/param";
+      }
+      return super.expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Test
@@ -108,26 +107,24 @@ abstract class AbstractVertxHttpServerTest extends AbstractHttpServerTest<Vertx>
             .join();
 
     assertThat(response.status().code()).isEqualTo(200);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(expectedName)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_ROUTE, expectedRoute),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isPositive()),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, path))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(expectedName)
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_ROUTE, expectedRoute),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
+                    equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                    satisfies(NETWORK_PEER_PORT, val -> val.isPositive()),
+                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                    equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(URL_PATH, path))));
   }
 
   protected boolean supportsMultiHandlerRoutes() {

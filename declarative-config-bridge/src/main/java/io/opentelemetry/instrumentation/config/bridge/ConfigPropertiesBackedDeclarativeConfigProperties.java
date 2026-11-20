@@ -121,7 +121,7 @@ final class ConfigPropertiesBackedDeclarativeConfigProperties
       String configPropertyPrefix,
       boolean instrumentationConfig) {
     this.configProperties = configProperties;
-    this.path = path;
+    this.path = new ArrayList<>(path);
     this.declarativePrefix = declarativePrefix;
     this.configPropertyPrefix = configPropertyPrefix;
     this.instrumentationConfig = instrumentationConfig;

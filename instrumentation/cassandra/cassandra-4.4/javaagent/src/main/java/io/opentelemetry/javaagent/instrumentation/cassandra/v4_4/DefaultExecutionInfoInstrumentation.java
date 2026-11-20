@@ -15,7 +15,7 @@ import com.datastax.oss.protocol.internal.Frame;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
@@ -45,7 +45,7 @@ class DefaultExecutionInfoInstrumentation implements TypeInstrumentation {
       if (frame == null) {
         return;
       }
-      InetSocketAddress peer = VirtualFieldHelper.FRAME_PEER.get(frame);
+      SocketAddress peer = VirtualFieldHelper.FRAME_PEER.get(frame);
       if (peer != null) {
         CassandraNetworkPeer.setExecutionInfoPeer(executionInfo, peer);
       }

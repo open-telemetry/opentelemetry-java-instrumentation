@@ -30,21 +30,20 @@ class Jetty12Helper {
     request.addFailureListener(throwable -> end(context, request, response, throwable));
     // detect request completion
     // https://github.com/jetty/jetty.project/blob/52d94174e2c7a6e794c6377dcf9cd3ed0b9e1806/jetty-core/jetty-server/src/main/java/org/eclipse/jetty/server/handler/EventsHandler.java#L75
-    request.addHttpStreamWrapper(
-        stream ->
-            new HttpStream.Wrapper(stream) {
-              @Override
-              public void succeeded() {
-                end(context, request, response, null);
-                super.succeeded();
-              }
+    request.addHttpStreamWrapper(stream ->
+        new HttpStream.Wrapper(stream) {
+          @Override
+          public void succeeded() {
+            end(context, request, response, null);
+            super.succeeded();
+          }
 
-              @Override
-              public void failed(Throwable throwable) {
-                end(context, request, response, throwable);
-                super.failed(throwable);
-              }
-            });
+          @Override
+          public void failed(Throwable throwable) {
+            end(context, request, response, throwable);
+            super.failed(throwable);
+          }
+        });
 
     return context;
   }

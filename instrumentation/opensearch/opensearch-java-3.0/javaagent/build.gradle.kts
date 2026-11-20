@@ -47,6 +47,14 @@ dependencies {
 }
 
 testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("org.opensearch.client:opensearch-java:3.0.0")
+    }
+  }
+
   executions("test") {
     configureDefault {
       filter {
@@ -61,5 +69,11 @@ testing.suites {
       }
       telemetryConfig("otel.instrumentation.opensearch.query-sanitization.enabled", "false")
     }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }

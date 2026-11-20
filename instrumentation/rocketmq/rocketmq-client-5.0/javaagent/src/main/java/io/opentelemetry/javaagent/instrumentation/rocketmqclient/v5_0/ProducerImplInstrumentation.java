@@ -49,7 +49,8 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
                     named(
                         "org.apache.rocketmq.shaded.com.google.common.util.concurrent.SettableFuture")))
             .and(takesArgument(3, List.class))
-            .and(takesArgument(4, List.class)),
+            .and(takesArgument(4, List.class))
+            .and(takesArgument(5, int.class)),
         getClass().getName() + "$SendAdvice");
 
     transformer.applyAdviceToMethod(named("sendAsync"), getClass().getName() + "$SendAsyncAdvice");
@@ -61,7 +62,14 @@ final class ProducerImplInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Argument(0) SettableFuture<List<SendReceiptImpl>> future0,
         @Advice.Argument(3) List<MessageQueueImpl> messageQueues,
-        @Advice.Argument(4) List<PublishingMessageImpl> messages) {
+        @Advice.Argument(4) List<PublishingMessageImpl> messages,
+        @Advice.Argument(5) int attempt) {
+      // Retries reuse the messages and the future for the entire send operation.
+      // Start spans and inject context only on the first attempt.
+      if (attempt != 1) {
+        return;
+      }
+
       Instrumenter<PublishingMessageImpl, SendReceiptImpl> instrumenter = producerInstrumenter();
       int count = messages.size();
       List<SettableFuture<SendReceiptImpl>> futures = FutureConverter.convert(future0, count);

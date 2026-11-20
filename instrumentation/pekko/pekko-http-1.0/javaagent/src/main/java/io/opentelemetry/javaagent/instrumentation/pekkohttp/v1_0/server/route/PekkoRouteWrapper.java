@@ -33,9 +33,8 @@ public class PekkoRouteWrapper implements Function1<RequestContext, Future<Route
       // Propagate the child RouteHolder via pekko httprequest attribute, which ensures
       // sibling directives share the same parentRouteHolder
       RequestContext requestWithChildRouteHolder =
-          ctx.mapRequest(
-              req ->
-                  (HttpRequest) req.addAttribute(PekkoRouteHolder.ATTRIBUTE_KEY, childRouteHolder));
+          ctx.mapRequest(req ->
+              (HttpRequest) req.addAttribute(PekkoRouteHolder.ATTRIBUTE_KEY, childRouteHolder));
       // RouteHolder needs to be in otel context for PathMatcherStaticInstrumentation
       try (Scope scope = Context.current().with(childRouteHolder).makeCurrent()) {
         return route
