@@ -149,14 +149,13 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
                         .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
-                        .hasLongSumSatisfying(sum ->
-                            sum.hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, topic))))));
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.rocketmq-client-5.0",
@@ -164,15 +163,14 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .hasHistogramSatisfying(histogram ->
-                            histogram.hasPointsSatisfying(point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                        equalTo(MESSAGING_OPERATION_TYPE, "send"))))));
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasCount(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "send")))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.rocketmq-client-5.0",
@@ -180,15 +178,14 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .hasHistogramSatisfying(histogram ->
-                            histogram.hasPointsSatisfying(point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                        equalTo(MESSAGING_DESTINATION_NAME, topic))))));
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasCount(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.rocketmq-client-5.0",
@@ -197,15 +194,14 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
                         .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
-                        .hasLongSumSatisfying(sum ->
-                            sum.hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                        equalTo(MESSAGING_DESTINATION_NAME, topic))))));
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic)))));
     assertThat(testing().metrics())
         .filteredOn(metric ->
             metric
