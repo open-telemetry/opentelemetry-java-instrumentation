@@ -309,8 +309,7 @@ class MeterTest {
 
     BatchCallback firstCallback = meter.batchCallback(callback, firstMeasurement);
     // Intentionally do not retain the second handle so callback reachability depends on the
-    // remaining anchor, not on another wrapper still holding the callback via its releaseAnchor
-    // action.
+    // remaining anchor, not on another wrapper still holding the callback via its onClose action.
     meter.batchCallback(callback, secondMeasurement);
 
     firstCallback.close();

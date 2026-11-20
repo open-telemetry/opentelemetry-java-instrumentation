@@ -10,15 +10,21 @@ import io.opentelemetry.api.metrics.ObservableLongGauge;
 public class ApplicationObservableLongGauge
     implements application.io.opentelemetry.api.metrics.ObservableLongGauge {
 
-  private final ApplicationCallbackHandle callbackHandle;
+  private final ObservableLongGauge agentGauge;
+  private final Runnable onClose;
 
-  public ApplicationObservableLongGauge(ObservableLongGauge agentGauge, Runnable releaseAnchor) {
-    callbackHandle = new ApplicationCallbackHandle(agentGauge::close, releaseAnchor);
+  public ApplicationObservableLongGauge(ObservableLongGauge agentGauge, Runnable onClose) {
+    this.agentGauge = agentGauge;
+    this.onClose = onClose;
   }
 
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    callbackHandle.close();
+    try {
+      agentGauge.close();
+    } finally {
+      onClose.run();
+    }
   }
 }
