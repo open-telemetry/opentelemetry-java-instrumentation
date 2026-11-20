@@ -129,19 +129,11 @@ class ApacheHttpClientRequest {
   @Nullable
   static NetworkPeer captureNetworkPeer(HttpContext context) {
     try {
-      Object connection = context.getAttribute(HttpCoreContext.HTTP_CONNECTION);
-      return connection instanceof HttpInetConnection
-          ? captureNetworkPeer((HttpInetConnection) connection)
-          : null;
-    } catch (Throwable t) {
-      logger.log(FINE, "Unable to capture network peer", t);
-      return null;
-    }
-  }
-
-  @Nullable
-  static NetworkPeer captureNetworkPeer(HttpInetConnection connection) {
-    try {
+      Object value = context.getAttribute(HttpCoreContext.HTTP_CONNECTION);
+      if (!(value instanceof HttpInetConnection)) {
+        return null;
+      }
+      HttpInetConnection connection = (HttpInetConnection) value;
       InetAddress address = connection.getRemoteAddress();
       return address == null
           ? null
