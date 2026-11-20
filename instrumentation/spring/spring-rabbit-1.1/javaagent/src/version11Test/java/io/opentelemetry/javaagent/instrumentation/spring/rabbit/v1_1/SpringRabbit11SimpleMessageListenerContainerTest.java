@@ -82,54 +82,47 @@ class SpringRabbit11SimpleMessageListenerContainerTest {
     testing.runWithSpan("parent", () -> rabbitTemplate.convertAndSend(QUEUE, "test"));
 
     assertThat(messageConsumed.await(10, SECONDS)).isTrue();
-    testing.waitAndAssertTraces(
-        trace -> {
-          SpanData producerSpan = trace.getSpan(1);
-          SpanData processSpan = trace.getSpan(2);
-          trace.hasSpansSatisfyingExactlyInAnyOrder(
-              span -> span.hasName("parent"),
-              span ->
-                  span.hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .satisfies(
-                          spanData ->
-                              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo(RABBIT_INSTRUMENTATION_NAME)),
-              span ->
-                  span.hasName("process " + QUEUE)
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(producerSpan)
-                      .satisfies(
-                          spanData ->
-                              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                                  .isEqualTo(SPRING_INSTRUMENTATION_NAME)),
-              span -> span.hasName("consumer").hasParent(processSpan));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      SpanData producerSpan = trace.getSpan(1);
+      SpanData processSpan = trace.getSpan(2);
+      trace.hasSpansSatisfyingExactlyInAnyOrder(
+          span -> span.hasName("parent"),
+          span ->
+              span.hasKind(SpanKind.PRODUCER)
+                  .hasParent(trace.getSpan(0))
+                  .satisfies(spanData ->
+                      assertThat(spanData.getInstrumentationScopeInfo().getName())
+                          .isEqualTo(RABBIT_INSTRUMENTATION_NAME)),
+          span ->
+              span.hasName("process " + QUEUE)
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasParent(producerSpan)
+                  .satisfies(spanData ->
+                      assertThat(spanData.getInstrumentationScopeInfo().getName())
+                          .isEqualTo(SPRING_INSTRUMENTATION_NAME)),
+          span -> span.hasName("consumer").hasParent(processSpan));
+    });
 
     testing.waitAndAssertMetrics(
         SPRING_INSTRUMENTATION_NAME,
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasHistogramSatisfying(
+                        histogram -> histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
     testing.waitAndAssertMetrics(
         SPRING_INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
     assertThat(testing.metrics())
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
-                    && metric.getName().equals("messaging.process.duration"))
+        .filteredOn(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)
+                && metric.getName().equals("messaging.process.duration"))
         .isEmpty();
   }
 }

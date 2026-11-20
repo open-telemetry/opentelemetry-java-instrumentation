@@ -51,48 +51,45 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
                     .hasName("testSummary")
                     .hasDescription("This is a test distribution summary")
                     .hasUnit("things")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                points ->
-                                    points
-                                        .hasSum(555.5)
-                                        .hasCount(4)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(points ->
+                            points
+                                .hasSum(555.5)
+                                .hasCount(4)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
                     .hasName("testSummary.histogram")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("le"), "1"),
-                                            equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point
-                                        .hasValue(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("le"), "10"),
-                                            equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point
-                                        .hasValue(3)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("le"), "100"),
-                                            equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point
-                                        .hasValue(4)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("le"), "1000"),
-                                            equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugeSatisfying(gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("le"), "1"),
+                                        equalTo(stringKey("tag"), "value")),
+                            point ->
+                                point
+                                    .hasValue(2)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("le"), "10"),
+                                        equalTo(stringKey("tag"), "value")),
+                            point ->
+                                point
+                                    .hasValue(3)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("le"), "100"),
+                                        equalTo(stringKey("tag"), "value")),
+                            point ->
+                                point
+                                    .hasValue(4)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("le"), "1000"),
+                                        equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -119,35 +116,32 @@ public abstract class AbstractDistributionSummaryHistogramGaugesTest {
                     .hasName("testSummary")
                     .hasDescription("This is a test distribution summary")
                     .hasUnit("things")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(150)
-                                        .hasCount(2)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSum(150)
+                                .hasCount(2)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
                     .hasName("testSummary.percentile")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("phi"), "0.5"),
-                                        equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("phi"), "0.95"),
-                                        equalTo(stringKey("tag"), "value")),
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("phi"), "0.99"),
-                                        equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugeSatisfying(gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("phi"), "0.5"),
+                                    equalTo(stringKey("tag"), "value")),
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("phi"), "0.95"),
+                                    equalTo(stringKey("tag"), "value")),
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("phi"), "0.99"),
+                                    equalTo(stringKey("tag"), "value")))));
   }
 }

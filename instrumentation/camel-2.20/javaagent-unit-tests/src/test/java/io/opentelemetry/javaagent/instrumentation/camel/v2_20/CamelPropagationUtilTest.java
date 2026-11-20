@@ -25,6 +25,7 @@ import org.apache.camel.component.aws.sqs.SqsConfiguration;
 import org.apache.camel.component.aws.sqs.SqsEndpoint;
 import org.apache.camel.component.http.HttpComponent;
 import org.apache.camel.component.http.HttpEndpoint;
+import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
@@ -32,9 +33,17 @@ class CamelPropagationUtilTest {
 
   @BeforeAll
   static void setUp() {
+    GlobalOpenTelemetry.resetForTest();
+    GlobalOpenTelemetry.get();
+    GlobalOpenTelemetry.resetForTest();
     GlobalOpenTelemetry.set(
         OpenTelemetry.propagating(
             ContextPropagators.create(W3CTraceContextPropagator.getInstance())));
+  }
+
+  @AfterAll
+  static void tearDown() {
+    GlobalOpenTelemetry.resetForTest();
   }
 
   @Test

@@ -60,11 +60,10 @@ class PekkoStreamAsyncInputTest {
                     @Override
                     public void preStart() {
                       ready.complete(
-                          createAsyncCallback(
-                              ignored -> {
-                                callbackHasSpan.complete(Span.current().getSpanContext().isValid());
-                                completeStage();
-                              }));
+                          createAsyncCallback(ignored -> {
+                            callbackHasSpan.complete(Span.current().getSpanContext().isValid());
+                            completeStage();
+                          }));
                     }
                   };
                 }

@@ -38,11 +38,10 @@ public final class WeakRefAsyncOperationEndStrategies extends AsyncOperationEndS
 
   @Override
   public void unregisterStrategy(AsyncOperationEndStrategy strategy) {
-    strategies.removeIf(
-        ref -> {
-          AsyncOperationEndStrategy s = ref.get();
-          return s == null || s == strategy;
-        });
+    strategies.removeIf(ref -> {
+      AsyncOperationEndStrategy s = ref.get();
+      return s == null || s == strategy;
+    });
   }
 
   @Nullable

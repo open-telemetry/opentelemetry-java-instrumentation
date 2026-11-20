@@ -22,8 +22,11 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+<<<<<<< HEAD
 import io.opentelemetry.javaagent.bootstrap.WeakRefConsumer;
 import java.lang.ref.WeakReference;
+=======
+>>>>>>> origin/main
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Consumer;
@@ -133,6 +136,7 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
     WeakRefConsumer<ObservableDoubleMeasurement> weakCallback =
         new WeakRefConsumer<>(new WeakReference<>(callback));
     ObservableDoubleGauge otelGauge =
+<<<<<<< HEAD
         otelMeter.gaugeBuilder(sanitizedName).buildWithCallback(weakCallback);
     weakCallback.closeWhenCollected(otelGauge);
     GaugeRegistration previous =
@@ -140,6 +144,17 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
     if (previous != null) {
       previous.gauge.close();
     }
+=======
+        otelMeter
+            .gaugeBuilder(sanitizedName)
+            .buildWithCallback(measurement -> {
+              Object val = gauge.getValue();
+              if (val instanceof Number) {
+                measurement.record(((Number) val).doubleValue());
+              }
+            });
+    otelGauges.put(name, otelGauge);
+>>>>>>> origin/main
   }
 
   @Override
@@ -234,6 +249,7 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
     otelDoubleHistograms.remove(name);
     if (dropwizardTimer != null) {
       DropwizardMetricsRecorder.unbindTimer(dropwizardTimer);
+<<<<<<< HEAD
     }
   }
 
@@ -248,6 +264,8 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
         Consumer<ObservableDoubleMeasurement> callback, ObservableDoubleGauge gauge) {
       this.callback = callback;
       this.gauge = gauge;
+=======
+>>>>>>> origin/main
     }
   }
 }

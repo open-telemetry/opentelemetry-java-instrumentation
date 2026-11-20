@@ -83,16 +83,15 @@ class FixedHostAwsV4AuthScheme implements AwsV4AuthScheme {
               .build();
       return DEFAULT
           .signAsync(override)
-          .thenApply(
-              signed ->
-                  signed.toBuilder()
-                      .request(
-                          signed.request().toBuilder()
-                              .protocol(original.protocol())
-                              .host(original.host())
-                              .port(original.port())
-                              .build())
-                      .build());
+          .thenApply(signed ->
+              signed.toBuilder()
+                  .request(
+                      signed.request().toBuilder()
+                          .protocol(original.protocol())
+                          .host(original.host())
+                          .port(original.port())
+                          .build())
+                  .build());
     }
   }
 }

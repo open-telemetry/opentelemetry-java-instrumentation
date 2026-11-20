@@ -43,16 +43,15 @@ class WebMvcHttpServerTest extends AbstractHttpServerTest<ConfigurableApplicatio
     // servlet filters don't capture exceptions thrown in controllers
     options.setTestException(false);
 
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (endpoint == ServerEndpoint.PATH_PARAM) {
-            return CONTEXT_PATH + "/path/{id}/param";
-          }
-          if (HttpConstants._OTHER.equals(method)) {
-            return CONTEXT_PATH + endpoint.getPath();
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (endpoint == ServerEndpoint.PATH_PARAM) {
+        return CONTEXT_PATH + "/path/{id}/param";
+      }
+      if (HttpConstants._OTHER.equals(method)) {
+        return CONTEXT_PATH + endpoint.getPath();
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Test

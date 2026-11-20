@@ -103,17 +103,15 @@ abstract class AbstractSpringIntegrationTracingTest {
 
     Message<?> capturedMessage = messageHandler.join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("process " + destinationName)
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasAttributesSatisfyingExactly(
-                          messagingAttributes("process", destinationName));
-                  verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
-                },
-                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              span.hasName("process " + destinationName)
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasAttributesSatisfyingExactly(messagingAttributes("process", destinationName));
+              verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
+            },
+            span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
     assertProcessMetrics(testing, destinationName, false);
 
@@ -133,16 +131,15 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.send(MessageBuilder.withPayload("test").build());
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process publishSubscribeChannel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "publishSubscribeChannel")),
-                span -> span.hasName("firstHandler").hasParent(trace.getSpan(0)),
-                span -> span.hasName("secondHandler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("process publishSubscribeChannel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "publishSubscribeChannel")),
+            span -> span.hasName("firstHandler").hasParent(trace.getSpan(0)),
+            span -> span.hasName("secondHandler").hasParent(trace.getSpan(0))));
 
     assertProcessMetrics(testing, "publishSubscribeChannel", false);
   }
@@ -163,24 +160,23 @@ abstract class AbstractSpringIntegrationTracingTest {
     testing.runWithSpan("parent", () -> channel.send(MessageBuilder.withPayload("test").build()));
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("process publishSubscribeChannel")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "publishSubscribeChannel")),
-                span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("process publishSubscribeChannel")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "publishSubscribeChannel")),
-                span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("process publishSubscribeChannel")
+                    .hasParent(trace.getSpan(0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "publishSubscribeChannel")),
+            span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
+            span ->
+                span.hasName("process publishSubscribeChannel")
+                    .hasParent(trace.getSpan(0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "publishSubscribeChannel")),
+            span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
 
     assertProcessMetrics(testing, "publishSubscribeChannel", false, 2);
   }
@@ -189,10 +185,9 @@ abstract class AbstractSpringIntegrationTracingTest {
   void shouldRecordFailedProcessMetrics() {
     SubscribableChannel channel =
         applicationContext.getBean("directChannel", SubscribableChannel.class);
-    channel.subscribe(
-        message -> {
-          throw new IllegalStateException("test");
-        });
+    channel.subscribe(message -> {
+      throw new IllegalStateException("test");
+    });
 
     assertThatThrownBy(() -> channel.send(MessageBuilder.withPayload("test").build()))
         .isInstanceOf(RuntimeException.class);
@@ -212,17 +207,16 @@ abstract class AbstractSpringIntegrationTracingTest {
 
     Message<?> capturedMessage = messageHandler.join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("process application.directChannel2")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasAttributesSatisfyingExactly(
-                          messagingAttributes("process", "application.directChannel2"));
-                  verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
-                },
-                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              span.hasName("process application.directChannel2")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasAttributesSatisfyingExactly(
+                      messagingAttributes("process", "application.directChannel2"));
+              verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
+            },
+            span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
     channel.unsubscribe(messageHandler);
   }
@@ -243,17 +237,16 @@ abstract class AbstractSpringIntegrationTracingTest {
 
     messageHandler.join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("process application.directChannel")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "application.directChannel")),
-                span -> span.hasName("handler").hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("process application.directChannel")
+                    .hasParent(trace.getSpan(0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "application.directChannel")),
+            span -> span.hasName("handler").hasParent(trace.getSpan(1))));
 
     assertProcessMetrics(testing, "application.directChannel", false);
 
@@ -274,17 +267,16 @@ abstract class AbstractSpringIntegrationTracingTest {
 
     Message<?> capturedMessage = messageHandler.join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("process application.linkedChannel1")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasAttributesSatisfyingExactly(
-                          messagingAttributes("process", "application.linkedChannel1"));
-                  verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
-                },
-                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              span.hasName("process application.linkedChannel1")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasAttributesSatisfyingExactly(
+                      messagingAttributes("process", "application.linkedChannel1"));
+              verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
+            },
+            span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
     channel2.unsubscribe(messageHandler);
   }
@@ -306,15 +298,14 @@ abstract class AbstractSpringIntegrationTracingTest {
 
     channel.send(MessageBuilder.withPayload("test").build());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process application.directChannel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "application.directChannel")),
-                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("process application.directChannel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "application.directChannel")),
+            span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
     channel.unsubscribe(messageHandler);
   }
@@ -339,16 +330,15 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.send(MessageBuilder.withPayload("test").build());
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process application.directChannel2")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "application.directChannel2")),
-                span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
-                span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("process application.directChannel2")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "application.directChannel2")),
+            span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
+            span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
 
     assertProcessMetrics(testing, "application.directChannel2", false);
 
@@ -382,16 +372,15 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.send(MessageBuilder.withPayload("test").build());
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process duplicateExecutorChannel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "duplicateExecutorChannel")),
-                span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
-                span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("process duplicateExecutorChannel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "duplicateExecutorChannel")),
+            span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
+            span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
 
     assertProcessMetrics(testing, "duplicateExecutorChannel", false);
 
@@ -425,16 +414,15 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.send(MessageBuilder.withPayload("test").build());
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process duplicateDirectChannel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "duplicateDirectChannel")),
-                span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
-                span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("process duplicateDirectChannel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "duplicateDirectChannel")),
+            span -> span.hasName("nestedHandler").hasParent(trace.getSpan(0)),
+            span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
 
     assertProcessMetrics(testing, "duplicateDirectChannel", false);
 
@@ -450,10 +438,9 @@ abstract class AbstractSpringIntegrationTracingTest {
           if (message.getHeaders().containsKey("nested")) {
             throw new IllegalStateException("nested failure");
           }
-          assertThatThrownBy(
-                  () ->
-                      channel.send(
-                          MessageBuilder.fromMessage(message).setHeader("nested", true).build()))
+          assertThatThrownBy(() ->
+                  channel.send(
+                      MessageBuilder.fromMessage(message).setHeader("nested", true).build()))
               .isInstanceOf(RuntimeException.class);
           runWithSpan("outerAfterNested", () -> {});
         };
@@ -463,15 +450,14 @@ abstract class AbstractSpringIntegrationTracingTest {
     channel.send(MessageBuilder.withPayload("test").build());
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process application.directChannel2")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "application.directChannel2")),
-                span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("process application.directChannel2")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "application.directChannel2")),
+            span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
     assertProcessMetrics(testing, "application.directChannel2", false);
 
     channel.unsubscribe(messageHandler);
@@ -502,24 +488,23 @@ abstract class AbstractSpringIntegrationTracingTest {
     testing.runWithSpan("parent", () -> channel.send(MessageBuilder.withPayload("test").build()));
 
     assertThat(handled.await(10, SECONDS)).isTrue();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("process executorChannel")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "executorChannel")),
-                span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("process executorChannel")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "executorChannel")),
-                span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("process executorChannel")
+                    .hasParent(trace.getSpan(0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "executorChannel")),
+            span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
+            span ->
+                span.hasName("process executorChannel")
+                    .hasParent(trace.getSpan(0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "executorChannel")),
+            span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
 
     assertProcessMetrics(testing, "executorChannel", false, 2);
 
@@ -543,22 +528,20 @@ abstract class AbstractSpringIntegrationTracingTest {
 
     Message<?> capturedMessage = messageHandler.join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("process application.directChannel")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasAttributesSatisfyingExactly(
-                          messagingAttributes(
-                              "process",
-                              "application.directChannel",
-                              equalTo(
-                                  headerAttributeKey("Test-Message-Header"),
-                                  singletonList("test"))));
-                  verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
-                },
-                span -> span.hasName("handler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              span.hasName("process application.directChannel")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasAttributesSatisfyingExactly(
+                      messagingAttributes(
+                          "process",
+                          "application.directChannel",
+                          equalTo(
+                              headerAttributeKey("Test-Message-Header"), singletonList("test"))));
+              verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(0));
+            },
+            span -> span.hasName("handler").hasParent(trace.getSpan(0))));
 
     channel.unsubscribe(messageHandler);
   }
@@ -573,16 +556,14 @@ abstract class AbstractSpringIntegrationTracingTest {
         applicationContext.getBean(GlobalChannelInterceptorWrapper.class).getChannelInterceptor());
     AtomicReference<Message<?>> firstMessage = new AtomicReference<>();
     AtomicReference<Message<?>> secondMessage = new AtomicReference<>();
-    channel.subscribe(
-        message -> {
-          firstMessage.set(message);
-          runWithSpan("firstHandler", () -> {});
-        });
-    channel.subscribe(
-        message -> {
-          secondMessage.set(message);
-          runWithSpan("secondHandler", () -> {});
-        });
+    channel.subscribe(message -> {
+      firstMessage.set(message);
+      runWithSpan("firstHandler", () -> {});
+    });
+    channel.subscribe(message -> {
+      secondMessage.set(message);
+      runWithSpan("secondHandler", () -> {});
+    });
 
     Map<String, List<String>> nativeHeaders =
         mutableNativeHeaders
@@ -597,28 +578,27 @@ abstract class AbstractSpringIntegrationTracingTest {
     testing.runWithSpan("parent", () -> channel.send(message));
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> {
-                  span.hasName("process nativeHeadersChannel")
-                      .hasParent(trace.getSpan(0))
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasAttributesSatisfyingExactly(
-                          messagingAttributes("process", "nativeHeadersChannel"));
-                  verifyCorrectSpanWasPropagated(firstMessage.get(), trace.getSpan(1));
-                },
-                span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
-                span -> {
-                  span.hasName("process nativeHeadersChannel")
-                      .hasParent(trace.getSpan(0))
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasAttributesSatisfyingExactly(
-                          messagingAttributes("process", "nativeHeadersChannel"));
-                  verifyCorrectSpanWasPropagated(secondMessage.get(), trace.getSpan(3));
-                },
-                span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> {
+              span.hasName("process nativeHeadersChannel")
+                  .hasParent(trace.getSpan(0))
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasAttributesSatisfyingExactly(
+                      messagingAttributes("process", "nativeHeadersChannel"));
+              verifyCorrectSpanWasPropagated(firstMessage.get(), trace.getSpan(1));
+            },
+            span -> span.hasName("firstHandler").hasParent(trace.getSpan(1)),
+            span -> {
+              span.hasName("process nativeHeadersChannel")
+                  .hasParent(trace.getSpan(0))
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasAttributesSatisfyingExactly(
+                      messagingAttributes("process", "nativeHeadersChannel"));
+              verifyCorrectSpanWasPropagated(secondMessage.get(), trace.getSpan(3));
+            },
+            span -> span.hasName("secondHandler").hasParent(trace.getSpan(3))));
 
     assertThat(message.getHeaders()).doesNotContainKey("traceparent");
     assertThat(nativeHeaders)

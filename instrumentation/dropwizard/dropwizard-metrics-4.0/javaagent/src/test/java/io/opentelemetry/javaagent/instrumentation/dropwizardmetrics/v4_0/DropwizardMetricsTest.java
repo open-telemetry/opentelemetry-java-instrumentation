@@ -210,13 +210,10 @@ class DropwizardMetricsTest {
         metrics ->
             metrics
                 .isNotEmpty()
-                .allSatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.isNotMonotonic()
-                                        .hasPointsSatisfying(point -> point.hasValue(7)))));
+                .allSatisfy(metric ->
+                    assertThat(metric)
+                        .hasLongSumSatisfying(sum ->
+                            sum.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(7)))));
   }
 
   @Test
@@ -254,10 +251,8 @@ class DropwizardMetricsTest {
         metric ->
             metric
                 .hasName("testhistogram")
-                .hasHistogramSatisfying(
-                    histogramMetric ->
-                        histogramMetric.hasPointsSatisfying(
-                            point -> point.hasSum(42).hasCount(2))));
+                .hasHistogramSatisfying(histogramMetric ->
+                    histogramMetric.hasPointsSatisfying(point -> point.hasSum(42).hasCount(2))));
     testing.clearData();
 
     // when
@@ -316,9 +311,8 @@ class DropwizardMetricsTest {
             metric
                 .hasName("testtimer")
                 .hasUnit("ms")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(point -> point.hasSum(1.234).hasCount(2))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point -> point.hasSum(1.234).hasCount(2))));
     testing.clearData();
 
     // when

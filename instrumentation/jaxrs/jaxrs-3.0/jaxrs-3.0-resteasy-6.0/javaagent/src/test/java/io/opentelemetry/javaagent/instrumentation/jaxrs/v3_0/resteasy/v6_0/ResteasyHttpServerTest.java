@@ -42,13 +42,12 @@ class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
 
     options.setContextPath("/resteasy-context");
     options.setResponseCodeOnNonStandardHttpMethod(500);
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + "/*";
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + "/*";
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Override

@@ -71,15 +71,14 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point -> point.hasValue(321).hasAttributes(Attributes.empty()),
-                            point ->
-                                point
-                                    .hasValue(123)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test"), "test")))));
+                .hasLongGaugeSatisfying(gauge ->
+                    gauge.hasPointsSatisfying(
+                        point -> point.hasValue(321).hasAttributes(Attributes.empty()),
+                        point ->
+                            point
+                                .hasValue(123)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("test"), "test")))));
 
     // sleep exporter interval
     Thread.sleep(100);
@@ -112,15 +111,14 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasDoubleGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point -> point.hasValue(3.21).hasAttributes(Attributes.empty()),
-                            point ->
-                                point
-                                    .hasValue(1.23)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("test"), "test")))));
+                .hasDoubleGaugeSatisfying(gauge ->
+                    gauge.hasPointsSatisfying(
+                        point -> point.hasValue(3.21).hasAttributes(Attributes.empty()),
+                        point ->
+                            point
+                                .hasValue(1.23)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("test"), "test")))));
 
     // sleep exporter interval
     Thread.sleep(100);

@@ -28,29 +28,25 @@ public abstract class AbstractR2DbcInstrumentationAutoConfigurationTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   @Test
   void querySanitizerEnabledByDefault() {
-    contextRunner.run(
-        context -> {
-          DatabaseClient client = context.getBean(DatabaseClient.class);
-          client
-              .sql(
-                  "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(255), age INT, PRIMARY KEY (id))")
-              .fetch()
-              .all()
-              .blockLast();
-          client.sql("SELECT * FROM player WHERE id = 1").fetch().all().blockLast();
-          testing()
-              .waitAndAssertTraces(
-                  trace ->
-                      trace.hasSpansSatisfyingExactly(
-                          span ->
-                              span.hasAttribute(
-                                  DB_QUERY_TEXT,
-                                  "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
-                  trace ->
-                      trace.hasSpansSatisfyingExactly(
-                          span ->
-                              span.hasAttribute(
-                                  DB_QUERY_TEXT, "SELECT * FROM player WHERE id = ?")));
-        });
+    contextRunner.run(context -> {
+      DatabaseClient client = context.getBean(DatabaseClient.class);
+      client
+          .sql(
+              "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(255), age INT, PRIMARY KEY (id))")
+          .fetch()
+          .all()
+          .blockLast();
+      client.sql("SELECT * FROM player WHERE id = 1").fetch().all().blockLast();
+      testing()
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasAttribute(
+                          DB_QUERY_TEXT,
+                          "CREATE TABLE IF NOT EXISTS player(id INT NOT NULL AUTO_INCREMENT, name VARCHAR(?), age INT, PRIMARY KEY (id))")),
+              trace ->
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasAttribute(DB_QUERY_TEXT, "SELECT * FROM player WHERE id = ?")));
+    });
   }
 }

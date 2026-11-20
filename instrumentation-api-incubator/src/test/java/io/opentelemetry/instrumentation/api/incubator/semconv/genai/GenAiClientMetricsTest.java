@@ -50,33 +50,27 @@ class GenAiClientMetricsTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasDescription("Number of input and output tokens used.")
                     .hasUnit("{token}")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(8)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_TOKEN_TYPE, "input")),
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(13)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_TOKEN_TYPE, "output")))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSum(8)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_TOKEN_TYPE, "input")),
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasSum(13)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_TOKEN_TYPE, "output")))),
             metric ->
                 assertThat(metric)
                     .hasName("gen_ai.client.operation.duration")
                     .hasDescription("GenAI operation duration.")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(2)
-                                        .hasAttributes(Attributes.empty()))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point.hasCount(1).hasSum(2).hasAttributes(Attributes.empty()))));
   }
 }

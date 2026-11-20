@@ -303,12 +303,11 @@ class AgentStartupBenchmark {
         .withEnv("OTEL_TRACES_EXPORTER", "none")
         .withEnv("OTEL_METRICS_EXPORTER", "none")
         .withEnv("OTEL_LOGS_EXPORTER", "none")
-        .withCreateContainerCmdModifier(
-            cmd ->
-                cmd.getHostConfig()
-                    .withMemory(MEMORY_BYTES)
-                    .withMemorySwap(MEMORY_BYTES)
-                    .withNanoCPUs(NANO_CPUS));
+        .withCreateContainerCmdModifier(cmd ->
+            cmd.getHostConfig()
+                .withMemory(MEMORY_BYTES)
+                .withMemorySwap(MEMORY_BYTES)
+                .withNanoCPUs(NANO_CPUS));
   }
 
   private static Path agent(String value) {

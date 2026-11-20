@@ -85,43 +85,40 @@ class VertxReactivePropagationTest {
     AggregatedHttpResponse response = client.get("/listProducts").aggregate().join();
     assertThat(response.status().code()).isEqualTo(SUCCESS.getStatus());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /listProducts")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, "/listProducts"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/listProducts")),
-                span ->
-                    span.hasName("handleListProducts")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("listProducts")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("SELECT products")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_QUERY_TEXT, "SELECT id, name, price, weight FROM products"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT products"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET /listProducts")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, "/listProducts"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, "/listProducts")),
+            span ->
+                span.hasName("handleListProducts")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("listProducts").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(1)),
+            span ->
+                span.hasName("SELECT products")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(2))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_QUERY_TEXT, "SELECT id, name, price, weight FROM products"),
+                        equalTo(DB_QUERY_SUMMARY, "SELECT products"))));
   }
 
   @SuppressWarnings("deprecation") // uses deprecated db semconv
@@ -139,86 +136,83 @@ class VertxReactivePropagationTest {
 
     for (int i = 0; i < count; i++) {
       int index = i;
-      pool.submit(
-          () -> {
-            try {
-              latch.await();
-            } catch (InterruptedException ignored) {
-              Thread.currentThread().interrupt();
-            }
-            testing.runWithSpan(
-                "client " + index,
-                () -> {
-                  HttpRequestBuilder builder =
-                      HttpRequest.builder()
-                          .get(baseUrl + "?" + TEST_REQUEST_ID_PARAMETER + "=" + index);
-                  Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index);
-                  propagator.inject(Context.current(), builder, setter);
-                  client.execute(builder.build()).aggregate().join();
-                });
-          });
+      pool.submit(() -> {
+        try {
+          latch.await();
+        } catch (InterruptedException ignored) {
+          Thread.currentThread().interrupt();
+        }
+        testing.runWithSpan(
+            "client " + index,
+            () -> {
+              HttpRequestBuilder builder =
+                  HttpRequest.builder()
+                      .get(baseUrl + "?" + TEST_REQUEST_ID_PARAMETER + "=" + index);
+              Span.current().setAttribute(TEST_REQUEST_ID_ATTRIBUTE, index);
+              propagator.inject(Context.current(), builder, setter);
+              client.execute(builder.build()).aggregate().join();
+            });
+      });
     }
 
     latch.countDown();
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < count; i++) {
-      assertions.add(
-          trace -> {
-            long requestId =
-                Long.parseLong(trace.getSpan(0).getName().substring("client ".length()));
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("client " + requestId)
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
-                span ->
-                    span.hasName("GET /listProducts")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(URL_PATH, baseUrl),
-                            equalTo(URL_QUERY, TEST_REQUEST_ID_PARAMETER + "=" + requestId),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/listProducts"),
-                            equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
-                span ->
-                    span.hasName("handleListProducts")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
-                span ->
-                    span.hasName("listProducts")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
-                span ->
-                    span.hasName("SELECT products")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(3))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                "SELECT id AS request"
-                                    + requestId
-                                    + ", name, price, weight FROM products"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT products")));
-          });
+      assertions.add(trace -> {
+        long requestId = Long.parseLong(trace.getSpan(0).getName().substring("client ".length()));
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("client " + requestId)
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
+            span ->
+                span.hasName("GET /listProducts")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(URL_PATH, baseUrl),
+                        equalTo(URL_QUERY, TEST_REQUEST_ID_PARAMETER + "=" + requestId),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, "/listProducts"),
+                        equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
+            span ->
+                span.hasName("handleListProducts")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
+            span ->
+                span.hasName("listProducts")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(2))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(longKey(TEST_REQUEST_ID_ATTRIBUTE), requestId)),
+            span ->
+                span.hasName("SELECT products")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(3))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(
+                            DB_QUERY_TEXT,
+                            "SELECT id AS request"
+                                + requestId
+                                + ", name, price, weight FROM products"),
+                        equalTo(DB_QUERY_SUMMARY, "SELECT products")));
+      });
     }
     testing.waitAndAssertTraces(assertions);
   }
