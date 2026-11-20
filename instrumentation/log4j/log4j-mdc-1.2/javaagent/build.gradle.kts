@@ -46,6 +46,12 @@ testing.suites {
       systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
       systemProperty("otel.service.name", "pattern-service")
     }
+    register("PatternInjectionResourceCollisions") {
+      filter { includeTestsMatching("*ResourceCollisionTest") }
+      systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
+      systemProperty("otel.instrumentation.common.mdc.resource-attributes", "trace_id,span_id,trace_flags,service.name")
+      systemProperty("otel.resource.attributes", "trace_id=resource-trace,span_id=resource-span,trace_flags=resource-flags,service.name=resource-service")
+    }
     register("PatternInjectionCustomKeys") {
       filter { includeTestsMatching("*LogPatternTest") }
       environment("OTEL_INSTRUMENTATION_LOGGING_PATTERN_INJECTION_ENABLED", "true")

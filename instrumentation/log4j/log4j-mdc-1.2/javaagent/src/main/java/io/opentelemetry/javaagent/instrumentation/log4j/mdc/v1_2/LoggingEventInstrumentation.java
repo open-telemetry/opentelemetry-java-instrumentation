@@ -56,7 +56,14 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
       Map<String, Object> result = new HashMap<>(properties);
       for (Map.Entry<String, String> entry :
           ConfiguredResourceAttributesHolder.getResourceAttributes().entrySet()) {
-        result.putIfAbsent(entry.getKey(), entry.getValue());
+        String key = entry.getKey();
+        // Match getMDC(): reserved correlation keys come from application MDC or the span,
+        // never from resource attributes, including when no valid span is present.
+        if (!key.equals(AgentCommonConfig.get().getTraceIdKey())
+            && !key.equals(AgentCommonConfig.get().getSpanIdKey())
+            && !key.equals(AgentCommonConfig.get().getTraceFlagsKey())) {
+          result.putIfAbsent(key, entry.getValue());
+        }
       }
       Context context = VirtualFieldHelper.CONTEXT.get(event);
       if (context != null) {
