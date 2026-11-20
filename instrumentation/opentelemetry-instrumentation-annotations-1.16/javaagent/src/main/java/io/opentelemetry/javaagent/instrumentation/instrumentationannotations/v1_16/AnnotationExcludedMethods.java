@@ -5,17 +5,19 @@
 
 package io.opentelemetry.javaagent.instrumentation.instrumentationannotations.v1_16;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isDeclaredBy;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.none;
+import static net.bytebuddy.matcher.ElementMatchers.not;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.javaagent.tooling.config.internal.MethodsConfigurationParser;
 import java.util.Map;
 import java.util.Set;
-import net.bytebuddy.description.ByteCodeElement;
+import javax.annotation.Nullable;
 import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -26,6 +28,11 @@ public class AnnotationExcludedMethods {
   annotation-based advices.
   */
   public static ElementMatcher.Junction<MethodDescription> configureExcludedMethods() {
+    return configureExcludedMethods(null);
+  }
+
+  static ElementMatcher.Junction<MethodDescription> configureExcludedMethods(
+      @Nullable ElementMatcher.Junction<MethodDescription> annotatedSuperMethodMatcher) {
     ElementMatcher.Junction<MethodDescription> result = none();
 
     Map<String, Set<String>> excludedMethods =
@@ -34,7 +41,15 @@ public class AnnotationExcludedMethods {
                 GlobalOpenTelemetry.get(), "opentelemetry_instrumentation_annotations"));
     for (Map.Entry<String, Set<String>> entry : excludedMethods.entrySet()) {
       String className = entry.getKey();
-      ElementMatcher.Junction<ByteCodeElement> matcher = isDeclaredBy(named(className));
+      ElementMatcher.Junction<MethodDescription> matcher = isDeclaredBy(named(className));
+      if (annotatedSuperMethodMatcher != null) {
+        matcher =
+            matcher.or(
+                not(annotatedSuperMethodMatcher)
+                    .and(
+                        hasSuperMethod(
+                            isDeclaredBy(named(className)).and(annotatedSuperMethodMatcher))));
+      }
 
       Set<String> methodNames = entry.getValue();
       if (!methodNames.isEmpty()) {

@@ -45,17 +45,19 @@ final class WithSpanParameterAttributeNamesExtractor implements ParameterAttribu
   public String[] extract(Method method, Parameter[] parameters) {
     String[] attributeNames = new String[parameters.length];
     for (int i = 0; i < parameters.length; i++) {
-      attributeNames[i] = attributeName(parameters[i]);
+      attributeNames[i] = attributeName(method, parameters[i], i);
     }
     return attributeNames;
   }
 
   @Nullable
-  private static String attributeName(Parameter parameter) {
+  private static String attributeName(Method method, Parameter parameter, int index) {
     if (spanAttributeAnnotation == null || spanAttributeValueFunction == null) {
       return null;
     }
-    Annotation annotation = parameter.getDeclaredAnnotation(spanAttributeAnnotation);
+    Annotation annotation =
+        MethodAnnotationResolver.findParameterAnnotationOrNull(
+            method, index, spanAttributeAnnotation);
     if (annotation == null) {
       return null;
     }
