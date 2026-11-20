@@ -77,6 +77,5 @@ public final class RuntimeTelemetry implements AutoCloseable {
         logger.log(WARNING, "Error closing runtime telemetry observable", e);
       }
     }
-    observables.clear();
   }
 }
