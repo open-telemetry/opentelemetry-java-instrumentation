@@ -33,6 +33,14 @@ testing.suites {
       }
       jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
     }
+    listOf("ResourceCollisions", "ResourceCollisionsPatternInjection").forEach { variant ->
+      register(variant) {
+        filter { includeTestsMatching("*ResourceCollisionTest") }
+        systemProperty("otel.instrumentation.logging.pattern-injection.enabled", variant.endsWith("PatternInjection").toString())
+        systemProperty("otel.instrumentation.common.mdc.resource-attributes", "trace_id,span_id,trace_flags,service.name")
+        systemProperty("otel.resource.attributes", "trace_id=resource-trace,span_id=resource-span,trace_flags=resource-flags,service.name=resource-service")
+      }
+    }
     register("PatternInjection") {
       filter { includeTestsMatching("*LogPatternTest") }
       systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")

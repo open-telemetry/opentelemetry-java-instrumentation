@@ -58,13 +58,15 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
 
     StringMap newContextData = newContextData(contextData);
     if (currentContext.isValid()) {
-      if (!newContextData.containsKey(TRACE_ID_KEY)) {
+      // Only application MDC can override span identifiers; the copy also contains resource
+      // attributes.
+      if (!contextData.containsKey(TRACE_ID_KEY)) {
         newContextData.putValue(TRACE_ID_KEY, currentContext.getTraceId());
       }
-      if (!newContextData.containsKey(SPAN_ID_KEY)) {
+      if (!contextData.containsKey(SPAN_ID_KEY)) {
         newContextData.putValue(SPAN_ID_KEY, currentContext.getSpanId());
       }
-      if (!newContextData.containsKey(TRACE_FLAGS_KEY)) {
+      if (!contextData.containsKey(TRACE_FLAGS_KEY)) {
         newContextData.putValue(TRACE_FLAGS_KEY, currentContext.getTraceFlags().asHex());
       }
     }
