@@ -20,9 +20,13 @@ import io.opentelemetry.api.metrics.LongHistogram;
 import io.opentelemetry.api.metrics.LongUpDownCounter;
 import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.api.metrics.ObservableDoubleGauge;
+import io.opentelemetry.api.metrics.ObservableDoubleMeasurement;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
+import io.opentelemetry.javaagent.bootstrap.WeakRefConsumer;
+import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Consumer;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -40,6 +44,8 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
   private final Map<String, LongHistogram> otelHistograms = new ConcurrentHashMap<>();
   private final Map<String, LongUpDownCounter> otelUpDownCounters = new ConcurrentHashMap<>();
   private final Map<String, ObservableDoubleGauge> otelGauges = new ConcurrentHashMap<>();
+  private final Map<String, Consumer<ObservableDoubleMeasurement>> gaugeCallbacks =
+      new ConcurrentHashMap<>();
 
   private final Map<String, Counter> dropwizardCounters = new ConcurrentHashMap<>();
   private final Map<String, Histogram> dropwizardHistograms = new ConcurrentHashMap<>();
@@ -119,21 +125,25 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
     if (sanitizedName == null) {
       return;
     }
+    Consumer<ObservableDoubleMeasurement> callback =
+        measurement -> {
+          Object val = gauge.getValue();
+          if (val instanceof Number) {
+            measurement.record(((Number) val).doubleValue());
+          }
+        };
+    WeakRefConsumer<ObservableDoubleMeasurement> weakCallback =
+        new WeakRefConsumer<>(new WeakReference<>(callback));
     ObservableDoubleGauge otelGauge =
-        otelMeter
-            .gaugeBuilder(sanitizedName)
-            .buildWithCallback(
-                measurement -> {
-                  Object val = gauge.getValue();
-                  if (val instanceof Number) {
-                    measurement.record(((Number) val).doubleValue());
-                  }
-                });
+        otelMeter.gaugeBuilder(sanitizedName).buildWithCallback(weakCallback);
+    weakCallback.closeWhenCollected(otelGauge);
     otelGauges.put(name, otelGauge);
+    gaugeCallbacks.put(name, callback);
   }
 
   @Override
   public void onGaugeRemoved(String name) {
+    gaugeCallbacks.remove(name);
     ObservableDoubleGauge otelGauge = otelGauges.remove(name);
     if (otelGauge != null) {
       otelGauge.close();

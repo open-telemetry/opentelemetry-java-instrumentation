@@ -11,12 +11,21 @@ import static java.util.concurrent.TimeUnit.NANOSECONDS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
 import com.codahale.metrics.Histogram;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
+import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.io.IOException;
+import java.lang.ref.WeakReference;
+import java.lang.reflect.Constructor;
+import java.net.URL;
+import java.net.URLClassLoader;
+import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
@@ -54,6 +63,78 @@ class DropwizardMetricsTest {
     // then
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "testgauge", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
+  void gaugeDoesNotRetainApplicationClassLoader()
+      throws IOException, ReflectiveOperationException, InterruptedException, TimeoutException {
+    WeakReference<ClassLoader> classLoaderRef = registerGaugeFromDisposableClassLoader();
+
+    GcUtils.awaitGc(classLoaderRef, Duration.ofSeconds(10));
+    assertThat(classLoaderRef.get()).isNull();
+
+    testing.clearData();
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME, "test.gc.disposable.gauge", AbstractIterableAssert::isEmpty);
+  }
+
+  private WeakReference<ClassLoader> registerGaugeFromDisposableClassLoader()
+      throws IOException, ReflectiveOperationException {
+    MetricRegistry metricRegistry = new MetricRegistry();
+    URL testClasses = getClass().getProtectionDomain().getCodeSource().getLocation();
+    String gaugeClassName = getClass().getName() + "$DisposableGauge";
+    URLClassLoader appClassLoader =
+        new URLClassLoader(new URL[] {testClasses}, getClass().getClassLoader()) {
+          @Override
+          protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (!name.equals(gaugeClassName)) {
+              return super.loadClass(name, resolve);
+            }
+            synchronized (getClassLoadingLock(name)) {
+              Class<?> loadedClass = findLoadedClass(name);
+              if (loadedClass == null) {
+                loadedClass = findClass(name);
+              }
+              if (resolve) {
+                resolveClass(loadedClass);
+              }
+              return loadedClass;
+            }
+          }
+        };
+    try {
+      Constructor<?> gaugeConstructor =
+          appClassLoader.loadClass(gaugeClassName).getDeclaredConstructor();
+      gaugeConstructor.setAccessible(true);
+      Gauge<?> gauge = (Gauge<?>) gaugeConstructor.newInstance();
+      Thread thread = Thread.currentThread();
+      ClassLoader previousContextClassLoader = thread.getContextClassLoader();
+      try {
+        thread.setContextClassLoader(getClass().getClassLoader());
+        metricRegistry.register("test.gc.disposable.gauge", gauge);
+      } finally {
+        thread.setContextClassLoader(previousContextClassLoader);
+      }
+
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          metric ->
+              metric
+                  .hasName("test.gc.disposable.gauge")
+                  .hasDoubleGaugeSatisfying(
+                      result -> result.hasPointsSatisfying(point -> point.hasValue(42))));
+      return new WeakReference<>(appClassLoader);
+    } finally {
+      appClassLoader.close();
+    }
+  }
+
+  public static class DisposableGauge implements Gauge<Integer> {
+
+    @Override
+    public Integer getValue() {
+      return 42;
+    }
   }
 
   @Test
