@@ -362,6 +362,11 @@
   - `kafka.server.messages`, `kafka.server.requests`, `kafka.server.failed_requests` and
     `kafka.server.network.io` now have a `kafka.topic.name` attribute instead of a broker-wide value.
   - `kafka.server.isr.operations` is now a counter instead of an updowncounter.
+- The Micrometer bridge no longer bridges standard Micrometer JVM metrics that runtime telemetry
+  also reports, such as `jvm.memory.used`, `jvm.threads.live` and `jvm.gc.pause`; use the runtime
+  telemetry metrics instead. Set
+  `otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled=false` to keep
+  them.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
@@ -512,6 +517,8 @@
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.
+- Deprecate `otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled`; it
+  will be removed in 4.0.
 
 ## Version 2.32.0 (2026-10-03)
 

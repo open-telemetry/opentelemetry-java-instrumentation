@@ -19,6 +19,20 @@ dependencies {
   implementation(project(":instrumentation:micrometer:micrometer-1.5:library"))
 
   testImplementation(project(":instrumentation:micrometer:micrometer-1.5:testing"))
+
+  // provides the JMX metrics that jvm-metrics-deduplication defers to
+  testInstrumentation(project(":instrumentation:runtime-telemetry:javaagent"))
+}
+
+testing {
+  suites {
+    register<JvmTestSuite>("unitTests") {
+      dependencies {
+        implementation(project())
+        implementation("io.micrometer:micrometer-core:1.5.0")
+      }
+    }
+  }
 }
 
 testing.suites {
@@ -32,7 +46,27 @@ testing.suites {
         excludeTestsMatching("*TimerMillisecondsTest")
         excludeTestsMatching("*PrometheusModeTest")
         excludeTestsMatching("*HistogramGaugesTest")
+        excludeTestsMatching("*JvmMetricsDeduplicationDefaultTest")
+        excludeTestsMatching("*JvmMetricsDeduplicationDisabledTest")
       }
+    }
+
+    register("JvmMetricsDeduplicationDefault") {
+      filter {
+        includeTestsMatching("*JvmMetricsDeduplicationDefaultTest")
+      }
+      include("**/*JvmMetricsDeduplicationDefaultTest.*")
+      jvmArgs(
+        "-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true",
+      )
+    }
+
+    register("JvmMetricsDeduplicationDisabled") {
+      filter {
+        includeTestsMatching("*JvmMetricsDeduplicationDisabledTest")
+      }
+      include("**/*JvmMetricsDeduplicationDisabledTest.*")
+      jvmArgs("-Dotel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled=false")
     }
 
     register("PrometheusMode") {
@@ -58,5 +92,11 @@ testing.suites {
       include("**/*HistogramGaugesTest.*")
       jvmArgs("-Dotel.instrumentation.micrometer.experimental.histogram-gauges.enabled=true")
     }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }

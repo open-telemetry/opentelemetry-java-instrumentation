@@ -25,6 +25,7 @@ import io.micrometer.core.instrument.distribution.pause.PauseDetector;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
 import javax.annotation.Nullable;
@@ -60,6 +61,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfigModifier distributionStatisticConfigModifier;
   private final boolean metersHiddenFromSearch;
+  private final Predicate<Meter.Id> suppressionPredicate;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
 
   OpenTelemetryMeterRegistry(
@@ -68,12 +70,14 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       NamingConvention namingConvention,
       DistributionStatisticConfigModifier distributionStatisticConfigModifier,
       boolean metersHiddenFromSearch,
+      Predicate<Meter.Id> suppressionPredicate,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.bridging = new Bridging();
     this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
     this.metersHiddenFromSearch = metersHiddenFromSearch;
+    this.suppressionPredicate = suppressionPredicate;
     this.otelMeter = otelMeter;
 
     this.config()
@@ -97,18 +101,27 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected <T> Gauge newGauge(Meter.Id id, @Nullable T obj, ToDoubleFunction<T> valueFunction) {
+    if (suppressionPredicate.test(id)) {
+      return SuppressedInstruments.gauge(id);
+    }
     return new OpenTelemetryGauge<>(
         id, config().namingConvention(), obj, valueFunction, otelMeter, bridging);
   }
 
   @Override
   protected Counter newCounter(Meter.Id id) {
+    if (suppressionPredicate.test(id)) {
+      return SuppressedInstruments.counter(id);
+    }
     return new OpenTelemetryCounter(id, config().namingConvention(), otelMeter, bridging);
   }
 
   @Override
   protected LongTaskTimer newLongTaskTimer(
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig) {
+    if (suppressionPredicate.test(id)) {
+      return SuppressedInstruments.longTaskTimer(id);
+    }
     OpenTelemetryLongTaskTimer timer =
         new OpenTelemetryLongTaskTimer(
             id,
@@ -129,6 +142,9 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       Meter.Id id,
       DistributionStatisticConfig distributionStatisticConfig,
       PauseDetector pauseDetector) {
+    if (suppressionPredicate.test(id)) {
+      return SuppressedInstruments.timer(id);
+    }
     OpenTelemetryTimer timer =
         new OpenTelemetryTimer(
             id,
@@ -149,6 +165,9 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   @Override
   protected DistributionSummary newDistributionSummary(
       Meter.Id id, DistributionStatisticConfig distributionStatisticConfig, double scale) {
+    if (suppressionPredicate.test(id)) {
+      return SuppressedInstruments.distributionSummary(id);
+    }
     OpenTelemetryDistributionSummary distributionSummary =
         new OpenTelemetryDistributionSummary(
             id,
@@ -167,6 +186,9 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   protected Meter newMeter(Meter.Id id, Meter.Type type, Iterable<Measurement> measurements) {
+    if (suppressionPredicate.test(id)) {
+      return SuppressedInstruments.meter(id);
+    }
     return new OpenTelemetryMeter(
         id, config().namingConvention(), measurements, otelMeter, bridging);
   }
@@ -178,6 +200,9 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       ToLongFunction<T> countFunction,
       ToDoubleFunction<T> totalTimeFunction,
       TimeUnit totalTimeFunctionUnit) {
+    if (suppressionPredicate.test(id)) {
+      return SuppressedInstruments.functionTimer(id);
+    }
     return new OpenTelemetryFunctionTimer<>(
         id,
         config().namingConvention(),
@@ -193,6 +218,9 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   @Override
   protected <T> FunctionCounter newFunctionCounter(
       Meter.Id id, T obj, ToDoubleFunction<T> countFunction) {
+    if (suppressionPredicate.test(id)) {
+      return SuppressedInstruments.functionCounter(id);
+    }
     return new OpenTelemetryFunctionCounter<>(
         id, config().namingConvention(), obj, countFunction, otelMeter, bridging);
   }
