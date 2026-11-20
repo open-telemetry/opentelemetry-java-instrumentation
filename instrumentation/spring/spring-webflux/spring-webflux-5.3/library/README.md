@@ -51,6 +51,26 @@ passed around correctly.
 The `WebClient` instrumentation will emit the `error.type` attribute with value `cancelled` whenever
 an outgoing HTTP request is cancelled.
 
+Experimental HTTP client telemetry captures a URI template only when it contains at least one URI
+variable and an identifiable absolute-path reference. Scheme and authority are excluded; literal
+path, query, and fragment text is trusted and preserved without sanitization in the span name,
+`url.template`, and HTTP client duration metric attributes. Pass sensitive or per-request values as
+URI variables rather than embedding them in template literals, and keep templates low-cardinality.
+
+Enable experimental client telemetry programmatically:
+
+```java
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetryBuilder;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
+
+OpenTelemetry openTelemetry = ...;
+SpringWebfluxClientTelemetryBuilder builder = SpringWebfluxClientTelemetry.builder(openTelemetry);
+Experimental.setEmitExperimentalTelemetry(builder, true);
+SpringWebfluxClientTelemetry telemetry = builder.build();
+```
+
 ### Setup
 
 Here is how to set up client and server instrumentation respectively:

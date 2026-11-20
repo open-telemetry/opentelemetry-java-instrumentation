@@ -20,6 +20,16 @@ class SpringWebfluxClientInstrumentationTest
   static final InstrumentationExtension testing = HttpClientInstrumentationExtension.forAgent();
 
   @Override
+  protected boolean supportsUriTemplates() {
+    return true;
+  }
+
+  @Override
+  protected boolean includesBasePathInUriTemplate() {
+    return true;
+  }
+
+  @Override
   protected WebClient.Builder instrument(WebClient.Builder builder) {
     return builder;
   }
