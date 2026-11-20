@@ -18,18 +18,17 @@ import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 import io.opentelemetry.api.metrics.ObservableLongCounter;
-import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
-import javax.annotation.Nullable;
 
 final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
     implements FunctionTimer, RemovableMeter, OpenTelemetryInstrument {
   private final TimeUnit baseTimeUnit;
-  @Nullable private ObservableLongCounter observableCount;
-  @Nullable private ObservableDoubleCounter observableTotalTime;
+  private final ObservableLongCounter observableCount;
+  private final ObservableDoubleCounter observableTotalTime;
+  private boolean removed;
 
   OpenTelemetryFunctionTimer(
       Id id,
@@ -54,9 +53,7 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
             .setUnit("{invocation}");
     LongMeasurementRecorder<T> countCallback =
         new LongMeasurementRecorder<>(obj, countFunction, attributes);
-    observableCount =
-        MetricCallbackRegistration.withoutContextClassLoader(
-            () -> countBuilder.buildWithCallback(countCallback));
+    observableCount = countBuilder.buildWithCallback(countCallback);
 
     DoubleCounterBuilder totalTimeBuilder =
         otelMeter
@@ -71,9 +68,7 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
                 TimeUtils.convert(
                     totalTimeFunction.applyAsDouble(val), totalTimeFunctionUnit, baseTimeUnit),
             attributes);
-    observableTotalTime =
-        MetricCallbackRegistration.withoutContextClassLoader(
-            () -> totalTimeBuilder.buildWithCallback(totalTimeCallback));
+    observableTotalTime = totalTimeBuilder.buildWithCallback(totalTimeCallback);
   }
 
   @Override
@@ -107,19 +102,13 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
 
   @Override
   public void onRemove() {
-    ObservableLongCounter count;
-    ObservableDoubleCounter totalTime;
     synchronized (this) {
-      count = observableCount;
-      observableCount = null;
-      totalTime = observableTotalTime;
-      observableTotalTime = null;
+      if (removed) {
+        return;
+      }
+      removed = true;
     }
-    if (count != null) {
-      count.close();
-    }
-    if (totalTime != null) {
-      totalTime.close();
-    }
+    observableCount.close();
+    observableTotalTime.close();
   }
 }

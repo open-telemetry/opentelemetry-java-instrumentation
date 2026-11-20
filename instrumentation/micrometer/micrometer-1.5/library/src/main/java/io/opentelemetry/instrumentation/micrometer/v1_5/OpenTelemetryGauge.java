@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.micrometer.v1_5;
 
-import static io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration.withoutContextClassLoader;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.baseUnit;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.name;
 import static io.opentelemetry.instrumentation.micrometer.v1_5.Bridging.tagsAsAttributes;
@@ -25,7 +24,8 @@ import javax.annotation.Nullable;
 final class OpenTelemetryGauge<T> extends AbstractMeter
     implements Gauge, RemovableMeter, OpenTelemetryInstrument {
 
-  @Nullable private ObservableDoubleGauge observableGauge;
+  private final ObservableDoubleGauge observableGauge;
+  private boolean removed;
 
   OpenTelemetryGauge(
       Id id,
@@ -44,7 +44,7 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
             .setUnit(baseUnit(id));
     DoubleMeasurementRecorder<T> callback =
         new DoubleMeasurementRecorder<>(obj, objMetric, tagsAsAttributes(id, namingConvention));
-    observableGauge = withoutContextClassLoader(() -> builder.buildWithCallback(callback));
+    observableGauge = builder.buildWithCallback(callback);
   }
 
   @Override
@@ -61,13 +61,12 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
 
   @Override
   public void onRemove() {
-    ObservableDoubleGauge observable;
     synchronized (this) {
-      observable = observableGauge;
-      observableGauge = null;
+      if (removed) {
+        return;
+      }
+      removed = true;
     }
-    if (observable != null) {
-      observable.close();
-    }
+    observableGauge.close();
   }
 }
