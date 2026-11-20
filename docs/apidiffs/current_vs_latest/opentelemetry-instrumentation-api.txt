@@ -46,7 +46,11 @@ Comparing source compatibility of opentelemetry-instrumentation-api-3.0.0-SNAPSH
 ***  MODIFIED INTERFACE: PUBLIC ABSTRACT io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter  (not serializable)
 	===  CLASS FILE FORMAT VERSION: 52.0 <- 52.0
 	GENERIC TEMPLATES: === REQUEST:java.lang.Object, === RESPONSE:java.lang.Object
+	===  UNCHANGED METHOD: PUBLIC java.net.InetSocketAddress getNetworkLocalInetSocketAddress(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: java.lang.Deprecated
 	+++  NEW METHOD: PUBLIC(+) java.net.SocketAddress getNetworkLocalSocketAddress(java.lang.Object, java.lang.Object)
 		+++  NEW ANNOTATION: javax.annotation.Nullable
+	===  UNCHANGED METHOD: PUBLIC java.net.InetSocketAddress getNetworkPeerInetSocketAddress(java.lang.Object, java.lang.Object)
+		+++  NEW ANNOTATION: java.lang.Deprecated
 	+++  NEW METHOD: PUBLIC(+) java.net.SocketAddress getNetworkPeerSocketAddress(java.lang.Object, java.lang.Object)
 		+++  NEW ANNOTATION: javax.annotation.Nullable

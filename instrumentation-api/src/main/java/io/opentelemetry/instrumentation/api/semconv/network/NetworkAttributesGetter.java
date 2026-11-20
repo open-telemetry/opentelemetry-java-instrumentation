@@ -78,7 +78,11 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Implementing this method is equivalent to implementing both {@link
    * #getNetworkLocalAddress(Object, Object)} and {@link #getNetworkLocalPort(Object, Object)}.
+   *
+   * @deprecated Use {@link #getNetworkLocalSocketAddress(Object, Object)} instead. To be removed in
+   *     the next major version.
    */
+  @Deprecated
   @Nullable
   default InetSocketAddress getNetworkLocalInetSocketAddress(
       REQUEST request, @Nullable RESPONSE response) {
@@ -88,9 +92,8 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns the local socket address.
    *
-   * <p>The default delegates to {@link #getNetworkLocalInetSocketAddress(Object, Object)}. Override
-   * this method to expose other socket address types. Defaults for address, port, network type, and
-   * transport use this method; explicitly overridden attribute getters take precedence.
+   * <p>Defaults for address, port, network type, and transport use this method; explicitly
+   * overridden attribute getters take precedence.
    *
    * <p>Supported types are {@link InetSocketAddress} and JDK 16+ {@code UnixDomainSocketAddress}.
    * Unix socket addresses supply a path and {@code unix} transport, but no port or network type.
@@ -106,10 +109,9 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Examples: {@code 10.1.2.80}, {@code /tmp/my.sock}
    *
-   * <p>By default, reads {@link #getNetworkLocalSocketAddress(Object, Object)}, which falls back to
-   * {@link #getNetworkLocalInetSocketAddress(Object, Object)}. Returns {@code null} for absent,
-   * unsupported, or unresolved addresses and empty Unix paths. Override this method for custom
-   * address representations.
+   * <p>By default, reads {@link #getNetworkLocalSocketAddress(Object, Object)}. Returns {@code
+   * null} for absent, unsupported, or unresolved addresses and empty Unix paths. Override this
+   * method for custom address representations.
    */
   @Nullable
   default String getNetworkLocalAddress(REQUEST request, @Nullable RESPONSE response) {
@@ -121,10 +123,9 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Examples: {@code 65123}
    *
-   * <p>By default, reads {@link #getNetworkLocalSocketAddress(Object, Object)}, which falls back to
-   * {@link #getNetworkLocalInetSocketAddress(Object, Object)}. Returns a port only for {@link
-   * InetSocketAddress}, including unresolved addresses, and {@code null} otherwise. Override this
-   * method for custom port representations.
+   * <p>By default, reads {@link #getNetworkLocalSocketAddress(Object, Object)}. Returns a port only
+   * for {@link InetSocketAddress}, including unresolved addresses, and {@code null} otherwise.
+   * Override this method for custom port representations.
    */
   @Nullable
   default Integer getNetworkLocalPort(REQUEST request, @Nullable RESPONSE response) {
@@ -136,7 +137,11 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Implementing this method is equivalent to implementing both {@link
    * #getNetworkPeerAddress(Object, Object)} and {@link #getNetworkPeerPort(Object, Object)}.
+   *
+   * @deprecated Use {@link #getNetworkPeerSocketAddress(Object, Object)} instead. To be removed in
+   *     the next major version.
    */
+  @Deprecated
   @Nullable
   default InetSocketAddress getNetworkPeerInetSocketAddress(
       REQUEST request, @Nullable RESPONSE response) {
@@ -146,9 +151,8 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
   /**
    * Returns the peer socket address.
    *
-   * <p>The default delegates to {@link #getNetworkPeerInetSocketAddress(Object, Object)}. Override
-   * this method to expose other socket address types. Defaults for address, port, network type, and
-   * transport use this method; explicitly overridden attribute getters take precedence.
+   * <p>Defaults for address, port, network type, and transport use this method; explicitly
+   * overridden attribute getters take precedence.
    *
    * <p>See {@link #getNetworkLocalSocketAddress(Object, Object)} for supported address types.
    */
@@ -162,10 +166,9 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Examples: {@code 10.1.2.80}, {@code /tmp/my.sock}
    *
-   * <p>By default, reads {@link #getNetworkPeerSocketAddress(Object, Object)}, which falls back to
-   * {@link #getNetworkPeerInetSocketAddress(Object, Object)}. Returns {@code null} for absent,
-   * unsupported, or unresolved addresses and empty Unix paths. Override this method for custom
-   * address representations.
+   * <p>By default, reads {@link #getNetworkPeerSocketAddress(Object, Object)}. Returns {@code null}
+   * for absent, unsupported, or unresolved addresses and empty Unix paths. Override this method for
+   * custom address representations.
    */
   @Nullable
   default String getNetworkPeerAddress(REQUEST request, @Nullable RESPONSE response) {
@@ -177,10 +180,9 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Examples: {@code 65123}
    *
-   * <p>By default, reads {@link #getNetworkPeerSocketAddress(Object, Object)}, which falls back to
-   * {@link #getNetworkPeerInetSocketAddress(Object, Object)}. Returns a port only for {@link
-   * InetSocketAddress}, including unresolved addresses, and {@code null} otherwise. Override this
-   * method for custom port representations.
+   * <p>By default, reads {@link #getNetworkPeerSocketAddress(Object, Object)}. Returns a port only
+   * for {@link InetSocketAddress}, including unresolved addresses, and {@code null} otherwise.
+   * Override this method for custom port representations.
    */
   @Nullable
   default Integer getNetworkPeerPort(REQUEST request, @Nullable RESPONSE response) {
