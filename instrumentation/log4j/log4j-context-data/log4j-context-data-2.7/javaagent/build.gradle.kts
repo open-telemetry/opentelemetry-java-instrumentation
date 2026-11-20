@@ -41,6 +41,15 @@ testing.suites {
         systemProperty("otel.resource.attributes", "trace_id=resource-trace,span_id=resource-span,trace_flags=resource-flags,service.name=resource-service")
       }
     }
+    register("PatternInjectionBraceKeys") {
+      filter {
+        includeTestsMatching("*LogPatternTest.rebuildsLayoutFromOriginalConversionPattern")
+        includeTestsMatching("*LogPatternTest.preservesStyleWithBraceContainingKeys")
+      }
+      systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
+      systemProperty("otel.instrumentation.common.logging.trace-id-key", "custom}trace")
+      systemProperty("otel.instrumentation.common.logging.span-id-key", "custom{span")
+    }
     register("PatternInjection") {
       filter { includeTestsMatching("*LogPatternTest") }
       systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")

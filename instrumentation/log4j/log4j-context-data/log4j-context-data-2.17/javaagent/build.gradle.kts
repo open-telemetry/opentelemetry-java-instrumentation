@@ -44,6 +44,15 @@ testing.suites {
       // now testing-common includes jetty / servlet.
       jvmArgs("-Dlog4j2.enable.threadlocals=true")
     }
+    register("PatternInjectionBraceKeys") {
+      filter {
+        includeTestsMatching("*LogPatternTest.rebuildsLayoutFromOriginalConversionPattern")
+        includeTestsMatching("*LogPatternTest.preservesStyleWithBraceContainingKeys")
+      }
+      systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
+      systemProperty("otel.instrumentation.common.logging.trace-id-key", "custom}trace")
+      systemProperty("otel.instrumentation.common.logging.span-id-key", "custom{span")
+    }
     register("PatternInjection") {
       filter { includeTestsMatching("*LogPatternTest") }
       systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")

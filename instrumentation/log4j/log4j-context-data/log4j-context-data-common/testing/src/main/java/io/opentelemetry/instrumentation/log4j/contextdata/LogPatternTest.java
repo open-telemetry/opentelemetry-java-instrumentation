@@ -264,8 +264,52 @@ public abstract class LogPatternTest {
     }
   }
 
+  @Test
+  void rebuildsLayoutFromOriginalConversionPattern() {
+    String pattern = "%d %-5p prefix: %m%n";
+    PatternLayout first = PatternLayout.newBuilder().withPattern(pattern).build();
+    PatternLayout rebuilt =
+        PatternLayout.newBuilder().withPattern(first.getConversionPattern()).build();
+    assertRenderedPattern(
+        rebuilt,
+        (layout, rendered) -> {
+          if (ENABLED) {
+            assertThat(rendered)
+                .containsOnlyOnce(TRACE + "=")
+                .containsOnlyOnce(SPAN + "=")
+                .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+          }
+        });
+    assertThat(first.getConversionPattern()).isEqualTo(pattern);
+    assertThat(rebuilt.getConversionPattern()).isEqualTo(pattern);
+  }
+
+  @Test
+  void preservesStyleWithBraceContainingKeys() {
+    PatternLayout layout =
+        PatternLayout.newBuilder()
+            .withNoConsoleNoAnsi(false)
+            .withPattern("%style{%d %-5p %m%n}{red}")
+            .build();
+    assertRenderedPattern(
+        layout,
+        (ignored, rendered) -> {
+          assertThat(rendered).contains("\u001B[31m", "pattern message").endsWith("\u001B[m");
+          if (ENABLED) {
+            assertThat(rendered)
+                .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+          }
+        });
+  }
+
   private void assertRenderedPattern(String pattern, BiConsumer<PatternLayout, String> assertion) {
-    PatternLayout layout = PatternLayout.newBuilder().withPattern(pattern).build();
+    assertRenderedPattern(PatternLayout.newBuilder().withPattern(pattern).build(), assertion);
+  }
+
+  private void assertRenderedPattern(
+      PatternLayout layout, BiConsumer<PatternLayout, String> assertion) {
     Logger logger = (Logger) LogManager.getLogger("TestLogger");
     List<String> messages = new ArrayList<>();
     AbstractAppender appender =

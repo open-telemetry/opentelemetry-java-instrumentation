@@ -19,3 +19,5 @@ For example, `%d{yyyy-MM-dd HH:mm:ss} %-5p %m%n` becomes:
 Missing fields are inserted before the message and its preceding literal text, after existing prefix fields such as the timestamp, level, and thread. Patterns without a message converter are unchanged. Date options and presentation wrappers are preserved. Existing keyed MDC converters are reused; a whole-MDC converter that already renders the fields needs no additions. Repeated layout initialization does not duplicate fields.
 
 Trace and span keys follow `otel.instrumentation.common.logging.trace-id-key` and `otel.instrumentation.common.logging.span-id-key`. Application-provided correlation values take precedence. Outside a valid span, missing trace/span values render empty.
+
+When Log4j2 correlation key names contain braces, injected fields are placed before the surrounding presentation wrapper so the original styling remains intact.

@@ -68,6 +68,7 @@ public final class LogPatternInjection {
     String enhanced =
         enabled ? enhance(pattern, framework, traceKey, spanKey, traceOption, spanOption) : pattern;
     return new Injection(
+        pattern,
         enhanced,
         framework,
         traceKey,
@@ -87,6 +88,18 @@ public final class LogPatternInjection {
       }
     }
     return option;
+  }
+
+  @Nullable
+  public static String restoreOriginalPattern(@Nullable String pattern, Framework framework) {
+    Injection injection = currentInjection.get();
+    if (pattern != null
+        && injection != null
+        && injection.matches(framework)
+        && pattern.equals(injection.pattern)) {
+      return injection.originalPattern;
+    }
+    return pattern;
   }
 
   @Nullable
@@ -148,7 +161,15 @@ public final class LogPatternInjection {
     if (fields.length() == 0) {
       return pattern;
     }
-    int end = messageInsertion(pattern, framework);
+    // Log4j2 does not support escaping literal braces inside wrapper options. Keep generated
+    // fields outside wrappers when their labels contain braces, preserving native styling.
+    boolean nestedInsertion =
+        framework != Framework.LOG4J2
+            || (traceKey.indexOf('{') < 0
+                && traceKey.indexOf('}') < 0
+                && spanKey.indexOf('{') < 0
+                && spanKey.indexOf('}') < 0);
+    int end = messageInsertion(pattern, framework, nestedInsertion);
     if (end < 0) {
       return pattern;
     }
@@ -422,7 +443,8 @@ public final class LogPatternInjection {
 
   // Returns an insertion offset, -1 for literal-only text, or -2 for prefix fields without a
   // message.
-  private static int messageInsertion(String pattern, Framework framework) {
+  private static int messageInsertion(
+      String pattern, Framework framework, boolean nestedInsertion) {
     boolean prefixSeen = false;
     int precedingEnd = 0;
     while (precedingEnd < pattern.length()
@@ -465,8 +487,13 @@ public final class LogPatternInjection {
           && (isLogback(framework)
               || (framework == Framework.LOG4J2 && isLog4j2Wrapper(converter)))) {
         int wrapperEnd = balancedEnd(pattern, end, open, close, framework);
-        int nested = messageInsertion(pattern.substring(end + 1, wrapperEnd - 1), framework);
+        int nested =
+            messageInsertion(
+                pattern.substring(end + 1, wrapperEnd - 1), framework, nestedInsertion);
         if (nested >= 0) {
+          if (!nestedInsertion) {
+            return precedingEnd;
+          }
           return nested == 0 ? precedingEnd : end + 1 + nested;
         }
         if (nested == -1) {
@@ -499,6 +526,7 @@ public final class LogPatternInjection {
    * at any time.
    */
   public static final class Injection {
+    @Nullable private final String originalPattern;
     @Nullable private final String pattern;
     private final Framework framework;
     private final String traceKey;
@@ -508,6 +536,7 @@ public final class LogPatternInjection {
     private final boolean modified;
 
     private Injection(
+        @Nullable String originalPattern,
         @Nullable String pattern,
         Framework framework,
         String traceKey,
@@ -515,6 +544,7 @@ public final class LogPatternInjection {
         String traceOption,
         String spanOption,
         boolean modified) {
+      this.originalPattern = originalPattern;
       this.pattern = pattern;
       this.framework = framework;
       this.traceKey = traceKey;
