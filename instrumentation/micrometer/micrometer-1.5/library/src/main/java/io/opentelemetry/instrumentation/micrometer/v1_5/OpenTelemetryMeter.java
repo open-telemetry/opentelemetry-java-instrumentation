@@ -14,23 +14,14 @@ import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.metrics.DoubleCounterBuilder;
-import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
-import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
-import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.Nullable;
 
 final class OpenTelemetryMeter extends AbstractMeter
     implements Meter, RemovableMeter, OpenTelemetryInstrument {
 
-  @Nullable private List<AutoCloseable> observableInstruments;
-
-  @SuppressWarnings("UnusedVariable")
-  @Nullable
-  private List<Measurement> measurements;
+  private final List<AutoCloseable> observableInstruments;
 
   OpenTelemetryMeter(
       Id id,
@@ -42,9 +33,7 @@ final class OpenTelemetryMeter extends AbstractMeter
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
     List<AutoCloseable> observableInstruments = new ArrayList<>();
-    List<Measurement> measurementReferences = new ArrayList<>();
     for (Measurement measurement : measurements) {
-      measurementReferences.add(measurement);
       String name =
           bridging.statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
       String description = bridging.description(name, id);
@@ -57,27 +46,23 @@ final class OpenTelemetryMeter extends AbstractMeter
         // fall through
         case TOTAL_TIME:
         case COUNT:
-          DoubleCounterBuilder counterBuilder =
+          observableInstruments.add(
               otelMeter
                   .counterBuilder(name)
                   .ofDoubles()
                   .setDescription(description)
-                  .setUnit(baseUnit);
-          observableInstruments.add(
-              MetricCallbackRegistration.withoutContextClassLoader(
-                  () -> counterBuilder.buildWithCallback(callback)));
+                  .setUnit(baseUnit)
+                  .buildWithCallback(callback));
           break;
 
         case ACTIVE_TASKS:
-          DoubleUpDownCounterBuilder upDownCounterBuilder =
+          observableInstruments.add(
               otelMeter
                   .upDownCounterBuilder(name)
                   .ofDoubles()
                   .setDescription(description)
-                  .setUnit(baseUnit);
-          observableInstruments.add(
-              MetricCallbackRegistration.withoutContextClassLoader(
-                  () -> upDownCounterBuilder.buildWithCallback(callback)));
+                  .setUnit(baseUnit)
+                  .buildWithCallback(callback));
           break;
 
         case DURATION:
@@ -85,16 +70,16 @@ final class OpenTelemetryMeter extends AbstractMeter
         case MAX:
         case VALUE:
         case UNKNOWN:
-          DoubleGaugeBuilder gaugeBuilder =
-              otelMeter.gaugeBuilder(name).setDescription(description).setUnit(baseUnit);
           observableInstruments.add(
-              MetricCallbackRegistration.withoutContextClassLoader(
-                  () -> gaugeBuilder.buildWithCallback(callback)));
+              otelMeter
+                  .gaugeBuilder(name)
+                  .setDescription(description)
+                  .setUnit(baseUnit)
+                  .buildWithCallback(callback));
           break;
       }
     }
     this.observableInstruments = observableInstruments;
-    this.measurements = measurementReferences;
   }
 
   @Override
@@ -105,16 +90,7 @@ final class OpenTelemetryMeter extends AbstractMeter
 
   @Override
   public void onRemove() {
-    List<AutoCloseable> observableInstruments;
     try {
-      synchronized (this) {
-        observableInstruments = this.observableInstruments;
-        this.observableInstruments = null;
-        measurements = null;
-      }
-      if (observableInstruments == null) {
-        return;
-      }
       for (AutoCloseable observableInstrument : observableInstruments) {
         observableInstrument.close();
       }

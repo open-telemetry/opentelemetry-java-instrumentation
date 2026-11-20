@@ -57,45 +57,6 @@ class DropwizardMetricsTest {
   }
 
   @Test
-  void sameGaugeNameInSeparateRegistriesKeepsOtherRegistrationWhenFirstIsRemoved() {
-    verifySeparateRegistryGaugeRemoval(true);
-  }
-
-  @Test
-  void sameGaugeNameInSeparateRegistriesKeepsOtherRegistrationWhenSecondIsRemoved() {
-    verifySeparateRegistryGaugeRemoval(false);
-  }
-
-  private static void verifySeparateRegistryGaugeRemoval(boolean removeFirst) {
-    MetricRegistry firstRegistry = new MetricRegistry();
-    MetricRegistry secondRegistry = new MetricRegistry();
-    AtomicLong firstValue = new AtomicLong(41);
-    AtomicLong secondValue = new AtomicLong(42);
-    firstRegistry.gauge("test.multi.registry.gauge", () -> firstValue::get);
-    secondRegistry.gauge("test.multi.registry.gauge", () -> secondValue::get);
-
-    MetricRegistry removedRegistry = removeFirst ? firstRegistry : secondRegistry;
-    MetricRegistry remainingRegistry = removeFirst ? secondRegistry : firstRegistry;
-    AtomicLong remainingValue = removeFirst ? secondValue : firstValue;
-    double expectedValue = (double) remainingValue.get();
-    removedRegistry.remove("test.multi.registry.gauge");
-    testing.clearData();
-
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME,
-        metric ->
-            metric
-                .hasName("test.multi.registry.gauge")
-                .hasDoubleGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(expectedValue))));
-
-    remainingRegistry.remove("test.multi.registry.gauge");
-    testing.clearData();
-    testing.waitAndAssertMetrics(
-        INSTRUMENTATION_NAME, "test.multi.registry.gauge", AbstractIterableAssert::isEmpty);
-  }
-
-  @Test
   void counter() {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();

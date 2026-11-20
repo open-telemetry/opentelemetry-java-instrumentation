@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 
 import io.opentelemetry.api.common.Attributes;
@@ -22,15 +21,10 @@ import io.opentelemetry.api.metrics.ObservableDoubleGauge;
 import io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter;
 import io.opentelemetry.api.metrics.ObservableLongCounter;
 import io.opentelemetry.api.metrics.ObservableLongGauge;
-import io.opentelemetry.api.metrics.ObservableLongMeasurement;
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
-import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.sdk.common.InstrumentationScopeInfo;
-import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
-import java.time.Duration;
-import java.util.function.Consumer;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -431,25 +425,6 @@ class MeterTest {
     testing.clearData();
 
     testing.waitAndAssertMetrics(instrumentationName, "test", AbstractIterableAssert::isEmpty);
-  }
-
-  @Test
-  void closedObservableDoesNotRetainCallbackWhenHandleRemainsReachable() throws Exception {
-    Consumer<ObservableLongMeasurement> callback =
-        new Consumer<ObservableLongMeasurement>() {
-          @Override
-          public void accept(ObservableLongMeasurement result) {}
-        };
-    WeakReference<Consumer<ObservableLongMeasurement>> callbackRef = new WeakReference<>(callback);
-    ObservableLongGauge observableGauge =
-        meter.gaugeBuilder("test").ofLongs().buildWithCallback(callback);
-
-    close(observableGauge);
-    callback = null;
-
-    GcUtils.awaitGc(callbackRef, Duration.ofSeconds(10));
-    assertThat(callbackRef.get()).isNull();
-    assertThat(observableGauge).isNotNull();
   }
 
   @Test

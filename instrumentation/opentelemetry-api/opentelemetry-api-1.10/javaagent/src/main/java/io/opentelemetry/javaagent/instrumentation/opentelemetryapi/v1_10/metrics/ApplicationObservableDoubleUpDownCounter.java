@@ -10,16 +10,22 @@ import io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter;
 public class ApplicationObservableDoubleUpDownCounter
     implements application.io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter {
 
-  private final ApplicationCallbackHandle callbackHandle;
+  private final ObservableDoubleUpDownCounter agentUpDownCounter;
+  private final Runnable onClose;
 
   public ApplicationObservableDoubleUpDownCounter(
       ObservableDoubleUpDownCounter agentUpDownCounter, Runnable onClose) {
-    callbackHandle = new ApplicationCallbackHandle(agentUpDownCounter::close, onClose);
+    this.agentUpDownCounter = agentUpDownCounter;
+    this.onClose = onClose;
   }
 
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    callbackHandle.close();
+    try {
+      agentUpDownCounter.close();
+    } finally {
+      onClose.run();
+    }
   }
 }

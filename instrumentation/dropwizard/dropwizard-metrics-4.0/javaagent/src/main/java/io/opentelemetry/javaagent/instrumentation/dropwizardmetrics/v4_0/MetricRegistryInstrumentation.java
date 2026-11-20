@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0.DropwizardSingletons.metrics;
 import static net.bytebuddy.matcher.ElementMatchers.isDefaultConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.codahale.metrics.MetricRegistry;
-import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -34,7 +34,7 @@ class MetricRegistryInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This MetricRegistry metricRegistry) {
-      metricRegistry.addListener(new DropwizardMetricsAdapter(GlobalOpenTelemetry.get()));
+      metricRegistry.addListener(metrics());
     }
   }
 }

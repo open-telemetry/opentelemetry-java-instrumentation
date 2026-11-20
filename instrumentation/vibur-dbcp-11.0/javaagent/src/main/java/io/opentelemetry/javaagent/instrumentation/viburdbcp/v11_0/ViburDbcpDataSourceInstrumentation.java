@@ -32,7 +32,7 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         named("start").and(takesArguments(0)), getClass().getName() + "$StartAdvice");
     transformer.applyAdviceToMethod(
-        named("terminate").and(takesArguments(0)), getClass().getName() + "$TerminateAdvice");
+        named("close").and(takesArguments(0)), getClass().getName() + "$CloseAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -57,7 +57,7 @@ final class ViburDbcpDataSourceInstrumentation implements TypeInstrumentation {
   }
 
   @SuppressWarnings("unused")
-  public static class TerminateAdvice {
+  public static class CloseAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(@Advice.This ViburDBCPDataSource dataSource) {

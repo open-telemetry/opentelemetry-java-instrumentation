@@ -12,12 +12,10 @@ import java.util.function.Consumer;
 public final class WeakRefConsumer<T> implements Consumer<T> {
 
   private final WeakReference<Consumer<T>> ref;
-  private final WeakReference<ClassLoader> contextClassLoader;
   private final AtomicReference<AutoCloseable> closeOnCollect = new AtomicReference<>();
 
   public WeakRefConsumer(WeakReference<Consumer<T>> ref) {
     this.ref = ref;
-    contextClassLoader = new WeakReference<>(Thread.currentThread().getContextClassLoader());
   }
 
   // Not a constructor parameter because of a chicken-and-egg problem: the SDK builder needs
@@ -30,14 +28,7 @@ public final class WeakRefConsumer<T> implements Consumer<T> {
   public void accept(T t) {
     Consumer<T> consumer = ref.get();
     if (consumer != null) {
-      Thread thread = Thread.currentThread();
-      ClassLoader originalClassLoader = thread.getContextClassLoader();
-      thread.setContextClassLoader(contextClassLoader.get());
-      try {
-        consumer.accept(t);
-      } finally {
-        thread.setContextClassLoader(originalClassLoader);
-      }
+      consumer.accept(t);
     } else {
       close();
     }
