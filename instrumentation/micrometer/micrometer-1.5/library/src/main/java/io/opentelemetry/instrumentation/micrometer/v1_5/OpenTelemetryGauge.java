@@ -60,10 +60,14 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
   }
 
   @Override
-  public synchronized void onRemove() {
-    if (observableGauge != null) {
-      observableGauge.close();
+  public void onRemove() {
+    ObservableDoubleGauge observable;
+    synchronized (this) {
+      observable = observableGauge;
       observableGauge = null;
+    }
+    if (observable != null) {
+      observable.close();
     }
   }
 }

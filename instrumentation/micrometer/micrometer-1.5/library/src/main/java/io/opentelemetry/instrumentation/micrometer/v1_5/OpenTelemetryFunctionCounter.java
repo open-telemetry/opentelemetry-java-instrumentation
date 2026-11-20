@@ -61,10 +61,14 @@ final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
   }
 
   @Override
-  public synchronized void onRemove() {
-    if (observableCount != null) {
-      observableCount.close();
+  public void onRemove() {
+    ObservableDoubleCounter observable;
+    synchronized (this) {
+      observable = observableCount;
       observableCount = null;
+    }
+    if (observable != null) {
+      observable.close();
     }
   }
 }
