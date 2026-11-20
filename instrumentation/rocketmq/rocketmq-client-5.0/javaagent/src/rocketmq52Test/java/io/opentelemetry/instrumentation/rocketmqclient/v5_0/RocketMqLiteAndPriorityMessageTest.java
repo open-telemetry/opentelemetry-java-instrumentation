@@ -229,13 +229,12 @@ class RocketMqLiteAndPriorityMessageTest {
             .setClientConfiguration(configuration)
             .setConsumerGroup(LITE_GROUP)
             .bindTopic(LITE_TOPIC)
-            .setMessageListener(
-                message -> {
-                  testing.runWithSpan("listener", () -> {});
-                  return failurePending.getAndSet(false)
-                      ? ConsumeResult.FAILURE
-                      : ConsumeResult.SUCCESS;
-                })
+            .setMessageListener(message -> {
+              testing.runWithSpan("listener", () -> {});
+              return failurePending.getAndSet(false)
+                  ? ConsumeResult.FAILURE
+                  : ConsumeResult.SUCCESS;
+            })
             .build();
     cleanup.deferCleanup(consumer);
     consumer.subscribeLite(LITE_CHILD_TOPIC);
@@ -249,11 +248,10 @@ class RocketMqLiteAndPriorityMessageTest {
             .setConsumerGroup(PRIORITY_PUSH_GROUP)
             .setSubscriptionExpressions(
                 singletonMap(PRIORITY_PUSH_TOPIC, new FilterExpression("*")))
-            .setMessageListener(
-                message -> {
-                  testing.runWithSpan("listener", () -> {});
-                  return ConsumeResult.SUCCESS;
-                })
+            .setMessageListener(message -> {
+              testing.runWithSpan("listener", () -> {});
+              return ConsumeResult.SUCCESS;
+            })
             .build();
     cleanup.deferCleanup(consumer);
   }
@@ -315,11 +313,9 @@ class RocketMqLiteAndPriorityMessageTest {
     await()
         .atMost(Duration.ofSeconds(30))
         .ignoreExceptionsInstanceOf(MQClientException.class)
-        .untilAsserted(
-            () ->
-                assertThat(admin.examineTopicRouteInfo(topic).getBrokerDatas())
-                    .anySatisfy(
-                        broker -> assertThat(broker.getBrokerName()).isEqualTo("broker-a")));
+        .untilAsserted(() ->
+            assertThat(admin.examineTopicRouteInfo(topic).getBrokerDatas())
+                .anySatisfy(broker -> assertThat(broker.getBrokerName()).isEqualTo("broker-a")));
   }
 
   private static SpanDataAssert assertSend(
@@ -409,34 +405,27 @@ class RocketMqLiteAndPriorityMessageTest {
       int attempts) {
     AtomicReference<SpanData> sent = new AtomicReference<>();
     List<Consumer<TraceAssert>> traces = new ArrayList<>();
-    traces.add(
-        trace -> {
-          if (attempts == 1) {
-            trace.hasSpansSatisfyingExactly(
-                span -> assertSend(span, topic, receipt, liteTopic, priority),
-                span ->
-                    assertProcess(span, topic, group, trace.getSpan(0), liteTopic, priority, false),
-                span -> span.hasName("listener").hasParent(trace.getSpan(1)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> assertSend(span, topic, receipt, liteTopic, priority),
-                span ->
-                    assertProcess(span, topic, group, trace.getSpan(0), liteTopic, priority, true),
-                span -> span.hasName("listener").hasParent(trace.getSpan(1)),
-                span ->
-                    assertProcess(span, topic, group, trace.getSpan(0), liteTopic, priority, false),
-                span -> span.hasName("listener").hasParent(trace.getSpan(3)));
-          }
-          sent.set(trace.getSpan(0));
-        });
+    traces.add(trace -> {
+      if (attempts == 1) {
+        trace.hasSpansSatisfyingExactly(
+            span -> assertSend(span, topic, receipt, liteTopic, priority),
+            span -> assertProcess(span, topic, group, trace.getSpan(0), liteTopic, priority, false),
+            span -> span.hasName("listener").hasParent(trace.getSpan(1)));
+      } else {
+        trace.hasSpansSatisfyingExactly(
+            span -> assertSend(span, topic, receipt, liteTopic, priority),
+            span -> assertProcess(span, topic, group, trace.getSpan(0), liteTopic, priority, true),
+            span -> span.hasName("listener").hasParent(trace.getSpan(1)),
+            span -> assertProcess(span, topic, group, trace.getSpan(0), liteTopic, priority, false),
+            span -> span.hasName("listener").hasParent(trace.getSpan(3)));
+      }
+      sent.set(trace.getSpan(0));
+    });
     if (RECEIVE_TELEMETRY_ENABLED) {
       // Lite FIFO retries reuse the received message locally.
-      traces.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      assertReceive(span, topic, group, sent.get(), liteTopic, priority)
-                          .hasNoParent()));
+      traces.add(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              assertReceive(span, topic, group, sent.get(), liteTopic, priority).hasNoParent()));
     }
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.PRODUCER, SpanKind.CLIENT), traces);
@@ -471,20 +460,16 @@ class RocketMqLiteAndPriorityMessageTest {
         INSTRUMENTATION_NAME,
         "messaging.client.sent.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "rocketmq"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                                equalTo(MESSAGING_OPERATION_NAME, "send"))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"))))));
     List<String> metricNames = new ArrayList<>();
     metricNames.add("messaging.client.operation.duration");
     metricNames.add("messaging.client.consumed.messages");
@@ -501,15 +486,13 @@ class RocketMqLiteAndPriorityMessageTest {
         .filteredOn(
             metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))
         .isNotEmpty()
-        .allSatisfy(
-            metric ->
-                assertThat(metric.getData().getPoints())
-                    .isNotEmpty()
-                    .allSatisfy(
-                        point ->
-                            assertThat(point.getAttributes().asMap())
-                                .doesNotContainKeys(
-                                    stringKey("rocketmq.message.lite_topic"),
-                                    longKey("rocketmq.message.priority"))));
+        .allSatisfy(metric ->
+            assertThat(metric.getData().getPoints())
+                .isNotEmpty()
+                .allSatisfy(point ->
+                    assertThat(point.getAttributes().asMap())
+                        .doesNotContainKeys(
+                            stringKey("rocketmq.message.lite_topic"),
+                            longKey("rocketmq.message.priority"))));
   }
 }
