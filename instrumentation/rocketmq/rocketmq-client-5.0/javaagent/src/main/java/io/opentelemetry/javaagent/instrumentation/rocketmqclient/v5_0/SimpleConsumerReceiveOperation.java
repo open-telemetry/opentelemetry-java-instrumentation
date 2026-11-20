@@ -90,24 +90,25 @@ public class SimpleConsumerReceiveOperation {
     @Nullable private ListenableFuture<List<MessageView>> originalFuture;
 
     private ReceiveFuture(
-        ListenableFuture<List<MessageView>> originalFuture,
+        ListenableFuture<List<MessageView>> sourceFuture,
         SimpleConsumerReceiveOperation operation) {
-      this.originalFuture = originalFuture;
+      this.originalFuture = sourceFuture;
 
-      // Observe the original completion even when this result future is cancelled.
+      // Observe source completion even if this future is cancelled. Publish its outcome only
+      // after telemetry; setFuture preserves success, failure, and cancellation.
       Futures.addCallback(
-          originalFuture,
+          sourceFuture,
           new FutureCallback<List<MessageView>>() {
             @Override
             public void onSuccess(List<MessageView> messages) {
               operation.endSuccessfully(messages);
-              setFuture(originalFuture);
+              setFuture(sourceFuture);
             }
 
             @Override
             public void onFailure(Throwable t) {
               operation.endSafely(null, t);
-              setFuture(originalFuture);
+              setFuture(sourceFuture);
             }
           },
           MoreExecutors.directExecutor());
@@ -117,6 +118,7 @@ public class SimpleConsumerReceiveOperation {
     @SuppressWarnings("Interruption") // propagate the caller's cancellation interrupt flag
     protected void afterDone() {
       ListenableFuture<List<MessageView>> future = originalFuture;
+      // Release this reference; the callback captures sourceFuture independently.
       originalFuture = null;
       if (isCancelled() && future != null) {
         future.cancel(wasInterrupted());

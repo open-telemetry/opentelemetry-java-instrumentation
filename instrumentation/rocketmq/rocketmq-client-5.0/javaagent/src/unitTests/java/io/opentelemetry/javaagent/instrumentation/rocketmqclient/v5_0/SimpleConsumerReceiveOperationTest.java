@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static net.javacrumbs.futureconverter.java8guava.FutureConverter.toCompletableFuture;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -154,11 +155,6 @@ class SimpleConsumerReceiveOperationTest {
     when(message.getMessageGroup()).thenReturn(Optional.empty());
     when(message.getDeliveryTimestamp()).thenReturn(Optional.empty());
     return message;
-  }
-
-  private static CompletableFuture<List<MessageView>> toCompletableFuture(
-      ListenableFuture<List<MessageView>> future) {
-    return net.javacrumbs.futureconverter.java8guava.FutureConverter.toCompletableFuture(future);
   }
 
   private static void await(CountDownLatch latch) {
