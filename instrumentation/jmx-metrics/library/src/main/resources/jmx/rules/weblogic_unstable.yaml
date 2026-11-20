@@ -1,0 +1,179 @@
+---
+rules:
+
+  # Thread pool metrics
+  - bean: com.bea:ServerRuntime=*,Name=ThreadPoolRuntime,Type=ThreadPoolRuntime
+    prefix: weblogic.thread.
+    type: updowncounter
+    unit: "{thread}"
+    mapping:
+      # weblogic.thread.count
+      ExecuteThreadTotalCount:
+        metric: count
+        desc: The total number of threads in the pool.
+      # weblogic.thread.idle.count
+      ExecuteThreadIdleCount:
+        metric: idle.count
+        desc: The number of idle threads in the pool.
+      # weblogic.thread.standby.count
+      StandbyThreadCount:
+        metric: standby.count
+        desc: The number of threads in the standby pool.
+      # weblogic.thread.stuck.count
+      StuckThreadCount:
+        metric: stuck.count
+        desc: Number of stuck threads in the thread pool.
+      # weblogic.thread.queue.size
+      QueueLength:
+        metric: queue.size
+        unit: "{request}"
+        desc: The number of pending requests in the priority queue.
+
+  # HTTP session metrics
+  - bean: com.bea:ServerRuntime=*,ApplicationRuntime=*,Name=*,Type=WebAppComponentRuntime
+    prefix: weblogic.session.
+    unit: "{session}"
+    metricAttribute:
+      weblogic.application: param(ApplicationRuntime)
+      weblogic.context: beanattr(ContextRoot)
+    mapping:
+      # weblogic.session.active.count
+      OpenSessionsCurrentCount:
+        metric: active.count
+        type: updowncounter
+        desc: The number of currently active sessions.
+      # weblogic.session.created
+      SessionsOpenedTotalCount:
+        metric: created
+        type: counter
+        desc: The number of sessions opened.
+
+  # Servlet request metrics
+  - bean: com.bea:ServerRuntime=*,ApplicationRuntime=*,WebAppComponentRuntime=*,Name=*,Type=ServletRuntime
+    prefix: weblogic.
+    metricAttribute:
+      weblogic.application: param(ApplicationRuntime)
+      weblogic.context: beanattr(ContextPath)
+      weblogic.servlet: param(Name)
+    mapping:
+      # weblogic.request.count
+      InvocationTotalCount:
+        metric: request.count
+        type: counter
+        unit: "{request}"
+        desc: The number of times the servlet has been invoked.
+      # weblogic.request.duration.sum
+      ExecutionTimeTotal:
+        metric: request.duration.sum
+        type: counter
+        sourceUnit: ms
+        unit: s
+        desc: The total amount of time spent executing servlet requests.
+      # weblogic.request.duration.max
+      ExecutionTimeHigh:
+        metric: request.duration.max
+        type: gauge
+        sourceUnit: ms
+        unit: s
+        desc: The longest servlet request execution time.
+
+  # Network channel I/O metrics
+  - bean: com.bea:ServerRuntime=*,Name=*,Type=ServerChannelRuntime
+    metricAttribute:
+      weblogic.channel: param(Name)
+    type: counter
+    unit: By
+    mapping:
+      # weblogic.network.io
+      BytesReceivedCount:
+        metric: &network_io_metric weblogic.network.io
+        desc: &network_io_desc Total number of bytes transferred on the channel.
+        metricAttribute:
+          network.io.direction: const(receive)
+      BytesSentCount:
+        metric: *network_io_metric
+        desc: *network_io_desc
+        metricAttribute:
+          network.io.direction: const(transmit)
+
+  # JDBC connection pool metrics
+  - bean: com.bea:ServerRuntime=*,Name=*,Type=JDBCDataSourceRuntime
+    prefix: weblogic.db.client.connection.
+    metricAttribute:
+      db.client.connection.pool.name: param(Name)
+    mapping:
+      # weblogic.db.client.connection.count
+      ActiveConnectionsCurrentCount:
+        metric: &db_conn_metric count
+        type: &db_conn_type updowncounter
+        unit: &db_conn_unit "{connection}"
+        desc: &db_conn_desc The number of open physical database connections.
+        metricAttribute:
+          db.client.connection.state: const(used)
+      # In WebLogic, NumAvailable is the number of currently created physical connections in the
+      # pool that are idle and available (CurrCapacity = NumAvailable + NumUnavailable), not the
+      # remaining capacity up to MaxCapacity.
+      NumAvailable:
+        metric: *db_conn_metric
+        type: *db_conn_type
+        unit: *db_conn_unit
+        desc: *db_conn_desc
+        metricAttribute:
+          db.client.connection.state: const(idle)
+      # weblogic.db.client.connection.wait.count
+      WaitingForConnectionTotal:
+        metric: wait.count
+        type: counter
+        unit: "{request}"
+        desc: The number of connection requests that had to wait to obtain a connection.
+
+  # JTA transaction metrics
+  - bean: com.bea:ServerRuntime=*,Name=JTARuntime,Type=JTARuntime
+    prefix: weblogic.transaction.
+    unit: "{transaction}"
+    mapping:
+      # weblogic.transaction.count
+      ActiveTransactionsTotalCount:
+        metric: count
+        type: updowncounter
+        desc: The number of active transactions.
+      # weblogic.transaction.completed
+      TransactionTotalCount:
+        metric: completed
+        type: counter
+        desc: The total number of transactions processed.
+      # weblogic.transaction.committed
+      TransactionCommittedTotalCount:
+        metric: committed
+        type: counter
+        desc: The total number of transactions committed.
+      # weblogic.transaction.rollback
+      TransactionRolledBackAppTotalCount:
+        metric: &rollback_metric rollback
+        type: &rollback_type counter
+        metricAttribute:
+          weblogic.rollback.cause: const(application)
+        desc: &rollback_desc The total number of transactions rolled back.
+      TransactionRolledBackResourceTotalCount:
+        metric: *rollback_metric
+        type: *rollback_type
+        metricAttribute:
+          weblogic.rollback.cause: const(resource)
+        desc: *rollback_desc
+      TransactionRolledBackSystemTotalCount:
+        metric: *rollback_metric
+        type: *rollback_type
+        metricAttribute:
+          weblogic.rollback.cause: const(system)
+        desc: *rollback_desc
+      TransactionRolledBackTimeoutTotalCount:
+        metric: *rollback_metric
+        type: *rollback_type
+        metricAttribute:
+          weblogic.rollback.cause: const(timeout)
+        desc: *rollback_desc
+      # weblogic.transaction.abandoned
+      TransactionAbandonedTotalCount:
+        metric: abandoned
+        type: counter
+        desc: The total number of transactions abandoned.

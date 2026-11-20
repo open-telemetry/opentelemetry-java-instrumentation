@@ -45,6 +45,7 @@ class InternalMetricsDefinitionsTest {
             "jetty",
             "jvm",
             "tomcat",
+            "weblogic",
             "wildfly");
 
     Set<String> allRules = new HashSet<>();

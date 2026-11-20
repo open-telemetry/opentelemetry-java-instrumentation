@@ -44,6 +44,7 @@ public class InternalMetricsDefinitions {
                   "jetty",
                   "jvm",
                   "tomcat",
+                  "weblogic",
                   "wildfly")));
 
   private final ClassLoader classLoader;

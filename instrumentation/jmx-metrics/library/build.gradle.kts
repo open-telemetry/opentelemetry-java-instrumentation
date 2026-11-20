@@ -26,6 +26,11 @@ val camelTestApp = configurations.create("camelTestApp") {
   isCanBeResolved = true
 }
 
+val weblogicTestApp = configurations.create("weblogicTestApp") {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+}
+
 dependencies {
   implementation("org.snakeyaml:snakeyaml-engine")
 
@@ -33,6 +38,7 @@ dependencies {
   jmxAgent(project(":instrumentation:jmx-metrics:javaagent", configuration = "shadow"))
   testWebApp(project(":instrumentation:jmx-metrics:testing-apps:testing-webapp", configuration = "testWebApp"))
   camelTestApp(project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app", configuration = "camelTestApp"))
+  weblogicTestApp(project(":instrumentation:jmx-metrics:testing-apps:weblogic-testing-app", configuration = "weblogicTestApp"))
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("org.testcontainers:testcontainers")
@@ -84,13 +90,21 @@ testing.suites {
       inputs.files(camelTestApp)
         .withPropertyName("camelTestApp")
         .withNormalizer(ClasspathNormalizer::class)
+      inputs.files(weblogicTestApp)
+        .withPropertyName("weblogicTestApp")
+        .withNormalizer(ClasspathNormalizer::class)
 
       val agentJarPath = baseAgent.elements.map { it.single().asFile.absolutePath }
       val jmxInstrumentationJarPath = jmxAgent.elements.map { it.single().asFile.absolutePath }
       val testAppWarPath = testWebApp.elements.map { it.single().asFile.absolutePath }
       val camelTestAppJarPath = camelTestApp.elements.map { it.single().asFile.absolutePath }
+      val weblogicTestAppJarPath = weblogicTestApp.elements.map { it.single().asFile.absolutePath }
       val registryDir = layout.projectDirectory.dir("../model").asFile.absolutePath
       inputs.dir(registryDir).withPathSensitivity(PathSensitivity.RELATIVE)
+
+      val weblogicEnabled =
+        providers.systemProperty("io.opentelemetry.jmx.weblogic.enabled").orElse("false")
+      inputs.property("weblogicEnabled", weblogicEnabled)
 
       jvmArgumentProviders += CommandLineArgumentProvider {
         listOf(
@@ -99,6 +113,8 @@ testing.suites {
           "-Dio.opentelemetry.testapp.path=${testAppWarPath.get()}",
           "-Dio.opentelemetry.registry.path=$registryDir",
           "-Dio.opentelemetry.cameltestapp.path=${camelTestAppJarPath.get()}",
+          "-Dio.opentelemetry.weblogictestapp.path=${weblogicTestAppJarPath.get()}",
+          "-Dio.opentelemetry.jmx.weblogic.enabled=${weblogicEnabled.get()}",
         )
       }
     }
