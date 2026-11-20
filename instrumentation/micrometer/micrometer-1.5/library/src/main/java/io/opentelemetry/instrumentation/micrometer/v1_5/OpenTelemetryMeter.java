@@ -17,6 +17,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.DoubleCounterBuilder;
 import io.opentelemetry.api.metrics.DoubleGaugeBuilder;
 import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.ObservableCallbackRegistrar;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.ArrayList;
 import java.util.List;
@@ -25,7 +26,8 @@ import javax.annotation.Nullable;
 final class OpenTelemetryMeter extends AbstractMeter
     implements Meter, RemovableMeter, OpenTelemetryInstrument {
 
-  private final List<AutoCloseable> observableInstruments;
+  private final List<ObservableCallbackRegistrar.Registration<? extends AutoCloseable>>
+      observableInstruments;
 
   @SuppressWarnings("UnusedVariable")
   @Nullable
@@ -38,11 +40,13 @@ final class OpenTelemetryMeter extends AbstractMeter
       NamingConvention namingConvention,
       Iterable<Measurement> measurements,
       io.opentelemetry.api.metrics.Meter otelMeter,
-      Bridging bridging) {
+      Bridging bridging,
+      ObservableCallbackRegistrar callbackRegistrar) {
     super(id);
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
-    List<AutoCloseable> observableInstruments = new ArrayList<>();
+    List<ObservableCallbackRegistrar.Registration<? extends AutoCloseable>> observableInstruments =
+        new ArrayList<>();
     List<Measurement> measurementReferences = new ArrayList<>();
     for (Measurement measurement : measurements) {
       measurementReferences.add(measurement);
@@ -64,7 +68,11 @@ final class OpenTelemetryMeter extends AbstractMeter
                   .ofDoubles()
                   .setDescription(description)
                   .setUnit(baseUnit);
-          observableInstruments.add(counterBuilder.buildWithCallback(callback));
+          observableInstruments.add(
+              callbackRegistrar.register(
+                  callback,
+                  CallbackClassLoader.find(measurement, id),
+                  counterBuilder::buildWithCallback));
           break;
 
         case ACTIVE_TASKS:
@@ -74,7 +82,11 @@ final class OpenTelemetryMeter extends AbstractMeter
                   .ofDoubles()
                   .setDescription(description)
                   .setUnit(baseUnit);
-          observableInstruments.add(upDownCounterBuilder.buildWithCallback(callback));
+          observableInstruments.add(
+              callbackRegistrar.register(
+                  callback,
+                  CallbackClassLoader.find(measurement, id),
+                  upDownCounterBuilder::buildWithCallback));
           break;
 
         case DURATION:
@@ -84,7 +96,11 @@ final class OpenTelemetryMeter extends AbstractMeter
         case UNKNOWN:
           DoubleGaugeBuilder gaugeBuilder =
               otelMeter.gaugeBuilder(name).setDescription(description).setUnit(baseUnit);
-          observableInstruments.add(gaugeBuilder.buildWithCallback(callback));
+          observableInstruments.add(
+              callbackRegistrar.register(
+                  callback,
+                  CallbackClassLoader.find(measurement, id),
+                  gaugeBuilder::buildWithCallback));
           break;
       }
     }
@@ -108,7 +124,8 @@ final class OpenTelemetryMeter extends AbstractMeter
         removed = true;
         measurements = null;
       }
-      for (AutoCloseable observableInstrument : observableInstruments) {
+      for (ObservableCallbackRegistrar.Registration<? extends AutoCloseable> observableInstrument :
+          observableInstruments) {
         observableInstrument.close();
       }
     } catch (Exception e) {
