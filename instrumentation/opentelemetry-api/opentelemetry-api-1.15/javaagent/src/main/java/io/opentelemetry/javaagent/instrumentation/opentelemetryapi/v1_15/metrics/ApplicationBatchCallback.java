@@ -6,23 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_15.metrics;
 
 import io.opentelemetry.api.metrics.BatchCallback;
+import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_10.metrics.ApplicationCallbackHandle;
 
 final class ApplicationBatchCallback
     implements application.io.opentelemetry.api.metrics.BatchCallback {
-  private final BatchCallback agentCallback;
-  private final Runnable onClose;
+  private final ApplicationCallbackHandle callbackHandle;
 
   ApplicationBatchCallback(BatchCallback agentCallback, Runnable onClose) {
-    this.agentCallback = agentCallback;
-    this.onClose = onClose;
+    callbackHandle = new ApplicationCallbackHandle(agentCallback::close, onClose);
   }
 
   @Override
   public void close() {
-    try {
-      agentCallback.close();
-    } finally {
-      onClose.run();
-    }
+    callbackHandle.close();
   }
 }

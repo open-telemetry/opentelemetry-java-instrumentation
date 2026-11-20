@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
@@ -44,12 +45,14 @@ public final class CodeCacheConfigurationHandler implements RecordedEventHandler
   }
 
   public CodeCacheConfigurationHandler(Meter meter) {
-    observables.add(
+    var builder =
         meter
             .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY_INIT)
             .setDescription(Constants.METRIC_DESCRIPTION_MEMORY_INIT)
-            .setUnit(Constants.BYTES)
-            .buildWithCallback(measurement -> measurement.record(initialSize, ATTR)));
+            .setUnit(Constants.BYTES);
+    observables.add(
+        MetricCallbackRegistration.withoutContextClassLoader(
+            () -> builder.buildWithCallback(measurement -> measurement.record(initialSize, ATTR))));
   }
 
   @Override

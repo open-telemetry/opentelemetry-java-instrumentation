@@ -68,6 +68,8 @@ class CallbackGcCloseTest {
     //    (including CallbackAnchor with its own static callbacks map).
     URL apiJar = GlobalOpenTelemetry.class.getProtectionDomain().getCodeSource().getLocation();
     URL testClasses = GaugeRegistrar.class.getProtectionDomain().getCodeSource().getLocation();
+    String contextClassLoaderProperty = instrumentationName + ".callbackTccL";
+    System.clearProperty(contextClassLoaderProperty);
 
     URLClassLoader childCl =
         new ChildFirstOtelClassLoader(new URL[] {apiJar, testClasses}, getClass().getClassLoader());
@@ -76,9 +78,16 @@ class CallbackGcCloseTest {
     //    Because the child CL loads its own copy of the OTel API, the bridge creates an
     //    CallbackAnchor instance in the child CL with its own callbacks map.
     Class<?> registrar = childCl.loadClass(GaugeRegistrar.class.getName());
-    registrar
-        .getMethod("register", String.class, String.class)
-        .invoke(null, instrumentationName, "test.gc.close");
+    Thread thread = Thread.currentThread();
+    ClassLoader originalClassLoader = thread.getContextClassLoader();
+    thread.setContextClassLoader(childCl);
+    try {
+      registrar
+          .getMethod("register", String.class, String.class)
+          .invoke(null, instrumentationName, "test.gc.close");
+    } finally {
+      thread.setContextClassLoader(originalClassLoader);
+    }
 
     // 3. Verify the gauge is producing metrics.
     testing.waitAndAssertMetrics(
@@ -88,6 +97,7 @@ class CallbackGcCloseTest {
                 .hasName("test.gc.close")
                 .hasLongGaugeSatisfying(
                     gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
+    assertThat(System.getProperty(contextClassLoaderProperty)).isEqualTo("true");
 
     // 4. Release the classloader — simulates app undeploy.
     WeakReference<ClassLoader> clRef = new WeakReference<>(childCl);
@@ -105,6 +115,7 @@ class CallbackGcCloseTest {
     // 7. The gauge should no longer produce metrics.
     testing.waitAndAssertMetrics(
         instrumentationName, "test.gc.close", AbstractIterableAssert::isEmpty);
+    System.clearProperty(contextClassLoaderProperty);
   }
 
   /**

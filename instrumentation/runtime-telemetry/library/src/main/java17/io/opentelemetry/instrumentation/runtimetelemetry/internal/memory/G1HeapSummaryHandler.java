@@ -10,6 +10,7 @@ import static io.opentelemetry.semconv.JvmAttributes.JVM_MEMORY_TYPE;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.util.ArrayList;
@@ -72,37 +73,46 @@ public final class G1HeapSummaryHandler implements RecordedEventHandler {
     usageAfterSelected = metricNames.contains(Constants.METRIC_NAME_MEMORY_AFTER);
     committedSelected = metricNames.contains(Constants.METRIC_NAME_COMMITTED);
     if (usageSelected) {
-      observables.add(
+      var builder =
           meter
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY)
-              .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(usageEden, ATTR_MEMORY_EDEN);
-                    measurement.record(usageSurvivor, ATTR_MEMORY_SURVIVOR);
-                  }));
+              .setUnit(Constants.BYTES);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () ->
+                  builder.buildWithCallback(
+                      measurement -> {
+                        measurement.record(usageEden, ATTR_MEMORY_EDEN);
+                        measurement.record(usageSurvivor, ATTR_MEMORY_SURVIVOR);
+                      })));
     }
     if (usageAfterSelected) {
-      observables.add(
+      var builder =
           meter
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY_AFTER)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY_AFTER)
-              .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> {
-                    measurement.record(usageEdenAfter, ATTR_MEMORY_EDEN);
-                    measurement.record(usageSurvivorAfter, ATTR_MEMORY_SURVIVOR);
-                  }));
+              .setUnit(Constants.BYTES);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () ->
+                  builder.buildWithCallback(
+                      measurement -> {
+                        measurement.record(usageEdenAfter, ATTR_MEMORY_EDEN);
+                        measurement.record(usageSurvivorAfter, ATTR_MEMORY_SURVIVOR);
+                      })));
     }
     if (committedSelected) {
-      observables.add(
+      var builder =
           meter
               .upDownCounterBuilder(Constants.METRIC_NAME_COMMITTED)
               .setDescription(Constants.METRIC_DESCRIPTION_COMMITTED)
-              .setUnit(Constants.BYTES)
-              .buildWithCallback(
-                  measurement -> measurement.record(committedEden, ATTR_MEMORY_EDEN)));
+              .setUnit(Constants.BYTES);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () ->
+                  builder.buildWithCallback(
+                      measurement -> measurement.record(committedEden, ATTR_MEMORY_EDEN))));
     }
   }
 

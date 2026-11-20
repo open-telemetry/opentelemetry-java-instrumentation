@@ -9,6 +9,7 @@ import static io.opentelemetry.semconv.JvmAttributes.JVM_THREAD_DAEMON;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
@@ -42,17 +43,20 @@ public final class ThreadCountHandler implements RecordedEventHandler {
   }
 
   public ThreadCountHandler(Meter meter) {
-    observables.add(
+    var builder =
         meter
             .upDownCounterBuilder(METRIC_NAME)
             .setDescription(METRIC_DESCRIPTION)
-            .setUnit(Constants.UNIT_THREADS)
-            .buildWithCallback(
-                measurement -> {
-                  long d = daemonCount;
-                  measurement.record(d, ATTR_DAEMON_TRUE);
-                  measurement.record(activeCount - d, ATTR_DAEMON_FALSE);
-                }));
+            .setUnit(Constants.UNIT_THREADS);
+    observables.add(
+        MetricCallbackRegistration.withoutContextClassLoader(
+            () ->
+                builder.buildWithCallback(
+                    measurement -> {
+                      long d = daemonCount;
+                      measurement.record(d, ATTR_DAEMON_TRUE);
+                      measurement.record(activeCount - d, ATTR_DAEMON_FALSE);
+                    })));
   }
 
   @Override

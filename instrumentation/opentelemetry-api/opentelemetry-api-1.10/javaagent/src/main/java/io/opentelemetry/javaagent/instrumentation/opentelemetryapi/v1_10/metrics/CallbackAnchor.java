@@ -10,9 +10,10 @@ import io.opentelemetry.javaagent.bootstrap.WeakRefRunnable;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 /**
  * Utility for preventing class loader leaks when bridging async instrument callbacks from the
@@ -50,7 +51,7 @@ public class CallbackAnchor {
     callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
     try {
       WeakRefConsumer<T> weak = new WeakRefConsumer<>(new WeakReference<>(callback));
-      R instrument = buildFn.apply(weak);
+      R instrument = withoutContextClassLoader(() -> buildFn.apply(weak));
       weak.closeWhenCollected(instrument);
       return instrument;
     } catch (Throwable t) {
@@ -64,7 +65,7 @@ public class CallbackAnchor {
     callbacks.merge(new IdentityKey(callback), 1, Integer::sum);
     try {
       WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(callback));
-      R instrument = buildFn.apply(weak);
+      R instrument = withoutContextClassLoader(() -> buildFn.apply(weak));
       weak.closeWhenCollected(instrument);
       return instrument;
     } catch (Throwable t) {
@@ -76,12 +77,24 @@ public class CallbackAnchor {
   // Some instrument wrappers may end up calling close() more than once. Guard the deferred
   // release so each wrapper decrements the callback ref count at most once.
   public static Runnable releaseOnClose(Object callback) {
-    AtomicBoolean released = new AtomicBoolean();
+    AtomicReference<Object> callbackRef = new AtomicReference<>(callback);
     return () -> {
-      if (released.compareAndSet(false, true)) {
-        release(callback);
+      Object value = callbackRef.getAndSet(null);
+      if (value != null) {
+        release(value);
       }
     };
+  }
+
+  private static <T> T withoutContextClassLoader(Supplier<T> supplier) {
+    Thread thread = Thread.currentThread();
+    ClassLoader originalClassLoader = thread.getContextClassLoader();
+    thread.setContextClassLoader(null);
+    try {
+      return supplier.get();
+    } finally {
+      thread.setContextClassLoader(originalClassLoader);
+    }
   }
 
   private static void release(Object callback) {

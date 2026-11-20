@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry.internal.buffer;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
@@ -66,28 +67,34 @@ public final class DirectBufferStatisticsHandler implements RecordedEventHandler
     limitSelected = metricNames.contains(METRIC_NAME_LIMIT);
     countSelected = metricNames.contains(METRIC_NAME_COUNT);
     if (usageSelected) {
-      observables.add(
+      var builder =
           meter
               .upDownCounterBuilder(METRIC_NAME_USAGE)
               .setDescription(METRIC_DESCRIPTION_USAGE)
-              .setUnit(Constants.BYTES)
-              .buildWithCallback(measurement -> measurement.record(usage, ATTR)));
+              .setUnit(Constants.BYTES);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () -> builder.buildWithCallback(measurement -> measurement.record(usage, ATTR))));
     }
     if (limitSelected) {
-      observables.add(
+      var builder =
           meter
               .upDownCounterBuilder(METRIC_NAME_LIMIT)
               .setDescription(METRIC_DESCRIPTION_LIMIT)
-              .setUnit(Constants.BYTES)
-              .buildWithCallback(measurement -> measurement.record(limit, ATTR)));
+              .setUnit(Constants.BYTES);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () -> builder.buildWithCallback(measurement -> measurement.record(limit, ATTR))));
     }
     if (countSelected) {
-      observables.add(
+      var builder =
           meter
               .upDownCounterBuilder(METRIC_NAME_COUNT)
               .setDescription(METRIC_DESCRIPTION_COUNT)
-              .setUnit(Constants.UNIT_BUFFERS)
-              .buildWithCallback(measurement -> measurement.record(count, ATTR)));
+              .setUnit(Constants.UNIT_BUFFERS);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () -> builder.buildWithCallback(measurement -> measurement.record(count, ATTR))));
     }
   }
 

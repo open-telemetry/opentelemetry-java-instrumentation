@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.lang.ref.WeakReference;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
 class WeakRefRunnableTest {
@@ -25,6 +26,30 @@ class WeakRefRunnableTest {
     assertThat(count.get()).isEqualTo(2);
 
     // prevent delegate from being collected during the test
+    assertThat(delegate).isNotNull();
+  }
+
+  @Test
+  void runsInRegistrationContextClassLoaderAndRestoresCurrentLoader() {
+    Thread thread = Thread.currentThread();
+    ClassLoader currentClassLoader = thread.getContextClassLoader();
+    ClassLoader registrationClassLoader = new ClassLoader() {};
+    AtomicReference<ClassLoader> callbackClassLoader = new AtomicReference<>();
+    Runnable delegate =
+        () -> callbackClassLoader.set(Thread.currentThread().getContextClassLoader());
+
+    WeakRefRunnable weak;
+    thread.setContextClassLoader(registrationClassLoader);
+    try {
+      weak = new WeakRefRunnable(new WeakReference<>(delegate));
+    } finally {
+      thread.setContextClassLoader(currentClassLoader);
+    }
+
+    weak.run();
+
+    assertThat(callbackClassLoader.get()).isSameAs(registrationClassLoader);
+    assertThat(thread.getContextClassLoader()).isSameAs(currentClassLoader);
     assertThat(delegate).isNotNull();
   }
 

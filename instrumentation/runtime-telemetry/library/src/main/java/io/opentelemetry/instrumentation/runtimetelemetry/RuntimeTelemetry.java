@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.runtimetelemetry;
 import static java.util.logging.Level.WARNING;
 
 import io.opentelemetry.api.OpenTelemetry;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
@@ -44,7 +44,7 @@ public final class RuntimeTelemetry implements AutoCloseable {
   }
 
   RuntimeTelemetry(List<AutoCloseable> observables, @Nullable AutoCloseable jfrTelemetry) {
-    this.observables = Collections.unmodifiableList(observables);
+    this.observables = new ArrayList<>(observables);
     this.jfrTelemetry = jfrTelemetry;
   }
 
@@ -77,5 +77,6 @@ public final class RuntimeTelemetry implements AutoCloseable {
         logger.log(WARNING, "Error closing runtime telemetry observable", e);
       }
     }
+    observables.clear();
   }
 }

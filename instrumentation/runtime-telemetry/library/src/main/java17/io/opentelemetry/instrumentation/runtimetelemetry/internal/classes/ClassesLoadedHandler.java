@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.classes;
 
 import io.opentelemetry.api.metrics.Meter;
+import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
@@ -65,28 +66,35 @@ public final class ClassesLoadedHandler implements RecordedEventHandler {
     loadedSelected = currentSelected || metricNames.contains(METRIC_NAME_LOADED);
     unloadedSelected = currentSelected || metricNames.contains(METRIC_NAME_UNLOADED);
     if (currentSelected) {
-      observables.add(
+      var builder =
           meter
               .upDownCounterBuilder(METRIC_NAME_CURRENT)
               .setDescription(METRIC_DESCRIPTION_CURRENT)
-              .setUnit(Constants.UNIT_CLASSES)
-              .buildWithCallback(measurement -> measurement.record(loaded - unloaded)));
+              .setUnit(Constants.UNIT_CLASSES);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () ->
+                  builder.buildWithCallback(measurement -> measurement.record(loaded - unloaded))));
     }
     if (metricNames.contains(METRIC_NAME_LOADED)) {
-      observables.add(
+      var builder =
           meter
               .counterBuilder(METRIC_NAME_LOADED)
               .setDescription(METRIC_DESCRIPTION_LOADED)
-              .setUnit(Constants.UNIT_CLASSES)
-              .buildWithCallback(measurement -> measurement.record(loaded)));
+              .setUnit(Constants.UNIT_CLASSES);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () -> builder.buildWithCallback(measurement -> measurement.record(loaded))));
     }
     if (metricNames.contains(METRIC_NAME_UNLOADED)) {
-      observables.add(
+      var builder =
           meter
               .counterBuilder(METRIC_NAME_UNLOADED)
               .setDescription(METRIC_DESCRIPTION_UNLOADED)
-              .setUnit(Constants.UNIT_CLASSES)
-              .buildWithCallback(measurement -> measurement.record(unloaded)));
+              .setUnit(Constants.UNIT_CLASSES);
+      observables.add(
+          MetricCallbackRegistration.withoutContextClassLoader(
+              () -> builder.buildWithCallback(measurement -> measurement.record(unloaded))));
     }
   }
 

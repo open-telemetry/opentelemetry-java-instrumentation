@@ -15,18 +15,22 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.internal.DefaultLongTaskTimer;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
+import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter;
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.TimeUnit;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
     implements RemovableMeter, OpenTelemetryInstrument {
 
   private final DistributionStatisticConfig distributionStatisticConfig;
-  private final ObservableLongUpDownCounter observableActiveTasks;
-  private final ObservableDoubleUpDownCounter observableDuration;
+  @Nullable private ObservableLongUpDownCounter observableActiveTasks;
+  @Nullable private ObservableDoubleUpDownCounter observableDuration;
 
   OpenTelemetryLongTaskTimer(
       Id id,
@@ -43,22 +47,28 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
     String name = name(id, namingConvention);
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
-    this.observableActiveTasks =
+    LongUpDownCounterBuilder activeTasksBuilder =
         otelMeter
             .upDownCounterBuilder(name + ".active")
             .setDescription(bridging.description(name + ".active", id))
-            .setUnit("{tasks}")
-            .buildWithCallback(
-                new LongMeasurementRecorder<>(this, DefaultLongTaskTimer::activeTasks, attributes));
-    this.observableDuration =
+            .setUnit("{tasks}");
+    LongMeasurementRecorder<OpenTelemetryLongTaskTimer> activeTasksCallback =
+        new LongMeasurementRecorder<>(this, DefaultLongTaskTimer::activeTasks, attributes);
+    observableActiveTasks =
+        MetricCallbackRegistration.withoutContextClassLoader(
+            () -> activeTasksBuilder.buildWithCallback(activeTasksCallback));
+
+    DoubleUpDownCounterBuilder durationBuilder =
         otelMeter
             .upDownCounterBuilder(name + ".duration")
             .ofDoubles()
             .setDescription(bridging.description(name + ".duration", id))
-            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
-            .buildWithCallback(
-                new DoubleMeasurementRecorder<>(
-                    this, t -> t.duration(t.baseTimeUnit()), attributes));
+            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit));
+    DoubleMeasurementRecorder<OpenTelemetryLongTaskTimer> durationCallback =
+        new DoubleMeasurementRecorder<>(this, t -> t.duration(t.baseTimeUnit()), attributes);
+    observableDuration =
+        MetricCallbackRegistration.withoutContextClassLoader(
+            () -> durationBuilder.buildWithCallback(durationCallback));
   }
 
   @Override
@@ -69,8 +79,20 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
 
   @Override
   public void onRemove() {
-    observableActiveTasks.close();
-    observableDuration.close();
+    ObservableLongUpDownCounter activeTasks;
+    ObservableDoubleUpDownCounter duration;
+    synchronized (this) {
+      activeTasks = observableActiveTasks;
+      observableActiveTasks = null;
+      duration = observableDuration;
+      observableDuration = null;
+    }
+    if (activeTasks != null) {
+      activeTasks.close();
+    }
+    if (duration != null) {
+      duration.close();
+    }
   }
 
   boolean isUsingMicrometerHistograms() {
