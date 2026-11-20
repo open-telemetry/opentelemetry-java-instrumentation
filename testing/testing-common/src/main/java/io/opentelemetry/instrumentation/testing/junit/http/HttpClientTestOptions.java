@@ -50,8 +50,7 @@ public abstract class HttpClientTestOptions {
   @Nullable
   public abstract Integer getResponseCodeOnRedirectError();
 
-  @Nullable
-  public abstract Integer getResponseCodeOnRedirectConnectionError();
+  public abstract boolean getExpectResponseCodeOnRedirectConnectionError();
 
   public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
 
@@ -133,7 +132,7 @@ public abstract class HttpClientTestOptions {
     default Builder withDefaults() {
       return setHttpAttributes(x -> DEFAULT_HTTP_ATTRIBUTES)
           .setResponseCodeOnRedirectError(FOUND_STATUS_CODE)
-          .setResponseCodeOnRedirectConnectionError(null)
+          .setExpectResponseCodeOnRedirectConnectionError(false)
           .setClientSpanErrorMapper((uri, exception) -> exception)
           .setSingleConnectionFactory((host, port) -> null)
           .setExpectedClientSpanNameMapper(DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER)
@@ -167,7 +166,7 @@ public abstract class HttpClientTestOptions {
 
     Builder setResponseCodeOnRedirectError(Integer value);
 
-    Builder setResponseCodeOnRedirectConnectionError(Integer value);
+    Builder setExpectResponseCodeOnRedirectConnectionError(boolean value);
 
     Builder setClientSpanErrorMapper(BiFunction<URI, Throwable, Throwable> value);
 

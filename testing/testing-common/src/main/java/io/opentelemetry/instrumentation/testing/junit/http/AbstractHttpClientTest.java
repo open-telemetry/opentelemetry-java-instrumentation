@@ -10,6 +10,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.junit.http.HttpClientTestOptions.FOUND_STATUS_CODE;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.comparingRootSpanAttribute;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
@@ -517,7 +518,9 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                             span,
                             uri,
                             "GET",
-                            options.getResponseCodeOnRedirectConnectionError(),
+                            options.getExpectResponseCodeOnRedirectConnectionError()
+                                ? FOUND_STATUS_CODE
+                                : null,
                             null,
                             true,
                             uri)

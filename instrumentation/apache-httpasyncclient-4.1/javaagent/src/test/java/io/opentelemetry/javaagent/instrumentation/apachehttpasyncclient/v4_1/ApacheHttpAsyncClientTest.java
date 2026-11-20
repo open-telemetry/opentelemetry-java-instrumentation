@@ -245,7 +245,7 @@ class ApacheHttpAsyncClientTest {
       optionsBuilder
           .spanEndsAfterBody()
           .setExpectNetworkPeerAttributes(true)
-          .setResponseCodeOnRedirectConnectionError(302);
+          .setExpectResponseCodeOnRedirectConnectionError(true);
     }
   }
 
