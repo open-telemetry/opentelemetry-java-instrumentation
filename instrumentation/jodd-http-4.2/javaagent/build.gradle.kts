@@ -17,3 +17,18 @@ dependencies {
 
   testImplementation(project(":instrumentation-api-incubator"))
 }
+
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("org.jodd:jodd-http:4.2.0")
+      implementation(project(":instrumentation-api"))
+      implementation(project(":instrumentation-api-incubator"))
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
+}
