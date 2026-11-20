@@ -67,10 +67,8 @@ class JmsInstrumenterFactoryTest {
           .filteredOn(
               span -> span.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
           .singleElement()
-          .satisfies(
-              span ->
-                  assertThat(span.getParentSpanId())
-                      .isEqualTo(parent.getSpanContext().getSpanId()));
+          .satisfies(span ->
+              assertThat(span.getParentSpanId()).isEqualTo(parent.getSpanContext().getSpanId()));
       Collection<MetricData> metrics = metricReader.collectAllMetrics();
       assertDurationCount(metrics, 1);
     }
@@ -101,11 +99,10 @@ class JmsInstrumenterFactoryTest {
       assertThat(metricReader.collectAllMetrics())
           .filteredOn(metric -> metric.getName().equals("messaging.client.consumed.messages"))
           .singleElement()
-          .satisfies(
-              metric ->
-                  assertThat(metric.getLongSumData().getPoints())
-                      .singleElement()
-                      .satisfies(point -> assertThat(point.getValue()).isEqualTo(1)));
+          .satisfies(metric ->
+              assertThat(metric.getLongSumData().getPoints())
+                  .singleElement()
+                  .satisfies(point -> assertThat(point.getValue()).isEqualTo(1)));
     }
   }
 
@@ -115,15 +112,13 @@ class JmsInstrumenterFactoryTest {
 
   private static void assertDurationCount(Collection<MetricData> metrics, long expectedCount) {
     assertThat(metrics)
-        .filteredOn(
-            metric ->
-                metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
-                    && metric.getName().equals("messaging.process.duration"))
+        .filteredOn(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME)
+                && metric.getName().equals("messaging.process.duration"))
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .singleElement()
-                    .satisfies(point -> assertThat(point.getCount()).isEqualTo(expectedCount)));
+        .satisfies(metric ->
+            assertThat(metric.getHistogramData().getPoints())
+                .singleElement()
+                .satisfies(point -> assertThat(point.getCount()).isEqualTo(expectedCount)));
   }
 }

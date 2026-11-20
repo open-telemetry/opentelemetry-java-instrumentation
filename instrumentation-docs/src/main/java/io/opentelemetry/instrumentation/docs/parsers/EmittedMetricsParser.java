@@ -62,30 +62,28 @@ public class EmittedMetricsParser {
       try (Stream<Path> files = Files.list(telemetryDir)) {
         files
             .filter(path -> path.getFileName().toString().startsWith("metrics-"))
-            .forEach(
-                path -> {
-                  String content = FileManager.readFileToString(path);
-                  if (content != null) {
-                    String whenKey = normalizeWhenCondition(content);
+            .forEach(path -> {
+              String content = FileManager.readFileToString(path);
+              if (content != null) {
+                String whenKey = normalizeWhenCondition(content);
 
-                    int metricsIndex = content.indexOf("metrics_by_scope:");
-                    if (metricsIndex != -1) {
-                      String yaml = "when: " + whenKey + "\n" + content.substring(metricsIndex);
-                      EmittedMetrics parsed;
-                      try {
-                        parsed = YamlHelper.emittedMetricsParser(yaml);
-                      } catch (Exception e) {
-                        logger.severe(
-                            "Error parsing metrics file (" + path + "): " + e.getMessage());
-                        return;
-                      }
-                      if (parsed.getMetricsByScope() != null) {
-                        metricsByWhen.putIfAbsent(whenKey, new ArrayList<>());
-                        metricsByWhen.get(whenKey).addAll(parsed.getMetricsByScope());
-                      }
-                    }
+                int metricsIndex = content.indexOf("metrics_by_scope:");
+                if (metricsIndex != -1) {
+                  String yaml = "when: " + whenKey + "\n" + content.substring(metricsIndex);
+                  EmittedMetrics parsed;
+                  try {
+                    parsed = YamlHelper.emittedMetricsParser(yaml);
+                  } catch (Exception e) {
+                    logger.severe("Error parsing metrics file (" + path + "): " + e.getMessage());
+                    return;
                   }
-                });
+                  if (parsed.getMetricsByScope() != null) {
+                    metricsByWhen.putIfAbsent(whenKey, new ArrayList<>());
+                    metricsByWhen.get(whenKey).addAll(parsed.getMetricsByScope());
+                  }
+                }
+              }
+            });
       } catch (IOException e) {
         logger.severe("Error reading metrics files: " + e.getMessage());
       }

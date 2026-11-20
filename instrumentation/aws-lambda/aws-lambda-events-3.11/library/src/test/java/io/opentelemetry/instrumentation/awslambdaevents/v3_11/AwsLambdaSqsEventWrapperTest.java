@@ -77,35 +77,32 @@ class AwsLambdaSqsEventWrapperTest {
             testing.getOpenTelemetrySdk(), WrappedLambda.fromConfiguration());
     wrapper.handleRequest(event, context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333")),
-                span ->
-                    span.hasName("process otel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "otel"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("my_function")
+                    .hasKind(SpanKind.SERVER)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CLOUD_RESOURCE_ID,
+                            AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                : null),
+                        equalTo(
+                            CLOUD_ACCOUNT_ID,
+                            AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333")),
+            span ->
+                span.hasName("process otel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "otel"),
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)))));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "otel", 1, 1, null);
   }
 

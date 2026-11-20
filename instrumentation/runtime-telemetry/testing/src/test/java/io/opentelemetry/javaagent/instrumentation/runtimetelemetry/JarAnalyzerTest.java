@@ -89,70 +89,63 @@ class JarAnalyzerTest {
         // instrumentation code
         Arguments.of(
             archiveUrl(JarAnalyzer.class),
-            assertAttributes(
-                attributes ->
-                    attributes
-                        .containsEntry(stringKey("package.type"), "jar")
-                        .hasEntrySatisfying(
-                            stringKey("package.path"),
-                            path ->
-                                assertThat(path)
-                                    .matches(
-                                        "opentelemetry-javaagent-runtime-telemetry-[0-9a-zA-Z-\\.]+\\.jar"))
-                        .containsEntry(
-                            stringKey("package.description"), "javaagent by OpenTelemetry")
-                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
-                        .hasEntrySatisfying(
-                            stringKey("package.checksum"),
-                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
+            assertAttributes(attributes ->
+                attributes
+                    .containsEntry(stringKey("package.type"), "jar")
+                    .hasEntrySatisfying(
+                        stringKey("package.path"),
+                        path ->
+                            assertThat(path)
+                                .matches(
+                                    "opentelemetry-javaagent-runtime-telemetry-[0-9a-zA-Z-\\.]+\\.jar"))
+                    .containsEntry(stringKey("package.description"), "javaagent by OpenTelemetry")
+                    .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
+                    .hasEntrySatisfying(
+                        stringKey("package.checksum"),
+                        checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // dummy war
         Arguments.of(
             archiveUrl(new File(System.getenv("DUMMY_APP_WAR"))),
-            assertAttributes(
-                attributes ->
-                    attributes
-                        .containsEntry(stringKey("package.type"), "war")
-                        .containsEntry(stringKey("package.path"), "app.war")
-                        .containsEntry(
-                            stringKey("package.description"), "Dummy App by OpenTelemetry")
-                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
-                        .hasEntrySatisfying(
-                            stringKey("package.checksum"),
-                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
+            assertAttributes(attributes ->
+                attributes
+                    .containsEntry(stringKey("package.type"), "war")
+                    .containsEntry(stringKey("package.path"), "app.war")
+                    .containsEntry(stringKey("package.description"), "Dummy App by OpenTelemetry")
+                    .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
+                    .hasEntrySatisfying(
+                        stringKey("package.checksum"),
+                        checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // io.opentelemetry:opentelemetry-api
         Arguments.of(
             archiveUrl(Tracer.class),
-            assertAttributes(
-                attributes ->
-                    attributes
-                        .containsEntry(stringKey("package.type"), "jar")
-                        .hasEntrySatisfying(
-                            stringKey("package.path"),
-                            path ->
-                                assertThat(path)
-                                    .matches("opentelemetry-api-[0-9a-zA-Z-\\.]+\\.jar"))
-                        .containsEntry(stringKey("package.description"), "all")
-                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
-                        .hasEntrySatisfying(
-                            stringKey("package.checksum"),
-                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
+            assertAttributes(attributes ->
+                attributes
+                    .containsEntry(stringKey("package.type"), "jar")
+                    .hasEntrySatisfying(
+                        stringKey("package.path"),
+                        path ->
+                            assertThat(path).matches("opentelemetry-api-[0-9a-zA-Z-\\.]+\\.jar"))
+                    .containsEntry(stringKey("package.description"), "all")
+                    .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
+                    .hasEntrySatisfying(
+                        stringKey("package.checksum"),
+                        checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))),
         // org.springframework:spring-webmvc
         Arguments.of(
             archiveUrl(HttpRequest.class),
-            assertAttributes(
-                attributes ->
-                    attributes
-                        .containsEntry(stringKey("package.type"), "jar")
-                        // TODO(jack-berg): can we extract version out of path to populate
-                        // package.version field?
-                        .hasEntrySatisfying(
-                            stringKey("package.path"),
-                            path -> assertThat(path).matches("spring-web-[0-9a-zA-Z-\\.]+\\.jar"))
-                        .containsEntry(stringKey("package.description"), "org.springframework.web")
-                        .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
-                        .hasEntrySatisfying(
-                            stringKey("package.checksum"),
-                            checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))));
+            assertAttributes(attributes ->
+                attributes
+                    .containsEntry(stringKey("package.type"), "jar")
+                    // TODO(jack-berg): can we extract version out of path to populate
+                    // package.version field?
+                    .hasEntrySatisfying(
+                        stringKey("package.path"),
+                        path -> assertThat(path).matches("spring-web-[0-9a-zA-Z-\\.]+\\.jar"))
+                    .containsEntry(stringKey("package.description"), "org.springframework.web")
+                    .containsEntry(stringKey("package.checksum_algorithm"), "SHA-256")
+                    .hasEntrySatisfying(
+                        stringKey("package.checksum"),
+                        checksum -> assertThat(checksum).matches("[0-9a-f]{64}")))));
   }
 
   private static URL archiveUrl(File file) {

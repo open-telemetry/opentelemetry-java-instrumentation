@@ -367,6 +367,8 @@
 
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
   resource, or baggage values.
+- Logback library appenders and the Spring Boot starter capture only application-owned MDC values,
+  excluding OpenTelemetry-added trace and baggage values.
 - Testing exporters now use delta-preferred metric temporality by default; up-down counters are
   cumulative.
 - Remove the deprecated `ServicePeerAttributesExtractor`,
@@ -504,6 +506,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `NetworkAttributesGetter.getNetworkLocalInetSocketAddress()` and
+  `getNetworkPeerInetSocketAddress()` in favor of `getNetworkLocalSocketAddress()` and
+  `getNetworkPeerSocketAddress()`.
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.

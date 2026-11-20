@@ -208,38 +208,38 @@ class YamlHelperTest {
     String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
-            definitions:
-              configurations:
-                otel.instrumentation.spring-web-6.0.enabled:
-                  name: otel.instrumentation.spring-web-6.0.enabled
-                  description: Enables or disables Spring Web 6.0 instrumentation.
-                  type: boolean
-                  default: true
-            libraries:
-            - name: spring-web-6.0
-              description: Spring Web 6.0 instrumentation
-              semantic_conventions:
-              - DATABASE_CLIENT_METRICS
-              - DATABASE_CLIENT_SPANS
-              features:
-              - HTTP_ROUTE
-              - CONTEXT_PROPAGATION
-              source_path: instrumentation/spring/spring-web/spring-web-6.0
-              minimum_java_version: 11
-              scope:
-                name: io.opentelemetry.spring-web-6.0
-              javaagent_target_versions:
-              - org.springframework:spring-web:[6.0.0,)
-              configuration_refs:
-              - otel.instrumentation.spring-web-6.0.enabled
-            custom:
-            - name: opentelemetry-external-annotations
-              source_path: instrumentation/opentelemetry-external-annotations-1.0
-              scope:
-                name: io.opentelemetry.opentelemetry-external-annotations
-              javaagent_target_versions:
-              - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
-            """;
+        definitions:
+          configurations:
+            otel.instrumentation.spring-web-6.0.enabled:
+              name: otel.instrumentation.spring-web-6.0.enabled
+              description: Enables or disables Spring Web 6.0 instrumentation.
+              type: boolean
+              default: true
+        libraries:
+        - name: spring-web-6.0
+          description: Spring Web 6.0 instrumentation
+          semantic_conventions:
+          - DATABASE_CLIENT_METRICS
+          - DATABASE_CLIENT_SPANS
+          features:
+          - HTTP_ROUTE
+          - CONTEXT_PROPAGATION
+          source_path: instrumentation/spring/spring-web/spring-web-6.0
+          minimum_java_version: 11
+          scope:
+            name: io.opentelemetry.spring-web-6.0
+          javaagent_target_versions:
+          - org.springframework:spring-web:[6.0.0,)
+          configuration_refs:
+          - otel.instrumentation.spring-web-6.0.enabled
+        custom:
+        - name: opentelemetry-external-annotations
+          source_path: instrumentation/opentelemetry-external-annotations-1.0
+          scope:
+            name: io.opentelemetry.opentelemetry-external-annotations
+          javaagent_target_versions:
+          - io.opentelemetry:opentelemetry-extension-annotations:[0.16.0,)
+        """;
 
     assertThat(result).isEqualTo(expectedYaml);
   }
@@ -293,19 +293,19 @@ class YamlHelperTest {
   void testMetadataParser() throws JsonProcessingException {
     String input =
         """
-            description: test description
-            classification: internal
-            disabled_by_default: true
-            library_link: https://example.com/test-library
-            features:
-              - HTTP_ROUTE
-              - CONTROLLER_SPANS
-            configurations:
-              - name: otel.instrumentation.common.db.query-sanitization.enabled
-                description: Enables query sanitization for database queries.
-                type: boolean
-                default: true
-            """;
+        description: test description
+        classification: internal
+        disabled_by_default: true
+        library_link: https://example.com/test-library
+        features:
+          - HTTP_ROUTE
+          - CONTROLLER_SPANS
+        configurations:
+          - name: otel.instrumentation.common.db.query-sanitization.enabled
+            description: Enables query sanitization for database queries.
+            type: boolean
+            default: true
+        """;
 
     InstrumentationMetadata metadata = YamlHelper.metaDataParser(input);
 
@@ -838,23 +838,23 @@ class YamlHelperTest {
     String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
-            libraries:
-            - name: other-lib-1.0
-              description: Test library instrumentation without link
-              source_path: instrumentation/other-lib/other-lib-1.0
-              scope:
-                name: io.opentelemetry.other-lib-1.0
-              javaagent_target_versions:
-              - com.example:test-library:[1.0.0,)
-            - name: test-lib-1.0
-              description: Test library instrumentation with link
-              library_link: https://example.com/test-library-docs
-              source_path: instrumentation/test-lib/test-lib-1.0
-              scope:
-                name: io.opentelemetry.test-lib-1.0
-              javaagent_target_versions:
-              - com.example:test-library:[1.0.0,)
-            """;
+        libraries:
+        - name: other-lib-1.0
+          description: Test library instrumentation without link
+          source_path: instrumentation/other-lib/other-lib-1.0
+          scope:
+            name: io.opentelemetry.other-lib-1.0
+          javaagent_target_versions:
+          - com.example:test-library:[1.0.0,)
+        - name: test-lib-1.0
+          description: Test library instrumentation with link
+          library_link: https://example.com/test-library-docs
+          source_path: instrumentation/test-lib/test-lib-1.0
+          scope:
+            name: io.opentelemetry.test-lib-1.0
+          javaagent_target_versions:
+          - com.example:test-library:[1.0.0,)
+        """;
 
     assertThat(result).isEqualTo(expectedYaml);
   }
@@ -946,28 +946,28 @@ class YamlHelperTest {
     String result = generateInstrumentationYaml(modules);
     String expectedYaml =
         """
-            libraries:
-            - name: opentelemetry-api-1.9
-              source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.9
-              scope:
-                name: io.opentelemetry.opentelemetry-api-1.9
-            - name: opentelemetry-api-1.10
-              source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.10
-              scope:
-                name: io.opentelemetry.opentelemetry-api-1.10
-            - name: opentelemetry-api-1.56
-              source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.56
-              scope:
-                name: io.opentelemetry.opentelemetry-api-1.56
-            - name: opentelemetry-api-1.57
-              source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
-              scope:
-                name: io.opentelemetry.opentelemetry-api-1.57
-            - name: opentelemetry-api-2.0
-              source_path: instrumentation/opentelemetry-api/opentelemetry-api-2.0
-              scope:
-                name: io.opentelemetry.opentelemetry-api-2.0
-            """;
+        libraries:
+        - name: opentelemetry-api-1.9
+          source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.9
+          scope:
+            name: io.opentelemetry.opentelemetry-api-1.9
+        - name: opentelemetry-api-1.10
+          source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.10
+          scope:
+            name: io.opentelemetry.opentelemetry-api-1.10
+        - name: opentelemetry-api-1.56
+          source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.56
+          scope:
+            name: io.opentelemetry.opentelemetry-api-1.56
+        - name: opentelemetry-api-1.57
+          source_path: instrumentation/opentelemetry-api/opentelemetry-api-1.57
+          scope:
+            name: io.opentelemetry.opentelemetry-api-1.57
+        - name: opentelemetry-api-2.0
+          source_path: instrumentation/opentelemetry-api/opentelemetry-api-2.0
+          scope:
+            name: io.opentelemetry.opentelemetry-api-2.0
+        """;
 
     assertThat(result).isEqualTo(expectedYaml);
   }

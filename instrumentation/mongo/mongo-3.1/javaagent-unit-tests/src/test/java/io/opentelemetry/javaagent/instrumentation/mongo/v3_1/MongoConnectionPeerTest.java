@@ -33,9 +33,9 @@ class MongoConnectionPeerTest {
     InetSocketAddress firstPeer = captureConnectedPeer(firstDescription);
     InetSocketAddress secondPeer = captureConnectedPeer(secondDescription);
 
-    assertThat(MongoConnectionPeer.resolve(firstDescription).getInetSocketAddress())
+    assertThat(MongoConnectionPeer.resolve(firstDescription).getSocketAddress())
         .isEqualTo(firstPeer);
-    assertThat(MongoConnectionPeer.resolve(secondDescription).getInetSocketAddress())
+    assertThat(MongoConnectionPeer.resolve(secondDescription).getSocketAddress())
         .isEqualTo(secondPeer);
     assertThat(firstPeer).isNotEqualTo(secondPeer);
   }
@@ -60,7 +60,7 @@ class MongoConnectionPeerTest {
 
   @Test
   @EnabledForJreRange(min = JRE.JAVA_16)
-  void capturesUnixSocketWithoutAPort() throws ReflectiveOperationException {
+  void capturesUnixSocketPeerThroughConnectionDescription() throws ReflectiveOperationException {
     String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
     SocketAddress unixSocketAddress =
         (SocketAddress)
@@ -75,8 +75,7 @@ class MongoConnectionPeerTest {
     MongoConnectionPeer.endOpen(state, connectionDescription, null);
 
     MongoNetworkPeer peer = MongoConnectionPeer.resolve(connectionDescription);
-    assertThat(peer.getAddress()).isEqualTo(socketPath);
-    assertThat(peer.getPort()).isNull();
+    assertThat(peer.getSocketAddress()).isSameAs(unixSocketAddress);
   }
 
   private static InetSocketAddress captureConnectedPeer(ConnectionDescription connectionDescription)

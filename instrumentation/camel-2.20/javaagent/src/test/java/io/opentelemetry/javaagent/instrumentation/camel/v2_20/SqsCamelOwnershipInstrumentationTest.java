@@ -97,15 +97,13 @@ class SqsCamelOwnershipInstrumentationTest {
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals("nested"))
         .singleElement()
-        .satisfies(
-            nested ->
-                assertThat(testing.spans())
-                    .filteredOn(span -> span.getSpanId().equals(nested.getParentSpanId()))
-                    .singleElement()
-                    .satisfies(
-                        process ->
-                            assertThat(process.getInstrumentationScopeInfo().getName())
-                                .isEqualTo("io.opentelemetry.aws-sdk-1.11")));
+        .satisfies(nested ->
+            assertThat(testing.spans())
+                .filteredOn(span -> span.getSpanId().equals(nested.getParentSpanId()))
+                .singleElement()
+                .satisfies(process ->
+                    assertThat(process.getInstrumentationScopeInfo().getName())
+                        .isEqualTo("io.opentelemetry.aws-sdk-1.11")));
   }
 
   private static class TestSqsConsumer extends SqsConsumer {

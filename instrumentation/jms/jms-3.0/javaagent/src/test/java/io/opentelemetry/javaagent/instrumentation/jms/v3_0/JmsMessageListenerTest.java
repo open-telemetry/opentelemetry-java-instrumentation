@@ -43,9 +43,8 @@ class JmsMessageListenerTest {
 
     outer.onMessage(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("process same").hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> span.hasName("process same").hasNoParent()));
     assertProcessDuration("same", 1);
   }
 
@@ -57,26 +56,23 @@ class JmsMessageListenerTest {
     SpanContext callerSpan = Span.current().getSpanContext();
     AtomicReference<SpanContext> outerSpan = new AtomicReference<>();
     MessageListener inner =
-        new TestMessageListener(
-            ignored -> {
-              assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan.get());
-            });
+        new TestMessageListener(ignored -> {
+          assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan.get());
+        });
     MessageListener outer =
-        new TestMessageListener(
-            ignored -> {
-              outerSpan.set(Span.current().getSpanContext());
-              assertThat(outerSpan.get().isValid()).isTrue();
-              assertThat(CONSUMER_PROCESS.fromContextOrNull(Context.current())).isNotNull();
-              inner.onMessage(innerMessage);
-              assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan.get());
-            });
+        new TestMessageListener(ignored -> {
+          outerSpan.set(Span.current().getSpanContext());
+          assertThat(outerSpan.get().isValid()).isTrue();
+          assertThat(CONSUMER_PROCESS.fromContextOrNull(Context.current())).isNotNull();
+          inner.onMessage(innerMessage);
+          assertThat(Span.current().getSpanContext()).isEqualTo(outerSpan.get());
+        });
 
     outer.onMessage(outerMessage);
 
     assertThat(Span.current().getSpanContext()).isEqualTo(callerSpan);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("process nested").hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> span.hasName("process nested").hasNoParent()));
     assertProcessDuration("nested", 1);
   }
 
@@ -93,12 +89,11 @@ class JmsMessageListenerTest {
           listener.onMessage(second);
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("caller").hasNoParent(),
-                span -> span.hasName("process independent").hasParent(trace.getSpan(0)),
-                span -> span.hasName("process independent").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("caller").hasNoParent(),
+            span -> span.hasName("process independent").hasParent(trace.getSpan(0)),
+            span -> span.hasName("process independent").hasParent(trace.getSpan(0))));
     assertProcessDuration("independent", 2);
   }
 
@@ -109,16 +104,14 @@ class JmsMessageListenerTest {
         metrics ->
             metrics
                 .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .singleElement()
-                            .satisfies(
-                                point -> {
-                                  assertThat(point.getCount()).isEqualTo(count);
-                                  assertThat(point.getAttributes())
-                                      .isEqualTo(metricAttributes(destination));
-                                })));
+                .satisfies(metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .singleElement()
+                        .satisfies(point -> {
+                          assertThat(point.getCount()).isEqualTo(count);
+                          assertThat(point.getAttributes())
+                              .isEqualTo(metricAttributes(destination));
+                        })));
   }
 
   private static Attributes metricAttributes(String destination) {

@@ -58,33 +58,29 @@ class ReactiveSpringDataTest {
             .block(Duration.ofSeconds(30));
     assertThat(count).isEqualTo(1);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("CustomerRepository.findAll")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                CustomerRepository.class.getName() + ".findAll")),
-                span ->
-                    span.hasName("SELECT CUSTOMER")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        // assert that this span ends before its parent span
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getEndEpochNanos())
-                                    .isLessThanOrEqualTo(trace.getSpan(1).getEndEpochNanos()))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "h2database"),
-                            equalTo(DB_NAMESPACE, "db"),
-                            equalTo(DB_QUERY_TEXT, "SELECT CUSTOMER.* FROM CUSTOMER"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT CUSTOMER"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(
-                                stringKey("server.service.name"), expectedMappedServiceName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("CustomerRepository.findAll")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME, CustomerRepository.class.getName() + ".findAll")),
+            span ->
+                span.hasName("SELECT CUSTOMER")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    // assert that this span ends before its parent span
+                    .satisfies(spanData ->
+                        assertThat(spanData.getEndEpochNanos())
+                            .isLessThanOrEqualTo(trace.getSpan(1).getEndEpochNanos()))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "h2database"),
+                        equalTo(DB_NAMESPACE, "db"),
+                        equalTo(DB_QUERY_TEXT, "SELECT CUSTOMER.* FROM CUSTOMER"),
+                        equalTo(DB_QUERY_SUMMARY, "SELECT CUSTOMER"),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 }

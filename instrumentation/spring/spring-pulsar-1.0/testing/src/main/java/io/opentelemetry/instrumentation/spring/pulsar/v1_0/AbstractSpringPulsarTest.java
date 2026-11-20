@@ -115,69 +115,53 @@ public abstract class AbstractSpringPulsarTest {
         "io.opentelemetry.spring-pulsar-1.0",
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasSumGreaterThan(0.0)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "pulsar"),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("s")
+                    .hasDescription("Duration of processing operation.")
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.pulsar-2.8",
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "pulsar"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_SUBSCRIPTION_NAME,
-                                                    OTEL_SUBSCRIPTION),
-                                                equalTo(SERVER_ADDRESS, brokerHost),
-                                                equalTo(SERVER_PORT, brokerPort))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("{message}")
+                    .hasDescription("Number of messages that were delivered to the application.")
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                    equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC),
+                                    equalTo(
+                                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, OTEL_SUBSCRIPTION),
+                                    equalTo(SERVER_ADDRESS, brokerHost),
+                                    equalTo(SERVER_PORT, brokerPort))))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-pulsar-1.0",
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "pulsar"),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, OTEL_TOPIC))))));
   }
 
   protected List<AttributeAssertion> publishAttributes() {

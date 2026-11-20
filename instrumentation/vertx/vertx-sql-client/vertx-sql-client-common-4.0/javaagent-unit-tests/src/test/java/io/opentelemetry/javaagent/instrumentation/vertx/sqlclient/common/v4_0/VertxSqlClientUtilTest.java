@@ -153,12 +153,11 @@ class VertxSqlClientUtilTest {
       assertThat(request.spanNameExtractionFailures).hasValue(1);
       assertThat(exporter.getFinishedSpanItems())
           .singleElement()
-          .satisfies(
-              spanData ->
-                  assertThat(spanData)
-                      .hasStatus(StatusData.error())
-                      .hasException(applicationError)
-                      .hasTotalAttributeCount(0));
+          .satisfies(spanData ->
+              assertThat(spanData)
+                  .hasStatus(StatusData.error())
+                  .hasException(applicationError)
+                  .hasTotalAttributeCount(0));
       assertThat(VertxSqlClientUtil.endQuerySpan(instrumenter, promise, null)).isNull();
       assertThat(exporter.getFinishedSpanItems()).hasSize(1);
     }
@@ -172,27 +171,25 @@ class VertxSqlClientUtilTest {
     ExecutorService executor = Executors.newFixedThreadPool(2);
     try {
       Future<Boolean> first =
-          executor.submit(
-              () -> {
-                barrier.await();
-                Scope scope = VertxSqlClientUtil.endQuerySpan(INSTRUMENTER, promise, null);
-                if (scope != null) {
-                  scope.close();
-                }
-                return scope != null;
-              });
+          executor.submit(() -> {
+            barrier.await();
+            Scope scope = VertxSqlClientUtil.endQuerySpan(INSTRUMENTER, promise, null);
+            if (scope != null) {
+              scope.close();
+            }
+            return scope != null;
+          });
       Future<Boolean> second =
-          executor.submit(
-              () -> {
-                barrier.await();
-                Scope scope =
-                    VertxSqlClientUtil.endQuerySpan(
-                        INSTRUMENTER, promise, new IllegalStateException("duplicate"));
-                if (scope != null) {
-                  scope.close();
-                }
-                return scope != null;
-              });
+          executor.submit(() -> {
+            barrier.await();
+            Scope scope =
+                VertxSqlClientUtil.endQuerySpan(
+                    INSTRUMENTER, promise, new IllegalStateException("duplicate"));
+            if (scope != null) {
+              scope.close();
+            }
+            return scope != null;
+          });
 
       assertThat(first.get()).isNotEqualTo(second.get());
     } finally {

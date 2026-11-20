@@ -74,17 +74,16 @@ abstract class PlayWsClientBaseTest<REQUEST> extends AbstractHttpClientTest<REQU
     optionsBuilder.setResponseCodeOnRedirectError(null);
     optionsBuilder.setMaxRedirects(3);
     optionsBuilder.spanEndsAfterBody();
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NETWORK_PROTOCOL_VERSION);
-          if (uri.toString().endsWith("/circular-redirect")) {
-            attributes.remove(SERVER_ADDRESS);
-            attributes.remove(SERVER_PORT);
-          }
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(uri -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      if (uri.toString().endsWith("/circular-redirect")) {
+        attributes.remove(SERVER_ADDRESS);
+        attributes.remove(SERVER_PORT);
+      }
+      return attributes;
+    });
   }
 
   private static AsyncHttpClient createClient(boolean readTimeout) {

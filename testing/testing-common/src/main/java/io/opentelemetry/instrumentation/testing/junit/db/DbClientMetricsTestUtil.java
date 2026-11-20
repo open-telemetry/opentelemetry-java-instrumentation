@@ -32,14 +32,10 @@ public class DbClientMetricsTestUtil {
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
                 .hasDescription("Duration of database client operations.")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsOnlyKeys(expectedKeys)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfying(attributes ->
+                            assertThat(attributes.asMap()).containsOnlyKeys(expectedKeys)))));
   }
 
   public static void assertDurationMetricWithResponseStatus(
@@ -59,16 +55,12 @@ public class DbClientMetricsTestUtil {
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
                 .hasDescription("Duration of database client operations.")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsOnlyKeys(expectedKeysWithStatus)
-                                            .containsEntry(
-                                                DB_RESPONSE_STATUS_CODE, expectedResponseStatusCode)
-                                            .doesNotContainKey(ERROR_TYPE)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point.hasAttributesSatisfying(attributes ->
+                            assertThat(attributes.asMap())
+                                .containsOnlyKeys(expectedKeysWithStatus)
+                                .containsEntry(DB_RESPONSE_STATUS_CODE, expectedResponseStatusCode)
+                                .doesNotContainKey(ERROR_TYPE)))));
   }
 }

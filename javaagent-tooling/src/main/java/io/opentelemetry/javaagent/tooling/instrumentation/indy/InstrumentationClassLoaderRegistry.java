@@ -73,10 +73,9 @@ public class InstrumentationClassLoaderRegistry {
         // module opener only usable for java 9+
         experimentalModule
             .jpmsModulesToOpen()
-            .forEach(
-                (javaModule, packages) ->
-                    ModuleOpener.open(
-                        instrumentation, javaModule, instrumentationClassLoader, packages));
+            .forEach((javaModule, packages) ->
+                ModuleOpener.open(
+                    instrumentation, javaModule, instrumentationClassLoader, packages));
       }
     }
     return instrumentationClassLoader;

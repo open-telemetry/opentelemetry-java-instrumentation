@@ -81,22 +81,21 @@ class TracingSessionTest {
     assertThatThrownBy(() -> session.execute("invalid")).isSameAs(failure);
 
     assertThat(exporter.getFinishedSpanItems())
-        .satisfiesExactly(
-            span ->
-                assertThat(span)
-                    .hasName("LOCALHOST:4242")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasNoParent()
-                    .hasStatus(StatusData.error())
-                    .hasException(failure)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(SERVER_ADDRESS, "LOCALHOST"),
-                        equalTo(SERVER_PORT, 4242L),
-                        equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                        equalTo(DB_QUERY_TEXT, "invalid"),
-                        equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                        equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
-                        equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                        equalTo(ERROR_TYPE, RuntimeException.class.getName())));
+        .satisfiesExactly(span ->
+            assertThat(span)
+                .hasName("LOCALHOST:4242")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasException(failure)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(SERVER_ADDRESS, "LOCALHOST"),
+                    equalTo(SERVER_PORT, 4242L),
+                    equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                    equalTo(DB_QUERY_TEXT, "invalid"),
+                    equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                    equalTo(CASSANDRA_QUERY_IDEMPOTENT, false),
+                    equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                    equalTo(ERROR_TYPE, RuntimeException.class.getName())));
   }
 }

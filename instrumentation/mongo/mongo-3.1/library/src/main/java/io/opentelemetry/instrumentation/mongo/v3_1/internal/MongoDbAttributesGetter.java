@@ -15,7 +15,7 @@ import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -158,10 +158,10 @@ class MongoDbAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       CommandStartedEvent event, @Nullable CommandSucceededEvent unused) {
     MongoNetworkPeer peer = getNetworkPeer(event);
-    return peer == null ? null : peer.getInetSocketAddress();
+    return peer == null ? null : peer.getSocketAddress();
   }
 
   @Nullable
