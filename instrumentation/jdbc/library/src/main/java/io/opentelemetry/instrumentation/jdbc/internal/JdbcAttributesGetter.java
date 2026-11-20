@@ -29,6 +29,12 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
     return request.getDbInfo().getDbSystemName();
   }
 
+  @Nullable
+  @Override
+  public String getDbNamespace(DbRequest request) {
+    return request.getDbInfo().getDbNamespace();
+  }
+
   @Override
   public SqlDialect getSqlDialect(DbRequest request) {
     String dbSystemName = getDbSystemName(request);
@@ -38,12 +44,6 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
       return SqlDialect.forDbSystemName("postgresql");
     }
     return SqlDialect.forDbSystemName(dbSystemName);
-  }
-
-  @Nullable
-  @Override
-  public String getDbNamespace(DbRequest request) {
-    return request.getDbInfo().getDbNamespace();
   }
 
   @Override
