@@ -13,19 +13,23 @@ import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.DoubleCounterBuilder;
+import io.opentelemetry.api.metrics.LongCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 import io.opentelemetry.api.metrics.ObservableLongCounter;
+import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
     implements FunctionTimer, RemovableMeter, OpenTelemetryInstrument {
   private final TimeUnit baseTimeUnit;
-  private final ObservableLongCounter observableCount;
-  private final ObservableDoubleCounter observableTotalTime;
+  @Nullable private ObservableLongCounter observableCount;
+  @Nullable private ObservableDoubleCounter observableTotalTime;
 
   OpenTelemetryFunctionTimer(
       Id id,
@@ -43,28 +47,33 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
     String name = Bridging.name(id, namingConvention);
     Attributes attributes = Bridging.tagsAsAttributes(id, namingConvention);
 
-    this.observableCount =
+    LongCounterBuilder countBuilder =
         otelMeter
             .counterBuilder(name + ".count")
             .setDescription(bridging.description(name + ".count", id))
-            .setUnit("{invocation}")
-            .buildWithCallback(new LongMeasurementRecorder<>(obj, countFunction, attributes));
+            .setUnit("{invocation}");
+    LongMeasurementRecorder<T> countCallback =
+        new LongMeasurementRecorder<>(obj, countFunction, attributes);
+    observableCount =
+        MetricCallbackRegistration.withoutContextClassLoader(
+            () -> countBuilder.buildWithCallback(countCallback));
 
-    this.observableTotalTime =
+    DoubleCounterBuilder totalTimeBuilder =
         otelMeter
             .counterBuilder(name + ".sum")
             .ofDoubles()
             .setDescription(bridging.description(name + ".sum", id))
-            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
-            .buildWithCallback(
-                new DoubleMeasurementRecorder<>(
-                    obj,
-                    val ->
-                        TimeUtils.convert(
-                            totalTimeFunction.applyAsDouble(val),
-                            totalTimeFunctionUnit,
-                            baseTimeUnit),
-                    attributes));
+            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit));
+    DoubleMeasurementRecorder<T> totalTimeCallback =
+        new DoubleMeasurementRecorder<>(
+            obj,
+            val ->
+                TimeUtils.convert(
+                    totalTimeFunction.applyAsDouble(val), totalTimeFunctionUnit, baseTimeUnit),
+            attributes);
+    observableTotalTime =
+        MetricCallbackRegistration.withoutContextClassLoader(
+            () -> totalTimeBuilder.buildWithCallback(totalTimeCallback));
   }
 
   @Override
@@ -97,8 +106,14 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
   }
 
   @Override
-  public void onRemove() {
-    observableCount.close();
-    observableTotalTime.close();
+  public synchronized void onRemove() {
+    if (observableCount != null) {
+      observableCount.close();
+      observableCount = null;
+    }
+    if (observableTotalTime != null) {
+      observableTotalTime.close();
+      observableTotalTime = null;
+    }
   }
 }

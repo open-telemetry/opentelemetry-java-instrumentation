@@ -212,4 +212,15 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       ((RemovableMeter) meter).onRemove();
     }
   }
+
+  @Override
+  public void close() {
+    try {
+      super.close();
+    } finally {
+      for (Meter meter : super.getMeters()) {
+        onMeterRemoved(meter);
+      }
+    }
+  }
 }
