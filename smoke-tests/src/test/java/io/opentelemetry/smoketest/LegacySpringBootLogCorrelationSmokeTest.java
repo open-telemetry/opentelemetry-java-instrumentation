@@ -28,7 +28,7 @@ class LegacySpringBootLogCorrelationSmokeTest {
   void logCorrelationInExecutableJar() {
     String appPath = System.getProperty("io.opentelemetry.smoketest.springboot13.path");
     try (GenericContainer<?> target =
-        new GenericContainer<>(DockerImageName.parse("eclipse-temurin:8"))
+        new GenericContainer<>(DockerImageName.parse("eclipse-temurin:8@sha256:238468a6b1e411e775bf264e639189a938eb0e887f16a2dea027c854c616b4f1"))
             .withCopyFileToContainer(
                 MountableFile.forHostPath(
                     System.getProperty("io.opentelemetry.smoketest.agent.shadowJar.path")),
