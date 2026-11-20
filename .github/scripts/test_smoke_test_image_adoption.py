@@ -39,9 +39,11 @@ from smoke_test_image_adoption import (
     validate_bot_branch,
     validate_candidate,
     validate_current_main,
+    validate_run_identity,
     verify_eligible_run,
     verify_required_jobs,
 )
+from smoke_test_image_refresh import REFRESH_FAMILIES, selected_families
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -145,6 +147,80 @@ def candidate_record(run=None, family="fake-backend", references=None):
 
 
 class AdoptionTest(unittest.TestCase):
+    def test_scheduled_and_manual_refresh_selection_is_allowlisted(self):
+        self.assertEqual(selected_families("schedule", None), list(REFRESH_FAMILIES))
+        self.assertEqual(
+            selected_families("workflow_dispatch", "all"), list(REFRESH_FAMILIES)
+        )
+        for family in REFRESH_FAMILIES:
+            with self.subTest(family=family):
+                self.assertEqual(selected_families("workflow_dispatch", family), [family])
+                self.assertEqual(
+                    FAMILIES[family].workflow_file,
+                    f"publish-smoke-test-{family}-images.yml",
+                )
+        self.assertNotIn("servlet", REFRESH_FAMILIES)
+        self.assertNotIn("early-jdk8", REFRESH_FAMILIES)
+
+    def test_refresh_dispatch_preserves_source_triggers_and_adoption_provenance(self):
+        workflows = ROOT / ".github" / "workflows"
+        adoption_workflow = (workflows / "propose-smoke-test-image-updates.yml").read_text()
+        refresh_workflow = (workflows / "refresh-smoke-test-image-bases.yml").read_text()
+        self.assertIn("actions: write", refresh_workflow)
+        self.assertIn("--field ref=main", refresh_workflow)
+        for family in REFRESH_FAMILIES:
+            with self.subTest(family=family):
+                publisher = workflows / FAMILIES[family].workflow_file
+                contents = publisher.read_text()
+                self.assertIn("  push:\n", contents)
+                self.assertIn(f'"smoke-tests/images/{family}/**"', contents)
+                self.assertIn("      - main\n", contents)
+                self.assertIn("  workflow_dispatch:\n", contents)
+                self.assertIn("cancel-in-progress: false", contents)
+                self.assertIn(
+                    f"      - {FAMILIES[family].workflow_name}\n", adoption_workflow
+                )
+                if family == "quarkus":
+                    self.assertIn("skip-java-8: true", contents)
+                    self.assertIn("skip-java-11: true", contents)
+                    self.assertIn("skip-java-17: true", contents)
+
+                run = run_record(family)
+                run["event"] = "workflow_dispatch"
+                tag = validate_run_identity(run, family, run["id"], run["run_attempt"])
+                expected = expected_references(family, tag)
+                candidate_images = validate_candidate(
+                    candidate_record(run, family, expected),
+                    run,
+                    family,
+                    run["id"],
+                    run["run_attempt"],
+                    expected,
+                )
+                self.assertEqual(set(candidate_images), expected)
+
+    def test_refresh_selection_rejects_untrusted_inputs(self):
+        for event_name, family in (
+            ("schedule", "grpc"),
+            ("workflow_dispatch", "servlet"),
+            ("workflow_dispatch", "early-jdk8"),
+            ("workflow_dispatch", "arbitrary-workflow"),
+            ("push", "all"),
+        ):
+            with (
+                self.subTest(event_name=event_name, family=family),
+                self.assertRaises(ValueError),
+            ):
+                selected_families(event_name, family)
+
+    def test_fake_backend_windows_build_pulls_its_digest_pinned_base(self):
+        image_build = (ROOT / "smoke-tests/images/fake-backend/build.gradle.kts").read_text()
+        dockerfile = (
+            ROOT / "smoke-tests/images/fake-backend/src/docker/backend/windows.dockerfile"
+        ).read_text()
+        self.assertIn('pull.set(true)', image_build)
+        self.assertIn("@sha256:", dockerfile.splitlines()[0])
+
     def test_publication_id_uses_exact_run_attempt(self):
         run = run_record(run_id=123456, attempt=2)
         self.assertEqual(publication_id(run), "20261119.123456000002")
@@ -488,6 +564,7 @@ class AdoptionTest(unittest.TestCase):
     def test_verify_eligible_run_checks_publication_artifact_and_registry(self):
         main_sha = run_process(["git", "rev-parse", "HEAD"], cwd=ROOT).strip()
         run = run_record(sha=main_sha)
+        run["event"] = "workflow_dispatch"
         expected = expected_references("fake-backend", publication_id(run))
         digest = "sha256:" + "a" * 64
 

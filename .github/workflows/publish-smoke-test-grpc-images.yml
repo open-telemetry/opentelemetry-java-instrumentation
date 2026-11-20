@@ -8,9 +8,14 @@ on:
       - ".github/workflows/reusable-publish-smoke-test-images.yml"
     branches:
       - main
+  workflow_dispatch:
 
 permissions:
   contents: read
+
+concurrency:
+  group: smoke-test-image-publish-${{ github.workflow }}
+  cancel-in-progress: false
 
 jobs:
   publish:

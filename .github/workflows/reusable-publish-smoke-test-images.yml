@@ -49,6 +49,13 @@ jobs:
       SKIP_JAVA_11: ${{ inputs.skip-java-11 }}
       SKIP_JAVA_17: ${{ inputs.skip-java-17 }}
     steps:
+      - name: Require main branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Smoke-test images can only be published from main."
+            exit 1
+          fi
+
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false

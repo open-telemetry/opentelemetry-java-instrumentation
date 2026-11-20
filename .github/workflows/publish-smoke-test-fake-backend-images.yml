@@ -12,6 +12,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: smoke-test-image-publish-${{ github.workflow }}
+  cancel-in-progress: false
+
 jobs:
   prepare:
     runs-on: ubuntu-latest
@@ -20,6 +24,12 @@ jobs:
       tag: ${{ steps.set-tag.outputs.tag }}
       attempt: ${{ steps.set-tag.outputs.attempt }}
     steps:
+      - name: Require main branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Smoke-test images can only be published from main."
+            exit 1
+          fi
       - id: set-tag
         run: |
           echo "tag=$(date -u '+%Y%m%d').${GITHUB_RUN_ID}$(printf '%06d' "$GITHUB_RUN_ATTEMPT")" >> "$GITHUB_OUTPUT"
