@@ -12,6 +12,7 @@ muzzle {
     module.set("kotlinx-coroutines-core")
     versions.set("[1.0.0,1.3.8)")
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
@@ -22,6 +23,20 @@ muzzle {
     versions.set("[1.3.9,)")
     assertInverse.set(true)
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationInstrumentationModule")
+    extraDependency(project(":instrumentation-annotations"))
+    extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
+  }
+  pass {
+    // instrumentation-docs:ignore - verification only, @WithSpan on suspend functions needs 1.4.3+
+    name.set("Kotlin Coroutines annotations")
+    group.set("org.jetbrains.kotlinx")
+    module.set("kotlinx-coroutines-core-jvm")
+    versions.set("[1.4.3,)")
+    assertInverse.set(true)
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
+    excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
+    excludeInstrumentationName("opentelemetry-instrumentation-annotations-1.16")
     extraDependency(project(":instrumentation-annotations"))
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
@@ -97,13 +112,25 @@ testing.suites {
     }
   }
 
+  // @WithSpan on suspend functions needs kotlinx-coroutines 1.4.3 or later
+  register<JvmTestSuite>("suspendWithSpanTest") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-extension-kotlin")
+      implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
+      implementation(
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.4.3").orLatest()}",
+      )
+      implementation(project(":instrumentation-annotations"))
+    }
+  }
+
   executions("version13Test") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
     }
   }
 
-  executions("test") {
+  executions("suspendWithSpanTest") {
     configureDefault {
       jvmArgs("-Dotel.instrumentation.kotlinx-coroutines-annotations.enabled=true")
     }
