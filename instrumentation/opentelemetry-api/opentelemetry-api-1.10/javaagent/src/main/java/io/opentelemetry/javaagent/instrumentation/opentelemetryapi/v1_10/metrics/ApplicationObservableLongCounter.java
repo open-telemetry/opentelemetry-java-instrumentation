@@ -12,8 +12,9 @@ public class ApplicationObservableLongCounter
 
   private final ApplicationCallbackHandle callbackHandle;
 
-  public ApplicationObservableLongCounter(ObservableLongCounter agentCounter, Runnable onClose) {
-    callbackHandle = new ApplicationCallbackHandle(agentCounter::close, onClose);
+  public ApplicationObservableLongCounter(
+      ObservableLongCounter agentCounter, Runnable releaseAnchor) {
+    callbackHandle = new ApplicationCallbackHandle(agentCounter::close, releaseAnchor);
   }
 
   // not adding @Override because this method was introduced in 1.12

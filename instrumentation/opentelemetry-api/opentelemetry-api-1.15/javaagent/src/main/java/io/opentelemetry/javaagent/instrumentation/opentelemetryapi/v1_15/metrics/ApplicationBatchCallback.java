@@ -12,8 +12,8 @@ final class ApplicationBatchCallback
     implements application.io.opentelemetry.api.metrics.BatchCallback {
   private final ApplicationCallbackHandle callbackHandle;
 
-  ApplicationBatchCallback(BatchCallback agentCallback, Runnable onClose) {
-    callbackHandle = new ApplicationCallbackHandle(agentCallback::close, onClose);
+  ApplicationBatchCallback(BatchCallback agentCallback, Runnable releaseAnchor) {
+    callbackHandle = new ApplicationCallbackHandle(agentCallback::close, releaseAnchor);
   }
 
   @Override

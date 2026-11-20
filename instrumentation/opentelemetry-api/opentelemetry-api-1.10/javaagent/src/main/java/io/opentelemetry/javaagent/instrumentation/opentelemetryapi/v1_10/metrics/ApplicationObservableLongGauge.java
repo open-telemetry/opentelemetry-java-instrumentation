@@ -12,8 +12,8 @@ public class ApplicationObservableLongGauge
 
   private final ApplicationCallbackHandle callbackHandle;
 
-  public ApplicationObservableLongGauge(ObservableLongGauge agentGauge, Runnable onClose) {
-    callbackHandle = new ApplicationCallbackHandle(agentGauge::close, onClose);
+  public ApplicationObservableLongGauge(ObservableLongGauge agentGauge, Runnable releaseAnchor) {
+    callbackHandle = new ApplicationCallbackHandle(agentGauge::close, releaseAnchor);
   }
 
   // not adding @Override because this method was introduced in 1.12

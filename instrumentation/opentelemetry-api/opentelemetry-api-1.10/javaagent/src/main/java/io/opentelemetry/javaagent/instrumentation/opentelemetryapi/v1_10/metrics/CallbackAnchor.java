@@ -73,8 +73,8 @@ public class CallbackAnchor {
     }
   }
 
-  // Some instrument wrappers may end up calling close() more than once. Guard the deferred
-  // release so each wrapper decrements the callback ref count at most once.
+  // Release each handle's anchor at most once, and clear the callback reference so a retained
+  // cleanup action does not keep the callback alive after close.
   public static Runnable releaseOnClose(Object callback) {
     AtomicReference<Object> callbackRef = new AtomicReference<>(callback);
     return () -> {

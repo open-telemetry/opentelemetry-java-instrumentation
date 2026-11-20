@@ -12,8 +12,9 @@ public class ApplicationObservableDoubleGauge
 
   private final ApplicationCallbackHandle callbackHandle;
 
-  public ApplicationObservableDoubleGauge(ObservableDoubleGauge agentGauge, Runnable onClose) {
-    callbackHandle = new ApplicationCallbackHandle(agentGauge::close, onClose);
+  public ApplicationObservableDoubleGauge(
+      ObservableDoubleGauge agentGauge, Runnable releaseAnchor) {
+    callbackHandle = new ApplicationCallbackHandle(agentGauge::close, releaseAnchor);
   }
 
   // not adding @Override because this method was introduced in 1.12

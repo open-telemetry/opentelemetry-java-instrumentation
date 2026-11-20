@@ -9,32 +9,32 @@ import javax.annotation.Nullable;
 
 public final class ApplicationCallbackHandle {
 
-  @Nullable private Runnable closeCallback;
-  @Nullable private Runnable onClose;
+  @Nullable private Runnable removeAgentCallback;
+  @Nullable private Runnable releaseAnchor;
 
-  public ApplicationCallbackHandle(Runnable closeCallback, Runnable onClose) {
-    this.closeCallback = closeCallback;
-    this.onClose = onClose;
+  public ApplicationCallbackHandle(Runnable removeAgentCallback, Runnable releaseAnchor) {
+    this.removeAgentCallback = removeAgentCallback;
+    this.releaseAnchor = releaseAnchor;
   }
 
   public void close() {
-    Runnable closeCallback;
-    Runnable onClose;
+    Runnable removeAgentCallback;
+    Runnable releaseAnchor;
     synchronized (this) {
-      closeCallback = this.closeCallback;
-      if (closeCallback == null) {
+      removeAgentCallback = this.removeAgentCallback;
+      if (removeAgentCallback == null) {
         return;
       }
-      this.closeCallback = null;
-      onClose = this.onClose;
-      this.onClose = null;
+      this.removeAgentCallback = null;
+      releaseAnchor = this.releaseAnchor;
+      this.releaseAnchor = null;
     }
 
     try {
-      closeCallback.run();
+      removeAgentCallback.run();
     } finally {
-      if (onClose != null) {
-        onClose.run();
+      if (releaseAnchor != null) {
+        releaseAnchor.run();
       }
     }
   }

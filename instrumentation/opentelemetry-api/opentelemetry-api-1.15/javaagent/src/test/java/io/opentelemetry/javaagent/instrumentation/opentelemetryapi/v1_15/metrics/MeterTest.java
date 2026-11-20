@@ -309,7 +309,8 @@ class MeterTest {
 
     BatchCallback firstCallback = meter.batchCallback(callback, firstMeasurement);
     // Intentionally do not retain the second handle so callback reachability depends on the
-    // remaining anchor, not on another wrapper still holding the callback via its onClose action.
+    // remaining anchor, not on another wrapper still holding the callback via its releaseAnchor
+    // action.
     meter.batchCallback(callback, secondMeasurement);
 
     firstCallback.close();
@@ -338,11 +339,13 @@ class MeterTest {
 
     firstCallback.close();
     secondCallback.close();
-    secondCallback = null;
     callback = null;
 
     GcUtils.awaitGc(callbackRef, Duration.ofSeconds(10));
     assertThat(callbackRef.get()).isNull();
+    // Keep both closed handles strongly reachable through GC to verify they do not retain the
+    // callback.
     assertThat(firstCallback).isNotNull();
+    assertThat(secondCallback).isNotNull();
   }
 }

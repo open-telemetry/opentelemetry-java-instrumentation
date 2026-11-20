@@ -13,8 +13,8 @@ public class ApplicationObservableDoubleCounter
   private final ApplicationCallbackHandle callbackHandle;
 
   public ApplicationObservableDoubleCounter(
-      ObservableDoubleCounter agentCounter, Runnable onClose) {
-    callbackHandle = new ApplicationCallbackHandle(agentCounter::close, onClose);
+      ObservableDoubleCounter agentCounter, Runnable releaseAnchor) {
+    callbackHandle = new ApplicationCallbackHandle(agentCounter::close, releaseAnchor);
   }
 
   // not adding @Override because this method was introduced in 1.12
