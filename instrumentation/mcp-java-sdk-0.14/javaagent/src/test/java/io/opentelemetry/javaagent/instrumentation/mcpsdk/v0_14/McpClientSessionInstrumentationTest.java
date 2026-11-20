@@ -123,16 +123,15 @@ class McpClientSessionInstrumentationTest {
                 .hasName("mcp.client.operation.duration")
                 .hasUnit("s")
                 .hasDescription(MCP_CLIENT_OPERATION_DURATION_DESCRIPTION)
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(MCP_METHOD_NAME, "tools/call"),
-                                equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
-                                equalTo(GEN_AI_TOOL_NAME, "lookup"),
-                                equalTo(MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05))
-                            .hasBucketBoundaries(
-                                0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120, 300))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(MCP_METHOD_NAME, "tools/call"),
+                            equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
+                            equalTo(GEN_AI_TOOL_NAME, "lookup"),
+                            equalTo(MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05))
+                        .hasBucketBoundaries(
+                            0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120, 300)));
   }
 
   @Test

@@ -286,11 +286,9 @@ public abstract class AbstractRedissonClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttributesSatisfying(attributes ->
-                            assertThat(attributes.asMap())
-                                .containsEntry(ERROR_TYPE, "WRONGTYPE")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfying(attributes ->
+                        assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "WRONGTYPE"))));
   }
 
   @Test
@@ -605,13 +603,12 @@ public abstract class AbstractRedissonClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasAttributesSatisfying(attributes ->
-                                assertThat(attributes.asMap())
-                                    .containsEntry(ERROR_TYPE, RedisException.class.getName())))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfying(attributes ->
+                            assertThat(attributes.asMap())
+                                .containsEntry(ERROR_TYPE, RedisException.class.getName()))));
     testing.clearData();
   }
 
@@ -666,18 +663,17 @@ public abstract class AbstractRedissonClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasAttributesSatisfying(attributes -> {
-                              if (expectedErrorType == null) {
-                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
-                              } else {
-                                assertThat(attributes.asMap())
-                                    .containsEntry(ERROR_TYPE, expectedErrorType);
-                              }
-                            }))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfying(attributes -> {
+                          if (expectedErrorType == null) {
+                            assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
+                          } else {
+                            assertThat(attributes.asMap())
+                                .containsEntry(ERROR_TYPE, expectedErrorType);
+                          }
+                        })));
     testing.clearData();
   }
 
@@ -701,20 +697,17 @@ public abstract class AbstractRedissonClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasAttributesSatisfying(attributes ->
-                                    assertThat(attributes.asMap())
-                                        .containsEntry(ERROR_TYPE, "MOVED")),
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasAttributesSatisfying(attributes ->
-                                    assertThat(attributes.asMap())
-                                        .doesNotContainKey(ERROR_TYPE)))));
+                .hasHistogramPointsSatisfying(
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "MOVED")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE))));
     testing.clearData();
   }
 

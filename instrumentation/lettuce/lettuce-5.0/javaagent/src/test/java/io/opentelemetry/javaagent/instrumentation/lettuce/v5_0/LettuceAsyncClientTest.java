@@ -721,12 +721,11 @@ class LettuceAsyncClientTest extends AbstractLettuceClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(count)
-                            .hasAttributesSatisfying(attributes ->
-                                assertThat(attributes.get(ERROR_TYPE)).isEqualTo(errorType)))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(count)
+                        .hasAttributesSatisfying(attributes ->
+                            assertThat(attributes.get(ERROR_TYPE)).isEqualTo(errorType))));
   }
 
   @Test

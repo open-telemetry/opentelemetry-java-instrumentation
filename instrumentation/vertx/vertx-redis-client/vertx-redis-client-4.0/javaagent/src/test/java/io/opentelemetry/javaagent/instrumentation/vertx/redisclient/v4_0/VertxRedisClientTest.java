@@ -300,9 +300,8 @@ class VertxRedisClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttributesSatisfying(equalTo(ERROR_TYPE, expectedErrorType)))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfying(equalTo(ERROR_TYPE, expectedErrorType))));
   }
 
   @Test

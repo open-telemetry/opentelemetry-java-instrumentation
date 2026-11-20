@@ -93,9 +93,7 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttribute(
-                            SERVER_ADDRESS, "db1.example:27017,db2.example:27018"))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttribute(SERVER_ADDRESS, "db1.example:27017,db2.example:27018")));
   }
 }

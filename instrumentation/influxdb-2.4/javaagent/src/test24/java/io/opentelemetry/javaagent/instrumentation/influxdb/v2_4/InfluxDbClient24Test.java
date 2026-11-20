@@ -201,10 +201,9 @@ class InfluxDbClient24Test {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.satisfies(pointData ->
-                            assertThat(pointData.getAttributes().get(ERROR_TYPE))
-                                .isEqualTo("_OTHER")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.satisfies(pointData ->
+                        assertThat(pointData.getAttributes().get(ERROR_TYPE))
+                            .isEqualTo("_OTHER"))));
   }
 }

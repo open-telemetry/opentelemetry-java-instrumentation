@@ -217,10 +217,9 @@ class MetricAggregationTest {
               MetricAssert metricAssert =
                   assertThat(metricData).hasDescription("description").hasUnit("1");
               if (metricType == MetricInfo.Type.GAUGE) {
-                metricAssert.hasLongGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(pointAsserts));
+                metricAssert.hasLongGaugePointsSatisfying(pointAsserts);
               } else {
-                metricAssert.hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(pointAsserts));
+                metricAssert.hasLongSumPointsSatisfying(pointAsserts);
               }
             }));
   }
