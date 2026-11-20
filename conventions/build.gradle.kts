@@ -42,6 +42,9 @@ tasks.withType<Test>().configureEach {
   useJUnitPlatform()
 }
 
+val nativePluginTestClasspath = configurations.create("nativePluginTestClasspath")
+val nativeMetadataTestRepository = configurations.create("nativeMetadataTestRepository")
+
 dependencies {
   implementation(gradleApi())
   implementation(localGroovy())
@@ -84,8 +87,19 @@ dependencies {
   compileOnly("org.graalvm.buildtools:native-gradle-plugin:1.1.19")
 
   testImplementation(enforcedPlatform("org.junit:junit-bom:5.14.4"))
+  testImplementation(gradleTestKit())
   testImplementation("org.junit.jupiter:junit-jupiter-api")
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+  nativePluginTestClasspath("org.graalvm.buildtools:native-gradle-plugin:1.1.19")
+  nativeMetadataTestRepository("org.graalvm.buildtools:graalvm-reachability-metadata:1.1.19:repository@zip")
   testImplementation("org.assertj:assertj-core:3.27.7")
+}
+
+tasks.pluginUnderTestMetadata {
+  pluginClasspath.from(nativePluginTestClasspath)
+}
+
+tasks.test {
+  systemProperty("nativeMetadataTestRepository", nativeMetadataTestRepository.singleFile)
 }

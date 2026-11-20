@@ -1,12 +1,13 @@
 // Shared GraalVM native-image test configuration for the smoke-tests-otel-starter Spring Boot
-// modules. Centralizes the workarounds we need with native-build-tools 1.0.0:
+// modules. Centralizes the workarounds we need with native-build-tools:
 //
 //  * The metadata repository is resolved through a detached configuration that violates Gradle's
 //    project lock requirements (see https://github.com/graalvm/native-build-tools/issues/572 and
 //    https://github.com/gradle/gradle/issues/17559). We download the metadata zip ourselves and
-//    point the extension at the extracted directory.
+//    point the extension at a project-local copy.
 //  * `collectReachabilityMetadata` triggers the same isolation issue and is disabled.
 
+import io.opentelemetry.instrumentation.gradle.NativeMetadataRepository
 import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
 
@@ -59,15 +60,15 @@ plugins.withId("org.graalvm.buildtools.native") {
     enabled = false
   }
 
-  // Use a per-project output directory so parallel builds of sibling smoke-test modules don't
-  // race on a single shared destination.
-  val metadataRepoDir = layout.buildDirectory.dir("metadata-repository")
-  val extractRepositoryMetadata = tasks.register<Copy>("extractRepositoryMetadata") {
-    from({ zipTree(repositoryMetadata.singleFile) })
-    into(metadataRepoDir)
-  }
-  tasks.named("nativeTestCompile").configure {
-    dependsOn(extractRepositoryMetadata)
+  // Resolve while this project is being configured, rather than from the plugin's detached
+  // configuration during task graph construction. The plugin queries its metadata inputs while
+  // discovering task dependencies, so a prerequisite task would run too late. Its service
+  // extracts this local archive before querying it.
+  val metadataArchive = repositoryMetadata.singleFile
+  val metadataRepository = providers.of(NativeMetadataRepository::class) {
+    parameters.archive.set(metadataArchive)
+    // The plugin keys its extraction cache by URI, so sibling projects must use different paths.
+    parameters.destination.set(layout.buildDirectory.dir("metadata-repository"))
   }
 
   // See https://github.com/graalvm/native-build-tools/issues/572
@@ -77,7 +78,7 @@ plugins.withId("org.graalvm.buildtools.native") {
       // Manually set up the metadata repository to avoid resolving the default repository, which
       // currently fails with "Resolution of the configuration ... was attempted without an
       // exclusive lock. This is unsafe and not allowed."
-      uri.set(metadataRepoDir.map { it.asFile.toURI() })
+      uri.set(metadataRepository)
     }
 
   tasks.named<Test>("test").configure {
