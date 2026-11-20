@@ -18,28 +18,123 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static java.util.Arrays.asList;
+import static java.util.concurrent.TimeUnit.HOURS;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.pulsar.client.api.Message;
 import org.apache.pulsar.client.api.MessageId;
 import org.apache.pulsar.client.api.MessageListener;
 import org.apache.pulsar.client.api.MessageRouter;
 import org.apache.pulsar.client.api.Messages;
+import org.apache.pulsar.client.api.Producer;
 import org.apache.pulsar.client.api.Schema;
 import org.apache.pulsar.client.api.SubscriptionInitialPosition;
 import org.apache.pulsar.client.api.TopicMetadata;
+import org.apache.pulsar.client.api.interceptor.ProducerInterceptor;
 import org.apache.pulsar.client.api.transaction.Transaction;
 import org.apache.pulsar.client.impl.conf.ConsumerConfigurationData;
 import org.junit.jupiter.api.Test;
 
 class PulsarClientTest extends AbstractPulsarClientTest {
+
+  @Test
+  @SuppressWarnings("rawtypes")
+  void inFlightFlushContinuationCanJoinSendFuture() throws Exception {
+    String topic = "persistent://public/default/inFlightFlushContinuationCanJoinSendFuture";
+    CountDownLatch acknowledgingLastSend = new CountDownLatch(1);
+    CountDownLatch completeLastSend = new CountDownLatch(1);
+    AtomicInteger acknowledgements = new AtomicInteger();
+    producer =
+        client
+            .newProducer(Schema.STRING)
+            .topic(topic)
+            .enableBatching(true)
+            .batchingMaxPublishDelay(1, HOURS)
+            .sendTimeout(0, SECONDS)
+            .intercept(
+                new ProducerInterceptor() {
+                  @Override
+                  public void close() {}
+
+                  @Override
+                  public boolean eligible(Message message) {
+                    return true;
+                  }
+
+                  @Override
+                  public Message beforeSend(Producer producer, Message message) {
+                    return message;
+                  }
+
+                  @Override
+                  public void onSendAcknowledgement(
+                      Producer producer, Message message, MessageId id, Throwable error) {
+                    if (acknowledgements.incrementAndGet() == 2) {
+                      acknowledgingLastSend.countDown();
+                      try {
+                        assertThat(completeLastSend.await(10, SECONDS)).isTrue();
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new AssertionError(e);
+                      }
+                    }
+                  }
+                })
+            .create();
+    ContextKey<String> key = ContextKey.named("pulsar-flush-caller");
+    CompletableFuture<MessageId> firstSend;
+    CompletableFuture<MessageId> lastSend;
+    try (Scope ignored = Context.current().with(key, "caller").makeCurrent()) {
+      firstSend = producer.sendAsync("first");
+      lastSend = producer.sendAsync("last");
+    }
+    try {
+      CompletableFuture<Void> flush = producer.flushAsync();
+      assertThat(acknowledgingLastSend.await(10, SECONDS)).isTrue();
+      assertThat(lastSend).isNotDone();
+      CompletableFuture<Void> joined =
+          flush.thenRun(
+              () -> {
+                try {
+                  assertThat(lastSend.get(5, SECONDS)).isNotNull();
+                  assertThat(firstSend.get(5, SECONDS)).isNotNull();
+                } catch (InterruptedException e) {
+                  Thread.currentThread().interrupt();
+                  throw new AssertionError(e);
+                } catch (Exception e) {
+                  throw new AssertionError(e);
+                }
+                assertThat(Context.current().get(key)).isEqualTo("caller");
+                assertThat(
+                        testing.spans().stream()
+                            .filter(span -> span.getKind() == SpanKind.PRODUCER)
+                            .count())
+                    .isEqualTo(2);
+              });
+      completeLastSend.countDown();
+      joined.get(15, SECONDS);
+    } finally {
+      completeLastSend.countDown();
+    }
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER).hasNoParent()));
+  }
 
   @Test
   void testConsumeNonPartitionedTopic() throws Exception {
