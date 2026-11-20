@@ -137,6 +137,25 @@ class DropwizardMetricsTest {
   }
 
   @Test
+  void removingSameNamedCounterFromAnotherRegistryKeepsRecordingAssociation() {
+    MetricRegistry removedRegistry = new MetricRegistry();
+    MetricRegistry remainingRegistry = new MetricRegistry();
+    removedRegistry.counter("test.multi.registry.counter");
+    Counter remainingCounter = remainingRegistry.counter("test.multi.registry.counter");
+
+    removedRegistry.remove("test.multi.registry.counter");
+    remainingCounter.inc(5);
+
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("test.multi.registry.counter")
+                .hasLongSumSatisfying(
+                    sum -> sum.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(5))));
+  }
+
+  @Test
   void histogram() {
     // given
     MetricRegistry metricRegistry = new MetricRegistry();
