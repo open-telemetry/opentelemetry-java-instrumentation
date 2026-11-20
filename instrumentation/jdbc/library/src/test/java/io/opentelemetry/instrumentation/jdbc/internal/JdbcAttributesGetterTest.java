@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MARIADB;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MICROSOFT_SQL_SERVER;
 import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.MYSQL;
@@ -20,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
@@ -37,7 +36,7 @@ class JdbcAttributesGetterTest {
   private static final String POLARDB = "polardb";
 
   private static Stream<String> identifierDialectDbSystemNames() {
-    return Stream.of(POSTGRESQL, ORACLE_DB, IBM_DB2, DERBY, HSQLDB, SAP_HANA, CLICKHOUSE, POLARDB);
+    return Stream.of(POSTGRESQL, ORACLE_DB, IBM_DB2, DERBY, HSQLDB, SAP_HANA, CLICKHOUSE);
   }
 
   private static Stream<String> stringLiteralDialectDbSystemNames() {
@@ -55,20 +54,43 @@ class JdbcAttributesGetterTest {
   @ParameterizedTest
   @MethodSource("identifierDialectDbSystemNames")
   void getSqlDialectTreatsDoubleQuotesAsIdentifiers(String dbSystemName) {
+    String query = "SELECT \"name\" FROM catalog";
     DbRequest request =
-        DbRequest.create(DbInfo.builder().dbSystemName(dbSystemName).build(), "SELECT 1", false);
+        DbRequest.create(DbInfo.builder().dbSystemName(dbSystemName).build(), query, false);
 
-    assertThat(attributesGetter.getSqlDialect(request)).isEqualTo(DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    assertThat(
+            SqlQueryAnalyzer.create(true)
+                .analyze(query, attributesGetter.getSqlDialect(request))
+                .getQueryText())
+        .isEqualTo(query);
   }
 
   @ParameterizedTest
   @MethodSource("stringLiteralDialectDbSystemNames")
   void getSqlDialectTreatsDoubleQuotesAsStringLiteralsByDefault(String dbSystemName) {
+    String query = "SELECT \"name\" FROM catalog";
     DbRequest request =
-        DbRequest.create(DbInfo.builder().dbSystemName(dbSystemName).build(), "SELECT 1", false);
+        DbRequest.create(DbInfo.builder().dbSystemName(dbSystemName).build(), query, false);
 
-    assertThat(attributesGetter.getSqlDialect(request))
-        .isEqualTo(DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    assertThat(
+            SqlQueryAnalyzer.create(true)
+                .analyze(query, attributesGetter.getSqlDialect(request))
+                .getQueryText())
+        .isEqualTo("SELECT ? FROM catalog");
+  }
+
+  @Test
+  void getSqlDialectUsesPostgresqlDialectForPolardbJdbcUrl() {
+    String query = "SELECT \"name\", 'sensitive' FROM catalog";
+    DbInfo dbInfo = JdbcConnectionUrlParser.parse("jdbc:polardb://example.com/db", null);
+    DbRequest request = DbRequest.create(dbInfo, query, false);
+
+    assertThat(attributesGetter.getDbSystemName(request)).isEqualTo(POLARDB);
+    assertThat(
+            SqlQueryAnalyzer.create(true)
+                .analyze(query, attributesGetter.getSqlDialect(request))
+                .getQueryText())
+        .isEqualTo("SELECT \"name\", ? FROM catalog");
   }
 
   @ParameterizedTest

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -23,6 +22,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class SqlQueryAnalyzerUtilCacheTest {
+  private static final SqlDialect DIALECT = SqlDialect.builder().build();
+
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   @Test
@@ -47,7 +48,7 @@ class SqlQueryAnalyzerUtilCacheTest {
 
           @Override
           public SqlDialect getSqlDialect(Object request) {
-            return DOUBLE_QUOTES_ARE_STRING_LITERALS;
+            return DIALECT;
           }
         };
     SpanNameExtractor<Object> spanNameExtractor = DbClientSpanNameExtractor.create(getter);
@@ -59,9 +60,8 @@ class SqlQueryAnalyzerUtilCacheTest {
 
     assertThat(spanNameExtractor.extract(null)).isEqualTo("SELECT test");
     // verify that analyzed query was cached
-    SqlQuery cached = SqlQueryAnalyzerUtil.analyze(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    assertThat(cached)
-        .isSameAs(SqlQueryAnalyzerUtil.analyze(testQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS));
+    SqlQuery cached = SqlQueryAnalyzerUtil.analyze(testQuery, DIALECT);
+    assertThat(cached).isSameAs(SqlQueryAnalyzerUtil.analyze(testQuery, DIALECT));
 
     // verify that the attributes extractor produces correct values
     AttributeKey<String> queryTextKey = DB_QUERY_TEXT;
@@ -78,14 +78,11 @@ class SqlQueryAnalyzerUtilCacheTest {
     InstrumenterContext.reset();
     cleanup.deferCleanup(InstrumenterContext::reset);
 
-    SqlQuery first = SqlQueryAnalyzerUtil.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    assertThat(SqlQueryAnalyzer.isCached(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
-    assertThat(SqlQueryAnalyzerUtil.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS))
-        .isSameAs(first);
+    SqlQuery first = SqlQueryAnalyzerUtil.analyze(query, DIALECT);
+    assertThat(SqlQueryAnalyzer.isCached(query, DIALECT)).isFalse();
+    assertThat(SqlQueryAnalyzerUtil.analyze(query, DIALECT)).isSameAs(first);
 
     InstrumenterContext.reset();
-    assertThat(SqlQueryAnalyzerUtil.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS))
-        .isEqualTo(first)
-        .isNotSameAs(first);
+    assertThat(SqlQueryAnalyzerUtil.analyze(query, DIALECT)).isEqualTo(first).isNotSameAs(first);
   }
 }
