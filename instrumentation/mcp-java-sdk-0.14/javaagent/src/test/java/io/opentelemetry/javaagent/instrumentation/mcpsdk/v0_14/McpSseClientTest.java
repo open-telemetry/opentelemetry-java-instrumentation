@@ -110,21 +110,18 @@ class McpSseClientTest {
       CompletableFuture<McpSchema.CallToolResult> response =
           client
               .callTool(new McpSchema.CallToolRequest("test", Map.of(), null))
-              .doOnNext(
-                  result -> {
-                    callbackContext.set(Context.current());
-                    testing.runWithSpan("callback", () -> {});
-                  })
+              .doOnNext(result -> {
+                callbackContext.set(Context.current());
+                testing.runWithSpan("callback", () -> {});
+              })
               .toFuture();
       await()
-          .untilAsserted(
-              () ->
-                  assertThat(testing.spans())
-                      .anySatisfy(
-                          span -> {
-                            assertThat(span.getName()).isEqualTo("POST");
-                            assertThat(span.getParentSpanContext().isValid()).isTrue();
-                          }));
+          .untilAsserted(() ->
+              assertThat(testing.spans())
+                  .anySatisfy(span -> {
+                    assertThat(span.getName()).isEqualTo("POST");
+                    assertThat(span.getParentSpanContext().isValid()).isTrue();
+                  }));
       assertThat(response).isNotDone();
       assertThat(testing.spans()).extracting(SpanData::getName).doesNotContain("tools/call test");
       sendResponse(toolMessage.get(), Map.of("content", List.of(), "isError", false));
@@ -132,9 +129,8 @@ class McpSseClientTest {
       assertThat(customHeader.get()).isEqualTo("token");
       assertThat(customizerContexts)
           .hasSize(3)
-          .allSatisfy(
-              context ->
-                  assertThat(Span.fromContext(context).getSpanContext().isValid()).isFalse());
+          .allSatisfy(context ->
+              assertThat(Span.fromContext(context).getSpanContext().isValid()).isFalse());
       assertThat(Span.fromContext(callbackContext.get()).getSpanContext().isValid()).isFalse();
     } finally {
       client.close();
@@ -158,36 +154,34 @@ class McpSseClientTest {
                     span.hasName("tools/call test")
                         .hasKind(CLIENT)
                         .hasNoParent()
-                        .satisfies(
-                            spanData ->
-                                assertThat(
-                                        toolMessage
-                                            .get()
-                                            .path("params")
-                                            .path("_meta")
-                                            .path("traceparent")
-                                            .asText())
-                                    .isEqualTo(
-                                        "00-"
-                                            + spanData.getTraceId()
-                                            + "-"
-                                            + spanData.getSpanId()
-                                            + "-"
-                                            + spanData.getSpanContext().getTraceFlags().asHex())),
+                        .satisfies(spanData ->
+                            assertThat(
+                                    toolMessage
+                                        .get()
+                                        .path("params")
+                                        .path("_meta")
+                                        .path("traceparent")
+                                        .asText())
+                                .isEqualTo(
+                                    "00-"
+                                        + spanData.getTraceId()
+                                        + "-"
+                                        + spanData.getSpanId()
+                                        + "-"
+                                        + spanData.getSpanContext().getTraceFlags().asHex())),
                 span ->
                     span.hasName("POST")
                         .hasKind(CLIENT)
                         .hasParent(trace.getSpan(0))
-                        .satisfies(
-                            spanData ->
-                                assertThat(toolHttpTraceparent.get())
-                                    .isEqualTo(
-                                        "00-"
-                                            + spanData.getTraceId()
-                                            + "-"
-                                            + spanData.getSpanId()
-                                            + "-"
-                                            + spanData.getSpanContext().getTraceFlags().asHex()))),
+                        .satisfies(spanData ->
+                            assertThat(toolHttpTraceparent.get())
+                                .isEqualTo(
+                                    "00-"
+                                        + spanData.getTraceId()
+                                        + "-"
+                                        + spanData.getSpanId()
+                                        + "-"
+                                        + spanData.getSpanContext().getTraceFlags().asHex()))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("GET").hasKind(CLIENT).hasNoParent()),

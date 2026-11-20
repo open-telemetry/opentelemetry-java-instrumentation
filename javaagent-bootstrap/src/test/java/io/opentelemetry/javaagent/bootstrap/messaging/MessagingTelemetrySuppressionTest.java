@@ -91,14 +91,13 @@ class MessagingTelemetrySuppressionTest {
 
     MessagingTelemetrySignals previous = suppression.suppress(PROCESS, SPAN);
     assertThatIllegalStateException()
-        .isThrownBy(
-            () -> {
-              try {
-                throw new IllegalStateException("boom");
-              } finally {
-                suppression.restore(previous);
-              }
-            });
+        .isThrownBy(() -> {
+          try {
+            throw new IllegalStateException("boom");
+          } finally {
+            suppression.restore(previous);
+          }
+        });
 
     assertThat(suppression.isSuppressed(PROCESS, SPAN)).isFalse();
   }

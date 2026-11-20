@@ -34,16 +34,12 @@ class MethodTest {
   @Test
   void methodTraced() {
     assertThat(new ConfigTracedCallable().call()).isEqualTo("Hello!");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("ConfigTracedCallable.call")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                ConfigTracedCallable.class.getName() + ".call"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("ConfigTracedCallable.call")
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, ConfigTracedCallable.class.getName() + ".call"))));
   }
 
   @Test
@@ -61,17 +57,13 @@ class MethodTest {
             })
         .isInstanceOf(NoInitialContextException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("InitialDirContext.search")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasException(throwableReference.get())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                InitialDirContext.class.getName() + ".search"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("InitialDirContext.search")
+                .hasKind(SpanKind.INTERNAL)
+                .hasException(throwableReference.get())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, InitialDirContext.class.getName() + ".search"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {
@@ -94,16 +86,14 @@ class MethodTest {
     traced.countDownLatch.countDown();
     assertThat(future.get(10, SECONDS)).isEqualTo("Hello!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("ConfigTracedCompletableFuture.getResult")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                ConfigTracedCompletableFuture.class.getName() + ".getResult"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("ConfigTracedCompletableFuture.getResult")
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        ConfigTracedCompletableFuture.class.getName() + ".getResult"))));
   }
 
   static class ConfigTracedCompletableFuture {

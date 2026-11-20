@@ -36,66 +36,63 @@ abstract class CustomSpanEventTest {
   void shouldBeAbleToCallSpanCurrentAndAddCustomInfoToSpans() {
     runner.runJob("customSpanEventsItemsJob");
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> assertions =
-              new ArrayList<>(
-                  asList(
-                      span ->
-                          span.hasName("BatchJob customSpanEventsItemsJob")
-                              .hasKind(SpanKind.INTERNAL)
-                              .hasEventsSatisfyingExactly(
-                                  event -> event.hasName("job.before"),
-                                  event -> event.hasName("job.after")),
-                      span ->
-                          span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep")
-                              .hasKind(SpanKind.INTERNAL)
-                              .hasParent(trace.getSpan(0))
-                              .satisfies(
-                                  spanData -> {
-                                    // CompositeChunkListener has broken ordering that causes
-                                    // listeners that do not override order() to appear first at all
-                                    // times because of that a custom ChunkListener will always see
-                                    // a Step span when using spring-batch versions [3, 4)
-                                    // that bug was fixed in 4.0
-                                    if (testLatestDeps()) {
-                                      assertThat(spanData)
-                                          .hasEventsSatisfyingExactly(
-                                              event -> event.hasName("step.before"),
-                                              event -> event.hasName("step.after"));
-                                    } else {
-                                      assertThat(spanData)
-                                          .hasEventsSatisfyingExactly(
-                                              event -> event.hasName("step.before"),
-                                              event -> event.hasName("chunk.before"),
-                                              event -> event.hasName("chunk.after"),
-                                              event -> event.hasName("step.after"));
-                                    }
-                                  }),
-                      span ->
-                          span.hasName(
-                                  "BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.Chunk")
-                              .hasKind(SpanKind.INTERNAL)
-                              .hasParent(trace.getSpan(1))
-                              .satisfies(
-                                  spanData -> {
-                                    // CompositeChunkListener has broken ordering that causes
-                                    // listeners that do not override order() to appear first at all
-                                    // times because of that a custom ChunkListener will always see
-                                    // a Step span when using spring-batch versions [3, 4)
-                                    // that bug was fixed in 4.0
-                                    if (testLatestDeps()) {
-                                      assertThat(spanData)
-                                          .hasEventsSatisfyingExactly(
-                                              event -> event.hasName("chunk.before"),
-                                              event -> event.hasName("chunk.after"));
-                                    } else {
-                                      assertThat(spanData.getEvents()).isEmpty();
-                                    }
-                                  })));
-          itemSpans(trace, assertions);
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
+    testing.waitAndAssertTraces(trace -> {
+      List<Consumer<SpanDataAssert>> assertions =
+          new ArrayList<>(
+              asList(
+                  span ->
+                      span.hasName("BatchJob customSpanEventsItemsJob")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasEventsSatisfyingExactly(
+                              event -> event.hasName("job.before"),
+                              event -> event.hasName("job.after")),
+                  span ->
+                      span.hasName("BatchJob customSpanEventsItemsJob.customSpanEventsItemStep")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(0))
+                          .satisfies(spanData -> {
+                            // CompositeChunkListener has broken ordering that causes
+                            // listeners that do not override order() to appear first at all
+                            // times because of that a custom ChunkListener will always see
+                            // a Step span when using spring-batch versions [3, 4)
+                            // that bug was fixed in 4.0
+                            if (testLatestDeps()) {
+                              assertThat(spanData)
+                                  .hasEventsSatisfyingExactly(
+                                      event -> event.hasName("step.before"),
+                                      event -> event.hasName("step.after"));
+                            } else {
+                              assertThat(spanData)
+                                  .hasEventsSatisfyingExactly(
+                                      event -> event.hasName("step.before"),
+                                      event -> event.hasName("chunk.before"),
+                                      event -> event.hasName("chunk.after"),
+                                      event -> event.hasName("step.after"));
+                            }
+                          }),
+                  span ->
+                      span.hasName(
+                              "BatchJob customSpanEventsItemsJob.customSpanEventsItemStep.Chunk")
+                          .hasKind(SpanKind.INTERNAL)
+                          .hasParent(trace.getSpan(1))
+                          .satisfies(spanData -> {
+                            // CompositeChunkListener has broken ordering that causes
+                            // listeners that do not override order() to appear first at all
+                            // times because of that a custom ChunkListener will always see
+                            // a Step span when using spring-batch versions [3, 4)
+                            // that bug was fixed in 4.0
+                            if (testLatestDeps()) {
+                              assertThat(spanData)
+                                  .hasEventsSatisfyingExactly(
+                                      event -> event.hasName("chunk.before"),
+                                      event -> event.hasName("chunk.after"));
+                            } else {
+                              assertThat(spanData.getEvents()).isEmpty();
+                            }
+                          })));
+      itemSpans(trace, assertions);
+      trace.hasSpansSatisfyingExactly(assertions);
+    });
   }
 
   protected void itemSpans(TraceAssert trace, List<Consumer<SpanDataAssert>> assertions) {

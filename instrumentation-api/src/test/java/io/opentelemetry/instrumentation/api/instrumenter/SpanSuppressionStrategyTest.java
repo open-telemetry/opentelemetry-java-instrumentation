@@ -328,13 +328,12 @@ class SpanSuppressionStrategyTest {
 
   @Test
   void context_shouldSuppressWhenKeyIsAvailableAndTrue() {
-    InstrumentationUtil.suppressInstrumentation(
-        () -> {
-          SpanSuppressor suppressor =
-              new SpanSuppressors.ByContextKey(SpanSuppressionStrategy.NONE.create(emptySet()));
+    InstrumentationUtil.suppressInstrumentation(() -> {
+      SpanSuppressor suppressor =
+          new SpanSuppressors.ByContextKey(SpanSuppressionStrategy.NONE.create(emptySet()));
 
-          assertThat(suppressor.shouldSuppress(Context.current(), SpanKind.CLIENT)).isTrue();
-        });
+      assertThat(suppressor.shouldSuppress(Context.current(), SpanKind.CLIENT)).isTrue();
+    });
   }
 
   @Test

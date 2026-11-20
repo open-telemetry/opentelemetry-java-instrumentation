@@ -42,14 +42,13 @@ class LogbackMdcSelectorTest {
       MDC.clear();
     }
 
-    testing.waitAndAssertLogRecords(
-        logRecord -> {
-          logRecord.hasEventName("MyEventName");
-          Attributes attributes = logRecord.actual().getAttributes();
-          assertThat(attributes.get(OTEL_EVENT_NAME)).isNull();
-          assertThat(capturedMdcAttributes(attributes))
-              .containsExactlyInAnyOrderEntriesOf(expectedMdcAttributes());
-        });
+    testing.waitAndAssertLogRecords(logRecord -> {
+      logRecord.hasEventName("MyEventName");
+      Attributes attributes = logRecord.actual().getAttributes();
+      assertThat(attributes.get(OTEL_EVENT_NAME)).isNull();
+      assertThat(capturedMdcAttributes(attributes))
+          .containsExactlyInAnyOrderEntriesOf(expectedMdcAttributes());
+    });
   }
 
   private static Map<String, String> mdcEntries() {
@@ -67,13 +66,12 @@ class LogbackMdcSelectorTest {
 
   private static Map<String, String> capturedMdcAttributes(Attributes attributes) {
     Map<String, String> captured = new HashMap<>();
-    MDC_ENTRIES.forEach(
-        (key, value) -> {
-          String attributeValue = attributes.get(stringKey(key));
-          if (attributeValue != null) {
-            captured.put(key, attributeValue);
-          }
-        });
+    MDC_ENTRIES.forEach((key, value) -> {
+      String attributeValue = attributes.get(stringKey(key));
+      if (attributeValue != null) {
+        captured.put(key, attributeValue);
+      }
+    });
     return captured;
   }
 

@@ -128,10 +128,9 @@ class InfluxDbQueryLifecycleTest {
   @Test
   void synchronousException() {
     try (InfluxDB client =
-        client(
-            chain -> {
-              throw new IOException("transport failure");
-            })) {
+        client(chain -> {
+          throw new IOException("transport failure");
+        })) {
       assertThatThrownBy(() -> client.query(QUERY)).isInstanceOf(InfluxDBIOException.class);
     }
     assertQuery(InfluxDBIOException.class.getName());
@@ -142,16 +141,14 @@ class InfluxDbQueryLifecycleTest {
     AtomicReference<JsonDataException> caughtError = new AtomicReference<>();
     JsonAdapter<Integer> adapter = new Moshi.Builder().build().adapter(Integer.class);
     try (InfluxDB client =
-        client(
-            chain -> {
-              try {
-                assertThat(adapter.fromJson(new Buffer().writeUtf8("\"not an integer\"")))
-                    .isNotNull();
-              } catch (JsonDataException e) {
-                caughtError.set(e);
-              }
-              return response(chain, SUCCESS);
-            })) {
+        client(chain -> {
+          try {
+            assertThat(adapter.fromJson(new Buffer().writeUtf8("\"not an integer\""))).isNotNull();
+          } catch (JsonDataException e) {
+            caughtError.set(e);
+          }
+          return response(chain, SUCCESS);
+        })) {
       assertThat(client.query(QUERY)).isNotNull();
     }
     assertThat(caughtError.get()).isInstanceOf(JsonDataException.class);
@@ -183,29 +180,24 @@ class InfluxDbQueryLifecycleTest {
     OkHttpClient.Builder nestedClientBuilder =
         new OkHttpClient.Builder()
             .dispatcher(nestedDispatcher)
-            .addInterceptor(
-                chain -> {
-                  nestedRequestStarted.countDown();
-                  return response(chain, SUCCESS);
-                });
+            .addInterceptor(chain -> {
+              nestedRequestStarted.countDown();
+              return response(chain, SUCCESS);
+            });
     try (InfluxDB nestedClient =
             InfluxDBFactory.connect("http://localhost:8086", nestedClientBuilder);
         InfluxDB outerClient =
-            client(
-                chain -> {
-                  nestedClient.query(
-                      QUERY,
-                      result -> nestedCallback.countDown(),
-                      error -> nestedCallback.countDown());
-                  await(releaseOuter);
-                  throw new IOException("outer transport failure");
-                })) {
+            client(chain -> {
+              nestedClient.query(
+                  QUERY, result -> nestedCallback.countDown(), error -> nestedCallback.countDown());
+              await(releaseOuter);
+              throw new IOException("outer transport failure");
+            })) {
       FutureTask<Void> outerQuery =
-          new FutureTask<>(
-              () -> {
-                outerClient.query(QUERY);
-                return null;
-              });
+          new FutureTask<>(() -> {
+            outerClient.query(QUERY);
+            return null;
+          });
       new Thread(outerQuery).start();
       try {
         assertThat(nestedRequestStarted.await(10, SECONDS)).isTrue();
@@ -250,20 +242,18 @@ class InfluxDbQueryLifecycleTest {
             "http://localhost:8086",
             new OkHttpClient.Builder()
                 .dispatcher(new Dispatcher(executor))
-                .addInterceptor(
-                    chain -> {
-                      if (chain.request().url().queryParameter("q").contains("nested")) {
-                        return response(chain, SUCCESS);
-                      }
-                      throw new IOException("outer transport failure");
-                    }))) {
+                .addInterceptor(chain -> {
+                  if (chain.request().url().queryParameter("q").contains("nested")) {
+                    return response(chain, SUCCESS);
+                  }
+                  throw new IOException("outer transport failure");
+                }))) {
       clientReference.set(client);
       FutureTask<Void> outerQuery =
-          new FutureTask<>(
-              () -> {
-                client.query(QUERY, result -> {}, error -> {});
-                return null;
-              });
+          new FutureTask<>(() -> {
+            client.query(QUERY, result -> {}, error -> {});
+            return null;
+          });
       new Thread(outerQuery).start();
       try {
         assertThat(outerBlocked.await(10, SECONDS)).isTrue();
@@ -313,20 +303,18 @@ class InfluxDbQueryLifecycleTest {
             "http://localhost:8086",
             new OkHttpClient.Builder()
                 .dispatcher(dispatcher)
-                .addInterceptor(
-                    chain -> {
-                      if (chain.request().url().queryParameter("q").contains("nested")) {
-                        return response(chain, SUCCESS);
-                      }
-                      throw new IOException("outer transport failure");
-                    }))) {
+                .addInterceptor(chain -> {
+                  if (chain.request().url().queryParameter("q").contains("nested")) {
+                    return response(chain, SUCCESS);
+                  }
+                  throw new IOException("outer transport failure");
+                }))) {
       clientReference.set(client);
       FutureTask<Void> outerQueryTask =
-          new FutureTask<>(
-              () -> {
-                client.query(outerQuery, result -> {}, error -> {});
-                return null;
-              });
+          new FutureTask<>(() -> {
+            client.query(outerQuery, result -> {}, error -> {});
+            return null;
+          });
       new Thread(outerQueryTask).start();
       try {
         assertThat(outerBlocked.await(10, SECONDS)).isTrue();
@@ -389,17 +377,16 @@ class InfluxDbQueryLifecycleTest {
                 "http://localhost:8086",
                 new OkHttpClient.Builder()
                     .dispatcher(outerDispatcher)
-                    .addInterceptor(
-                        chain -> {
-                          nestedClient.query(
-                              QUERY,
-                              result -> nestedCallback.countDown(),
-                              error -> nestedCallback.countDown());
-                          await(nestedCallCompleted);
-                          outerBlocked.countDown();
-                          await(releaseOuter);
-                          throw new IOException("outer transport failure");
-                        }))) {
+                    .addInterceptor(chain -> {
+                      nestedClient.query(
+                          QUERY,
+                          result -> nestedCallback.countDown(),
+                          error -> nestedCallback.countDown());
+                      await(nestedCallCompleted);
+                      outerBlocked.countDown();
+                      await(releaseOuter);
+                      throw new IOException("outer transport failure");
+                    }))) {
       outerClient.query(QUERY, result -> {}, error -> {});
       try {
         assertThat(outerBlocked.await(10, SECONDS)).isTrue();
@@ -426,12 +413,11 @@ class InfluxDbQueryLifecycleTest {
     CountDownLatch complete = new CountDownLatch(1);
     AtomicReference<Throwable> failure = new AtomicReference<>();
     try (InfluxDB client =
-        client(
-            chain -> {
-              requestStarted.countDown();
-              await(respond);
-              return response(chain, SUCCESS);
-            })) {
+        client(chain -> {
+          requestStarted.countDown();
+          await(respond);
+          return response(chain, SUCCESS);
+        })) {
       Consumer<Throwable> failureConsumer =
           error -> {
             failure.set(error);
@@ -558,13 +544,12 @@ class InfluxDbQueryLifecycleTest {
     AtomicReference<QueryResult> successResult = new AtomicReference<>();
     AtomicReference<Throwable> failure = new AtomicReference<>();
     try (InfluxDB client =
-        client(
-            chain ->
-                response(chain, "{\"error\":\"private HTTP error\"}")
-                    .newBuilder()
-                    .code(400)
-                    .message("Bad Request")
-                    .build())) {
+        client(chain ->
+            response(chain, "{\"error\":\"private HTTP error\"}")
+                .newBuilder()
+                .code(400)
+                .message("Bad Request")
+                .build())) {
       client.query(
           QUERY,
           result -> {
@@ -632,21 +617,20 @@ class InfluxDbQueryLifecycleTest {
         nextChunk.countDown();
         complete.countDown();
       }
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span ->
-                      span.hasName("SELECT cpu")
-                          .hasParent(trace.getSpan(0))
-                          .hasStatus(StatusData.unset())
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, "influxdb"),
-                              equalTo(DB_NAMESPACE, "mydb"),
-                              equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              equalTo(SERVER_PORT, 8086))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"),
+              span ->
+                  span.hasName("SELECT cpu")
+                      .hasParent(trace.getSpan(0))
+                      .hasStatus(StatusData.unset())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(DB_SYSTEM_NAME, "influxdb"),
+                          equalTo(DB_NAMESPACE, "mydb"),
+                          equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
+                          equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, 8086))));
       assertMetric(null);
     }
   }
@@ -713,21 +697,20 @@ class InfluxDbQueryLifecycleTest {
       } finally {
         release.countDown();
       }
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span ->
-                      span.hasName("SELECT cpu")
-                          .hasParent(trace.getSpan(0))
-                          .hasStatus(StatusData.unset())
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, "influxdb"),
-                              equalTo(DB_NAMESPACE, "mydb"),
-                              equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              equalTo(SERVER_PORT, 8086))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"),
+              span ->
+                  span.hasName("SELECT cpu")
+                      .hasParent(trace.getSpan(0))
+                      .hasStatus(StatusData.unset())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(DB_SYSTEM_NAME, "influxdb"),
+                          equalTo(DB_NAMESPACE, "mydb"),
+                          equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
+                          equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, 8086))));
       assertThat(completionParent.get())
           .isEqualTo(overload.contains("completion") ? parent.get() : null);
       assertMetric(null);
@@ -739,10 +722,9 @@ class InfluxDbQueryLifecycleTest {
     CountDownLatch callback = new CountDownLatch(1);
     CountDownLatch release = new CountDownLatch(1);
     try (InfluxDB client =
-        client(
-            chain -> {
-              throw new IOException("transport failure");
-            })) {
+        client(chain -> {
+          throw new IOException("transport failure");
+        })) {
       testing.runWithSpan(
           "parent",
           () ->
@@ -761,23 +743,22 @@ class InfluxDbQueryLifecycleTest {
       } finally {
         release.countDown();
       }
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span ->
-                      span.hasName("SELECT cpu")
-                          .hasParent(trace.getSpan(0))
-                          .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, "influxdb"),
-                              equalTo(DB_NAMESPACE, "mydb"),
-                              equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              equalTo(SERVER_PORT, 8086),
-                              equalTo(ERROR_TYPE, IOException.class.getName())),
-                  span -> span.hasName("callback").hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"),
+              span ->
+                  span.hasName("SELECT cpu")
+                      .hasParent(trace.getSpan(0))
+                      .hasStatus(StatusData.error())
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(DB_SYSTEM_NAME, "influxdb"),
+                          equalTo(DB_NAMESPACE, "mydb"),
+                          equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
+                          equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                          equalTo(SERVER_ADDRESS, "localhost"),
+                          equalTo(SERVER_PORT, 8086),
+                          equalTo(ERROR_TYPE, IOException.class.getName())),
+              span -> span.hasName("callback").hasParent(trace.getSpan(0))));
       assertMetric(IOException.class.getName());
     }
   }
@@ -786,13 +767,12 @@ class InfluxDbQueryLifecycleTest {
   @ValueSource(strings = {"asynchronous", "chunked", "completion", "failure"})
   void callbackException(String callback) {
     try (InfluxDB client =
-        client(
-            chain -> {
-              if (callback.equals("failure")) {
-                throw new IOException("transport failure");
-              }
-              return response(chain, SUCCESS + "\n");
-            })) {
+        client(chain -> {
+          if (callback.equals("failure")) {
+            throw new IOException("transport failure");
+          }
+          return response(chain, SUCCESS + "\n");
+        })) {
       switch (callback) {
         case "asynchronous":
           client.query(
@@ -861,12 +841,11 @@ class InfluxDbQueryLifecycleTest {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
             .dispatcher(dispatcher)
-            .addInterceptor(
-                chain ->
-                    response(chain, SUCCESS)
-                        .newBuilder()
-                        .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
-                        .build());
+            .addInterceptor(chain ->
+                response(chain, SUCCESS)
+                    .newBuilder()
+                    .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
+                    .build());
     try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
       Consumer<Throwable> failure =
           error -> {
@@ -914,12 +893,11 @@ class InfluxDbQueryLifecycleTest {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
             .dispatcher(dispatcher)
-            .addInterceptor(
-                chain ->
-                    response(chain, SUCCESS)
-                        .newBuilder()
-                        .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
-                        .build());
+            .addInterceptor(chain ->
+                response(chain, SUCCESS)
+                    .newBuilder()
+                    .body(ResponseBody.create(MediaType.parse("application/json"), -1, source))
+                    .build());
     try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
       client.query(
           QUERY,
@@ -954,15 +932,14 @@ class InfluxDbQueryLifecycleTest {
         };
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
-            .addInterceptor(
-                chain -> {
-                  requestStarted.countDown();
-                  await(releaseRequest);
-                  if (failTransport) {
-                    throw new IOException("transport failure");
-                  }
-                  return response(chain, SUCCESS);
-                });
+            .addInterceptor(chain -> {
+              requestStarted.countDown();
+              await(releaseRequest);
+              if (failTransport) {
+                throw new IOException("transport failure");
+              }
+              return response(chain, SUCCESS);
+            });
     try (InfluxDB client =
         new InfluxDBImpl(
             "http://localhost:8086",
@@ -1014,12 +991,11 @@ class InfluxDbQueryLifecycleTest {
     OkHttpClient.Builder builder =
         new OkHttpClient.Builder()
             .dispatcher(dispatcher)
-            .addInterceptor(
-                chain -> {
-                  requestStarted.countDown();
-                  await(release);
-                  throw new IOException("Canceled");
-                });
+            .addInterceptor(chain -> {
+              requestStarted.countDown();
+              await(release);
+              throw new IOException("Canceled");
+            });
     try (InfluxDB client = InfluxDBFactory.connect("http://localhost:8086", builder)) {
       if (failureConsumerThrows) {
         client.query(
@@ -1099,21 +1075,19 @@ class InfluxDbQueryLifecycleTest {
   }
 
   private static void assertQuery(String errorType) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT cpu")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(errorType == null ? StatusData.unset() : StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "influxdb"),
-                            equalTo(DB_NAMESPACE, "mydb"),
-                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, 8086),
-                            equalTo(ERROR_TYPE, errorType))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SELECT cpu")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(errorType == null ? StatusData.unset() : StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "influxdb"),
+                    equalTo(DB_NAMESPACE, "mydb"),
+                    equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
+                    equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, 8086),
+                    equalTo(ERROR_TYPE, errorType))));
     assertMetric(errorType);
   }
 
@@ -1124,21 +1098,19 @@ class InfluxDbQueryLifecycleTest {
             metric
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram -> {
-                      histogram.satisfies(data -> assertThat(data.getPoints()).hasSize(1));
-                      histogram.hasPointsSatisfying(
-                          point ->
-                              point
-                                  .hasCount(1)
-                                  .hasAttributesSatisfyingExactly(
-                                      equalTo(DB_SYSTEM_NAME, "influxdb"),
-                                      equalTo(DB_NAMESPACE, "mydb"),
-                                      equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                                      equalTo(SERVER_ADDRESS, "localhost"),
-                                      equalTo(SERVER_PORT, 8086),
-                                      equalTo(ERROR_TYPE, errorType)));
-                    }));
+                .hasHistogramSatisfying(histogram -> {
+                  histogram.satisfies(data -> assertThat(data.getPoints()).hasSize(1));
+                  histogram.hasPointsSatisfying(point ->
+                      point
+                          .hasCount(1)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(DB_SYSTEM_NAME, "influxdb"),
+                              equalTo(DB_NAMESPACE, "mydb"),
+                              equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                              equalTo(SERVER_ADDRESS, "localhost"),
+                              equalTo(SERVER_PORT, 8086),
+                              equalTo(ERROR_TYPE, errorType)));
+                }));
   }
 
   private static void assertNoDuration() {

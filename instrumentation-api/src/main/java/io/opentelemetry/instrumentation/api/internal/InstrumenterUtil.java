@@ -100,13 +100,12 @@ public final class InstrumenterUtil {
           Function<RESPONSETO, RESPONSEFROM> responseReverseConverter) {
     return inputExtractor -> {
       SpanStatusExtractor<REQUESTFROM, RESPONSEFROM> outputExtractor =
-          extractor.apply(
-              (spanStatusBuilder, requestFrom, responseFrom, error) ->
-                  inputExtractor.extract(
-                      spanStatusBuilder,
-                      requestConverter.apply(requestFrom),
-                      responseFrom == null ? null : responseConverter.apply(responseFrom),
-                      error));
+          extractor.apply((spanStatusBuilder, requestFrom, responseFrom, error) ->
+              inputExtractor.extract(
+                  spanStatusBuilder,
+                  requestConverter.apply(requestFrom),
+                  responseFrom == null ? null : responseConverter.apply(responseFrom),
+                  error));
       return (spanStatusBuilder, requestTo, responseTo, error) ->
           outputExtractor.extract(
               spanStatusBuilder,

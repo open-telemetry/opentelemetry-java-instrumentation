@@ -26,16 +26,15 @@ public class CompletableFutureWrapper {
 
   private static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
-    result.whenComplete(
-        (T value, Throwable throwable) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            if (throwable != null) {
-              future.completeExceptionally(throwable);
-            } else {
-              future.complete(value);
-            }
-          }
-        });
+    result.whenComplete((T value, Throwable throwable) -> {
+      try (Scope ignored = context.makeCurrent()) {
+        if (throwable != null) {
+          future.completeExceptionally(throwable);
+        } else {
+          future.complete(value);
+        }
+      }
+    });
 
     return result;
   }
