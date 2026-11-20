@@ -99,11 +99,10 @@ final class OpenTelemetryInstrumentation extends SimplePerformantInstrumentation
 
       if (fieldValue instanceof CompletionStage) {
         return ((CompletionStage<?>) fieldValue)
-            .whenComplete(
-                (result, throwable) -> {
-                  handleDataFetcherResult(childContext, result);
-                  dataFetcherInstrumenter.end(childContext, environment, result, throwable);
-                });
+            .whenComplete((result, throwable) -> {
+              handleDataFetcherResult(childContext, result);
+              dataFetcherInstrumenter.end(childContext, environment, result, throwable);
+            });
       }
 
       handleDataFetcherResult(childContext, fieldValue);

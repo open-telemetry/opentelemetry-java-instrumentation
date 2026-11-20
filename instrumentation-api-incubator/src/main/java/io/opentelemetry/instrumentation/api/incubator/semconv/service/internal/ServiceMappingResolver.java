@@ -58,27 +58,24 @@ public class ServiceMappingResolver {
   public ServiceMappingResolver(OpenTelemetry openTelemetry) {
     DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common")
         .getStructuredList("server_service_mapping", emptyList())
-        .forEach(
-            entry -> {
-              String target = entry.getString("target");
-              String serviceName = entry.getString("service_name");
-              String serviceNamespace = entry.getString("service_namespace");
-              if (target == null) {
-                logger.log(
-                    WARNING,
-                    "Invalid server_service_mapping entry - target is required: {0}",
-                    entry);
-                return;
-              }
-              if (serviceName == null && serviceNamespace == null) {
-                logger.log(
-                    WARNING,
-                    "Invalid server_service_mapping entry - at least one of service_name or service_namespace is required: {0}",
-                    entry);
-                return;
-              }
-              addMapping(target, serviceName, serviceNamespace);
-            });
+        .forEach(entry -> {
+          String target = entry.getString("target");
+          String serviceName = entry.getString("service_name");
+          String serviceNamespace = entry.getString("service_namespace");
+          if (target == null) {
+            logger.log(
+                WARNING, "Invalid server_service_mapping entry - target is required: {0}", entry);
+            return;
+          }
+          if (serviceName == null && serviceNamespace == null) {
+            logger.log(
+                WARNING,
+                "Invalid server_service_mapping entry - at least one of service_name or service_namespace is required: {0}",
+                entry);
+            return;
+          }
+          addMapping(target, serviceName, serviceNamespace);
+        });
   }
 
   private void addMapping(

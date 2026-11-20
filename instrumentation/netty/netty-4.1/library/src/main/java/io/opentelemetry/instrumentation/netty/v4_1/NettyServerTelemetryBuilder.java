@@ -33,11 +33,10 @@ public final class NettyServerTelemetryBuilder {
   static {
     NettyServerInstrumenterBuilderUtil.setBuilderExtractor(
         nettyServerTelemetryBuilder -> nettyServerTelemetryBuilder.builder);
-    Experimental.internalSetEmitExperimentalServerTelemetry(
-        (builder, emit) -> {
-          builder.builder.setEmitExperimentalHttpServerTelemetry(emit);
-          builder.emitExperimentalHttpServerEvents = emit;
-        });
+    Experimental.internalSetEmitExperimentalServerTelemetry((builder, emit) -> {
+      builder.builder.setEmitExperimentalHttpServerTelemetry(emit);
+      builder.emitExperimentalHttpServerEvents = emit;
+    });
   }
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {

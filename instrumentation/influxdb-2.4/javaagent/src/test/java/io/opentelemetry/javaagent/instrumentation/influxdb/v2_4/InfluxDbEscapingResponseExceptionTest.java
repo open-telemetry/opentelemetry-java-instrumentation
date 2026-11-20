@@ -77,22 +77,20 @@ class InfluxDbEscapingResponseExceptionTest {
     }
 
     String errorType = JsonDataException.class.getName();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT cpu")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "influxdb"),
-                            equalTo(DB_NAMESPACE, "mydb"),
-                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, 8086),
-                            equalTo(ERROR_TYPE, errorType))
-                        .hasEventsSatisfyingExactly(event -> event.hasName("exception"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SELECT cpu")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "influxdb"),
+                    equalTo(DB_NAMESPACE, "mydb"),
+                    equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
+                    equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, 8086),
+                    equalTo(ERROR_TYPE, errorType))
+                .hasEventsSatisfyingExactly(event -> event.hasName("exception"))));
     assertThat(testing.spans().get(0).getEvents())
         .singleElement()
         .satisfies(
@@ -103,19 +101,17 @@ class InfluxDbEscapingResponseExceptionTest {
             metric
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(DB_SYSTEM_NAME, "influxdb"),
-                                        equalTo(DB_NAMESPACE, "mydb"),
-                                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                                        equalTo(SERVER_ADDRESS, "localhost"),
-                                        equalTo(SERVER_PORT, 8086),
-                                        equalTo(ERROR_TYPE, errorType)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, "influxdb"),
+                                equalTo(DB_NAMESPACE, "mydb"),
+                                equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, 8086),
+                                equalTo(ERROR_TYPE, errorType)))));
   }
 
   private static Response response(Interceptor.Chain chain, String body) {

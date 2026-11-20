@@ -133,28 +133,26 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     // timeouts leak the scope
     optionsBuilder.disableTestReadTimeout();
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NETWORK_PROTOCOL_VERSION);
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(uri -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      return attributes;
+    });
 
-    optionsBuilder.setClientSpanErrorMapper(
-        (uri, throwable) -> {
-          if (!throwable.getClass().getName().endsWith("WebClientRequestException")) {
-            String uriString = uri.toString();
-            if (uriString.equals("http://localhost:61/")) { // unopened port
-              if (!throwable.getClass().getName().endsWith("AnnotatedConnectException")) {
-                throwable = throwable.getCause();
-              }
-            } else if (uriString.equals("https://192.0.2.1/")) { // non routable address
-              throwable = throwable.getCause();
-            }
+    optionsBuilder.setClientSpanErrorMapper((uri, throwable) -> {
+      if (!throwable.getClass().getName().endsWith("WebClientRequestException")) {
+        String uriString = uri.toString();
+        if (uriString.equals("http://localhost:61/")) { // unopened port
+          if (!throwable.getClass().getName().endsWith("AnnotatedConnectException")) {
+            throwable = throwable.getCause();
           }
-          return throwable;
-        });
+        } else if (uriString.equals("https://192.0.2.1/")) { // non routable address
+          throwable = throwable.getCause();
+        }
+      }
+      return throwable;
+    });
 
     optionsBuilder.setSingleConnectionFactory(
         (host, port) -> new SpringWebfluxSingleConnection(host, port, this::instrument));
@@ -173,45 +171,43 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
   void shouldEndSpanOnMonoTimeout() {
     URI uri = resolveAddress("/read-timeout");
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () -> {
-                      WebClient.RequestBodySpec request = buildRequest("GET", uri, emptyMap());
-                      Mono<ClientResponse> mono;
-                      if (Webflux7Util.IS_WEBFLUX_7) {
-                        mono = Webflux7Util.exchangeToMono(request);
-                      } else {
-                        mono = request.exchange();
-                      }
-                      // apply Mono timeout that is way shorter than HTTP request timeout
-                      return mono.timeout(Duration.ofSeconds(1)).block();
-                    }));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () -> {
+                  WebClient.RequestBodySpec request = buildRequest("GET", uri, emptyMap());
+                  Mono<ClientResponse> mono;
+                  if (Webflux7Util.IS_WEBFLUX_7) {
+                    mono = Webflux7Util.exchangeToMono(request);
+                  } else {
+                    mono = request.exchange();
+                  }
+                  // apply Mono timeout that is way shorter than HTTP request timeout
+                  return mono.timeout(Duration.ofSeconds(1)).block();
+                }));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? thrown : null),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_FULL, uri.toString()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(ERROR_TYPE, "cancelled")),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? thrown : null),
+            span ->
+                span.hasName("GET")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(URL_FULL, uri.toString()),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, uri.getPort()),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(ERROR_TYPE, "cancelled")),
+            span ->
+                span.hasName("test-http-server")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(1))));
   }
 }

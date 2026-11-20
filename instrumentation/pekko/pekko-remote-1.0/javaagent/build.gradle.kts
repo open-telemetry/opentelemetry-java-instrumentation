@@ -31,8 +31,8 @@ dependencies {
   // classic remoting needs netty, which is an optional dependency of pekko-remote, pekko moved
   // the classic transport from netty 3 to netty 4 during the 1.x line
   if (otelProps.testLatestDeps) {
-    testImplementation("io.netty:netty-transport:4.2.17.Final")
-    testImplementation("io.netty:netty-handler:4.2.17.Final")
+    testImplementation("io.netty:netty-transport:4.2.20.Final")
+    testImplementation("io.netty:netty-handler:4.2.20.Final")
   } else {
     testImplementation("io.netty:netty:3.10.6.Final")
   }
@@ -57,16 +57,16 @@ testing.suites {
       implementation("org.scala-lang:scala3-library_3:3.3.6")
       implementation("org.apache.pekko:pekko-remote_3:${baseVersion("1.0.1").orLatest("1.+")}")
       if (otelProps.testLatestDeps) {
-        implementation("io.netty:netty-transport:4.2.17.Final")
-        implementation("io.netty:netty-handler:4.2.17.Final")
+        implementation("io.netty:netty-transport:4.2.20.Final")
+        implementation("io.netty:netty-handler:4.2.20.Final")
       } else {
         implementation("io.netty:netty:3.10.6.Final")
       }
     }
   }
 
-  // pekko 2.x has only milestone releases so far, which latest dep testing skips, run the tests
-  // against them explicitly, pekko 2.x requires java 17 and has no scala 2.12 artifacts
+  // pekko 2.x requires java 17 and has no scala 2.12 artifacts, so it is tested in separate suites
+  // instead of latest dep testing
   register<JvmTestSuite>("pekko2Test") {
     sources {
       java.srcDir("src/test/java")
@@ -74,9 +74,9 @@ testing.suites {
     }
 
     dependencies {
-      implementation("org.apache.pekko:pekko-remote_2.13:${baseVersion("2.0.0-M4").orLatest()}")
-      implementation("io.netty:netty-transport:4.2.17.Final")
-      implementation("io.netty:netty-handler:4.2.17.Final")
+      implementation("org.apache.pekko:pekko-remote_2.13:${baseVersion("2.0.0").orLatest()}")
+      implementation("io.netty:netty-transport:4.2.20.Final")
+      implementation("io.netty:netty-handler:4.2.20.Final")
     }
   }
 
@@ -88,9 +88,9 @@ testing.suites {
 
     dependencies {
       implementation("org.scala-lang:scala3-library_3:3.3.8")
-      implementation("org.apache.pekko:pekko-remote_3:${baseVersion("2.0.0-M4").orLatest()}")
-      implementation("io.netty:netty-transport:4.2.17.Final")
-      implementation("io.netty:netty-handler:4.2.17.Final")
+      implementation("org.apache.pekko:pekko-remote_3:${baseVersion("2.0.0").orLatest()}")
+      implementation("io.netty:netty-transport:4.2.20.Final")
+      implementation("io.netty:netty-handler:4.2.20.Final")
     }
   }
 

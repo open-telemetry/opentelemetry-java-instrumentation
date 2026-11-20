@@ -195,10 +195,11 @@ steps:
   - name: Build review bundle
     env:
       GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      PR_NUMBER: ${{ needs.dispatch.outputs.pr_number }}
     run: |
       mkdir -p /tmp/gh-aw/agent
       python .github/scripts/pr-review/prepare.py \
-        "${{ needs.dispatch.outputs.pr_number }}" \
+        "$PR_NUMBER" \
         --output-dir /tmp/gh-aw/bundle \
         --findings-path /tmp/gh-aw/agent/findings.json
 

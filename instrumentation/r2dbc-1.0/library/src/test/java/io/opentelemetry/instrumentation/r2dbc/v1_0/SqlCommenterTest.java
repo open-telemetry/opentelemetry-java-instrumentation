@@ -122,35 +122,31 @@ class SqlCommenterTest {
             "parent",
             () -> {
               Mono.from(connectionFactory.create())
-                  .flatMapMany(
-                      connection ->
-                          Mono.from(connection.createStatement("SELECT 3").execute())
-                              // Subscribe to the Statement.execute()
-                              .flatMapMany(result -> result.map((row, metadata) -> ""))
-                              .concatWith(Mono.from(connection.close()).cast(String.class)))
+                  .flatMapMany(connection ->
+                      Mono.from(connection.createStatement("SELECT 3").execute())
+                          // Subscribe to the Statement.execute()
+                          .flatMapMany(result -> result.map((row, metadata) -> ""))
+                          .concatWith(Mono.from(connection.close()).cast(String.class)))
                   .doFinally(e -> testing.runWithSpan("child", () -> {}))
                   .blockLast(Duration.ofMinutes(1));
               return Span.current().getSpanContext();
             });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-                span -> span.hasName("SELECT").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+            span -> span.hasName("SELECT").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
 
     if (sqlCommenterEnabled) {
       assertThat(queries)
           .singleElement()
-          .satisfies(
-              query ->
-                  assertThat(query)
-                      .contains("SELECT 3")
-                      .contains("traceparent")
-                      .contains(spanContext.getTraceId())
-                      .contains(spanContext.getSpanId()));
+          .satisfies(query ->
+              assertThat(query)
+                  .contains("SELECT 3")
+                  .contains("traceparent")
+                  .contains(spanContext.getTraceId())
+                  .contains(spanContext.getSpanId()));
     } else {
       assertThat(queries).containsExactly("SELECT 3");
     }

@@ -51,11 +51,10 @@ class ViewRenderTest {
           renderer.render(view, Locale.ENGLISH, outputStream);
         });
     assertThat(outputStream.toString("UTF-8")).contains("This is an example of a view");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> span.hasName("Render " + template).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("Render " + template).hasParent(trace.getSpan(0))));
   }
 
   @Test

@@ -45,6 +45,15 @@ testing.suites {
       }
     }
 
+    register("Metrics") {
+      filter {
+        includeTestsMatching(
+          "io.opentelemetry.instrumentation.kafkaclients.v2_6.internal.OpenTelemetryMetricsReporterTest.observeMetrics"
+        )
+      }
+      systemProperty("metadataConfig", "KafkaTelemetry.metricConfigProperties()")
+    }
+
     register("ReceiveTelemetry") {
       filter {
         includeTestsMatching("io.opentelemetry.instrumentation.kafkaclients.v2_6.InterceptorsTest.testInterceptors")

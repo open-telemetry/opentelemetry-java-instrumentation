@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import redis.clients.jedis.exceptions.JedisDataException;
 
@@ -78,8 +78,7 @@ final class JedisDbAttributesGetter implements DbClientAttributesGetter<JedisReq
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      JedisRequest request, @Nullable Void unused) {
+  public SocketAddress getNetworkPeerSocketAddress(JedisRequest request, @Nullable Void unused) {
     return request.getPeerAddress();
   }
 }

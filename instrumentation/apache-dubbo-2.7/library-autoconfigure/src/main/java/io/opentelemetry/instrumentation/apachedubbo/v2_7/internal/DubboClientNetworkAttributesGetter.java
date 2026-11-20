@@ -49,7 +49,7 @@ public final class DubboClientNetworkAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       DubboRequest request, @Nullable Result response) {
     return request.remoteAddress();
   }

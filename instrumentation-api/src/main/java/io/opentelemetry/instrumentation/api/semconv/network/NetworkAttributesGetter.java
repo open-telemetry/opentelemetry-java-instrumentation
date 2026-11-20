@@ -5,8 +5,9 @@
 
 package io.opentelemetry.instrumentation.api.semconv.network;
 
-import io.opentelemetry.instrumentation.api.semconv.network.internal.InetSocketAddressUtil;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
 import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 /**
@@ -28,9 +29,9 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    */
   @Nullable
   default String getNetworkType(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getNetworkType(
-        getNetworkLocalInetSocketAddress(request, response),
-        getNetworkPeerInetSocketAddress(request, response));
+    return SocketAddressUtil.getNetworkType(
+        getNetworkLocalSocketAddress(request, response),
+        getNetworkPeerSocketAddress(request, response));
   }
 
   /**
@@ -38,11 +39,16 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    * href="https://en.wikipedia.org/wiki/Inter-process_communication">inter-process communication
    * method</a>.
    *
-   * <p>Examples: {@code tcp}, {@code udp}
+   * <p>Examples: {@code tcp}, {@code udp}, {@code unix}
+   *
+   * <p>By default, returns {@code unix} when either socket address is a supported Unix domain
+   * socket address, and {@code null} otherwise. Internet socket addresses do not imply a transport.
    */
   @Nullable
   default String getNetworkTransport(REQUEST request, @Nullable RESPONSE response) {
-    return null;
+    return SocketAddressUtil.getNetworkTransport(
+        getNetworkLocalSocketAddress(request, response),
+        getNetworkPeerSocketAddress(request, response));
   }
 
   /**
@@ -72,7 +78,11 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Implementing this method is equivalent to implementing both {@link
    * #getNetworkLocalAddress(Object, Object)} and {@link #getNetworkLocalPort(Object, Object)}.
+   *
+   * @deprecated Use {@link #getNetworkLocalSocketAddress(Object, Object)} instead. To be removed in
+   *     the next major version.
    */
+  @Deprecated
   @Nullable
   default InetSocketAddress getNetworkLocalInetSocketAddress(
       REQUEST request, @Nullable RESPONSE response) {
@@ -80,19 +90,32 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
+   * Returns the local socket address.
+   *
+   * <p>Defaults for address, port, network type, and transport use this method; explicitly
+   * overridden attribute getters take precedence.
+   *
+   * <p>Supported types are {@link InetSocketAddress} and JDK 16+ {@code UnixDomainSocketAddress}.
+   * Unix socket addresses supply a path and {@code unix} transport, but no port or network type.
+   * Empty Unix paths are omitted.
+   */
+  @Nullable
+  default SocketAddress getNetworkLocalSocketAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getNetworkLocalInetSocketAddress(request, response);
+  }
+
+  /**
    * Returns the local address of the network connection - IP address or Unix domain socket name.
    *
    * <p>Examples: {@code 10.1.2.80}, {@code /tmp/my.sock}
    *
-   * <p>By default, this method attempts to retrieve the local address using the {@link
-   * #getNetworkLocalInetSocketAddress(Object, Object)} method. If that method is not implemented,
-   * it will simply return {@code null}. If the instrumented library does not expose {@link
-   * InetSocketAddress} in its API, you might want to implement this method instead of {@link
-   * #getNetworkLocalInetSocketAddress(Object, Object)}.
+   * <p>By default, reads {@link #getNetworkLocalSocketAddress(Object, Object)}. Returns {@code
+   * null} for absent, unsupported, or unresolved addresses and empty Unix paths. Override this
+   * method for custom address representations.
    */
   @Nullable
   default String getNetworkLocalAddress(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getIpAddress(getNetworkLocalInetSocketAddress(request, response));
+    return SocketAddressUtil.getAddress(getNetworkLocalSocketAddress(request, response));
   }
 
   /**
@@ -100,15 +123,13 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Examples: {@code 65123}
    *
-   * <p>By default, this method attempts to retrieve the local port using the {@link
-   * #getNetworkLocalInetSocketAddress(Object, Object)} method. If that method is not implemented,
-   * it will simply return {@code null}. If the instrumented library does not expose {@link
-   * InetSocketAddress} in its API, you might want to implement this method instead of {@link
-   * #getNetworkLocalInetSocketAddress(Object, Object)}.
+   * <p>By default, reads {@link #getNetworkLocalSocketAddress(Object, Object)}. Returns a port only
+   * for {@link InetSocketAddress}, including unresolved addresses, and {@code null} otherwise.
+   * Override this method for custom port representations.
    */
   @Nullable
   default Integer getNetworkLocalPort(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getPort(getNetworkLocalInetSocketAddress(request, response));
+    return SocketAddressUtil.getPort(getNetworkLocalSocketAddress(request, response));
   }
 
   /**
@@ -116,7 +137,11 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Implementing this method is equivalent to implementing both {@link
    * #getNetworkPeerAddress(Object, Object)} and {@link #getNetworkPeerPort(Object, Object)}.
+   *
+   * @deprecated Use {@link #getNetworkPeerSocketAddress(Object, Object)} instead. To be removed in
+   *     the next major version.
    */
+  @Deprecated
   @Nullable
   default InetSocketAddress getNetworkPeerInetSocketAddress(
       REQUEST request, @Nullable RESPONSE response) {
@@ -124,19 +149,30 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
   }
 
   /**
+   * Returns the peer socket address.
+   *
+   * <p>Defaults for address, port, network type, and transport use this method; explicitly
+   * overridden attribute getters take precedence.
+   *
+   * <p>See {@link #getNetworkLocalSocketAddress(Object, Object)} for supported address types.
+   */
+  @Nullable
+  default SocketAddress getNetworkPeerSocketAddress(REQUEST request, @Nullable RESPONSE response) {
+    return getNetworkPeerInetSocketAddress(request, response);
+  }
+
+  /**
    * Returns the peer address of the network connection - IP address or Unix domain socket name.
    *
    * <p>Examples: {@code 10.1.2.80}, {@code /tmp/my.sock}
    *
-   * <p>By default, this method attempts to retrieve the peer address using the {@link
-   * #getNetworkPeerInetSocketAddress(Object, Object)} method. If that method is not implemented, it
-   * will simply return {@code null}. If the instrumented library does not expose {@link
-   * InetSocketAddress} in its API, you might want to implement this method instead of {@link
-   * #getNetworkPeerInetSocketAddress(Object, Object)}.
+   * <p>By default, reads {@link #getNetworkPeerSocketAddress(Object, Object)}. Returns {@code null}
+   * for absent, unsupported, or unresolved addresses and empty Unix paths. Override this method for
+   * custom address representations.
    */
   @Nullable
   default String getNetworkPeerAddress(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getIpAddress(getNetworkPeerInetSocketAddress(request, response));
+    return SocketAddressUtil.getAddress(getNetworkPeerSocketAddress(request, response));
   }
 
   /**
@@ -144,14 +180,12 @@ public interface NetworkAttributesGetter<REQUEST, RESPONSE> {
    *
    * <p>Examples: {@code 65123}
    *
-   * <p>By default, this method attempts to retrieve the peer port using the {@link
-   * #getNetworkPeerInetSocketAddress(Object, Object)} method. If that method is not implemented, it
-   * will simply return {@code null}. If the instrumented library does not expose {@link
-   * InetSocketAddress} in its API, you might want to implement this method instead of {@link
-   * #getNetworkPeerInetSocketAddress(Object, Object)}.
+   * <p>By default, reads {@link #getNetworkPeerSocketAddress(Object, Object)}. Returns a port only
+   * for {@link InetSocketAddress}, including unresolved addresses, and {@code null} otherwise.
+   * Override this method for custom port representations.
    */
   @Nullable
   default Integer getNetworkPeerPort(REQUEST request, @Nullable RESPONSE response) {
-    return InetSocketAddressUtil.getPort(getNetworkPeerInetSocketAddress(request, response));
+    return SocketAddressUtil.getPort(getNetworkPeerSocketAddress(request, response));
   }
 }

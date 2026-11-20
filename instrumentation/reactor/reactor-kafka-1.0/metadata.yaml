@@ -3,6 +3,7 @@ description: >
 display_name: Reactor Kafka
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 library_link: https://projectreactor.io/docs/kafka/release/reference/
 configurations:
   - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled

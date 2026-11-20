@@ -116,12 +116,11 @@ class AsyncHttpClientTest extends AbstractHttpClientTest<Request> {
       optionsBuilder.disableTestReadTimeout();
     }
 
-    optionsBuilder.setHttpAttributes(
-        endpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NETWORK_PROTOCOL_VERSION);
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(endpoint -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      return attributes;
+    });
   }
 }

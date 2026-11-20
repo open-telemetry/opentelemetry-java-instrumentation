@@ -14,8 +14,6 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.DurationUtil;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
-import java.time.Duration;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import javax.annotation.Nullable;
@@ -64,10 +62,5 @@ public final class YoungGarbageCollectionHandler implements RecordedEventHandler
   @Override
   public Set<String> getMetricNames() {
     return Set.of(Constants.METRIC_NAME_GC_DURATION);
-  }
-
-  @Override
-  public Optional<Duration> getPollingDuration() {
-    return Optional.of(Duration.ofSeconds(1));
   }
 }
