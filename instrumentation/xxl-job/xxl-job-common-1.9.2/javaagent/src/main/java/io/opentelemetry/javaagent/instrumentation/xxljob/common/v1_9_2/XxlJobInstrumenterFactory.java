@@ -27,11 +27,12 @@ public class XxlJobInstrumenterFactory {
         Instrumenter.<XxlJobProcessRequest, Void>builder(
                 GlobalOpenTelemetry.get(), instrumentationName, spanNameExtractor)
             .addAttributesExtractor(CodeAttributesExtractor.create(codeAttributesGetter))
-            .setSpanStatusExtractor((spanStatusBuilder, xxlJobProcessRequest, response, error) -> {
-              if (error != null || xxlJobProcessRequest.isFailed()) {
-                spanStatusBuilder.setStatus(StatusCode.ERROR);
-              }
-            });
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, xxlJobProcessRequest, response, error) -> {
+                  if (error != null || xxlJobProcessRequest.isFailed()) {
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  }
+                });
     if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
       builder.addAttributesExtractor(
           AttributesExtractor.constant(AttributeKey.stringKey("job.system"), "xxl-job"));

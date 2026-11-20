@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGet
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.ChannelUtil;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.HttpSchemeUtil;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.List;
@@ -79,7 +78,8 @@ public final class NettyHttpServerAttributesGetter
 
   @Override
   public String getNetworkTransport(NettyCommonRequest requestAndChannel, HttpResponse response) {
-    return ChannelUtil.getNetworkTransport(requestAndChannel.getChannel());
+    return ChannelUtil.getNetworkTransport(
+        requestAndChannel.getChannel(), requestAndChannel.getRemoteAddress());
   }
 
   @Override
@@ -100,23 +100,15 @@ public final class NettyHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       NettyCommonRequest requestAndChannel, @Nullable HttpResponse response) {
-    SocketAddress address = requestAndChannel.getRemoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return requestAndChannel.getRemoteAddress();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public SocketAddress getNetworkLocalSocketAddress(
       NettyCommonRequest requestAndChannel, @Nullable HttpResponse response) {
-    SocketAddress address = requestAndChannel.getChannel().localAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return requestAndChannel.getChannel().localAddress();
   }
 }

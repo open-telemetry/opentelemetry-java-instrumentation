@@ -57,8 +57,9 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
     log(keyValuePairs("key1", "value1", "key2", "value2", "other", "value3"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -67,16 +68,18 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
     log(keyValuePairs("request-id", "123", "client-secret", "shh"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "123")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "123")));
   }
 
   @Test
   void noSelectorCapturesEverything() {
     log(keyValuePairs("key1", "value1"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -88,8 +91,9 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
     log(keyValuePairs("key1", "value1", "key2", "value2"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -99,8 +103,9 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
     log(keyValuePairs("key1", "value1", "key2", "value2"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -110,9 +115,10 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
     log(keyValuePairs("key1", "value1", "key2", "value2"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(
-            equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -132,8 +138,9 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
 
     log(keyValuePairs("key1", "value1"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -145,8 +152,9 @@ class OpenTelemetryAppenderKeyValuePairSelectorTest {
     keyValuePairs.put("key1", "value2");
     log(keyValuePairs);
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value2")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value2")));
   }
 
   private void log(Map<String, String> keyValuePairs) {

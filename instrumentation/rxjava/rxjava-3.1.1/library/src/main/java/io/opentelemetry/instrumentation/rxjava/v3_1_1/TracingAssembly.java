@@ -202,19 +202,20 @@ public final class TracingAssembly {
   @GuardedBy("TracingAssembly.class")
   private static void enableWrappedScheduleHandler() {
     oldScheduleHandler = RxJavaPlugins.getScheduleHandler();
-    RxJavaPlugins.setScheduleHandler(runnable -> {
-      Context context = Context.current();
-      Runnable wrappedRunnable =
-          () -> {
-            try (Scope ignored = context.makeCurrent()) {
-              runnable.run();
-            }
-          };
-      // If there was a previous handler, apply it to our wrapped runnable
-      return oldScheduleHandler != null
-          ? oldScheduleHandler.apply(wrappedRunnable)
-          : wrappedRunnable;
-    });
+    RxJavaPlugins.setScheduleHandler(
+        runnable -> {
+          Context context = Context.current();
+          Runnable wrappedRunnable =
+              () -> {
+                try (Scope ignored = context.makeCurrent()) {
+                  runnable.run();
+                }
+              };
+          // If there was a previous handler, apply it to our wrapped runnable
+          return oldScheduleHandler != null
+              ? oldScheduleHandler.apply(wrappedRunnable)
+              : wrappedRunnable;
+        });
   }
 
   @GuardedBy("TracingAssembly.class")

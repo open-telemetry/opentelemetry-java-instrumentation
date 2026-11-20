@@ -536,17 +536,18 @@ public final class SqsImpl {
                       (CompletableFuture<ReceiveMessageResponse>) result;
                   CompletableFuture<ReceiveMessageResponse> resultFuture =
                       new CompletableFuture<>();
-                  originalFuture.whenComplete((response, throwable) -> {
-                    if (throwable != null) {
-                      resultFuture.completeExceptionally(throwable);
-                    } else {
-                      TracingList tracingList = sqsTracingContext.get();
-                      if (tracingList != null) {
-                        SqsImpl.setMessages(response, tracingList);
-                      }
-                      resultFuture.complete(response);
-                    }
-                  });
+                  originalFuture.whenComplete(
+                      (response, throwable) -> {
+                        if (throwable != null) {
+                          resultFuture.completeExceptionally(throwable);
+                        } else {
+                          TracingList tracingList = sqsTracingContext.get();
+                          if (tracingList != null) {
+                            SqsImpl.setMessages(response, tracingList);
+                          }
+                          resultFuture.complete(response);
+                        }
+                      });
 
                   return resultFuture;
                 } catch (InvocationTargetException e) {

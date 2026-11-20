@@ -23,13 +23,15 @@ public class GrizzlySingletons {
             new HttpRequestHeadersGetter(),
             builder ->
                 builder
-                    .addContextCustomizer((context, request, attributes) ->
-                        new AppServerBridge.Builder()
-                            .captureServletAttributes()
-                            .recordException()
-                            .init(context))
-                    .addContextCustomizer((context, httpRequestPacket, startAttributes) ->
-                        GrizzlyErrorHolder.init(context)));
+                    .addContextCustomizer(
+                        (context, request, attributes) ->
+                            new AppServerBridge.Builder()
+                                .captureServletAttributes()
+                                .recordException()
+                                .init(context))
+                    .addContextCustomizer(
+                        (context, httpRequestPacket, startAttributes) ->
+                            GrizzlyErrorHolder.init(context)));
   }
 
   public static Instrumenter<HttpRequestPacket, HttpResponsePacket> instrumenter() {

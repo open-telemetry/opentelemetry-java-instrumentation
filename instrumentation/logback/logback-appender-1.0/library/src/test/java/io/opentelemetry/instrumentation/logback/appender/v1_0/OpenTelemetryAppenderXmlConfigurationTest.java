@@ -54,8 +54,9 @@ class OpenTelemetryAppenderXmlConfigurationTest {
     configurator.doConfigure(new ByteArrayInputStream(configuration.getBytes(UTF_8)));
 
     return loggerContext.getStatusManager().getCopyOfStatusList().stream()
-        .filter(status ->
-            status.getMessage() != null && status.getMessage().contains(deprecatedProperty))
+        .filter(
+            status ->
+                status.getMessage() != null && status.getMessage().contains(deprecatedProperty))
         .collect(toList());
   }
 }

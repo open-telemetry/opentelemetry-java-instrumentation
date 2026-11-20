@@ -46,12 +46,13 @@ class BedrockRuntimeEventsTest {
 
       assertThat(exporter.getFinishedLogRecordItems())
           .singleElement()
-          .satisfies(log ->
-              assertThat(log)
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EVENT_NAME, "gen_ai." + message.roleAsString() + ".message"),
-                      equalTo(GEN_AI_PROVIDER_NAME, "aws.bedrock"))
-                  .hasBody(expectedBody));
+          .satisfies(
+              log ->
+                  assertThat(log)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EVENT_NAME, "gen_ai." + message.roleAsString() + ".message"),
+                          equalTo(GEN_AI_PROVIDER_NAME, "aws.bedrock"))
+                      .hasBody(expectedBody));
     }
   }
 

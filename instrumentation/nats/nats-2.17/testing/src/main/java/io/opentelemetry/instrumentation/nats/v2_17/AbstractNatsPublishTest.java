@@ -125,13 +125,14 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
 
     int clientId = connection.getServerInfo().getClientId();
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                settlementSpan(trace, firstAckSubject, "ack", clientId),
-                settlementSpan(trace, secondAckSubject, "nak", clientId),
-                settlementSpan(trace, thirdAckSubject, "in-progress", clientId),
-                settlementSpan(trace, fourthAckSubject, "term", clientId)));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    settlementSpan(trace, firstAckSubject, "ack", clientId),
+                    settlementSpan(trace, secondAckSubject, "nak", clientId),
+                    settlementSpan(trace, thirdAckSubject, "in-progress", clientId),
+                    settlementSpan(trace, fourthAckSubject, "term", clientId)));
   }
 
   private static byte[] body(String body) {
@@ -151,14 +152,15 @@ public abstract class AbstractNatsPublishTest extends AbstractNatsTest {
 
   private void assertPublishSpan() {
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("publish sub")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("publish", "sub", clientId))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasNoParent(),
+                    span ->
+                        span.hasName("publish sub")
+                            .hasKind(SpanKind.PRODUCER)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                messagingAttributes("publish", "sub", clientId))));
   }
 }

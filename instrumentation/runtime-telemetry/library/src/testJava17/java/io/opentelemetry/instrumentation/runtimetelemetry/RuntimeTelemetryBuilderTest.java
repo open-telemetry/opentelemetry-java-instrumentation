@@ -59,10 +59,11 @@ class RuntimeTelemetryBuilderTest {
     assertThat(jfrRuntimeMetrics.getMetricNames()).containsExactly("jvm.cpu.longlock");
     assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
         .singleElement()
-        .satisfies(handler -> {
-          assertThat(handler.getEventName()).isEqualTo("jdk.JavaMonitorWait");
-          assertThat(handler.getMetricNames()).containsExactly("jvm.cpu.longlock");
-        });
+        .satisfies(
+            handler -> {
+              assertThat(handler.getEventName()).isEqualTo("jdk.JavaMonitorWait");
+              assertThat(handler.getMetricNames()).containsExactly("jvm.cpu.longlock");
+            });
   }
 
   @Test
@@ -76,10 +77,11 @@ class RuntimeTelemetryBuilderTest {
         (JfrConfig.JfrRuntimeMetrics) runtimeTelemetry.getJfrTelemetry();
     assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
         .singleElement()
-        .satisfies(handler -> {
-          assertThat(handler.getEventName()).isEqualTo("jdk.CPULoad");
-          assertThat(handler.getMetricNames()).containsExactly("jvm.cpu.recent_utilization");
-        });
+        .satisfies(
+            handler -> {
+              assertThat(handler.getEventName()).isEqualTo("jdk.CPULoad");
+              assertThat(handler.getMetricNames()).containsExactly("jvm.cpu.recent_utilization");
+            });
   }
 
   @Test
@@ -259,9 +261,10 @@ class RuntimeTelemetryBuilderTest {
         buildTelemetry(include("jvm.cpu.recent_utilization"), false, true, false);
 
     await()
-        .untilAsserted(() ->
-            assertMetricSchemaUrl(
-                telemetry.reader.collectAllMetrics(), "jvm.cpu.recent_utilization", V1_45_0));
+        .untilAsserted(
+            () ->
+                assertMetricSchemaUrl(
+                    telemetry.reader.collectAllMetrics(), "jvm.cpu.recent_utilization", V1_45_0));
   }
 
   @Test
@@ -275,9 +278,10 @@ class RuntimeTelemetryBuilderTest {
             false);
 
     await()
-        .untilAsserted(() ->
-            assertMetricSchemaUrl(
-                telemetry.reader.collectAllMetrics(), "jvm.cpu.recent_utilization", V1_45_0));
+        .untilAsserted(
+            () ->
+                assertMetricSchemaUrl(
+                    telemetry.reader.collectAllMetrics(), "jvm.cpu.recent_utilization", V1_45_0));
   }
 
   @Test
@@ -286,9 +290,10 @@ class RuntimeTelemetryBuilderTest {
         buildTelemetry(include("jvm.cpu.recent_utilization", "jvm.cpu.context_switch"), false);
 
     await()
-        .untilAsserted(() ->
-            assertMetricSchemaUrl(
-                telemetry.reader.collectAllMetrics(), "jvm.cpu.recent_utilization", V1_45_0));
+        .untilAsserted(
+            () ->
+                assertMetricSchemaUrl(
+                    telemetry.reader.collectAllMetrics(), "jvm.cpu.recent_utilization", V1_45_0));
     assertMetricSchemaUrl(telemetry.reader.collectAllMetrics(), "jvm.cpu.context_switch", null);
     assertMetricSchemaUrl(telemetry.reader.collectAllMetrics(), "jvm.cpu.time", V1_45_0);
   }
@@ -299,9 +304,10 @@ class RuntimeTelemetryBuilderTest {
         buildTelemetry(include("jvm.cpu.recent_utilization"), false, false, true);
 
     await()
-        .untilAsserted(() ->
-            assertMetricSchemaUrl(
-                telemetry.reader.collectAllMetrics(), "jvm.cpu.recent_utilization", V1_45_0));
+        .untilAsserted(
+            () ->
+                assertMetricSchemaUrl(
+                    telemetry.reader.collectAllMetrics(), "jvm.cpu.recent_utilization", V1_45_0));
     assertMetricSchemaUrl(telemetry.reader.collectAllMetrics(), "jvm.cpu.context_switch", null);
   }
 

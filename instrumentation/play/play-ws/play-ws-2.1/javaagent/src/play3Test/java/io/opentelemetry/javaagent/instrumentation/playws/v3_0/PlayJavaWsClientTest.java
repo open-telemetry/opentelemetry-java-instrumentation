@@ -57,13 +57,14 @@ class PlayJavaWsClientTest extends PlayWsClientBaseTest<StandaloneWSRequest> {
       HttpClientResult requestResult) {
     request
         .execute()
-        .whenComplete((response, throwable) -> {
-          if (throwable != null) {
-            requestResult.complete(throwable);
-          } else {
-            requestResult.complete(response.getStatus());
-          }
-        });
+        .whenComplete(
+            (response, throwable) -> {
+              if (throwable != null) {
+                requestResult.complete(throwable);
+              } else {
+                requestResult.complete(response.getStatus());
+              }
+            });
   }
 
   private static StandaloneWSClient getClient(URI uri) {

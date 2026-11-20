@@ -49,10 +49,11 @@ public class TestAgentListener implements AgentBuilder.Listener {
     // note that this class must be initialized before AgentInstaller calls ContextStorage.get(),
     // otherwise addWrapper() is silently ignored and the assertion in AgentForTestingTest fails
     // for the wrong reason
-    ContextStorage.addWrapper(storage -> {
-      contextStorageInitialized.set(true);
-      return storage;
-    });
+    ContextStorage.addWrapper(
+        storage -> {
+          contextStorageInitialized.set(true);
+          return storage;
+        });
     ADDITIONAL_LIBRARIES_TRIE = buildAdditionalLibraryIgnores();
     OTHER_IGNORES_TRIE = buildOtherConfiguredIgnores();
   }

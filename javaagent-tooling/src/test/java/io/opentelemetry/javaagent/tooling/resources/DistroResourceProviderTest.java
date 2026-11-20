@@ -60,10 +60,11 @@ class DistroResourceProviderTest {
   void resourceAttributesOverrideDistro() {
     AutoConfiguredOpenTelemetrySdk sdk =
         AutoConfiguredOpenTelemetrySdk.builder()
-            .addPropertiesSupplier(() ->
-                singletonMap(
-                    "otel.resource.attributes",
-                    "telemetry.distro.name=custom-distro,telemetry.distro.version=1.2.3"))
+            .addPropertiesSupplier(
+                () ->
+                    singletonMap(
+                        "otel.resource.attributes",
+                        "telemetry.distro.name=custom-distro,telemetry.distro.version=1.2.3"))
             .build();
     cleanup.deferCleanup(sdk.getOpenTelemetrySdk());
 
@@ -76,14 +77,15 @@ class DistroResourceProviderTest {
   void resourceCustomizerOverridesDistro() {
     AutoConfiguredOpenTelemetrySdk sdk =
         AutoConfiguredOpenTelemetrySdk.builder()
-            .addResourceCustomizer((resource, config) ->
-                resource.merge(
-                    Resource.create(
-                        Attributes.of(
-                            TELEMETRY_DISTRO_NAME,
-                            "custom-distro",
-                            TELEMETRY_DISTRO_VERSION,
-                            "1.2.3"))))
+            .addResourceCustomizer(
+                (resource, config) ->
+                    resource.merge(
+                        Resource.create(
+                            Attributes.of(
+                                TELEMETRY_DISTRO_NAME,
+                                "custom-distro",
+                                TELEMETRY_DISTRO_VERSION,
+                                "1.2.3"))))
             .build();
     cleanup.deferCleanup(sdk.getOpenTelemetrySdk());
 

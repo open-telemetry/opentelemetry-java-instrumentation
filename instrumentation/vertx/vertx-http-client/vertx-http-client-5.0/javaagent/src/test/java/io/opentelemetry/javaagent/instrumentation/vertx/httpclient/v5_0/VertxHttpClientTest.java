@@ -67,15 +67,17 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
     CompletableFuture<Integer> future = new CompletableFuture<>();
 
     request
-        .compose(req ->
-            req.send()
-                .onComplete(asyncResult -> {
-                  if (asyncResult.succeeded()) {
-                    future.complete(asyncResult.result().statusCode());
-                  } else {
-                    future.completeExceptionally(asyncResult.cause());
-                  }
-                }))
+        .compose(
+            req ->
+                req.send()
+                    .onComplete(
+                        asyncResult -> {
+                          if (asyncResult.succeeded()) {
+                            future.complete(asyncResult.result().statusCode());
+                          } else {
+                            future.completeExceptionally(asyncResult.cause());
+                          }
+                        }))
         .onFailure(future::completeExceptionally);
 
     return future;
@@ -133,13 +135,14 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
               CompletableFuture<Integer> result = new CompletableFuture<>();
               request
                   .response()
-                  .onComplete(asyncResult -> {
-                    if (asyncResult.succeeded()) {
-                      result.complete(asyncResult.result().statusCode());
-                    } else {
-                      result.completeExceptionally(asyncResult.cause());
-                    }
-                  });
+                  .onComplete(
+                      asyncResult -> {
+                        if (asyncResult.succeeded()) {
+                          result.complete(asyncResult.result().statusCode());
+                        } else {
+                          result.completeExceptionally(asyncResult.cause());
+                        }
+                      });
 
               // Flush the request head before ending the request, so the headers (and the injected
               // trace context) are written on sendHead() and end() is a genuine second call.
@@ -151,11 +154,12 @@ class VertxHttpClientTest extends AbstractHttpClientTest<Future<HttpClientReques
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-            span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0)),
-            span -> span.hasKind(SERVER).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+                span -> span.hasKind(CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SERVER).hasParent(trace.getSpan(1))));
   }
 
   @Override

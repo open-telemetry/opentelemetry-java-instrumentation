@@ -60,18 +60,19 @@ class Log4j1Test {
   @Test
   void testCodeAttributes() {
     logger.info("this is test message");
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord
-            .hasBody("this is test message")
-            .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-            .hasSeverity(Severity.INFO)
-            .hasSeverityText("INFO")
-            .hasAttributesSatisfyingExactly(
-                equalTo(CODE_FILE_PATH, "Log4j1Test.java"),
-                satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
-                equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".testCodeAttributes"),
-                equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(THREAD_ID, Thread.currentThread().getId())));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("this is test message")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FILE_PATH, "Log4j1Test.java"),
+                    satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
+                    equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".testCodeAttributes"),
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId())));
   }
 
   @ParameterizedTest
@@ -113,38 +114,42 @@ class Log4j1Test {
     }
 
     if (expectedSeverity != null) {
-      testing.waitAndAssertLogRecords(logRecord -> {
-        logRecord
-            .hasBody("xyz")
-            .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
-            .hasSeverity(expectedSeverity)
-            .hasSeverityText(expectedSeverityText)
-            .hasSpanContext(
-                withParent ? testing.spans().get(0).getSpanContext() : SpanContext.getInvalid());
+      testing.waitAndAssertLogRecords(
+          logRecord -> {
+            logRecord
+                .hasBody("xyz")
+                .hasInstrumentationScope(
+                    InstrumentationScopeInfo.builder(expectedLoggerName).build())
+                .hasSeverity(expectedSeverity)
+                .hasSeverityText(expectedSeverityText)
+                .hasSpanContext(
+                    withParent
+                        ? testing.spans().get(0).getSpanContext()
+                        : SpanContext.getInvalid());
 
-        List<AttributeAssertion> attributeAsserts =
-            new ArrayList<>(
-                asList(
-                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                    equalTo(THREAD_ID, Thread.currentThread().getId())));
-        if (logException) {
-          attributeAsserts.addAll(
-              asList(
-                  equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                  equalTo(EXCEPTION_MESSAGE, "hello"),
-                  satisfies(
-                      EXCEPTION_STACKTRACE, val -> val.contains(Log4j1Test.class.getName()))));
-        }
-        attributeAsserts.add(
-            equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".performLogging"));
-        attributeAsserts.add(equalTo(CODE_FILE_PATH, "Log4j1Test.java"));
-        attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
-        logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
+            List<AttributeAssertion> attributeAsserts =
+                new ArrayList<>(
+                    asList(
+                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                        equalTo(THREAD_ID, Thread.currentThread().getId())));
+            if (logException) {
+              attributeAsserts.addAll(
+                  asList(
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "hello"),
+                      satisfies(
+                          EXCEPTION_STACKTRACE, val -> val.contains(Log4j1Test.class.getName()))));
+            }
+            attributeAsserts.add(
+                equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".performLogging"));
+            attributeAsserts.add(equalTo(CODE_FILE_PATH, "Log4j1Test.java"));
+            attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
+            logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
 
-        assertThat(logRecord.actual().getTimestampEpochNanos())
-            .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
-            .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
-      });
+            assertThat(logRecord.actual().getTimestampEpochNanos())
+                .isGreaterThanOrEqualTo(MILLISECONDS.toNanos(start.toEpochMilli()))
+                .isLessThanOrEqualTo(MILLISECONDS.toNanos(Instant.now().toEpochMilli()));
+          });
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
       assertThat(testing.logRecords()).isEmpty();
@@ -164,21 +169,22 @@ class Log4j1Test {
       MDC.remove("otel.event.name");
     }
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord
-            .hasBody("xyz")
-            .hasEventName("MyEventName")
-            .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-            .hasSeverity(Severity.INFO)
-            .hasSeverityText("INFO")
-            .hasAttributesSatisfyingExactly(
-                equalTo(CODE_FILE_PATH, "Log4j1Test.java"),
-                satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
-                equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".testMdc"),
-                equalTo(stringKey("key1"), "val1"),
-                equalTo(stringKey("key2"), "val2"),
-                equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                equalTo(THREAD_ID, Thread.currentThread().getId())));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("xyz")
+                .hasEventName("MyEventName")
+                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+                .hasSeverity(Severity.INFO)
+                .hasSeverityText("INFO")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FILE_PATH, "Log4j1Test.java"),
+                    satisfies(CODE_LINE_NUMBER, val -> val.isPositive()),
+                    equalTo(CODE_FUNCTION_NAME, Log4j1Test.class.getName() + ".testMdc"),
+                    equalTo(stringKey("key1"), "val1"),
+                    equalTo(stringKey("key2"), "val2"),
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId())));
   }
 
   private static void performLogging(

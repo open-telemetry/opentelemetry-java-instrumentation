@@ -92,11 +92,12 @@ class Netty41ClientPipelineTest {
             });
     // This is a cheap/easy way to block/ensure that the first request has finished and check
     // reported spans midway through the complex sequence of events
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasNoParent().hasName("parent1").hasKind(SpanKind.INTERNAL),
-            span -> span.hasParent(trace.getSpan(0)).hasKind(SpanKind.CLIENT),
-            span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("parent1").hasKind(SpanKind.INTERNAL),
+                span -> span.hasParent(trace.getSpan(0)).hasKind(SpanKind.CLIENT),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
 
     testing.clearData();
     // now run a second request through the same channel
@@ -106,11 +107,12 @@ class Netty41ClientPipelineTest {
           ch.write(request);
           ch.flush();
         });
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasNoParent().hasName("parent2").hasKind(SpanKind.INTERNAL),
-            span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-            span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("parent2").hasKind(SpanKind.INTERNAL),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1))));
   }
 
   @Test
@@ -139,9 +141,10 @@ class Netty41ClientPipelineTest {
     pipeline.remove(
         "io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler");
     // There is only one
-    assertThatThrownBy(() ->
-            pipeline.remove(
-                "io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler"))
+    assertThatThrownBy(
+            () ->
+                pipeline.remove(
+                    "io.opentelemetry.javaagent.shaded.instrumentation.netty.v4_1.internal.client.HttpClientTracingHandler"))
         .isInstanceOf(NoSuchElementException.class);
   }
 
@@ -211,12 +214,13 @@ class Netty41ClientPipelineTest {
     int responseCode = testing.runWithSpan("parent", () -> annotatedClass.tracedMethod(method));
 
     assertThat(responseCode).isEqualTo(200);
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasNoParent().hasName("parent").hasKind(SpanKind.INTERNAL),
-            span -> span.hasParent(trace.getSpan(0)).hasName("tracedMethod"),
-            span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)),
-            span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(2))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasNoParent().hasName("parent").hasKind(SpanKind.INTERNAL),
+                span -> span.hasParent(trace.getSpan(0)).hasName("tracedMethod"),
+                span -> span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)),
+                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(2))));
   }
 
   static class TracedClass {

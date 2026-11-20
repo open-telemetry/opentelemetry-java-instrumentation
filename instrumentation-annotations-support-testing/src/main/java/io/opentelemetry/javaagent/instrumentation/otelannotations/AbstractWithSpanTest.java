@@ -53,13 +53,17 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
 
     assertThat(getCompleted(future)).isEqualTo(AbstractTraced.SUCCESS_VALUE);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("Traced.completable")
-                .hasKind(SpanKind.INTERNAL)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".completable"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("Traced.completable")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                traced.getClass().getName() + ".completable"))));
   }
 
   @Test
@@ -71,15 +75,19 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
     Throwable thrown = catchThrowable(() -> getCompleted(future));
     assertThat(unwrapError(thrown)).isEqualTo(AbstractTraced.FAILURE);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("Traced.completable")
-                .hasKind(SpanKind.INTERNAL)
-                .hasNoParent()
-                .hasStatus(StatusData.error())
-                .hasException(AbstractTraced.FAILURE)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".completable"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("Traced.completable")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(AbstractTraced.FAILURE)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                traced.getClass().getName() + ".completable"))));
   }
 
   @Test
@@ -88,16 +96,19 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
     T future = traced.completable();
     cancel(future);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("Traced.completable")
-                .hasKind(SpanKind.INTERNAL)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".completable"),
-                    equalTo(
-                        booleanKey(canceledKey()),
-                        isExperimentalSpanAttributesEnabled() ? true : null))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("Traced.completable")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, traced.getClass().getName() + ".completable"),
+                            equalTo(
+                                booleanKey(canceledKey()),
+                                isExperimentalSpanAttributesEnabled() ? true : null))));
   }
 
   @Test
@@ -105,14 +116,17 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
     AbstractTraced<T, U> traced = newTraced();
     assertThat(getCompleted(traced.alreadySucceeded())).isEqualTo(AbstractTraced.SUCCESS_VALUE);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("Traced.alreadySucceeded")
-                .hasKind(SpanKind.INTERNAL)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(
-                        CODE_FUNCTION_NAME, traced.getClass().getName() + ".alreadySucceeded"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("Traced.alreadySucceeded")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                traced.getClass().getName() + ".alreadySucceeded"))));
   }
 
   @Test
@@ -121,14 +135,18 @@ public abstract class AbstractWithSpanTest<T extends U, U> {
     Throwable error = catchThrowable(() -> getCompleted(traced.alreadyFailed()));
     assertThat(unwrapError(error)).isEqualTo(AbstractTraced.FAILURE);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("Traced.alreadyFailed")
-                .hasKind(SpanKind.INTERNAL)
-                .hasNoParent()
-                .hasStatus(StatusData.error())
-                .hasException(AbstractTraced.FAILURE)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".alreadyFailed"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("Traced.alreadyFailed")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(AbstractTraced.FAILURE)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                traced.getClass().getName() + ".alreadyFailed"))));
   }
 }

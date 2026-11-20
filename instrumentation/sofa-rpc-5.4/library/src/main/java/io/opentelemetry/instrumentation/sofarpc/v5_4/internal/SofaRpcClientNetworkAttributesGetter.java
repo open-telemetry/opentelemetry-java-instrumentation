@@ -43,7 +43,7 @@ public final class SofaRpcClientNetworkAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       SofaRpcRequest request, @Nullable SofaResponse response) {
     return request.remoteAddress();
   }

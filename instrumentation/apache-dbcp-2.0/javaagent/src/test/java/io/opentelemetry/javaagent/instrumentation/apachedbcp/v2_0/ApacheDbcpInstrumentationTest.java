@@ -213,11 +213,12 @@ class ApacheDbcpInstrumentationTest extends AbstractApacheDbcpInstrumentationTes
 
   private static void assertNoCommonsPoolMetrics() {
     assertThat(testing.metrics())
-        .filteredOn(metricData ->
-            metricData
-                .getInstrumentationScopeInfo()
-                .getName()
-                .equals(COMMONS_POOL_INSTRUMENTATION_NAME))
+        .filteredOn(
+            metricData ->
+                metricData
+                    .getInstrumentationScopeInfo()
+                    .getName()
+                    .equals(COMMONS_POOL_INSTRUMENTATION_NAME))
         .isEmpty();
   }
 }

@@ -85,13 +85,14 @@ public class AgentTestingExporterAccess {
       List<byte[]> bytes = (List<byte[]>) getSpanExportRequests.invokeExact();
       List<ResourceSpans> allResourceSpans =
           bytes.stream()
-              .map(serialized -> {
-                try {
-                  return ExportTraceServiceRequest.parseFrom(serialized);
-                } catch (InvalidProtocolBufferException e) {
-                  throw new AssertionError(e);
-                }
-              })
+              .map(
+                  serialized -> {
+                    try {
+                      return ExportTraceServiceRequest.parseFrom(serialized);
+                    } catch (InvalidProtocolBufferException e) {
+                      throw new AssertionError(e);
+                    }
+                  })
               .flatMap(request -> request.getResourceSpansList().stream())
               .collect(toList());
 
@@ -107,13 +108,14 @@ public class AgentTestingExporterAccess {
       List<byte[]> bytes = (List<byte[]>) getMetricExportRequests.invokeExact();
       return TelemetryConverter.getMetricsData(
           bytes.stream()
-              .map(serialized -> {
-                try {
-                  return ExportMetricsServiceRequest.parseFrom(serialized);
-                } catch (InvalidProtocolBufferException e) {
-                  throw new AssertionError(e);
-                }
-              })
+              .map(
+                  serialized -> {
+                    try {
+                      return ExportMetricsServiceRequest.parseFrom(serialized);
+                    } catch (InvalidProtocolBufferException e) {
+                      throw new AssertionError(e);
+                    }
+                  })
               .flatMap(request -> request.getResourceMetricsList().stream())
               .collect(toList()));
     } catch (Throwable t) {
@@ -127,13 +129,14 @@ public class AgentTestingExporterAccess {
       List<byte[]> bytes = (List<byte[]>) getLogExportRequests.invokeExact();
       return TelemetryConverter.getLogRecordData(
           bytes.stream()
-              .map(serialized -> {
-                try {
-                  return ExportLogsServiceRequest.parseFrom(serialized);
-                } catch (InvalidProtocolBufferException e) {
-                  throw new AssertionError(e);
-                }
-              })
+              .map(
+                  serialized -> {
+                    try {
+                      return ExportLogsServiceRequest.parseFrom(serialized);
+                    } catch (InvalidProtocolBufferException e) {
+                      throw new AssertionError(e);
+                    }
+                  })
               .flatMap(request -> request.getResourceLogsList().stream())
               .collect(toList()));
     } catch (Throwable t) {

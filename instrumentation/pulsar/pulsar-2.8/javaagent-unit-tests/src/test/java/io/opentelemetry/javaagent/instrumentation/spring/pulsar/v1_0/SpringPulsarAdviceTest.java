@@ -96,17 +96,19 @@ class SpringPulsarAdviceTest {
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
     assertProcessDuration(metrics, 2);
     assertThat(spanExporter.getFinishedSpanItems())
-        .filteredOn(span ->
-            span.getInstrumentationScopeInfo()
-                .getName()
-                .equals("io.opentelemetry.spring-pulsar-1.0"))
+        .filteredOn(
+            span ->
+                span.getInstrumentationScopeInfo()
+                    .getName()
+                    .equals("io.opentelemetry.spring-pulsar-1.0"))
         .hasSize(2)
-        .allSatisfy(span -> {
-          assertThat(span.getParentSpanId()).isEqualTo(parent.getSpanContext().getSpanId());
-          assertThat(span.getLinks())
-              .singleElement()
-              .satisfies(link -> assertThat(link.getSpanContext()).isEqualTo(PRODUCER_CONTEXT));
-        });
+        .allSatisfy(
+            span -> {
+              assertThat(span.getParentSpanId()).isEqualTo(parent.getSpanContext().getSpanId());
+              assertThat(span.getLinks())
+                  .singleElement()
+                  .satisfies(link -> assertThat(link.getSpanContext()).isEqualTo(PRODUCER_CONTEXT));
+            });
   }
 
   @Test
@@ -129,10 +131,11 @@ class SpringPulsarAdviceTest {
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
     assertProcessDuration(metrics, 2);
     assertThat(spanExporter.getFinishedSpanItems())
-        .filteredOn(span ->
-            span.getInstrumentationScopeInfo()
-                .getName()
-                .equals("io.opentelemetry.spring-pulsar-1.0"))
+        .filteredOn(
+            span ->
+                span.getInstrumentationScopeInfo()
+                    .getName()
+                    .equals("io.opentelemetry.spring-pulsar-1.0"))
         .extracting(span -> span.getParentSpanId())
         .containsExactlyInAnyOrder(
             firstParent.getSpanContext().getSpanId(), secondParent.getSpanContext().getSpanId());
@@ -166,10 +169,11 @@ class SpringPulsarAdviceTest {
     Collection<MetricData> metrics = metricReader.collectAllMetrics();
     assertProcessDuration(metrics, 2);
     assertThat(spanExporter.getFinishedSpanItems())
-        .filteredOn(span ->
-            span.getInstrumentationScopeInfo()
-                .getName()
-                .equals("io.opentelemetry.spring-pulsar-1.0"))
+        .filteredOn(
+            span ->
+                span.getInstrumentationScopeInfo()
+                    .getName()
+                    .equals("io.opentelemetry.spring-pulsar-1.0"))
         .extracting(span -> span.getParentSpanId())
         .containsExactlyInAnyOrder(
             outerParent.getSpanContext().getSpanId(), innerParent.getSpanContext().getSpanId());
@@ -186,17 +190,19 @@ class SpringPulsarAdviceTest {
     }
 
     assertThat(spanExporter.getFinishedSpanItems())
-        .filteredOn(span ->
-            span.getInstrumentationScopeInfo()
-                .getName()
-                .equals("io.opentelemetry.spring-pulsar-1.0"))
+        .filteredOn(
+            span ->
+                span.getInstrumentationScopeInfo()
+                    .getName()
+                    .equals("io.opentelemetry.spring-pulsar-1.0"))
         .singleElement()
-        .satisfies(span -> {
-          assertThat(span.getParentSpanId()).isEqualTo(parent.getSpanContext().getSpanId());
-          assertThat(span.getLinks())
-              .singleElement()
-              .satisfies(link -> assertThat(link.getSpanContext()).isEqualTo(PRODUCER_CONTEXT));
-        });
+        .satisfies(
+            span -> {
+              assertThat(span.getParentSpanId()).isEqualTo(parent.getSpanContext().getSpanId());
+              assertThat(span.getLinks())
+                  .singleElement()
+                  .satisfies(link -> assertThat(link.getSpanContext()).isEqualTo(PRODUCER_CONTEXT));
+            });
   }
 
   private static Message<?> message(String topic) {
@@ -227,12 +233,13 @@ class SpringPulsarAdviceTest {
     assertThat(metrics)
         .filteredOn(metric -> metric.getName().equals("messaging.process.duration"))
         .singleElement()
-        .satisfies(metric -> {
-          assertThat(
-                  metric.getHistogramData().getPoints().stream()
-                      .mapToLong(point -> point.getCount())
-                      .sum())
-              .isEqualTo(expected);
-        });
+        .satisfies(
+            metric -> {
+              assertThat(
+                      metric.getHistogramData().getPoints().stream()
+                          .mapToLong(point -> point.getCount())
+                          .sum())
+                  .isEqualTo(expected);
+            });
   }
 }

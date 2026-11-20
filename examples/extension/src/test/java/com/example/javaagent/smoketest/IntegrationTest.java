@@ -148,8 +148,10 @@ abstract class IntegrationTest {
         traces.stream()
             .flatMap(it -> it.getResourceSpansList().stream())
             .flatMap(it -> it.getResource().getAttributesList().stream())
-            .filter(kv ->
-                kv.getKey().equals(resourceName) && kv.getValue().getStringValue().equals(value))
+            .filter(
+                kv ->
+                    kv.getKey().equals(resourceName)
+                        && kv.getValue().getStringValue().equals(value))
             .count();
   }
 
@@ -163,9 +165,10 @@ abstract class IntegrationTest {
     return (int)
         getSpanStream(traces)
             .flatMap(it -> it.getAttributesList().stream())
-            .filter(kv ->
-                kv.getKey().equals(attributeName)
-                    && kv.getValue().getStringValue().equals(attributeValue))
+            .filter(
+                kv ->
+                    kv.getKey().equals(attributeName)
+                        && kv.getValue().getStringValue().equals(attributeValue))
             .count();
   }
 
@@ -181,15 +184,16 @@ abstract class IntegrationTest {
     String content = waitForContent();
 
     return StreamSupport.stream(OBJECT_MAPPER.readTree(content).spliterator(), false)
-        .map(it -> {
-          ExportTraceServiceRequest.Builder builder = ExportTraceServiceRequest.newBuilder();
-          try {
-            JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder);
-          } catch (InvalidProtocolBufferException | JsonProcessingException e) {
-            e.printStackTrace();
-          }
-          return builder.build();
-        })
+        .map(
+            it -> {
+              ExportTraceServiceRequest.Builder builder = ExportTraceServiceRequest.newBuilder();
+              try {
+                JsonFormat.parser().merge(OBJECT_MAPPER.writeValueAsString(it), builder);
+              } catch (InvalidProtocolBufferException | JsonProcessingException e) {
+                e.printStackTrace();
+              }
+              return builder.build();
+            })
         .collect(toList());
   }
 

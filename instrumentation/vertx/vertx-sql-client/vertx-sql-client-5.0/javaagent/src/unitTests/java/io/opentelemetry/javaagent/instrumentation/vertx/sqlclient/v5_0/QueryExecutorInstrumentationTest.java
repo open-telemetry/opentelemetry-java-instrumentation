@@ -23,13 +23,14 @@ class QueryExecutorInstrumentationTest {
     RuntimeException failure = new RuntimeException("failure");
     when(batch.size()).thenThrow(failure);
 
-    assertThatThrownBy(() ->
-            QueryExecutorInstrumentation.QueryAdvice.AdviceScope.start(
-                queryExecutor,
-                new Object(),
-                null,
-                "executeBatchQuery",
-                new Object[] {"SELECT 1", batch}))
+    assertThatThrownBy(
+            () ->
+                QueryExecutorInstrumentation.QueryAdvice.AdviceScope.start(
+                    queryExecutor,
+                    new Object(),
+                    null,
+                    "executeBatchQuery",
+                    new Object[] {"SELECT 1", batch}))
         .isSameAs(failure);
 
     CallDepth callDepth = CallDepth.forClass(queryExecutor.getClass());

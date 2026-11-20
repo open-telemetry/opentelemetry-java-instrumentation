@@ -78,15 +78,17 @@ class InstrumentationWithSpanAspectTest {
     testing.runWithSpan("parent", withSpanTester::testWithSpan);
 
     // then
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-            span ->
-                span.hasName(unproxiedTesterSimpleClassName + ".testWithSpan")
-                    .hasKind(INTERNAL)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testWithSpan"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                span ->
+                    span.hasName(unproxiedTesterSimpleClassName + ".testWithSpan")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testWithSpan"))));
   }
 
   @Test
@@ -97,17 +99,18 @@ class InstrumentationWithSpanAspectTest {
     testing.runWithSpan("parent", () -> withSpanTester.testWithSpanWithValue());
 
     // then
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-            span ->
-                span.hasName("greatestSpanEver")
-                    .hasKind(INTERNAL)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            CODE_FUNCTION_NAME,
-                            unproxiedTesterClassName + ".testWithSpanWithValue"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                span ->
+                    span.hasName("greatestSpanEver")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                unproxiedTesterClassName + ".testWithSpanWithValue"))));
   }
 
   @Test
@@ -117,15 +120,17 @@ class InstrumentationWithSpanAspectTest {
     assertThatThrownBy(() -> withSpanTester.testWithSpanWithException())
         .isInstanceOf(Exception.class);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName(unproxiedTesterSimpleClassName + ".testWithSpanWithException")
-                .hasKind(INTERNAL)
-                .hasStatus(StatusData.error())
-                .hasAttributesSatisfyingExactly(
-                    equalTo(
-                        CODE_FUNCTION_NAME,
-                        unproxiedTesterClassName + ".testWithSpanWithException"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(unproxiedTesterSimpleClassName + ".testWithSpanWithException")
+                        .hasKind(INTERNAL)
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                unproxiedTesterClassName + ".testWithSpanWithException"))));
   }
 
   @Test
@@ -136,17 +141,18 @@ class InstrumentationWithSpanAspectTest {
     testing.runWithSpan("parent", () -> withSpanTester.testWithClientSpan());
 
     // then
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-            span ->
-                span.hasName(unproxiedTesterSimpleClassName + ".testWithClientSpan")
-                    .hasKind(CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            CODE_FUNCTION_NAME,
-                            unproxiedTesterClassName + ".testWithClientSpan"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                span ->
+                    span.hasName(unproxiedTesterSimpleClassName + ".testWithClientSpan")
+                        .hasKind(CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                unproxiedTesterClassName + ".testWithClientSpan"))));
   }
 
   @Test
@@ -156,19 +162,21 @@ class InstrumentationWithSpanAspectTest {
         "parent", () -> withSpanTester.withSpanAttributes("foo", "bar", "baz", null, "fizz"));
 
     // then
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-            span ->
-                span.hasName(unproxiedTesterSimpleClassName + ".withSpanAttributes")
-                    .hasKind(INTERNAL)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            CODE_FUNCTION_NAME, unproxiedTesterClassName + ".withSpanAttributes"),
-                        equalTo(stringKey("discoveredName"), "foo"),
-                        equalTo(stringKey("implicitName"), "bar"),
-                        equalTo(stringKey("explicitName"), "baz"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                span ->
+                    span.hasName(unproxiedTesterSimpleClassName + ".withSpanAttributes")
+                        .hasKind(INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                unproxiedTesterClassName + ".withSpanAttributes"),
+                            equalTo(stringKey("discoveredName"), "foo"),
+                            equalTo(stringKey("implicitName"), "bar"),
+                            equalTo(stringKey("explicitName"), "baz"))));
   }
 
   @Test
@@ -183,14 +191,15 @@ class InstrumentationWithSpanAspectTest {
         orderByRootSpanName("parent", unproxiedTesterSimpleClassName + ".testWithoutParentSpan"),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName(unproxiedTesterSimpleClassName + ".testWithoutParentSpan")
-                    .hasKind(INTERNAL)
-                    .hasNoParent()
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            CODE_FUNCTION_NAME,
-                            unproxiedTesterClassName + ".testWithoutParentSpan"))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(unproxiedTesterSimpleClassName + ".testWithoutParentSpan")
+                        .hasKind(INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                unproxiedTesterClassName + ".testWithoutParentSpan"))));
   }
 
   static class InstrumentationWithSpanTester {
@@ -254,26 +263,28 @@ class InstrumentationWithSpanAspectTest {
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace
-              .hasSize(1)
-              .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace
+                  .hasSize(1)
+                  .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
       future.complete("DONE");
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-              span ->
-                  span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              CODE_FUNCTION_NAME,
-                              unproxiedTesterClassName + ".testAsyncCompletionStage"))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                  span ->
+                      span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
+                          .hasKind(INTERNAL)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  unproxiedTesterClassName + ".testAsyncCompletionStage"))));
     }
 
     @Test
@@ -285,27 +296,29 @@ class InstrumentationWithSpanAspectTest {
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletionStage(future));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace
-              .hasSize(1)
-              .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace
+                  .hasSize(1)
+                  .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-              span ->
-                  span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
-                      .hasKind(INTERNAL)
-                      .hasStatus(StatusData.error())
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              CODE_FUNCTION_NAME,
-                              unproxiedTesterClassName + ".testAsyncCompletionStage"))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                  span ->
+                      span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
+                          .hasKind(INTERNAL)
+                          .hasStatus(StatusData.error())
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  unproxiedTesterClassName + ".testAsyncCompletionStage"))));
     }
 
     @Test
@@ -315,17 +328,18 @@ class InstrumentationWithSpanAspectTest {
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletionStage(null));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-              span ->
-                  span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              CODE_FUNCTION_NAME,
-                              unproxiedTesterClassName + ".testAsyncCompletionStage"))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                  span ->
+                      span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletionStage")
+                          .hasKind(INTERNAL)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  unproxiedTesterClassName + ".testAsyncCompletionStage"))));
     }
   }
 
@@ -342,26 +356,28 @@ class InstrumentationWithSpanAspectTest {
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace
-              .hasSize(1)
-              .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace
+                  .hasSize(1)
+                  .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
       future.complete("DONE");
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-              span ->
-                  span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              CODE_FUNCTION_NAME,
-                              unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                  span ->
+                      span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
+                          .hasKind(INTERNAL)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
     }
 
     @Test
@@ -373,27 +389,29 @@ class InstrumentationWithSpanAspectTest {
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace
-              .hasSize(1)
-              .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace
+                  .hasSize(1)
+                  .hasSpansSatisfyingExactly(span -> span.hasName("parent").hasKind(INTERNAL)));
 
       // when
       future.completeExceptionally(new Exception("Test @WithSpan With completeExceptionally"));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-              span ->
-                  span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
-                      .hasKind(INTERNAL)
-                      .hasStatus(StatusData.error())
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              CODE_FUNCTION_NAME,
-                              unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                  span ->
+                      span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
+                          .hasKind(INTERNAL)
+                          .hasStatus(StatusData.error())
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
     }
 
     @Test
@@ -405,17 +423,18 @@ class InstrumentationWithSpanAspectTest {
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-              span ->
-                  span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              CODE_FUNCTION_NAME,
-                              unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                  span ->
+                      span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
+                          .hasKind(INTERNAL)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
     }
 
     @Test
@@ -428,18 +447,19 @@ class InstrumentationWithSpanAspectTest {
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(future));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-              span ->
-                  span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
-                      .hasKind(INTERNAL)
-                      .hasStatus(StatusData.error())
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              CODE_FUNCTION_NAME,
-                              unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                  span ->
+                      span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
+                          .hasKind(INTERNAL)
+                          .hasStatus(StatusData.error())
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
     }
 
     @Test
@@ -449,17 +469,18 @@ class InstrumentationWithSpanAspectTest {
       testing.runWithSpan("parent", () -> withSpanTester.testAsyncCompletableFuture(null));
 
       // then
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
-              span ->
-                  span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
-                      .hasKind(INTERNAL)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              CODE_FUNCTION_NAME,
-                              unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  parentSpan -> parentSpan.hasName("parent").hasKind(INTERNAL),
+                  span ->
+                      span.hasName(unproxiedTesterSimpleClassName + ".testAsyncCompletableFuture")
+                          .hasKind(INTERNAL)
+                          .hasParent(trace.getSpan(0))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(
+                                  CODE_FUNCTION_NAME,
+                                  unproxiedTesterClassName + ".testAsyncCompletableFuture"))));
     }
   }
 }

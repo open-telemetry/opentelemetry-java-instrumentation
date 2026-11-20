@@ -43,10 +43,11 @@ class HttpSecurityInstrumentationTest {
     DefaultSecurityFilterChain filterChain = httpSecurity.build();
 
     assertThat(filterChain.getFilters())
-        .filteredOn(item ->
-            item.getClass()
-                .getName()
-                .endsWith(UserAttributesCapturingServletFilter.class.getSimpleName()))
+        .filteredOn(
+            item ->
+                item.getClass()
+                    .getName()
+                    .endsWith(UserAttributesCapturingServletFilter.class.getSimpleName()))
         .hasSize(1);
   }
 

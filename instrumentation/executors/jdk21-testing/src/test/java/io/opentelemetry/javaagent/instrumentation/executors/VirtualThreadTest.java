@@ -47,10 +47,11 @@ class VirtualThreadTest {
     @Override
     public void run() {
       try {
-        executeOnCarrierThread(() -> {
-          isPropagationDisabled.set(ExecutorAdviceHelper.isPropagationDisabled());
-          return null;
-        });
+        executeOnCarrierThread(
+            () -> {
+              isPropagationDisabled.set(ExecutorAdviceHelper.isPropagationDisabled());
+              return null;
+            });
       } catch (Exception e) {
         error = e;
       }

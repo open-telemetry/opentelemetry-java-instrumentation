@@ -26,11 +26,14 @@ class TracedMethodsExclusionTest {
     // Baseline and assumption validation
     assertThat(new TestClass().annotated()).isEqualTo("Hello!");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("TestClass.annotated")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, TestClass.class.getName() + ".annotated"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TestClass.annotated")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME, TestClass.class.getName() + ".annotated"))));
   }
 
   @Test

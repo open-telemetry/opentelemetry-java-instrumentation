@@ -46,12 +46,14 @@ class AzureSdkTest {
     Context context = TracerProxy.start("hello", Context.NONE);
     TracerProxy.end(200, null, context);
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("hello")
-                .satisfies(hasScopeSchemaUrl(null))
-                .hasKind(SpanKind.INTERNAL)
-                .hasStatus(StatusData.ok())
-                .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("hello")
+                        .satisfies(hasScopeSchemaUrl(null))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.ok())
+                        .hasTotalAttributeCount(0)));
   }
 }

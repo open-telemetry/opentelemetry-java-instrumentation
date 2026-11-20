@@ -107,14 +107,15 @@ final class RocketMqInstrumenterFactory {
             .addAttributesExtractor(attributesExtractor)
             .addAttributesExtractor(new RocketMqConsumerProcessAttributeExtractor())
             .addOperationMetrics(MessagingProcessMetrics.get())
-            .setSpanStatusExtractor((spanStatusBuilder, messageView, consumeResult, error) -> {
-              if (consumeResult == ConsumeResult.FAILURE) {
-                spanStatusBuilder.setStatus(StatusCode.ERROR);
-              } else {
-                SpanStatusExtractor.getDefault()
-                    .extract(spanStatusBuilder, messageView, consumeResult, error);
-              }
-            });
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, messageView, consumeResult, error) -> {
+                  if (consumeResult == ConsumeResult.FAILURE) {
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault()
+                        .extract(spanStatusBuilder, messageView, consumeResult, error);
+                  }
+                });
     if (!receiveInstrumentationEnabled) {
       instrumenterBuilder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
     }

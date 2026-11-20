@@ -179,10 +179,11 @@ class UserAttributesCapturerTest {
       UserAttributesCapturer capturer,
       Authentication authentication,
       Consumer<SpanDataAssert> assertions) {
-    testing.runWithHttpServerSpan(() -> {
-      Context otelContext = Context.current();
-      capturer.captureUserAttributes(otelContext, authentication);
-    });
+    testing.runWithHttpServerSpan(
+        () -> {
+          Context otelContext = Context.current();
+          capturer.captureUserAttributes(otelContext, authentication);
+        });
 
     testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(assertions));
   }

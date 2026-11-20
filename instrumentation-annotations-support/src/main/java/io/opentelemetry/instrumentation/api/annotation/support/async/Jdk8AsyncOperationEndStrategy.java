@@ -73,7 +73,8 @@ public enum Jdk8AsyncOperationEndStrategy implements AsyncOperationEndStrategy {
       REQUEST request,
       CompletionStage<?> stage,
       Class<RESPONSE> responseType) {
-    return stage.whenComplete((result, exception) ->
-        instrumenter.end(context, request, tryToGetResponse(responseType, result), exception));
+    return stage.whenComplete(
+        (result, exception) ->
+            instrumenter.end(context, request, tryToGetResponse(responseType, result), exception));
   }
 }

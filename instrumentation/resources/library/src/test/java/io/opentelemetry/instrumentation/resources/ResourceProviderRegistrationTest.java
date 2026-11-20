@@ -45,10 +45,11 @@ class ResourceProviderRegistrationTest {
     try (OpenTelemetrySdk sdk =
         AutoConfiguredOpenTelemetrySdk.builder()
             .addPropertiesSupplier(() -> properties)
-            .addResourceCustomizer((resource, config) -> {
-              configuredResource.set(resource);
-              return resource;
-            })
+            .addResourceCustomizer(
+                (resource, config) -> {
+                  configuredResource.set(resource);
+                  return resource;
+                })
             .build()
             .getOpenTelemetrySdk()) {
       Resource resource = configuredResource.get();
@@ -67,12 +68,13 @@ class ResourceProviderRegistrationTest {
   @Test
   void resourceProvidersAreRegistered() {
     assertThat(ServiceLoader.load(ResourceProvider.class))
-        .filteredOn(provider ->
-            provider
-                .getClass()
-                .getPackage()
-                .getName()
-                .equals("io.opentelemetry.instrumentation.resources"))
+        .filteredOn(
+            provider ->
+                provider
+                    .getClass()
+                    .getPackage()
+                    .getName()
+                    .equals("io.opentelemetry.instrumentation.resources"))
         .extracting(provider -> provider.getClass().getSimpleName())
         .containsExactlyInAnyOrder(
             "ContainerResourceProvider",

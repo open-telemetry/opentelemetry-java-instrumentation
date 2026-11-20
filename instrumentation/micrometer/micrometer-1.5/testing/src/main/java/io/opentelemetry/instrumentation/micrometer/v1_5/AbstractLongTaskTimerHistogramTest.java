@@ -52,10 +52,11 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                     .hasName("testLongTaskTimerHistogram.active")
                     .hasDescription("This is a test timer")
                     .hasUnit("{tasks}")
-                    .hasLongSumSatisfying(sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point -> point.hasValue(3).hasAttributes(Attributes.empty()))));
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point -> point.hasValue(3).hasAttributes(Attributes.empty()))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -64,29 +65,36 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                     .hasName("testLongTaskTimerHistogram.duration")
                     .hasDescription("This is a test timer")
                     .hasUnit("s")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(point ->
-                                point
-                                    .hasAttributes(Attributes.empty())
-                                    .satisfies(pointData ->
-                                        assertThat(pointData.getValue()).isPositive()))));
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasAttributes(Attributes.empty())
+                                            .satisfies(
+                                                pointData ->
+                                                    assertThat(pointData.getValue())
+                                                        .isPositive()))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
                     .hasName("testLongTaskTimerHistogram.histogram")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributesSatisfyingExactly(equalTo(stringKey("le"), "0.1"))
-                                    .hasValue(2),
-                            point ->
-                                point
-                                    .hasAttributesSatisfyingExactly(equalTo(stringKey("le"), "1"))
-                                    .hasValue(3))));
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("le"), "0.1"))
+                                        .hasValue(2),
+                                point ->
+                                    point
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("le"), "1"))
+                                        .hasValue(3))));
 
     // when
     sample1.stop();
@@ -103,10 +111,11 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                     .hasName("testLongTaskTimerHistogram.active")
                     .hasDescription("This is a test timer")
                     .hasUnit("{tasks}")
-                    .hasLongSumSatisfying(sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point -> point.hasValue(0).hasAttributes(Attributes.empty()))));
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point -> point.hasValue(0).hasAttributes(Attributes.empty()))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -115,27 +124,29 @@ public abstract class AbstractLongTaskTimerHistogramTest {
                     .hasName("testLongTaskTimerHistogram.duration")
                     .hasDescription("This is a test timer")
                     .hasUnit("s")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point -> point.hasValue(0).hasAttributes(Attributes.empty()))));
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point -> point.hasValue(0).hasAttributes(Attributes.empty()))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
                     .hasName("testLongTaskTimerHistogram.histogram")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("le"), "0.1")),
-                            point ->
-                                point
-                                    .hasValue(0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("le"), "1")))));
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("le"), "0.1")),
+                                point ->
+                                    point
+                                        .hasValue(0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("le"), "1")))));
   }
 }

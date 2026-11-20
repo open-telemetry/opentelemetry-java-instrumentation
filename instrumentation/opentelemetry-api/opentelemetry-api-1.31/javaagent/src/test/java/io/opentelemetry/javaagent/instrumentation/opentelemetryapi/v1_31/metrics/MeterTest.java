@@ -91,13 +91,15 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasLongSumSatisfying(sum ->
-                    sum.isMonotonic()
-                        .hasPointsSatisfying(point ->
-                            point
-                                .hasValue(11)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test"), "test")))));
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(11)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("test"), "test")))));
   }
 
   @Test
@@ -125,13 +127,15 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasDoubleSumSatisfying(sum ->
-                    sum.isMonotonic()
-                        .hasPointsSatisfying(point ->
-                            point
-                                .hasValue(12.1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test"), "test")))));
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12.1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("test"), "test")))));
   }
 
   @Test
@@ -159,13 +163,15 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasLongSumSatisfying(sum ->
-                    sum.isNotMonotonic()
-                        .hasPointsSatisfying(point ->
-                            point
-                                .hasValue(11)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test"), "test")))));
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(11)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("test"), "test")))));
   }
 
   @Test
@@ -194,13 +200,15 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasDoubleSumSatisfying(sum ->
-                    sum.isNotMonotonic()
-                        .hasPointsSatisfying(point ->
-                            point
-                                .hasValue(12.1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test"), "test")))));
+                .hasDoubleSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(12.1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("test"), "test")))));
   }
 
   @Test
@@ -229,12 +237,15 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasSum(11.0)
-                            .hasBucketBoundaries(10.0)
-                            .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test")))));
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(11.0)
+                                    .hasBucketBoundaries(10.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test"), "test")))));
   }
 
   @Test
@@ -263,12 +274,15 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasSum(12.1)
-                            .hasBucketBoundaries(10.0)
-                            .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test")))));
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(12.1)
+                                    .hasBucketBoundaries(10.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test"), "test")))));
   }
 
   @Test
@@ -280,8 +294,9 @@ class MeterTest {
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
     ObservableLongGauge observableGauge =
-        builder.buildWithCallback(result ->
-            result.record(123, Attributes.of(stringKey("test"), "test", stringKey("q"), "r")));
+        builder.buildWithCallback(
+            result ->
+                result.record(123, Attributes.of(stringKey("test"), "test", stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -295,11 +310,14 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasLongGaugeSatisfying(gauge ->
-                    gauge.hasPointsSatisfying(point ->
-                        point
-                            .hasValue(123)
-                            .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test")))));
+                .hasLongGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(123)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test"), "test")))));
 
     observableGauge.close();
 
@@ -332,14 +350,15 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasLongGaugeSatisfying(gauge ->
-                    gauge.hasPointsSatisfying(
-                        point -> point.hasValue(321).hasAttributes(Attributes.empty()),
-                        point ->
-                            point
-                                .hasValue(123)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test"), "test")))));
+                .hasLongGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point -> point.hasValue(321).hasAttributes(Attributes.empty()),
+                            point ->
+                                point
+                                    .hasValue(123)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test"), "test")))));
 
     testing.clearData();
 
@@ -354,8 +373,9 @@ class MeterTest {
     extendedBuilder.setAttributesAdvice(singletonList(stringKey("test")));
 
     ObservableDoubleGauge observableGauge =
-        builder.buildWithCallback(result ->
-            result.record(1.23, Attributes.of(stringKey("test"), "test", stringKey("q"), "r")));
+        builder.buildWithCallback(
+            result ->
+                result.record(1.23, Attributes.of(stringKey("test"), "test", stringKey("q"), "r")));
 
     testing.waitAndAssertMetrics(
         instrumentationName,
@@ -369,11 +389,14 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasDoubleGaugeSatisfying(gauge ->
-                    gauge.hasPointsSatisfying(point ->
-                        point
-                            .hasValue(1.23)
-                            .hasAttributesSatisfyingExactly(equalTo(stringKey("test"), "test")))));
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasValue(1.23)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test"), "test")))));
 
     observableGauge.close();
 
@@ -405,14 +428,15 @@ class MeterTest {
                         .setVersion("1.2.3")
                         .setSchemaUrl("http://schema.org")
                         .build())
-                .hasDoubleGaugeSatisfying(gauge ->
-                    gauge.hasPointsSatisfying(
-                        point -> point.hasValue(3.21).hasAttributes(Attributes.empty()),
-                        point ->
-                            point
-                                .hasValue(1.23)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("test"), "test")))));
+                .hasDoubleGaugeSatisfying(
+                    gauge ->
+                        gauge.hasPointsSatisfying(
+                            point -> point.hasValue(3.21).hasAttributes(Attributes.empty()),
+                            point ->
+                                point
+                                    .hasValue(1.23)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(stringKey("test"), "test")))));
 
     testing.clearData();
 

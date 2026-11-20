@@ -71,13 +71,15 @@ class AzureSdkTest {
     Context context = azTracer.start("hello", Context.NONE);
     azTracer.end(null, null, context);
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("hello")
-                .satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.23.1"))
-                .hasKind(SpanKind.INTERNAL)
-                .hasStatus(StatusData.unset())
-                .hasAttributesSatisfyingExactly(equalTo(AZ_NAMESPACE, "otel.tests"))));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("hello")
+                        .satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.23.1"))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(equalTo(AZ_NAMESPACE, "otel.tests"))));
   }
 
   @Test
@@ -93,13 +95,15 @@ class AzureSdkTest {
     Context context = azTracer.start("hello", Context.NONE);
     azTracer.end(null, null, context);
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("hello")
-                .satisfies(hasScopeSchemaUrl(schemaUrl))
-                .hasKind(SpanKind.INTERNAL)
-                .hasStatus(StatusData.unset())
-                .hasAttributesSatisfyingExactly(equalTo(AZ_NAMESPACE, "otel.tests"))));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("hello")
+                        .satisfies(hasScopeSchemaUrl(schemaUrl))
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(equalTo(AZ_NAMESPACE, "otel.tests"))));
   }
 
   @Test
@@ -121,10 +125,11 @@ class AzureSdkTest {
     azTracer.end(null, null, child);
     parentSpan.end();
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasNoParent(),
-            span -> span.hasName("child").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("child").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -133,11 +138,12 @@ class AzureSdkTest {
 
     HttpClient mockClient =
         request ->
-            Mono.defer(() -> {
-              // check if suppression is working
-              hasClientAndHttpKeys.set(hasClientAndHttpSpans());
-              return Mono.just(new MockHttpResponse(request, 200));
-            });
+            Mono.defer(
+                () -> {
+                  // check if suppression is working
+                  hasClientAndHttpKeys.set(hasClientAndHttpSpans());
+                  return Mono.just(new MockHttpResponse(request, 200));
+                });
 
     StepVerifier.create(createService(mockClient, true).testMethod())
         .expectNextCount(1)
@@ -145,23 +151,24 @@ class AzureSdkTest {
         .verify();
 
     assertThat(hasClientAndHttpKeys.get()).isTrue();
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span ->
-                span.hasName("myService.testMethod")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasStatus(StatusData.unset())
-                    .hasTotalAttributeCount(0),
-            span ->
-                span.hasKind(SpanKind.CLIENT)
-                    .hasName("GET")
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(HTTP_REQUEST_METHOD, "GET"),
-                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                        equalTo(SERVER_ADDRESS, "azure.com"),
-                        equalTo(SERVER_PORT, 443),
-                        equalTo(URL_FULL, "https://azure.com/path"))));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("myService.testMethod")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasStatus(StatusData.unset())
+                        .hasTotalAttributeCount(0),
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasName("GET")
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(SERVER_ADDRESS, "azure.com"),
+                            equalTo(SERVER_PORT, 443),
+                            equalTo(URL_FULL, "https://azure.com/path"))));
   }
 
   @Test
@@ -170,11 +177,12 @@ class AzureSdkTest {
 
     HttpClient mockClient =
         request ->
-            Mono.defer(() -> {
-              // check no suppression
-              hasClientAndHttpKeys.set(hasClientAndHttpSpans());
-              return Mono.just(new MockHttpResponse(request, 200));
-            });
+            Mono.defer(
+                () -> {
+                  // check no suppression
+                  hasClientAndHttpKeys.set(hasClientAndHttpSpans());
+                  return Mono.just(new MockHttpResponse(request, 200));
+                });
 
     StepVerifier.create(createService(mockClient, false).testMethod())
         .expectNextCount(1)

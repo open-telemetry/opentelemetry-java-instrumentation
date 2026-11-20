@@ -206,23 +206,25 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.SERVER)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.unset())
-                    .hasLinks(expectedSpanLink())
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("req1"), "req1_value"),
-                        equalTo(stringKey("req2"), "req2_2_value"),
-                        equalTo(stringKey("req3"), "req3_value"),
-                        equalTo(stringKey("resp1"), "resp1_value"),
-                        equalTo(stringKey("resp2"), "resp2_2_value"),
-                        equalTo(stringKey("resp3"), "resp3_value"))));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.SERVER)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasLinks(expectedSpanLink())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_2_value"),
+                                equalTo(stringKey("req3"), "req3_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_2_value"),
+                                equalTo(stringKey("resp3"), "resp3_value"))));
   }
 
   @Test
@@ -249,11 +251,13 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasStatus(StatusData.error())
-                    .hasException(emitExceptionAsSpanEvents() ? error : null)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
@@ -299,12 +303,14 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                    .hasSpanId(Span.fromContext(context).getSpanContext().getSpanId())
-                    .hasParentSpanId("090a0b0c0d0e0f00")));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                            .hasSpanId(Span.fromContext(context).getSpanContext().getSpanId())
+                            .hasParentSpanId("090a0b0c0d0e0f00")));
   }
 
   @Test
@@ -328,23 +334,25 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.unset())
-                    .hasLinks(expectedSpanLink())
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("req1"), "req1_value"),
-                        equalTo(stringKey("req2"), "req2_2_value"),
-                        equalTo(stringKey("req3"), "req3_value"),
-                        equalTo(stringKey("resp1"), "resp1_value"),
-                        equalTo(stringKey("resp2"), "resp2_2_value"),
-                        equalTo(stringKey("resp3"), "resp3_value"))));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasLinks(expectedSpanLink())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_2_value"),
+                                equalTo(stringKey("req3"), "req3_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_2_value"),
+                                equalTo(stringKey("resp3"), "resp3_value"))));
   }
 
   @Test
@@ -375,11 +383,13 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasStatus(StatusData.error())
-                    .hasException(emitExceptionAsSpanEvents() ? error : null)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
@@ -411,11 +421,13 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasStatus(StatusData.error())
-                    .hasException(emitExceptionAsSpanEvents() ? error : null)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
       List<LogRecordData> logs = otelTesting.getLogRecords();
@@ -480,12 +492,14 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId("090a0b0c0d0e0f00")));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId("090a0b0c0d0e0f00")));
   }
 
   @Test
@@ -506,12 +520,14 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                    .hasParentSpanId("090a0b0c0d0e0f00")));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                            .hasParentSpanId("090a0b0c0d0e0f00")));
   }
 
   @Test
@@ -532,9 +548,10 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("span").hasKind(SpanKind.INTERNAL)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -695,20 +712,22 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.SERVER)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("req1"), "req1_value"),
-                        equalTo(stringKey("req2"), "req2_value"),
-                        equalTo(stringKey("resp1"), "resp1_value"),
-                        equalTo(stringKey("resp2"), "resp2_value"))));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.SERVER)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_value"))));
 
     assertThat(startContext.get())
         .hasSize(3)
@@ -739,9 +758,10 @@ class InstrumenterTest {
     // then
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test span").hasTotalRecordedLinks(0)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("test span").hasTotalRecordedLinks(0)));
   }
 
   @Test
@@ -793,9 +813,10 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
   }
 
   @Test
@@ -813,11 +834,15 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasInstrumentationScopeInfo(
-                        InstrumentationScopeInfo.builder("test").setVersion("1.0").build())));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasInstrumentationScopeInfo(
+                                InstrumentationScopeInfo.builder("test")
+                                    .setVersion("1.0")
+                                    .build())));
   }
 
   @Test
@@ -839,9 +864,10 @@ class InstrumenterTest {
             .build();
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasInstrumentationScopeInfo(expectedLibraryInfo)));
   }
 
   @ParameterizedTest
@@ -853,21 +879,22 @@ class InstrumenterTest {
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", name -> "span")
             .addAttributesExtractor(new AttributesExtractor1())
-            .addOperationMetrics(meter -> {
-              LongCounter counter = meter.counterBuilder("test.operations").build();
-              return new OperationListener() {
-                @Override
-                public Context onStart(
-                    Context context, Attributes startAttributes, long startNanos) {
-                  return context;
-                }
+            .addOperationMetrics(
+                meter -> {
+                  LongCounter counter = meter.counterBuilder("test.operations").build();
+                  return new OperationListener() {
+                    @Override
+                    public Context onStart(
+                        Context context, Attributes startAttributes, long startNanos) {
+                      return context;
+                    }
 
-                @Override
-                public void onEnd(Context context, Attributes endAttributes, long endNanos) {
-                  counter.add(1);
-                }
-              };
-            });
+                    @Override
+                    public void onEnd(Context context, Attributes endAttributes, long endNanos) {
+                      counter.add(1);
+                    }
+                  };
+                });
     if (schemaUrl != null) {
       builder.setSchemaUrl(schemaUrl);
     }
@@ -947,9 +974,10 @@ class InstrumenterTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("span").hasKind(SpanKind.INTERNAL)));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("span").hasKind(SpanKind.INTERNAL)));
   }
 
   private static void assertThatSpanKeyWasStored(SpanKey spanKey, Context context) {

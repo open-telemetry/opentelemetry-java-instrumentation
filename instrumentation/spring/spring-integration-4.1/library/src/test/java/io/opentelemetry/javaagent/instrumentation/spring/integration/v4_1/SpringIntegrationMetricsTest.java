@@ -57,16 +57,17 @@ class SpringIntegrationMetricsTest {
 
     runWithSpan("parent", () -> channel.send(MessageBuilder.withPayload("test").build()));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-            span -> {
-              span.hasName("send output")
-                  .hasKind(SpanKind.PRODUCER)
-                  .hasParent(trace.getSpan(0))
-                  .hasAttributesSatisfyingExactly(messagingAttributes("send", "output"));
-              verifyCorrectSpanWasPropagated(capturedMessage.get(), trace.getSpan(1));
-            }));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span -> {
+                  span.hasName("send output")
+                      .hasKind(SpanKind.PRODUCER)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(messagingAttributes("send", "output"));
+                  verifyCorrectSpanWasPropagated(capturedMessage.get(), trace.getSpan(1));
+                }));
 
     assertSendMetrics(testing, "output");
   }
@@ -83,11 +84,13 @@ class SpringIntegrationMetricsTest {
 
     runWithSpan("parent", () -> channel.send(MessageBuilder.withPayload("test").build()));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span -> {
-          span.hasName("parent").hasKind(SpanKind.INTERNAL);
-          verifyCorrectSpanWasPropagated(capturedMessage.get(), trace.getSpan(0));
-        }));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> {
+                  span.hasName("parent").hasKind(SpanKind.INTERNAL);
+                  verifyCorrectSpanWasPropagated(capturedMessage.get(), trace.getSpan(0));
+                }));
     assertNoMetrics(testing);
   }
 
@@ -111,17 +114,18 @@ class SpringIntegrationMetricsTest {
     runWithSpan("parent", () -> output.send(MessageBuilder.withPayload("test").build()));
 
     Message<?> capturedMessage = capturingMessageHandler.join();
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-            span -> {
-              span.hasName("process input")
-                  .hasParent(trace.getSpan(0))
-                  .hasKind(SpanKind.CONSUMER)
-                  .hasAttributesSatisfyingExactly(messagingAttributes("process", "input"));
-              verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(1));
-            },
-            span -> span.hasName("handler").hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span -> {
+                  span.hasName("process input")
+                      .hasParent(trace.getSpan(0))
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasAttributesSatisfyingExactly(messagingAttributes("process", "input"));
+                  verifyCorrectSpanWasPropagated(capturedMessage, trace.getSpan(1));
+                },
+                span -> span.hasName("handler").hasParent(trace.getSpan(1))));
     assertProcessMetrics(testing, "input", false);
   }
 
@@ -135,21 +139,23 @@ class SpringIntegrationMetricsTest {
             .setProducerSpanEnabled(true)
             .build()
             .createChannelInterceptor());
-    channel.subscribe(message -> {
-      if (!message.getHeaders().containsKey("nested")) {
-        channel.send(MessageBuilder.fromMessage(message).setHeader("nested", true).build());
-        runWithSpan("outerAfterNested", () -> {});
-      }
-    });
+    channel.subscribe(
+        message -> {
+          if (!message.getHeaders().containsKey("nested")) {
+            channel.send(MessageBuilder.fromMessage(message).setHeader("nested", true).build());
+            runWithSpan("outerAfterNested", () -> {});
+          }
+        });
 
     Context before = Context.current();
     channel.send(MessageBuilder.withPayload("test").build());
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("send output").hasKind(SpanKind.PRODUCER),
-            span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("send output").hasKind(SpanKind.PRODUCER),
+                span -> span.hasName("outerAfterNested").hasParent(trace.getSpan(0))));
     assertSendMetrics(testing, "output");
   }
 
@@ -176,9 +182,10 @@ class SpringIntegrationMetricsTest {
     }
     lowerClientInstrumenter.end(context, message, null, null);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("process").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("process").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -206,9 +213,10 @@ class SpringIntegrationMetricsTest {
     }
     lowerClientInstrumenter.end(context, message, null, null);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("process").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("process").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 }

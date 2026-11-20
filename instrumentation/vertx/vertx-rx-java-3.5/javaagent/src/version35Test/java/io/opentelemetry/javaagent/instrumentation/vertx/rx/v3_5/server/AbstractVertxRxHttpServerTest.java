@@ -59,12 +59,13 @@ abstract class AbstractVertxRxHttpServerTest extends AbstractHttpServerTest<Vert
     options.setTestPathParam(true);
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
-    options.setExpectedHttpRoute((endpoint, method) -> {
-      if (HttpConstants._OTHER.equals(method)) {
-        return getContextPath() + endpoint.getPath();
-      }
-      return expectedHttpRoute(endpoint, method);
-    });
+    options.setExpectedHttpRoute(
+        (endpoint, method) -> {
+          if (HttpConstants._OTHER.equals(method)) {
+            return getContextPath() + endpoint.getPath();
+          }
+          return expectedHttpRoute(endpoint, method);
+        });
   }
 
   protected abstract Class<? extends AbstractVerticle> verticle();

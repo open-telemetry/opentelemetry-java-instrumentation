@@ -73,13 +73,15 @@ class SpringSchedulingTest {
     assertThat(task.blockUntilExecute()).isTrue();
 
     assertThat(task).isNotNull();
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("TriggerTask.run")
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, TriggerTask.class.getName() + ".run"),
-                    equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TriggerTask.run")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, TriggerTask.class.getName() + ".run"),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
   }
 
   @Test
@@ -91,13 +93,15 @@ class SpringSchedulingTest {
     assertThat(task.blockUntilExecute()).isTrue();
 
     assertThat(task).isNotNull();
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("IntervalTask.run")
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, IntervalTask.class.getName() + ".run"),
-                    equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("IntervalTask.run")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, IntervalTask.class.getName() + ".run"),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
   }
 
   @Test
@@ -109,17 +113,20 @@ class SpringSchedulingTest {
     assertThat(configurer.singleUseLatch.await(2000, MILLISECONDS)).isTrue();
 
     assertThat(configurer).isNotNull();
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("LambdaTaskConfigurer$$Lambda.run")
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    satisfies(
-                        CODE_FUNCTION_NAME,
-                        val ->
-                            val.startsWith(LambdaTaskConfigurer.class.getName() + "$$Lambda")
-                                .endsWith("run")),
-                    equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("LambdaTaskConfigurer$$Lambda.run")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                CODE_FUNCTION_NAME,
+                                val ->
+                                    val.startsWith(
+                                            LambdaTaskConfigurer.class.getName() + "$$Lambda")
+                                        .endsWith("run")),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
   }
 
   @Test
@@ -138,13 +145,17 @@ class SpringSchedulingTest {
     assertThat(latch.await(5, SECONDS)).isTrue();
 
     assertThat(latch).isNotNull();
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("EnhancedClassTaskConfig.run")
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, EnhancedClassTaskConfig.class.getName() + ".run"),
-                    equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("EnhancedClassTaskConfig.run")
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                EnhancedClassTaskConfig.class.getName() + ".run"),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))));
   }
 
   @Test
@@ -163,24 +174,28 @@ class SpringSchedulingTest {
     assertThat(task.blockUntilExecute()).isTrue();
 
     assertThat(task).isNotNull();
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span ->
-                span.hasName("TaskWithError.run")
-                    .hasNoParent()
-                    .hasStatus(StatusData.error())
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(CODE_FUNCTION_NAME, TaskWithError.class.getName() + ".run"),
-                        equalTo(stringKey("job.system"), experimental("spring_scheduling")))
-                    .hasEventsSatisfyingExactly(event ->
-                        event
-                            .hasName("exception")
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                                equalTo(EXCEPTION_MESSAGE, "failure"),
-                                satisfies(
-                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)))),
-            span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TaskWithError.run")
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, TaskWithError.class.getName() + ".run"),
+                            equalTo(stringKey("job.system"), experimental("spring_scheduling")))
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(
+                                            EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                                        equalTo(EXCEPTION_MESSAGE, "failure"),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class)))),
+                span -> span.hasName("error-handler").hasParent(trace.getSpan(0))));
   }
 
   private static GenericApplicationContext createContext(Class<?> beanClass) {

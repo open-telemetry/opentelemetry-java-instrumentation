@@ -359,17 +359,21 @@ public abstract class AbstractThriftTest {
                     .hasName("rpc.server.call.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        getServerServiceName(handlerClassName) + "/say")))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasBucketBoundaries(
+                                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01,
+                                            0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                                            60.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                            equalTo(
+                                                RPC_METHOD,
+                                                getServerServiceName(handlerClassName)
+                                                    + "/say")))));
     getTesting()
         .waitAndAssertMetrics(
             "io.opentelemetry.thrift-0.13",
@@ -378,17 +382,22 @@ public abstract class AbstractThriftTest {
                     .hasName("rpc.client.call.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, serverPort),
-                                    equalTo(RPC_METHOD, CustomService.class.getName() + "/say")))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasBucketBoundaries(
+                                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01,
+                                            0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                                            60.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                            equalTo(SERVER_ADDRESS, "localhost"),
+                                            equalTo(SERVER_PORT, serverPort),
+                                            equalTo(
+                                                RPC_METHOD,
+                                                CustomService.class.getName() + "/say")))));
   }
 
   @ParameterizedTest
@@ -402,11 +411,12 @@ public abstract class AbstractThriftTest {
             "parent", () -> assertThat(client.say("Hello", "World")).isEqualTo("Say Hello World"));
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
-                span -> assertServerSpan(span, "say", port).hasParent(trace.getSpan(1))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
+                    span -> assertServerSpan(span, "say", port).hasParent(trace.getSpan(1))));
 
     assertMetrics(port, CustomHandler.class.getName());
   }
@@ -449,11 +459,12 @@ public abstract class AbstractThriftTest {
             "parent", () -> assertThat(client.say("Hello", "World")).isEqualTo("Say Hello World"));
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
-                span -> assertServerSpan(span, "say", port).hasParent(trace.getSpan(1))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
+                    span -> assertServerSpan(span, "say", port).hasParent(trace.getSpan(1))));
 
     assertMetrics(port, CustomHandler.class.getName());
   }
@@ -466,10 +477,12 @@ public abstract class AbstractThriftTest {
     assertThat(client.withoutArgs()).isEqualTo("no args");
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "withoutArgs", port).hasNoParent(),
-                span -> assertServerSpan(span, "withoutArgs", port).hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertClientSpan(span, "withoutArgs", port).hasNoParent(),
+                    span ->
+                        assertServerSpan(span, "withoutArgs", port).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -480,17 +493,18 @@ public abstract class AbstractThriftTest {
     assertThatThrownBy(client::withError).isInstanceOf(TApplicationException.class);
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertClientSpan(span, "withError", port, true)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertServerSpan(
-                            span, CustomHandler.class.getName(), "withError", port, "_OTHER")
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertClientSpan(span, "withError", port, true)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error()),
+                    span ->
+                        assertServerSpan(
+                                span, CustomHandler.class.getName(), "withError", port, "_OTHER")
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -500,19 +514,22 @@ public abstract class AbstractThriftTest {
                     .hasName("rpc.server.call.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        getServerServiceName(CustomHandler.class.getName())
-                                            + "/withError"),
-                                    equalTo(ERROR_TYPE, "_OTHER")))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasBucketBoundaries(
+                                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01,
+                                            0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                                            60.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                            equalTo(
+                                                RPC_METHOD,
+                                                getServerServiceName(CustomHandler.class.getName())
+                                                    + "/withError"),
+                                            equalTo(ERROR_TYPE, "_OTHER")))));
     getTesting()
         .waitAndAssertMetrics(
             "io.opentelemetry.thrift-0.13",
@@ -521,22 +538,29 @@ public abstract class AbstractThriftTest {
                     .hasName("rpc.client.call.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(
-                                        RPC_METHOD, CustomService.class.getName() + "/withError"),
-                                    equalTo(
-                                        stringKey("rpc.status_code"),
-                                        Integer.toString(TApplicationException.INTERNAL_ERROR)),
-                                    equalTo(ERROR_TYPE, TApplicationException.class.getName())))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasBucketBoundaries(
+                                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01,
+                                            0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0,
+                                            60.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                            equalTo(SERVER_ADDRESS, "localhost"),
+                                            equalTo(SERVER_PORT, port),
+                                            equalTo(
+                                                RPC_METHOD,
+                                                CustomService.class.getName() + "/withError"),
+                                            equalTo(
+                                                stringKey("rpc.status_code"),
+                                                Integer.toString(
+                                                    TApplicationException.INTERNAL_ERROR)),
+                                            equalTo(
+                                                ERROR_TYPE,
+                                                TApplicationException.class.getName())))));
   }
 
   @Test
@@ -547,10 +571,12 @@ public abstract class AbstractThriftTest {
     assertThat(client.withCollision("collision")).isEqualTo("collision");
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "withCollision", port).hasNoParent(),
-                span -> assertServerSpan(span, "withCollision", port).hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertClientSpan(span, "withCollision", port).hasNoParent(),
+                    span ->
+                        assertServerSpan(span, "withCollision", port).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -561,18 +587,19 @@ public abstract class AbstractThriftTest {
     client.oneWayWithError();
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertClientSpan(span, "oneWayWithError", port)
-                        .hasNoParent()
-                        // client span is not aware of the error
-                        .hasStatus(StatusData.unset()),
-                span ->
-                    assertServerSpan(span, "oneWayWithError", port)
-                        .hasParent(trace.getSpan(0))
-                        // currently we detect the error only when the response is sent
-                        .hasStatus(StatusData.unset())));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        assertClientSpan(span, "oneWayWithError", port)
+                            .hasNoParent()
+                            // client span is not aware of the error
+                            .hasStatus(StatusData.unset()),
+                    span ->
+                        assertServerSpan(span, "oneWayWithError", port)
+                            .hasParent(trace.getSpan(0))
+                            // currently we detect the error only when the response is sent
+                            .hasStatus(StatusData.unset())));
   }
 
   @Test
@@ -608,19 +635,20 @@ public abstract class AbstractThriftTest {
     assertThat(completableFuture.get(15, SECONDS)).isEqualTo("Say Async World");
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
-                span ->
-                    (hasAsyncServerNetworkAttributes()
-                            ? assertServerSpan(span, "say", port)
-                            : assertServerSpan(span, "say"))
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
+                    span ->
+                        (hasAsyncServerNetworkAttributes()
+                                ? assertServerSpan(span, "say", port)
+                                : assertServerSpan(span, "say"))
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -710,24 +738,29 @@ public abstract class AbstractThriftTest {
         .hasRootCauseInstanceOf(TApplicationException.class);
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertClientSpan(span, "withError", port, true)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error()),
-                span ->
-                    (hasAsyncServerNetworkAttributes()
-                            ? assertServerSpan(
-                                span, CustomHandler.class.getName(), "withError", port, "_OTHER")
-                            : assertServerSpan(
-                                span, CustomHandler.class.getName(), "withError", "_OTHER"))
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        assertClientSpan(span, "withError", port, true)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error()),
+                    span ->
+                        (hasAsyncServerNetworkAttributes()
+                                ? assertServerSpan(
+                                    span,
+                                    CustomHandler.class.getName(),
+                                    "withError",
+                                    port,
+                                    "_OTHER")
+                                : assertServerSpan(
+                                    span, CustomHandler.class.getName(), "withError", "_OTHER"))
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -738,10 +771,11 @@ public abstract class AbstractThriftTest {
     client.oneWay();
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "oneWay", port).hasNoParent(),
-                span -> assertServerSpan(span, "oneWay", port).hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertClientSpan(span, "oneWay", port).hasNoParent(),
+                    span -> assertServerSpan(span, "oneWay", port).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -771,19 +805,20 @@ public abstract class AbstractThriftTest {
     assertThat(completableFuture.get(15, SECONDS)).isEqualTo("ok");
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, "oneWay", port).hasParent(trace.getSpan(0)),
-                span ->
-                    (hasAsyncServerNetworkAttributes()
-                            ? assertServerSpan(span, "oneWay", port)
-                            : assertServerSpan(span, "oneWay"))
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "oneWay", port).hasParent(trace.getSpan(0)),
+                    span ->
+                        (hasAsyncServerNetworkAttributes()
+                                ? assertServerSpan(span, "oneWay", port)
+                                : assertServerSpan(span, "oneWay"))
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -804,10 +839,11 @@ public abstract class AbstractThriftTest {
     assertThat(userWithAddress.address.traceContext).isEqualTo(traceContext);
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "save", port).hasNoParent(),
-                span -> assertServerSpan(span, "save", port).hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> assertClientSpan(span, "save", port).hasNoParent(),
+                    span -> assertServerSpan(span, "save", port).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -908,17 +944,19 @@ public abstract class AbstractThriftTest {
     assertThat(completableFuture.get(15, SECONDS)).isEqualTo("Say Async World");
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
-                span ->
-                    assertServerSpan(span, CustomAsyncHandler.class.getName(), "say", port, null)
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "say", port).hasParent(trace.getSpan(0)),
+                    span ->
+                        assertServerSpan(
+                                span, CustomAsyncHandler.class.getName(), "say", port, null)
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -1000,17 +1038,19 @@ public abstract class AbstractThriftTest {
     assertThat(completableFuture.get(15, SECONDS)).isEqualTo("ok");
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertClientSpan(span, "oneWay", port).hasParent(trace.getSpan(0)),
-                span ->
-                    assertServerSpan(span, CustomAsyncHandler.class.getName(), "oneWay", port, null)
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span -> assertClientSpan(span, "oneWay", port).hasParent(trace.getSpan(0)),
+                    span ->
+                        assertServerSpan(
+                                span, CustomAsyncHandler.class.getName(), "oneWay", port, null)
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -1047,25 +1087,26 @@ public abstract class AbstractThriftTest {
         .hasRootCauseInstanceOf(TApplicationException.class);
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertClientSpan(span, "withError", port, true)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error()),
-                span ->
-                    assertServerSpan(
-                            span,
-                            CustomAsyncHandler.class.getName(),
-                            "withError",
-                            port,
-                            IllegalStateException.class.getName())
-                        .hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        assertClientSpan(span, "withError", port, true)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error()),
+                    span ->
+                        assertServerSpan(
+                                span,
+                                CustomAsyncHandler.class.getName(),
+                                "withError",
+                                port,
+                                IllegalStateException.class.getName())
+                            .hasParent(trace.getSpan(1)),
+                    span ->
+                        span.hasName("callback")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0))));
   }
 
   @Test

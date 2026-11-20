@@ -76,13 +76,14 @@ public interface RecordedEventHandler
   }
 
   static void closeObservables(List<AutoCloseable> observables) {
-    observables.forEach(observable -> {
-      try {
-        observable.close();
-      } catch (Exception e) {
-        // Ignore
-      }
-    });
+    observables.forEach(
+        observable -> {
+          try {
+            observable.close();
+          } catch (Exception e) {
+            // Ignore
+          }
+        });
   }
 
   @Override

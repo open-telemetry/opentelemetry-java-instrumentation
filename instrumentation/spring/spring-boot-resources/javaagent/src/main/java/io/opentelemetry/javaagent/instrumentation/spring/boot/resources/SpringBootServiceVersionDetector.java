@@ -51,10 +51,11 @@ public class SpringBootServiceVersionDetector implements ResourceProvider {
 
   private Resource create() {
     return getServiceVersionFromBuildInfo()
-        .map(version -> {
-          logger.log(FINE, "Auto-detected Spring Boot service version: {0}", version);
-          return Resource.builder().put(SERVICE_VERSION, version).build();
-        })
+        .map(
+            version -> {
+              logger.log(FINE, "Auto-detected Spring Boot service version: {0}", version);
+              return Resource.builder().put(SERVICE_VERSION, version).build();
+            })
         .orElseGet(Resource::empty);
   }
 

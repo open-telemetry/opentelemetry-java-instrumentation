@@ -57,11 +57,12 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
 
   @Override
   protected void runMongoClientTest(Runnable runnable) {
-    contextRunner.run(applicationContext -> {
-      testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
-      mongoClient = applicationContext.getBean(MongoClient.class);
+    contextRunner.run(
+        applicationContext -> {
+          testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
+          mongoClient = applicationContext.getBean(MongoClient.class);
 
-      runnable.run();
-    });
+          runnable.run();
+        });
   }
 }

@@ -588,16 +588,7 @@ public final class BedrockRuntimeImpl {
           (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
     }
 
-    TokenUsage usage = null;
-    if (sdkResponse instanceof ConverseResponse) {
-      usage = ((ConverseResponse) sdkResponse).usage();
-    } else {
-      BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
-          BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
-      if (streamHandler != null) {
-        usage = streamHandler.usage;
-      }
-    }
+    TokenUsage usage = getConverseTokenUsage(response);
     if (usage != null) {
       return integerToLong(usage.inputTokens());
     }
@@ -662,6 +653,37 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
+  static Long getUsageCacheReadInputTokens(Response response) {
+    return getTokenUsageCount(response, "cacheReadInputTokens");
+  }
+
+  @Nullable
+  static Long getUsageCacheCreationInputTokens(Response response) {
+    return getTokenUsageCount(response, "cacheWriteInputTokens");
+  }
+
+  @Nullable
+  private static Long getTokenUsageCount(Response response, String fieldName) {
+    TokenUsage usage = getConverseTokenUsage(response);
+    if (usage == null) {
+      return null;
+    }
+    // The cache token fields were added in bedrockruntime 2.31.12, after the version this library
+    // compiles against, so they are read by name and are absent on older SDKs.
+    return usage.getValueForField(fieldName, Integer.class).map(Integer::longValue).orElse(null);
+  }
+
+  @Nullable
+  private static TokenUsage getConverseTokenUsage(Response response) {
+    if (response.getSdkResponse() instanceof ConverseResponse) {
+      return ((ConverseResponse) response.getSdkResponse()).usage();
+    }
+    BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
+        BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
+    return streamHandler != null ? streamHandler.usage : null;
+  }
+
+  @Nullable
   static Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
     SdkResponse sdkResponse = response.getSdkResponse();
     if (sdkResponse instanceof InvokeModelResponse) {
@@ -670,16 +692,7 @@ public final class BedrockRuntimeImpl {
           (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
     }
 
-    TokenUsage usage = null;
-    if (sdkResponse instanceof ConverseResponse) {
-      usage = ((ConverseResponse) sdkResponse).usage();
-    } else {
-      BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
-          BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
-      if (streamHandler != null) {
-        usage = streamHandler.usage;
-      }
-    }
+    TokenUsage usage = getConverseTokenUsage(response);
     if (usage != null) {
       return integerToLong(usage.outputTokens());
     }
@@ -1066,15 +1079,16 @@ public final class BedrockRuntimeImpl {
         if (toolResultContent != null && toolResultContent.isList()) {
           List<ToolResultContentBlock> toolResultContentBlocks =
               toolResultContent.asList().stream()
-                  .map(toolResultContentBlockDoc -> {
-                    if (toolResultContentBlockDoc.isMap()) {
-                      Document json = toolResultContentBlockDoc.asMap().get("json");
-                      if (json != null) {
-                        return ToolResultContentBlock.builder().json(json).build();
-                      }
-                    }
-                    return null;
-                  })
+                  .map(
+                      toolResultContentBlockDoc -> {
+                        if (toolResultContentBlockDoc.isMap()) {
+                          Document json = toolResultContentBlockDoc.asMap().get("json");
+                          if (json != null) {
+                            return ToolResultContentBlock.builder().json(json).build();
+                          }
+                        }
+                        return null;
+                      })
                   .filter(Objects::nonNull)
                   .collect(toList());
           resultBlockBuilder.content(toolResultContentBlocks);
@@ -1231,10 +1245,11 @@ public final class BedrockRuntimeImpl {
     @Override
     public final void onEventStream(SdkPublisher<S> sdkPublisher) {
       delegate.onEventStream(
-          sdkPublisher.map(event -> {
-            handleEventSafely(event);
-            return event;
-          }));
+          sdkPublisher.map(
+              event -> {
+                handleEventSafely(event);
+                return event;
+              }));
     }
 
     // Telemetry parsing must never change the behavior of the application's stream.

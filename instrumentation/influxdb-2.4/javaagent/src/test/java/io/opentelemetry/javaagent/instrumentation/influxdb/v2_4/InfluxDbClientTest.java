@@ -88,17 +88,19 @@ class InfluxDbClientTest {
 
     influxDb.query(new Query("SELECT * FROM cpu_load", DATABASE_NAME));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("SELECT cpu_load")
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                    equalTo(DB_NAMESPACE, DATABASE_NAME),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                    equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
   }
 
   @Test
@@ -129,46 +131,50 @@ class InfluxDbClientTest {
     influxDb.deleteDatabase(dbName);
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("CREATE DATABASE " + dbName)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, dbName),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_OPERATION_NAME, "CREATE DATABASE"))),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("CREATE DATABASE " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, dbName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_OPERATION_NAME, "CREATE DATABASE"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("write " + dbName)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, dbName),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_OPERATION_NAME, "write"))),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("write " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, dbName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_OPERATION_NAME, "write"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("SELECT cpu")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, dbName),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu GROUP BY *"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu"))),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT cpu")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, dbName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu GROUP BY *"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("DROP DATABASE " + dbName)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, dbName),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_OPERATION_NAME, "DROP DATABASE"))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("DROP DATABASE " + dbName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, dbName),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_OPERATION_NAME, "DROP DATABASE"))));
   }
 
   @Test
@@ -176,17 +182,19 @@ class InfluxDbClientTest {
     Query query = new Query("SELECT * FROM cpu_load where test1 = 'influxDb'", DATABASE_NAME);
     influxDb.query(query, MILLISECONDS);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("SELECT cpu_load")
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                    equalTo(DB_NAMESPACE, DATABASE_NAME),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load where test1 = ?"),
-                    equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load where test1 = ?"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
 
     assertDurationMetric(
         testing,
@@ -209,17 +217,21 @@ class InfluxDbClientTest {
     influxDb.query(query, 2, result -> queue.add(result));
     queue.poll(20, SECONDS);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("SELECT cpu_load")
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                    equalTo(DB_NAMESPACE, DATABASE_NAME),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load where time >= ? AND time <= ?"),
-                    equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "SELECT * FROM cpu_load where time >= ? AND time <= ?"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
   }
 
   @Test
@@ -230,17 +242,19 @@ class InfluxDbClientTest {
     influxDb.query(query, 2, result -> queue.add(result));
     queue.poll(20, SECONDS);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("SELECT cpu_load")
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                    equalTo(DB_NAMESPACE, DATABASE_NAME),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                    equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"))));
   }
 
   @Test
@@ -262,21 +276,23 @@ class InfluxDbClientTest {
                 }));
     assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("SELECT cpu_load")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
-            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -302,23 +318,27 @@ class InfluxDbClientTest {
                 }));
     assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("SELECT cpu_load")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
-            span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
-            span ->
-                span.hasName("completion").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("completion")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -344,23 +364,27 @@ class InfluxDbClientTest {
                 }));
     assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("SELECT cpu_load")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
-            span -> span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
-            span ->
-                span.hasName("completion").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("completion")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -379,21 +403,23 @@ class InfluxDbClientTest {
                 throwable -> countDownLatch.countDown()));
     assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("SELECT cpu_load")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
-            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load")),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -414,23 +440,25 @@ class InfluxDbClientTest {
                 }));
     assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("SELECT cpu_load")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME),
-                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                        equalTo(SERVER_PORT, 1),
-                        equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"),
-                        equalTo(ERROR_TYPE, "java.net.ConnectException"))
-                    .hasStatus(StatusData.error()),
-            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT cpu_load")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                            equalTo(SERVER_PORT, 1),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu_load"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu_load"),
+                            equalTo(ERROR_TYPE, "java.net.ConnectException"))
+                        .hasStatus(StatusData.error()),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -452,23 +480,25 @@ class InfluxDbClientTest {
         });
     assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("SELECT h2o_feet; SELECT h2o_feet")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(
-                            DB_QUERY_TEXT,
-                            "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT water_level FROM h2o_feet LIMIT ?"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT h2o_feet; SELECT h2o_feet")),
-            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT h2o_feet; SELECT h2o_feet")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "SELECT MEAN(water_level) FROM h2o_feet where time = ?; SELECT water_level FROM h2o_feet LIMIT ?"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT h2o_feet; SELECT h2o_feet")),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -490,23 +520,25 @@ class InfluxDbClientTest {
         });
     assertThat(countDownLatchFailure.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("SELECT")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(DB_QUERY_TEXT, "SELECT MEAN(water_level) FROM;"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT"),
-                        equalTo(ERROR_TYPE, "org.influxdb.InfluxDBException"))
-                    .hasStatus(StatusData.error()),
-            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SELECT")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT MEAN(water_level) FROM;"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT"),
+                            equalTo(ERROR_TYPE, "org.influxdb.InfluxDBException"))
+                        .hasStatus(StatusData.error()),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -516,16 +548,18 @@ class InfluxDbClientTest {
     records.add(measurement + ",atag=test1 idle=100,usertime=10,system=1 1485273600");
     influxDb.write(DATABASE_NAME, "autogen", InfluxDB.ConsistencyLevel.ONE, records);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("write " + DATABASE_NAME)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                    equalTo(DB_NAMESPACE, DATABASE_NAME),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(DB_OPERATION_NAME, "write"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("write " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_OPERATION_NAME, "write"))));
   }
 
   @Test
@@ -535,16 +569,18 @@ class InfluxDbClientTest {
     records.add(measurement + ",atag=test1 idle=100,usertime=10,system=1 1485273600");
     influxDb.write(DATABASE_NAME, "autogen", InfluxDB.ConsistencyLevel.ONE, SECONDS, records);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("write " + DATABASE_NAME)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                    equalTo(DB_NAMESPACE, DATABASE_NAME),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(DB_OPERATION_NAME, "write"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("write " + DATABASE_NAME)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_OPERATION_NAME, "write"))));
   }
 
   @Test
@@ -556,15 +592,17 @@ class InfluxDbClientTest {
     }
     influxDb.write(port, lineProtocols);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("write " + host + ":" + port)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(DB_OPERATION_NAME, "write"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("write " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_OPERATION_NAME, "write"))));
   }
 
   @Test
@@ -575,15 +613,17 @@ class InfluxDbClientTest {
 
     influxDbWithCredentialsInUrl.query(new Query("SELECT * FROM cpu", DATABASE_NAME));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, INFLUXDB),
-                    equalTo(DB_NAMESPACE, DATABASE_NAME),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
-                    equalTo(DB_QUERY_SUMMARY, "SELECT cpu"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, INFLUXDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_QUERY_TEXT, "SELECT * FROM cpu"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu"))));
   }
 }

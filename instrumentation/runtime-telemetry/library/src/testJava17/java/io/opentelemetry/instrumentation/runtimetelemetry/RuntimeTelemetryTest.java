@@ -63,10 +63,11 @@ class RuntimeTelemetryTest {
 
     assertThat(reader.collectAllMetrics())
         .isNotEmpty()
-        .allSatisfy(metric -> {
-          assertThat(metric.getInstrumentationScopeInfo().getName())
-              .isEqualTo("io.opentelemetry.runtime-telemetry");
-        });
+        .allSatisfy(
+            metric -> {
+              assertThat(metric.getInstrumentationScopeInfo().getName())
+                  .isEqualTo("io.opentelemetry.runtime-telemetry");
+            });
   }
 
   @Test
@@ -92,9 +93,10 @@ class RuntimeTelemetryTest {
     assertThat(jfrRuntimeMetrics).isNotNull();
     assertThat(jfrRuntimeMetrics.getRecordedEventHandlers())
         .hasSizeGreaterThan(0)
-        .allSatisfy(handler -> {
-          assertThat(handler.getMetricNames()).contains("jvm.cpu.longlock");
-        });
+        .allSatisfy(
+            handler -> {
+              assertThat(handler.getMetricNames()).contains("jvm.cpu.longlock");
+            });
   }
 
   @Test

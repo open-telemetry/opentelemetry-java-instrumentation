@@ -45,9 +45,10 @@ class FieldBackedImplementationTest {
 
   @BeforeAll
   static void setUp() {
-    TestAgentListenerAccess.addSkipErrorCondition((typeName, throwable) ->
-        typeName.startsWith("library.Incorrect")
-            && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."));
+    TestAgentListenerAccess.addSkipErrorCondition(
+        (typeName, throwable) ->
+            typeName.startsWith("library.Incorrect")
+                && throwable.getMessage().startsWith("Incorrect Context Api Usage detected."));
     TestAgentListenerAccess.addSkipTransformationCondition(
         typeName -> typeName != null && typeName.endsWith("UntransformableKeyClass"));
   }
@@ -121,11 +122,12 @@ class FieldBackedImplementationTest {
 
     assertThat(fields.size()).isEqualTo(3);
     assertThat(fields)
-        .allSatisfy(field -> {
-          assertThat(Modifier.isPrivate(field.getModifiers())).isTrue();
-          assertThat(Modifier.isTransient(field.getModifiers())).isTrue();
-          assertThat(field.isSynthetic()).isTrue();
-        });
+        .allSatisfy(
+            field -> {
+              assertThat(Modifier.isPrivate(field.getModifiers())).isTrue();
+              assertThat(Modifier.isTransient(field.getModifiers())).isTrue();
+              assertThat(field.isSynthetic()).isTrue();
+            });
 
     assertThat(interfaces.size()).isEqualTo(3);
     assertThat(interfaces).allSatisfy(iface -> assertThat(iface.isSynthetic()).isTrue());

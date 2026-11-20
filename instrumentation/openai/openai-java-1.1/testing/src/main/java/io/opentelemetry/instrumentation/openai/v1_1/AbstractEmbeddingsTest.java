@@ -74,10 +74,11 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
         try {
           return cl.embeddings()
               .create(request)
-              .thenApply(res -> {
-                assertThat(Span.fromContextOrNull(Context.current())).isNull();
-                return res;
-              })
+              .thenApply(
+                  res -> {
+                    assertThat(Span.fromContextOrNull(Context.current())).isNull();
+                    return res;
+                  })
               .join();
         } catch (CompletionException e) {
           if (e.getCause() instanceof RuntimeException) {
@@ -103,23 +104,25 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
     assertThat(response.data()).hasSize(1);
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                maybeWithTransportSpan(span ->
-                    span.hasName("embeddings text-embedding-3-small")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 4),
-                            // Newer versions of the library populate base64 when unset by
-                            // the user.
-                            satisfies(
-                                GEN_AI_REQUEST_ENCODING_FORMATS,
-                                val -> val.isIn(singletonList("base64"), null))))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasName("embeddings text-embedding-3-small")
+                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
+                                .hasKind(SpanKind.CLIENT)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 4),
+                                    // Newer versions of the library populate base64 when unset by
+                                    // the user.
+                                    satisfies(
+                                        GEN_AI_REQUEST_ENCODING_FORMATS,
+                                        val -> val.isIn(singletonList("base64"), null))))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -128,29 +131,33 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSumGreaterThan(0.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(4.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                    equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(4.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
   }
 
   @ParameterizedTest
@@ -173,22 +180,24 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
     assertThat(response.data()).hasSize(1);
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                maybeWithTransportSpan(span ->
-                    span.hasName("embeddings text-embedding-3-small")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 4),
-                            // Newer versions of the library populate base64 when unset by
-                            // the user.
-                            satisfies(
-                                GEN_AI_REQUEST_ENCODING_FORMATS,
-                                val -> val.isIn(singletonList("base64"), null))))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasName("embeddings text-embedding-3-small")
+                                .hasKind(SpanKind.CLIENT)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 4),
+                                    // Newer versions of the library populate base64 when unset by
+                                    // the user.
+                                    satisfies(
+                                        GEN_AI_REQUEST_ENCODING_FORMATS,
+                                        val -> val.isIn(singletonList("base64"), null))))));
   }
 
   private static Stream<Arguments> withOptionsCases() {
@@ -222,18 +231,21 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
     assertThat(response.data()).hasSize(1);
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                maybeWithTransportSpan(span ->
-                    span.hasName("embeddings text-embedding-3-small")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            equalTo(GEN_AI_REQUEST_ENCODING_FORMATS, singletonList("base64")),
-                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 4)))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasName("embeddings text-embedding-3-small")
+                                .hasKind(SpanKind.CLIENT)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    equalTo(
+                                        GEN_AI_REQUEST_ENCODING_FORMATS, singletonList("base64")),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 4)))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -241,28 +253,32 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSumGreaterThan(0.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(4.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                    equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(4.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT)))));
   }
 
   @Test
@@ -294,22 +310,24 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
     assertThat(thrown).isInstanceOf(OpenAIIoException.class);
 
     getTesting()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                maybeWithTransportSpan(span ->
-                    span.hasName("embeddings text-embedding-3-small")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
-                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                            // Newer versions of the library populate base64 when unset by
-                            // the user.
-                            satisfies(
-                                GEN_AI_REQUEST_ENCODING_FORMATS,
-                                val -> val.isIn(singletonList("base64"), null))))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    maybeWithTransportSpan(
+                        span ->
+                            span.hasName("embeddings text-embedding-3-small")
+                                .hasKind(SpanKind.CLIENT)
+                                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                    // Newer versions of the library populate base64 when unset by
+                                    // the user.
+                                    satisfies(
+                                        GEN_AI_REQUEST_ENCODING_FORMATS,
+                                        val -> val.isIn(singletonList("base64"), null))))));
 
     getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
 
@@ -319,14 +337,16 @@ public abstract class AbstractEmbeddingsTest extends AbstractOpenAiTest {
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSumGreaterThan(0.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSumGreaterThan(0.0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
+                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                            equalTo(GEN_AI_OPERATION_NAME, EMBEDDINGS),
+                                            equalTo(GEN_AI_REQUEST_MODEL, MODEL)))));
   }
 }

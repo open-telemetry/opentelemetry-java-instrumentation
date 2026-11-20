@@ -59,10 +59,11 @@ class OpenSearchRest3Test extends AbstractOpenSearchRestTest {
         PoolingAsyncClientConnectionManagerBuilder.create().setTlsStrategy(tlsStrategy).build();
 
     return RestClient.builder(httpHosts(hostAddresses))
-        .setHttpClientConfigCallback(httpClientBuilder ->
-            httpClientBuilder
-                .setConnectionManager(connectionManager)
-                .setDefaultCredentialsProvider(credentialsProvider))
+        .setHttpClientConfigCallback(
+            httpClientBuilder ->
+                httpClientBuilder
+                    .setConnectionManager(connectionManager)
+                    .setDefaultCredentialsProvider(credentialsProvider))
         .build();
   }
 

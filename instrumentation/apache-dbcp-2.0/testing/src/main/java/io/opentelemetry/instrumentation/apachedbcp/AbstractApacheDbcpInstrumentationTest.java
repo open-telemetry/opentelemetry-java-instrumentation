@@ -77,10 +77,15 @@ public abstract class AbstractApacheDbcpInstrumentationTest {
     testing().clearData();
 
     await()
-        .untilAsserted(() ->
-            assertThat(testing().metrics())
-                .filteredOn(metricData ->
-                    metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-                .isEmpty());
+        .untilAsserted(
+            () ->
+                assertThat(testing().metrics())
+                    .filteredOn(
+                        metricData ->
+                            metricData
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

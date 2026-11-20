@@ -68,9 +68,10 @@ class PrintStreamPersister implements ResultsPersister {
   private void display(
       List<AppPerfResults> results, String pref, Function<AppPerfResults, String> vs) {
     out.printf("%-20s: ", pref);
-    results.forEach(result -> {
-      out.printf("%17s", vs.apply(result));
-    });
+    results.forEach(
+        result -> {
+          out.printf("%17s", vs.apply(result));
+        });
     out.println();
   }
 

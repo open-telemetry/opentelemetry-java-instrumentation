@@ -50,11 +50,12 @@ class ChatCompletionEventsHelperTest {
 
       assertThat(exporter.getFinishedLogRecordItems())
           .singleElement()
-          .satisfies(log ->
-              assertThat(log)
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EVENT_NAME, eventName), equalTo(GEN_AI_PROVIDER_NAME, "openai"))
-                  .hasBody(expectedBody));
+          .satisfies(
+              log ->
+                  assertThat(log)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EVENT_NAME, eventName), equalTo(GEN_AI_PROVIDER_NAME, "openai"))
+                      .hasBody(expectedBody));
     }
   }
 

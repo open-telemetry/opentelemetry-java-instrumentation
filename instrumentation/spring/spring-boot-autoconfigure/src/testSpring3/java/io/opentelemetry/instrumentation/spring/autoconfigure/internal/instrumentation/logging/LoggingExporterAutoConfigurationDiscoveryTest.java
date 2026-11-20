@@ -34,15 +34,17 @@ class LoggingExporterAutoConfigurationDiscoveryTest {
   void debugEnabled() {
     runner
         .withPropertyValues("otel.spring-starter.debug=true")
-        .run(context ->
-            assertThat(context.getBean(OpenTelemetry.class).toString())
-                .containsOnlyOnce("LoggingSpanExporter"));
+        .run(
+            context ->
+                assertThat(context.getBean(OpenTelemetry.class).toString())
+                    .containsOnlyOnce("LoggingSpanExporter"));
   }
 
   @Test
   void debugUnset() {
-    runner.run(context ->
-        assertThat(context.getBean(OpenTelemetry.class).toString())
-            .doesNotContain("LoggingSpanExporter"));
+    runner.run(
+        context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .doesNotContain("LoggingSpanExporter"));
   }
 }

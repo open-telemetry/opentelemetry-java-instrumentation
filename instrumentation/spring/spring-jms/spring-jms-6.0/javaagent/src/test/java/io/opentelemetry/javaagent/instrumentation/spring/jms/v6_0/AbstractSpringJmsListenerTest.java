@@ -92,10 +92,11 @@ abstract class AbstractSpringJmsListenerTest {
     JmsListenerEndpointRegistry registry =
         applicationContext.getBean(JmsListenerEndpointRegistry.class);
     await()
-        .until(() ->
-            registry.getListenerContainers().stream()
-                .map(DefaultMessageListenerContainer.class::cast)
-                .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
+        .until(
+            () ->
+                registry.getListenerContainers().stream()
+                    .map(DefaultMessageListenerContainer.class::cast)
+                    .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
   }
 
   static Map<String, Object> defaultConfig() {

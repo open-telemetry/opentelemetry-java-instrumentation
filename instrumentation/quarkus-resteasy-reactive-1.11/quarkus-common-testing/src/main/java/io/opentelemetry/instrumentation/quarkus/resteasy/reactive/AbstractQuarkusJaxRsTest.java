@@ -60,9 +60,10 @@ public abstract class AbstractQuarkusJaxRsTest {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("success");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("GET /test").hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /test").hasKind(SpanKind.SERVER)));
   }
 
   @Test
@@ -71,9 +72,10 @@ public abstract class AbstractQuarkusJaxRsTest {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("hello");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("GET /hello").hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /hello").hasKind(SpanKind.SERVER)));
   }
 
   @Test
@@ -82,9 +84,10 @@ public abstract class AbstractQuarkusJaxRsTest {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("hello test");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("GET /hello/greeting/{name}").hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /hello/greeting/{name}").hasKind(SpanKind.SERVER)));
   }
 
   @Test
@@ -93,9 +96,12 @@ public abstract class AbstractQuarkusJaxRsTest {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("success");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("GET /test-sub-resource-locator/call/sub").hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /test-sub-resource-locator/call/sub")
+                        .hasKind(SpanKind.SERVER)));
   }
 
   @Test
@@ -104,9 +110,10 @@ public abstract class AbstractQuarkusJaxRsTest {
     assertThat(response.status().code()).isEqualTo(401);
     assertThat(response.contentUtf8()).isEqualTo("Aborted");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("GET /hello").hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /hello").hasKind(SpanKind.SERVER)));
   }
 
   private static AggregatedHttpResponse request(String path) {

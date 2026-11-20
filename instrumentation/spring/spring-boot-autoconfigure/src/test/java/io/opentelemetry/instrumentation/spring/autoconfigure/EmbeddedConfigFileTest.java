@@ -32,28 +32,33 @@ class EmbeddedConfigFileTest {
 
     assertThat(result)
         .containsOnlyKeys("resource", "traces")
-        .satisfies(map -> {
-          assertThat(map.get("resource"))
-              .isInstanceOf(Map.class)
-              .satisfies(resource -> {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> resourceMap = (Map<String, Object>) resource;
-                assertThat(resourceMap)
-                    .containsOnlyKeys("service")
-                    .satisfies(m -> {
-                      @SuppressWarnings("unchecked")
-                      Map<String, Object> serviceMap = (Map<String, Object>) m.get("service");
-                      assertThat(serviceMap).containsEntry("name", "my-service");
-                    });
-              });
-          assertThat(map.get("traces"))
-              .isInstanceOf(Map.class)
-              .satisfies(traces -> {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> tracesMap = (Map<String, Object>) traces;
-                assertThat(tracesMap).containsEntry("exporter", "otlp");
-              });
-        });
+        .satisfies(
+            map -> {
+              assertThat(map.get("resource"))
+                  .isInstanceOf(Map.class)
+                  .satisfies(
+                      resource -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> resourceMap = (Map<String, Object>) resource;
+                        assertThat(resourceMap)
+                            .containsOnlyKeys("service")
+                            .satisfies(
+                                m -> {
+                                  @SuppressWarnings("unchecked")
+                                  Map<String, Object> serviceMap =
+                                      (Map<String, Object>) m.get("service");
+                                  assertThat(serviceMap).containsEntry("name", "my-service");
+                                });
+                      });
+              assertThat(map.get("traces"))
+                  .isInstanceOf(Map.class)
+                  .satisfies(
+                      traces -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> tracesMap = (Map<String, Object>) traces;
+                        assertThat(tracesMap).containsEntry("exporter", "otlp");
+                      });
+            });
   }
 
   @Test
@@ -67,23 +72,27 @@ class EmbeddedConfigFileTest {
 
     assertThat(result)
         .containsOnlyKeys("instrumentation")
-        .satisfies(map -> {
-          @SuppressWarnings("unchecked")
-          Map<String, Object> instrumentation = (Map<String, Object>) map.get("instrumentation");
-          assertThat(instrumentation)
-              .containsOnlyKeys("java")
-              .satisfies(m -> {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> javaMap = (Map<String, Object>) m.get("java");
-                assertThat(javaMap)
-                    .containsOnlyKeys("list")
-                    .satisfies(java -> {
-                      @SuppressWarnings("unchecked")
-                      List<Object> list = (List<Object>) java.get("list");
-                      assertThat(list).containsExactly("one", "two", "three");
-                    });
-              });
-        });
+        .satisfies(
+            map -> {
+              @SuppressWarnings("unchecked")
+              Map<String, Object> instrumentation =
+                  (Map<String, Object>) map.get("instrumentation");
+              assertThat(instrumentation)
+                  .containsOnlyKeys("java")
+                  .satisfies(
+                      m -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> javaMap = (Map<String, Object>) m.get("java");
+                        assertThat(javaMap)
+                            .containsOnlyKeys("list")
+                            .satisfies(
+                                java -> {
+                                  @SuppressWarnings("unchecked")
+                                  List<Object> list = (List<Object>) java.get("list");
+                                  assertThat(list).containsExactly("one", "two", "three");
+                                });
+                      });
+            });
   }
 
   @Test
@@ -98,25 +107,27 @@ class EmbeddedConfigFileTest {
 
     assertThat(result)
         .containsOnlyKeys("resource", "traces")
-        .satisfies(map -> {
-          @SuppressWarnings("unchecked")
-          Map<String, Object> resource = (Map<String, Object>) map.get("resource");
-          assertThat(resource)
-              .containsKeys("service", "attributes")
-              .satisfies(r -> {
-                @SuppressWarnings("unchecked")
-                Map<String, Object> service = (Map<String, Object>) r.get("service");
-                assertThat(service).containsEntry("name", "test-service");
+        .satisfies(
+            map -> {
+              @SuppressWarnings("unchecked")
+              Map<String, Object> resource = (Map<String, Object>) map.get("resource");
+              assertThat(resource)
+                  .containsKeys("service", "attributes")
+                  .satisfies(
+                      r -> {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> service = (Map<String, Object>) r.get("service");
+                        assertThat(service).containsEntry("name", "test-service");
 
-                @SuppressWarnings("unchecked")
-                List<Object> attributes = (List<Object>) r.get("attributes");
-                assertThat(attributes).containsExactly("key1=value1", "key2=value2");
-              });
+                        @SuppressWarnings("unchecked")
+                        List<Object> attributes = (List<Object>) r.get("attributes");
+                        assertThat(attributes).containsExactly("key1=value1", "key2=value2");
+                      });
 
-          @SuppressWarnings("unchecked")
-          Map<String, Object> traces = (Map<String, Object>) map.get("traces");
-          assertThat(traces).containsEntry("exporter", "otlp");
-        });
+              @SuppressWarnings("unchecked")
+              Map<String, Object> traces = (Map<String, Object>) map.get("traces");
+              assertThat(traces).containsEntry("exporter", "otlp");
+            });
   }
 
   @Test
@@ -148,11 +159,12 @@ class EmbeddedConfigFileTest {
 
     assertThat(result)
         .containsOnlyKeys("list")
-        .satisfies(map -> {
-          @SuppressWarnings("unchecked")
-          List<Object> list = (List<Object>) map.get("list");
-          assertThat(list).hasSize(3).containsExactly("first", null, "third");
-        });
+        .satisfies(
+            map -> {
+              @SuppressWarnings("unchecked")
+              List<Object> list = (List<Object>) map.get("list");
+              assertThat(list).hasSize(3).containsExactly("first", null, "third");
+            });
   }
 
   @Test
@@ -188,23 +200,24 @@ class EmbeddedConfigFileTest {
 
     assertThat(result)
         .containsOnlyKeys("outer")
-        .satisfies(map -> {
-          @SuppressWarnings("unchecked")
-          List<Object> outer = (List<Object>) map.get("outer");
-          assertThat(outer).hasSize(2);
+        .satisfies(
+            map -> {
+              @SuppressWarnings("unchecked")
+              List<Object> outer = (List<Object>) map.get("outer");
+              assertThat(outer).hasSize(2);
 
-          @SuppressWarnings("unchecked")
-          Map<String, Object> firstElement = (Map<String, Object>) outer.get(0);
-          @SuppressWarnings("unchecked")
-          List<Object> firstInner = (List<Object>) firstElement.get("inner");
-          assertThat(firstInner).containsExactly("value1", "value2");
+              @SuppressWarnings("unchecked")
+              Map<String, Object> firstElement = (Map<String, Object>) outer.get(0);
+              @SuppressWarnings("unchecked")
+              List<Object> firstInner = (List<Object>) firstElement.get("inner");
+              assertThat(firstInner).containsExactly("value1", "value2");
 
-          @SuppressWarnings("unchecked")
-          Map<String, Object> secondElement = (Map<String, Object>) outer.get(1);
-          @SuppressWarnings("unchecked")
-          List<Object> secondInner = (List<Object>) secondElement.get("inner");
-          assertThat(secondInner).containsExactly("value3");
-        });
+              @SuppressWarnings("unchecked")
+              Map<String, Object> secondElement = (Map<String, Object>) outer.get(1);
+              @SuppressWarnings("unchecked")
+              List<Object> secondInner = (List<Object>) secondElement.get("inner");
+              assertThat(secondInner).containsExactly("value3");
+            });
   }
 
   @Test

@@ -37,12 +37,14 @@ class ShadingTest {
       jarFile.stream()
           .map(JarEntry::getName)
           .filter(entryName -> !entryName.endsWith("/")) // Skip directories
-          .forEach(entryName -> {
-            boolean isExpected = EXPECTED_ENTRY_PREFIXES.stream().anyMatch(entryName::startsWith);
-            if (!isExpected) {
-              unexpectedEntries.add(entryName);
-            }
-          });
+          .forEach(
+              entryName -> {
+                boolean isExpected =
+                    EXPECTED_ENTRY_PREFIXES.stream().anyMatch(entryName::startsWith);
+                if (!isExpected) {
+                  unexpectedEntries.add(entryName);
+                }
+              });
     }
 
     assertThat(unexpectedEntries).isEmpty();

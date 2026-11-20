@@ -192,9 +192,10 @@ class ChannelPipelineTest {
     List<ChannelHandler> list = new ArrayList<>();
     channelPipeline
         .iterator()
-        .forEachRemaining(entry -> {
-          list.add(entry.getValue());
-        });
+        .forEachRemaining(
+            entry -> {
+              list.add(entry.getValue());
+            });
     assertThat(list).containsExactly(httpHandler);
   }
 

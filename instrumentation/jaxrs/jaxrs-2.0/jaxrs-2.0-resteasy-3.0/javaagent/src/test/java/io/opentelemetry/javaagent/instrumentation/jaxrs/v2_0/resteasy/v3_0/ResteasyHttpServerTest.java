@@ -42,12 +42,13 @@ class ResteasyHttpServerTest extends JaxRsHttpServerTest<UndertowJaxrsServer> {
 
     options.setContextPath("/resteasy-context");
     options.setResponseCodeOnNonStandardHttpMethod(500);
-    options.setExpectedHttpRoute((endpoint, method) -> {
-      if (HttpConstants._OTHER.equals(method)) {
-        return getContextPath() + "/*";
-      }
-      return expectedHttpRoute(endpoint, method);
-    });
+    options.setExpectedHttpRoute(
+        (endpoint, method) -> {
+          if (HttpConstants._OTHER.equals(method)) {
+            return getContextPath() + "/*";
+          }
+          return expectedHttpRoute(endpoint, method);
+        });
   }
 
   // resteasy 3.0.x does not support JAX-RS 2.1

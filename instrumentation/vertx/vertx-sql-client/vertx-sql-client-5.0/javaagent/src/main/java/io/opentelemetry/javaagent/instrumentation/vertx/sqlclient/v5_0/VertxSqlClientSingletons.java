@@ -167,24 +167,25 @@ public class VertxSqlClientSingletons {
 
   public static Future<SqlConnection> attachClientState(
       Future<SqlConnection> future, @Nullable VertxSqlClientState poolState) {
-    return future.transform(result -> {
-      if (result.succeeded() && result.result() instanceof SqlClientBase) {
-        SqlClientBase sqlClientBase = (SqlClientBase) result.result();
-        VertxSqlClientState state = poolState;
-        if (state == null || state.isSupplier()) {
-          VertxSqlClientState connectionState = getClientState(sqlClientBase);
-          if (connectionState != null) {
-            state = connectionState;
+    return future.transform(
+        result -> {
+          if (result.succeeded() && result.result() instanceof SqlClientBase) {
+            SqlClientBase sqlClientBase = (SqlClientBase) result.result();
+            VertxSqlClientState state = poolState;
+            if (state == null || state.isSupplier()) {
+              VertxSqlClientState connectionState = getClientState(sqlClientBase);
+              if (connectionState != null) {
+                state = connectionState;
+              }
+            }
+            cacheConnectionState(
+                sqlClientBase,
+                state != null && state.isSupplier()
+                    ? new VertxSqlClientState(state.getInfo(), false)
+                    : state);
           }
-        }
-        cacheConnectionState(
-            sqlClientBase,
-            state != null && state.isSupplier()
-                ? new VertxSqlClientState(state.getInfo(), false)
-                : state);
-      }
-      return copyResult(result);
-    });
+          return copyResult(result);
+        });
   }
 
   @Nullable
@@ -203,14 +204,15 @@ public class VertxSqlClientSingletons {
 
   public static Future<SqlConnectOptions> captureConnectionAttempt(
       Future<SqlConnectOptions> connectOptionsFuture, ConnectionAttempt connectionAttempt) {
-    return connectOptionsFuture.map(connectOptions -> {
-      try {
-        connectionAttempt.capture(connectOptions);
-      } catch (Throwable t) {
-        logger.log(FINE, "Failed to capture Vert.x SQL connection options", t);
-      }
-      return connectOptions;
-    });
+    return connectOptionsFuture.map(
+        connectOptions -> {
+          try {
+            connectionAttempt.capture(connectOptions);
+          } catch (Throwable t) {
+            logger.log(FINE, "Failed to capture Vert.x SQL connection options", t);
+          }
+          return connectOptions;
+        });
   }
 
   public static <T> Future<T> attachConnectionData(
@@ -218,21 +220,22 @@ public class VertxSqlClientSingletons {
     if (connectionAttempt == null) {
       return future;
     }
-    return future.transform(result -> {
-      try {
-        VertxSqlClientInfo info = connectionAttempt.info;
-        if (info != null) {
-          if (result.succeeded()) {
-            cacheConnectionState(result.result(), new VertxSqlClientState(info, false));
-          } else {
-            connectionAttempt.captureFailureInfo(info);
+    return future.transform(
+        result -> {
+          try {
+            VertxSqlClientInfo info = connectionAttempt.info;
+            if (info != null) {
+              if (result.succeeded()) {
+                cacheConnectionState(result.result(), new VertxSqlClientState(info, false));
+              } else {
+                connectionAttempt.captureFailureInfo(info);
+              }
+            }
+          } catch (Throwable t) {
+            logger.log(FINE, "Failed to attach Vert.x SQL connection metadata", t);
           }
-        }
-      } catch (Throwable t) {
-        logger.log(FINE, "Failed to attach Vert.x SQL connection metadata", t);
-      }
-      return copyResult(result);
-    });
+          return copyResult(result);
+        });
   }
 
   private static <T> Future<T> copyResult(AsyncResult<T> result) {

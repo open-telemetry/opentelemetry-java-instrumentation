@@ -134,12 +134,13 @@ public class DropwizardMetricsAdapter implements MetricRegistryListener {
     ObservableDoubleGauge otelGauge =
         otelMeter
             .gaugeBuilder(sanitizedName)
-            .buildWithCallback(measurement -> {
-              Object val = gauge.getValue();
-              if (val instanceof Number) {
-                measurement.record(((Number) val).doubleValue());
-              }
-            });
+            .buildWithCallback(
+                measurement -> {
+                  Object val = gauge.getValue();
+                  if (val instanceof Number) {
+                    measurement.record(((Number) val).doubleValue());
+                  }
+                });
     otelGauges.put(name, otelGauge);
   }
 

@@ -37,11 +37,12 @@ class SpringPulsarTest extends AbstractSpringPulsarTest {
                         .hasAttributesSatisfyingExactly(processAttributes()),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(2))),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("receive " + OTEL_TOPIC)
-                    .hasKind(CLIENT)
-                    .hasNoParent()
-                    .hasAttributesSatisfyingExactly(receiveAttributes())));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("receive " + OTEL_TOPIC)
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(receiveAttributes())));
     assertProcessMetrics();
   }
 }

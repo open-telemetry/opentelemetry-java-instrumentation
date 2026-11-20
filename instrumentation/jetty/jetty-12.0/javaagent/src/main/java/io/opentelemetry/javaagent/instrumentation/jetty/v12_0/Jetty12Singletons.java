@@ -23,11 +23,12 @@ class Jetty12Singletons {
             new Jetty12HttpAttributesGetter(),
             new Jetty12TextMapGetter(),
             builder ->
-                builder.addContextCustomizer((context, request, attributes) ->
-                    new AppServerBridge.Builder()
-                        .captureServletAttributes()
-                        .recordException()
-                        .init(context)));
+                builder.addContextCustomizer(
+                    (context, request, attributes) ->
+                        new AppServerBridge.Builder()
+                            .captureServletAttributes()
+                            .recordException()
+                            .init(context)));
   }
 
   private static final Jetty12Helper helper = new Jetty12Helper(instrumenter);

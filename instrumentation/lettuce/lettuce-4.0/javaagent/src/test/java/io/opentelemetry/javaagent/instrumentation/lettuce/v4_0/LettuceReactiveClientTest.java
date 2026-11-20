@@ -125,23 +125,26 @@ class LettuceReactiveClientTest {
 
     assertThat(future.get(10, SECONDS)).isEqualTo("OK");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("SET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "SET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
-            span ->
-                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -160,18 +163,20 @@ class LettuceReactiveClientTest {
 
     assertThat(future.get(10, SECONDS)).isEqualTo("TESTVAL");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("GET " + host + ":" + port)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, REDIS),
-                    equalTo(DB_NAMESPACE, "0"),
-                    equalTo(DB_OPERATION_NAME, "GET"),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                    equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
   }
 
   @Test
@@ -183,29 +188,31 @@ class LettuceReactiveClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("GET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "GET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("GET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "GET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
   }
 
   // to make sure instrumentation's chained completion stages won't interfere with user's, while
@@ -234,22 +241,25 @@ class LettuceReactiveClientTest {
 
     assertThat(future.get(10, SECONDS)).isEqualTo(defaultVal);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("GET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "GET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
-            span ->
-                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -260,18 +270,20 @@ class LettuceReactiveClientTest {
     reactiveCommands.randomkey().subscribe(future::complete, future::completeExceptionally);
 
     assertThat(future.get(10, SECONDS)).isNotNull();
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("RANDOMKEY " + host + ":" + port)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, REDIS),
-                    equalTo(DB_NAMESPACE, "0"),
-                    equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                    equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("RANDOMKEY " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
   }
 
   @Test
@@ -282,18 +294,20 @@ class LettuceReactiveClientTest {
     reactiveCommands.command().count().subscribe(future::complete, future::completeExceptionally);
 
     assertThat(future.get(10, SECONDS)).isGreaterThan(100);
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("COMMAND " + host + ":" + port)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, REDIS),
-                    equalTo(DB_NAMESPACE, "0"),
-                    equalTo(DB_OPERATION_NAME, "COMMAND"),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                    equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("COMMAND " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "COMMAND"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
   }
 
   @Test
@@ -308,18 +322,20 @@ class LettuceReactiveClientTest {
         .subscribe(future::complete, future::completeExceptionally);
 
     assertThat(future.get(10, SECONDS)).isEqualTo(2);
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("COMMAND " + host + ":" + port)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, REDIS),
-                    equalTo(DB_NAMESPACE, "0"),
-                    equalTo(DB_OPERATION_NAME, "COMMAND"),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port),
-                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                    equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("COMMAND " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "COMMAND"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
   }
 
   @Test
@@ -332,21 +348,24 @@ class LettuceReactiveClientTest {
 
   @Test
   void testShutdownCommandShouldProduceSpan() {
-    withIsolatedContainer((connection, port) -> {
-      RedisReactiveCommands<String, String> commands = connection.reactive();
-      commands.shutdown(false).subscribe();
+    withIsolatedContainer(
+        (connection, port) -> {
+          RedisReactiveCommands<String, String> commands = connection.reactive();
+          commands.shutdown(false).subscribe();
 
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(span ->
-              span.hasName("SHUTDOWN " + host + ":" + port)
-                  .hasKind(SpanKind.CLIENT)
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(DB_SYSTEM_NAME, REDIS),
-                      equalTo(DB_NAMESPACE, "0"),
-                      equalTo(DB_OPERATION_NAME, "SHUTDOWN"),
-                      equalTo(SERVER_ADDRESS, host),
-                      equalTo(SERVER_PORT, port))));
-    });
+          testing.waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span ->
+                          span.hasName("SHUTDOWN " + host + ":" + port)
+                              .hasKind(SpanKind.CLIENT)
+                              .hasAttributesSatisfyingExactly(
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_NAMESPACE, "0"),
+                                  equalTo(DB_OPERATION_NAME, "SHUTDOWN"),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, port))));
+        });
   }
 
   @Test
@@ -361,33 +380,34 @@ class LettuceReactiveClientTest {
             });
 
     assertThat(result).isEqualTo("1");
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("test-parent").hasTotalAttributeCount(0),
-            span ->
-                span.hasName("SET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "SET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
-            span ->
-                span.hasName("GET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "GET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
   }
 
   @Test
@@ -407,33 +427,34 @@ class LettuceReactiveClientTest {
                     future::completeExceptionally));
 
     await().untilAsserted(() -> assertThat(future).isCompletedWithValue("1"));
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("test-parent").hasTotalAttributeCount(0),
-            span ->
-                span.hasName("SET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "SET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
-            span ->
-                span.hasName("GET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "GET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
   }
 
   @Test
@@ -455,33 +476,34 @@ class LettuceReactiveClientTest {
                     future::completeExceptionally));
 
     await().untilAsserted(() -> assertThat(future).isCompletedWithValue("1"));
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("test-parent").hasTotalAttributeCount(0),
-            span ->
-                span.hasName("SET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "SET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
-            span ->
-                span.hasName("GET " + host + ":" + port)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_NAMESPACE, "0"),
-                        equalTo(DB_OPERATION_NAME, "GET"),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(NETWORK_PEER_ADDRESS, ip),
-                        equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test-parent").hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("SET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "SET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port))),
+                span ->
+                    span.hasName("GET " + host + ":" + port)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, Long.valueOf(port)))));
   }
 
   private static void withIsolatedContainer(

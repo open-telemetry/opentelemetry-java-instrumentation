@@ -33,10 +33,11 @@ public class LoggingExporterAutoConfiguration {
   @Bean
   public AutoConfigurationCustomizerProvider loggingOtelCustomizer() {
     return p ->
-        p.addTracerProviderCustomizer((builder, config) -> {
-          enableLoggingExporter(builder, config);
-          return builder;
-        });
+        p.addTracerProviderCustomizer(
+            (builder, config) -> {
+              enableLoggingExporter(builder, config);
+              return builder;
+            });
   }
 
   public static void enableLoggingExporter(

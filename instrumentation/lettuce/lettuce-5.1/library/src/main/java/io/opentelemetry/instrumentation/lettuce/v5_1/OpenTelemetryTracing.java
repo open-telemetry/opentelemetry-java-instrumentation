@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.lettuce.core.RedisCommandExecutionException;
 import io.lettuce.core.output.CommandOutput;
 import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.CommandWrapper;
@@ -211,17 +212,19 @@ final class OpenTelemetryTracing implements Tracing {
       if (command instanceof CompleteableCommand) {
         CompleteableCommand<?> completeableCommand = (CompleteableCommand<?>) command;
         AsyncCommand<?, ?, ?> asyncCommand = CommandWrapper.unwrap(command, AsyncCommand.class);
-        completeableCommand.onComplete((o, throwable) -> {
-          Throwable error = throwable != null ? throwable : this.error;
-          // CommandWrapper can report null even when its async delegate failed.
-          if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
-            asyncCommand.whenComplete((result, terminalError) ->
-                finishFromOutput(
-                    command.getOutput(), terminalError != null ? terminalError : error));
-          } else {
-            finishFromOutput(command.getOutput(), error);
-          }
-        });
+        completeableCommand.onComplete(
+            (o, throwable) -> {
+              Throwable error = throwable != null ? throwable : this.error;
+              // CommandWrapper can report null even when its async delegate failed.
+              if (asyncCommand != null && asyncCommand.isCompletedExceptionally()) {
+                asyncCommand.whenComplete(
+                    (result, terminalError) ->
+                        finishFromOutput(
+                            command.getOutput(), terminalError != null ? terminalError : error));
+              } else {
+                finishFromOutput(command.getOutput(), error);
+              }
+            });
       }
 
       return this;
@@ -311,11 +314,11 @@ final class OpenTelemetryTracing implements Tracing {
 
     private void finishFromOutput(
         @Nullable CommandOutput<?, ?, ?> output, @Nullable Throwable error) {
-      if (error != null) {
+      if (error != null && !(error instanceof RedisCommandExecutionException)) {
         end(null, error);
-      } else {
-        end(LettuceResponse.fromCommandOutput(output), null);
+        return;
       }
+      end(LettuceResponse.fromCommandOutput(output), error);
     }
 
     private void end(@Nullable LettuceResponse response, @Nullable Throwable error) {

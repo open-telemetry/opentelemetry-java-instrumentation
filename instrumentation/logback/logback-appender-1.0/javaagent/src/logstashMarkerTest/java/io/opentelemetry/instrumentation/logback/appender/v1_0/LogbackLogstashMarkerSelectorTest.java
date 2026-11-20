@@ -42,11 +42,12 @@ class LogbackLogstashMarkerSelectorTest {
         .addMarker(Markers.append("other", "other-value"))
         .log();
 
-    testing.waitAndAssertLogRecords(logRecord -> {
-      Attributes attributes = logRecord.actual().getAttributes();
-      assertThat(capturedMarkerAttributes(attributes))
-          .containsExactlyInAnyOrderEntriesOf(expectedMarkerAttributes());
-    });
+    testing.waitAndAssertLogRecords(
+        logRecord -> {
+          Attributes attributes = logRecord.actual().getAttributes();
+          assertThat(capturedMarkerAttributes(attributes))
+              .containsExactlyInAnyOrderEntriesOf(expectedMarkerAttributes());
+        });
   }
 
   private static Map<String, String> markerAttributes() {
@@ -60,12 +61,13 @@ class LogbackLogstashMarkerSelectorTest {
 
   private static Map<String, String> capturedMarkerAttributes(Attributes attributes) {
     Map<String, String> captured = new HashMap<>();
-    MARKER_ATTRIBUTES.forEach((key, value) -> {
-      String attributeValue = attributes.get(stringKey(key));
-      if (attributeValue != null) {
-        captured.put(key, attributeValue);
-      }
-    });
+    MARKER_ATTRIBUTES.forEach(
+        (key, value) -> {
+          String attributeValue = attributes.get(stringKey(key));
+          if (attributeValue != null) {
+            captured.put(key, attributeValue);
+          }
+        });
     return captured;
   }
 

@@ -34,8 +34,9 @@ public class CpuCount {
             .upDownCounterBuilder("jvm.cpu.count")
             .setDescription("Number of processors available to the Java virtual machine.")
             .setUnit("{cpu}")
-            .buildWithCallback(observableMeasurement ->
-                observableMeasurement.record(availableProcessors.getAsInt()));
+            .buildWithCallback(
+                observableMeasurement ->
+                    observableMeasurement.record(availableProcessors.getAsInt()));
     return singletonList(observable);
   }
 

@@ -37,9 +37,10 @@ class SqsCamelTest {
   }
 
   private static void waitAndClearSetupTraces(String queueUrl, String queueName) {
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName)));
     testing.clearData();
   }
 
@@ -62,9 +63,10 @@ class SqsCamelTest {
                 span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace -> assertCamelProducedConsumerTrace(trace, queueUrl, queueName),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
-                    .hasNoParent()));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
+                        .hasNoParent()));
     assertSendAndProcessMetrics(testing, "aws.sqs", queueName);
     camelApp.stop();
   }
@@ -88,9 +90,10 @@ class SqsCamelTest {
                 span -> AwsSpanAssertions.sqs(span, "SQS.ListQueues").hasNoParent()),
         trace -> assertSdkProducedConsumerTrace(trace, queueUrl, queueName),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
-                    .hasNoParent()));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
+                        .hasNoParent()));
     if (!Boolean.getBoolean("testCamelDisabled")) {
       assertProcessMetrics(testing, "aws.sqs", queueName);
     }

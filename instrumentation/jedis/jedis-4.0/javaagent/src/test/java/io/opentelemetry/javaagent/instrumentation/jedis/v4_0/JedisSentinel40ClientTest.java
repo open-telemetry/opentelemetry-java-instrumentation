@@ -96,14 +96,16 @@ class JedisSentinel40ClientTest {
     try {
       set(pool, "before-failover");
       await()
-          .untilAsserted(() ->
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("SET"))
-                  .anySatisfy(span -> {
-                    assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                        .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                    assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                  }));
+          .untilAsserted(
+              () ->
+                  assertThat(testing.spans())
+                      .filteredOn(span -> span.getName().startsWith("SET"))
+                      .anySatisfy(
+                          span -> {
+                            assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                                .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                            assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                          }));
       testing.clearData();
 
       Container.ExecResult failover =
@@ -139,25 +141,30 @@ class JedisSentinel40ClientTest {
     }
 
     await()
-        .untilAsserted(() -> {
-          assertThat(testing.spans())
-              .filteredOn(span -> span.getName().startsWith("SET"))
-              .isNotEmpty()
-              .allSatisfy(span -> {
-                assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-              });
-          assertThat(testing.spans())
-              .filteredOn(span ->
-                  span.getName().startsWith("SENTINEL") || span.getName().startsWith("SUBSCRIBE"))
-              .isNotEmpty()
-              .allSatisfy(span -> {
-                assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-              });
-        });
+        .untilAsserted(
+            () -> {
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("SET"))
+                  .isNotEmpty()
+                  .allSatisfy(
+                      span -> {
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                      });
+              assertThat(testing.spans())
+                  .filteredOn(
+                      span ->
+                          span.getName().startsWith("SENTINEL")
+                              || span.getName().startsWith("SUBSCRIBE"))
+                  .isNotEmpty()
+                  .allSatisfy(
+                      span -> {
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                      });
+            });
   }
 
   @Test
@@ -185,15 +192,17 @@ class JedisSentinel40ClientTest {
     }
 
     await()
-        .untilAsserted(() ->
-            assertThat(testing.spans())
-                .filteredOn(span -> span.getName().startsWith("SET"))
-                .isNotEmpty()
-                .allSatisfy(span -> {
-                  assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                      .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                  assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                }));
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(span -> span.getName().startsWith("SET"))
+                    .isNotEmpty()
+                    .allSatisfy(
+                        span -> {
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                        }));
   }
 
   private static void set(JedisSentinelPool pool, String key) {

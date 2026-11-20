@@ -15,9 +15,10 @@ class HttpHeaderSetter implements TextMapSetter<Request> {
   @Override
   public void set(@Nullable Request request, String key, String value) {
     if (request != null) {
-      request.headers(httpFields -> {
-        httpFields.put(new HttpField(key, value));
-      });
+      request.headers(
+          httpFields -> {
+            httpFields.put(new HttpField(key, value));
+          });
     }
   }
 }

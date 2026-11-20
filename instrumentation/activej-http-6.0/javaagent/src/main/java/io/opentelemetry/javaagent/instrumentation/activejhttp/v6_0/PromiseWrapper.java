@@ -16,8 +16,9 @@ class PromiseWrapper {
 
   static Promise<HttpResponse> wrap(
       Promise<HttpResponse> promise, HttpRequest httpRequest, Context context) {
-    return promise.whenComplete((httpResponse, exception) ->
-        instrumenter().end(context, httpRequest, httpResponse, exception));
+    return promise.whenComplete(
+        (httpResponse, exception) ->
+            instrumenter().end(context, httpRequest, httpResponse, exception));
   }
 
   private PromiseWrapper() {}

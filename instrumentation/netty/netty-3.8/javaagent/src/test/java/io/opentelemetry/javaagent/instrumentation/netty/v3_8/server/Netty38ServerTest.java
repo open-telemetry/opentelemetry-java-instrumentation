@@ -87,12 +87,13 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setHttpAttributes(serverEndpoint -> {
-      Set<AttributeKey<?>> attributes =
-          new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-      attributes.remove(HTTP_ROUTE);
-      return attributes;
-    });
+    options.setHttpAttributes(
+        serverEndpoint -> {
+          Set<AttributeKey<?>> attributes =
+              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+          attributes.remove(HTTP_ROUTE);
+          return attributes;
+        });
 
     options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(serverEndpoint -> true);
@@ -128,9 +129,10 @@ class Netty38ServerTest extends AbstractHttpServerTest<ServerBootstrap> {
                         } else if (INDEXED_CHILD.equals(endpoint)) {
                           responseContent =
                               ChannelBuffers.copiedBuffer(endpoint.getBody(), CharsetUtil.UTF_8);
-                          endpoint.collectSpanAttributes(name ->
-                              new QueryStringDecoder(uri)
-                                  .getParameters().get(name).stream().findFirst().orElse(null));
+                          endpoint.collectSpanAttributes(
+                              name ->
+                                  new QueryStringDecoder(uri)
+                                      .getParameters().get(name).stream().findFirst().orElse(null));
                           response =
                               new DefaultHttpResponse(
                                   HTTP_1_1, HttpResponseStatus.valueOf(endpoint.getStatus()));

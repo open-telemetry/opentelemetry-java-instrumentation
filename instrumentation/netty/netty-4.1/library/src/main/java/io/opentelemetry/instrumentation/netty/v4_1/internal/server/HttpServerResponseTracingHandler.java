@@ -81,12 +81,13 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
           // Headers and body all sent together, we have the response information in the msg.
           beforeCommitHandler.handle(serverContext.context(), (HttpResponse) msg);
           serverContexts.pollFirst();
-          writePromise.addListener(future ->
-              end(
-                  serverContext.context(),
-                  serverContext.request(),
-                  (FullHttpResponse) msg,
-                  writePromise));
+          writePromise.addListener(
+              future ->
+                  end(
+                      serverContext.context(),
+                      serverContext.request(),
+                      (FullHttpResponse) msg,
+                      writePromise));
         }
       } else {
         HttpResponse responseTest = ctx.channel().attr(HTTP_SERVER_RESPONSE).get();
@@ -97,8 +98,9 @@ public class HttpServerResponseTracingHandler extends ChannelOutboundHandlerAdap
           // LastHttpContent).
           serverContexts.pollFirst();
           HttpResponse response = ctx.channel().attr(HTTP_SERVER_RESPONSE).getAndSet(null);
-          writePromise.addListener(future ->
-              end(serverContext.context(), serverContext.request(), response, writePromise));
+          writePromise.addListener(
+              future ->
+                  end(serverContext.context(), serverContext.request(), response, writePromise));
         }
       }
     } else {

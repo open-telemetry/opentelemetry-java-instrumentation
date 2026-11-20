@@ -28,10 +28,11 @@ class ServerHttpSecurityInstrumentationTest {
     SecurityWebFilterChain securityWebFilterChain = serverHttpSecurity.build();
 
     assertThat(securityWebFilterChain.getWebFilters().collectList().block())
-        .filteredOn(item ->
-            item.getClass()
-                .getName()
-                .endsWith(UserAttributesCapturingWebFilter.class.getSimpleName()))
+        .filteredOn(
+            item ->
+                item.getClass()
+                    .getName()
+                    .endsWith(UserAttributesCapturingWebFilter.class.getSimpleName()))
         .hasSize(1);
   }
 }

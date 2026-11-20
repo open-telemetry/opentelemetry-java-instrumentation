@@ -48,17 +48,18 @@ class ScopedThreadSuppressionTest {
     assertThat(suppression.tryAcquire()).isTrue();
 
     Thread thread =
-        new Thread(() -> {
-          try {
-            assertThat(suppression.isActive()).isFalse();
-            assertThat(suppression.tryAcquire()).isTrue();
-            assertThat(suppression.isActive()).isTrue();
-            suppression.release();
-            assertThat(suppression.isActive()).isFalse();
-          } catch (Throwable t) {
-            failure.set(t);
-          }
-        });
+        new Thread(
+            () -> {
+              try {
+                assertThat(suppression.isActive()).isFalse();
+                assertThat(suppression.tryAcquire()).isTrue();
+                assertThat(suppression.isActive()).isTrue();
+                suppression.release();
+                assertThat(suppression.isActive()).isFalse();
+              } catch (Throwable t) {
+                failure.set(t);
+              }
+            });
     thread.start();
     thread.join();
 

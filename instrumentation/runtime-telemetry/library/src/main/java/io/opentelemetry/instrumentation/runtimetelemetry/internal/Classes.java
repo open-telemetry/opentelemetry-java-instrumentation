@@ -50,8 +50,9 @@ public class Classes {
               .counterBuilder("jvm.class.loaded")
               .setDescription("Number of classes loaded since JVM start.")
               .setUnit("{class}")
-              .buildWithCallback(observableMeasurement ->
-                  observableMeasurement.record(classBean.getTotalLoadedClassCount())));
+              .buildWithCallback(
+                  observableMeasurement ->
+                      observableMeasurement.record(classBean.getTotalLoadedClassCount())));
     }
     if (metricNamePredicate.test("jvm.class.unloaded")) {
       observables.add(
@@ -59,8 +60,9 @@ public class Classes {
               .counterBuilder("jvm.class.unloaded")
               .setDescription("Number of classes unloaded since JVM start.")
               .setUnit("{class}")
-              .buildWithCallback(observableMeasurement ->
-                  observableMeasurement.record(classBean.getUnloadedClassCount())));
+              .buildWithCallback(
+                  observableMeasurement ->
+                      observableMeasurement.record(classBean.getUnloadedClassCount())));
     }
     if (metricNamePredicate.test("jvm.class.count")) {
       observables.add(
@@ -68,8 +70,9 @@ public class Classes {
               .upDownCounterBuilder("jvm.class.count")
               .setDescription("Number of classes currently loaded.")
               .setUnit("{class}")
-              .buildWithCallback(observableMeasurement ->
-                  observableMeasurement.record(classBean.getLoadedClassCount())));
+              .buildWithCallback(
+                  observableMeasurement ->
+                      observableMeasurement.record(classBean.getLoadedClassCount())));
     }
 
     return observables;

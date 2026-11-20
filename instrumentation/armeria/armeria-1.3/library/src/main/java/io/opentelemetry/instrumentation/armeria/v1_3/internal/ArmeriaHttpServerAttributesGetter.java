@@ -11,7 +11,7 @@ import com.linecorp.armeria.common.SessionProtocol;
 import com.linecorp.armeria.common.logging.RequestLog;
 import com.linecorp.armeria.server.ServiceRequestContext;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -98,14 +98,14 @@ final class ArmeriaHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       ServiceRequestContext ctx, @Nullable RequestLog requestLog) {
     return RequestContextAccess.remoteAddress(ctx);
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public SocketAddress getNetworkLocalSocketAddress(
       ServiceRequestContext ctx, @Nullable RequestLog log) {
     return RequestContextAccess.localAddress(ctx);
   }

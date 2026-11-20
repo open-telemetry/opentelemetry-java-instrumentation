@@ -60,17 +60,18 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
       Map<String, String> headers,
       HttpClientResult httpClientResult) {
     internalSendRequest(wsRequest, method)
-        .whenComplete((wsResponse, throwable) -> {
-          if (wsResponse != null) {
-            httpClientResult.complete(wsResponse::getStatus, throwable);
-          } else {
-            httpClientResult.complete(
-                () -> {
-                  throw new IllegalArgumentException("wsResponse is null!", throwable);
-                },
-                throwable);
-          }
-        });
+        .whenComplete(
+            (wsResponse, throwable) -> {
+              if (wsResponse != null) {
+                httpClientResult.complete(wsResponse::getStatus, throwable);
+              } else {
+                httpClientResult.complete(
+                    () -> {
+                      throw new IllegalArgumentException("wsResponse is null!", throwable);
+                    },
+                    throwable);
+              }
+            });
   }
 
   @Override
@@ -83,8 +84,9 @@ class PlayWsClientTest extends AbstractHttpClientTest<WSRequest> {
     // nor waiting for connection pool slots to free up. Therefore making a single connection test
     // would require manually sequencing the connections, which is not meaningful for a high
     // concurrency test.
-    optionsBuilder.setSingleConnectionFactory((a, b) ->
-        null); // this can be omitted as it's the default. it's here for the comment above.
+    optionsBuilder.setSingleConnectionFactory(
+        (a, b) ->
+            null); // this can be omitted as it's the default. it's here for the comment above.
   }
 
   private static CompletionStage<WSResponse> internalSendRequest(

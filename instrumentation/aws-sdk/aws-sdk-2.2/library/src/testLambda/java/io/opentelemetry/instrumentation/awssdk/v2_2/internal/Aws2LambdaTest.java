@@ -31,9 +31,10 @@ class Aws2LambdaTest extends AbstractAws2LambdaTest {
 
   @BeforeAll
   static void setup() {
-    testing.runWithHttpServerSpan(() -> {
-      context = Context.current();
-    });
+    testing.runWithHttpServerSpan(
+        () -> {
+          context = Context.current();
+        });
 
     telemetry = AwsSdkTelemetry.create(testing.getOpenTelemetry());
   }

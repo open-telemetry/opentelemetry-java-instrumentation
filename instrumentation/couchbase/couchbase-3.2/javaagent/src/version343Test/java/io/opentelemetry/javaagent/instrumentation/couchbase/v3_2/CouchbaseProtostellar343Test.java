@@ -54,12 +54,14 @@ class CouchbaseProtostellar343Test {
                 emptyMap());
         request.raisedResponseToUser(null);
 
-        testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("get node:18099")
-                    .hasKind(CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(SERVER_ADDRESS, "node"), equalTo(SERVER_PORT, 18099L))));
+        testing.waitAndAssertTracesWithoutScopeVersionVerification(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("get node:18099")
+                            .hasKind(CLIENT)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(SERVER_ADDRESS, "node"), equalTo(SERVER_PORT, 18099L))));
       } finally {
         core.close();
       }

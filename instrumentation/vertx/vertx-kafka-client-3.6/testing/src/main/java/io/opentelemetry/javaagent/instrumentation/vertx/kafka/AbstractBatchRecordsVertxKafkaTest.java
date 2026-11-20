@@ -40,13 +40,14 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
     // in Vertx, a batch handler is something that runs in addition to the regular single record
     // handler -- the KafkaConsumer won't start polling unless you set the regular handler
     kafkaConsumer.batchHandler(BatchRecordsHandler.INSTANCE);
-    kafkaConsumer.handler(record -> {
-      assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
-      testing().runWithSpan("process " + record.value(), () -> {});
-      if (BatchRecordsHandler.recordProcessed()) {
-        kafkaConsumer.pause();
-      }
-    });
+    kafkaConsumer.handler(
+        record -> {
+          assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
+          testing().runWithSpan("process " + record.value(), () -> {});
+          if (BatchRecordsHandler.recordProcessed()) {
+            kafkaConsumer.pause();
+          }
+        });
 
     kafkaConsumer.partitionsAssignedHandler(partitions -> consumerReady.countDown());
     subscribe("testBatchTopic");
@@ -181,13 +182,14 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                                 batchProcessAttributes("testBatchTopic")),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))),
             trace ->
-                trace.hasSpansSatisfyingExactly(span ->
-                    span.hasName("poll testBatchTopic")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(
-                            batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("poll testBatchTopic")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinks(
+                                batchRecordLink(producer1.get()), batchRecordLink(producer2.get()))
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
   }
 
   private void assertBatchFailure(KafkaProducerRecord<String, String> record) {
@@ -227,11 +229,12 @@ public abstract class AbstractBatchRecordsVertxKafkaTest extends AbstractVertxKa
                                 withErrorType(batchProcessAttributes("testBatchTopic"))),
                     span -> span.hasName("batch consumer").hasParent(trace.getSpan(0))),
             trace ->
-                trace.hasSpansSatisfyingExactly(span ->
-                    span.hasName("poll testBatchTopic")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(batchRecordLink(producer.get()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("poll testBatchTopic")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinks(batchRecordLink(producer.get()))
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testBatchTopic"))));
   }
 }

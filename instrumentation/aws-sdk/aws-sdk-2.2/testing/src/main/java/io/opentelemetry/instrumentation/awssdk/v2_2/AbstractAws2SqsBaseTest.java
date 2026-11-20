@@ -291,12 +291,14 @@ public abstract class AbstractAws2SqsBaseTest extends AbstractAwsSdkTest {
             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
 
     // the creation context is linked even when it is also this span's parent
-    span.hasLinksSatisfying(links ->
-        assertThat(links)
-            .singleElement()
-            .satisfies(link ->
-                assertThat(link.getSpanContext().getSpanId())
-                    .isEqualTo(creationContext.getSpanId())));
+    span.hasLinksSatisfying(
+        links ->
+            assertThat(links)
+                .singleElement()
+                .satisfies(
+                    link ->
+                        assertThat(link.getSpanContext().getSpanId())
+                            .isEqualTo(creationContext.getSpanId())));
     return span;
   }
 

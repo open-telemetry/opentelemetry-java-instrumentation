@@ -43,14 +43,15 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
 
   @BeforeAll
   void setUpClient() throws Exception {
-    exec.run(unused -> {
-      ((DefaultExecController) exec.getController())
-          .setInitializers(ImmutableList.of(OpenTelemetryExecInitializer.INSTANCE));
-      ((DefaultExecController) exec.getController())
-          .setInterceptors(ImmutableList.of(OpenTelemetryExecInterceptor.INSTANCE));
-      client = buildHttpClient();
-      singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
-    });
+    exec.run(
+        unused -> {
+          ((DefaultExecController) exec.getController())
+              .setInitializers(ImmutableList.of(OpenTelemetryExecInitializer.INSTANCE));
+          ((DefaultExecController) exec.getController())
+              .setInterceptors(ImmutableList.of(OpenTelemetryExecInterceptor.INSTANCE));
+          client = buildHttpClient();
+          singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
+        });
   }
 
   @AfterAll
@@ -93,11 +94,14 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
     // ratpack-test 1.8 supports execute with an Action of registrySpec
     exec.yield(
             r -> r.add(Context.class, Context.current()),
-            e ->
-                Operation.of(() ->
-                        internalSendRequest(client, method, uri, headers)
-                            .result(result ->
-                                httpClientResult.complete(result::getValue, result.getThrowable())))
+            (e) ->
+                Operation.of(
+                        () ->
+                            internalSendRequest(client, method, uri, headers)
+                                .result(
+                                    result ->
+                                        httpClientResult.complete(
+                                            result::getValue, result.getThrowable())))
                     .promise())
         .getValueOrThrow();
   }
@@ -124,26 +128,28 @@ abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTest<Void
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setSingleConnectionFactory((host, port) ->
-        (path, headers) -> {
-          URI uri = resolveAddress(path);
-          return exec.yield(
-                  r -> r.add(Context.class, Context.current()),
-                  unused -> internalSendRequest(singleConnectionClient, "GET", uri, headers))
-              .getValueOrThrow();
-        });
+    optionsBuilder.setSingleConnectionFactory(
+        (host, port) ->
+            (path, headers) -> {
+              URI uri = resolveAddress(path);
+              return exec.yield(
+                      r -> r.add(Context.class, Context.current()),
+                      unused -> internalSendRequest(singleConnectionClient, "GET", uri, headers))
+                  .getValueOrThrow();
+            });
 
-    optionsBuilder.setClientSpanErrorMapper((uri, exception) -> {
-      if (uri.toString().equals("https://192.0.2.1/")) {
-        return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
-      } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
-        return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
-      } else if (uri.getPath().equals("/read-timeout")) {
-        return new HttpClientReadTimeoutException(
-            "Read timeout (PT2S) waiting on HTTP server at " + uri);
-      }
-      return exception;
-    });
+    optionsBuilder.setClientSpanErrorMapper(
+        (uri, exception) -> {
+          if (uri.toString().equals("https://192.0.2.1/")) {
+            return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
+          } else if (OS.WINDOWS.isCurrentOs() && uri.toString().equals("http://localhost:61/")) {
+            return new ConnectTimeoutException("Connect timeout (PT2S) connecting to " + uri);
+          } else if (uri.getPath().equals("/read-timeout")) {
+            return new HttpClientReadTimeoutException(
+                "Read timeout (PT2S) waiting on HTTP server at " + uri);
+          }
+          return exception;
+        });
     optionsBuilder.setHttpAttributes(this::computeHttpAttributes);
 
     optionsBuilder.disableTestRedirects();

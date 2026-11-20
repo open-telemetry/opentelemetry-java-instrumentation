@@ -29,12 +29,15 @@ class ConfiguredTraceAnnotationsTest {
   @Test
   void testMethodWithAnnotationShouldBeTraced() {
     assertThat(new AnnotationTracedCallable().call()).isEqualTo("Hello!");
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("AnnotationTracedCallable.call")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(
-                        CODE_FUNCTION_NAME, AnnotationTracedCallable.class.getName() + ".call"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("AnnotationTracedCallable.call")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                AnnotationTracedCallable.class.getName() + ".call"))));
   }
 
   static class AnnotationTracedCallable implements Callable<String> {

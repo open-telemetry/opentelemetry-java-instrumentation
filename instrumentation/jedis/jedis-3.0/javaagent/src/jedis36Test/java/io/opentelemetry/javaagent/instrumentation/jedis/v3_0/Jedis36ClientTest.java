@@ -61,9 +61,10 @@ class Jedis36ClientTest {
     testing.waitForTraces(1);
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(span -> {
-          assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo("localhost");
-          assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
-        });
+        .satisfies(
+            span -> {
+              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo("localhost");
+              assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
+            });
   }
 }

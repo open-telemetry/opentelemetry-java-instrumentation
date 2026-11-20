@@ -51,10 +51,13 @@ class McpCallbackContextTest {
         first
             .callTool(new McpSchema.CallToolRequest("first", Map.of(), null))
             .doOnSubscribe(unused -> callbackContexts.add(Context.current()))
-            .doOnNext(result -> {
-              callbackContexts.add(Context.current());
-              second.callTool(new McpSchema.CallToolRequest("second", Map.of(), null)).subscribe();
-            })
+            .doOnNext(
+                result -> {
+                  callbackContexts.add(Context.current());
+                  second
+                      .callTool(new McpSchema.CallToolRequest("second", Map.of(), null))
+                      .subscribe();
+                })
             .doOnError(unused -> callbackContexts.add(Context.current()))
             .onErrorResume(
                 McpError.class,
@@ -160,10 +163,11 @@ class McpCallbackContextTest {
     try {
       client
           .callTool(new McpSchema.CallToolRequest("async", Map.of(), null))
-          .doOnNext(result -> {
-            callbackContext.set(Context.current());
-            testing.runWithSpan("callback", () -> {});
-          })
+          .doOnNext(
+              result -> {
+                callbackContext.set(Context.current());
+                testing.runWithSpan("callback", () -> {});
+              })
           .subscribe();
       testing.runWithSpan(
           "response-thread",

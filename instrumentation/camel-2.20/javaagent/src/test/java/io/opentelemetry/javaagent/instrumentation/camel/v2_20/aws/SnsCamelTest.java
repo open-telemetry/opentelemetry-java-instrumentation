@@ -72,9 +72,10 @@ class SnsCamelTest {
                 span ->
                     CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(0))),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", metaData.queueUrl, queueName)
-                    .hasNoParent()));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", metaData.queueUrl, queueName)
+                        .hasNoParent()));
 
     try {
       awsConnector.purgeQueue(metaData.queueUrl);
@@ -123,9 +124,10 @@ class SnsCamelTest {
                 span ->
                     CamelSpanAssertions.sqsConsume(span, queueName).hasParent(trace.getSpan(2))),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
-                    .hasNoParent()));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.DeleteMessage", queueUrl, queueName)
+                        .hasNoParent()));
 
     try {
       awsConnector.purgeQueue(queueUrl);
@@ -138,20 +140,27 @@ class SnsCamelTest {
   private static void waitAndClearSetupTraces(String queueUrl, String queueName, String topicArn) {
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName).hasNoParent()),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.CreateQueue", queueUrl, queueName)
+                        .hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sqs(span, "SQS.GetQueueAttributes", queueUrl).hasNoParent()),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.GetQueueAttributes", queueUrl).hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sqs(span, "SQS.SetQueueAttributes", queueUrl).hasNoParent()),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sqs(span, "SQS.SetQueueAttributes", queueUrl).hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sns(span, "SNS.CreateTopic", topicArn, null).hasNoParent()),
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sns(span, "SNS.CreateTopic", topicArn, null).hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                AwsSpanAssertions.sns(span, "SNS.Subscribe", topicArn, topicArn).hasNoParent()));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    AwsSpanAssertions.sns(span, "SNS.Subscribe", topicArn, topicArn)
+                        .hasNoParent()));
     testing.clearData();
   }
 

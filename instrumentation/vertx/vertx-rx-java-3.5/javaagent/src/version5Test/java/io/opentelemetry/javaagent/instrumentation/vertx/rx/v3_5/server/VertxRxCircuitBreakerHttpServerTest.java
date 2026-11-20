@@ -44,12 +44,13 @@ class VertxRxCircuitBreakerHttpServerTest extends AbstractVertxRxHttpServerTest 
     void handle(RoutingContext ctx, ServerEndpoint endpoint, Runnable action) {
       breaker
           .execute(future -> future.complete(endpoint))
-          .onComplete(result -> {
-            if (result.failed()) {
-              throw new IllegalStateException(result.cause());
-            }
-            controller(endpoint, action::run);
-          });
+          .onComplete(
+              result -> {
+                if (result.failed()) {
+                  throw new IllegalStateException(result.cause());
+                }
+                controller(endpoint, action::run);
+              });
     }
 
     @Override
@@ -66,33 +67,39 @@ class VertxRxCircuitBreakerHttpServerTest extends AbstractVertxRxHttpServerTest 
       configure(router);
       router
           .route(EXCEPTION.getPath())
-          .handler(ctx ->
-              breaker
-                  .execute(future -> future.fail(new IllegalStateException(EXCEPTION.getBody())))
-                  .onComplete(result -> {
-                    try {
-                      Throwable cause = result.cause();
-                      controller(
-                          EXCEPTION,
-                          () -> {
-                            throw cause;
-                          });
-                    } catch (Throwable t) {
-                      ctx.response().setStatusCode(EXCEPTION.getStatus()).end(t.getMessage());
-                    }
-                  }));
+          .handler(
+              ctx ->
+                  breaker
+                      .execute(
+                          future -> future.fail(new IllegalStateException(EXCEPTION.getBody())))
+                      .onComplete(
+                          result -> {
+                            try {
+                              Throwable cause = result.cause();
+                              controller(
+                                  EXCEPTION,
+                                  () -> {
+                                    throw cause;
+                                  });
+                            } catch (Throwable t) {
+                              ctx.response()
+                                  .setStatusCode(EXCEPTION.getStatus())
+                                  .end(t.getMessage());
+                            }
+                          }));
 
       vertx
           .createHttpServer()
           .requestHandler(router)
           .listen(port)
-          .onComplete(httpServerAsyncResult -> {
-            if (httpServerAsyncResult.failed()) {
-              startPromise.fail(httpServerAsyncResult.cause());
-              return;
-            }
-            startPromise.complete();
-          });
+          .onComplete(
+              httpServerAsyncResult -> {
+                if (httpServerAsyncResult.failed()) {
+                  startPromise.fail(httpServerAsyncResult.cause());
+                  return;
+                }
+                startPromise.complete();
+              });
     }
   }
 }

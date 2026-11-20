@@ -39,15 +39,16 @@ class PortAllocator {
 
     Runtime.getRuntime()
         .addShutdownHook(
-            new Thread(() -> {
-              for (Closeable socket : sockets) {
-                try {
-                  socket.close();
-                } catch (IOException ignored) {
-                  // Ignore
-                }
-              }
-            }));
+            new Thread(
+                () -> {
+                  for (Closeable socket : sockets) {
+                    try {
+                      socket.close();
+                    } catch (IOException ignored) {
+                      // Ignore
+                    }
+                  }
+                }));
   }
 
   /** Find open port. */

@@ -14,8 +14,8 @@ public class PekkoServerIgnoredTypesConfigurer implements IgnoredTypesConfigurer
 
   @Override
   public void configure(IgnoredTypesBuilder builder) {
-    // in PekkoHttpServerInstrumentationTestAsync http pipeline test sending this message trigger
-    // processing next request, we don't want to propagate context there
+    // A stream wake-up can process the next request, which must not inherit the sender's context.
     builder.ignoreTaskClass("org.apache.pekko.stream.impl.fusing.ActorGraphInterpreter$AsyncInput");
+    builder.ignoreTaskClass("org.apache.pekko.stream.impl.fusing.GraphInterpreterShell$AsyncInput");
   }
 }

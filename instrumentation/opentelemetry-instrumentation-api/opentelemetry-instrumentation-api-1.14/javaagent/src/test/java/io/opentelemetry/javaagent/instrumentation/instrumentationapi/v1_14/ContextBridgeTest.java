@@ -81,8 +81,9 @@ class ContextBridgeTest {
           testing.runWithSpan(
               "internal",
               () ->
-                  spanKeys.forEach(spanKey ->
-                      assertThat(spanKey.fromContextOrNull(Context.current())).isNotNull()));
+                  spanKeys.forEach(
+                      spanKey ->
+                          assertThat(spanKey.fromContextOrNull(Context.current())).isNotNull()));
         });
   }
 
@@ -107,15 +108,17 @@ class ContextBridgeTest {
             HttpServerRoute.update(
                 Context.current(), HttpServerRouteSource.SERVER, "/test/controller/:id"));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("GET /test/server/*")
-                .hasKind(SpanKind.SERVER)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(HTTP_ROUTE, "/test/server/*"),
-                    equalTo(ERROR_TYPE, "_OTHER"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /test/server/*")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_ROUTE, "/test/server/*"),
+                            equalTo(ERROR_TYPE, "_OTHER"))));
   }
 
   @Test
@@ -126,14 +129,16 @@ class ContextBridgeTest {
             HttpServerRoute.update(
                 Context.current(), HttpServerRouteSource.CONTROLLER, "/test/controller/:id"));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("GET /test/controller/:id")
-                .hasKind(SpanKind.SERVER)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(HTTP_ROUTE, "/test/controller/:id"),
-                    equalTo(ERROR_TYPE, "_OTHER"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET /test/controller/:id")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_ROUTE, "/test/controller/:id"),
+                            equalTo(ERROR_TYPE, "_OTHER"))));
   }
 }

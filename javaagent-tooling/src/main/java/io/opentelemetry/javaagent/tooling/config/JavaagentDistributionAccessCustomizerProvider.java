@@ -53,11 +53,12 @@ public final class JavaagentDistributionAccessCustomizerProvider
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
-    customizer.addModelCustomizer(model -> {
-      AgentDistributionConfig distributionConfig = parseConfig(model.getDistribution());
-      AgentDistributionConfig.set(distributionConfig);
-      return model;
-    });
+    customizer.addModelCustomizer(
+        model -> {
+          AgentDistributionConfig distributionConfig = parseConfig(model.getDistribution());
+          AgentDistributionConfig.set(distributionConfig);
+          return model;
+        });
   }
 
   private static AgentDistributionConfig parseConfig(@Nullable DistributionModel distribution) {

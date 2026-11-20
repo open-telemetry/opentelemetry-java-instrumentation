@@ -69,10 +69,11 @@ class KafkaUtilTest {
     AtomicReference<Cluster> reported = new AtomicReference<>(Cluster.empty());
     Metadata metadata = mock(Metadata.class);
     when(metadata.fetch())
-        .thenAnswer(invocation -> {
-          fetches.incrementAndGet();
-          return reported.get();
-        });
+        .thenAnswer(
+            invocation -> {
+              fetches.incrementAndGet();
+              return reported.get();
+            });
     Consumer<?, ?> client = stubConsumer();
     VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
 
@@ -112,10 +113,11 @@ class KafkaUtilTest {
     AtomicReference<KafkaClusterId> publishedWhenRead = new AtomicReference<>();
     Metadata metadata = mock(Metadata.class);
     when(metadata.fetch())
-        .thenAnswer(invocation -> {
-          publishedWhenRead.set(field.get(client));
-          return Cluster.empty();
-        });
+        .thenAnswer(
+            invocation -> {
+              publishedWhenRead.set(field.get(client));
+              return Cluster.empty();
+            });
 
     assertThat(KafkaUtil.initializeClusterId(client, field, new HolderWithMetadata(metadata)))
         .isNull();
@@ -160,10 +162,11 @@ class KafkaUtilTest {
     AtomicReference<Cluster> reported = new AtomicReference<>(Cluster.empty());
     Metadata metadata = mock(Metadata.class);
     when(metadata.fetch())
-        .thenAnswer(invocation -> {
-          fetches.incrementAndGet();
-          return reported.get();
-        });
+        .thenAnswer(
+            invocation -> {
+              fetches.incrementAndGet();
+              return reported.get();
+            });
     Consumer<?, ?> client = stubConsumer();
     VirtualField<Consumer<?, ?>, KafkaClusterId> field = clusterIdField();
     HolderWithMetadata holder = new HolderWithMetadata(metadata);
@@ -174,22 +177,23 @@ class KafkaUtilTest {
     ExecutorService pool = Executors.newFixedThreadPool(threads);
     try {
       for (int i = 0; i < threads; i++) {
-        pool.execute(() -> {
-          try {
-            start.await();
-            // The getClusterId() path, while the broker is still silent.
-            KafkaClusterId cached = field.get(client);
-            if (cached == null) {
-              KafkaUtil.initializeClusterId(client, field, holder);
-            } else {
-              KafkaUtil.readClusterId(cached);
-            }
-          } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-          } finally {
-            done.countDown();
-          }
-        });
+        pool.execute(
+            () -> {
+              try {
+                start.await();
+                // The getClusterId() path, while the broker is still silent.
+                KafkaClusterId cached = field.get(client);
+                if (cached == null) {
+                  KafkaUtil.initializeClusterId(client, field, holder);
+                } else {
+                  KafkaUtil.readClusterId(cached);
+                }
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              } finally {
+                done.countDown();
+              }
+            });
       }
       start.countDown();
       assertThat(done.await(30, SECONDS)).isTrue();
@@ -326,10 +330,11 @@ class KafkaUtilTest {
     // Metadata is final, so counting fetch() needs the inline mock maker.
     Metadata metadata = mock(Metadata.class);
     when(metadata.fetch())
-        .thenAnswer(invocation -> {
-          fetches.incrementAndGet();
-          return cluster;
-        });
+        .thenAnswer(
+            invocation -> {
+              fetches.incrementAndGet();
+              return cluster;
+            });
     return metadata;
   }
 

@@ -64,8 +64,9 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -74,19 +75,21 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
   void noSelectorCapturesEverything() {
     log();
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(
-            equalTo(stringKey("key1"), "value1"),
-            equalTo(stringKey("key2"), "value2"),
-            equalTo(stringKey("other"), "value3")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -98,8 +101,9 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -109,8 +113,9 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -120,11 +125,12 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(
-            equalTo(stringKey("key1"), "value1"),
-            equalTo(stringKey("key2"), "value2"),
-            equalTo(stringKey("other"), "value3")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -144,11 +150,12 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(
-            equalTo(stringKey("key1"), "value1"),
-            equalTo(stringKey("key2"), "value2"),
-            equalTo(stringKey("other"), "value3")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"),
+                equalTo(stringKey("key2"), "value2"),
+                equalTo(stringKey("other"), "value3")));
   }
 
   @Test
@@ -191,12 +198,13 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
       MDC.remove("mdc-secret");
     }
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(
-            equalTo(stringKey("request-kvp"), "captured"),
-            equalTo(stringKey("request-marker"), "captured"),
-            equalTo(stringKey("request-argument"), "captured"),
-            equalTo(stringKey("mdc-secret"), "separate")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request-kvp"), "captured"),
+                equalTo(stringKey("request-marker"), "captured"),
+                equalTo(stringKey("request-argument"), "captured"),
+                equalTo(stringKey("mdc-secret"), "separate")));
   }
 
   @Test
@@ -213,11 +221,12 @@ class OpenTelemetryAppenderLogstashStructuredArgsSelectorTest {
         .addArgument(StructuredArguments.keyValue("request-argument-secret", "ignored"))
         .log("log message {} {}");
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(
-            equalTo(stringKey("request-kvp"), "captured"),
-            equalTo(stringKey("request-marker"), "captured"),
-            equalTo(stringKey("request-argument"), "captured")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request-kvp"), "captured"),
+                equalTo(stringKey("request-marker"), "captured"),
+                equalTo(stringKey("request-argument"), "captured")));
   }
 
   private void log() {

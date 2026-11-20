@@ -60,10 +60,15 @@ class OracleUcpTelemetryTest {
 
     testing.clearData();
     await()
-        .untilAsserted(() ->
-            assertThat(testing.metrics())
-                .filteredOn(metric ->
-                    metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
-                .isEmpty());
+        .untilAsserted(
+            () ->
+                assertThat(testing.metrics())
+                    .filteredOn(
+                        metric ->
+                            metric
+                                .getInstrumentationScopeInfo()
+                                .getName()
+                                .equals(INSTRUMENTATION_NAME))
+                    .isEmpty());
   }
 }

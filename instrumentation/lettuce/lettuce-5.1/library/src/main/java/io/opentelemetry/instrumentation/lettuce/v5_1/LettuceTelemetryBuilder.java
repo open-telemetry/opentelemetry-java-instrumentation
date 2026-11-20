@@ -57,14 +57,15 @@ public final class LettuceTelemetryBuilder {
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
             .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get())
-            .setSpanStatusExtractor((spanStatusBuilder, request, response, error) -> {
-              if (response != null && response.isFailed()) {
-                spanStatusBuilder.setStatus(StatusCode.ERROR);
-              } else {
-                SpanStatusExtractor.getDefault()
-                    .extract(spanStatusBuilder, request, response, error);
-              }
-            });
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, request, response, error) -> {
+                  if (response != null && response.isFailed()) {
+                    spanStatusBuilder.setStatus(StatusCode.ERROR);
+                  } else {
+                    SpanStatusExtractor.getDefault()
+                        .extract(spanStatusBuilder, request, response, error);
+                  }
+                });
     setDbClientExceptionEventExtractor(builder);
 
     Instrumenter<LettuceRequest, LettuceResponse> instrumenter =

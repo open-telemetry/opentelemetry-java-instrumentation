@@ -59,8 +59,11 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
     ClusterIdCapture clusterIdCapture = new ClusterIdCapture();
     MongoClientSettings settings =
         MongoClientSettings.builder()
-            .applyToClusterSettings(builder ->
-                builder.srvHost("cluster0.example.invalid").addClusterListener(clusterIdCapture))
+            .applyToClusterSettings(
+                builder ->
+                    builder
+                        .srvHost("cluster0.example.invalid")
+                        .addClusterListener(clusterIdCapture))
             .build();
 
     // closing an SRV client races the resolver thread and can report an uncaught exception
@@ -93,9 +96,11 @@ class MongoConfiguredTargetTest extends AbstractMongoConfiguredTargetTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttribute(
-                            SERVER_ADDRESS, "db1.example:27017,db2.example:27018"))));
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttribute(
+                                    SERVER_ADDRESS, "db1.example:27017,db2.example:27018"))));
   }
 }

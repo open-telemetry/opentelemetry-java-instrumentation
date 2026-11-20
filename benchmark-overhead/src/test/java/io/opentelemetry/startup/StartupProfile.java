@@ -59,8 +59,9 @@ final class StartupProfile {
                 .reversed()
                 .thenComparing(Map.Entry.comparingByKey()))
         .limit(100)
-        .forEach(entry ->
-            result.append(entry.getValue()).append(" ").append(entry.getKey()).append("\n"));
+        .forEach(
+            entry ->
+                result.append(entry.getValue()).append(" ").append(entry.getKey()).append("\n"));
   }
 
   private StartupProfile() {}

@@ -71,12 +71,14 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
         client.execute(request(RESPONSE_EXCEPTION, "GET")).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasKind(SpanKind.SERVER)
-                .hasNoParent()
-                .hasStatus(StatusData.unset())
-                .hasEventsSatisfyingExactly()));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasStatus(StatusData.unset())
+                        .hasEventsSatisfyingExactly()));
   }
 
   @Test
@@ -89,15 +91,17 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
         client.execute(request(RESPONSE_EXCEPTION_WITH_CAUSE, "GET")).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(200);
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasKind(SpanKind.SERVER)
-                .hasNoParent()
-                .hasStatus(causeIsDropped ? StatusData.unset() : StatusData.error())
-                .hasException(
-                    causeIsDropped
-                        ? null
-                        : new IllegalStateException("response processing failure"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasStatus(causeIsDropped ? StatusData.unset() : StatusData.error())
+                        .hasException(
+                            causeIsDropped
+                                ? null
+                                : new IllegalStateException("response processing failure"))));
   }
 
   @Test
@@ -106,12 +110,14 @@ class ArmeriaHttpServerTest extends AbstractArmeriaHttpServerTest {
         client.execute(request(WRAPPED_RESPONSE_EXCEPTION, "GET")).aggregate().join();
 
     assertThat(response.status().code()).isEqualTo(500);
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasKind(SpanKind.SERVER)
-                .hasNoParent()
-                .hasStatus(StatusData.error())
-                .hasException(wrappedResponseException)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.SERVER)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasException(wrappedResponseException)));
   }
 
   private static HttpResponseException responseExceptionWithCause() {

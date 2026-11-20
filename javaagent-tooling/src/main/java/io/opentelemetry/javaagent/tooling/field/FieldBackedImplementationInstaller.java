@@ -91,11 +91,12 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
        */
       builder =
           builder.transform(
-              getTransformerForAsmVisitor(classes ->
-                  new VirtualFieldFindRewriter(
-                      instrumenterClass,
-                      virtualFieldMappings,
-                      classes.virtualFieldImplementations)));
+              getTransformerForAsmVisitor(
+                  classes ->
+                      new VirtualFieldFindRewriter(
+                          instrumenterClass,
+                          virtualFieldMappings,
+                          classes.virtualFieldImplementations)));
     }
     return builder;
   }
@@ -229,12 +230,13 @@ final class FieldBackedImplementationInstaller implements VirtualFieldImplementa
 
           builder =
               builder.transform(
-                  getTransformerForAsmVisitor(classes ->
-                      new RealFieldInjector(
-                          classes.fieldAccessorInterfaces,
-                          mapping.getTypeName(),
-                          mapping.getFieldTypeName(),
-                          mapping.getFieldName())));
+                  getTransformerForAsmVisitor(
+                      classes ->
+                          new RealFieldInjector(
+                              classes.fieldAccessorInterfaces,
+                              mapping.getTypeName(),
+                              mapping.getFieldTypeName(),
+                              mapping.getFieldName())));
         }
       }
     }

@@ -66,10 +66,11 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
     RestClient restClient = restClientBuilder.baseUrl("http://localhost:" + port).build();
     restClient.get().uri(OtelSpringStarterSmokeTestController.PING).retrieve().body(String.class);
 
-    testing.waitAndAssertTraces(traceAssert ->
-        traceAssert.hasSpansSatisfyingExactly(
-            span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
-            span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
-            AbstractSpringStarterSmokeTest::withSpanAssert));
+    testing.waitAndAssertTraces(
+        traceAssert ->
+            traceAssert.hasSpansSatisfyingExactly(
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
+                span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
+                AbstractSpringStarterSmokeTest::withSpanAssert));
   }
 }

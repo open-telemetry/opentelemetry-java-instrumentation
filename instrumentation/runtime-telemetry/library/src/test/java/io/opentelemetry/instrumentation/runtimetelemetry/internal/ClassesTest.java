@@ -40,10 +40,11 @@ class ClassesTest {
                 .hasName("jvm.class.loaded")
                 .hasDescription("Number of classes loaded since JVM start.")
                 .hasUnit("{class}")
-                .hasLongSumSatisfying(sum ->
-                    sum.isMonotonic()
-                        .hasPointsSatisfying(
-                            point -> point.hasValue(3).hasAttributes(Attributes.empty()))));
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point -> point.hasValue(3).hasAttributes(Attributes.empty()))));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -51,10 +52,11 @@ class ClassesTest {
                 .hasName("jvm.class.unloaded")
                 .hasDescription("Number of classes unloaded since JVM start.")
                 .hasUnit("{class}")
-                .hasLongSumSatisfying(sum ->
-                    sum.isMonotonic()
-                        .hasPointsSatisfying(
-                            point -> point.hasValue(2).hasAttributes(Attributes.empty()))));
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isMonotonic()
+                            .hasPointsSatisfying(
+                                point -> point.hasValue(2).hasAttributes(Attributes.empty()))));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -62,9 +64,10 @@ class ClassesTest {
                 .hasName("jvm.class.count")
                 .hasDescription("Number of classes currently loaded.")
                 .hasUnit("{class}")
-                .hasLongSumSatisfying(sum ->
-                    sum.isNotMonotonic()
-                        .hasPointsSatisfying(
-                            point -> point.hasValue(1).hasAttributes(Attributes.empty()))));
+                .hasLongSumSatisfying(
+                    sum ->
+                        sum.isNotMonotonic()
+                            .hasPointsSatisfying(
+                                point -> point.hasValue(1).hasAttributes(Attributes.empty()))));
   }
 }

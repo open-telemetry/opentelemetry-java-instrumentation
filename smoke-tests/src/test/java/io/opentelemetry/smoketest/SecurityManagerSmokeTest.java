@@ -17,10 +17,11 @@ class SecurityManagerSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .image(jdk ->
-            String.format(
-                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk%s-%s",
-                jdk, TestImageVersions.SECURITY_MANAGER_VERSION))
+        .image(
+            jdk ->
+                String.format(
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-security-manager:jdk%s-%s",
+                    jdk, TestImageVersions.SECURITY_MANAGER_VERSION))
         .env("OTEL_JAVAAGENT_EXPERIMENTAL_SECURITY_MANAGER_SUPPORT_ENABLED", "true");
   }
 

@@ -55,11 +55,13 @@ class ThreadDetailsCustomizerProviderTest {
 
       assertThat(exporter.getFinishedSpanItems())
           .singleElement()
-          .satisfies(span ->
-              assertThat(span)
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(THREAD_ID, expected ? Thread.currentThread().getId() : null),
-                      equalTo(THREAD_NAME, expected ? Thread.currentThread().getName() : null)));
+          .satisfies(
+              span ->
+                  assertThat(span)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(THREAD_ID, expected ? Thread.currentThread().getId() : null),
+                          equalTo(
+                              THREAD_NAME, expected ? Thread.currentThread().getName() : null)));
     }
   }
 }

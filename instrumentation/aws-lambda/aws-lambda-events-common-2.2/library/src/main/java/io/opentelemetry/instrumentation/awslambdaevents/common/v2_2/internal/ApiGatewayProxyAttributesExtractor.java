@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.awslambdaevents.common.v2_2.internal;
 
 import static io.opentelemetry.instrumentation.api.internal.HttpConstants._OTHER;
-import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.emptyIfNull;
 import static io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.MapUtils.lowercaseMap;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -113,11 +112,15 @@ final class ApiGatewayProxyAttributesExtractor
 
   @Nullable
   private static String getQueryString(APIGatewayProxyRequestEvent request) {
+    Map<String, String> parameters = request.getQueryStringParameters();
+    if (parameters == null || parameters.isEmpty()) {
+      return null;
+    }
+
     StringBuilder str = new StringBuilder();
     try {
       boolean first = true;
-      for (Map.Entry<String, String> entry :
-          emptyIfNull(request.getQueryStringParameters()).entrySet()) {
+      for (Map.Entry<String, String> entry : parameters.entrySet()) {
         String key = URLEncoder.encode(entry.getKey(), UTF_8.name());
         String value = URLEncoder.encode(entry.getValue(), UTF_8.name());
         if (!first) {

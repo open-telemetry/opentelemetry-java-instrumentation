@@ -49,9 +49,10 @@ class RabbitTemplateTest {
 
     assertThat(template.receiveAndConvert("template")).isEqualTo("message");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("receive template").hasKind(SpanKind.CLIENT).hasNoParent()));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("receive template").hasKind(SpanKind.CLIENT).hasNoParent()));
     assertReceiveMetrics(testing, "template", null, 1);
   }
 

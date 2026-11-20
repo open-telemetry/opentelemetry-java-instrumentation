@@ -23,7 +23,8 @@ import org.junit.jupiter.api.Test;
 
 class NetworkAttributesExtractorInetSocketAddressTest {
 
-  static class TestNetworkAttributesGetter
+  @SuppressWarnings("deprecation")
+  static class LegacyNetworkAttributesGetter
       implements NetworkAttributesGetter<InetSocketAddress, InetSocketAddress> {
 
     @Nullable
@@ -42,12 +43,12 @@ class NetworkAttributesExtractorInetSocketAddressTest {
   }
 
   @Test
-  void fullAddress() {
+  void legacyOverridesSupplyNetworkAttributes() {
     InetSocketAddress local = new InetSocketAddress("1.2.3.4", 8080);
     InetSocketAddress peer = new InetSocketAddress("4.3.2.1", 9090);
 
     AttributesExtractor<InetSocketAddress, InetSocketAddress> extractor =
-        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+        NetworkAttributesExtractor.create(new LegacyNetworkAttributesGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), local);
@@ -65,9 +66,9 @@ class NetworkAttributesExtractorInetSocketAddressTest {
   }
 
   @Test
-  void noAttributes() {
+  void legacyOverridesWithNoAddresses() {
     AttributesExtractor<InetSocketAddress, InetSocketAddress> extractor =
-        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+        NetworkAttributesExtractor.create(new LegacyNetworkAttributesGetter());
 
     AttributesBuilder startAttributes = Attributes.builder();
     extractor.onStart(startAttributes, Context.root(), null);

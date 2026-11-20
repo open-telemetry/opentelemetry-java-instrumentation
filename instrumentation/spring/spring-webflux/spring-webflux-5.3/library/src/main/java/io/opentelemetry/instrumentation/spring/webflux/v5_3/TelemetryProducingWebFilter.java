@@ -124,10 +124,11 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
       if (response.isCommitted()) {
         end(currentContext, t);
       } else {
-        response.beforeCommit(() -> {
-          end(currentContext, t);
-          return Mono.empty();
-        });
+        response.beforeCommit(
+            () -> {
+              end(currentContext, t);
+              return Mono.empty();
+            });
       }
     }
 

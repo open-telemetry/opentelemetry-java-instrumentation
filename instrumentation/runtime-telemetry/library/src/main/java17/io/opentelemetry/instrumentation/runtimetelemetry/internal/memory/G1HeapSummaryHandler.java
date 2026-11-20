@@ -77,10 +77,11 @@ public final class G1HeapSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(measurement -> {
-                measurement.record(usageEden, ATTR_MEMORY_EDEN);
-                measurement.record(usageSurvivor, ATTR_MEMORY_SURVIVOR);
-              }));
+              .buildWithCallback(
+                  measurement -> {
+                    measurement.record(usageEden, ATTR_MEMORY_EDEN);
+                    measurement.record(usageSurvivor, ATTR_MEMORY_SURVIVOR);
+                  }));
     }
     if (usageAfterSelected) {
       observables.add(
@@ -88,10 +89,11 @@ public final class G1HeapSummaryHandler implements RecordedEventHandler {
               .upDownCounterBuilder(Constants.METRIC_NAME_MEMORY_AFTER)
               .setDescription(Constants.METRIC_DESCRIPTION_MEMORY_AFTER)
               .setUnit(Constants.BYTES)
-              .buildWithCallback(measurement -> {
-                measurement.record(usageEdenAfter, ATTR_MEMORY_EDEN);
-                measurement.record(usageSurvivorAfter, ATTR_MEMORY_SURVIVOR);
-              }));
+              .buildWithCallback(
+                  measurement -> {
+                    measurement.record(usageEdenAfter, ATTR_MEMORY_EDEN);
+                    measurement.record(usageSurvivorAfter, ATTR_MEMORY_SURVIVOR);
+                  }));
     }
     if (committedSelected) {
       observables.add(

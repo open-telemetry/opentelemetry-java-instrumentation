@@ -49,24 +49,30 @@ class ArmeriaHeaderSelectorTest {
 
     sendRequest(client);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasAttribute(
-                    stringArrayKey("http.request.header.x-test-request"),
-                    singletonList("request-value"))
-                .hasAttribute(
-                    stringArrayKey("http.response.header.x-test-response"),
-                    singletonList("response-value"))
-                // an excluded header is not captured
-                .satisfies(spanData ->
-                    assertThat(spanData.getAttributes().asMap())
-                        .doesNotContainKey(stringArrayKey("http.request.header.x-ignored-request"))
-                        .doesNotContainKey(
-                            stringArrayKey("http.response.header.x-ignored-response")))
-                // pseudo-headers are not HTTP headers
-                .satisfies(spanData ->
-                    assertThat(spanData.getAttributes().asMap())
-                        .doesNotContainKey(stringArrayKey("http.request.header.:method")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttribute(
+                            stringArrayKey("http.request.header.x-test-request"),
+                            singletonList("request-value"))
+                        .hasAttribute(
+                            stringArrayKey("http.response.header.x-test-response"),
+                            singletonList("response-value"))
+                        // an excluded header is not captured
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.request.header.x-ignored-request"))
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.response.header.x-ignored-response")))
+                        // pseudo-headers are not HTTP headers
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.request.header.:method")))));
   }
 
   @Test
@@ -93,13 +99,15 @@ class ArmeriaHeaderSelectorTest {
   @Test
   void serverCapturesHeadersMatchingSelectorPatterns() {
     int port =
-        startServer(sb ->
-            sb.decorator(
-                ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-                    .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
-                    .setResponseHeaders(IncludeExclude.builder().setExcluded("x-ignored-*").build())
-                    .build()
-                    .createDecorator()));
+        startServer(
+            sb ->
+                sb.decorator(
+                    ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
+                        .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
+                        .setResponseHeaders(
+                            IncludeExclude.builder().setExcluded("x-ignored-*").build())
+                        .build()
+                        .createDecorator()));
 
     sendRequest(WebClient.of("http://localhost:" + port));
 
@@ -109,15 +117,16 @@ class ArmeriaHeaderSelectorTest {
   @Test
   void serverCapturesHeadersConfiguredByName() {
     int port =
-        startServer(sb ->
-            sb.decorator(
-                ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-                    .setRequestHeaders(
-                        IncludeExclude.builder().setIncluded("x-test-request").build())
-                    .setResponseHeaders(
-                        IncludeExclude.builder().setIncluded("x-test-response").build())
-                    .build()
-                    .createDecorator()));
+        startServer(
+            sb ->
+                sb.decorator(
+                    ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
+                        .setRequestHeaders(
+                            IncludeExclude.builder().setIncluded("x-test-request").build())
+                        .setResponseHeaders(
+                            IncludeExclude.builder().setIncluded("x-test-response").build())
+                        .build()
+                        .createDecorator()));
 
     sendRequest(WebClient.of("http://localhost:" + port));
 
@@ -144,11 +153,12 @@ class ArmeriaHeaderSelectorTest {
   @Test
   void serverDoesNotCaptureHeadersByDefault() {
     int port =
-        startServer(sb ->
-            sb.decorator(
-                ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
-                    .build()
-                    .createDecorator()));
+        startServer(
+            sb ->
+                sb.decorator(
+                    ArmeriaServerTelemetry.builder(testing.getOpenTelemetry())
+                        .build()
+                        .createDecorator()));
 
     sendRequest(WebClient.of("http://localhost:" + port));
 
@@ -190,33 +200,44 @@ class ArmeriaHeaderSelectorTest {
   }
 
   private static void assertCapturedHeaders() {
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasAttribute(
-                    stringArrayKey("http.request.header.x-test-request"),
-                    singletonList("request-value"))
-                .hasAttribute(
-                    stringArrayKey("http.response.header.x-test-response"),
-                    singletonList("response-value"))
-                .satisfies(spanData ->
-                    assertThat(spanData.getAttributes().asMap())
-                        .doesNotContainKey(stringArrayKey("http.request.header.x-ignored-request"))
-                        .doesNotContainKey(
-                            stringArrayKey("http.response.header.x-ignored-response"))
-                        // pseudo-headers are not HTTP headers
-                        .doesNotContainKey(stringArrayKey("http.response.header.:status")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttribute(
+                            stringArrayKey("http.request.header.x-test-request"),
+                            singletonList("request-value"))
+                        .hasAttribute(
+                            stringArrayKey("http.response.header.x-test-response"),
+                            singletonList("response-value"))
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.request.header.x-ignored-request"))
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.response.header.x-ignored-response"))
+                                    // pseudo-headers are not HTTP headers
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.response.header.:status")))));
   }
 
   private static void assertNoCapturedHeaders() {
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasAttributesSatisfying(attributes ->
-                    attributes.forEach((key, value) ->
-                        assertThat(key.getKey())
-                            .doesNotStartWith("http.request.header.")
-                            .doesNotStartWith("http.response.header.")))
-                .satisfies(spanData ->
-                    assertThat(spanData.getAttributes().asMap())
-                        .doesNotContainKey(stringArrayKey("http.request.header.authorization")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasAttributesSatisfying(
+                            attributes ->
+                                attributes.forEach(
+                                    (key, value) ->
+                                        assertThat(key.getKey())
+                                            .doesNotStartWith("http.request.header.")
+                                            .doesNotStartWith("http.response.header.")))
+                        .satisfies(
+                            spanData ->
+                                assertThat(spanData.getAttributes().asMap())
+                                    .doesNotContainKey(
+                                        stringArrayKey("http.request.header.authorization")))));
   }
 }

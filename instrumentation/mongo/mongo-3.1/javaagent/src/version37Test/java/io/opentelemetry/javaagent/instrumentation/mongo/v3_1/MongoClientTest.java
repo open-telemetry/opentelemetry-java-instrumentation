@@ -47,10 +47,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
     client =
         MongoClients.create(
             MongoClientSettings.builder()
-                .applyToClusterSettings(builder ->
-                    builder
-                        .hosts(singletonList(new ServerAddress(host, port)))
-                        .description("some-description"))
+                .applyToClusterSettings(
+                    builder ->
+                        builder
+                            .hosts(singletonList(new ServerAddress(host, port)))
+                            .description("some-description"))
                 .build());
     cleanup.deferAfterAll(() -> client.close());
   }
@@ -84,10 +85,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
       String dbName, String collectionName) {
     MongoClientSettings clientSettings =
         MongoClientSettings.builder()
-            .applyToClusterSettings(builder ->
-                builder
-                    .hosts(singletonList(new ServerAddress(host, port)))
-                    .description("some-description"))
+            .applyToClusterSettings(
+                builder ->
+                    builder
+                        .hosts(singletonList(new ServerAddress(host, port)))
+                        .description("some-description"))
             .build();
     MongoClientSettings newClientSettings = MongoClientSettings.builder(clientSettings).build();
     MongoClient mongoClient = MongoClients.create(newClientSettings);
@@ -100,10 +102,11 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   protected void createCollectionCallingBuildTwice(String dbName, String collectionName) {
     MongoClientSettings.Builder clientSettings =
         MongoClientSettings.builder()
-            .applyToClusterSettings(builder ->
-                builder
-                    .hosts(singletonList(new ServerAddress(host, port)))
-                    .description("some-description"));
+            .applyToClusterSettings(
+                builder ->
+                    builder
+                        .hosts(singletonList(new ServerAddress(host, port)))
+                        .description("some-description"));
     clientSettings.build();
     MongoClient mongoClient = MongoClients.create(clientSettings.build());
     cleanup.deferCleanup(() -> mongoClient.close());
@@ -241,13 +244,17 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
   void emitsInstrumentationScope() {
     createCollection("test_db", createCollectionName());
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.satisfies(spanData -> {
-              assertThat(spanData.getInstrumentationScopeInfo().getName())
-                  .isEqualTo("io.opentelemetry.mongo-3.1");
-              assertThat(spanData.getInstrumentationScopeInfo().getVersion()).isNotEmpty();
-            })));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.satisfies(
+                        spanData -> {
+                          assertThat(spanData.getInstrumentationScopeInfo().getName())
+                              .isEqualTo("io.opentelemetry.mongo-3.1");
+                          assertThat(spanData.getInstrumentationScopeInfo().getVersion())
+                              .isNotEmpty();
+                        })));
   }
 
   @Test

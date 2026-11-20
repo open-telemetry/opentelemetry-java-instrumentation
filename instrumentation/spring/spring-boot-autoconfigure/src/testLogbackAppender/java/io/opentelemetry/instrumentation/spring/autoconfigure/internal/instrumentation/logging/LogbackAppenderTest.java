@@ -178,10 +178,11 @@ class LogbackAppenderTest {
             StructuredArguments.keyValue("key2", "val2"),
             StructuredArguments.keyValue("other", "val3"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord
-            .hasBody("structured log message")
-            .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("structured log message")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "val1")));
   }
 
   private static CapturingOpenTelemetryAppender structuredAttributes(
@@ -289,11 +290,12 @@ class LogbackAppenderTest {
             });
 
     assertThat(listAppender.list)
-        .satisfiesExactly(event ->
-            assertThat(event)
-                .satisfies(
-                    e -> assertThat(e.getMessage()).isEqualTo("test log message: {}"),
-                    e -> assertThat(e.getMDCPropertyMap()).containsOnlyKeys("key1", "key2")));
+        .satisfiesExactly(
+            event ->
+                assertThat(event)
+                    .satisfies(
+                        e -> assertThat(e.getMessage()).isEqualTo("test log message: {}"),
+                        e -> assertThat(e.getMDCPropertyMap()).containsOnlyKeys("key1", "key2")));
   }
 
   @Test
@@ -322,9 +324,10 @@ class LogbackAppenderTest {
     }
 
     assertThat(testing.logRecords())
-        .satisfiesOnlyOnce(logRecord ->
-            assertThat(logRecord.getAttributes().asMap())
-                .containsExactly(entry(stringKey("key1"), "val1")));
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
   }
 
   @Test
@@ -353,9 +356,11 @@ class LogbackAppenderTest {
     }
 
     assertThat(testing.logRecords())
-        .satisfiesOnlyOnce(logRecord ->
-            assertThat(logRecord.getAttributes().asMap())
-                .containsOnly(entry(stringKey("key1"), "val1"), entry(stringKey("key2"), "val2")));
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsOnly(
+                        entry(stringKey("key1"), "val1"), entry(stringKey("key2"), "val2")));
   }
 
   @Test
@@ -384,9 +389,10 @@ class LogbackAppenderTest {
     }
 
     assertThat(testing.logRecords())
-        .satisfiesOnlyOnce(logRecord ->
-            assertThat(logRecord.getAttributes().asMap())
-                .containsExactly(entry(stringKey("key1"), "val1")));
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
   }
 
   @Test
@@ -427,10 +433,12 @@ class LogbackAppenderTest {
     }
 
     assertThat(testing.logRecords())
-        .satisfiesOnlyOnce(logRecord ->
-            assertThat(logRecord.getAttributes().asMap())
-                .containsOnly(
-                    entry(stringKey("request-id"), "123"), entry(stringKey("user-1"), "alice")));
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsOnly(
+                        entry(stringKey("request-id"), "123"),
+                        entry(stringKey("user-1"), "alice")));
   }
 
   @Test
@@ -465,9 +473,10 @@ class LogbackAppenderTest {
     }
 
     assertThat(testing.logRecords())
-        .satisfiesOnlyOnce(logRecord ->
-            assertThat(logRecord.getAttributes().asMap())
-                .containsExactly(entry(stringKey("key1"), "val1")));
+        .satisfiesOnlyOnce(
+            logRecord ->
+                assertThat(logRecord.getAttributes().asMap())
+                    .containsExactly(entry(stringKey("key1"), "val1")));
   }
 
   /**
@@ -500,8 +509,9 @@ class LogbackAppenderTest {
     appender.start();
 
     return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
-        .filter(status ->
-            status.getMessage() != null && status.getMessage().contains(deprecatedProperty))
+        .filter(
+            status ->
+                status.getMessage() != null && status.getMessage().contains(deprecatedProperty))
         .collect(toList());
   }
 
@@ -607,13 +617,14 @@ class LogbackAppenderTest {
     appender.start();
 
     return appender.getContext().getStatusManager().getCopyOfStatusList().stream()
-        .filter(status ->
-            status.getMessage() != null
-                && status
-                    .getMessage()
-                    .contains(
-                        "otel.instrumentation.logback-appender.experimental"
-                            + ".capture-logger-context-attributes"))
+        .filter(
+            status ->
+                status.getMessage() != null
+                    && status
+                        .getMessage()
+                        .contains(
+                            "otel.instrumentation.logback-appender.experimental"
+                                + ".capture-logger-context-attributes"))
         .collect(toList());
   }
 
@@ -652,11 +663,12 @@ class LogbackAppenderTest {
           environment, new OpenTelemetryAppender());
 
       assertThat(warningAppender.list)
-          .filteredOn(event ->
-              event
-                  .getFormattedMessage()
-                  .contains(
-                      "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"))
+          .filteredOn(
+              event ->
+                  event
+                      .getFormattedMessage()
+                      .contains(
+                          "otel.instrumentation.logback-appender.experimental.capture-mdc-attributes"))
           .isEmpty();
     } finally {
       installerLogger.detachAppender(warningAppender);
@@ -732,17 +744,71 @@ class LogbackAppenderTest {
 
     assertThat(testing.logRecords()).isEmpty();
     assertThat(listAppender.list)
-        .satisfiesExactly(event ->
-            assertThat(event)
-                .satisfies(
-                    e -> assertThat(e.getMessage()).isEqualTo("test log message"),
-                    e ->
-                        assertThat(e.getMDCPropertyMap())
-                            .containsOnlyKeys(
-                                replacementConfigured ? "traceid" : "trace_id",
-                                replacementConfigured ? "spanid" : "span_id",
-                                replacementConfigured ? "traceflags" : "trace_flags",
-                                "baggage.key")));
+        .satisfiesExactly(
+            event ->
+                assertThat(event)
+                    .satisfies(
+                        e -> assertThat(e.getMessage()).isEqualTo("test log message"),
+                        e ->
+                            assertThat(e.getMDCPropertyMap())
+                                .containsOnlyKeys(
+                                    replacementConfigured ? "traceid" : "trace_id",
+                                    replacementConfigured ? "spanid" : "span_id",
+                                    replacementConfigured ? "traceflags" : "trace_flags",
+                                    "baggage.key")));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"logback-test.xml", "logback-no-otel-appenders.xml"})
+  void exportsOnlyApplicationMdc(String configurationFile) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:" + configurationFile);
+    properties.put("otel.instrumentation.logback-mdc.add-baggage", "true");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.mdc-attributes.included", "*");
+    properties.put(
+        "otel.instrumentation.logback-appender.experimental.capture-code-attributes", false);
+
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+    ListAppender<ILoggingEvent> listAppender = getListAppender();
+    listAppender.list.clear();
+
+    MDC.put("request-id", "123");
+    MDC.put("span_id", "application-span");
+    MDC.put("baggage.key", "application-baggage");
+    Span span = testing.getOpenTelemetry().getTracer("test").spanBuilder("test").startSpan();
+    cleanup.deferCleanup(span::end);
+    try (Scope ignored = span.makeCurrent();
+        Scope ignoredBaggage =
+            Baggage.builder().put("key", "enriched-baggage").build().makeCurrent()) {
+      LoggerFactory.getLogger("test").info("test log message");
+    } finally {
+      MDC.clear();
+    }
+
+    testing.waitAndAssertLogRecords(
+        log ->
+            log.hasBody("test log message")
+                .hasSpanContext(span.getSpanContext())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("request-id"), "123"),
+                    equalTo(stringKey("span_id"), "application-span"),
+                    equalTo(stringKey("baggage.key"), "application-baggage")));
+    assertThat(listAppender.list)
+        .singleElement()
+        .satisfies(
+            event ->
+                assertThat(event.getMDCPropertyMap())
+                    .containsEntry("trace_id", span.getSpanContext().getTraceId())
+                    .containsEntry("span_id", span.getSpanContext().getSpanId())
+                    .containsEntry("baggage.key", "enriched-baggage")
+                    .containsEntry("request-id", "123"));
   }
 
   @Test
@@ -772,13 +838,14 @@ class LogbackAppenderTest {
     assertThat(testing.logRecords()).isEmpty();
     assertThat(CustomListAppender.lastLogHadTraceId).isTrue();
     assertThat(listAppender.list)
-        .satisfiesExactly(event ->
-            assertThat(event)
-                .satisfies(
-                    e -> assertThat(e.getMessage()).isEqualTo("test log message"),
-                    e ->
-                        assertThat(e.getMDCPropertyMap())
-                            .containsOnlyKeys("trace_id", "span_id", "trace_flags")));
+        .satisfiesExactly(
+            event ->
+                assertThat(event)
+                    .satisfies(
+                        e -> assertThat(e.getMessage()).isEqualTo("test log message"),
+                        e ->
+                            assertThat(e.getMDCPropertyMap())
+                                .containsOnlyKeys("trace_id", "span_id", "trace_flags")));
   }
 
   @Test
@@ -808,11 +875,12 @@ class LogbackAppenderTest {
 
     assertThat(testing.logRecords()).isEmpty();
     assertThat(listAppender.list)
-        .satisfiesExactly(event ->
-            assertThat(event)
-                .satisfies(
-                    e -> assertThat(e.getMessage()).isEqualTo("test log message"),
-                    e -> assertThat(e.getMDCPropertyMap()).isEmpty()));
+        .satisfiesExactly(
+            event ->
+                assertThat(event)
+                    .satisfies(
+                        e -> assertThat(e.getMessage()).isEqualTo("test log message"),
+                        e -> assertThat(e.getMDCPropertyMap()).isEmpty()));
   }
 
   @SuppressWarnings("unchecked")

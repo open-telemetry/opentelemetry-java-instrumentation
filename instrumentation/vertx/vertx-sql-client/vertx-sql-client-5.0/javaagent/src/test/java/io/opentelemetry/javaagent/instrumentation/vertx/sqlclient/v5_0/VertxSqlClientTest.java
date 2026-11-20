@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
@@ -142,9 +143,10 @@ class VertxSqlClientTest {
     cleanup.deferAfterAll(pool::close);
     pool.query("create table test(id int primary key, name varchar(255))")
         .execute()
-        .compose(r ->
-            // insert some test data
-            pool.query("insert into test values (1, 'Hello'), (2, 'World')").execute())
+        .compose(
+            r ->
+                // insert some test data
+                pool.query("insert into test values (1, 'Hello'), (2, 'World')").execute())
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -203,8 +205,9 @@ class VertxSqlClientTest {
     assertThat(thrown).isInstanceOf(ExecutionException.class);
     Throwable error = thrown.getCause();
     assertThat(error).isNotNull();
-    testing.waitAndAssertTraces(trace ->
-        assertServerListTarget(trace, "127.0.0.1:1,127.0.0.1:2", "select * from test", error));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertServerListTarget(trace, "127.0.0.1:1,127.0.0.1:2", "select * from test", error));
   }
 
   @Test
@@ -216,13 +219,14 @@ class VertxSqlClientTest {
         PgBuilder.pool()
             .using(vertx)
             .connectingTo(asList(first, second))
-            .withConnectHandler(connection -> {
-              connection
-                  .query("select * from test")
-                  .execute()
-                  .onComplete(ignored -> connection.close());
-              handlerInvoked.complete(null);
-            })
+            .withConnectHandler(
+                connection -> {
+                  connection
+                      .query("select * from test")
+                      .execute()
+                      .onComplete(ignored -> connection.close());
+                  handlerInvoked.complete(null);
+                })
             .with(new PoolOptions().setMaxSize(1))
             .build();
     cleanup.deferCleanup(listPool::close);
@@ -243,10 +247,11 @@ class VertxSqlClientTest {
     Pool supplierPool =
         PgBuilder.pool()
             .using(vertx)
-            .connectingTo(() -> {
-              calls.incrementAndGet();
-              return Future.succeededFuture(suppliedOptions);
-            })
+            .connectingTo(
+                () -> {
+                  calls.incrementAndGet();
+                  return Future.succeededFuture(suppliedOptions);
+                })
             .with(new PoolOptions().setMaxSize(1))
             .build();
     cleanup.deferCleanup(supplierPool::close);
@@ -290,14 +295,15 @@ class VertxSqlClientTest {
             connection
                 .query("select * from test")
                 .execute()
-                .onComplete(result -> {
-                  connection.close();
-                  if (result.succeeded()) {
-                    handlerInvoked.complete(null);
-                  } else {
-                    handlerInvoked.completeExceptionally(result.cause());
-                  }
-                });
+                .onComplete(
+                    result -> {
+                      connection.close();
+                      if (result.succeeded()) {
+                        handlerInvoked.complete(null);
+                      } else {
+                        handlerInvoked.completeExceptionally(result.cause());
+                      }
+                    });
     ClientBuilder<Pool> builder =
         PgBuilder.pool()
             .using(vertx)
@@ -336,12 +342,13 @@ class VertxSqlClientTest {
                     options -> Future.failedFuture(connectionFailure),
                     () -> {
                       nestedBuilds.incrementAndGet();
-                      assertThatThrownBy(() ->
-                              PgBuilder.pool()
-                                  .using(vertx)
-                                  .connectingTo(connectOptions())
-                                  .with(new PoolOptions().setIdleTimeoutUnit(null))
-                                  .build())
+                      assertThatThrownBy(
+                              () ->
+                                  PgBuilder.pool()
+                                      .using(vertx)
+                                      .connectingTo(connectOptions())
+                                      .with(new PoolOptions().setIdleTimeoutUnit(null))
+                                      .build())
                           .isInstanceOf(NullPointerException.class);
                     }))
             .using(vertx)
@@ -380,10 +387,11 @@ class VertxSqlClientTest {
     Pool supplierPool =
         PgBuilder.pool()
             .using(vertx)
-            .connectingTo(() -> {
-              calls.incrementAndGet();
-              return suppliedOptions.future();
-            })
+            .connectingTo(
+                () -> {
+                  calls.incrementAndGet();
+                  return suppliedOptions.future();
+                })
             .with(new PoolOptions().setMaxSize(1))
             .build();
     cleanup.deferCleanup(supplierPool::close);
@@ -554,9 +562,10 @@ class VertxSqlClientTest {
     Pool throwingPool =
         PgBuilder.pool()
             .using(vertx)
-            .connectingTo(() -> {
-              throw thrown;
-            })
+            .connectingTo(
+                () -> {
+                  throw thrown;
+                })
             .with(new PoolOptions().setMaxSize(1))
             .build();
     cleanup.deferCleanup(throwingPool::close);
@@ -585,9 +594,10 @@ class VertxSqlClientTest {
     Pool throwingPool =
         ClientBuilder.pool(new PgDriver() {})
             .using(vertx)
-            .connectingTo(() -> {
-              throw thrown;
-            })
+            .connectingTo(
+                () -> {
+                  throw thrown;
+                })
             .with(new PoolOptions().setMaxSize(1))
             .build();
     cleanup.deferCleanup(throwingPool::close);
@@ -634,15 +644,21 @@ class VertxSqlClientTest {
     Pool supplierPool =
         ClientBuilder.pool(failingDriver(failed))
             .using(vertx)
-            .connectingTo(() ->
-                Future.succeededFuture(
-                    calls.getAndIncrement() == 0 ? staleOptions : connectOptions()))
+            .connectingTo(
+                () ->
+                    Future.succeededFuture(
+                        calls.getAndIncrement() == 0 ? staleOptions : connectOptions()))
             .with(new PoolOptions().setMaxSize(1))
             .build();
     cleanup.deferCleanup(supplierPool::close);
 
-    assertThatThrownBy(() ->
-            supplierPool.getConnection().toCompletionStage().toCompletableFuture().get(30, SECONDS))
+    assertThatThrownBy(
+            () ->
+                supplierPool
+                    .getConnection()
+                    .toCompletionStage()
+                    .toCompletableFuture()
+                    .get(30, SECONDS))
         .hasCause(failed);
     assertThatThrownBy(() -> select(supplierPool)).hasCause(failed);
 
@@ -663,13 +679,14 @@ class VertxSqlClientTest {
             .build();
     cleanup.deferCleanup(supplierPool::close);
 
-    assertThatThrownBy(() ->
-            supplierPool
-                .query("")
-                .execute()
-                .toCompletionStage()
-                .toCompletableFuture()
-                .get(30, SECONDS))
+    assertThatThrownBy(
+            () ->
+                supplierPool
+                    .query("")
+                    .execute()
+                    .toCompletionStage()
+                    .toCompletableFuture()
+                    .get(30, SECONDS))
         .hasCause(failed);
 
     testing.waitAndAssertTraces(trace -> assertSupplierFallbackFailure(trace, failed));
@@ -685,16 +702,18 @@ class VertxSqlClientTest {
     CountDownLatch attemptsStarted = new CountDownLatch(2);
     Pool supplierPool =
         ClientBuilder.pool(
-                driver(options -> {
-                  Promise<SqlConnection> attempt = Promise.promise();
-                  connectionAttempts.add(attempt);
-                  attemptsStarted.countDown();
-                  return attempt.future();
-                }))
+                driver(
+                    options -> {
+                      Promise<SqlConnection> attempt = Promise.promise();
+                      connectionAttempts.add(attempt);
+                      attemptsStarted.countDown();
+                      return attempt.future();
+                    }))
             .using(vertx)
-            .connectingTo(() ->
-                Future.succeededFuture(
-                    calls.getAndIncrement() == 0 ? firstOptions : connectOptions()))
+            .connectingTo(
+                () ->
+                    Future.succeededFuture(
+                        calls.getAndIncrement() == 0 ? firstOptions : connectOptions()))
             .with(new PoolOptions().setMaxSize(2))
             .build();
     cleanup.deferCleanup(supplierPool::close);
@@ -772,11 +791,12 @@ class VertxSqlClientTest {
                     },
                     ignored -> {}))
             .using(vertx)
-            .connectingTo(() ->
-                Future.succeededFuture(
-                    connectOptions()
-                        .setHost(
-                            calls.getAndIncrement() == 0 ? "second.example" : "first.example")))
+            .connectingTo(
+                () ->
+                    Future.succeededFuture(
+                        connectOptions()
+                            .setHost(
+                                calls.getAndIncrement() == 0 ? "second.example" : "first.example")))
             .with(new PoolOptions().setMaxSize(2))
             .build();
     cleanup.deferCleanup(supplierPool::close);
@@ -833,21 +853,23 @@ class VertxSqlClientTest {
     List<String> events = new CopyOnWriteArrayList<>();
     Pool supplierPool =
         ClientBuilder.pool(
-                driver(options -> {
-                  if (options.getHost().equals("first.example")) {
-                    firstConnecting.countDown();
-                    return firstAttempt.future();
-                  }
-                  events.add("replacement connecting");
-                  replacementConnecting.countDown();
-                  return secondAttempt.future();
-                }))
+                driver(
+                    options -> {
+                      if (options.getHost().equals("first.example")) {
+                        firstConnecting.countDown();
+                        return firstAttempt.future();
+                      }
+                      events.add("replacement connecting");
+                      replacementConnecting.countDown();
+                      return secondAttempt.future();
+                    }))
             .using(vertx)
-            .connectingTo(() ->
-                Future.succeededFuture(
-                    connectOptions()
-                        .setHost(
-                            calls.getAndIncrement() == 0 ? "first.example" : "second.example")))
+            .connectingTo(
+                () ->
+                    Future.succeededFuture(
+                        connectOptions()
+                            .setHost(
+                                calls.getAndIncrement() == 0 ? "first.example" : "second.example")))
             .with(new PoolOptions().setMaxSize(1))
             .build();
     cleanup.deferCleanup(supplierPool::close);
@@ -903,19 +925,23 @@ class VertxSqlClientTest {
     CountDownLatch queryConnecting = new CountDownLatch(1);
     Pool supplierPool =
         ClientBuilder.pool(
-                driver(options -> {
-                  if (options.getHost().equals("explicit.example")) {
-                    return acquisitionAttempt.future();
-                  }
-                  queryConnecting.countDown();
-                  return queryAttempt.future();
-                }))
+                driver(
+                    options -> {
+                      if (options.getHost().equals("explicit.example")) {
+                        return acquisitionAttempt.future();
+                      }
+                      queryConnecting.countDown();
+                      return queryAttempt.future();
+                    }))
             .using(vertx)
-            .connectingTo(() ->
-                Future.succeededFuture(
-                    connectOptions()
-                        .setHost(
-                            calls.getAndIncrement() == 0 ? "explicit.example" : "query.example")))
+            .connectingTo(
+                () ->
+                    Future.succeededFuture(
+                        connectOptions()
+                            .setHost(
+                                calls.getAndIncrement() == 0
+                                    ? "explicit.example"
+                                    : "query.example")))
             .with(new PoolOptions().setMaxSize(1))
             .build();
     cleanup.deferCleanup(supplierPool::close);
@@ -931,14 +957,15 @@ class VertxSqlClientTest {
     assertThatThrownBy(() -> query.toCompletionStage().toCompletableFuture().get(30, SECONDS))
         .hasCause(queryFailure);
     assertThat(calls).hasValue(2);
-    testing.waitAndAssertTraces(trace ->
-        assertSupplierQuery(
-            trace,
-            "select * from query_request",
-            "query_request",
-            "other_sql",
-            "query.example",
-            queryFailure));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertSupplierQuery(
+                trace,
+                "select * from query_request",
+                "query_request",
+                "other_sql",
+                "query.example",
+                queryFailure));
   }
 
   @Test
@@ -950,13 +977,14 @@ class VertxSqlClientTest {
     Pool supplierPool =
         PgBuilder.pool()
             .using(vertx)
-            .connectingTo(() -> {
-              if (calls.getAndIncrement() == 0) {
-                return Future.succeededFuture(connectOptions());
-              }
-              laterConnecting.countDown();
-              return laterOptions.future();
-            })
+            .connectingTo(
+                () -> {
+                  if (calls.getAndIncrement() == 0) {
+                    return Future.succeededFuture(connectOptions());
+                  }
+                  laterConnecting.countDown();
+                  return laterOptions.future();
+                })
             .with(new PoolOptions().setMaxSize(2))
             .build();
     cleanup.deferCleanup(supplierPool::close);
@@ -1005,10 +1033,11 @@ class VertxSqlClientTest {
                       poolCompletions.incrementAndGet();
                     }))
             .using(vertx)
-            .connectingTo(() -> {
-              supplierCalled.countDown();
-              return options.future();
-            })
+            .connectingTo(
+                () -> {
+                  supplierCalled.countDown();
+                  return options.future();
+                })
             .with(
                 new PoolOptions()
                     .setMaxSize(1)
@@ -1030,9 +1059,15 @@ class VertxSqlClientTest {
     }
     Throwable timeout = result.get(30, SECONDS);
     assertThat(timeout).hasMessage("Timeout waiting for connection");
-    testing.waitAndAssertTraces(trace ->
-        assertSupplierQuery(
-            trace, "select * from timeout_request", "timeout_request", "other_sql", null, timeout));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertSupplierQuery(
+                trace,
+                "select * from timeout_request",
+                "timeout_request",
+                "other_sql",
+                null,
+                timeout));
     if (!optionsBeforeTimeout) {
       options.complete(connectOptions().setHost("late.example"));
     }
@@ -1041,9 +1076,15 @@ class VertxSqlClientTest {
     assertThat(completions).hasValue(1);
     assertThat(poolCompletions).hasValue(1);
     assertThat(result.get(30, SECONDS)).isSameAs(timeout);
-    testing.waitAndAssertTraces(trace ->
-        assertSupplierQuery(
-            trace, "select * from timeout_request", "timeout_request", "other_sql", null, timeout));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertSupplierQuery(
+                trace,
+                "select * from timeout_request",
+                "timeout_request",
+                "other_sql",
+                null,
+                timeout));
   }
 
   @Test
@@ -1075,26 +1116,28 @@ class VertxSqlClientTest {
     CompletableFuture<Throwable> result =
         queryOnContext(supplierPool, "select * from failed_request", context, completions);
     assertThat(result.get(30, SECONDS)).isSameAs(failure);
-    testing.waitAndAssertTraces(trace ->
-        assertSupplierQuery(
-            trace,
-            "select * from failed_request",
-            "failed_request",
-            "other_sql",
-            "failed.example",
-            failure));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertSupplierQuery(
+                trace,
+                "select * from failed_request",
+                "failed_request",
+                "other_sql",
+                "failed.example",
+                failure));
 
     assertThat(result.get(30, SECONDS)).isSameAs(failure);
     assertThat(completions).hasValue(1);
     assertThat(poolCompletions).hasValue(1);
-    testing.waitAndAssertTraces(trace ->
-        assertSupplierQuery(
-            trace,
-            "select * from failed_request",
-            "failed_request",
-            "other_sql",
-            "failed.example",
-            failure));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertSupplierQuery(
+                trace,
+                "select * from failed_request",
+                "failed_request",
+                "other_sql",
+                "failed.example",
+                failure));
   }
 
   @ParameterizedTest
@@ -1143,31 +1186,34 @@ class VertxSqlClientTest {
       assertThat(timeout).hasMessage("Timeout waiting for connection");
       Consumer<TraceAssert> assertion =
           trace ->
-              trace.hasSpansSatisfyingExactly(span ->
-                  span.hasName("select fixed_request")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasNoParent()
-                      .hasStatus(StatusData.error())
-                      .hasEventsSatisfyingExactly(event ->
-                          event
-                              .hasName("exception")
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(EXCEPTION_TYPE, timeout.getClass().getName()),
-                                  equalTo(EXCEPTION_MESSAGE, timeout.getMessage()),
-                                  satisfies(
-                                      EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(DB_SYSTEM_NAME, "other_sql"),
-                          equalTo(DB_NAMESPACE, DB),
-                          equalTo(DB_QUERY_TEXT, "select * from fixed_request"),
-                          equalTo(DB_QUERY_SUMMARY, "select fixed_request"),
-                          equalTo(
-                              SERVER_ADDRESS,
-                              serverList
-                                  ? "fixed.example:" + port + ",other.example:" + (port + 1)
-                                  : "fixed.example"),
-                          equalTo(SERVER_PORT, serverList ? null : Long.valueOf(port)),
-                          equalTo(ERROR_TYPE, timeout.getClass().getName())));
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("select fixed_request")
+                          .hasKind(SpanKind.CLIENT)
+                          .hasNoParent()
+                          .hasStatus(StatusData.error())
+                          .hasEventsSatisfyingExactly(
+                              event ->
+                                  event
+                                      .hasName("exception")
+                                      .hasAttributesSatisfyingExactly(
+                                          equalTo(EXCEPTION_TYPE, timeout.getClass().getName()),
+                                          equalTo(EXCEPTION_MESSAGE, timeout.getMessage()),
+                                          satisfies(
+                                              EXCEPTION_STACKTRACE,
+                                              val -> val.isInstanceOf(String.class))))
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(DB_SYSTEM_NAME, "other_sql"),
+                              equalTo(DB_NAMESPACE, DB),
+                              equalTo(DB_QUERY_TEXT, "select * from fixed_request"),
+                              equalTo(DB_QUERY_SUMMARY, "select fixed_request"),
+                              equalTo(
+                                  SERVER_ADDRESS,
+                                  serverList
+                                      ? "fixed.example:" + port + ",other.example:" + (port + 1)
+                                      : "fixed.example"),
+                              equalTo(SERVER_PORT, serverList ? null : Long.valueOf(port)),
+                              equalTo(ERROR_TYPE, timeout.getClass().getName())));
       testing.waitAndAssertTraces(assertion);
 
       attempt.fail(lateFailure);
@@ -1207,16 +1253,17 @@ class VertxSqlClientTest {
     Pool supplierPool =
         ClientBuilder.pool(driver)
             .using(isolatedVertx)
-            .connectingTo(() -> {
-              supplierEntered.countDown();
-              try {
-                assertThat(releaseSupplier.await(30, SECONDS)).isTrue();
-              } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new AssertionError(e);
-              }
-              throw thrown;
-            })
+            .connectingTo(
+                () -> {
+                  supplierEntered.countDown();
+                  try {
+                    assertThat(releaseSupplier.await(30, SECONDS)).isTrue();
+                  } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    throw new AssertionError(e);
+                  }
+                  throw thrown;
+                })
             .with(
                 new PoolOptions()
                     .setMaxSize(1)
@@ -1226,16 +1273,23 @@ class VertxSqlClientTest {
             .build();
 
     java.util.concurrent.Future<Throwable> result =
-        executor.submit(() ->
-            catchThrowable(() -> supplierPool.query("select * from timeout_request").execute()));
-    cleanup.deferCleanup(() -> {
-      releaseSupplier.countDown();
-      try {
-        result.get(30, SECONDS);
-      } finally {
-        driver.closeAfterSupplierThrow().toCompletionStage().toCompletableFuture().get(30, SECONDS);
-      }
-    });
+        executor.submit(
+            () ->
+                catchThrowable(
+                    () -> supplierPool.query("select * from timeout_request").execute()));
+    cleanup.deferCleanup(
+        () -> {
+          releaseSupplier.countDown();
+          try {
+            result.get(30, SECONDS);
+          } finally {
+            driver
+                .closeAfterSupplierThrow()
+                .toCompletionStage()
+                .toCompletableFuture()
+                .get(30, SECONDS);
+          }
+        });
     assertThat(supplierEntered.await(30, SECONDS)).isTrue();
     if (throwBeforeTimeout) {
       releaseSupplier.countDown();
@@ -1246,14 +1300,15 @@ class VertxSqlClientTest {
     releaseSupplier.countDown();
     assertThat(result.get(30, SECONDS)).isSameAs(thrown);
     assertThat(poolCompletions).hasValue(1);
-    testing.waitAndAssertTraces(trace ->
-        assertSupplierQuery(
-            trace,
-            "select * from timeout_request",
-            "timeout_request",
-            "other_sql",
-            null,
-            throwBeforeTimeout ? thrown : timeout));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertSupplierQuery(
+                trace,
+                "select * from timeout_request",
+                "timeout_request",
+                "other_sql",
+                null,
+                throwBeforeTimeout ? thrown : timeout));
   }
 
   @Test
@@ -1279,6 +1334,20 @@ class VertxSqlClientTest {
     Throwable error = thrown.getCause();
     assertThat(error).isNotNull();
     testing.waitAndAssertTraces(trace -> assertOracleConnectFailure(trace, error));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.vertx-sql-client-5.0",
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point.hasAttributesSatisfying(
+                                    attributes ->
+                                        assertThat(attributes.asMap())
+                                            .containsEntry(DB_RESPONSE_STATUS_CODE, "12541")
+                                            .containsEntry(ERROR_TYPE, "12541")))));
   }
 
   @ParameterizedTest
@@ -1311,32 +1380,39 @@ class VertxSqlClientTest {
     assertThat(thrown).isInstanceOf(ExecutionException.class);
     Throwable timeout = thrown.getCause();
     assertThat(timeout).hasMessage("Timeout waiting for connection");
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("select test")
-                .hasKind(SpanKind.CLIENT)
-                .hasNoParent()
-                .hasStatus(StatusData.error())
-                .hasEventsSatisfyingExactly(event ->
-                    event
-                        .hasName("exception")
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("select test")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, timeout.getClass().getName()),
+                                        equalTo(EXCEPTION_MESSAGE, timeout.getMessage()),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class))))
                         .hasAttributesSatisfyingExactly(
-                            equalTo(EXCEPTION_TYPE, timeout.getClass().getName()),
-                            equalTo(EXCEPTION_MESSAGE, timeout.getMessage()),
-                            satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                    equalTo(DB_NAMESPACE, DB),
-                    equalTo(DB_QUERY_TEXT, "select * from test"),
-                    equalTo(DB_QUERY_SUMMARY, "select test"),
-                    equalTo(
-                        stringKey("server.service.name"),
-                        serverList ? null : expectedMappedServiceName()),
-                    equalTo(
-                        SERVER_ADDRESS,
-                        serverList ? host + ":" + port + "," + host + ":" + (port + 1) : host),
-                    equalTo(SERVER_PORT, serverList ? null : Long.valueOf(port)),
-                    equalTo(ERROR_TYPE, timeout.getClass().getName()))));
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "select * from test"),
+                            equalTo(DB_QUERY_SUMMARY, "select test"),
+                            equalTo(
+                                stringKey("server.service.name"),
+                                serverList ? null : expectedMappedServiceName()),
+                            equalTo(
+                                SERVER_ADDRESS,
+                                serverList
+                                    ? host + ":" + port + "," + host + ":" + (port + 1)
+                                    : host),
+                            equalTo(SERVER_PORT, serverList ? null : Long.valueOf(port)),
+                            equalTo(ERROR_TYPE, timeout.getClass().getName()))));
   }
 
   @Test
@@ -1375,8 +1451,10 @@ class VertxSqlClientTest {
         .toCompletableFuture()
         .get(30, SECONDS);
 
-    testing.waitAndAssertTraces(trace ->
-        assertServerListTarget(trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
+    testing.waitAndAssertTraces(
+        trace ->
+            assertServerListTarget(
+                trace, query, host + ":" + port + "," + host + ":" + (port + 1)));
   }
 
   @ParameterizedTest
@@ -1437,29 +1515,33 @@ class VertxSqlClientTest {
         .runWithSpan(
             "parent",
             () ->
-                cursorPool.withTransaction(connection ->
-                    connection
-                        .prepare("select * from test order by id")
-                        .compose(statement -> {
-                          Cursor cursor = statement.cursor(Tuple.tuple());
-                          return cursor
-                              .read(1)
-                              .compose(first -> {
-                                assertThat(first).hasSize(1);
-                                assertThat(cursor.hasMore()).isTrue();
-                                return cursor.read(1);
-                              })
-                              .onSuccess(second -> assertThat(second).hasSize(1))
-                              .eventually(cursor::close)
-                              .eventually(statement::close);
-                        })))
+                cursorPool.withTransaction(
+                    connection ->
+                        connection
+                            .prepare("select * from test order by id")
+                            .compose(
+                                statement -> {
+                                  Cursor cursor = statement.cursor(Tuple.tuple());
+                                  return cursor
+                                      .read(1)
+                                      .compose(
+                                          first -> {
+                                            assertThat(first).hasSize(1);
+                                            assertThat(cursor.hasMore()).isTrue();
+                                            return cursor.read(1);
+                                          })
+                                      .onSuccess(second -> assertThat(second).hasSize(1))
+                                      .eventually(cursor::close)
+                                      .eventually(statement::close);
+                                })))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -1526,17 +1608,19 @@ class VertxSqlClientTest {
 
     select(singlePool);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                    equalTo(DB_NAMESPACE, DB),
-                    equalTo(DB_QUERY_TEXT, "select * from test"),
-                    equalTo(DB_QUERY_SUMMARY, "select test"),
-                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                    equalTo(SERVER_ADDRESS, host),
-                    equalTo(SERVER_PORT, port))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "select * from test"),
+                            equalTo(DB_QUERY_SUMMARY, "select test"),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -1608,17 +1692,18 @@ class VertxSqlClientTest {
   }
 
   private static void assertDirectTarget(TraceAssert trace) {
-    trace.hasSpansSatisfyingExactly(span ->
-        span.hasName("select test")
-            .hasKind(SpanKind.CLIENT)
-            .hasAttributesSatisfyingExactly(
-                equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                equalTo(DB_NAMESPACE, DB),
-                equalTo(DB_QUERY_TEXT, "select * from test"),
-                equalTo(DB_QUERY_SUMMARY, "select test"),
-                equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                equalTo(SERVER_ADDRESS, host),
-                equalTo(SERVER_PORT, port)));
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("select test")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                    equalTo(DB_NAMESPACE, DB),
+                    equalTo(DB_QUERY_TEXT, "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, "select test"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port)));
   }
 
   private static void assertSupplierTarget(TraceAssert trace) {
@@ -1626,17 +1711,18 @@ class VertxSqlClientTest {
   }
 
   private static void assertSupplierTarget(TraceAssert trace, String expectedHost) {
-    trace.hasSpansSatisfyingExactly(span ->
-        span.hasName("select test")
-            .hasKind(SpanKind.CLIENT)
-            .hasAttributesSatisfyingExactly(
-                equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                equalTo(DB_NAMESPACE, DB),
-                equalTo(DB_QUERY_TEXT, "select * from test"),
-                equalTo(DB_QUERY_SUMMARY, "select test"),
-                equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                equalTo(SERVER_ADDRESS, expectedHost),
-                equalTo(SERVER_PORT, port)));
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("select test")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                    equalTo(DB_NAMESPACE, DB),
+                    equalTo(DB_QUERY_TEXT, "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, "select test"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, expectedHost),
+                    equalTo(SERVER_PORT, port)));
   }
 
   private static void assertSupplierQuery(
@@ -1646,67 +1732,72 @@ class VertxSqlClientTest {
       String dbSystem,
       String expectedHost,
       Throwable error) {
-    trace.hasSpansSatisfyingExactly(span -> {
-      span.hasName("select " + table)
-          .hasKind(SpanKind.CLIENT)
-          .hasNoParent()
-          .hasStatus(error == null ? StatusData.unset() : StatusData.error())
-          .hasAttributesSatisfyingExactly(
-              equalTo(DB_SYSTEM_NAME, dbSystem),
-              equalTo(DB_NAMESPACE, expectedHost != null ? DB : null),
-              equalTo(DB_QUERY_TEXT, statement),
-              equalTo(DB_QUERY_SUMMARY, "select " + table),
-              equalTo(
-                  stringKey("server.service.name"),
-                  expectedHost != null
-                          && (expectedHost.equals(host)
-                              || expectedHost.equals("localhost")
-                              || expectedHost.equals("127.0.0.1"))
-                      ? expectedMappedServiceName()
-                      : null),
-              equalTo(SERVER_ADDRESS, expectedHost),
-              equalTo(SERVER_PORT, expectedHost != null ? Long.valueOf(port) : null),
-              equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
-      if (error == null) {
-        span.hasEventsSatisfyingExactly();
-      } else {
-        span.hasEventsSatisfyingExactly(event ->
-            event
-                .hasName("exception")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(EXCEPTION_TYPE, error.getClass().getName()),
-                    equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                    satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
-      }
-    });
+    trace.hasSpansSatisfyingExactly(
+        span -> {
+          span.hasName("select " + table)
+              .hasKind(SpanKind.CLIENT)
+              .hasNoParent()
+              .hasStatus(error == null ? StatusData.unset() : StatusData.error())
+              .hasAttributesSatisfyingExactly(
+                  equalTo(DB_SYSTEM_NAME, dbSystem),
+                  equalTo(DB_NAMESPACE, expectedHost != null ? DB : null),
+                  equalTo(DB_QUERY_TEXT, statement),
+                  equalTo(DB_QUERY_SUMMARY, "select " + table),
+                  equalTo(
+                      stringKey("server.service.name"),
+                      expectedHost != null
+                              && (expectedHost.equals(host)
+                                  || expectedHost.equals("localhost")
+                                  || expectedHost.equals("127.0.0.1"))
+                          ? expectedMappedServiceName()
+                          : null),
+                  equalTo(SERVER_ADDRESS, expectedHost),
+                  equalTo(SERVER_PORT, expectedHost != null ? Long.valueOf(port) : null),
+                  equalTo(ERROR_TYPE, error != null ? error.getClass().getName() : null));
+          if (error == null) {
+            span.hasEventsSatisfyingExactly();
+          } else {
+            span.hasEventsSatisfyingExactly(
+                event ->
+                    event
+                        .hasName("exception")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                            equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                            satisfies(
+                                EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+          }
+        });
   }
 
   private static CompletableFuture<Throwable> queryOnContext(
       Pool supplierPool, String sql, Context context, AtomicInteger completions) {
     CompletableFuture<Throwable> result = new CompletableFuture<>();
-    context.runOnContext(ignored -> {
-      Thread thread = Thread.currentThread();
-      try (Scope ignoredScope =
-          io.opentelemetry.context.Context.current().with(REQUEST_KEY, sql).makeCurrent()) {
-        supplierPool
-            .query(sql)
-            .execute()
-            .onComplete(queryResult -> {
-              try {
-                completions.incrementAndGet();
-                assertThat(Vertx.currentContext()).isSameAs(context);
-                assertThat(Thread.currentThread()).isSameAs(thread);
-                assertThat(io.opentelemetry.context.Context.current().get(REQUEST_KEY))
-                    .isEqualTo(sql);
-                result.complete(queryResult.cause());
-              } catch (Throwable t) {
-                result.completeExceptionally(t);
-              }
-            });
-      } catch (Throwable t) {
-        result.completeExceptionally(t);
-      }
-    });
+    context.runOnContext(
+        ignored -> {
+          Thread thread = Thread.currentThread();
+          try (Scope ignoredScope =
+              io.opentelemetry.context.Context.current().with(REQUEST_KEY, sql).makeCurrent()) {
+            supplierPool
+                .query(sql)
+                .execute()
+                .onComplete(
+                    queryResult -> {
+                      try {
+                        completions.incrementAndGet();
+                        assertThat(Vertx.currentContext()).isSameAs(context);
+                        assertThat(Thread.currentThread()).isSameAs(thread);
+                        assertThat(io.opentelemetry.context.Context.current().get(REQUEST_KEY))
+                            .isEqualTo(sql);
+                        result.complete(queryResult.cause());
+                      } catch (Throwable t) {
+                        result.completeExceptionally(t);
+                      }
+                    });
+          } catch (Throwable t) {
+            result.completeExceptionally(t);
+          }
+        });
     return result;
   }
 
@@ -1721,52 +1812,58 @@ class VertxSqlClientTest {
 
   private static void assertSupplierFailure(
       TraceAssert trace, RuntimeException error, String dbSystem, String expectedHost) {
-    trace.hasSpansSatisfyingExactly(span ->
-        span.hasName("select test")
-            .hasKind(SpanKind.CLIENT)
-            .hasStatus(StatusData.error())
-            .hasEventsSatisfyingExactly(event ->
-                event
-                    .hasName("exception")
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
-                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
-            .hasAttributesSatisfyingExactly(
-                equalTo(DB_SYSTEM_NAME, dbSystem),
-                equalTo(DB_NAMESPACE, expectedHost != null ? DB : null),
-                equalTo(DB_QUERY_TEXT, "select * from test"),
-                equalTo(DB_QUERY_SUMMARY, "select test"),
-                equalTo(
-                    stringKey("server.service.name"),
-                    expectedHost != null && expectedHost.equals(host)
-                        ? expectedMappedServiceName()
-                        : null),
-                equalTo(SERVER_ADDRESS, expectedHost),
-                equalTo(SERVER_PORT, expectedHost != null ? Long.valueOf(port) : null),
-                equalTo(ERROR_TYPE, error.getClass().getName())));
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("select test")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .hasEventsSatisfyingExactly(
+                    event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                                equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, dbSystem),
+                    equalTo(DB_NAMESPACE, expectedHost != null ? DB : null),
+                    equalTo(DB_QUERY_TEXT, "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, "select test"),
+                    equalTo(
+                        stringKey("server.service.name"),
+                        expectedHost != null && expectedHost.equals(host)
+                            ? expectedMappedServiceName()
+                            : null),
+                    equalTo(SERVER_ADDRESS, expectedHost),
+                    equalTo(SERVER_PORT, expectedHost != null ? Long.valueOf(port) : null),
+                    equalTo(ERROR_TYPE, error.getClass().getName())));
   }
 
   private static void assertSupplierFallbackFailure(TraceAssert trace, RuntimeException error) {
-    trace.hasSpansSatisfyingExactly(span ->
-        span.hasName("")
-            .hasKind(SpanKind.CLIENT)
-            .hasStatus(StatusData.error())
-            .hasEventsSatisfyingExactly(event ->
-                event
-                    .hasName("exception")
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
-                        equalTo(EXCEPTION_MESSAGE, error.getMessage()),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
-            .hasAttributesSatisfyingExactly(
-                equalTo(DB_SYSTEM_NAME, "other_sql"),
-                equalTo(DB_NAMESPACE, ""),
-                equalTo(DB_QUERY_TEXT, ""),
-                equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                equalTo(SERVER_ADDRESS, host),
-                equalTo(SERVER_PORT, port),
-                equalTo(ERROR_TYPE, error.getClass().getName())));
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .hasEventsSatisfyingExactly(
+                    event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                                equalTo(EXCEPTION_MESSAGE, error.getMessage()),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "other_sql"),
+                    equalTo(DB_NAMESPACE, ""),
+                    equalTo(DB_QUERY_TEXT, ""),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(ERROR_TYPE, error.getClass().getName())));
   }
 
   private static PgDriver failingDriver(RuntimeException failure) {
@@ -1778,26 +1875,30 @@ class VertxSqlClientTest {
   }
 
   private static void assertOracleConnectFailure(TraceAssert trace, Throwable error) {
-    trace.hasSpansSatisfyingExactly(span ->
-        span.hasName("select test")
-            .hasKind(SpanKind.CLIENT)
-            .hasStatus(StatusData.error())
-            .hasEventsSatisfyingExactly(event ->
-                event
-                    .hasName("exception")
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(EXCEPTION_TYPE, error.getClass().getName()),
-                        satisfies(EXCEPTION_MESSAGE, val -> val.isNotBlank()),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
-            .hasAttributesSatisfyingExactly(
-                equalTo(DB_SYSTEM_NAME, "oracle.db"),
-                equalTo(DB_NAMESPACE, "testdb"),
-                equalTo(DB_QUERY_TEXT, "select * from test"),
-                equalTo(DB_QUERY_SUMMARY, "select test"),
-                equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                equalTo(SERVER_PORT, 1),
-                equalTo(ERROR_TYPE, "66000")));
+    trace.hasSpansSatisfyingExactly(
+        span ->
+            span.hasName("select test")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .hasEventsSatisfyingExactly(
+                    event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, error.getClass().getName()),
+                                satisfies(EXCEPTION_MESSAGE, val -> val.isNotBlank()),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "oracle.db"),
+                    equalTo(DB_NAMESPACE, "testdb"),
+                    equalTo(DB_QUERY_TEXT, "select * from test"),
+                    equalTo(DB_QUERY_SUMMARY, "select test"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                    equalTo(SERVER_PORT, 1),
+                    equalTo(ERROR_TYPE, "12541"),
+                    equalTo(DB_RESPONSE_STATUS_CODE, "12541")));
   }
 
   private static void select(SqlClient client) throws Exception {
@@ -1828,32 +1929,36 @@ class VertxSqlClientTest {
         () ->
             pool.query("select * from test")
                 .execute()
-                .onComplete(rowSetAsyncResult -> {
-                  if (rowSetAsyncResult.succeeded()) {
-                    future.complete(rowSetAsyncResult.result());
-                  } else {
-                    future.completeExceptionally(rowSetAsyncResult.cause());
-                  }
-                }));
+                .onComplete(
+                    rowSetAsyncResult -> {
+                      if (rowSetAsyncResult.succeeded()) {
+                        future.complete(rowSetAsyncResult.result());
+                      } else {
+                        future.completeExceptionally(rowSetAsyncResult.cause());
+                      }
+                    }));
     result.get(30, SECONDS);
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-            span ->
-                span.hasName("select test")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                        equalTo(DB_NAMESPACE, DB),
-                        equalTo(DB_QUERY_TEXT, "select * from test"),
-                        equalTo(DB_QUERY_SUMMARY, "select test"),
-                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port)),
-            span ->
-                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("select test")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "select * from test"),
+                            equalTo(DB_QUERY_SUMMARY, "select test"),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port)),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
 
     assertDurationMetric(
         testing,
@@ -1875,44 +1980,51 @@ class VertxSqlClientTest {
         () ->
             pool.query("invalid")
                 .execute()
-                .onComplete(rowSetAsyncResult -> {
-                  if (rowSetAsyncResult.succeeded()) {
-                    result.complete(rowSetAsyncResult.result());
-                  } else {
-                    result.completeExceptionally(rowSetAsyncResult.cause());
-                  }
-                }));
+                .onComplete(
+                    rowSetAsyncResult -> {
+                      if (rowSetAsyncResult.succeeded()) {
+                        result.complete(rowSetAsyncResult.result());
+                      } else {
+                        result.completeExceptionally(rowSetAsyncResult.cause());
+                      }
+                    }));
 
     assertThat(latch.await(30, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-            span ->
-                span.hasName("tempdb")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasStatus(StatusData.error())
-                    .hasEventsSatisfyingExactly(event ->
-                        event
-                            .hasName("exception")
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(EXCEPTION_TYPE, PgException.class.getName()),
-                                satisfies(
-                                    EXCEPTION_MESSAGE,
-                                    val -> val.contains("syntax error at or near")),
-                                satisfies(
-                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                        equalTo(DB_NAMESPACE, DB),
-                        equalTo(DB_QUERY_TEXT, "invalid"),
-                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(ERROR_TYPE, "42601")),
-            span ->
-                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("tempdb")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, PgException.class.getName()),
+                                        satisfies(
+                                            EXCEPTION_MESSAGE,
+                                            val -> val.contains("syntax error at or near")),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class))))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, "invalid"),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(ERROR_TYPE, "42601"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "42601")),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -1933,21 +2045,22 @@ class VertxSqlClientTest {
   }
 
   private static void assertPreparedSelect(String query) {
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-            span ->
-                span.hasName("select test")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                        equalTo(DB_NAMESPACE, DB),
-                        equalTo(DB_QUERY_TEXT, query),
-                        equalTo(DB_QUERY_SUMMARY, "select test"),
-                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("select test")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, query),
+                            equalTo(DB_QUERY_SUMMARY, "select test"),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -2018,32 +2131,37 @@ class VertxSqlClientTest {
       // the failure is recorded on the client span
     }
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-            span ->
-                span.hasName("select test")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasStatus(StatusData.error())
-                    .hasEventsSatisfyingExactly(event ->
-                        event
-                            .hasName("exception")
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(EXCEPTION_TYPE, PgException.class.getName()),
-                                satisfies(
-                                    EXCEPTION_MESSAGE, val -> val.contains("division by zero")),
-                                satisfies(
-                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                        equalTo(DB_NAMESPACE, DB),
-                        equalTo(DB_QUERY_TEXT, query),
-                        equalTo(DB_QUERY_SUMMARY, "select test"),
-                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port),
-                        equalTo(ERROR_TYPE, "22012"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("select test")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasStatus(StatusData.error())
+                        .hasEventsSatisfyingExactly(
+                            event ->
+                                event
+                                    .hasName("exception")
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(EXCEPTION_TYPE, PgException.class.getName()),
+                                        satisfies(
+                                            EXCEPTION_MESSAGE,
+                                            val -> val.contains("division by zero")),
+                                        satisfies(
+                                            EXCEPTION_STACKTRACE,
+                                            val -> val.isInstanceOf(String.class))))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, query),
+                            equalTo(DB_QUERY_SUMMARY, "select test"),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(ERROR_TYPE, "22012"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "22012"))));
   }
 
   private static Future<?> executePreparedStatement(String query, Tuple tuple) {
@@ -2062,17 +2180,21 @@ class VertxSqlClientTest {
       String query,
       Tuple tuple,
       Function<PreparedStatement, PreparedQuery<?>> preparedQueryFactory) {
-    return targetPool.withConnection(connection ->
-        connection
-            .prepare(query)
-            .compose(statement ->
-                preparedQueryFactory
-                    .apply(statement)
-                    .execute(tuple)
-                    .compose(
-                        rows -> statement.close().map(rows),
-                        error ->
-                            statement.close().compose(ignored -> Future.failedFuture(error)))));
+    return targetPool.withConnection(
+        connection ->
+            connection
+                .prepare(query)
+                .compose(
+                    statement ->
+                        preparedQueryFactory
+                            .apply(statement)
+                            .execute(tuple)
+                            .compose(
+                                rows -> statement.close().map(rows),
+                                error ->
+                                    statement
+                                        .close()
+                                        .compose(ignored -> Future.failedFuture(error)))));
   }
 
   @ParameterizedTest
@@ -2097,23 +2219,24 @@ class VertxSqlClientTest {
       // an empty batch fails to execute; the failure is recorded on the client span
     }
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
-            span ->
-                span.hasName(scenario.stableSpanName)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                        equalTo(DB_NAMESPACE, DB),
-                        equalTo(DB_QUERY_TEXT, scenario.preparedQuery),
-                        equalTo(DB_QUERY_SUMMARY, scenario.querySummary),
-                        equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                        equalTo(ERROR_TYPE, scenario.errorType),
-                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                        equalTo(SERVER_ADDRESS, host),
-                        equalTo(SERVER_PORT, port))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName(scenario.stableSpanName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                            equalTo(DB_NAMESPACE, DB),
+                            equalTo(DB_QUERY_TEXT, scenario.preparedQuery),
+                            equalTo(DB_QUERY_SUMMARY, scenario.querySummary),
+                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                            equalTo(ERROR_TYPE, scenario.errorType),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port))));
   }
 
   private static void recreateBatchTestTable() throws Exception {
@@ -2162,8 +2285,10 @@ class VertxSqlClientTest {
         .runWithSpan(
             "parent",
             () ->
-                pool.withTransaction(conn ->
-                    conn.preparedQuery("select * from test where id = $1").execute(Tuple.of(1))))
+                pool.withTransaction(
+                    conn ->
+                        conn.preparedQuery("select * from test where id = $1")
+                            .execute(Tuple.of(1))))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -2177,8 +2302,10 @@ class VertxSqlClientTest {
         .runWithSpan(
             "parent",
             () ->
-                pool.withConnection(conn ->
-                    conn.preparedQuery("select * from test where id = $1").execute(Tuple.of(1))))
+                pool.withConnection(
+                    conn ->
+                        conn.preparedQuery("select * from test where id = $1")
+                            .execute(Tuple.of(1))))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);
@@ -2204,14 +2331,15 @@ class VertxSqlClientTest {
           () ->
               pool.query("select * from test")
                   .execute()
-                  .onComplete(rowSetAsyncResult -> {
-                    if (rowSetAsyncResult.succeeded()) {
-                      future.complete(rowSetAsyncResult.result());
-                    } else {
-                      future.completeExceptionally(rowSetAsyncResult.cause());
-                    }
-                    latch.countDown();
-                  }));
+                  .onComplete(
+                      rowSetAsyncResult -> {
+                        if (rowSetAsyncResult.succeeded()) {
+                          future.complete(rowSetAsyncResult.result());
+                        } else {
+                          future.completeExceptionally(rowSetAsyncResult.cause());
+                        }
+                        latch.countDown();
+                      }));
     }
     assertThat(latch.await(30, SECONDS)).isTrue();
     for (CompletableFuture<Object> result : resultList) {
@@ -2259,21 +2387,25 @@ class VertxSqlClientTest {
     ExecutorService executorService = Executors.newFixedThreadPool(4);
     cleanup.deferCleanup(() -> executorService.shutdown());
     for (CompletableFuture<Object> future : futureList) {
-      executorService.submit(() -> {
-        testing.runWithSpan(
-            "parent",
-            () ->
-                pool.withConnection(conn ->
-                        conn.preparedQuery("select * from test where id = $1").execute(Tuple.of(1)))
-                    .onComplete(rowSetAsyncResult -> {
-                      if (rowSetAsyncResult.succeeded()) {
-                        future.complete(rowSetAsyncResult.result());
-                      } else {
-                        future.completeExceptionally(rowSetAsyncResult.cause());
-                      }
-                      latch.countDown();
-                    }));
-      });
+      executorService.submit(
+          () -> {
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    pool.withConnection(
+                            conn ->
+                                conn.preparedQuery("select * from test where id = $1")
+                                    .execute(Tuple.of(1)))
+                        .onComplete(
+                            rowSetAsyncResult -> {
+                              if (rowSetAsyncResult.succeeded()) {
+                                future.complete(rowSetAsyncResult.result());
+                              } else {
+                                future.completeExceptionally(rowSetAsyncResult.cause());
+                              }
+                              latch.countDown();
+                            }));
+          });
     }
     assertThat(latch.await(30, SECONDS)).isTrue();
     for (CompletableFuture<Object> result : resultList) {

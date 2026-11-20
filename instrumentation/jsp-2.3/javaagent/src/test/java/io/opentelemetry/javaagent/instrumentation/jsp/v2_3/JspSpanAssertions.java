@@ -52,23 +52,26 @@ class JspSpanAssertions {
   void assertServerSpan(SpanDataAssert span, JspSpan spanData) {
     if (spanData.getExceptionClass() != null) {
       span.hasStatus(StatusData.error())
-          .hasEventsSatisfyingExactly(event ->
-              event
-                  .hasName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(
-                          EXCEPTION_TYPE,
-                          val ->
-                              val.satisfiesAnyOf(
-                                  v -> val.isEqualTo(spanData.getExceptionClass().getName()),
-                                  v -> val.contains(spanData.getExceptionClass().getSimpleName()))),
-                      satisfies(
-                          EXCEPTION_MESSAGE,
-                          val ->
-                              val.satisfiesAnyOf(
-                                  v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
-                                  v -> val.isInstanceOf(String.class))),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+          .hasEventsSatisfyingExactly(
+              event ->
+                  event
+                      .hasName("exception")
+                      .hasAttributesSatisfyingExactly(
+                          satisfies(
+                              EXCEPTION_TYPE,
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      v -> val.isEqualTo(spanData.getExceptionClass().getName()),
+                                      v ->
+                                          val.contains(
+                                              spanData.getExceptionClass().getSimpleName()))),
+                          satisfies(
+                              EXCEPTION_MESSAGE,
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
+                                      v -> val.isInstanceOf(String.class))),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
 
     span.hasName(spanData.getMethod() + " " + spanData.getRoute())
@@ -98,13 +101,14 @@ class JspSpanAssertions {
   void assertCompileSpan(SpanDataAssert span, JspSpan spanData) {
     if (spanData.getExceptionClass() != null) {
       span.hasStatus(StatusData.error())
-          .hasEventsSatisfyingExactly(event ->
-              event
-                  .hasName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, spanData.getExceptionClass().getCanonicalName()),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)),
-                      satisfies(EXCEPTION_MESSAGE, val -> val.isInstanceOf(String.class))));
+          .hasEventsSatisfyingExactly(
+              event ->
+                  event
+                      .hasName("exception")
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(EXCEPTION_TYPE, spanData.getExceptionClass().getCanonicalName()),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)),
+                          satisfies(EXCEPTION_MESSAGE, val -> val.isInstanceOf(String.class))));
     }
 
     span.hasName("Compile " + spanData.getRoute())
@@ -125,23 +129,26 @@ class JspSpanAssertions {
 
     if (spanData.getExceptionClass() != null) {
       span.hasStatus(StatusData.error())
-          .hasEventsSatisfyingExactly(event ->
-              event
-                  .hasName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(
-                          EXCEPTION_TYPE,
-                          val ->
-                              val.satisfiesAnyOf(
-                                  v -> val.isEqualTo(spanData.getExceptionClass().getName()),
-                                  v -> val.contains(spanData.getExceptionClass().getSimpleName()))),
-                      satisfies(
-                          EXCEPTION_MESSAGE,
-                          val ->
-                              val.satisfiesAnyOf(
-                                  v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
-                                  v -> val.isInstanceOf(String.class))),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+          .hasEventsSatisfyingExactly(
+              event ->
+                  event
+                      .hasName("exception")
+                      .hasAttributesSatisfyingExactly(
+                          satisfies(
+                              EXCEPTION_TYPE,
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      v -> val.isEqualTo(spanData.getExceptionClass().getName()),
+                                      v ->
+                                          val.contains(
+                                              spanData.getExceptionClass().getSimpleName()))),
+                          satisfies(
+                              EXCEPTION_MESSAGE,
+                              val ->
+                                  val.satisfiesAnyOf(
+                                      v -> assertThat(spanData.isErrorMessageOptional()).isTrue(),
+                                      v -> val.isInstanceOf(String.class))),
+                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
 
     span.hasName("Render " + spanData.getRoute()).hasParent(spanData.getParent());

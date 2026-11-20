@@ -40,10 +40,11 @@ class DefaultEnablementTest {
     assertThat(result).isEqualTo("Hello!");
 
     if (INSTRUMENTATION_ENABLED) {
-      testing.waitAndAssertTraces(trace ->
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent"),
-              span -> span.hasName("ExampleGroup.TestCommand.execute")));
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("parent"),
+                  span -> span.hasName("ExampleGroup.TestCommand.execute")));
     } else {
       testing.waitAndAssertTraces(
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));

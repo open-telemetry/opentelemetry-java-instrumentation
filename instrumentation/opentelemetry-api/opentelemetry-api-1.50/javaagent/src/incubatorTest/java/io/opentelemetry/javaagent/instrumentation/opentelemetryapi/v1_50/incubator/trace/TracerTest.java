@@ -63,12 +63,13 @@ class TracerTest {
     }
     {
       AtomicReference<Span> spanRef = new AtomicReference<>();
-      assertThatThrownBy(() ->
-              builder.startAndCall(
-                  () -> {
-                    throw new IllegalStateException("fail");
-                  },
-                  (s, t) -> spanRef.set(s)))
+      assertThatThrownBy(
+              () ->
+                  builder.startAndCall(
+                      () -> {
+                        throw new IllegalStateException("fail");
+                      },
+                      (s, t) -> spanRef.set(s)))
           .isInstanceOf(IllegalStateException.class);
       assertThat(spanRef.get().getSpanContext().getTraceId()).isNotEqualTo(TraceId.getInvalid());
     }
@@ -85,12 +86,13 @@ class TracerTest {
     }
     {
       AtomicReference<Span> spanRef = new AtomicReference<>();
-      assertThatThrownBy(() ->
-              builder.startAndRun(
-                  () -> {
-                    throw new IllegalStateException("fail");
-                  },
-                  (s, t) -> spanRef.set(s)))
+      assertThatThrownBy(
+              () ->
+                  builder.startAndRun(
+                      () -> {
+                        throw new IllegalStateException("fail");
+                      },
+                      (s, t) -> spanRef.set(s)))
           .isInstanceOf(IllegalStateException.class);
       assertThat(spanRef.get().getSpanContext().getTraceId()).isNotEqualTo(TraceId.getInvalid());
     }

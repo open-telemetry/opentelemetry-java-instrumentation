@@ -51,11 +51,13 @@ class MyBatisTest {
     TestMapper testMapper = sqlSession.getMapper(TestMapper.class);
     testMapper.select();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasKind(SpanKind.INTERNAL)
-                .hasName("TestMapper.select")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(CODE_FUNCTION_NAME, TestMapper.class.getName() + ".select"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasKind(SpanKind.INTERNAL)
+                        .hasName("TestMapper.select")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, TestMapper.class.getName() + ".select"))));
   }
 }

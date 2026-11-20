@@ -62,13 +62,15 @@ class MessagingProcessInstrumenterFactoryTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("process")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasTraceId(producer.getTraceId())
-                    .hasParentSpanId(producer.getSpanId())
-                    .hasLinks(LinkData.create(producer))));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasTraceId(producer.getTraceId())
+                            .hasParentSpanId(producer.getSpanId())
+                            .hasLinks(LinkData.create(producer))));
   }
 
   @Test
@@ -93,13 +95,15 @@ class MessagingProcessInstrumenterFactoryTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("process")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasTraceId(producer.getTraceId())
-                    .hasParentSpanId(producer.getSpanId())
-                    .hasLinks(LinkData.create(producer))));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasTraceId(producer.getTraceId())
+                            .hasParentSpanId(producer.getSpanId())
+                            .hasLinks(LinkData.create(producer))));
   }
 
   @Test
@@ -117,13 +121,15 @@ class MessagingProcessInstrumenterFactoryTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("process")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasTraceId(ambientParent.getTraceId())
-                    .hasParentSpanId(ambientParent.getSpanId())
-                    .hasLinks()));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasTraceId(ambientParent.getTraceId())
+                            .hasParentSpanId(ambientParent.getSpanId())
+                            .hasLinks()));
   }
 
   @Test
@@ -142,13 +148,15 @@ class MessagingProcessInstrumenterFactoryTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("process")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasTraceId(ambientParent.getTraceId())
-                    .hasParentSpanId(ambientParent.getSpanId())
-                    .hasLinks(LinkData.create(producer))));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("process")
+                            .hasKind(SpanKind.CONSUMER)
+                            .hasTraceId(ambientParent.getTraceId())
+                            .hasParentSpanId(ambientParent.getSpanId())
+                            .hasLinks(LinkData.create(producer))));
   }
 
   private static SpanContext spanContext(String traceId, String spanId) {

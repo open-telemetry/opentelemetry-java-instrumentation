@@ -161,8 +161,9 @@ class TomcatServlet5WebXmlFilterTest {
       connection.disconnect();
     }
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("GET /app/users/*").hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /app/users/*").hasKind(SpanKind.SERVER)));
   }
 }

@@ -25,9 +25,10 @@ class SpringJmsMessageListenerStartFailureTest {
     IllegalStateException failure = new IllegalStateException("failure");
 
     try (Scope ignored = throwingContext(failure).makeCurrent()) {
-      assertThatThrownBy(() ->
-              SpringJmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope.start(
-                  message))
+      assertThatThrownBy(
+              () ->
+                  SpringJmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope.start(
+                      message))
           .isSameAs(failure);
     }
 

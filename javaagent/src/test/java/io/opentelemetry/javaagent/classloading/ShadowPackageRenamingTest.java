@@ -63,9 +63,10 @@ class ShadowPackageRenamingTest {
 
   @Test
   void agentClassesNotVisible() {
-    assertThatThrownBy(() ->
-            ClassLoader.getSystemClassLoader()
-                .loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller"))
+    assertThatThrownBy(
+            () ->
+                ClassLoader.getSystemClassLoader()
+                    .loadClass("io.opentelemetry.javaagent.tooling.AgentInstaller"))
         .isInstanceOf(ClassNotFoundException.class);
   }
 

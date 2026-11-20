@@ -29,22 +29,24 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
 
   @BeforeAll
   void setUpTopicAndConsumer() {
-    kafkaConsumer.handler(record -> {
-      try {
-        assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
-        testing().runWithSpan("consumer", () -> {});
-        if ("error".equals(record.value())) {
-          throw new IllegalArgumentException("boom");
-        }
-      } finally {
-        kafkaConsumer.pause();
-      }
-    });
+    kafkaConsumer.handler(
+        record -> {
+          try {
+            assertThat(processSpanEnabledSupplier().getAsBoolean()).isTrue();
+            testing().runWithSpan("consumer", () -> {});
+            if ("error".equals(record.value())) {
+              throw new IllegalArgumentException("boom");
+            }
+          } finally {
+            kafkaConsumer.pause();
+          }
+        });
 
-    kafkaConsumer.partitionsAssignedHandler(partitions -> {
-      kafkaConsumer.pause();
-      consumerReady.countDown();
-    });
+    kafkaConsumer.partitionsAssignedHandler(
+        partitions -> {
+          kafkaConsumer.pause();
+          consumerReady.countDown();
+        });
     subscribe("testSingleTopic");
   }
 
@@ -79,12 +81,13 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
               producer.set(trace.getSpan(1));
             },
             trace ->
-                trace.hasSpansSatisfyingExactly(span ->
-                    span.hasName("poll testSingleTopic")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(batchRecordLink(producer.get()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic"))));
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("poll testSingleTopic")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinks(batchRecordLink(producer.get()))
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic"))));
     assertSingleMetrics(null);
   }
 
@@ -121,12 +124,13 @@ public abstract class AbstractSingleRecordVertxKafkaTest extends AbstractVertxKa
               producer.set(trace.getSpan(1));
             },
             trace ->
-                trace.hasSpansSatisfyingExactly(span ->
-                    span.hasName("poll testSingleTopic")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(batchRecordLink(producer.get()))
-                        .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic"))));
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("poll testSingleTopic")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasLinks(batchRecordLink(producer.get()))
+                            .hasAttributesSatisfyingExactly(receiveAttributes("testSingleTopic"))));
     assertSingleMetrics(IllegalArgumentException.class.getName());
   }
 

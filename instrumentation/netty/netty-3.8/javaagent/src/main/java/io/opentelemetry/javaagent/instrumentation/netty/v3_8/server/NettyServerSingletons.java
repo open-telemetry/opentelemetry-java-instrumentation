@@ -22,8 +22,9 @@ final class NettyServerSingletons {
             new NettyHttpServerAttributesGetter(),
             new NettyHeadersGetter(),
             builder ->
-                builder.addContextCustomizer((context, requestAndChannel, startAttributes) ->
-                    NettyErrorHolder.init(context)));
+                builder.addContextCustomizer(
+                    (context, requestAndChannel, startAttributes) ->
+                        NettyErrorHolder.init(context)));
   }
 
   public static Instrumenter<NettyRequest, HttpResponse> instrumenter() {

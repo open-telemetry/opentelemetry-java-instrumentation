@@ -39,8 +39,13 @@ class VertxRxCircuitBreakerSingleConnection extends VertxRxSingleConnection {
 
   private void sendRequestWithCallback(HttpRequest<?> request, Consumer<AsyncResult<?>> consumer) {
     breaker
-        .execute(command ->
-            request.rxSend().doOnSuccess(command::complete).doOnError(command::fail).subscribe())
+        .execute(
+            command ->
+                request
+                    .rxSend()
+                    .doOnSuccess(command::complete)
+                    .doOnError(command::fail)
+                    .subscribe())
         .onComplete(consumer::accept);
   }
 }

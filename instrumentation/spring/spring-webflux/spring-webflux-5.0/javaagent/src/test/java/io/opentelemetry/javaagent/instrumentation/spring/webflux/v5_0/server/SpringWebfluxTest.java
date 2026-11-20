@@ -49,16 +49,18 @@ class SpringWebfluxTest extends AbstractSpringWebfluxTest {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("HELLO");
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("GET /proxy-handler").hasKind(SpanKind.SERVER).hasNoParent(),
-            span ->
-                span.hasName("SpringWebfluxTest$ProxiedHandler.handle")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(
-                            CODE_FUNCTION_NAME, proxiedHandler.getClass().getName() + ".handle"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("GET /proxy-handler").hasKind(SpanKind.SERVER).hasNoParent(),
+                span ->
+                    span.hasName("SpringWebfluxTest$ProxiedHandler.handle")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(
+                                CODE_FUNCTION_NAME,
+                                proxiedHandler.getClass().getName() + ".handle"))));
   }
 
   @TestConfiguration

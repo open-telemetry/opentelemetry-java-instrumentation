@@ -39,12 +39,13 @@ final class RestClientBeanPostProcessorSpring4 implements BeanPostProcessor {
     RestClient.Builder result =
         restClient
             .mutate()
-            .requestInterceptors(interceptors -> {
-              if (isInterceptorNotPresent(interceptors, instrumentationInterceptor)) {
-                interceptors.add(0, instrumentationInterceptor);
-                interceptorAdded.set(true);
-              }
-            });
+            .requestInterceptors(
+                interceptors -> {
+                  if (isInterceptorNotPresent(interceptors, instrumentationInterceptor)) {
+                    interceptors.add(0, instrumentationInterceptor);
+                    interceptorAdded.set(true);
+                  }
+                });
 
     return interceptorAdded.get() ? result.build() : restClient;
   }

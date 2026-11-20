@@ -44,11 +44,14 @@ class SimpleAsyncTaskExecutorInstrumentationTest {
           child1.waitForCompletion();
           child2.waitForCompletion();
         });
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-            span ->
-                span.hasName("asyncChild").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("asyncChild")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   static class AsyncTask implements Runnable, Callable<Object> {

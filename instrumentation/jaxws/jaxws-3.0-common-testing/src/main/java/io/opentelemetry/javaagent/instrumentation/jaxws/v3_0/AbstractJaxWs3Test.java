@@ -93,17 +93,18 @@ public abstract class AbstractJaxWs3Test extends AbstractHttpServerUsingTest<Ser
     assertThat(response.getMessage()).isEqualTo("Hello Test");
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(serverSpanName("hello"))
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.unset()),
-                span ->
-                    span.hasName("HelloService/hello")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.INTERNAL)));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(serverSpanName("hello"))
+                            .hasNoParent()
+                            .hasKind(SpanKind.SERVER)
+                            .hasStatus(StatusData.unset()),
+                    span ->
+                        span.hasName("HelloService/hello")
+                            .hasParent(trace.getSpan(0))
+                            .hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -114,19 +115,20 @@ public abstract class AbstractJaxWs3Test extends AbstractHttpServerUsingTest<Ser
 
     Exception expectedException = new IllegalStateException("hello exception");
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(serverSpanName("hello"))
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error()),
-                span ->
-                    span.hasName("HelloService/hello")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasStatus(StatusData.error())
-                        .hasException(expectedException)));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(serverSpanName("hello"))
+                            .hasNoParent()
+                            .hasKind(SpanKind.SERVER)
+                            .hasStatus(StatusData.error()),
+                    span ->
+                        span.hasName("HelloService/hello")
+                            .hasParent(trace.getSpan(0))
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasStatus(StatusData.error())
+                            .hasException(expectedException)));
   }
 
   private String serverSpanName(String operation) {

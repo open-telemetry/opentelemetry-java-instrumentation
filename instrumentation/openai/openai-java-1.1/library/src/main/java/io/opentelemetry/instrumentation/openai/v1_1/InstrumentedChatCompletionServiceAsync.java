@@ -108,9 +108,10 @@ final class InstrumentedChatCompletionServiceAsync
         context, eventLogger, chatCompletionCreateParams, captureMessageContent);
     CompletableFuture<ChatCompletion> future =
         delegate.create(chatCompletionCreateParams, requestOptions);
-    future.thenAccept(r ->
-        ChatCompletionEventsHelper.emitCompletionLogEvents(
-            context, eventLogger, r, captureMessageContent));
+    future.thenAccept(
+        r ->
+            ChatCompletionEventsHelper.emitCompletionLogEvents(
+                context, eventLogger, r, captureMessageContent));
     return future;
   }
 

@@ -57,13 +57,15 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusCounter")
                     .hasDescription("This is a test counter")
                     .hasUnit("")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(12)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -89,13 +91,15 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusSummary.items")
                     .hasDescription("This is a test summary")
                     .hasUnit("items")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(54)
-                                .hasCount(2)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(54)
+                                        .hasCount(2)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -123,13 +127,15 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusFunctionTimer.seconds.count")
                     .hasDescription("This is a test function timer")
                     .hasUnit("{invocation}")
-                    .hasLongSumSatisfying(sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.isMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -138,12 +144,14 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusFunctionTimer.seconds.sum")
                     .hasDescription("This is a test function timer")
                     .hasUnit("s")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(42)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(42)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -164,12 +172,14 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusGauge.items")
                     .hasDescription("This is a test gauge")
                     .hasUnit("items")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(42)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugeSatisfying(
+                        gauge ->
+                            gauge.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(42)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -193,13 +203,15 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusLongTaskTimer.seconds.active")
                     .hasDescription("This is a test long task timer")
                     .hasUnit("{tasks}")
-                    .hasLongSumSatisfying(sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(1)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -208,14 +220,18 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusLongTaskTimer.seconds.duration")
                     .hasDescription("This is a test long task timer")
                     .hasUnit("s")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(point ->
-                                point
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value"))
-                                    .satisfies(pointData ->
-                                        assertThat(pointData.getValue()).isPositive()))));
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isNotMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value"))
+                                            .satisfies(
+                                                pointData ->
+                                                    assertThat(pointData.getValue())
+                                                        .isPositive()))));
 
     // when
     MILLISECONDS.sleep(100);
@@ -228,24 +244,28 @@ public abstract class AbstractPrometheusModeTest {
             metric ->
                 metric
                     .hasName("testPrometheusLongTaskTimer.seconds.active")
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasLongSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             metric ->
                 metric
                     .hasName("testPrometheusLongTaskTimer.seconds.duration")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasValue(0)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -268,13 +288,15 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusMeter.bytes.count")
                     .hasDescription("This is a test meter")
                     .hasUnit("bytes")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(12)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumSatisfying(
+                        sum ->
+                            sum.isMonotonic()
+                                .hasPointsSatisfying(
+                                    point ->
+                                        point
+                                            .hasValue(12)
+                                            .hasAttributesSatisfyingExactly(
+                                                equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -300,13 +322,15 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusTimer.seconds")
                     .hasDescription("This is a test timer")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(16.789)
-                                .hasCount(3)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(16.789)
+                                        .hasCount(3)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value")))));
   }
 
   @Test
@@ -370,16 +394,22 @@ public abstract class AbstractPrometheusModeTest {
                     .hasName("testPrometheusTimerBoundary.seconds")
                     .hasDescription("This is a test timer")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(0.1)
-                                .hasCount(1)
-                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
-                                .satisfies(pointData -> {
-                                  assertThat(pointData.getBoundaries()).hasSize(1);
-                                  assertThat(Double.toString(pointData.getBoundaries().get(0)))
-                                      .isEqualTo("0.3");
-                                }))));
+                    .hasHistogramSatisfying(
+                        histogram ->
+                            histogram.hasPointsSatisfying(
+                                point ->
+                                    point
+                                        .hasSum(0.1)
+                                        .hasCount(1)
+                                        .hasAttributesSatisfyingExactly(
+                                            equalTo(stringKey("tag"), "value"))
+                                        .satisfies(
+                                            pointData -> {
+                                              assertThat(pointData.getBoundaries()).hasSize(1);
+                                              assertThat(
+                                                      Double.toString(
+                                                          pointData.getBoundaries().get(0)))
+                                                  .isEqualTo("0.3");
+                                            }))));
   }
 }

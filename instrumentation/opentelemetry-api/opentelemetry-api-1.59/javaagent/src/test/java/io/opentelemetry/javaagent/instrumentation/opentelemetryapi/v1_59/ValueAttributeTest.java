@@ -49,10 +49,12 @@ class ValueAttributeTest {
     testing.runWithSpan(
         "test-span", () -> Span.current().setAttribute(valueKey("key"), Value.of("test")));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test"))));
   }
 
   @Test
@@ -60,10 +62,12 @@ class ValueAttributeTest {
     testing.runWithSpan(
         "test-span", () -> Span.current().setAttribute(valueKey("key"), Value.of(123L)));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(longKey("key"), 123L))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(longKey("key"), 123L))));
   }
 
   @Test
@@ -71,10 +75,12 @@ class ValueAttributeTest {
     testing.runWithSpan(
         "test-span", () -> Span.current().setAttribute(valueKey("key"), Value.of(1.23)));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(doubleKey("key"), 1.23))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(doubleKey("key"), 1.23))));
   }
 
   @Test
@@ -82,10 +88,12 @@ class ValueAttributeTest {
     testing.runWithSpan(
         "test-span", () -> Span.current().setAttribute(valueKey("key"), Value.of(true)));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(booleanKey("key"), true))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("key"), true))));
   }
 
   @Test
@@ -96,10 +104,13 @@ class ValueAttributeTest {
             Span.current()
                 .setAttribute(valueKey("key"), Value.of(asList(Value.of("a"), Value.of("b")))));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(stringArrayKey("key"), asList("a", "b")))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringArrayKey("key"), asList("a", "b")))));
   }
 
   @Test
@@ -110,10 +121,13 @@ class ValueAttributeTest {
             Span.current()
                 .setAttribute(valueKey("key"), Value.of(asList(Value.of(1L), Value.of(2L)))));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(longArrayKey("key"), asList(1L, 2L)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(longArrayKey("key"), asList(1L, 2L)))));
   }
 
   @Test
@@ -124,10 +138,13 @@ class ValueAttributeTest {
             Span.current()
                 .setAttribute(valueKey("key"), Value.of(asList(Value.of(1.1), Value.of(2.2)))));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(doubleArrayKey("key"), asList(1.1, 2.2)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(doubleArrayKey("key"), asList(1.1, 2.2)))));
   }
 
   @Test
@@ -138,11 +155,13 @@ class ValueAttributeTest {
             Span.current()
                 .setAttribute(valueKey("key"), Value.of(asList(Value.of(true), Value.of(false)))));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(booleanArrayKey("key"), asList(true, false)))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(booleanArrayKey("key"), asList(true, false)))));
   }
 
   @Test
@@ -150,10 +169,12 @@ class ValueAttributeTest {
     Value<?> value = Value.of(new byte[] {1, 2, 3});
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
   }
 
   @Test
@@ -162,10 +183,12 @@ class ValueAttributeTest {
         Value.of(KeyValue.of("key1", Value.of("value1")), KeyValue.of("key2", Value.of(123L)));
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
   }
 
   @Test
@@ -177,10 +200,12 @@ class ValueAttributeTest {
                 Value.of(asList(Value.of("c"), Value.of("d")))));
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
   }
 
   @Test
@@ -188,10 +213,12 @@ class ValueAttributeTest {
     Value<?> value = Value.of(Value.of("string"), Value.of(42L), Value.of(true));
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
   }
 
   @Test
@@ -199,10 +226,13 @@ class ValueAttributeTest {
     testing.runWithSpan(
         "test-span", () -> Span.current().setAttribute(valueKey("emptyValue"), Value.empty()));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(valueKey("emptyValue"), Value.empty()))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(valueKey("emptyValue"), Value.empty()))));
   }
 
   @Test
@@ -210,9 +240,10 @@ class ValueAttributeTest {
     testing.runWithSpan(
         "test-span", () -> Span.current().setAttribute(valueKey("nullValue"), null));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("test-span").hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("test-span").hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -220,10 +251,12 @@ class ValueAttributeTest {
     Value<?> value = Value.of(emptyList());
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
   }
 
   @Test
@@ -232,10 +265,12 @@ class ValueAttributeTest {
         Value.of(KeyValue.of("outer", Value.of(KeyValue.of("inner", Value.of("deep")))));
     testing.runWithSpan("test-span", () -> Span.current().setAttribute(valueKey("key"), value));
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(valueKey("key"), value))));
   }
 
   @Test
@@ -249,13 +284,15 @@ class ValueAttributeTest {
           Span.current().setAttribute(valueKey("bytes"), bytesValue);
         });
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(stringKey("string"), "hello"),
-                    equalTo(longKey("long"), 42L),
-                    equalTo(valueKey("bytes"), bytesValue))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("string"), "hello"),
+                            equalTo(longKey("long"), 42L),
+                            equalTo(valueKey("bytes"), bytesValue))));
   }
 
   @Test
@@ -268,10 +305,12 @@ class ValueAttributeTest {
         .startSpan()
         .end();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("test-span")
-                .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test"))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("test-span")
+                        .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test"))));
   }
 
   @Test
@@ -283,9 +322,10 @@ class ValueAttributeTest {
         .setAttribute(valueKey("key"), Value.of("test"))
         .emit();
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord
-            .hasBody("body")
-            .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord
+                .hasBody("body")
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("key"), "test")));
   }
 }

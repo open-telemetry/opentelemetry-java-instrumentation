@@ -84,13 +84,14 @@ class MetricAggregationTest {
     ObjectName objectName = new ObjectName(DOMAIN + ":type=" + Hello.class.getSimpleName() + ",*");
     theServer
         .queryMBeans(objectName, null)
-        .forEach(instance -> {
-          try {
-            theServer.unregisterMBean(instance.getObjectName());
-          } catch (InstanceNotFoundException | MBeanRegistrationException e) {
-            throw new RuntimeException(e);
-          }
-        });
+        .forEach(
+            instance -> {
+              try {
+                theServer.unregisterMBean(instance.getObjectName());
+              } catch (InstanceNotFoundException | MBeanRegistrationException e) {
+                throw new RuntimeException(e);
+              }
+            });
   }
 
   private static ObjectName getObjectName(String a, String b) throws MalformedObjectNameException {
@@ -213,16 +214,17 @@ class MetricAggregationTest {
         "io.opentelemetry.jmx",
         metricName,
         metrics ->
-            metrics.anySatisfy(metricData -> {
-              MetricAssert metricAssert =
-                  assertThat(metricData).hasDescription("description").hasUnit("1");
-              if (metricType == MetricInfo.Type.GAUGE) {
-                metricAssert.hasLongGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(pointAsserts));
-              } else {
-                metricAssert.hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(pointAsserts));
-              }
-            }));
+            metrics.anySatisfy(
+                metricData -> {
+                  MetricAssert metricAssert =
+                      assertThat(metricData).hasDescription("description").hasUnit("1");
+                  if (metricType == MetricInfo.Type.GAUGE) {
+                    metricAssert.hasLongGaugeSatisfying(
+                        gauge -> gauge.hasPointsSatisfying(pointAsserts));
+                  } else {
+                    metricAssert.hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(pointAsserts));
+                  }
+                }));
   }
 
   private static void startTestMetric(

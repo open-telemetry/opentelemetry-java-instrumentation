@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_STORED_PROCEDURE_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -140,17 +141,19 @@ public abstract class AbstractJdbcInstrumentationTest {
 
   static void prepareConnectionPoolDatasources() {
     List<String> connectionPoolNames = asList("tomcat", "hikari", "c3p0");
-    connectionPoolNames.forEach(cpName -> {
-      Map<String, DataSource> dbDsMapping = new HashMap<>();
-      JDBC_URLS.forEach((dbType, jdbcUrl) -> {
-        DataSource dataSource = createDs(cpName, dbType, jdbcUrl);
-        if (dataSource instanceof Closeable) {
-          cleanup.deferAfterAll((Closeable) dataSource);
-        }
-        dbDsMapping.put(dbType, dataSource);
-      });
-      cpDatasources.put(cpName, dbDsMapping);
-    });
+    connectionPoolNames.forEach(
+        cpName -> {
+          Map<String, DataSource> dbDsMapping = new HashMap<>();
+          JDBC_URLS.forEach(
+              (dbType, jdbcUrl) -> {
+                DataSource dataSource = createDs(cpName, dbType, jdbcUrl);
+                if (dataSource instanceof Closeable) {
+                  cleanup.deferAfterAll((Closeable) dataSource);
+                }
+                dbDsMapping.put(dbType, dataSource);
+              });
+          cpDatasources.put(cpName, dbDsMapping);
+        });
   }
 
   static DataSource createTomcatDs(String dbType, String jdbcUrl) {
@@ -432,23 +435,26 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                isCallStatement
-                                    ? "CALL ABS"
-                                    : table != null ? "SELECT " + table : "SELECT"),
-                            equalTo(DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    isCallStatement
+                                        ? "CALL ABS"
+                                        : table != null ? "SELECT " + table : "SELECT"),
+                                equalTo(
+                                    DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
 
     assertDurationMetric(
         testing(), "io.opentelemetry.jdbc", DB_SYSTEM_NAME, DB_NAMESPACE, DB_QUERY_SUMMARY);
@@ -462,22 +468,30 @@ public abstract class AbstractJdbcInstrumentationTest {
     cleanup.deferCleanup(statement);
 
     Throwable error =
-        catchThrowable(() ->
-            testing()
-                .runWithSpan(
-                    "parent", () -> statement.executeQuery("SELECT * FROM table_does_not_exist")));
+        catchThrowable(
+            () ->
+                testing()
+                    .runWithSpan(
+                        "parent",
+                        () -> statement.executeQuery("SELECT * FROM table_does_not_exist")));
 
     assertThat(error).isInstanceOf(SQLException.class);
+    SQLException sqlException = (SQLException) error;
+    String expectedErrorCode = sqlException.getSQLState() + "/" + sqlException.getErrorCode();
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? error : null)));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasStatus(StatusData.error())
+                            .hasAttributesSatisfying(
+                                equalTo(DB_RESPONSE_STATUS_CODE, expectedErrorCode),
+                                equalTo(ERROR_TYPE, expectedErrorCode))
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)));
 
     if (emitExceptionAsLogs()) {
       testing()
@@ -648,23 +662,26 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                isCallStatement
-                                    ? "CALL ABS"
-                                    : table != null ? "SELECT " + table : "SELECT"),
-                            equalTo(DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    isCallStatement
+                                        ? "CALL ABS"
+                                        : table != null ? "SELECT " + table : "SELECT"),
+                                equalTo(
+                                    DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
   }
 
   @ParameterizedTest
@@ -689,23 +706,26 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                isCallStatement
-                                    ? "CALL ABS"
-                                    : table != null ? "SELECT " + table : "SELECT"),
-                            equalTo(DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    isCallStatement
+                                        ? "CALL ABS"
+                                        : table != null ? "SELECT " + table : "SELECT"),
+                                equalTo(
+                                    DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
   }
 
   @ParameterizedTest
@@ -733,23 +753,26 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     boolean isCallStatement = query.toUpperCase(Locale.ROOT).startsWith("CALL");
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                isCallStatement
-                                    ? "CALL ABS"
-                                    : table != null ? "SELECT " + table : "SELECT"),
-                            equalTo(DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    isCallStatement
+                                        ? "CALL ABS"
+                                        : table != null ? "SELECT " + table : "SELECT"),
+                                equalTo(
+                                    DB_STORED_PROCEDURE_NAME, isCallStatement ? "ABS" : null))));
   }
 
   static Stream<Arguments> statementUpdateStream() throws SQLException {
@@ -904,18 +927,20 @@ public abstract class AbstractJdbcInstrumentationTest {
     assertThat(statement.getUpdateCount()).isEqualTo(0);
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, query),
-                            equalTo(DB_QUERY_SUMMARY, "CREATE TABLE " + table))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, query),
+                                equalTo(DB_QUERY_SUMMARY, "CREATE TABLE " + table))));
   }
 
   static Stream<Arguments> preparedStatementUpdateStream() throws SQLException {
@@ -1144,18 +1169,20 @@ public abstract class AbstractJdbcInstrumentationTest {
     testing().runWithSpan("parent", () -> action.accept(statement));
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, query),
-                            equalTo(DB_QUERY_SUMMARY, "CREATE TABLE " + table))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, query),
+                                equalTo(DB_QUERY_SUMMARY, "CREATE TABLE " + table))));
   }
 
   static Stream<Arguments> connectionConstructorStream() {
@@ -1250,19 +1277,22 @@ public abstract class AbstractJdbcInstrumentationTest {
     rs.next();
     assertThat(rs.getInt(1)).isEqualTo(3);
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
-                            equalTo(
-                                DB_QUERY_SUMMARY, table == null ? "SELECT" : "SELECT " + table))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    table == null ? "SELECT" : "SELECT " + table))));
   }
 
   static Stream<Arguments> getConnectionStream() {
@@ -1317,33 +1347,42 @@ public abstract class AbstractJdbcInstrumentationTest {
 
     testing().runWithSpan("parent", () -> datasource.getConnection().close());
     testing()
-        .waitAndAssertTraces(trace -> {
-          List<Consumer<SpanDataAssert>> assertions =
-              new ArrayList<>(
-                  asList(
-                      span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                      span ->
-                          span.hasName(originalDatasourceClass.getSimpleName() + ".getConnection")
-                              .hasKind(SpanKind.INTERNAL)
-                              .hasParent(trace.getSpan(0))
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(
-                                      CODE_FUNCTION_NAME,
-                                      originalDatasourceClass.getName() + ".getConnection"),
-                                  equalTo(
-                                      DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                                  equalTo(DB_USER, null),
-                                  equalTo(DB_NAMESPACE, "jdbcunittest"),
-                                  equalTo(DB_CONNECTION_STRING, null))));
-          // sqlite-jdbc executes extra statements during connection init
-          if (ds instanceof SQLiteDataSource && hasSqliteConnectionInitializationSpans()) {
-            assertions.add(span ->
-                span.hasName("jdbcunittest").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)));
-            assertions.add(span ->
-                span.hasName("jdbcunittest").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1)));
-          }
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
+        .waitAndAssertTraces(
+            trace -> {
+              List<Consumer<SpanDataAssert>> assertions =
+                  new ArrayList<>(
+                      asList(
+                          span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                          span ->
+                              span.hasName(
+                                      originalDatasourceClass.getSimpleName() + ".getConnection")
+                                  .hasKind(SpanKind.INTERNAL)
+                                  .hasParent(trace.getSpan(0))
+                                  .hasAttributesSatisfyingExactly(
+                                      equalTo(
+                                          CODE_FUNCTION_NAME,
+                                          originalDatasourceClass.getName() + ".getConnection"),
+                                      equalTo(
+                                          DB_SYSTEM_NAME,
+                                          system.equals("h2") ? "h2database" : system),
+                                      equalTo(DB_USER, null),
+                                      equalTo(DB_NAMESPACE, "jdbcunittest"),
+                                      equalTo(DB_CONNECTION_STRING, null))));
+              // sqlite-jdbc executes extra statements during connection init
+              if (ds instanceof SQLiteDataSource && hasSqliteConnectionInitializationSpans()) {
+                assertions.add(
+                    span ->
+                        span.hasName("jdbcunittest")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1)));
+                assertions.add(
+                    span ->
+                        span.hasName("jdbcunittest")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1)));
+              }
+              trace.hasSpansSatisfyingExactly(assertions);
+            });
   }
 
   @ParameterizedTest
@@ -1365,18 +1404,20 @@ public abstract class AbstractJdbcInstrumentationTest {
     cleanup.deferCleanup(statement);
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("localhost")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, OTHER_SQL),
-                            equalTo(DB_QUERY_TEXT, "testing ?"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("localhost")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, OTHER_SQL),
+                                equalTo(DB_QUERY_TEXT, "testing ?"),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
+                                equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
   static Stream<Arguments> spanNameStream() {
@@ -1447,22 +1488,24 @@ public abstract class AbstractJdbcInstrumentationTest {
             });
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(spanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, OTHER_SQL),
-                            equalTo(DB_NAMESPACE, databaseName),
-                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
-                            equalTo(
-                                DB_QUERY_SUMMARY,
-                                table != null ? operation + " " + table : operation),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName(spanName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, OTHER_SQL),
+                                equalTo(DB_NAMESPACE, databaseName),
+                                equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                                equalTo(
+                                    DB_QUERY_SUMMARY,
+                                    table != null ? operation + " " + table : operation),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
+                                equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
   @ParameterizedTest
@@ -1470,11 +1513,12 @@ public abstract class AbstractJdbcInstrumentationTest {
   void testConnectionCached(String connectionPoolName) throws SQLException {
     String dbType = "hsqldb";
     DataSource ds = wrap(createDs(connectionPoolName, dbType, JDBC_URLS.get(dbType)));
-    cleanup.deferCleanup(() -> {
-      if (ds instanceof Closeable) {
-        ((Closeable) ds).close();
-      }
-    });
+    cleanup.deferCleanup(
+        () -> {
+          if (ds instanceof Closeable) {
+            ((Closeable) ds).close();
+          }
+        });
     String query = "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS";
     int numQueries = 5;
     int[] res = new int[numQueries];
@@ -1498,14 +1542,15 @@ public abstract class AbstractJdbcInstrumentationTest {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     Consumer<TraceAssert> traceAssertConsumer =
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("SELECT INFORMATION_SCHEMA.SYSTEM_USERS")
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, HSQLDB),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                        equalTo(DB_QUERY_TEXT, "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
-                        equalTo(DB_QUERY_SUMMARY, "SELECT INFORMATION_SCHEMA.SYSTEM_USERS")));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("SELECT INFORMATION_SCHEMA.SYSTEM_USERS")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, HSQLDB),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                            equalTo(DB_QUERY_TEXT, "SELECT 3 FROM INFORMATION_SCHEMA.SYSTEM_USERS"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT INFORMATION_SCHEMA.SYSTEM_USERS")));
     for (int i = 0; i < numQueries; i++) {
       assertions.add(traceAssertConsumer);
     }
@@ -1562,19 +1607,21 @@ public abstract class AbstractJdbcInstrumentationTest {
             });
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("SELECT table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, OTHER_SQL),
-                            equalTo(DB_QUERY_TEXT, "SELECT * FROM table"),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT table"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("SELECT table")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, OTHER_SQL),
+                                equalTo(DB_QUERY_TEXT, "SELECT * FROM table"),
+                                equalTo(DB_QUERY_SUMMARY, "SELECT table"),
+                                equalTo(
+                                    stringKey("server.service.name"), expectedMappedServiceName()),
+                                equalTo(SERVER_ADDRESS, "localhost"))));
   }
 
   // regression test for
@@ -1593,11 +1640,14 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("SELECT").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("SELECT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))));
   }
 
   // regression test for
@@ -1616,11 +1666,14 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("SELECT").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("SELECT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))));
   }
 
   static Stream<Arguments> batchCasesStream() {
@@ -1799,13 +1852,14 @@ public abstract class AbstractJdbcInstrumentationTest {
         }
       }
       testing()
-          .waitAndAssertTraces(trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("empty parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span -> {
-                    span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
-                    span.hasAttribute(equalTo(DB_OPERATION_BATCH_SIZE, 0L));
-                  }));
+          .waitAndAssertTraces(
+              trace ->
+                  trace.hasSpansSatisfyingExactly(
+                      span -> span.hasName("empty parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                      span -> {
+                        span.hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0));
+                        span.hasAttribute(equalTo(DB_OPERATION_BATCH_SIZE, 0L));
+                      }));
     } else {
       assertThatThrownBy(statement::executeLargeBatch)
           .isInstanceOf(UnsupportedOperationException.class);
@@ -1838,19 +1892,21 @@ public abstract class AbstractJdbcInstrumentationTest {
     testing().runWithSpan("parent", statement::executeBatch);
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("BATCH INSERT " + tableName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, "INSERT INTO " + tableName + " VALUES(?)"),
-                            equalTo(DB_QUERY_SUMMARY, "BATCH INSERT " + tableName),
-                            equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("BATCH INSERT " + tableName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, "INSERT INTO " + tableName + " VALUES(?)"),
+                                equalTo(DB_QUERY_SUMMARY, "BATCH INSERT " + tableName),
+                                equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
   }
 
   @Test
@@ -1989,28 +2045,31 @@ public abstract class AbstractJdbcInstrumentationTest {
             });
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("INSERT " + tableName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, "INSERT INTO " + tableName + " VALUES(?)"),
-                            equalTo(DB_QUERY_SUMMARY, "INSERT " + tableName)),
-                span ->
-                    span.hasName("COMMIT")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            // COMMIT is not extracted from db.query.text - it's an explicit
-                            // transaction operation
-                            equalTo(DB_OPERATION_NAME, "COMMIT"))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("INSERT " + tableName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, "INSERT INTO " + tableName + " VALUES(?)"),
+                                equalTo(DB_QUERY_SUMMARY, "INSERT " + tableName)),
+                    span ->
+                        span.hasName("COMMIT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                // COMMIT is not extracted from db.query.text - it's an explicit
+                                // transaction operation
+                                equalTo(DB_OPERATION_NAME, "COMMIT"))));
   }
 
   @ParameterizedTest
@@ -2041,28 +2100,31 @@ public abstract class AbstractJdbcInstrumentationTest {
             });
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("INSERT " + tableName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            equalTo(DB_QUERY_TEXT, "INSERT INTO " + tableName + " VALUES(?)"),
-                            equalTo(DB_QUERY_SUMMARY, "INSERT " + tableName)),
-                span ->
-                    span.hasName("ROLLBACK")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                            // ROLLBACK is not extracted from db.query.text - it's an explicit
-                            // transaction operation
-                            equalTo(DB_OPERATION_NAME, "ROLLBACK"))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("INSERT " + tableName)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_QUERY_TEXT, "INSERT INTO " + tableName + " VALUES(?)"),
+                                equalTo(DB_QUERY_SUMMARY, "INSERT " + tableName)),
+                    span ->
+                        span.hasName("ROLLBACK")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(0))
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(
+                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                // ROLLBACK is not extracted from db.query.text - it's an explicit
+                                // transaction operation
+                                equalTo(DB_OPERATION_NAME, "ROLLBACK"))));
   }
 
   @ParameterizedTest
@@ -2086,27 +2148,34 @@ public abstract class AbstractJdbcInstrumentationTest {
     assertThat((Throwable) error).isNotNull();
 
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName(operation)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasNoParent()
-                    .hasStatus(StatusData.error())
-                    .hasException(emitExceptionAsSpanEvents() ? error : null)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, "h2database"),
-                        equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                        equalTo(DB_OPERATION_NAME, operation),
-                        equalTo(ERROR_TYPE, Integer.toString(error.getErrorCode())))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName(operation)
+                            .hasKind(SpanKind.CLIENT)
+                            .hasNoParent()
+                            .hasStatus(StatusData.error())
+                            .hasException(emitExceptionAsSpanEvents() ? error : null)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_SYSTEM_NAME, "h2database"),
+                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                                equalTo(DB_OPERATION_NAME, operation),
+                                equalTo(
+                                    ERROR_TYPE, error.getSQLState() + "/" + error.getErrorCode()),
+                                equalTo(
+                                    DB_RESPONSE_STATUS_CODE,
+                                    error.getSQLState() + "/" + error.getErrorCode()))));
 
     if (emitExceptionAsLogs()) {
       testing()
-          .waitAndAssertLogRecords(logRecord ->
-              logRecord
-                  .hasSeverity(Severity.WARN)
-                  .hasEventName("db.client.operation.exception")
-                  .hasException(error)
-                  .hasTotalAttributeCount(3));
+          .waitAndAssertLogRecords(
+              logRecord ->
+                  logRecord
+                      .hasSeverity(Severity.WARN)
+                      .hasEventName("db.client.operation.exception")
+                      .hasException(error)
+                      .hasTotalAttributeCount(3));
     }
   }
 
@@ -2134,19 +2203,20 @@ public abstract class AbstractJdbcInstrumentationTest {
   }
 
   private PreparedStatement wrapPreparedStatement(PreparedStatement statement) {
-    return ProxyStatementFactory.proxyPreparedStatement((proxy, method, args) -> {
-      if ("isWrapperFor".equals(method.getName())
-          && args.length == 1
-          && args[0] == PreparedStatement.class) {
-        return true;
-      }
-      if ("unwrap".equals(method.getName())
-          && args.length == 1
-          && args[0] == PreparedStatement.class) {
-        return statement;
-      }
-      return testing().runWithSpan("wrapper", () -> method.invoke(statement, args));
-    });
+    return ProxyStatementFactory.proxyPreparedStatement(
+        (proxy, method, args) -> {
+          if ("isWrapperFor".equals(method.getName())
+              && args.length == 1
+              && args[0] == PreparedStatement.class) {
+            return true;
+          }
+          if ("unwrap".equals(method.getName())
+              && args.length == 1
+              && args[0] == PreparedStatement.class) {
+            return statement;
+          }
+          return testing().runWithSpan("wrapper", () -> method.invoke(statement, args));
+        });
   }
 
   // test that tracing does not start from a wrapper
@@ -2175,13 +2245,18 @@ public abstract class AbstractJdbcInstrumentationTest {
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("wrapper").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("wrapper")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName("SELECT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1))));
   }
 
   // test that tracing does not start from a wrapper
@@ -2195,30 +2270,38 @@ public abstract class AbstractJdbcInstrumentationTest {
     cleanup.deferCleanup(statement);
 
     Statement proxyStatement =
-        ProxyStatementFactory.proxyStatement((proxy, method, args) -> {
-          if ("isWrapperFor".equals(method.getName())
-              && args.length == 1
-              && args[0] == Statement.class) {
-            return true;
-          }
-          if ("unwrap".equals(method.getName()) && args.length == 1 && args[0] == Statement.class) {
-            return statement;
-          }
-          return testing().runWithSpan("wrapper", () -> method.invoke(statement, args));
-        });
+        ProxyStatementFactory.proxyStatement(
+            (proxy, method, args) -> {
+              if ("isWrapperFor".equals(method.getName())
+                  && args.length == 1
+                  && args[0] == Statement.class) {
+                return true;
+              }
+              if ("unwrap".equals(method.getName())
+                  && args.length == 1
+                  && args[0] == Statement.class) {
+                return statement;
+              }
+              return testing().runWithSpan("wrapper", () -> method.invoke(statement, args));
+            });
     ResultSet resultSet =
         testing().runWithSpan("parent", () -> proxyStatement.executeQuery("SELECT 3"));
 
     resultSet.next();
     assertThat(resultSet.getInt(1)).isEqualTo(3);
     testing()
-        .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("wrapper").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SELECT").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(1))));
+        .waitAndAssertTraces(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                    span ->
+                        span.hasName("wrapper")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasParent(trace.getSpan(0)),
+                    span ->
+                        span.hasName("SELECT")
+                            .hasKind(SpanKind.CLIENT)
+                            .hasParent(trace.getSpan(1))));
   }
 
   private static final class BatchScenario {

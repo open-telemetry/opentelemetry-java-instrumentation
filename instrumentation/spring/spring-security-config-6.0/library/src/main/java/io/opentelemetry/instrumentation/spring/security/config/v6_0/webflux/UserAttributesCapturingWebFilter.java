@@ -40,12 +40,13 @@ public class UserAttributesCapturingWebFilter implements WebFilter {
     Context threadLocalOtelContext = Context.current();
 
     return Mono.zip(ReactiveSecurityContextHolder.getContext(), Mono.deferContextual(Mono::just))
-        .doOnNext(t2 ->
-            capturer.captureUserAttributes(
-                requireNonNull(
-                    ContextPropagationOperator.getOpenTelemetryContext(
-                        reactor.util.context.Context.of(t2.getT2()), threadLocalOtelContext)),
-                t2.getT1().getAuthentication()))
+        .doOnNext(
+            t2 ->
+                capturer.captureUserAttributes(
+                    requireNonNull(
+                        ContextPropagationOperator.getOpenTelemetryContext(
+                            reactor.util.context.Context.of(t2.getT2()), threadLocalOtelContext)),
+                    t2.getT1().getAuthentication()))
         .then(chain.filter(exchange));
   }
 }

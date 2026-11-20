@@ -30,8 +30,10 @@ class LibraryInstrumentationExtensionTest {
         });
 
     // then
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            parentSpan -> parentSpan.hasName("parent"), childSpan -> childSpan.hasName("child")));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                parentSpan -> parentSpan.hasName("parent"),
+                childSpan -> childSpan.hasName("child")));
   }
 }

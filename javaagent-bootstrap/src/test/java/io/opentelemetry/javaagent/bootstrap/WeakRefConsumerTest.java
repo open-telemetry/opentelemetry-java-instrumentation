@@ -67,9 +67,10 @@ class WeakRefConsumerTest {
   @Test
   void closeExceptionIsSuppressed() {
     WeakRefConsumer<String> weak = new WeakRefConsumer<>(new WeakReference<>(null));
-    weak.closeWhenCollected(() -> {
-      throw new Exception("boom");
-    });
+    weak.closeWhenCollected(
+        () -> {
+          throw new Exception("boom");
+        });
 
     // Should not throw
     weak.accept("x");

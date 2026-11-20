@@ -104,9 +104,10 @@ public class TestController extends Controller {
     runWithSpan(
         "controller",
         () -> {
-          ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(name -> {
-            return getPara(name);
-          });
+          ServerEndpoint.INDEXED_CHILD.collectSpanAttributes(
+              name -> {
+                return getPara(name);
+              });
           renderText(ServerEndpoint.INDEXED_CHILD.getBody());
         });
   }

@@ -67,23 +67,28 @@ class JedisCluster30ClientTest {
     }
 
     await()
-        .untilAsserted(() -> {
-          assertThat(testing.spans())
-              .filteredOn(span -> span.getName().startsWith("SET"))
-              .singleElement()
-              .satisfies(span -> {
-                assertThat(span.getName()).isEqualTo("SET " + clusterTarget);
-                assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
-                assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
-              });
-          assertThat(testing.spans())
-              .filteredOn(span -> span.getName().startsWith("CLUSTER"))
-              .isNotEmpty()
-              .allSatisfy(span -> {
-                assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
-                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-              });
-        });
+        .untilAsserted(
+            () -> {
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("SET"))
+                  .singleElement()
+                  .satisfies(
+                      span -> {
+                        assertThat(span.getName()).isEqualTo("SET " + clusterTarget);
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(clusterTarget);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
+                      });
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().startsWith("CLUSTER"))
+                  .isNotEmpty()
+                  .allSatisfy(
+                      span -> {
+                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                            .isEqualTo(clusterTarget);
+                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                      });
+            });
   }
 
   @Test
@@ -97,15 +102,18 @@ class JedisCluster30ClientTest {
     }
 
     await()
-        .untilAsserted(() ->
-            assertThat(testing.spans())
-                .filteredOn(span -> span.getName().startsWith("SET"))
-                .singleElement()
-                .satisfies(span -> {
-                  assertThat(span.getName()).isEqualTo("SET " + clusterTarget);
-                  assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
-                  assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
-                }));
+        .untilAsserted(
+            () ->
+                assertThat(testing.spans())
+                    .filteredOn(span -> span.getName().startsWith("SET"))
+                    .singleElement()
+                    .satisfies(
+                        span -> {
+                          assertThat(span.getName()).isEqualTo("SET " + clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                              .isEqualTo(clusterTarget);
+                          assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
+                        }));
   }
 
   private static void startClusterServer() throws Exception {
@@ -132,12 +140,13 @@ class JedisCluster30ClientTest {
       throw new IllegalStateException(result.getStderr());
     }
     await()
-        .untilAsserted(() -> {
-          Container.ExecResult clusterInfo =
-              clusterServer.execInContainer("redis-cli", "cluster", "info");
-          assertThat(clusterInfo.getExitCode()).isZero();
-          assertThat(clusterInfo.getStdout()).contains("cluster_state:ok");
-        });
+        .untilAsserted(
+            () -> {
+              Container.ExecResult clusterInfo =
+                  clusterServer.execInContainer("redis-cli", "cluster", "info");
+              assertThat(clusterInfo.getExitCode()).isZero();
+              assertThat(clusterInfo.getStdout()).contains("cluster_state:ok");
+            });
 
     clusterHost = clusterServer.getHost();
     HostAndPort selected = new HostAndPort(clusterHost, clusterPort);

@@ -99,10 +99,11 @@ class InstrumentationCustomizerTest {
   @Test
   void testGetInstrumentationName() {
     AtomicBoolean customizerCalled = new AtomicBoolean();
-    setCustomizer(customizer -> {
-      customizerCalled.set(true);
-      assertThat(customizer.getInstrumentationName()).isEqualTo("test");
-    });
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          assertThat(customizer.getInstrumentationName()).isEqualTo("test");
+        });
 
     Instrumenter.<Map<String, String>, Map<String, String>>builder(
             otelTesting.getOpenTelemetry(), "test", unused -> "span")
@@ -114,11 +115,12 @@ class InstrumentationCustomizerTest {
   @Test
   void testHasType() {
     AtomicBoolean customizerCalled = new AtomicBoolean();
-    setCustomizer(customizer -> {
-      customizerCalled.set(true);
-      assertThat(customizer.hasType(InstrumentationType.HTTP_CLIENT)).isTrue();
-      assertThat(customizer.hasType(InstrumentationType.HTTP_SERVER)).isFalse();
-    });
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          assertThat(customizer.hasType(InstrumentationType.HTTP_CLIENT)).isTrue();
+          assertThat(customizer.hasType(InstrumentationType.HTTP_SERVER)).isFalse();
+        });
 
     class TestAttributesExtractor implements AttributesExtractor<Object, Object>, SpanKeyProvider {
       @Override
@@ -150,10 +152,11 @@ class InstrumentationCustomizerTest {
   @Test
   void testAddAttributesExtractor() {
     AtomicBoolean customizerCalled = new AtomicBoolean();
-    setCustomizer(customizer -> {
-      customizerCalled.set(true);
-      customizer.addAttributesExtractor(new AttributesExtractor1());
-    });
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          customizer.addAttributesExtractor(new AttributesExtractor1());
+        });
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
@@ -170,30 +173,33 @@ class InstrumentationCustomizerTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("req1"), "req1_value"),
-                        equalTo(stringKey("req2"), "req2_value"),
-                        equalTo(stringKey("resp1"), "resp1_value"),
-                        equalTo(stringKey("resp2"), "resp2_value"))));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_value"))));
   }
 
   @Test
   void testAddAttributesExtractors() {
     AtomicBoolean customizerCalled = new AtomicBoolean();
-    setCustomizer(customizer -> {
-      customizerCalled.set(true);
-      customizer.addAttributesExtractors(
-          asList(new AttributesExtractor1(), new AttributesExtractor2()));
-    });
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          customizer.addAttributesExtractors(
+              asList(new AttributesExtractor1(), new AttributesExtractor2()));
+        });
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
@@ -210,22 +216,24 @@ class InstrumentationCustomizerTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.unset())
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("req1"), "req1_value"),
-                        equalTo(stringKey("req2"), "req2_2_value"),
-                        equalTo(stringKey("req3"), "req3_value"),
-                        equalTo(stringKey("resp1"), "resp1_value"),
-                        equalTo(stringKey("resp2"), "resp2_2_value"),
-                        equalTo(stringKey("resp3"), "resp3_value"))));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("req1"), "req1_value"),
+                                equalTo(stringKey("req2"), "req2_2_value"),
+                                equalTo(stringKey("req3"), "req3_value"),
+                                equalTo(stringKey("resp1"), "resp1_value"),
+                                equalTo(stringKey("resp2"), "resp2_2_value"),
+                                equalTo(stringKey("resp3"), "resp3_value"))));
   }
 
   @Test
@@ -233,10 +241,11 @@ class InstrumentationCustomizerTest {
     when(operationListener.onStart(any(), any(), anyLong())).thenAnswer(i -> i.getArguments()[0]);
 
     AtomicBoolean customizerCalled = new AtomicBoolean();
-    setCustomizer(customizer -> {
-      customizerCalled.set(true);
-      customizer.addOperationMetrics(meter -> operationListener);
-    });
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          customizer.addOperationMetrics(meter -> operationListener);
+        });
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
@@ -253,16 +262,18 @@ class InstrumentationCustomizerTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.unset())
-                    .hasAttributes(Attributes.empty())));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasAttributes(Attributes.empty())));
 
     verify(operationListener).onStart(any(), any(), anyLong());
     verify(operationListener).onEnd(any(), any(), anyLong());
@@ -273,10 +284,11 @@ class InstrumentationCustomizerTest {
     when(contextCustomizer.onStart(any(), any(), any())).thenAnswer(i -> i.getArguments()[0]);
 
     AtomicBoolean customizerCalled = new AtomicBoolean();
-    setCustomizer(customizer -> {
-      customizerCalled.set(true);
-      customizer.addContextCustomizer(contextCustomizer);
-    });
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          customizer.addContextCustomizer(contextCustomizer);
+        });
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
@@ -293,16 +305,18 @@ class InstrumentationCustomizerTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.unset())
-                    .hasAttributes(Attributes.empty())));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasAttributes(Attributes.empty())));
 
     verify(contextCustomizer).onStart(any(), any(), any());
   }
@@ -310,11 +324,12 @@ class InstrumentationCustomizerTest {
   @Test
   void testSetSpanNameExtractor() {
     AtomicBoolean customizerCalled = new AtomicBoolean();
-    setCustomizer(customizer -> {
-      customizerCalled.set(true);
-      customizer.setSpanNameExtractorCustomizer(
-          unused -> (SpanNameExtractor<Object>) object -> "new name");
-    });
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          customizer.setSpanNameExtractorCustomizer(
+              unused -> (SpanNameExtractor<Object>) object -> "new name");
+        });
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
@@ -331,33 +346,38 @@ class InstrumentationCustomizerTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("new name")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.unset())
-                    .hasAttributes(Attributes.empty())));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("new name")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.unset())
+                            .hasAttributes(Attributes.empty())));
   }
 
   @Test
   void testSetSpanStatusExtractor() {
     AtomicBoolean customizerCalled = new AtomicBoolean();
-    setCustomizer(customizer -> {
-      customizerCalled.set(true);
-      customizer.setSpanStatusExtractorCustomizer(unused ->
-          (spanStatusBuilder, request, response, error) ->
-              spanStatusBuilder.setStatus(StatusCode.OK));
-    });
+    setCustomizer(
+        customizer -> {
+          customizerCalled.set(true);
+          customizer.setSpanStatusExtractorCustomizer(
+              unused ->
+                  (spanStatusBuilder, request, response, error) ->
+                      spanStatusBuilder.setStatus(StatusCode.OK));
+        });
 
     Instrumenter<Map<String, String>, Map<String, String>> instrumenter =
         Instrumenter.<Map<String, String>, Map<String, String>>builder(
                 otelTesting.getOpenTelemetry(), "test", unused -> "span")
-            .setSpanStatusExtractor((spanStatusBuilder, request, response, error) ->
-                spanStatusBuilder.setStatus(StatusCode.ERROR))
+            .setSpanStatusExtractor(
+                (spanStatusBuilder, request, response, error) ->
+                    spanStatusBuilder.setStatus(StatusCode.ERROR))
             .buildInstrumenter();
 
     assertThat(customizerCalled).isTrue();
@@ -370,16 +390,18 @@ class InstrumentationCustomizerTest {
 
     otelTesting
         .assertTraces()
-        .hasTracesSatisfyingExactly(trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("span")
-                    .hasKind(SpanKind.INTERNAL)
-                    .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
-                    .hasTraceId(spanContext.getTraceId())
-                    .hasSpanId(spanContext.getSpanId())
-                    .hasParentSpanId(SpanId.getInvalid())
-                    .hasStatus(StatusData.ok())
-                    .hasAttributes(Attributes.empty())));
+        .hasTracesSatisfyingExactly(
+            trace ->
+                trace.hasSpansSatisfyingExactly(
+                    span ->
+                        span.hasName("span")
+                            .hasKind(SpanKind.INTERNAL)
+                            .hasInstrumentationScopeInfo(InstrumentationScopeInfo.create("test"))
+                            .hasTraceId(spanContext.getTraceId())
+                            .hasSpanId(spanContext.getSpanId())
+                            .hasParentSpanId(SpanId.getInvalid())
+                            .hasStatus(StatusData.ok())
+                            .hasAttributes(Attributes.empty())));
   }
 
   static class AttributesExtractor1

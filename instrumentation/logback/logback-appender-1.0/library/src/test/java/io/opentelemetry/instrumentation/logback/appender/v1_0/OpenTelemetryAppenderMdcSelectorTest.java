@@ -66,8 +66,9 @@ class OpenTelemetryAppenderMdcSelectorTest {
 
     log(mdc("key1", "value1", "key2", "value2", "other", "value3"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -76,8 +77,9 @@ class OpenTelemetryAppenderMdcSelectorTest {
 
     log(mdc("request-id", "123", "client-secret", "shh"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "123")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("request-id"), "123")));
   }
 
   @Test
@@ -94,8 +96,9 @@ class OpenTelemetryAppenderMdcSelectorTest {
 
     log(mdc("key1", "value1", "key2", "value2"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -106,8 +109,9 @@ class OpenTelemetryAppenderMdcSelectorTest {
 
     log(mdc("key1", "value1", "key2", "value2"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -118,9 +122,10 @@ class OpenTelemetryAppenderMdcSelectorTest {
 
     log(mdc("key1", "value1", "key2", "value2", "*", "star"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(
-            equalTo(stringKey("*"), "star"), equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("*"), "star"), equalTo(stringKey("key1"), "value1")));
     assertThat(warnings()).containsExactly(DEPRECATED_MDC_ATTRIBUTES_WARNING);
   }
 
@@ -143,8 +148,9 @@ class OpenTelemetryAppenderMdcSelectorTest {
 
     log(mdc("key1", "value1", "key?", "literal"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key?"), "literal")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key?"), "literal")));
   }
 
   @Test
@@ -154,9 +160,10 @@ class OpenTelemetryAppenderMdcSelectorTest {
 
     log(mdc("key1", "value1", "key2", "value2"));
 
-    testing.waitAndAssertLogRecords(logRecord ->
-        logRecord.hasAttributesSatisfyingExactly(
-            equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
+    testing.waitAndAssertLogRecords(
+        logRecord ->
+            logRecord.hasAttributesSatisfyingExactly(
+                equalTo(stringKey("key1"), "value1"), equalTo(stringKey("key2"), "value2")));
   }
 
   @Test

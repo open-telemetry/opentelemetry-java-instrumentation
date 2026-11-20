@@ -107,9 +107,10 @@ abstract class AbstractJms1Test {
     cleanup.deferCleanup(consumer::close);
 
     CompletableFuture<TextMessage> receivedMessageFuture = new CompletableFuture<>();
-    consumer.setMessageListener(message ->
-        testing.runWithSpan(
-            "consumer", () -> receivedMessageFuture.complete((TextMessage) message)));
+    consumer.setMessageListener(
+        message ->
+            testing.runWithSpan(
+                "consumer", () -> receivedMessageFuture.complete((TextMessage) message)));
 
     // when
     testing.runWithSpan("producer parent", () -> producer.send(destination, sentMessage));
@@ -120,36 +121,39 @@ abstract class AbstractJms1Test {
 
     String messageId = receivedMessage.getJMSMessageID();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("producer parent").hasNoParent(),
-            span ->
-                span.hasName(
-                        destinationName.equals("(temporary)") ? "send" : "send " + destinationName)
-                    .hasKind(PRODUCER)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("messaging.system.name"), "jms"),
-                        messagingDestinationName(destinationName, isTemporary),
-                        equalTo(MESSAGING_OPERATION_NAME, "send"),
-                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                        equalTo(MESSAGING_MESSAGE_ID, messageId),
-                        messagingTempDestination(isTemporary)),
-            span ->
-                span.hasName(
-                        destinationName.equals("(temporary)")
-                            ? "process"
-                            : "process " + destinationName)
-                    .hasKind(CONSUMER)
-                    .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("messaging.system.name"), "jms"),
-                        messagingDestinationName(destinationName, isTemporary),
-                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                        equalTo(MESSAGING_MESSAGE_ID, messageId),
-                        messagingTempDestination(isTemporary)),
-            span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasNoParent(),
+                span ->
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "send"
+                                : "send " + destinationName)
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(isTemporary)),
+                span ->
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "process"
+                                : "process " + destinationName)
+                        .hasKind(CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(isTemporary)),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
   @ParameterizedTest
@@ -191,9 +195,10 @@ abstract class AbstractJms1Test {
     cleanup.deferCleanup(consumer::close);
 
     CompletableFuture<TextMessage> receivedMessageFuture = new CompletableFuture<>();
-    consumer.setMessageListener(message ->
-        testing.runWithSpan(
-            "consumer", () -> receivedMessageFuture.complete((TextMessage) message)));
+    consumer.setMessageListener(
+        message ->
+            testing.runWithSpan(
+                "consumer", () -> receivedMessageFuture.complete((TextMessage) message)));
 
     // when
     testing.runWithSpan("producer parent", () -> producer.send(sentMessage));
@@ -204,48 +209,51 @@ abstract class AbstractJms1Test {
 
     String messageId = receivedMessage.getJMSMessageID();
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("producer parent").hasNoParent(),
-            span ->
-                span.hasName(
-                        destinationName.equals("(temporary)") ? "send" : "send " + destinationName)
-                    .hasKind(PRODUCER)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("messaging.system.name"), "jms"),
-                        messagingDestinationName(destinationName, isTemporary),
-                        equalTo(MESSAGING_OPERATION_NAME, "send"),
-                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                        equalTo(MESSAGING_MESSAGE_ID, messageId),
-                        messagingTempDestination(isTemporary),
-                        equalTo(
-                            stringArrayKey("messaging.header.Test_Message_Header"),
-                            singletonList("test")),
-                        equalTo(
-                            stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                            singletonList("1234"))),
-            span ->
-                span.hasName(
-                        destinationName.equals("(temporary)")
-                            ? "process"
-                            : "process " + destinationName)
-                    .hasKind(CONSUMER)
-                    .hasParent(trace.getSpan(1))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("messaging.system.name"), "jms"),
-                        messagingDestinationName(destinationName, isTemporary),
-                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                        equalTo(MESSAGING_MESSAGE_ID, messageId),
-                        messagingTempDestination(isTemporary),
-                        equalTo(
-                            stringArrayKey("messaging.header.Test_Message_Header"),
-                            singletonList("test")),
-                        equalTo(
-                            stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                            singletonList("1234"))),
-            span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer parent").hasNoParent(),
+                span ->
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "send"
+                                : "send " + destinationName)
+                        .hasKind(PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            equalTo(MESSAGING_OPERATION_NAME, "send"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(isTemporary),
+                            equalTo(
+                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                singletonList("test")),
+                            equalTo(
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
+                                singletonList("1234"))),
+                span ->
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "process"
+                                : "process " + destinationName)
+                        .hasKind(CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(isTemporary),
+                            equalTo(
+                                stringArrayKey("messaging.header.Test_Message_Header"),
+                                singletonList("test")),
+                            equalTo(
+                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
+                                singletonList("1234"))),
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
   }
 
   @ParameterizedTest
@@ -298,21 +306,22 @@ abstract class AbstractJms1Test {
                             equalTo(MESSAGING_MESSAGE_ID, messageId),
                             messagingTempDestination(isTemporary))),
         trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName(
-                        destinationName.equals("(temporary)")
-                            ? "receive"
-                            : "receive " + destinationName)
-                    .hasKind(CLIENT)
-                    .hasNoParent()
-                    .hasTotalRecordedLinks(0)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(stringKey("messaging.system.name"), "jms"),
-                        messagingDestinationName(destinationName, isTemporary),
-                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                        equalTo(MESSAGING_MESSAGE_ID, messageId),
-                        messagingTempDestination(isTemporary))));
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(
+                            destinationName.equals("(temporary)")
+                                ? "receive"
+                                : "receive " + destinationName)
+                        .hasKind(CLIENT)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "jms"),
+                            messagingDestinationName(destinationName, isTemporary),
+                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                            equalTo(MESSAGING_MESSAGE_ID, messageId),
+                            messagingTempDestination(isTemporary))));
   }
 
   @Test
@@ -464,12 +473,13 @@ abstract class AbstractJms1Test {
     outerListener.onMessage(outerMessage);
 
     await()
-        .untilAsserted(() -> {
-          assertThat(testing.spans()).hasSize(6);
-          assertThat(testing.spans())
-              .filteredOn(span -> span.getName().equals("process nestedProcessingQueue"))
-              .hasSize(2);
-        });
+        .untilAsserted(
+            () -> {
+              assertThat(testing.spans()).hasSize(6);
+              assertThat(testing.spans())
+                  .filteredOn(span -> span.getName().equals("process nestedProcessingQueue"))
+                  .hasSize(2);
+            });
   }
 
   private static Attributes messagingMetricAttributes(String operationName, String destination) {

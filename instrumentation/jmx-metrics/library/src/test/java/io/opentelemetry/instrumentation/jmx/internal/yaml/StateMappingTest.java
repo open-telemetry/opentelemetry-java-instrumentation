@@ -34,8 +34,9 @@ class StateMappingTest {
 
   @Test
   void tryDuplicateDefault() {
-    assertThatThrownBy(() ->
-        StateMapping.builder().withDefaultState("default").withDefaultState("default").build());
+    assertThatThrownBy(
+        () ->
+            StateMapping.builder().withDefaultState("default").withDefaultState("default").build());
   }
 
   @Test
@@ -64,11 +65,12 @@ class StateMappingTest {
 
   @Test
   void tryDuplicateMappings() {
-    assertThatThrownBy(() ->
-        StateMapping.builder()
-            .withDefaultState("default")
-            .withMappedValue("value", "state1")
-            .withMappedValue("value", "state2")
-            .build());
+    assertThatThrownBy(
+        () ->
+            StateMapping.builder()
+                .withDefaultState("default")
+                .withMappedValue("value", "state1")
+                .withMappedValue("value", "state2")
+                .build());
   }
 }
