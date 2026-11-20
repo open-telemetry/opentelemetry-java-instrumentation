@@ -1,13 +1,12 @@
 // Shared GraalVM native-image test configuration for the smoke-tests-otel-starter Spring Boot
-// modules. Centralizes the workarounds we need with native-build-tools:
+// modules. Centralizes the workarounds we need with native-build-tools 1.0.0:
 //
 //  * The metadata repository is resolved through a detached configuration that violates Gradle's
 //    project lock requirements (see https://github.com/graalvm/native-build-tools/issues/572 and
 //    https://github.com/gradle/gradle/issues/17559). We download the metadata zip ourselves and
-//    point the extension at a project-local copy.
+//    point the extension at the extracted directory.
 //  * `collectReachabilityMetadata` triggers the same isolation issue and is disabled.
 
-import io.opentelemetry.instrumentation.gradle.NativeMetadataRepository
 import org.graalvm.buildtools.gradle.dsl.GraalVMExtension
 import org.graalvm.buildtools.gradle.dsl.GraalVMReachabilityMetadataRepositoryExtension
 
@@ -60,25 +59,25 @@ plugins.withId("org.graalvm.buildtools.native") {
     enabled = false
   }
 
-  // Resolve while this project is being configured, rather than from the plugin's detached
-  // configuration during task graph construction. The plugin queries its metadata inputs while
-  // discovering task dependencies, so a prerequisite task would run too late. Its service
-  // extracts this local archive before querying it.
-  val metadataArchive = repositoryMetadata.singleFile
-  val metadataRepository = providers.of(NativeMetadataRepository::class) {
-    parameters.archive.set(metadataArchive)
-    // The plugin keys its extraction cache by URI, so sibling projects must use different paths.
-    parameters.destination.set(layout.buildDirectory.dir("metadata-repository"))
+  // Use a per-project output directory so parallel builds of sibling smoke-test modules don't
+  // race on a single shared destination.
+  val metadataRepoDir = layout.buildDirectory.dir("metadata-repository")
+  val extractRepositoryMetadata = tasks.register<Copy>("extractRepositoryMetadata") {
+    from({ zipTree(repositoryMetadata.singleFile) })
+    into(metadataRepoDir)
+  }
+  tasks.named("nativeTestCompile").configure {
+    dependsOn(extractRepositoryMetadata)
   }
 
   // See https://github.com/graalvm/native-build-tools/issues/572
   (extensions.getByName("graalvmNative") as ExtensionAware).extensions
     .configure<GraalVMReachabilityMetadataRepositoryExtension> {
-      enabled.set(true)
+      enabled.set(false)
       // Manually set up the metadata repository to avoid resolving the default repository, which
       // currently fails with "Resolution of the configuration ... was attempted without an
       // exclusive lock. This is unsafe and not allowed."
-      uri.set(metadataRepository)
+      uri.set(metadataRepoDir.map { it.asFile.toURI() })
     }
 
   tasks.named<Test>("test").configure {

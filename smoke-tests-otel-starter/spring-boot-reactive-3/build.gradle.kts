@@ -23,6 +23,8 @@ dependencies {
 
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation("io.projectreactor:reactor-test")
+  // Exercise Hibernate Validator startup in the native smoke test.
+  testRuntimeOnly("org.springframework.boot:spring-boot-starter-validation")
 }
 
 springBoot {

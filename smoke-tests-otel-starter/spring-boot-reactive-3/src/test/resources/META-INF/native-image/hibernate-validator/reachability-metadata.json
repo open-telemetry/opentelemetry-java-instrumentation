@@ -1,0 +1,32 @@
+{
+  "reflection": [
+    {
+      "condition": {
+        "typeReached": "org.hibernate.validator.internal.util.logging.LoggerFactory"
+      },
+      "type": "org.hibernate.validator.internal.util.logging.Log_$logger",
+      "methods": [
+        {
+          "name": "<init>",
+          "parameterTypes": ["org.jboss.logging.Logger"]
+        }
+      ]
+    },
+    {
+      "condition": {
+        "typeReached": "org.hibernate.validator.internal.util.logging.Messages"
+      },
+      "type": "org.hibernate.validator.internal.util.logging.Messages_$bundle",
+      "fields": [
+        {
+          "name": "INSTANCE"
+        }
+      ]
+    }
+  ],
+  "resources": [
+    {
+      "bundle": "org.hibernate.validator.ValidationMessages"
+    }
+  ]
+}
