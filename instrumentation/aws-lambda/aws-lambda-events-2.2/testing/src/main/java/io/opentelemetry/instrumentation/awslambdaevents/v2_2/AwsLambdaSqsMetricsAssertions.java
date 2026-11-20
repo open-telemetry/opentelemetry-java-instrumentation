@@ -100,15 +100,14 @@ public class AwsLambdaSqsMetricsAssertions {
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("{message}")
                     .hasDescription("Number of messages that were delivered to the application.")
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(consumedMessageCount)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                    equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                    equalTo(ERROR_TYPE, errorType))))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(consumedMessageCount)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                equalTo(ERROR_TYPE, errorType)))));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> metric.getInstrumentationScopeInfo().getName().equals(instrumentationName))
