@@ -71,6 +71,10 @@ import org.springframework.messaging.support.MessageBuilder;
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     classes = AwsSqsTestApplication.class)
 class AwsSqsTest {
+  private static final boolean RECEIVE_TELEMETRY =
+      Boolean.getBoolean(
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -326,16 +330,20 @@ class AwsSqsTest {
             span.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.aws-sdk-2.2")
                 && span.getName().equals("process batch-queue"))
         .isEmpty();
-    assertThat(testing.metrics())
-        .filteredOn(metric ->
-            metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.aws-sdk-2.2")
-                && metric.getName().equals("messaging.client.consumed.messages"))
-        .isEmpty();
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-cloud-aws-3.0",
         "messaging.process.duration",
         metrics -> metrics.hasSize(1));
-    assertBatchConsumedMessages(2);
+    // each delivery is counted once, by the receive operation when receive telemetry is enabled
+    // and by the batch process operation otherwise
+    if (RECEIVE_TELEMETRY) {
+      assertThat(sumBatchMessageCount("receive batch-queue")).isEqualTo(2);
+      assertBatchConsumedMessages("io.opentelemetry.aws-sdk-2.2", "receive", 2);
+      assertNoConsumedMessages("io.opentelemetry.spring-cloud-aws-3.0");
+    } else {
+      assertNoConsumedMessages("io.opentelemetry.aws-sdk-2.2");
+      assertBatchConsumedMessages("io.opentelemetry.spring-cloud-aws-3.0", "process", 2);
+    }
 
     AwsSqsTestApplication.batchMessageHandler = null;
     AwsSqsTestApplication.batchInterceptor = null;
@@ -348,14 +356,7 @@ class AwsSqsTest {
         "io.opentelemetry.spring-cloud-aws-3.0",
         "messaging.process.duration",
         metrics -> metrics.hasSize(1));
-    assertThat(testing.metrics())
-        .filteredOn(metric ->
-            metric
-                    .getInstrumentationScopeInfo()
-                    .getName()
-                    .equals("io.opentelemetry.spring-cloud-aws-3.0")
-                && metric.getName().equals("messaging.client.consumed.messages"))
-        .isEmpty();
+    assertNoConsumedMessages("io.opentelemetry.spring-cloud-aws-3.0");
 
     // a listener that empties the batch before completing does not change the reported batch size
     testing.clearData();
@@ -378,9 +379,12 @@ class AwsSqsTest {
                     .hasLinksSatisfying(links -> assertLinksToCreate(links, createSpanIds, 2))));
   }
 
-  private static void assertBatchConsumedMessages(long expected) {
+  private static void assertBatchConsumedMessages(
+      String scope, String operationName, long expected) {
+    // only the sdk receive operation knows the server it talked to
+    boolean receive = operationName.equals("receive");
     testing.waitAndAssertMetrics(
-        "io.opentelemetry.spring-cloud-aws-3.0",
+        scope,
         "messaging.client.consumed.messages",
         metrics ->
             metrics.anySatisfy(metric ->
@@ -390,9 +394,21 @@ class AwsSqsTest {
                             point
                                 .hasValue(expected)
                                 .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
                                     equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                    equalTo(MESSAGING_DESTINATION_NAME, "batch-queue"))))));
+                                    equalTo(MESSAGING_DESTINATION_NAME, "batch-queue"),
+                                    equalTo(SERVER_ADDRESS, receive ? "localhost" : null),
+                                    equalTo(
+                                        SERVER_PORT,
+                                        receive ? (long) AwsSqsTestApplication.sqsPort : null))))));
+  }
+
+  private static void assertNoConsumedMessages(String scope) {
+    assertThat(testing.metrics())
+        .filteredOn(metric ->
+            metric.getInstrumentationScopeInfo().getName().equals(scope)
+                && metric.getName().equals("messaging.client.consumed.messages"))
+        .isEmpty();
   }
 
   private static List<SpanData> findSpans(String name) {
