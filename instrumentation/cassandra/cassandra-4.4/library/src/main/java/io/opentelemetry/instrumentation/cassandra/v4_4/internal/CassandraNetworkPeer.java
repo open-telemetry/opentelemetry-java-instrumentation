@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.cassandra.v4_4.internal;
 
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 /**
@@ -18,15 +18,15 @@ import javax.annotation.Nullable;
  */
 public class CassandraNetworkPeer {
 
-  private static final VirtualField<ExecutionInfo, InetSocketAddress> EXECUTION_INFO_PEER =
-      VirtualField.find(ExecutionInfo.class, InetSocketAddress.class);
+  private static final VirtualField<ExecutionInfo, SocketAddress> EXECUTION_INFO_PEER =
+      VirtualField.find(ExecutionInfo.class, SocketAddress.class);
 
-  public static void setExecutionInfoPeer(ExecutionInfo executionInfo, InetSocketAddress peer) {
+  public static void setExecutionInfoPeer(ExecutionInfo executionInfo, SocketAddress peer) {
     EXECUTION_INFO_PEER.set(executionInfo, peer);
   }
 
   @Nullable
-  public static InetSocketAddress getExecutionInfoPeer(ExecutionInfo executionInfo) {
+  public static SocketAddress getExecutionInfoPeer(ExecutionInfo executionInfo) {
     return EXECUTION_INFO_PEER.get(executionInfo);
   }
 

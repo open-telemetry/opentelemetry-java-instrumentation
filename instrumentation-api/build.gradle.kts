@@ -30,6 +30,7 @@ dependencies {
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
+  compileOnly("org.codehaus.mojo:animal-sniffer-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")

@@ -9,7 +9,7 @@ import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.asynchttpclient.Response;
@@ -97,11 +97,8 @@ final class AsyncHttpClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       RequestContext request, @Nullable Response response) {
-    if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
-      return (InetSocketAddress) response.getRemoteAddress();
-    }
-    return null;
+    return response != null ? response.getRemoteAddress() : null;
   }
 }
