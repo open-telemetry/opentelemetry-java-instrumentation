@@ -338,11 +338,11 @@ class MeterTest {
 
     firstCallback.close();
     secondCallback.close();
-    firstCallback = null;
     secondCallback = null;
     callback = null;
 
     GcUtils.awaitGc(callbackRef, Duration.ofSeconds(10));
     assertThat(callbackRef.get()).isNull();
+    assertThat(firstCallback).isNotNull();
   }
 }

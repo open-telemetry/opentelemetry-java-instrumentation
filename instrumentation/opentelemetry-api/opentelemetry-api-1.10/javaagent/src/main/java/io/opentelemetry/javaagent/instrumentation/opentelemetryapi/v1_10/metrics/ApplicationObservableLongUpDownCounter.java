@@ -10,22 +10,16 @@ import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
 public class ApplicationObservableLongUpDownCounter
     implements application.io.opentelemetry.api.metrics.ObservableLongUpDownCounter {
 
-  private final ObservableLongUpDownCounter agentUpDownCounter;
-  private final Runnable onClose;
+  private final ApplicationCallbackHandle callbackHandle;
 
   public ApplicationObservableLongUpDownCounter(
       ObservableLongUpDownCounter agentUpDownCounter, Runnable onClose) {
-    this.agentUpDownCounter = agentUpDownCounter;
-    this.onClose = onClose;
+    callbackHandle = new ApplicationCallbackHandle(agentUpDownCounter::close, onClose);
   }
 
   // not adding @Override because this method was introduced in 1.12
   @SuppressWarnings("unused")
   public void close() {
-    try {
-      agentUpDownCounter.close();
-    } finally {
-      onClose.run();
-    }
+    callbackHandle.close();
   }
 }

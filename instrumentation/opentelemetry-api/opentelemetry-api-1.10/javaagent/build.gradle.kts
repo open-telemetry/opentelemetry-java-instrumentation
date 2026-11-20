@@ -8,6 +8,18 @@ dependencies {
   implementation(project(":instrumentation:opentelemetry-api:opentelemetry-api-1.4:javaagent"))
 }
 
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
+}
+
 configurations.configureEach {
   if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
     resolutionStrategy {
