@@ -9,9 +9,12 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.gradle.api.DomainObjectCollection
 import org.gradle.api.Project
+import org.gradle.api.artifacts.ExternalModuleDependency
+import org.gradle.api.artifacts.ProjectDependency
 import org.gradle.api.plugins.jvm.JvmTestSuite
 import org.gradle.api.tasks.SourceSetContainer
 import org.gradle.api.tasks.testing.Test
+import org.gradle.kotlin.dsl.invoke
 import org.gradle.testfixtures.ProjectBuilder
 import org.gradle.testing.base.TestingExtension
 import org.gradle.testing.base.TestSuite
@@ -23,6 +26,81 @@ class TestSuiteExecutionsTest {
   private val project = ProjectBuilder.builder().build().also {
     it.pluginManager.apply("java-library")
     it.pluginManager.apply(TestSuiteExecutionsPlugin::class.java)
+  }
+
+  @JunitTest
+  fun `unit tests helper includes only its suite in check and keeps test tasks lazy`() {
+    val configuredTasks = mutableListOf<String>()
+    project.tasks.withType(Test::class.java).configureEach {
+      configuredTasks.add(name)
+    }
+    suites().register("optInTest", JvmTestSuite::class.java)
+    suites().invoke {
+      unitTests()
+    }
+    val unitTests = suites().named("unitTests", JvmTestSuite::class.java)
+
+    assertThat(configuredTasks).isEmpty()
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains("test", "unitTests")
+      .doesNotContain("optInTest")
+    assertThat(configuredTasks).doesNotContain("optInTest")
+    assertBinding(test("unitTests"), unitTests.get())
+    assertThat(
+      project.configurations.getByName(unitTests.get().sources.implementationConfigurationName)
+        .dependencies.filterIsInstance<ProjectDependency>()
+        .map { it.path }
+    ).containsExactly(project.path)
+  }
+
+  @JunitTest
+  fun `unit tests helper keeps dependencies separate from integration tests`() {
+    project.dependencies.add("testImplementation", "example:library:1.0")
+    project.dependencies.add("testImplementation", "example:integration-only:1.0")
+    val unitTests = suites().unitTests {
+      dependencies {
+        implementation.add("example:library:2.0")
+      }
+    }.get()
+
+    assertThat(
+      project.configurations.getByName(unitTests.sources.compileClasspathConfigurationName)
+        .allDependencies.filterIsInstance<ExternalModuleDependency>()
+        .filter { it.group == "example" }
+        .map { "${it.name}:${it.version}" }
+    ).containsExactly("library:2.0")
+  }
+
+  @JunitTest
+  fun `agent-free classification follows the owning suite before task configuration`() {
+    val agentTests = mutableListOf<String>()
+    project.tasks.withType(Test::class.java).configureEach {
+      if (!isUnitTestSuite()) {
+        agentTests.add(name)
+      }
+    }
+    suite("test").executions {
+      register("UnitTests") {}
+    }
+    suites().unitTests().get().executions {
+      register("Experimental") {}
+    }
+    suites().register("legacyUNITTESTS", JvmTestSuite::class.java).get().executions {
+      register("Experimental") {}
+    }
+    project.tasks.register("standaloneUnitTests", Test::class.java)
+
+    listOf(
+      "test",
+      "testUnitTests",
+      "unitTests",
+      "unitTestsExperimental",
+      "legacyUNITTESTS",
+      "legacyUNITTESTSExperimental",
+      "standaloneUnitTests"
+    ).forEach { test(it) }
+
+    assertThat(agentTests).containsExactlyInAnyOrder("test", "testUnitTests", "standaloneUnitTests")
   }
 
   @JunitTest
