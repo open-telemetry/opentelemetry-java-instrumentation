@@ -53,24 +53,19 @@ class SpringCloudGatewayRouteFilterIntegrationTest {
     assertThat(response.contentUtf8()).isEqualTo("gateway");
 
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("GET " + routeId)
-                      .hasKind(SpanKind.SERVER)
-                      .hasAttribute(HTTP_ROUTE, routeId);
-                  instrumentationName.set(span.actual().getInstrumentationScopeInfo().getName());
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> {
+          span.hasName("GET " + routeId).hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, routeId);
+          instrumentationName.set(span.actual().getInstrumentationScopeInfo().getName());
+        }));
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(HTTP_ROUTE, routeId))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(
+                        point -> point.hasAttribute(HTTP_ROUTE, routeId))));
   }
 
   @Configuration(proxyBeanMethods = false)
@@ -85,18 +80,16 @@ class SpringCloudGatewayRouteFilterIntegrationTest {
               route ->
                   route
                       .path("/gateway/**")
-                      .filters(
-                          filters ->
-                              filters.filter(
-                                  (exchange, chain) ->
-                                      exchange
-                                          .getResponse()
-                                          .writeWith(
-                                              Mono.just(
-                                                  exchange
-                                                      .getResponse()
-                                                      .bufferFactory()
-                                                      .wrap("gateway".getBytes(UTF_8))))))
+                      .filters(filters ->
+                          filters.filter((exchange, chain) ->
+                              exchange
+                                  .getResponse()
+                                  .writeWith(
+                                      Mono.just(
+                                          exchange
+                                              .getResponse()
+                                              .bufferFactory()
+                                              .wrap("gateway".getBytes(UTF_8))))))
                       .uri("http://localhost"))
           .build();
     }
