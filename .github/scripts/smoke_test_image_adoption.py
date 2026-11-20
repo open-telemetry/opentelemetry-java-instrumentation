@@ -223,6 +223,12 @@ class GitHub:
             f"actions/runs/{quote(str(run_id), safe='')}/attempts/{quote(str(attempt), safe='')}",
         )
 
+    def workflow_run(self, run_id):
+        return self.request(
+            "GET",
+            f"actions/runs/{quote(str(run_id), safe='')}",
+        )
+
     def run_jobs(self, run_id, attempt):
         path = (
             f"actions/runs/{quote(str(run_id), safe='')}/attempts/"
@@ -284,6 +290,9 @@ class GitHub:
             {"state": "open", "head": f"open-telemetry:{ADOPTION_BRANCH}"}
         )
         return self.pages(f"pulls?{query}")
+
+    def pull_request(self, number):
+        return self.request("GET", f"pulls/{quote(str(number), safe='')}")
 
     def create_pr(self, body):
         return self.request(
@@ -379,6 +388,8 @@ def expected_references(family_name, tag, java_versions=None):
 
 def validate_run_identity(run, family_name, run_id, attempt):
     family = FAMILIES[family_name]
+    repository = run.get("repository") or {}
+    head_repository = run.get("head_repository") or {}
     if (
         str(run.get("id")) != str(run_id)
         or str(run.get("run_attempt")) != str(attempt)
@@ -389,6 +400,8 @@ def validate_run_identity(run, family_name, run_id, attempt):
         or run.get("status") != "completed"
         or run.get("conclusion") != "success"
         or not SHA_PATTERN.fullmatch(run.get("head_sha", ""))
+        or repository.get("full_name", "").lower() != REPOSITORY
+        or head_repository.get("full_name", "").lower() != REPOSITORY
     ):
         raise AdoptionError(
             "publisher run identity, branch, attempt, or conclusion is not eligible"
@@ -752,27 +765,47 @@ def latest_successful_run(api, family_name, main_sha, compare=None):
 
 def resolve_pinned_run(api, family_name, version):
     date, suffix = version.split(".", 1)
-    attempts = [(suffix, 1, True)]
     if len(suffix) > 6:
-        attempts.append((suffix[:-6], int(suffix[-6:]), False))
-    for run_id, attempt, legacy in attempts:
+        run_id, attempt = suffix[:-6], int(suffix[-6:])
+        if not run_id.isdecimal() or attempt == 0:
+            raise AdoptionError(
+                f"cannot verify provenance for currently pinned {family_name} version {version}"
+            )
         try:
             run = api.run_attempt(run_id, attempt)
         except NotFound:
-            continue
-        if not run_is_from_family(run, family_name):
-            continue
-        date_from_run = datetime.fromisoformat(
-            (run.get("run_started_at") or run["created_at"]).replace("Z", "+00:00")
-        ).astimezone(timezone.utc).strftime("%Y%m%d")
-        expected = f"{date_from_run}.{run_id}" if legacy else version
-        valid_version = (
-            date == date_from_run
-            if legacy
-            else publication_id_matches(run, version)
-        )
-        if expected == version and valid_version:
-            return run
+            pass
+        else:
+            try:
+                validate_run_identity(run, family_name, run_id, attempt)
+                if publication_id_matches(run, version):
+                    return run
+            except AdoptionError:
+                pass
+
+    try:
+        run_summary = api.workflow_run(suffix)
+    except NotFound:
+        run_summary = None
+    if (
+        run_summary is not None
+        and str(run_summary.get("id")) == suffix
+        and run_is_from_family(run_summary, family_name)
+        and str(run_summary.get("run_attempt", "")).isdecimal()
+        and int(run_summary["run_attempt"]) > 0
+    ):
+        attempt = str(run_summary["run_attempt"])
+        try:
+            run = api.run_attempt(suffix, attempt)
+        except NotFound:
+            run = None
+        if run is not None:
+            validate_run_identity(run, family_name, suffix, attempt)
+            date_from_run = datetime.fromisoformat(
+                (run.get("run_started_at") or run["created_at"]).replace("Z", "+00:00")
+            ).astimezone(timezone.utc).strftime("%Y%m%d")
+            if date == date_from_run:
+                return run
     raise AdoptionError(
         f"cannot verify provenance for currently pinned {family_name} version {version}"
     )
@@ -910,6 +943,52 @@ def read_pin_files(root, ref):
 def remote_head(root, branch):
     output = local_git(["ls-remote", "--heads", "origin", branch], root)
     return output.split()[0] if output.split() else None
+
+
+def validate_live_pr(api, pr, expected_head):
+    number = pr.get("number")
+    try:
+        live_pr = api.pull_request(number)
+    except NotFound:
+        raise AdoptionError("the smoke-test adoption PR is no longer available") from None
+    base = live_pr.get("base") or {}
+    head = live_pr.get("head") or {}
+    base_repository = base.get("repo") or {}
+    head_repository = head.get("repo") or {}
+    if (
+        live_pr.get("number") != number
+        or live_pr.get("title") != TITLE
+        or live_pr.get("state") != "open"
+        or live_pr.get("merged")
+        or live_pr.get("merged_at") is not None
+        or base.get("ref") != BASE_BRANCH
+        or base_repository.get("full_name", "").lower() != REPOSITORY
+        or head.get("ref") != ADOPTION_BRANCH
+        or head_repository.get("full_name", "").lower() != REPOSITORY
+        or head.get("sha") != expected_head
+    ):
+        raise AdoptionError(
+            "the smoke-test adoption PR is closed or no longer targets the expected branch"
+        )
+    return live_pr
+
+
+def validate_current_main(root, api, branch_head):
+    main_sha = api.main_sha()
+    if remote_head(root, BASE_BRANCH) != main_sha:
+        raise AdoptionError("main changed during adoption; inspect the PR and retry")
+    try:
+        local_git(["merge-base", "--is-ancestor", main_sha, branch_head], root)
+    except AdoptionError:
+        raise AdoptionError(
+            "the adoption branch does not contain current main; inspect the PR and retry"
+        ) from None
+
+
+def validate_published_pr(root, api, pr, expected_head):
+    require_expected_remote_head(expected_head, remote_head(root, ADOPTION_BRANCH))
+    validate_current_main(root, api, expected_head)
+    return validate_live_pr(api, pr, expected_head)
 
 
 def commit_records(root, base_ref, branch_ref):
@@ -1081,29 +1160,54 @@ def publish_update(root, api, branch_files, pr, expected_head, updates):
         run_process([".github/scripts/use-cla-approved-bot.sh"], cwd=root)
         local_git(["commit", "-m", TITLE], root)
     require_expected_remote_head(expected_head, remote_head(root, ADOPTION_BRANCH))
+    head_sha = local_git(["rev-parse", "HEAD"], root).strip()
+    if expected_head is not None:
+        try:
+            local_git(["merge-base", "--is-ancestor", expected_head, head_sha], root)
+        except AdoptionError:
+            raise AdoptionError(
+                "the adoption update is not a fast-forward; inspect the PR and retry"
+            ) from None
+
     token = os.environ.get("GH_TOKEN")
     if not token:
         raise AdoptionError("GitHub App token is required to publish an adoption PR")
     api.token = token
     git_env = {**os.environ, "GH_TOKEN": token}
     run_process(["gh", "auth", "setup-git"], cwd=root, env=git_env)
-    push_args = ["push", "origin", f"HEAD:refs/heads/{ADOPTION_BRANCH}"]
-    if expected_head is None:
-        push_args.insert(1, "--set-upstream")
+    if pr:
+        validate_live_pr(api, pr, expected_head)
+    elif api.open_adoption_prs():
+        raise AdoptionError("an adoption PR appeared during update; inspect it and retry")
+    require_expected_remote_head(expected_head, remote_head(root, ADOPTION_BRANCH))
+    validate_current_main(root, api, head_sha)
+    push_args = [
+        "push",
+        f"--force-with-lease=refs/heads/{ADOPTION_BRANCH}:{expected_head or ''}",
+        "origin",
+        f"HEAD:refs/heads/{ADOPTION_BRANCH}",
+    ]
     try:
         run_process(["git", *push_args], cwd=root, env=git_env)
     except AdoptionError:
         raise AdoptionError(
-            "non-force push refused a concurrent adoption-branch change; "
-            "inspect the open PR and retry"
+            "the adoption branch changed during publication; inspect the PR and retry"
         ) from None
+    require_expected_remote_head(head_sha, remote_head(root, ADOPTION_BRANCH))
+    validate_current_main(root, api, head_sha)
     if pr:
+        validate_published_pr(root, api, pr, head_sha)
         post_publication_comments(api, pr, updates)
+        validate_published_pr(root, api, pr, head_sha)
         return f"Updated smoke-test adoption PR #{pr['number']}."
     if not updates:
         return "No newer verified smoke-test image publications to propose."
+    if api.open_adoption_prs():
+        raise AdoptionError("an adoption PR appeared during update; inspect it and retry")
     created = api.create_pr(PR_BODY)
+    validate_published_pr(root, api, created, head_sha)
     post_publication_comments(api, created, updates)
+    validate_published_pr(root, api, created, head_sha)
     return f"Opened draft smoke-test adoption PR #{created['number']}."
 
 
