@@ -53,7 +53,6 @@ public class GrpcTargetParser {
     return parseTarget(target, true);
   }
 
-  // only used by tests
   @Nullable
   public static String createDnsTargetFromUri(@Nullable URI uri) {
     if (uri == null) {

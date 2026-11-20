@@ -45,7 +45,6 @@ public final class HttpClientRequestResendCount {
     return resend == null ? 0 : resend.resends;
   }
 
-  // only used by tests
   static int getAndIncrement(Context context) {
     HttpClientRequestResendCount resend = context.get(KEY);
     if (resend == null) {
