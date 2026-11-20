@@ -11,7 +11,6 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.UrlParser;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpErrorType;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -118,17 +117,14 @@ final class ReactorNettyHttpClientAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       HttpClientRequest request, @Nullable HttpClientResponse response) {
 
     // we're making use of the fact that HttpClientOperations is both a Connection and an
     // HttpClientResponse
     if (response instanceof Connection) {
       Connection connection = (Connection) response;
-      SocketAddress address = connection.channel().remoteAddress();
-      if (address instanceof InetSocketAddress) {
-        return (InetSocketAddress) address;
-      }
+      return connection.channel().remoteAddress();
     }
     return null;
   }

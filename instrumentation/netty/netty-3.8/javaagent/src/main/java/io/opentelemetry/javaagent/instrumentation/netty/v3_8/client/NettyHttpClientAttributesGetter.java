@@ -10,7 +10,6 @@ import static io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.HttpSch
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.ChannelUtil;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -102,12 +101,8 @@ final class NettyHttpClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       NettyRequest requestAndChannel, @Nullable HttpResponse response) {
-    SocketAddress address = requestAndChannel.channel().getRemoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return requestAndChannel.channel().getRemoteAddress();
   }
 }

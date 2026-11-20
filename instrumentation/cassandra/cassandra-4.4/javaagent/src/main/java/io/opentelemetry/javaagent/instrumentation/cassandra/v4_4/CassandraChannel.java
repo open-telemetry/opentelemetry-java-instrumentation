@@ -5,12 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_4;
 
+import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 /**
@@ -42,7 +43,7 @@ public class CassandraChannel {
       };
 
   @Nullable
-  public static InetSocketAddress getRemoteAddress(Object context) {
+  public static SocketAddress getRemoteAddress(Object context) {
     try {
       Object channel = (Object) channelMethods.get(context.getClass()).invokeExact(context);
       if (channel == null) {
@@ -50,11 +51,11 @@ public class CassandraChannel {
       }
       Object remoteAddress =
           (Object) remoteAddressMethods.get(channel.getClass()).invokeExact(channel);
-      if (!(remoteAddress instanceof InetSocketAddress)
-          || ((InetSocketAddress) remoteAddress).isUnresolved()) {
+      if (!(remoteAddress instanceof SocketAddress)) {
         return null;
       }
-      return (InetSocketAddress) remoteAddress;
+      SocketAddress socketAddress = (SocketAddress) remoteAddress;
+      return SocketAddressUtil.hasAddress(socketAddress) ? socketAddress : null;
     } catch (Throwable ignored) {
       return null;
     }

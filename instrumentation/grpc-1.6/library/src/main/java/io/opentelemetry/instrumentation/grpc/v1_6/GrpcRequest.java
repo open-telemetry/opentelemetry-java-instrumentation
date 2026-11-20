@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcSocketAddressUtil;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ParsedTarget;
 import java.net.SocketAddress;
@@ -84,8 +86,8 @@ public final class GrpcRequest {
     this.fullMethodName = method.getFullMethodName();
     this.originalFullMethodName = null;
     this.metadata = metadata;
-    this.peerSocketAddress = peerSocketAddress;
-    this.localSocketAddress = localSocketAddress;
+    this.peerSocketAddress = GrpcSocketAddressUtil.normalize(peerSocketAddress);
+    this.localSocketAddress = GrpcSocketAddressUtil.normalize(localSocketAddress);
     this.serverAddress = serverAddress;
     this.serverPort = serverPort;
   }
@@ -148,20 +150,37 @@ public final class GrpcRequest {
 
   @Nullable
   public SocketAddress getPeerSocketAddress() {
+    return originalAddress(peerSocketAddress);
+  }
+
+  @Nullable
+  SocketAddress getNormalizedPeerSocketAddress() {
     return peerSocketAddress;
   }
 
   void setPeerSocketAddress(@Nullable SocketAddress peerSocketAddress) {
-    this.peerSocketAddress = peerSocketAddress;
+    this.peerSocketAddress = GrpcSocketAddressUtil.normalize(peerSocketAddress);
   }
 
   @Nullable
   public SocketAddress getLocalSocketAddress() {
+    return originalAddress(localSocketAddress);
+  }
+
+  @Nullable
+  SocketAddress getNormalizedLocalSocketAddress() {
     return localSocketAddress;
   }
 
   void setLocalSocketAddress(@Nullable SocketAddress localSocketAddress) {
-    this.localSocketAddress = localSocketAddress;
+    this.localSocketAddress = GrpcSocketAddressUtil.normalize(localSocketAddress);
+  }
+
+  @Nullable
+  private static SocketAddress originalAddress(@Nullable SocketAddress address) {
+    return address instanceof UnixSocketAddress
+        ? ((UnixSocketAddress) address).getOriginalAddress()
+        : address;
   }
 
   @Nullable

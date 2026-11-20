@@ -167,14 +167,14 @@ enum WebfluxServerHttpAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getRemoteAddress();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public InetSocketAddress getNetworkLocalSocketAddress(
       ServerWebExchange request, @Nullable ServerWebExchange response) {
     return request.getRequest().getLocalAddress();
   }

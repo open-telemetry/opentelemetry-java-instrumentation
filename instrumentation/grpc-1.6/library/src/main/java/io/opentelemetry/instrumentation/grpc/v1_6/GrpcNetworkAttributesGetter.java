@@ -8,11 +8,10 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 import io.grpc.Status;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-final class GrpcServerNetworkAttributesGetter
+final class GrpcNetworkAttributesGetter
     implements ServerAttributesGetter<GrpcRequest>, NetworkAttributesGetter<GrpcRequest, Status> {
 
   @Nullable
@@ -29,23 +28,13 @@ final class GrpcServerNetworkAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
-      GrpcRequest grpcRequest, @Nullable Status status) {
-    SocketAddress address = grpcRequest.getLocalSocketAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+  public SocketAddress getNetworkLocalSocketAddress(GrpcRequest request, @Nullable Status status) {
+    return request.getNormalizedLocalSocketAddress();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      GrpcRequest request, @Nullable Status status) {
-    SocketAddress address = request.getPeerSocketAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+  public SocketAddress getNetworkPeerSocketAddress(GrpcRequest request, @Nullable Status status) {
+    return request.getNormalizedPeerSocketAddress();
   }
 }

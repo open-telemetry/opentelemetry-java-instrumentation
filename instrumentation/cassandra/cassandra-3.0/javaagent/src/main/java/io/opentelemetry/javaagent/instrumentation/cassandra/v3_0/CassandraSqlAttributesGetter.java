@@ -63,7 +63,7 @@ final class CassandraSqlAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       CassandraRequest request, @Nullable CassandraResponse response) {
     return response == null ? null : response.getPeerAddress();
   }
