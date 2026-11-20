@@ -53,15 +53,13 @@ public class PlayJavaStreamedWsClientBaseTest extends PlayWsClientBaseTest<Stand
       Map<String, String> headers,
       HttpClientResult requestResult) {
     internalSendRequest(request)
-        .whenComplete(
-            (response, throwable) -> {
-              if (throwable != null) {
-                requestResult.complete(
-                    throwable.getCause() != null ? throwable.getCause() : throwable);
-              } else {
-                requestResult.complete(response.getStatus());
-              }
-            });
+        .whenComplete((response, throwable) -> {
+          if (throwable != null) {
+            requestResult.complete(throwable.getCause() != null ? throwable.getCause() : throwable);
+          } else {
+            requestResult.complete(response.getStatus());
+          }
+        });
   }
 
   private static CompletionStage<StandaloneWSResponse> internalSendRequest(

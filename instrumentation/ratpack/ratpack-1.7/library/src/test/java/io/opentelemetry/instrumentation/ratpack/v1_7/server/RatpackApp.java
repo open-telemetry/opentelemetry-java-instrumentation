@@ -14,22 +14,20 @@ import ratpack.server.RatpackServer;
 public class RatpackApp {
 
   public static void main(String... args) throws Exception {
-    RatpackServer.start(
-        server ->
-            server
-                .registry(Guice.registry(b -> b.module(OpenTelemetryModule.class)))
-                .handlers(
-                    chain ->
-                        chain
-                            .get("ignore", ctx -> ctx.render("ignored"))
-                            .all(Handler.class)
-                            .get("foo", ctx -> ctx.render("hi-foo"))
-                            .get(
-                                "bar",
-                                ctx ->
-                                    ctx.get(HttpClient.class)
-                                        .get(ctx.get(URI.class))
-                                        .then(response -> ctx.render("hi-bar")))));
+    RatpackServer.start(server ->
+        server
+            .registry(Guice.registry(b -> b.module(OpenTelemetryModule.class)))
+            .handlers(chain ->
+                chain
+                    .get("ignore", ctx -> ctx.render("ignored"))
+                    .all(Handler.class)
+                    .get("foo", ctx -> ctx.render("hi-foo"))
+                    .get(
+                        "bar",
+                        ctx ->
+                            ctx.get(HttpClient.class)
+                                .get(ctx.get(URI.class))
+                                .then(response -> ctx.render("hi-bar")))));
   }
 
   private RatpackApp() {}

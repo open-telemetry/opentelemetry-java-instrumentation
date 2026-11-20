@@ -48,12 +48,11 @@ class AsyncOpenTelemetryAppenderTest {
         .filteredOn(status -> status.getOrigin() instanceof OpenTelemetryAppender)
         .filteredOn(status -> status.getMessage().contains("is downstream of AsyncAppender"))
         .singleElement()
-        .satisfies(
-            status ->
-                assertThat(status.getMessage())
-                    .contains(
-                        "OpenTelemetryAppender 'OpenTelemetry' is downstream of AsyncAppender"
-                            + " 'AsyncAppender'"));
+        .satisfies(status ->
+            assertThat(status.getMessage())
+                .contains(
+                    "OpenTelemetryAppender 'OpenTelemetry' is downstream of AsyncAppender"
+                        + " 'AsyncAppender'"));
     logger.info("log message 1");
 
     testing.waitAndAssertLogRecords(logRecord -> logRecord.hasBody("log message 1"));
@@ -130,24 +129,22 @@ class AsyncOpenTelemetryAppenderTest {
     }
 
     try {
-      testing.waitAndAssertLogRecords(
-          log ->
-              log.hasBody("async mdc log")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(stringKey("request-id"), "123"),
-                      equalTo(stringKey("custom.span"), "application-span"),
-                      equalTo(stringKey("custom.flags"), "application-flags"),
-                      equalTo(stringKey("baggage.key"), "application-baggage")));
+      testing.waitAndAssertLogRecords(log ->
+          log.hasBody("async mdc log")
+              .hasAttributesSatisfyingExactly(
+                  equalTo(stringKey("request-id"), "123"),
+                  equalTo(stringKey("custom.span"), "application-span"),
+                  equalTo(stringKey("custom.flags"), "application-flags"),
+                  equalTo(stringKey("baggage.key"), "application-baggage")));
       assertThat(applicationAppender.list)
           .singleElement()
-          .satisfies(
-              event ->
-                  assertThat(event.getMDCPropertyMap())
-                      .containsEntry("request-id", "123")
-                      .containsEntry("custom.trace", span.getSpanContext().getTraceId())
-                      .containsEntry("custom.span", span.getSpanContext().getSpanId())
-                      .containsEntry("custom.flags", span.getSpanContext().getTraceFlags().asHex())
-                      .containsEntry("baggage.key", "enriched-baggage"));
+          .satisfies(event ->
+              assertThat(event.getMDCPropertyMap())
+                  .containsEntry("request-id", "123")
+                  .containsEntry("custom.trace", span.getSpanContext().getTraceId())
+                  .containsEntry("custom.span", span.getSpanContext().getSpanId())
+                  .containsEntry("custom.flags", span.getSpanContext().getTraceFlags().asHex())
+                  .containsEntry("baggage.key", "enriched-baggage"));
     } finally {
       MDC.clear();
       testLogger.detachAppender(mdcAppender);

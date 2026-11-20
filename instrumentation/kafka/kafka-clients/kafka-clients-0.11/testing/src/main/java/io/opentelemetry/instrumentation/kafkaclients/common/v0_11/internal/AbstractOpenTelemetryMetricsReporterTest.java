@@ -433,39 +433,34 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
               metricName,
               metrics -> {
                 metrics.isNotEmpty();
-                metrics.allSatisfy(
-                    metricData -> {
-                      // After a real produce/consume cycle the broker fires onUpdate() on each
-                      // reporter; all metric points must carry the resulting cluster id.
-                      assertThat(metricData.getData().getPoints())
-                          .isNotEmpty()
-                          .allSatisfy(
-                              point ->
-                                  assertThat(
-                                          point.getAttributes().get(stringKey("kafka.cluster.id")))
-                                      .isNotEmpty());
+                metrics.allSatisfy(metricData -> {
+                  // After a real produce/consume cycle the broker fires onUpdate() on each
+                  // reporter; all metric points must carry the resulting cluster id.
+                  assertThat(metricData.getData().getPoints())
+                      .isNotEmpty()
+                      .allSatisfy(point ->
+                          assertThat(point.getAttributes().get(stringKey("kafka.cluster.id")))
+                              .isNotEmpty());
 
-                      // All data points for a given metric must carry the same set of attribute
-                      // keys.
-                      Set<String> expectedKeys =
-                          metricData.getData().getPoints().stream()
-                              .findFirst()
-                              .map(
-                                  point ->
-                                      point.getAttributes().asMap().keySet().stream()
-                                          .map(AttributeKey::getKey)
-                                          .collect(toSet()))
-                              .orElse(emptySet());
-                      assertThat(metricData.getData().getPoints())
-                          .extracting(PointData::getAttributes)
-                          .extracting(
-                              attributes ->
-                                  attributes.asMap().keySet().stream()
-                                      .map(AttributeKey::getKey)
-                                      .collect(toSet()))
-                          .allSatisfy(
-                              attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
-                    });
+                  // All data points for a given metric must carry the same set of attribute
+                  // keys.
+                  Set<String> expectedKeys =
+                      metricData.getData().getPoints().stream()
+                          .findFirst()
+                          .map(point ->
+                              point.getAttributes().asMap().keySet().stream()
+                                  .map(AttributeKey::getKey)
+                                  .collect(toSet()))
+                          .orElse(emptySet());
+                  assertThat(metricData.getData().getPoints())
+                      .extracting(PointData::getAttributes)
+                      .extracting(attributes ->
+                          attributes.asMap().keySet().stream()
+                              .map(AttributeKey::getKey)
+                              .collect(toSet()))
+                      .allSatisfy(
+                          attributeKeys -> assertThat(attributeKeys).isEqualTo(expectedKeys));
+                });
               });
     }
 
@@ -524,10 +519,9 @@ public abstract class AbstractOpenTelemetryMetricsReporterTest {
         // Find first (there may be multiple) registered instrument that matches the kafkaMetricId
         Optional<InstrumentDescriptor> descriptor =
             registeredObservables.stream()
-                .filter(
-                    registeredObservable ->
-                        KafkaMetricId.create(registeredObservable.getKafkaMetricName())
-                            .equals(kafkaMetricId))
+                .filter(registeredObservable ->
+                    KafkaMetricId.create(registeredObservable.getKafkaMetricName())
+                        .equals(kafkaMetricId))
                 .findFirst()
                 .map(RegisteredObservable::getInstrumentDescriptor);
         if (!descriptor.isPresent()) {

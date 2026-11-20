@@ -34,18 +34,17 @@ public final class McpProtocolVersionState {
     if (!McpSchema.METHOD_INITIALIZE.equals(method) || publisher == null) {
       return publisher;
     }
-    return publisher.doOnNext(
-        result -> {
-          try {
-            if (result instanceof McpSchema.InitializeResult initializeResult
-                && initializeResult.protocolVersion() != null) {
-              SESSION_PROTOCOL_VERSION.set(
-                  session, new McpProtocolVersionState(initializeResult.protocolVersion()));
-            }
-          } catch (Throwable t) {
-            logger.log(FINE, "Failed to capture MCP protocol version", t);
-          }
-        });
+    return publisher.doOnNext(result -> {
+      try {
+        if (result instanceof McpSchema.InitializeResult initializeResult
+            && initializeResult.protocolVersion() != null) {
+          SESSION_PROTOCOL_VERSION.set(
+              session, new McpProtocolVersionState(initializeResult.protocolVersion()));
+        }
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to capture MCP protocol version", t);
+      }
+    });
   }
 
   private McpProtocolVersionState(String protocolVersion) {

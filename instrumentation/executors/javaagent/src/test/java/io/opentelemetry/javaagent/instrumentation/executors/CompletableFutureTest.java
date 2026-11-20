@@ -50,29 +50,24 @@ class CompletableFutureTest {
                         executor)
                     .thenCompose(
                         s -> CompletableFuture.supplyAsync(new AppendingSupplier(s), executor2))
-                    .thenApply(
-                        s -> {
-                          testing.runWithSpan("function", () -> {});
-                          return s + "c";
-                        })
+                    .thenApply(s -> {
+                      testing.runWithSpan("function", () -> {});
+                      return s + "c";
+                    })
                     .join());
 
     assertThat(result).isEqualTo("abc");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("supplier").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("appendingSupplier")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("function")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("supplier").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("appendingSupplier")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("function").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -84,12 +79,10 @@ class CompletableFutureTest {
 
     assertThat(future.join()).isEqualTo("done");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -103,12 +96,10 @@ class CompletableFutureTest {
 
     assertThat(future.join()).isEqualTo("done");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -122,12 +113,10 @@ class CompletableFutureTest {
 
     assertThat(future.join()).isEqualTo("done");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -137,19 +126,16 @@ class CompletableFutureTest {
             "parent",
             () ->
                 CompletableFuture.supplyAsync(() -> "done")
-                    .thenCompose(
-                        result ->
-                            CompletableFuture.supplyAsync(
-                                () -> testing.runWithSpan("child", () -> result))));
+                    .thenCompose(result ->
+                        CompletableFuture.supplyAsync(
+                            () -> testing.runWithSpan("child", () -> result))));
 
     assertThat(future.join()).isEqualTo("done");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -159,19 +145,16 @@ class CompletableFutureTest {
             "parent",
             () ->
                 CompletableFuture.supplyAsync(() -> "done")
-                    .thenComposeAsync(
-                        result ->
-                            CompletableFuture.supplyAsync(
-                                () -> testing.runWithSpan("child", () -> result))));
+                    .thenComposeAsync(result ->
+                        CompletableFuture.supplyAsync(
+                            () -> testing.runWithSpan("child", () -> result))));
 
     assertThat(future.join()).isEqualTo("done");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -186,12 +169,10 @@ class CompletableFutureTest {
 
     assertThat(future.join()).isEqualTo("done");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   static class AppendingSupplier implements Supplier<String> {

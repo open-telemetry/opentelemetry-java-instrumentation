@@ -51,13 +51,11 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(doc.selectFirst("#message").text()).isEqualTo("Hello World!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + getContextPath() + "/wicket-test/hello.HelloPage")
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET " + getContextPath() + "/wicket-test/hello.HelloPage")
+                .hasNoParent()
+                .hasKind(SpanKind.SERVER)));
   }
 
   @Test
@@ -67,15 +65,13 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
 
     assertThat(response.status().code()).isEqualTo(500);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + getContextPath() + "/wicket-test/hello.ExceptionPage")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(new Exception("test exception"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET " + getContextPath() + "/wicket-test/hello.ExceptionPage")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasException(new Exception("test exception"))));
   }
 
   @Test
@@ -86,14 +82,11 @@ abstract class AbstractWicketTest<SERVER> extends AbstractHttpServerUsingTest<SE
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("hello resource");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + getContextPath() + "/wicket-test/hello.HelloResource")
-                        .hasAttribute(
-                            HTTP_ROUTE, getContextPath() + "/wicket-test/hello.HelloResource")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET " + getContextPath() + "/wicket-test/hello.HelloResource")
+                .hasAttribute(HTTP_ROUTE, getContextPath() + "/wicket-test/hello.HelloResource")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()));
   }
 }

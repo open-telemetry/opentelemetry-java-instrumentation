@@ -133,50 +133,48 @@ public class HttpClientTestServer extends ServerExtension {
               String name = ctx.pathParam("name");
               return HttpResponse.of("Hello, %s!", name != null ? name : "unknown");
             })
-        .decorator(
-            (delegate, ctx, req) -> {
-              for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {
-                if (req.headers().getAll(field).size() > 1) {
-                  throw new AssertionError((Object) ("more than one " + field + " header present"));
+        .decorator((delegate, ctx, req) -> {
+          for (String field : openTelemetry.getPropagators().getTextMapPropagator().fields()) {
+            if (req.headers().getAll(field).size() > 1) {
+              throw new AssertionError((Object) ("more than one " + field + " header present"));
+            }
+          }
+          SpanBuilder spanBuilder =
+              tracer
+                  .spanBuilder("test-http-server")
+                  .setSpanKind(SERVER)
+                  .setParent(
+                      openTelemetry
+                          .getPropagators()
+                          .getTextMapPropagator()
+                          .extract(Context.current(), ctx, RequestContextGetter.INSTANCE));
+
+          String traceRequestId = req.headers().get("test-request-id");
+          if (traceRequestId != null) {
+            spanBuilder.setAttribute("test.request.id", Integer.parseInt(traceRequestId));
+          }
+          Span span = spanBuilder.startSpan();
+          ctx.log()
+              .whenComplete()
+              .thenAccept(log -> {
+                Throwable error = log.responseCause();
+                if (error != null) {
+                  span.recordException(error);
+                  span.setStatus(StatusCode.ERROR);
                 }
-              }
-              SpanBuilder spanBuilder =
-                  tracer
-                      .spanBuilder("test-http-server")
-                      .setSpanKind(SERVER)
-                      .setParent(
-                          openTelemetry
-                              .getPropagators()
-                              .getTextMapPropagator()
-                              .extract(Context.current(), ctx, RequestContextGetter.INSTANCE));
+                span.end();
+              });
 
-              String traceRequestId = req.headers().get("test-request-id");
-              if (traceRequestId != null) {
-                spanBuilder.setAttribute("test.request.id", Integer.parseInt(traceRequestId));
-              }
-              Span span = spanBuilder.startSpan();
-              ctx.log()
-                  .whenComplete()
-                  .thenAccept(
-                      log -> {
-                        Throwable error = log.responseCause();
-                        if (error != null) {
-                          span.recordException(error);
-                          span.setStatus(StatusCode.ERROR);
-                        }
-                        span.end();
-                      });
+          // this header is set by java http client http/2 tests
+          // we delay the response a bit to ensure that client can send the full request before
+          // it receives the response
+          // this is a workaround for http/2 tests failing with java.io.IOException: RST_STREAM
+          // received
+          boolean delay = req.headers().get("java-http-client-http2") != null;
 
-              // this header is set by java http client http/2 tests
-              // we delay the response a bit to ensure that client can send the full request before
-              // it receives the response
-              // this is a workaround for http/2 tests failing with java.io.IOException: RST_STREAM
-              // received
-              boolean delay = req.headers().get("java-http-client-http2") != null;
-
-              HttpResponse response = delegate.serve(ctx, req);
-              return delay ? HttpResponse.delayed(response, Duration.ofMillis(10)) : response;
-            })
+          HttpResponse response = delegate.serve(ctx, req);
+          return delay ? HttpResponse.delayed(response, Duration.ofMillis(10)) : response;
+        })
         .decorator(LoggingService.newDecorator());
   }
 

@@ -30,23 +30,21 @@ class JfrVirtualThreadPinnedTest {
     Object lock = new Object();
     Thread vt =
         Thread.ofVirtual()
-            .start(
-                () -> {
-                  synchronized (lock) {
-                    // Parking inside a synchronized block pins the virtual thread
-                    LockSupport.parkNanos(100_000_000L); // 100ms
-                  }
-                  latch.countDown();
-                });
+            .start(() -> {
+              synchronized (lock) {
+                // Parking inside a synchronized block pins the virtual thread
+                LockSupport.parkNanos(100_000_000L); // 100ms
+              }
+              latch.countDown();
+            });
 
     assertThat(latch.await(10, SECONDS)).isTrue();
     vt.join(5000);
 
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName("jvm.thread.virtual.pinned")
-                .hasUnit(Constants.SECONDS)
-                .hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(point -> {})));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName("jvm.thread.virtual.pinned")
+            .hasUnit(Constants.SECONDS)
+            .hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(point -> {})));
   }
 }

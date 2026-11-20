@@ -73,20 +73,18 @@ class RedissonUnixSocketTest {
       testing.clearData();
       client.getBucket("uds-test").set("ok");
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasKind(CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_PEER_ADDRESS, socketPath),
-                              equalTo(NETWORK_PEER_PORT, null),
-                              equalTo(SERVER_ADDRESS, null),
-                              equalTo(SERVER_PORT, null),
-                              equalTo(DB_SYSTEM_NAME, REDIS),
-                              equalTo(DB_NAMESPACE, "0"),
-                              equalTo(DB_QUERY_TEXT, "SET uds-test ?"),
-                              equalTo(DB_OPERATION_NAME, "SET"))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasKind(CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(NETWORK_PEER_ADDRESS, socketPath),
+                      equalTo(NETWORK_PEER_PORT, null),
+                      equalTo(SERVER_ADDRESS, null),
+                      equalTo(SERVER_PORT, null),
+                      equalTo(DB_SYSTEM_NAME, REDIS),
+                      equalTo(DB_NAMESPACE, "0"),
+                      equalTo(DB_QUERY_TEXT, "SET uds-test ?"),
+                      equalTo(DB_OPERATION_NAME, "SET"))));
     } finally {
       try {
         if (client != null) {
