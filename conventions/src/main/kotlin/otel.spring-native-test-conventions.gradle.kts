@@ -73,7 +73,7 @@ plugins.withId("org.graalvm.buildtools.native") {
   // See https://github.com/graalvm/native-build-tools/issues/572
   (extensions.getByName("graalvmNative") as ExtensionAware).extensions
     .configure<GraalVMReachabilityMetadataRepositoryExtension> {
-      enabled.set(false)
+      enabled.set(true)
       // Manually set up the metadata repository to avoid resolving the default repository, which
       // currently fails with "Resolution of the configuration ... was attempted without an
       // exclusive lock. This is unsafe and not allowed."
