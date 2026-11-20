@@ -5,9 +5,7 @@
 
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.cpu;
 
-import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
@@ -38,11 +36,12 @@ public final class ContextSwitchRateHandler implements RecordedEventHandler {
   }
 
   public ContextSwitchRateHandler(Meter meter) {
-    DoubleUpDownCounterBuilder builder =
-        meter.upDownCounterBuilder(METRIC_NAME).ofDoubles().setUnit(Constants.HERTZ);
     observables.add(
-        MetricCallbackRegistration.withoutContextClassLoader(
-            () -> builder.buildWithCallback(measurement -> measurement.record(value))));
+        meter
+            .upDownCounterBuilder(METRIC_NAME)
+            .ofDoubles()
+            .setUnit(Constants.HERTZ)
+            .buildWithCallback(codm -> codm.record(value)));
   }
 
   @Override
