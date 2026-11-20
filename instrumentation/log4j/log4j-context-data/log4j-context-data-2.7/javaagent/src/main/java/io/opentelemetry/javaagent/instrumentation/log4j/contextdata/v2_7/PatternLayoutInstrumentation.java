@@ -31,16 +31,35 @@ class PatternLayoutInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class BuildAdvice {
-    @AssignReturned.ToFields(@AssignReturned.ToFields.ToField("pattern"))
+    @AssignReturned.ToFields(@AssignReturned.ToFields.ToField(value = "pattern", index = 2))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static String onEnter(
+    public static Object[] onEnter(
         @Advice.FieldValue("pattern") @Nullable String pattern,
         @Advice.FieldValue("patternSelector") Object selector) {
-      if (selector == null) {
-        return LogPatternInjection.inject(pattern, LogPatternInjection.Framework.LOG4J2);
+      if (!LogPatternInjection.isEnabled()) {
+        return null;
       }
-      return pattern;
+      LogPatternInjection.Injection injection =
+          LogPatternInjection.prepare(
+              selector == null ? pattern : null, LogPatternInjection.Framework.LOG4J2);
+      String enhanced = selector == null ? injection.getPattern() : pattern;
+      Object[] state = new Object[] {null, pattern, enhanced};
+      state[0] = LogPatternInjection.currentInjection().set(injection);
+      return state;
+    }
+
+    @AssignReturned.ToFields(@AssignReturned.ToFields.ToField("pattern"))
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    @Nullable
+    public static String onExit(
+        @Advice.Enter @Nullable Object[] state,
+        @Advice.FieldValue("pattern") @Nullable String pattern) {
+      if (state == null) {
+        return pattern;
+      }
+      LogPatternInjection.currentInjection().restore((LogPatternInjection.Injection) state[0]);
+      return (String) state[1];
     }
   }
 }

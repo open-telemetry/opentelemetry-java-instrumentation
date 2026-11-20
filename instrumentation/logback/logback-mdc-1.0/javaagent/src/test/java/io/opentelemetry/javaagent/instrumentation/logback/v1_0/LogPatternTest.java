@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.logback.v1_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -18,6 +19,7 @@ import ch.qos.logback.core.read.ListAppender;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import java.util.Base64;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -148,6 +150,60 @@ class LogPatternTest {
       })
   void respectsNativeMdcKeySemantics(String pattern) {
     assertRenderedPattern(pattern);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preservesExactAliasKeys(boolean withMessage) {
+    String traceAlias =
+        "otel.pattern-injection.trace."
+            + Base64.getUrlEncoder().withoutPadding().encodeToString(TRACE.getBytes(UTF_8));
+    String spanAlias =
+        "otel.pattern-injection.span."
+            + Base64.getUrlEncoder().withoutPadding().encodeToString(SPAN.getBytes(UTF_8));
+    String pattern = "%X{" + traceAlias + "} %X{" + spanAlias + "}" + (withMessage ? " %m%n" : "");
+    LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+    Logger logger = context.getLogger("alias-regression");
+    boolean additive = logger.isAdditive();
+    Level level = logger.getLevel();
+    ListAppender<ILoggingEvent> appender = new ListAppender<>();
+    PatternLayout layout = new PatternLayout();
+    try {
+      layout.setContext(context);
+      layout.setPattern(pattern);
+      layout.start();
+      layout.stop();
+      layout.start();
+      assertThat(layout.getPattern()).isEqualTo(pattern);
+      appender.setContext(context);
+      appender.start();
+      logger.setLevel(Level.INFO);
+      logger.setAdditive(false);
+      logger.addAppender(appender);
+      MDC.put(traceAlias, "application-trace-alias");
+      MDC.put(spanAlias, "application-span-alias");
+      testing.runWithSpan(
+          "alias",
+          () -> {
+            logger.info("message");
+            String rendered = layout.doLayout(appender.list.get(0));
+            assertThat(rendered)
+                .containsOnlyOnce("application-trace-alias")
+                .containsOnlyOnce("application-span-alias");
+            if (ENABLED && withMessage) {
+              assertThat(rendered)
+                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+            }
+          });
+    } finally {
+      MDC.clear();
+      layout.stop();
+      logger.detachAppender(appender);
+      logger.setAdditive(additive);
+      logger.setLevel(level);
+      appender.stop();
+    }
   }
 
   private static void assertRenderedPattern(String pattern) {

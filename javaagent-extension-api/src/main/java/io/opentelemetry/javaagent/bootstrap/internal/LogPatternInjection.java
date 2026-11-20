@@ -9,6 +9,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import java.util.Base64;
 import javax.annotation.Nullable;
 
@@ -31,34 +32,74 @@ public final class LogPatternInjection {
           .get("pattern_injection")
           .getBoolean("enabled", false);
 
+  private static final ScopedThreadValue<Injection> currentInjection = new ScopedThreadValue<>();
+
   public static boolean isEnabled() {
     return ENABLED;
   }
 
-  @Nullable
-  public static String inject(@Nullable String pattern, Framework framework) {
-    if (!ENABLED) {
-      return pattern;
-    }
-    return enhance(
+  public static ScopedThreadValue<Injection> currentInjection() {
+    return currentInjection;
+  }
+
+  public static Injection prepare(@Nullable String pattern, Framework framework) {
+    return prepare(
         pattern,
         framework,
         AgentCommonConfig.get().getTraceIdKey(),
-        AgentCommonConfig.get().getSpanIdKey());
+        AgentCommonConfig.get().getSpanIdKey(),
+        ENABLED);
+  }
+
+  // visible for testing
+  static Injection prepare(
+      @Nullable String pattern, Framework framework, String traceKey, String spanKey) {
+    return prepare(pattern, framework, traceKey, spanKey, true);
+  }
+
+  private static Injection prepare(
+      @Nullable String pattern,
+      Framework framework,
+      String traceKey,
+      String spanKey,
+      boolean enabled) {
+    String traceOption = availableOption(pattern, traceKey, true, framework);
+    String spanOption = availableOption(pattern, spanKey, false, framework);
+    String enhanced =
+        enabled ? enhance(pattern, framework, traceKey, spanKey, traceOption, spanOption) : pattern;
+    return new Injection(
+        enhanced,
+        framework,
+        traceKey,
+        spanKey,
+        traceOption,
+        spanOption,
+        pattern != null && !pattern.equals(enhanced));
+  }
+
+  private static String availableOption(
+      @Nullable String pattern, String key, boolean trace, Framework framework) {
+    String option = mdcOption(key, trace, framework);
+    if (!option.equals(key) && pattern != null) {
+      // Existing application converters must never be mistaken for generated aliases.
+      while (pattern.contains(option)) {
+        option += "_";
+      }
+    }
+    return option;
   }
 
   @Nullable
   public static String resolveMdcKey(@Nullable String key, Framework framework) {
-    if (!ENABLED || key == null) {
+    Injection injection = currentInjection.get();
+    if (key == null || injection == null || !injection.matches(framework)) {
       return key;
     }
-    String traceKey = AgentCommonConfig.get().getTraceIdKey();
-    if (key.equals(mdcOption(traceKey, true, framework))) {
-      return traceKey;
+    if (key.equals(injection.traceOption)) {
+      return injection.traceKey;
     }
-    String spanKey = AgentCommonConfig.get().getSpanIdKey();
-    if (key.equals(mdcOption(spanKey, false, framework))) {
-      return spanKey;
+    if (key.equals(injection.spanOption)) {
+      return injection.spanKey;
     }
     return key;
   }
@@ -66,6 +107,23 @@ public final class LogPatternInjection {
   @Nullable
   static String enhance(
       @Nullable String pattern, Framework framework, String traceKey, String spanKey) {
+    return enhance(
+        pattern,
+        framework,
+        traceKey,
+        spanKey,
+        mdcOption(traceKey, true, framework),
+        mdcOption(spanKey, false, framework));
+  }
+
+  @Nullable
+  private static String enhance(
+      @Nullable String pattern,
+      Framework framework,
+      String traceKey,
+      String spanKey,
+      String traceOption,
+      String spanOption) {
     if (pattern == null || pattern.isEmpty()) {
       return pattern;
     }
@@ -73,7 +131,7 @@ public final class LogPatternInjection {
     String[] keys = {traceKey, spanKey};
     for (int i = 0; i < keys.length; i++) {
       String key = keys[i];
-      String option = mdcOption(key, i == 0, framework);
+      String option = i == 0 ? traceOption : spanOption;
       if (!contains(pattern, framework, key, option)) {
         if (fields.length() > 0) {
           fields.append(' ');
@@ -432,6 +490,51 @@ public final class LogPatternInjection {
       }
     }
     return prefixSeen ? -2 : -1;
+  }
+
+  /**
+   * Initialization state scoped to one native pattern compilation, never a log event.
+   *
+   * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
+   * at any time.
+   */
+  public static final class Injection {
+    @Nullable private final String pattern;
+    private final Framework framework;
+    private final String traceKey;
+    private final String spanKey;
+    private final String traceOption;
+    private final String spanOption;
+    private final boolean modified;
+
+    private Injection(
+        @Nullable String pattern,
+        Framework framework,
+        String traceKey,
+        String spanKey,
+        String traceOption,
+        String spanOption,
+        boolean modified) {
+      this.pattern = pattern;
+      this.framework = framework;
+      this.traceKey = traceKey;
+      this.spanKey = spanKey;
+      this.traceOption = traceOption;
+      this.spanOption = spanOption;
+      this.modified = modified;
+    }
+
+    @Nullable
+    public String getPattern() {
+      return pattern;
+    }
+
+    private boolean matches(Framework other) {
+      return modified
+          && (framework == other
+              || (isLogback(framework) && isLogback(other))
+              || (framework == Framework.LOG4J1_WITH_MDC_MAP && other == Framework.LOG4J1));
+    }
   }
 
   private LogPatternInjection() {}

@@ -18,6 +18,68 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class LogPatternInjectionTest {
+  @Test
+  void scopesAliasRestorationAndRestoresNestedState() {
+    String alias = "otel.pattern-injection.trace.Y3VzdG9tLHRyYWNl";
+    LogPatternInjection.Injection injection =
+        LogPatternInjection.prepare(
+            "%X{" + alias + "} %m%n", Framework.LOGBACK, "custom,trace", "span_id");
+    assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
+        .isEqualTo(alias + "_");
+    LogPatternInjection.Injection previous = LogPatternInjection.currentInjection().set(injection);
+    try {
+      assertThat(LogPatternInjection.resolveMdcKey(alias, Framework.LOGBACK)).isEqualTo(alias);
+      assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
+          .isEqualTo("custom,trace");
+      LogPatternInjection.Injection nested =
+          LogPatternInjection.currentInjection()
+              .set(
+                  LogPatternInjection.prepare(
+                      "%X{" + alias + "_}", Framework.LOGBACK, "custom,trace", "span_id"));
+      try {
+        assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
+            .isEqualTo(alias + "_");
+      } finally {
+        LogPatternInjection.currentInjection().restore(nested);
+      }
+      assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
+          .isEqualTo("custom,trace");
+    } finally {
+      LogPatternInjection.currentInjection().restore(previous);
+    }
+    assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
+        .isEqualTo(alias + "_");
+  }
+
+  @Test
+  void doesNotRestoreAliasesWhenNothingWasInjected() {
+    String alias = "otel.pattern-injection.trace.Y3VzdG9tLHRyYWNl";
+    LogPatternInjection.Injection previous =
+        LogPatternInjection.currentInjection()
+            .set(LogPatternInjection.prepare(null, Framework.LOGBACK, "custom,trace", "span_id"));
+    try {
+      assertThat(LogPatternInjection.resolveMdcKey(alias, Framework.LOGBACK)).isEqualTo(alias);
+    } finally {
+      LogPatternInjection.currentInjection().restore(previous);
+    }
+  }
+
+  @Test
+  void avoidsApplicationAliasCollisions() {
+    String alias = "otel.pattern-injection.trace.Y3VzdG9tLHRyYWNl";
+    String pattern = "%X{" + alias + "} %X{" + alias + "_} %m%n";
+    LogPatternInjection.Injection injection =
+        LogPatternInjection.prepare(pattern, Framework.LOGBACK, "custom,trace", "span_id");
+    assertThat(injection.getPattern())
+        .contains(pattern.substring(0, pattern.indexOf("%m")))
+        .contains("custom,trace=%X{" + alias + "__}");
+    assertThat(
+            LogPatternInjection.prepare(
+                    "%X{" + alias + "}", Framework.LOGBACK, "custom,trace", "span_id")
+                .getPattern())
+        .isEqualTo("%X{" + alias + "}");
+  }
+
   private static final String FIELDS = "trace_id=%X{trace_id} span_id=%X{span_id}";
 
   @ParameterizedTest

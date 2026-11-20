@@ -5,11 +5,13 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
 import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
@@ -230,6 +232,36 @@ public abstract class LogPatternTest {
                 .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
           }
         });
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void preservesExactAliasKeys(boolean withMessage) {
+    String traceAlias =
+        "otel.pattern-injection.log4j2.trace."
+            + Base64.getUrlEncoder().withoutPadding().encodeToString(TRACE.getBytes(UTF_8));
+    String spanAlias =
+        "otel.pattern-injection.log4j2.span."
+            + Base64.getUrlEncoder().withoutPadding().encodeToString(SPAN.getBytes(UTF_8));
+    String pattern = "%X{" + traceAlias + "} %X{" + spanAlias + "}" + (withMessage ? " %m%n" : "");
+    ThreadContext.put(traceAlias, "application-trace-alias");
+    ThreadContext.put(spanAlias, "application-span-alias");
+    try {
+      assertRenderedPattern(
+          pattern,
+          (layout, rendered) -> {
+            assertThat(rendered)
+                .containsOnlyOnce("application-trace-alias")
+                .containsOnlyOnce("application-span-alias");
+            if (ENABLED && withMessage) {
+              assertThat(rendered)
+                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+            }
+          });
+    } finally {
+      ThreadContext.clearAll();
+    }
   }
 
   private void assertRenderedPattern(String pattern, BiConsumer<PatternLayout, String> assertion) {
