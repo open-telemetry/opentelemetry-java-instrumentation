@@ -498,26 +498,22 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
               .mapToObj(i -> makeCircularRedirectAssertForLolLevelTrace(uri, method, i))
               .collect(toList()));
     } else {
-      testing.waitAndAssertTraces(
-          trace -> {
-            List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-            assertions.add(
-                span ->
-                    assertClientSpan(
-                            span,
-                            uri,
-                            method,
-                            options.getExpectResponseCodeOnRedirectError()
-                                ? FOUND_STATUS_CODE
-                                : null,
-                            null)
-                        .hasNoParent()
-                        .hasException(emitExceptionAsSpanEvents() ? clientError : null));
-            for (int i = 0; i < options.getMaxRedirects(); i++) {
-              assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
-            }
-            trace.hasSpansSatisfyingExactly(assertions);
-          });
+      testing.waitAndAssertTraces(trace -> {
+        List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+        assertions.add(span ->
+            assertClientSpan(
+                    span,
+                    uri,
+                    method,
+                    options.getExpectResponseCodeOnRedirectError() ? FOUND_STATUS_CODE : null,
+                    null)
+                .hasNoParent()
+                .hasException(emitExceptionAsSpanEvents() ? clientError : null));
+        for (int i = 0; i < options.getMaxRedirects(); i++) {
+          assertions.add(span -> assertServerSpan(span).hasParent(trace.getSpan(0)));
+        }
+        trace.hasSpansSatisfyingExactly(assertions);
+      });
     }
 
     // For low-level instrumentation, individual redirect requests succeed (302) and the overall
