@@ -36,33 +36,30 @@ class SpringWebfluxInstrumentationAutoConfigurationTest
   void shouldCreateBeanPostProcessorWhenEnabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-webflux.enabled=true")
-        .run(
-            context ->
-                assertThat(context)
-                    .hasBean("otelWebClientBeanPostProcessor")
-                    .hasBean("telemetryFilter"));
+        .run(context ->
+            assertThat(context)
+                .hasBean("otelWebClientBeanPostProcessor")
+                .hasBean("telemetryFilter"));
   }
 
   @Test
   void shouldNotCreateBeanPostProcessorWhenDisabled() {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-webflux.enabled=false")
-        .run(
-            context ->
-                assertThat(context)
-                    .doesNotHaveBean("otelWebClientBeanPostProcessor")
-                    .doesNotHaveBean("telemetryFilter"));
+        .run(context ->
+            assertThat(context)
+                .doesNotHaveBean("otelWebClientBeanPostProcessor")
+                .doesNotHaveBean("telemetryFilter"));
   }
 
   @Test
   void shouldCreateBeanPostProcessorWhenWebClientCustomizerNotOnClasspath() {
     contextRunner
         .withClassLoader(new FilteredClassLoader(WebClientCustomizer.class))
-        .run(
-            context ->
-                assertThat(context)
-                    .hasBean("otelWebClientBeanPostProcessor")
-                    .hasBean("telemetryFilter")
-                    .doesNotHaveBean("otelWebClientCustomizer"));
+        .run(context ->
+            assertThat(context)
+                .hasBean("otelWebClientBeanPostProcessor")
+                .hasBean("telemetryFilter")
+                .doesNotHaveBean("otelWebClientCustomizer"));
   }
 }

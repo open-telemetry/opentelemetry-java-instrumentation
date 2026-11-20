@@ -81,14 +81,13 @@ public final class MongoInstrumenterFactory {
                 instrumentationName,
                 DbClientSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
-            .setSpanStatusExtractor(
-                (status, request, response, error) -> {
-                  if (dbAttributesGetter.getErrorType(request, response, error) != null) {
-                    status.setStatus(StatusCode.ERROR);
-                  } else {
-                    SpanStatusExtractor.getDefault().extract(status, request, response, error);
-                  }
-                })
+            .setSpanStatusExtractor((status, request, response, error) -> {
+              if (dbAttributesGetter.getErrorType(request, response, error) != null) {
+                status.setStatus(StatusCode.ERROR);
+              } else {
+                SpanStatusExtractor.getDefault().extract(status, request, response, error);
+              }
+            })
             .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);

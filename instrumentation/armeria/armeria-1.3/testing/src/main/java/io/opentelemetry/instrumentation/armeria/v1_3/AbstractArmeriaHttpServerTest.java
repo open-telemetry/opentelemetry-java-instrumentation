@@ -141,26 +141,24 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
                             HttpData.ofUtf8(CAPTURE_HEADERS.getBody()))));
 
     // Make sure user decorators see spans.
-    sb.decorator(
-        (delegate, ctx, req) -> {
+    sb.decorator((delegate, ctx, req) -> {
+      if (!Span.current().getSpanContext().isValid()) {
+        // Return an invalid code to fail any assertion
+        return HttpResponse.of(600);
+      }
+      ctx.addAdditionalResponseHeader("decoratinghttpservicefunction", "ok");
+      return delegate.serve(ctx, req);
+    });
+
+    sb.decorator(delegate ->
+        (ctx, req) -> {
           if (!Span.current().getSpanContext().isValid()) {
             // Return an invalid code to fail any assertion
-            return HttpResponse.of(600);
+            return HttpResponse.of(601);
           }
-          ctx.addAdditionalResponseHeader("decoratinghttpservicefunction", "ok");
+          ctx.addAdditionalResponseHeader("decoratingfunction", "ok");
           return delegate.serve(ctx, req);
         });
-
-    sb.decorator(
-        delegate ->
-            (ctx, req) -> {
-              if (!Span.current().getSpanContext().isValid()) {
-                // Return an invalid code to fail any assertion
-                return HttpResponse.of(601);
-              }
-              ctx.addAdditionalResponseHeader("decoratingfunction", "ok");
-              return delegate.serve(ctx, req);
-            });
 
     configureServer(sb);
 
@@ -177,15 +175,14 @@ public abstract class AbstractArmeriaHttpServerTest extends AbstractHttpServerTe
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (endpoint == ServerEndpoint.NOT_FOUND) {
-            // TODO: Revisit this when applying instrumenters to more libraries, Armeria currently
-            // reports '/*' which is a fallback route.
-            return "/*";
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (endpoint == ServerEndpoint.NOT_FOUND) {
+        // TODO: Revisit this when applying instrumenters to more libraries, Armeria currently
+        // reports '/*' which is a fallback route.
+        return "/*";
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
 
     options.setTestPathParam(true);
   }

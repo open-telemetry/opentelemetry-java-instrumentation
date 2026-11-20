@@ -76,29 +76,25 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
           });
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("send " + SHARED_TOPIC)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, false)),
-                span ->
-                    span.hasName("process " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes("10", greeting, false, true)),
-                span ->
-                    span.hasName("processing")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(2)),
-                span ->
-                    span.hasName("producer callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("send " + SHARED_TOPIC)
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(sendAttributes("10", greeting, false)),
+            span ->
+                span.hasName("process " + SHARED_TOPIC)
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(processAttributes("10", greeting, false, true)),
+            span ->
+                span.hasName("processing").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(2)),
+            span ->
+                span.hasName("producer callback")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
     String instrumentationName = "io.opentelemetry.kafka-clients-0.11";
     assertSendMetrics(testing, instrumentationName, SHARED_TOPIC, "0", 1, null);
     assertProcessMetricsWithConsumedMessages(
@@ -126,20 +122,18 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
       assertThat(record.key()).isNull();
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("send " + SHARED_TOPIC)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(sendAttributes(null, null, false)),
-                span ->
-                    span.hasName("process " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(null, null, false, false))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("send " + SHARED_TOPIC)
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(sendAttributes(null, null, false)),
+            span ->
+                span.hasName("process " + SHARED_TOPIC)
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(processAttributes(null, null, false, false))));
   }
 
   @Test
@@ -170,10 +164,9 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().equals(processName))
         .hasSize(2)
-        .allSatisfy(
-            span ->
-                assertThat(span.getParentSpanId())
-                    .isNotEqualTo(firstSpan.getSpanContext().getSpanId()));
+        .allSatisfy(span ->
+            assertThat(span.getParentSpanId())
+                .isNotEqualTo(firstSpan.getSpanContext().getSpanId()));
   }
 
   @Test
@@ -195,19 +188,18 @@ class KafkaClientSuppressReceiveSpansTest extends KafkaClientPropagationBaseTest
       assertThat(record.key()).isNull();
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("send " + SHARED_TOPIC)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(sendAttributes(null, greeting, false)),
-                span ->
-                    span.hasName("process " + SHARED_TOPIC)
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            processAttributes(null, greeting, false, false))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("send " + SHARED_TOPIC)
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(sendAttributes(null, greeting, false)),
+            span ->
+                span.hasName("process " + SHARED_TOPIC)
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        processAttributes(null, greeting, false, false))));
   }
 }

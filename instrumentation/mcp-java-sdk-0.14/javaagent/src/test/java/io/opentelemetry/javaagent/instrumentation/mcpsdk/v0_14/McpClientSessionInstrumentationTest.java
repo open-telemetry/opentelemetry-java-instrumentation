@@ -78,21 +78,19 @@ class McpClientSessionInstrumentationTest {
     assertThat(sentRequest.meta().get("traceparent").toString())
         .matches("00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("tools/call delete-file")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MCP_METHOD_NAME, "tools/call"),
-                            equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
-                            equalTo(GEN_AI_TOOL_NAME, "delete-file"),
-                            equalTo(
-                                JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("tools/call delete-file")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MCP_METHOD_NAME, "tools/call"),
+                        equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
+                        equalTo(GEN_AI_TOOL_NAME, "delete-file"),
+                        equalTo(JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()))));
   }
 
   @Test
@@ -112,14 +110,12 @@ class McpClientSessionInstrumentationTest {
 
     assertThat(initialize.then(callTool).block()).isNotNull();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("tools/call lookup")
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasAttribute(MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("tools/call lookup")
+                .hasKind(CLIENT)
+                .hasNoParent()
+                .hasAttribute(MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05)));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         metric ->
@@ -127,20 +123,16 @@ class McpClientSessionInstrumentationTest {
                 .hasName("mcp.client.operation.duration")
                 .hasUnit("s")
                 .hasDescription(MCP_CLIENT_OPERATION_DURATION_DESCRIPTION)
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MCP_METHOD_NAME, "tools/call"),
-                                        equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
-                                        equalTo(GEN_AI_TOOL_NAME, "lookup"),
-                                        equalTo(
-                                            MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05))
-                                    .hasBucketBoundaries(
-                                        0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120,
-                                        300))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MCP_METHOD_NAME, "tools/call"),
+                                equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
+                                equalTo(GEN_AI_TOOL_NAME, "lookup"),
+                                equalTo(MCP_PROTOCOL_VERSION, ProtocolVersions.MCP_2024_11_05))
+                            .hasBucketBoundaries(
+                                0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 30, 60, 120, 300))));
   }
 
   @Test
@@ -161,14 +153,11 @@ class McpClientSessionInstrumentationTest {
                     Context.current()));
     assertThat(publisher.block()).isNotNull();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("tools/call async-tool")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("tools/call async-tool").hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -190,13 +179,12 @@ class McpClientSessionInstrumentationTest {
     SpanContext propagatedSpanContext =
         Span.fromContext(transport.getToolRequestContext()).getSpanContext();
     assertThat(propagatedSpanContext.isValid()).isTrue();
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("tools/call context-tool").hasKind(CLIENT).hasNoParent());
-          assertThat(propagatedSpanContext.getTraceId()).isEqualTo(trace.getSpan(0).getTraceId());
-          assertThat(propagatedSpanContext.getSpanId()).isEqualTo(trace.getSpan(0).getSpanId());
-        });
+    testing.waitAndAssertTraces(trace -> {
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasName("tools/call context-tool").hasKind(CLIENT).hasNoParent());
+      assertThat(propagatedSpanContext.getTraceId()).isEqualTo(trace.getSpan(0).getTraceId());
+      assertThat(propagatedSpanContext.getSpanId()).isEqualTo(trace.getSpan(0).getSpanId());
+    });
   }
 
   @Test
@@ -323,21 +311,19 @@ class McpClientSessionInstrumentationTest {
     McpSchema.CallToolRequest sent =
         (McpSchema.CallToolRequest) transport.getToolRequest().params();
     assertThat(sent.meta()).containsEntry("baggage", "tenant=worker");
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasNoParent(),
-              span ->
-                  span.hasName("tools/call worker").hasKind(CLIENT).hasParent(trace.getSpan(0)));
-          assertThat(sent.meta().get("traceparent"))
-              .isEqualTo(
-                  "00-"
-                      + trace.getSpan(1).getTraceId()
-                      + "-"
-                      + trace.getSpan(1).getSpanId()
-                      + "-"
-                      + trace.getSpan(1).getSpanContext().getTraceFlags().asHex());
-        });
+    testing.waitAndAssertTraces(trace -> {
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasName("parent").hasNoParent(),
+          span -> span.hasName("tools/call worker").hasKind(CLIENT).hasParent(trace.getSpan(0)));
+      assertThat(sent.meta().get("traceparent"))
+          .isEqualTo(
+              "00-"
+                  + trace.getSpan(1).getTraceId()
+                  + "-"
+                  + trace.getSpan(1).getSpanId()
+                  + "-"
+                  + trace.getSpan(1).getSpanContext().getTraceFlags().asHex());
+    });
   }
 
   @Test
@@ -385,36 +371,34 @@ class McpClientSessionInstrumentationTest {
     McpClientSession session = newSession(transport);
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        session
-                            .sendRequest(
-                                McpSchema.METHOD_TOOLS_CALL,
-                                new McpSchema.CallToolRequest("missing-tool", Map.of(), null),
-                                CALL_TOOL_RESULT_TYPE)
-                            .block()));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    session
+                        .sendRequest(
+                            McpSchema.METHOD_TOOLS_CALL,
+                            new McpSchema.CallToolRequest("missing-tool", Map.of(), null),
+                            CALL_TOOL_RESULT_TYPE)
+                        .block()));
 
     assertThat(thrown).isInstanceOf(McpError.class);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("tools/call missing-tool")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MCP_METHOD_NAME, "tools/call"),
-                            equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
-                            equalTo(GEN_AI_TOOL_NAME, "missing-tool"),
-                            equalTo(JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()),
-                            equalTo(ERROR_TYPE, "-32601"),
-                            equalTo(RPC_RESPONSE_STATUS_CODE, "-32601"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("tools/call missing-tool")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(thrown)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MCP_METHOD_NAME, "tools/call"),
+                        equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
+                        equalTo(GEN_AI_TOOL_NAME, "missing-tool"),
+                        equalTo(JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()),
+                        equalTo(ERROR_TYPE, "-32601"),
+                        equalTo(RPC_RESPONSE_STATUS_CODE, "-32601"))));
   }
 
   @Test
@@ -434,21 +418,20 @@ class McpClientSessionInstrumentationTest {
                     CALL_TOOL_RESULT_TYPE)
                 .block());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("tools/call failing-tool")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(MCP_METHOD_NAME, "tools/call"),
-                            equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
-                            equalTo(GEN_AI_TOOL_NAME, "failing-tool"),
-                            equalTo(JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()),
-                            equalTo(ERROR_TYPE, "tool_error"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("tools/call failing-tool")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(MCP_METHOD_NAME, "tools/call"),
+                        equalTo(GEN_AI_OPERATION_NAME, EXECUTE_TOOL),
+                        equalTo(GEN_AI_TOOL_NAME, "failing-tool"),
+                        equalTo(JSONRPC_REQUEST_ID, transport.getToolRequest().id().toString()),
+                        equalTo(ERROR_TYPE, "tool_error"))));
   }
 
   @Test
@@ -470,14 +453,11 @@ class McpClientSessionInstrumentationTest {
     assertThat(testing.spans()).hasSize(1);
     subscription.dispose();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("tools/call slow-tool")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("tools/call slow-tool").hasKind(CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test

@@ -24,9 +24,8 @@ class OpenSearchAttributesGetterTest {
   void recordsAvailableResponseStatuses(int statusCode) {
     OpenSearchException error =
         new OpenSearchException(
-            ErrorResponse.of(
-                response ->
-                    response.status(statusCode).error(cause -> cause.type("test").reason("test"))));
+            ErrorResponse.of(response ->
+                response.status(statusCode).error(cause -> cause.type("test").reason("test"))));
 
     assertStatus(error, statusCode);
     assertStatus(new CompletionException(error), statusCode);

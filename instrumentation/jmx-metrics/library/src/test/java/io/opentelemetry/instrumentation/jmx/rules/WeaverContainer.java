@@ -138,45 +138,42 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
           jsonNode -> {
             JsonNode allAdvice = jsonNode.get("live_check_result").get("all_advice");
             if (allAdvice.isArray() && !allAdvice.isEmpty()) {
-              allAdvice.forEach(
-                  advice -> {
-                    advices.add(
-                        new WeaverValidationAdvice(
-                            advice.get("signal_name").asText(null),
-                            advice.get("message").asText(),
-                            advice.get("level").asText()));
-                  });
+              allAdvice.forEach(advice -> {
+                advices.add(
+                    new WeaverValidationAdvice(
+                        advice.get("signal_name").asText(null),
+                        advice.get("message").asText(),
+                        advice.get("level").asText()));
+              });
             }
           };
 
       json.get("samples")
-          .forEach(
-              sample -> {
-                JsonNode resource = sample.get("resource");
-                JsonNode metric = sample.get("metric");
-                JsonNode instrumentationScope = sample.get("instrumentation_scope");
-                if (resource != null) {
-                  resource.get("attributes").forEach(parseValidationAdvice);
-                } else if (metric != null) {
-                  parseValidationAdvice.accept(metric);
-                } else if (instrumentationScope != null) {
-                  parseValidationAdvice.accept(instrumentationScope);
-                  instrumentationScope.get("attributes").forEach(parseValidationAdvice);
-                } else {
-                  throw new IllegalStateException("unexpected weaver validation result type");
-                }
-              });
+          .forEach(sample -> {
+            JsonNode resource = sample.get("resource");
+            JsonNode metric = sample.get("metric");
+            JsonNode instrumentationScope = sample.get("instrumentation_scope");
+            if (resource != null) {
+              resource.get("attributes").forEach(parseValidationAdvice);
+            } else if (metric != null) {
+              parseValidationAdvice.accept(metric);
+            } else if (instrumentationScope != null) {
+              parseValidationAdvice.accept(instrumentationScope);
+              instrumentationScope.get("attributes").forEach(parseValidationAdvice);
+            } else {
+              throw new IllegalStateException("unexpected weaver validation result type");
+            }
+          });
 
       BiFunction<JsonNode, String, Map<String, Integer>> doParse =
           (jsonNode, key) -> {
             Map<String, Integer> result = new HashMap<>();
             JsonNode node = jsonNode.get(key);
             node.fieldNames()
-                .forEachRemaining(
-                    name -> {
-                      JsonNode jsonCount = node.get(name);
-                      result.put(name, jsonCount.asInt());
-                    });
+                .forEachRemaining(name -> {
+                  JsonNode jsonCount = node.get(name);
+                  result.put(name, jsonCount.asInt());
+                });
             return result;
           };
 
@@ -191,17 +188,15 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
 
     @CanIgnoreReturnValue
     public WeaverValidationResult checkNothingUnregisteredWithPrefix(String prefix) {
-      seenNonRegistryMetrics.forEach(
-          attribute ->
-              assertThat(attribute)
-                  .describedAs("no un-registered metric with prefix %s expected", prefix)
-                  .doesNotStartWith(prefix));
+      seenNonRegistryMetrics.forEach(attribute ->
+          assertThat(attribute)
+              .describedAs("no un-registered metric with prefix %s expected", prefix)
+              .doesNotStartWith(prefix));
 
-      seenNonRegistryAttributes.forEach(
-          attribute ->
-              assertThat(attribute)
-                  .describedAs("no un-registered attribute with prefix %s expected", prefix)
-                  .doesNotStartWith(prefix));
+      seenNonRegistryAttributes.forEach(attribute ->
+          assertThat(attribute)
+              .describedAs("no un-registered attribute with prefix %s expected", prefix)
+              .doesNotStartWith(prefix));
       return this;
     }
 
@@ -241,27 +236,23 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
           .describedAs("expected registered %s to contain all keys", type)
           .containsAll(expectedKeys);
 
-      map.forEach(
-          (key, count) -> {
-            if (key.startsWith(prefix) && !expectedKeys.contains(key)) {
-              assertThat(count)
-                  .describedAs("expected registered %s to have zero count for key %s", type, key)
-                  .isZero();
-            }
-          });
+      map.forEach((key, count) -> {
+        if (key.startsWith(prefix) && !expectedKeys.contains(key)) {
+          assertThat(count)
+              .describedAs("expected registered %s to have zero count for key %s", type, key)
+              .isZero();
+        }
+      });
 
-      reported.forEach(
-          key ->
-              assertThat(map.get(key))
-                  .describedAs("expected registered %s to contain key %s with count > 0", type, key)
-                  .isGreaterThan(0));
+      reported.forEach(key ->
+          assertThat(map.get(key))
+              .describedAs("expected registered %s to contain key %s with count > 0", type, key)
+              .isGreaterThan(0));
 
-      notReported.forEach(
-          key ->
-              assertThat(map.get(key))
-                  .describedAs(
-                      "expected registered %s to contain key %s with count >= 0", type, key)
-                  .isGreaterThanOrEqualTo(0));
+      notReported.forEach(key ->
+          assertThat(map.get(key))
+              .describedAs("expected registered %s to contain key %s with count >= 0", type, key)
+              .isGreaterThanOrEqualTo(0));
 
       return this;
     }
@@ -291,38 +282,33 @@ public class WeaverContainer extends GenericContainer<WeaverContainer> {
     @CanIgnoreReturnValue
     public WeaverValidationResult checkCommonViolations() {
       AtomicInteger violationCount = new AtomicInteger(0);
-      advices.forEach(
-          advice -> {
-            if (shouldIgnoreAdvice(advice)) {
-              return;
-            }
+      advices.forEach(advice -> {
+        if (shouldIgnoreAdvice(advice)) {
+          return;
+        }
 
-            String signalOrResource = advice.getSignalName();
-            if (signalOrResource == null) {
-              signalOrResource = "resource attribute";
-            }
-            switch (advice.getLevel()) {
-              case "information":
-                logger.info(
-                    "weaver reported information on {} : {}",
-                    signalOrResource,
-                    advice.getMessage());
-                break;
-              case "violation":
-                logger.error(
-                    "weaver reported violation on {} : {}", signalOrResource, advice.getMessage());
-                violationCount.getAndIncrement();
-                break;
-              case "improvement":
-                logger.warn(
-                    "weaver reported improvement on {} : {}",
-                    signalOrResource,
-                    advice.getMessage());
-                break;
-              default:
-                throw new IllegalStateException("unknown advice level " + advice.getLevel());
-            }
-          });
+        String signalOrResource = advice.getSignalName();
+        if (signalOrResource == null) {
+          signalOrResource = "resource attribute";
+        }
+        switch (advice.getLevel()) {
+          case "information":
+            logger.info(
+                "weaver reported information on {} : {}", signalOrResource, advice.getMessage());
+            break;
+          case "violation":
+            logger.error(
+                "weaver reported violation on {} : {}", signalOrResource, advice.getMessage());
+            violationCount.getAndIncrement();
+            break;
+          case "improvement":
+            logger.warn(
+                "weaver reported improvement on {} : {}", signalOrResource, advice.getMessage());
+            break;
+          default:
+            throw new IllegalStateException("unknown advice level " + advice.getLevel());
+        }
+      });
       assertThat(violationCount.get())
           .describedAs("no registry violation should be reported")
           .isEqualTo(0);

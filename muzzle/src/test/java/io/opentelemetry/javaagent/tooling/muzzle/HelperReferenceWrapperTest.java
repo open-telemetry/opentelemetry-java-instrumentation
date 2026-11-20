@@ -73,19 +73,17 @@ class HelperReferenceWrapperTest {
     assertThat(helperWrapper.isAbstract()).isFalse();
 
     assertThat(helperWrapper.getMethods())
-        .satisfiesExactly(
-            method -> {
-              assertThat(method.isAbstract()).isFalse();
-              assertThat(method.getName()).isEqualTo("bar");
-              assertThat(method.getDescriptor()).isEqualTo("()V");
-            });
+        .satisfiesExactly(method -> {
+          assertThat(method.isAbstract()).isFalse();
+          assertThat(method.getName()).isEqualTo("bar");
+          assertThat(method.getDescriptor()).isEqualTo("()V");
+        });
 
     assertThat(helperWrapper.getFields())
-        .satisfiesExactly(
-            field -> {
-              assertThat(field.getName()).isEqualTo("declaredField");
-              assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
-            });
+        .satisfiesExactly(field -> {
+          assertThat(field.getName()).isEqualTo("declaredField");
+          assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
+        });
 
     assertThat(helperWrapper.hasSuperTypes()).isTrue();
     assertThat(helperWrapper.getSuperTypes())
@@ -107,45 +105,41 @@ class HelperReferenceWrapperTest {
 
               assertThat(baseHelper.hasSuperTypes()).isTrue();
               assertThat(baseHelper.getSuperTypes())
-                  .satisfiesExactly(
-                      helperReferenceWrapper -> {
-                        assertThat(helperReferenceWrapper.isAbstract()).isTrue();
-                        assertThat(helperReferenceWrapper.getMethods()).isEmpty();
+                  .satisfiesExactly(helperReferenceWrapper -> {
+                    assertThat(helperReferenceWrapper.isAbstract()).isTrue();
+                    assertThat(helperReferenceWrapper.getMethods()).isEmpty();
 
-                        assertThat(helperReferenceWrapper.getFields())
-                            .satisfiesExactly(
-                                field -> {
-                                  assertThat(field.getName()).isEqualTo("field");
-                                  assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
-                                });
+                    assertThat(helperReferenceWrapper.getFields())
+                        .satisfiesExactly(field -> {
+                          assertThat(field.getName()).isEqualTo("field");
+                          assertThat(field.getDescriptor()).isEqualTo("Ljava/lang/Object;");
+                        });
 
-                        assertThat(helperReferenceWrapper.hasSuperTypes()).isTrue();
-                        assertThat(helperReferenceWrapper.getSuperTypes())
-                            .satisfiesExactly(
-                                wrapper -> assertThat(wrapper.hasSuperTypes()).isFalse(),
-                                wrapper -> {
-                                  assertThat(wrapper.isAbstract()).isTrue();
-                                  assertThat(wrapper.getMethods())
-                                      .satisfiesExactly(
-                                          method -> {
-                                            assertThat(method.isAbstract()).isTrue();
-                                            assertThat(method.getName()).isEqualTo("foo");
-                                            assertThat(method.getDescriptor()).isEqualTo("()V");
-                                          });
-                                  assertThat(wrapper.hasSuperTypes()).isFalse();
-                                  assertThat(wrapper.getSuperTypes()).isEmpty();
-                                });
-                      });
+                    assertThat(helperReferenceWrapper.hasSuperTypes()).isTrue();
+                    assertThat(helperReferenceWrapper.getSuperTypes())
+                        .satisfiesExactly(
+                            wrapper -> assertThat(wrapper.hasSuperTypes()).isFalse(),
+                            wrapper -> {
+                              assertThat(wrapper.isAbstract()).isTrue();
+                              assertThat(wrapper.getMethods())
+                                  .satisfiesExactly(method -> {
+                                    assertThat(method.isAbstract()).isTrue();
+                                    assertThat(method.getName()).isEqualTo("foo");
+                                    assertThat(method.getDescriptor()).isEqualTo("()V");
+                                  });
+                              assertThat(wrapper.hasSuperTypes()).isFalse();
+                              assertThat(wrapper.getSuperTypes()).isEmpty();
+                            });
+                  });
             },
             wrapper -> {
               assertThat(wrapper.isAbstract()).isTrue();
               assertThat(wrapper.getMethods())
-                  .satisfiesExactly(
-                      method -> {
-                        assertThat(method.isAbstract()).isTrue();
-                        assertThat(method.getName()).isEqualTo("bar");
-                        assertThat(method.getDescriptor()).isEqualTo("()V");
-                      });
+                  .satisfiesExactly(method -> {
+                    assertThat(method.isAbstract()).isTrue();
+                    assertThat(method.getName()).isEqualTo("bar");
+                    assertThat(method.getDescriptor()).isEqualTo("()V");
+                  });
               assertThat(wrapper.hasSuperTypes()).isFalse();
               assertThat(wrapper.getSuperTypes()).isEmpty();
             });

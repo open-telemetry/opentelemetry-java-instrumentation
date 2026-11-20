@@ -374,11 +374,10 @@ class ReferenceCollectorTest {
     ReferenceCollector collector = new ReferenceCollector(s -> false, loader);
 
     assertThatExceptionOfType(MuzzleCompilationException.class)
-        .isThrownBy(
-            () ->
-                collector.collectReferencesFromResource(
-                    HelperResource.create(
-                        "META-INF/services/example.Service", "agent/providers", false)))
+        .isThrownBy(() ->
+            collector.collectReferencesFromResource(
+                HelperResource.create(
+                    "META-INF/services/example.Service", "agent/providers", false)))
         .withMessage("Invalid provider name in resource agent/providers: '" + provider + "'");
     assertThat(loader.lookups).containsExactly("agent/providers");
   }
@@ -447,11 +446,10 @@ class ReferenceCollectorTest {
     ReferenceCollector collector = new ReferenceCollector(s -> false);
 
     assertThatExceptionOfType(MuzzleCompilationException.class)
-        .isThrownBy(
-            () -> {
-              collector.collectReferencesFromAdvice(adviceClassName);
-              collector.prune();
-            });
+        .isThrownBy(() -> {
+          collector.collectReferencesFromAdvice(adviceClassName);
+          collector.prune();
+        });
   }
 
   @SuppressWarnings("unused")

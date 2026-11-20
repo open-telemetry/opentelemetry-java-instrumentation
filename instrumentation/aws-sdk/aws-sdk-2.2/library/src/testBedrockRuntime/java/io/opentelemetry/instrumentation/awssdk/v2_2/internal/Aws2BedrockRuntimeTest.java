@@ -159,19 +159,17 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
     String sanFranciscoToolUseId = sanFranciscoToolUseId0;
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat amazon.nova-micro-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -181,42 +179,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(415)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(162)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(415)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(162)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -295,19 +290,17 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 + "In San Francisco, the weather is 70 degrees and sunny.");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 57),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat amazon.nova-micro-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 57),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -317,42 +310,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(554)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(57)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(554)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(57)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -436,33 +426,31 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
         ConverseStreamResponseHandler.builder()
             .subscriber(
                 ConverseStreamResponseHandler.Visitor.builder()
-                    .onContentBlockStart(
-                        chunk -> {
-                          if (!responseChunksTools.isEmpty()) {
-                            JsonNode node = JsonNode.parser().parse(currentToolArgs.toString());
-                            currentToolArgs.setLength(0);
-                            Document document = node.visit(new DocumentUnmarshaller());
-                            responseChunksTools.get(responseChunksTools.size() - 1).input(document);
-                          }
-                          ToolUseBlockStart toolUse = chunk.start().toolUse();
-                          if (toolUse != null) {
-                            responseChunksTools.add(
-                                ToolUseBlock.builder()
-                                    .name(toolUse.name())
-                                    .toolUseId(toolUse.toolUseId()));
-                          }
-                        })
-                    .onContentBlockDelta(
-                        chunk -> {
-                          ToolUseBlockDelta toolUse = chunk.delta().toolUse();
-                          if (toolUse != null) {
-                            currentToolArgs.append(toolUse.input());
-                          }
-                          String text = chunk.delta().text();
-                          if (text != null) {
-                            responseChunksText.append(text);
-                          }
-                        })
+                    .onContentBlockStart(chunk -> {
+                      if (!responseChunksTools.isEmpty()) {
+                        JsonNode node = JsonNode.parser().parse(currentToolArgs.toString());
+                        currentToolArgs.setLength(0);
+                        Document document = node.visit(new DocumentUnmarshaller());
+                        responseChunksTools.get(responseChunksTools.size() - 1).input(document);
+                      }
+                      ToolUseBlockStart toolUse = chunk.start().toolUse();
+                      if (toolUse != null) {
+                        responseChunksTools.add(
+                            ToolUseBlock.builder()
+                                .name(toolUse.name())
+                                .toolUseId(toolUse.toolUseId()));
+                      }
+                    })
+                    .onContentBlockDelta(chunk -> {
+                      ToolUseBlockDelta toolUse = chunk.delta().toolUse();
+                      if (toolUse != null) {
+                        currentToolArgs.append(toolUse.input());
+                      }
+                      String text = chunk.delta().text();
+                      if (text != null) {
+                        responseChunksText.append(text);
+                      }
+                    })
                     .build())
             .build();
 
@@ -505,19 +493,17 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
     String sanFranciscoToolUseId = sanFranciscoToolUseId0;
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat amazon.nova-micro-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 415),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 162),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -527,42 +513,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(415)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(162)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(415)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(162)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -637,10 +620,9 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
         ConverseStreamResponseHandler.builder()
             .subscriber(
                 ConverseStreamResponseHandler.Visitor.builder()
-                    .onContentBlockDelta(
-                        chunk -> {
-                          responseChunks.add(chunk.delta().text());
-                        })
+                    .onContentBlockDelta(chunk -> {
+                      responseChunks.add(chunk.delta().text());
+                    })
                     .build())
             .build();
 
@@ -660,20 +642,18 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 + "In San Francisco, the weather is 70 degrees and sunny.");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_REQUEST_STREAM, true),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat amazon.nova-micro-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_REQUEST_STREAM, true),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 554),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -683,42 +663,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(554)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(59)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(554)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(59)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -946,19 +923,17 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
     String sanFranciscoToolUseId = sanFranciscoToolUseId0;
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 166),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat amazon.nova-micro-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 166),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -968,42 +943,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(416)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(166)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(416)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(166)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
     getTesting()
@@ -1110,19 +1082,17 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 + "The current weather in San Francisco is 70 degrees and it is sunny.");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 559),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat amazon.nova-micro-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 559),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 59),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1132,42 +1102,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(559)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(59)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(559)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(59)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -1387,20 +1354,18 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
     String sanFranciscoToolUseId = sanFranciscoToolUseId0;
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_REQUEST_STREAM, true),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 165),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat amazon.nova-micro-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_REQUEST_STREAM, true),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 416),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 165),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1410,42 +1375,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(416)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(165)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(416)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(165)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
     getTesting()
@@ -1569,21 +1531,20 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
         InvokeModelWithResponseStreamResponseHandler.builder()
             .subscriber(
                 InvokeModelWithResponseStreamResponseHandler.Visitor.builder()
-                    .onChunk(
-                        chunk -> {
-                          JsonNode node = JsonNode.parser().parse(chunk.bytes().asByteArray());
-                          DocumentUnmarshaller unmarshaller = new DocumentUnmarshaller();
-                          Document result = node.visit(unmarshaller);
+                    .onChunk(chunk -> {
+                      JsonNode node = JsonNode.parser().parse(chunk.bytes().asByteArray());
+                      DocumentUnmarshaller unmarshaller = new DocumentUnmarshaller();
+                      Document result = node.visit(unmarshaller);
 
-                          Document contentBlockDelta = result.asMap().get("contentBlockDelta");
-                          if (contentBlockDelta != null) {
-                            Document delta = contentBlockDelta.asMap().get("delta");
-                            Document t = delta.asMap().get("text");
-                            if (t != null) {
-                              text.append(t.asString());
-                            }
-                          }
-                        })
+                      Document contentBlockDelta = result.asMap().get("contentBlockDelta");
+                      if (contentBlockDelta != null) {
+                        Document delta = contentBlockDelta.asMap().get("delta");
+                        Document t = delta.asMap().get("text");
+                        if (t != null) {
+                          text.append(t.asString());
+                        }
+                      }
+                    })
                     .build())
             .build();
 
@@ -1595,20 +1556,18 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 + "In San Francisco, the weather is 70 degrees and sunny.");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat amazon.nova-micro-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_REQUEST_STREAM, true),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 558),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 58),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat amazon.nova-micro-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_REQUEST_STREAM, true),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 558),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 58),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1618,42 +1577,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(558)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(58)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(558)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(58)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -1805,19 +1761,17 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
     String sanFranciscoToolUseId = sanFranciscoToolUseId0;
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 133),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 133),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1827,42 +1781,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(380)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(133)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(380)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(133)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
     getTesting()
@@ -1947,19 +1898,17 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
         .contains("Seattle: 50 degrees and raining\n" + "San Francisco: 70 degrees and sunny");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 590),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 132),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 590),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 132),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -1969,42 +1918,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(590)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(132)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(590)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(132)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
@@ -2227,20 +2173,18 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
     String sanFranciscoToolUseId = sanFranciscoToolUseId0;
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_REQUEST_STREAM, true),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 144),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_REQUEST_STREAM, true),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 380),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 144),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("tool_use")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -2250,42 +2194,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(380)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(144)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(380)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(144)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
     SpanContext spanCtx0 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 
     getTesting()
@@ -2384,20 +2325,19 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
         InvokeModelWithResponseStreamResponseHandler.builder()
             .subscriber(
                 InvokeModelWithResponseStreamResponseHandler.Visitor.builder()
-                    .onChunk(
-                        chunk -> {
-                          JsonNode node = JsonNode.parser().parse(chunk.bytes().asByteArray());
-                          DocumentUnmarshaller unmarshaller = new DocumentUnmarshaller();
-                          Document result = node.visit(unmarshaller);
+                    .onChunk(chunk -> {
+                      JsonNode node = JsonNode.parser().parse(chunk.bytes().asByteArray());
+                      DocumentUnmarshaller unmarshaller = new DocumentUnmarshaller();
+                      Document result = node.visit(unmarshaller);
 
-                          if (result.asMap().get("type").asString().equals("content_block_delta")) {
-                            Document delta = result.asMap().get("delta");
-                            Document t = delta.asMap().get("text");
-                            if (t != null) {
-                              text.append(t.asString());
-                            }
-                          }
-                        })
+                      if (result.asMap().get("type").asString().equals("content_block_delta")) {
+                        Document delta = result.asMap().get("delta");
+                        Document t = delta.asMap().get("text");
+                        if (t != null) {
+                          text.append(t.asString());
+                        }
+                      }
+                    })
                     .build())
             .build();
 
@@ -2410,20 +2350,18 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                 + "San Francisco: The current weather in San Francisco is 70 degrees and sunny.");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfying(
-                                equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, modelId),
-                                equalTo(GEN_AI_REQUEST_STREAM, true),
-                                equalTo(GEN_AI_USAGE_INPUT_TOKENS, 601),
-                                equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 145),
-                                equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("chat anthropic.claude-3-5-sonnet-20240620-v1:0")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfying(
+                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                        equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                        equalTo(GEN_AI_REQUEST_STREAM, true),
+                        equalTo(GEN_AI_USAGE_INPUT_TOKENS, 601),
+                        equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 145),
+                        equalTo(GEN_AI_RESPONSE_FINISH_REASONS, asList("end_turn")))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -2433,42 +2371,39 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
                     .hasName("gen_ai.client.token.usage")
                     .hasUnit("{token}")
                     .hasDescription("Number of input and output tokens used.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(601)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)),
-                                point ->
-                                    point
-                                        .hasSum(145)
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(601)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)),
+                            point ->
+                                point
+                                    .hasSum(145)
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, modelId)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .hasUnit("s")
                     .hasDescription("GenAI operation duration.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, modelId)))));
 
     SpanContext spanCtx1 = getTesting().waitForTraces(1).get(0).get(0).getSpanContext();
 

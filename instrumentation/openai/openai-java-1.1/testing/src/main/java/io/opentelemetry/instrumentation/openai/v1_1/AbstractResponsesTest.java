@@ -93,25 +93,22 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     assertThat(response.id()).startsWith("resp_");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("stop")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_RESPONSE_ID, response.id()),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                            satisfies(
+                                GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
+                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                            equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
+                            equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
 
     getTesting()
         .waitAndAssertMetrics(
@@ -120,42 +117,39 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSumGreaterThan(0.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))),
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))),
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(22.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                            equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
-                                point ->
-                                    point
-                                        .hasSum(4.0)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                            equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
+                    .hasHistogramSatisfying(histogram ->
+                        histogram.hasPointsSatisfying(
+                            point ->
+                                point
+                                    .hasSum(22.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                                        equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+                            point ->
+                                point
+                                    .hasSum(4.0)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                        equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                                        equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
   }
 
   @Test
@@ -172,28 +166,25 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     Response response = doResponses(params);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_MAX_TOKENS, 50L),
-                                    equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.5),
-                                    equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
-                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("stop")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 50L),
+                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.5),
+                            equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                            equalTo(GEN_AI_RESPONSE_ID, response.id()),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                            satisfies(
+                                GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
+                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                            equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
+                            equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
   }
 
   @Test
@@ -211,26 +202,23 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
             .orElseThrow(AssertionError::new);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true),
-                                    equalTo(GEN_AI_RESPONSE_ID, responseId),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("stop")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_RESPONSE_ID, responseId),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                            satisfies(
+                                GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
+                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                            equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
+                            equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
   }
 
   @Test
@@ -246,33 +234,29 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     Throwable thrown;
     try (StreamResponse<ResponseStreamEvent> result = service.createStreaming(params)) {
       thrown =
-          catchThrowable(
-              () ->
-                  result.stream()
-                      .forEach(
-                          event -> {
-                            throw failure;
-                          }));
+          catchThrowable(() ->
+              result.stream()
+                  .forEach(event -> {
+                    throw failure;
+                  }));
     }
     assertThat(thrown).isSameAs(failure);
 
     // The caller's own failure isn't a client error, so close() ends the span without it.
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasStatus(StatusData.unset())
-                                .hasException(null)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true),
-                                    equalTo(GEN_AI_RESPONSE_ID, "resp_14783stream"),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasStatus(StatusData.unset())
+                        .hasException(null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_RESPONSE_ID, "resp_14783stream"),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
   }
 
   @Test
@@ -288,28 +272,26 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     assertThat(events).anySatisfy(event -> assertThat(event.isIncomplete()).isTrue());
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasStatus(StatusData.unset())
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_MAX_TOKENS, 16L),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true),
-                                    equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamincomplete"),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("length")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 16L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_MAX_TOKENS, 16L),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamincomplete"),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                            satisfies(
+                                GEN_AI_RESPONSE_FINISH_REASONS,
+                                val -> val.containsExactly("length")),
+                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                            equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 16L),
+                            equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
   }
 
   @Test
@@ -323,25 +305,23 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     // The SDK delivers response.failed as an ordinary event, so nothing is thrown; the span is
     // still marked as an error.
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasStatus(StatusData.error())
-                                .hasException(null)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.2),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true),
-                                    equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamfailed"),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("error"))))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasStatus(StatusData.error())
+                        .hasException(null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.2),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamfailed"),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                            satisfies(
+                                GEN_AI_RESPONSE_FINISH_REASONS,
+                                val -> val.containsExactly("error"))))));
   }
 
   @Test
@@ -354,22 +334,20 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
 
     // A typed error event ends the stream without a terminal response or a thrown exception.
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasStatus(StatusData.error())
-                                .hasException(null)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.4),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true),
-                                    equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamerror"),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasStatus(StatusData.error())
+                        .hasException(null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.4),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamerror"),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
   }
 
   @Test
@@ -383,36 +361,33 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     // The span keeps the id and model from the response.created event that arrived before the
     // malformed one.
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasStatus(StatusData.error())
-                                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(ERROR_TYPE, thrown.getClass().getName()),
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.0),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true),
-                                    equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamfailure"),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasStatus(StatusData.error())
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, thrown.getClass().getName()),
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_TEMPERATURE, 0.0),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_RESPONSE_ID, "resp_14783streamfailure"),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))));
 
     // The HTTP exchange itself succeeded, so unlike connectionError there is no transport-level
     // exception log, only the GenAI one.
     if (emitExceptionAsLogs()) {
       getTesting()
-          .waitAndAssertLogRecords(
-              logRecord ->
-                  logRecord
-                      .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("gen_ai.client.operation.exception")
-                      .hasException(thrown)
-                      .hasTotalAttributeCount(3));
+          .waitAndAssertLogRecords(logRecord ->
+              logRecord
+                  .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("gen_ai.client.operation.exception")
+                  .hasException(thrown)
+                  .hasTotalAttributeCount(3));
     }
   }
 
@@ -442,18 +417,16 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     assertThat(thrown).isInstanceOf(OpenAIIoException.class);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL)))));
 
     getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
   }
@@ -484,19 +457,17 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     assertThat(thrown).isInstanceOf(OpenAIIoException.class);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_STREAM, true)))));
 
     getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
   }
@@ -525,25 +496,22 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     assertThat(response.id()).startsWith("resp_");
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("stop")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 61L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 8L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_RESPONSE_ID, response.id()),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                            satisfies(
+                                GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
+                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 61L),
+                            equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 8L),
+                            equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
   }
 
   @ParameterizedTest
@@ -567,26 +535,23 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
             .orElseThrow(AssertionError::new);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true),
-                                    equalTo(GEN_AI_RESPONSE_ID, responseId),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("stop")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 61L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 8L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_REQUEST_STREAM, true),
+                            equalTo(GEN_AI_RESPONSE_ID, responseId),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                            satisfies(
+                                GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
+                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 61L),
+                            equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 8L),
+                            equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
   }
 
   @ParameterizedTest
@@ -605,25 +570,22 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
             client -> async.apply(client).create(params));
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            assertResponsesSpan(span)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_RESPONSE_ID, response.id()),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                    satisfies(
-                                        GEN_AI_RESPONSE_FINISH_REASONS,
-                                        val -> val.containsExactly("stop")),
-                                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
-                                    equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
-                                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
-                                    equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    assertResponsesSpan(span)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                            equalTo(GEN_AI_RESPONSE_ID, response.id()),
+                            equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                            satisfies(
+                                GEN_AI_RESPONSE_FINISH_REASONS, val -> val.containsExactly("stop")),
+                            equalTo(GEN_AI_USAGE_INPUT_TOKENS, 22L),
+                            equalTo(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L),
+                            equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 4L),
+                            equalTo(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)))));
   }
 
   private static Stream<Arguments> withOptionsCases() {
@@ -665,30 +627,27 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     cleanup.deferCleanup(clientAsync::close);
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                doResponses(
-                    (service, p) -> testHelper.createWithoutParams(service, explicitOptions),
-                    (service, p) -> testHelper.createWithoutParams(service, explicitOptions),
-                    ResponseCreateParams.builder().build(),
-                    client,
-                    clientAsync));
+        catchThrowable(() ->
+            doResponses(
+                (service, p) -> testHelper.createWithoutParams(service, explicitOptions),
+                (service, p) -> testHelper.createWithoutParams(service, explicitOptions),
+                ResponseCreateParams.builder().build(),
+                client,
+                clientAsync));
     assertThat(thrown).isInstanceOf(OpenAIIoException.class);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            span.hasName("chat")
-                                .hasKind(SpanKind.CLIENT)
-                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    span.hasName("chat")
+                        .hasKind(SpanKind.CLIENT)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT)))));
 
     getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
   }
@@ -716,33 +675,28 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
     cleanup.deferCleanup(clientAsync::close);
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                doResponsesStreaming(
-                    (service, p) ->
-                        testHelper.createStreamingWithoutParams(service, explicitOptions),
-                    (service, p) ->
-                        testHelper.createStreamingWithoutParams(service, explicitOptions),
-                    ResponseCreateParams.builder().build(),
-                    client,
-                    clientAsync));
+        catchThrowable(() ->
+            doResponsesStreaming(
+                (service, p) -> testHelper.createStreamingWithoutParams(service, explicitOptions),
+                (service, p) -> testHelper.createStreamingWithoutParams(service, explicitOptions),
+                ResponseCreateParams.builder().build(),
+                client,
+                clientAsync));
     assertThat(thrown).isInstanceOf(OpenAIIoException.class);
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    maybeWithTransportSpan(
-                        span ->
-                            span.hasName("chat")
-                                .hasKind(SpanKind.CLIENT)
-                                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_STREAM, true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                maybeWithTransportSpan(span ->
+                    span.hasName("chat")
+                        .hasKind(SpanKind.CLIENT)
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
+                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, OpenAIIoException.class.getName()),
+                            equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_STREAM, true)))));
 
     getTesting().waitAndAssertLogRecords(genAiClientExceptionLogs(thrown));
   }
@@ -780,11 +734,10 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
         try {
           return async
               .apply(cl.responses(), params)
-              .thenApply(
-                  res -> {
-                    assertThat(Span.fromContextOrNull(Context.current())).isNull();
-                    return res;
-                  })
+              .thenApply(res -> {
+                assertThat(Span.fromContextOrNull(Context.current())).isNull();
+                return res;
+              })
               .join();
         } catch (CompletionException e) {
           if (e.getCause() instanceof RuntimeException) {
