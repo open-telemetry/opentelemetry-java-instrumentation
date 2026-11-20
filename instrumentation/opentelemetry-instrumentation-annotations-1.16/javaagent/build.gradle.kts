@@ -17,6 +17,7 @@ muzzle {
 }
 
 dependencies {
+  compileOnly(project(":javaagent-tooling:javaagent-tooling-java9"))
   compileOnly(project(":instrumentation-annotations-support"))
 
   // this instrumentation needs to do similar shading dance as opentelemetry-api-1.0 because
