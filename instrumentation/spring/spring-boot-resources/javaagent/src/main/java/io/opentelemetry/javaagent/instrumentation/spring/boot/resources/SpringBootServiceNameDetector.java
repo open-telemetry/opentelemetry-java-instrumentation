@@ -109,11 +109,10 @@ public class SpringBootServiceNameDetector implements ConditionalResourceProvide
         .map(Supplier::get)
         .filter(Objects::nonNull)
         .findFirst()
-        .map(
-            serviceName -> {
-              logger.log(FINE, "Auto-detected Spring Boot service name: {0}", serviceName);
-              return Resource.builder().put(SERVICE_NAME, serviceName).build();
-            })
+        .map(serviceName -> {
+          logger.log(FINE, "Auto-detected Spring Boot service name: {0}", serviceName);
+          return Resource.builder().put(SERVICE_NAME, serviceName).build();
+        })
         .orElseGet(Resource::empty);
   }
 

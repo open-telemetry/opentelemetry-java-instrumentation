@@ -53,35 +53,31 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         .runWithSpan(
             "producer",
             () -> {
-              kafkaTemplate.executeInTransaction(
-                  ops -> {
-                    send("testSingleTopic", "10", "testSpan");
-                    return 0;
-                  });
+              kafkaTemplate.executeInTransaction(ops -> {
+                send("testSingleTopic", "10", "testSpan");
+                return 0;
+              });
             });
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("producer"),
-                    span ->
-                        span.hasName("send testSingleTopic")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                sendAttributes("testSingleTopic", "10")),
-                    span -> {
-                      span.hasName("process testSingleTopic")
-                          .hasKind(SpanKind.CONSUMER)
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              singleProcessAttributes(
-                                  "testSingleTopic", "testSingleListener", "10"));
-                      SpanContext producerContext = trace.getSpan(1).getSpanContext();
-                      span.hasLinks(LinkData.create(asRemote(producerContext)));
-                    },
-                    span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("producer"),
+                span ->
+                    span.hasName("send testSingleTopic")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(sendAttributes("testSingleTopic", "10")),
+                span -> {
+                  span.hasName("process testSingleTopic")
+                      .hasKind(SpanKind.CONSUMER)
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(
+                          singleProcessAttributes("testSingleTopic", "testSingleListener", "10"));
+                  SpanContext producerContext = trace.getSpan(1).getSpanContext();
+                  span.hasLinks(LinkData.create(asRemote(producerContext)));
+                },
+                span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
     assertProcessMetricsWithConsumedMessages(
         testing(),
         "io.opentelemetry.spring-kafka-2.7",
@@ -99,46 +95,28 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         .runWithSpan(
             "producer",
             () -> {
-              kafkaTemplate.executeInTransaction(
-                  ops -> {
-                    send("testSingleTopic", "10", "error");
-                    return 0;
-                  });
+              kafkaTemplate.executeInTransaction(ops -> {
+                send("testSingleTopic", "10", "error");
+                return 0;
+              });
             });
 
     List<AttributeAssertion> processAttributes =
         singleProcessAttributes("testSingleTopic", "testSingleListener", "10");
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              SpanContext producerContext = trace.getSpan(1).getSpanContext();
-              List<Consumer<SpanDataAssert>> assertions =
-                  new ArrayList<>(
-                      asList(
-                          span -> span.hasName("producer"),
-                          span ->
-                              span.hasName("send testSingleTopic")
-                                  .hasKind(SpanKind.PRODUCER)
-                                  .hasParent(trace.getSpan(0))
-                                  .hasAttributesSatisfyingExactly(
-                                      sendAttributes("testSingleTopic", "10")),
-                          span -> {
-                            span.hasName("process testSingleTopic")
-                                .hasKind(SpanKind.CONSUMER)
-                                .hasParent(trace.getSpan(1))
-                                .hasStatus(StatusData.error())
-                                .hasException(new IllegalArgumentException("boom"))
-                                .hasAttributesSatisfyingExactly(withErrorType(processAttributes));
-                            span.hasLinks(LinkData.create(asRemote(producerContext)));
-                          },
-                          span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
-              if (testLatestDeps()) {
-                assertions.add(
-                    span -> span.hasName("handle exception").hasParent(trace.getSpan(2)));
-              }
-              assertions.addAll(
+        .waitAndAssertTraces(trace -> {
+          SpanContext producerContext = trace.getSpan(1).getSpanContext();
+          List<Consumer<SpanDataAssert>> assertions =
+              new ArrayList<>(
                   asList(
+                      span -> span.hasName("producer"),
+                      span ->
+                          span.hasName("send testSingleTopic")
+                              .hasKind(SpanKind.PRODUCER)
+                              .hasParent(trace.getSpan(0))
+                              .hasAttributesSatisfyingExactly(
+                                  sendAttributes("testSingleTopic", "10")),
                       span -> {
                         span.hasName("process testSingleTopic")
                             .hasKind(SpanKind.CONSUMER)
@@ -148,29 +126,41 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes));
                         span.hasLinks(LinkData.create(asRemote(producerContext)));
                       },
-                      span ->
-                          span.hasName("consumer")
-                              .hasParent(trace.getSpan(testLatestDeps() ? 5 : 4))));
-              if (testLatestDeps()) {
-                assertions.add(
-                    span -> span.hasName("handle exception").hasParent(trace.getSpan(5)));
-              }
-              assertions.addAll(
-                  asList(
-                      span -> {
-                        span.hasName("process testSingleTopic")
-                            .hasKind(SpanKind.CONSUMER)
-                            .hasParent(trace.getSpan(1))
-                            .hasStatus(StatusData.unset())
-                            .hasAttributesSatisfyingExactly(processAttributes);
-                        span.hasLinks(LinkData.create(asRemote(producerContext)));
-                      },
-                      span ->
-                          span.hasName("consumer")
-                              .hasParent(trace.getSpan(testLatestDeps() ? 8 : 6))));
+                      span -> span.hasName("consumer").hasParent(trace.getSpan(2))));
+          if (testLatestDeps()) {
+            assertions.add(span -> span.hasName("handle exception").hasParent(trace.getSpan(2)));
+          }
+          assertions.addAll(
+              asList(
+                  span -> {
+                    span.hasName("process testSingleTopic")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasStatus(StatusData.error())
+                        .hasException(new IllegalArgumentException("boom"))
+                        .hasAttributesSatisfyingExactly(withErrorType(processAttributes));
+                    span.hasLinks(LinkData.create(asRemote(producerContext)));
+                  },
+                  span ->
+                      span.hasName("consumer").hasParent(trace.getSpan(testLatestDeps() ? 5 : 4))));
+          if (testLatestDeps()) {
+            assertions.add(span -> span.hasName("handle exception").hasParent(trace.getSpan(5)));
+          }
+          assertions.addAll(
+              asList(
+                  span -> {
+                    span.hasName("process testSingleTopic")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasParent(trace.getSpan(1))
+                        .hasStatus(StatusData.unset())
+                        .hasAttributesSatisfyingExactly(processAttributes);
+                    span.hasLinks(LinkData.create(asRemote(producerContext)));
+                  },
+                  span ->
+                      span.hasName("consumer").hasParent(trace.getSpan(testLatestDeps() ? 8 : 6))));
 
-              trace.hasSpansSatisfyingExactly(assertions);
-            });
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.spring-kafka-2.7",
@@ -247,11 +237,10 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         .runWithSpan(
             "producer",
             () -> {
-              kafkaTemplate.executeInTransaction(
-                  ops -> {
-                    send("testBatchTopic", "10", "error");
-                    return 0;
-                  });
+              kafkaTemplate.executeInTransaction(ops -> {
+                send("testBatchTopic", "10", "error");
+                return 0;
+              });
             });
 
     AtomicReference<SpanData> producer = new AtomicReference<>();

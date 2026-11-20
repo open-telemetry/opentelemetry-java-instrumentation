@@ -12,7 +12,6 @@ import io.netty.handler.codec.http.HttpVersion;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.ChannelUtil;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -81,7 +80,8 @@ final class NettyHttpClientAttributesGetter
   @Override
   public String getNetworkTransport(
       NettyCommonRequest requestAndChannel, @Nullable HttpResponse response) {
-    return ChannelUtil.getNetworkTransport(requestAndChannel.getChannel());
+    return ChannelUtil.getNetworkTransport(
+        requestAndChannel.getChannel(), requestAndChannel.getRemoteAddress());
   }
 
   @Override
@@ -114,12 +114,8 @@ final class NettyHttpClientAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       NettyCommonRequest requestAndChannel, @Nullable HttpResponse response) {
-    SocketAddress address = requestAndChannel.getRemoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return requestAndChannel.getRemoteAddress();
   }
 }

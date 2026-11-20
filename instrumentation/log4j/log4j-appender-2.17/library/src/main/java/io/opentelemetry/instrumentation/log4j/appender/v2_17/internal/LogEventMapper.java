@@ -205,17 +205,15 @@ public final class LogEventMapper<T> {
       // TODO (trask) this could be optimized in 2.9 and later by calling MapMessage.forEach()
       mapMessage
           .getData()
-          .forEach(
-              (key, value) -> {
-                if (value != null
-                    && !key.isEmpty()
-                    && !key.equals(OTEL_EVENT_NAME.getKey())
-                    && (!checkSpecialMapMessageAttribute
-                        || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))
-                    && mapMessageAttributes.test(key)) {
-                  builder.setAttribute(getMapMessageAttributeKey(key), value.toString());
-                }
-              });
+          .forEach((key, value) -> {
+            if (value != null
+                && !key.isEmpty()
+                && !key.equals(OTEL_EVENT_NAME.getKey())
+                && (!checkSpecialMapMessageAttribute || !key.equals(SPECIAL_MAP_MESSAGE_ATTRIBUTE))
+                && mapMessageAttributes.test(key)) {
+              builder.setAttribute(getMapMessageAttributeKey(key), value.toString());
+            }
+          });
     }
   }
 

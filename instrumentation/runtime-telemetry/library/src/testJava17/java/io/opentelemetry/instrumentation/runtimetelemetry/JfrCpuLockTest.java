@@ -44,11 +44,10 @@ class JfrCpuLockTest {
 
     assertThat(done.get()).isTrue();
 
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName("jvm.cpu.longlock")
-                .hasUnit(SECONDS)
-                .hasHistogramSatisfying(histogram -> {}));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName("jvm.cpu.longlock")
+            .hasUnit(SECONDS)
+            .hasHistogramSatisfying(histogram -> {}));
   }
 }

@@ -69,34 +69,33 @@ class DeclarativeConfigValidationTest {
     List<String> errors = new ArrayList<>();
 
     allConfigurations()
-        .forEach(
-            (source, configs) -> {
-              for (ConfigurationOption config : configs) {
-                // Structured-list schemas are validated structurally, even for declarative-only
-                // configs (those without a flat property name, such as url_template_rules).
-                validateStructuredListSchema(source, config, errors);
+        .forEach((source, configs) -> {
+          for (ConfigurationOption config : configs) {
+            // Structured-list schemas are validated structurally, even for declarative-only
+            // configs (those without a flat property name, such as url_template_rules).
+            validateStructuredListSchema(source, config, errors);
 
-                // Deprecated spellings stay resolvable at runtime, so they may be documented, but
-                // only as deprecated.
-                validateNotDeprecated(source, config, errors);
+            // Deprecated spellings stay resolvable at runtime, so they may be documented, but
+            // only as deprecated.
+            validateNotDeprecated(source, config, errors);
 
-                // The flat -> declarative round-trip needs a flat system property to drive the
-                // bridge. Declarative-only configs (no name) are skipped here, as are flat
-                // properties that are read directly from system properties rather than through
-                // the bridge.
-                if (config.name() != null
-                    && !config.name().isBlank()
-                    && !SYSTEM_PROPERTY_ONLY_NAMES.contains(config.name())
-                    && config.declarativeName() != null
-                    && !config.declarativeName().isBlank()) {
-                  ValidationResult result = validateConfig(source, config);
-                  results.add(result);
-                  if (!result.valid) {
-                    errors.add(result.toString());
-                  }
-                }
+            // The flat -> declarative round-trip needs a flat system property to drive the
+            // bridge. Declarative-only configs (no name) are skipped here, as are flat
+            // properties that are read directly from system properties rather than through
+            // the bridge.
+            if (config.name() != null
+                && !config.name().isBlank()
+                && !SYSTEM_PROPERTY_ONLY_NAMES.contains(config.name())
+                && config.declarativeName() != null
+                && !config.declarativeName().isBlank()) {
+              ValidationResult result = validateConfig(source, config);
+              results.add(result);
+              if (!result.valid) {
+                errors.add(result.toString());
               }
-            });
+            }
+          }
+        });
 
     long validCount = results.stream().filter(r -> r.valid).count();
     logger.info(
@@ -159,41 +158,39 @@ class DeclarativeConfigValidationTest {
     Set<String> documentedNames = new HashSet<>();
     configsBySource.values().stream()
         .flatMap(List::stream)
-        .forEach(
-            config -> {
-              if (config.name() != null) {
-                documentedNames.add(config.name());
-              }
-              if (config.declarativeName() != null) {
-                documentedNames.add(config.declarativeName());
-              }
-            });
-
-    List<String> errors = new ArrayList<>();
-    configsBySource.forEach(
-        (source, configs) -> {
-          for (ConfigurationOption config : configs) {
-            String id = config.name() != null ? config.name() : config.declarativeName();
-            boolean describedAsDeprecated = config.description().startsWith("Deprecated");
-            if (describedAsDeprecated != config.isDeprecated()) {
-              errors.add(
-                  source
-                      + ": '"
-                      + id
-                      + "' must set `deprecated: true` exactly when its description starts with"
-                      + " \"Deprecated\"");
-            }
-            if (config.replacedBy() != null && !documentedNames.contains(config.replacedBy())) {
-              errors.add(
-                  source
-                      + ": '"
-                      + id
-                      + "' is replaced_by '"
-                      + config.replacedBy()
-                      + "', which is not a documented name or declarative_name");
-            }
+        .forEach(config -> {
+          if (config.name() != null) {
+            documentedNames.add(config.name());
+          }
+          if (config.declarativeName() != null) {
+            documentedNames.add(config.declarativeName());
           }
         });
+
+    List<String> errors = new ArrayList<>();
+    configsBySource.forEach((source, configs) -> {
+      for (ConfigurationOption config : configs) {
+        String id = config.name() != null ? config.name() : config.declarativeName();
+        boolean describedAsDeprecated = config.description().startsWith("Deprecated");
+        if (describedAsDeprecated != config.isDeprecated()) {
+          errors.add(
+              source
+                  + ": '"
+                  + id
+                  + "' must set `deprecated: true` exactly when its description starts with"
+                  + " \"Deprecated\"");
+        }
+        if (config.replacedBy() != null && !documentedNames.contains(config.replacedBy())) {
+          errors.add(
+              source
+                  + ": '"
+                  + id
+                  + "' is replaced_by '"
+                  + config.replacedBy()
+                  + "', which is not a documented name or declarative_name");
+        }
+      }
+    });
 
     assertThat(errors).isEmpty();
   }
@@ -209,43 +206,40 @@ class DeclarativeConfigValidationTest {
     Map<String, String> sharedIdsByName = new HashMap<>();
     SharedConfigurationRegistry.getInstance()
         .definitions()
-        .forEach(
-            (id, config) -> {
-              if (config.name() != null) {
-                sharedIdsByName.put(config.name(), id);
-              }
-            });
+        .forEach((id, config) -> {
+          if (config.name() != null) {
+            sharedIdsByName.put(config.name(), id);
+          }
+        });
 
     List<String> errors = new ArrayList<>();
     metadataConfigurations()
-        .forEach(
-            (source, configs) -> {
-              Set<String> refs = new HashSet<>();
-              for (ConfigurationOption config : configs) {
-                if (config.id() != null) {
-                  refs.add(config.id());
-                }
-              }
-              for (ConfigurationOption config : configs) {
-                if (config.id() != null || config.defaultValue() != null) {
-                  continue;
-                }
-                sharedIdsByName.forEach(
-                    (name, id) -> {
-                      if (config.description().contains("`" + name + "`") && !refs.contains(id)) {
-                        errors.add(
-                            source
-                                + ": '"
-                                + config.name()
-                                + "' falls back to '"
-                                + name
-                                + "', so the module must also declare `- ref: "
-                                + id
-                                + "`");
-                      }
-                    });
+        .forEach((source, configs) -> {
+          Set<String> refs = new HashSet<>();
+          for (ConfigurationOption config : configs) {
+            if (config.id() != null) {
+              refs.add(config.id());
+            }
+          }
+          for (ConfigurationOption config : configs) {
+            if (config.id() != null || config.defaultValue() != null) {
+              continue;
+            }
+            sharedIdsByName.forEach((name, id) -> {
+              if (config.description().contains("`" + name + "`") && !refs.contains(id)) {
+                errors.add(
+                    source
+                        + ": '"
+                        + config.name()
+                        + "' falls back to '"
+                        + name
+                        + "', so the module must also declare `- ref: "
+                        + id
+                        + "`");
               }
             });
+          }
+        });
 
     assertThat(errors).isEmpty();
   }

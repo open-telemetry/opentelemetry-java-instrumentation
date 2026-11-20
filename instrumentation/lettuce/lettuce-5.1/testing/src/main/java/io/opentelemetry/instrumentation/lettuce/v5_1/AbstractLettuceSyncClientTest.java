@@ -140,23 +140,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(res).isEqualTo("OK");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("SET"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
-                                    equalTo(DB_OPERATION_NAME, "SET")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("SET"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "SET TESTSETKEY ?"),
+                                equalTo(DB_OPERATION_NAME, "SET")))));
 
     List<AttributeKey<?>> expected =
         new ArrayList<>(
@@ -182,23 +181,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(res).isEqualTo("TESTVAL");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("GET"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
-                                    equalTo(DB_OPERATION_NAME, "GET")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("GET"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "GET TESTKEY"),
+                                equalTo(DB_OPERATION_NAME, "GET")))));
   }
 
   @Test
@@ -207,23 +205,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(res).isNull();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("GET"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
-                                    equalTo(DB_OPERATION_NAME, "GET")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("GET"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "GET NON_EXISTENT_KEY"),
+                                equalTo(DB_OPERATION_NAME, "GET")))));
   }
 
   @Test
@@ -232,23 +229,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(res).isNotNull();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("RANDOMKEY"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
-                                    equalTo(DB_OPERATION_NAME, "RANDOMKEY")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("RANDOMKEY"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
+                                equalTo(DB_OPERATION_NAME, "RANDOMKEY")))));
   }
 
   @Test
@@ -268,23 +264,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(res).isEqualTo(1);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("LPUSH", host, containerConnection.port))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, containerConnection.port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "LPUSH TESTLIST ?"),
-                                    equalTo(DB_OPERATION_NAME, "LPUSH")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("LPUSH", host, containerConnection.port))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, containerConnection.port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "LPUSH TESTLIST ?"),
+                                equalTo(DB_OPERATION_NAME, "LPUSH")))));
   }
 
   @Test
@@ -298,27 +293,24 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(thrown).isInstanceOf(RedisCommandExecutionException.class);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("LPUSH"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
-                                    equalTo(DB_OPERATION_NAME, "LPUSH"),
-                                    equalTo(ERROR_TYPE, testLatestDeps() ? "WRONGTYPE" : "_OTHER"),
-                                    equalTo(
-                                        DB_RESPONSE_STATUS_CODE,
-                                        testLatestDeps() ? "WRONGTYPE" : null)))
-                            .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("LPUSH"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        addExtraAttributes(
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "LPUSH " + WRONG_TYPE_KEY + " ?"),
+                            equalTo(DB_OPERATION_NAME, "LPUSH"),
+                            equalTo(ERROR_TYPE, testLatestDeps() ? "WRONGTYPE" : "_OTHER"),
+                            equalTo(
+                                DB_RESPONSE_STATUS_CODE, testLatestDeps() ? "WRONGTYPE" : null)))
+                    .satisfies(AbstractLettuceClientTest::assertCommandErrorEvents)));
 
     assertCommandMetric("LPUSH", testLatestDeps() ? "WRONGTYPE" : "_OTHER");
   }
@@ -326,36 +318,32 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
   @Test
   void testEvalshaNoScriptError() {
     Throwable thrown =
-        catchThrowable(
-            () ->
-                syncCommands.evalsha(
-                    "0000000000000000000000000000000000000000", ScriptOutputType.VALUE));
+        catchThrowable(() ->
+            syncCommands.evalsha(
+                "0000000000000000000000000000000000000000", ScriptOutputType.VALUE));
 
     assertThat(thrown).isInstanceOf(RedisNoScriptException.class);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("EVALSHA"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(
-                                        DB_QUERY_TEXT,
-                                        "EVALSHA 0000000000000000000000000000000000000000 0"),
-                                    equalTo(DB_OPERATION_NAME, "EVALSHA"),
-                                    equalTo(ERROR_TYPE, testLatestDeps() ? "NOSCRIPT" : "_OTHER"),
-                                    equalTo(
-                                        DB_RESPONSE_STATUS_CODE,
-                                        testLatestDeps() ? "NOSCRIPT" : null)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("EVALSHA"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        addExtraAttributes(
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(
+                                DB_QUERY_TEXT,
+                                "EVALSHA 0000000000000000000000000000000000000000 0"),
+                            equalTo(DB_OPERATION_NAME, "EVALSHA"),
+                            equalTo(ERROR_TYPE, testLatestDeps() ? "NOSCRIPT" : "_OTHER"),
+                            equalTo(
+                                DB_RESPONSE_STATUS_CODE, testLatestDeps() ? "NOSCRIPT" : null)))));
 
     assertCommandMetric("EVALSHA", testLatestDeps() ? "NOSCRIPT" : "_OTHER");
   }
@@ -374,34 +362,28 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
 
     String b64Script = Base64.getEncoder().encodeToString(script.getBytes(UTF_8));
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(missingEndpoint ? "EVAL" : spanName("EVAL"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, missingEndpoint ? null : ip),
-                                    equalTo(
-                                        NETWORK_PEER_PORT, missingEndpoint ? null : (long) port),
-                                    equalTo(SERVER_ADDRESS, missingEndpoint ? null : host),
-                                    equalTo(SERVER_PORT, missingEndpoint ? null : (long) port),
-                                    equalTo(
-                                        DB_NAMESPACE,
-                                        lettuceVersion != null
-                                                && lettuceVersion.startsWith("6.5.0.RELEASE")
-                                            ? String.valueOf(DB_INDEX)
-                                            : null),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "EVAL " + b64Script + " 0 ?"),
-                                    equalTo(DB_OPERATION_NAME, "EVAL"),
-                                    equalTo(ERROR_TYPE, testLatestDeps() ? "ERR" : "_OTHER"),
-                                    equalTo(
-                                        DB_RESPONSE_STATUS_CODE,
-                                        testLatestDeps() ? "ERR" : null)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(missingEndpoint ? "EVAL" : spanName("EVAL"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        addExtraAttributes(
+                            equalTo(NETWORK_PEER_ADDRESS, missingEndpoint ? null : ip),
+                            equalTo(NETWORK_PEER_PORT, missingEndpoint ? null : (long) port),
+                            equalTo(SERVER_ADDRESS, missingEndpoint ? null : host),
+                            equalTo(SERVER_PORT, missingEndpoint ? null : (long) port),
+                            equalTo(
+                                DB_NAMESPACE,
+                                lettuceVersion != null && lettuceVersion.startsWith("6.5.0.RELEASE")
+                                    ? String.valueOf(DB_INDEX)
+                                    : null),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "EVAL " + b64Script + " 0 ?"),
+                            equalTo(DB_OPERATION_NAME, "EVAL"),
+                            equalTo(ERROR_TYPE, testLatestDeps() ? "ERR" : "_OTHER"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, testLatestDeps() ? "ERR" : null)))));
 
     assertCommandMetric("EVAL", testLatestDeps() ? "ERR" : "_OTHER");
   }
@@ -659,27 +641,26 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
       String lettuceVersion) {
     boolean missingEndpoint = "6.0.0.RELEASE".equals(lettuceVersion);
     return trace ->
-        trace.hasSpansSatisfyingExactly(
-            span ->
-                span.hasName(missingEndpoint ? operation : spanName(operation))
-                    .hasKind(SpanKind.CLIENT)
-                    .hasNoParent()
-                    .hasStatus(status)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_QUERY_TEXT, query),
-                        equalTo(DB_OPERATION_NAME, operation),
-                        equalTo(NETWORK_PEER_ADDRESS, missingEndpoint ? null : ip),
-                        equalTo(NETWORK_PEER_PORT, missingEndpoint ? null : (long) port),
-                        equalTo(SERVER_ADDRESS, missingEndpoint ? null : host),
-                        equalTo(SERVER_PORT, missingEndpoint ? null : (long) port),
-                        equalTo(
-                            DB_NAMESPACE,
-                            lettuceVersion != null && lettuceVersion.startsWith("6.5.0.RELEASE")
-                                ? String.valueOf(DB_INDEX)
-                                : null),
-                        equalTo(ERROR_TYPE, errorType),
-                        equalTo(DB_RESPONSE_STATUS_CODE, responseStatusCode)));
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(missingEndpoint ? operation : spanName(operation))
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(status)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, query),
+                    equalTo(DB_OPERATION_NAME, operation),
+                    equalTo(NETWORK_PEER_ADDRESS, missingEndpoint ? null : ip),
+                    equalTo(NETWORK_PEER_PORT, missingEndpoint ? null : (long) port),
+                    equalTo(SERVER_ADDRESS, missingEndpoint ? null : host),
+                    equalTo(SERVER_PORT, missingEndpoint ? null : (long) port),
+                    equalTo(
+                        DB_NAMESPACE,
+                        lettuceVersion != null && lettuceVersion.startsWith("6.5.0.RELEASE")
+                            ? String.valueOf(DB_INDEX)
+                            : null),
+                    equalTo(ERROR_TYPE, errorType),
+                    equalTo(DB_RESPONSE_STATUS_CODE, responseStatusCode)));
   }
 
   @Test
@@ -688,24 +669,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(res).isEqualTo("OK");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("HMSET"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(
-                                        DB_QUERY_TEXT, "HMSET user firstname ? lastname ? age ?"),
-                                    equalTo(DB_OPERATION_NAME, "HMSET")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("HMSET"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "HMSET user firstname ? lastname ? age ?"),
+                                equalTo(DB_OPERATION_NAME, "HMSET")))));
   }
 
   @Test
@@ -714,23 +693,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(res).isEqualTo(TEST_HASH_MAP);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("HGETALL"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "HGETALL TESTHM"),
-                                    equalTo(DB_OPERATION_NAME, "HGETALL")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("HGETALL"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "HGETALL TESTHM"),
+                                equalTo(DB_OPERATION_NAME, "HGETALL")))));
   }
 
   @Test
@@ -750,23 +728,22 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     String b64Script = Base64.getEncoder().encodeToString(script.getBytes(UTF_8));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName("EVAL"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "EVAL " + b64Script + " 1 TESTLIST ? ?"),
-                                    equalTo(DB_OPERATION_NAME, "EVAL")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName("EVAL"))
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            addExtraAttributes(
+                                equalTo(NETWORK_PEER_ADDRESS, ip),
+                                equalTo(NETWORK_PEER_PORT, port),
+                                equalTo(SERVER_ADDRESS, host),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(DB_SYSTEM_NAME, REDIS),
+                                equalTo(DB_QUERY_TEXT, "EVAL " + b64Script + " 1 TESTLIST ? ?"),
+                                equalTo(DB_OPERATION_NAME, "EVAL")))));
   }
 
   @Test
@@ -779,21 +756,19 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     assertThat(result).isEqualTo("OK");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(spanName("MSET"))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                addExtraAttributes(
-                                    equalTo(NETWORK_PEER_ADDRESS, ip),
-                                    equalTo(NETWORK_PEER_PORT, port),
-                                    equalTo(SERVER_ADDRESS, host),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(DB_SYSTEM_NAME, REDIS),
-                                    equalTo(DB_QUERY_TEXT, "MSET key1 ? key2 ?"),
-                                    equalTo(DB_OPERATION_NAME, "MSET")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(spanName("MSET"))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        addExtraAttributes(
+                            equalTo(NETWORK_PEER_ADDRESS, ip),
+                            equalTo(NETWORK_PEER_PORT, port),
+                            equalTo(SERVER_ADDRESS, host),
+                            equalTo(SERVER_PORT, port),
+                            equalTo(DB_SYSTEM_NAME, REDIS),
+                            equalTo(DB_QUERY_TEXT, "MSET key1 ? key2 ?"),
+                            equalTo(DB_OPERATION_NAME, "MSET")))));
   }
 
   @Test
@@ -808,88 +783,82 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
       testing()
           .waitAndAssertTraces(
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("CLIENT", host, containerConnection.port))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, containerConnection.port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      equalTo(DB_QUERY_TEXT, "CLIENT SETINFO lib-name Lettuce"),
-                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(ERROR_TYPE, "ERR"),
-                                      equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName(spanName("CLIENT", host, containerConnection.port))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, containerConnection.port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_QUERY_TEXT, "CLIENT SETINFO lib-name Lettuce"),
+                                  equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                  equalTo(ERROR_TYPE, "ERR"),
+                                  equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("CLIENT", host, containerConnection.port))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, containerConnection.port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      satisfies(
-                                          DB_QUERY_TEXT,
-                                          val -> val.startsWith("CLIENT SETINFO lib-ver")),
-                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(ERROR_TYPE, "ERR"),
-                                      equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName(spanName("CLIENT", host, containerConnection.port))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, containerConnection.port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  satisfies(
+                                      DB_QUERY_TEXT,
+                                      val -> val.startsWith("CLIENT SETINFO lib-ver")),
+                                  equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                  equalTo(ERROR_TYPE, "ERR"),
+                                  equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("CLIENT", host, containerConnection.port))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, containerConnection.port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      satisfies(
-                                          DB_QUERY_TEXT,
-                                          val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
-                                      equalTo(DB_OPERATION_NAME, "CLIENT"),
-                                      equalTo(ERROR_TYPE, "ERR"),
-                                      equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName(spanName("CLIENT", host, containerConnection.port))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, containerConnection.port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  satisfies(
+                                      DB_QUERY_TEXT,
+                                      val -> val.startsWith("CLIENT MAINT_NOTIFICATIONS")),
+                                  equalTo(DB_OPERATION_NAME, "CLIENT"),
+                                  equalTo(ERROR_TYPE, "ERR"),
+                                  equalTo(DB_RESPONSE_STATUS_CODE, "ERR")))),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("DEBUG", host, containerConnection.port))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, containerConnection.port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      equalTo(DB_QUERY_TEXT, "DEBUG SEGFAULT"),
-                                      equalTo(DB_OPERATION_NAME, "DEBUG")))));
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName(spanName("DEBUG", host, containerConnection.port))
+                          .hasKind(SpanKind.CLIENT)
+                          .hasAttributesSatisfyingExactly(
+                              addExtraAttributes(
+                                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                                  equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                                  equalTo(SERVER_ADDRESS, host),
+                                  equalTo(SERVER_PORT, containerConnection.port),
+                                  equalTo(DB_SYSTEM_NAME, REDIS),
+                                  equalTo(DB_QUERY_TEXT, "DEBUG SEGFAULT"),
+                                  equalTo(DB_OPERATION_NAME, "DEBUG")))));
     } else {
       testing()
-          .waitAndAssertTraces(
-              trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName(spanName("DEBUG", host, containerConnection.port))
-                              .hasKind(SpanKind.CLIENT)
-                              .hasAttributesSatisfyingExactly(
-                                  addExtraAttributes(
-                                      equalTo(NETWORK_PEER_ADDRESS, ip),
-                                      equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                      equalTo(SERVER_ADDRESS, host),
-                                      equalTo(SERVER_PORT, containerConnection.port),
-                                      equalTo(DB_SYSTEM_NAME, REDIS),
-                                      equalTo(DB_QUERY_TEXT, "DEBUG SEGFAULT"),
-                                      equalTo(DB_OPERATION_NAME, "DEBUG")))));
+          .waitAndAssertTraces(trace ->
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasName(spanName("DEBUG", host, containerConnection.port))
+                      .hasKind(SpanKind.CLIENT)
+                      .hasAttributesSatisfyingExactly(
+                          addExtraAttributes(
+                              equalTo(NETWORK_PEER_ADDRESS, ip),
+                              equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                              equalTo(SERVER_ADDRESS, host),
+                              equalTo(SERVER_PORT, containerConnection.port),
+                              equalTo(DB_SYSTEM_NAME, REDIS),
+                              equalTo(DB_QUERY_TEXT, "DEBUG SEGFAULT"),
+                              equalTo(DB_OPERATION_NAME, "DEBUG")))));
     }
   }
 
@@ -908,33 +877,29 @@ public abstract class AbstractLettuceSyncClientTest extends AbstractLettuceClien
     commands.shutdown(false);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName(spanName("SHUTDOWN", host, containerConnection.port))
-                          .hasKind(SpanKind.CLIENT)
-                          .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(
-                              addExtraAttributes(
-                                  equalTo(NETWORK_PEER_ADDRESS, ip),
-                                  equalTo(NETWORK_PEER_PORT, containerConnection.port),
-                                  equalTo(SERVER_ADDRESS, host),
-                                  equalTo(SERVER_PORT, containerConnection.port),
-                                  equalTo(DB_SYSTEM_NAME, REDIS),
-                                  equalTo(DB_QUERY_TEXT, "SHUTDOWN NOSAVE"),
-                                  equalTo(DB_OPERATION_NAME, "SHUTDOWN"),
-                                  equalTo(
-                                      ERROR_TYPE,
-                                      testLatestDeps()
-                                          ? RedisException.class.getName()
-                                          : "_OTHER")));
-                      if (testLatestDeps()) {
-                        // Lettuce 6+ also exposes the exception.
-                        span.hasException(new RedisException("Connection disconnected"))
-                            .hasEventsSatisfyingExactly(event -> event.hasName("exception"));
-                      }
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              span.hasName(spanName("SHUTDOWN", host, containerConnection.port))
+                  .hasKind(SpanKind.CLIENT)
+                  .hasStatus(StatusData.error())
+                  .hasAttributesSatisfyingExactly(
+                      addExtraAttributes(
+                          equalTo(NETWORK_PEER_ADDRESS, ip),
+                          equalTo(NETWORK_PEER_PORT, containerConnection.port),
+                          equalTo(SERVER_ADDRESS, host),
+                          equalTo(SERVER_PORT, containerConnection.port),
+                          equalTo(DB_SYSTEM_NAME, REDIS),
+                          equalTo(DB_QUERY_TEXT, "SHUTDOWN NOSAVE"),
+                          equalTo(DB_OPERATION_NAME, "SHUTDOWN"),
+                          equalTo(
+                              ERROR_TYPE,
+                              testLatestDeps() ? RedisException.class.getName() : "_OTHER")));
+              if (testLatestDeps()) {
+                // Lettuce 6+ also exposes the exception.
+                span.hasException(new RedisException("Connection disconnected"))
+                    .hasEventsSatisfyingExactly(event -> event.hasName("exception"));
+              }
+            }));
 
     assertCommandMetric("SHUTDOWN", testLatestDeps() ? RedisException.class.getName() : "_OTHER");
   }

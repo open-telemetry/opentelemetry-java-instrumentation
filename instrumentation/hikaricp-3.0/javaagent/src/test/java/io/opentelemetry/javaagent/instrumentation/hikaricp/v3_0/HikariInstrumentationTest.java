@@ -81,11 +81,10 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     AtomicReference<String> userMetricsPoolName = new AtomicReference<>();
     HikariDataSource dataSource = newDataSource();
     dataSource.setJdbcUrl("jdbc:postgresql://db.example:5432/orders");
-    dataSource.setMetricsTrackerFactory(
-        (poolName, poolStats) -> {
-          userMetricsPoolName.set(poolName);
-          return new IMetricsTracker() {};
-        });
+    dataSource.setMetricsTrackerFactory((poolName, poolStats) -> {
+      userMetricsPoolName.set(poolName);
+      return new IMetricsTracker() {};
+    });
     startDataSource(dataSource);
 
     try {
@@ -192,19 +191,18 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
     AtomicInteger counter = new AtomicInteger();
     DataSource source = mock(DataSource.class);
     when(source.getConnection())
-        .thenAnswer(
-            ignored -> {
-              Connection connection = mock(Connection.class);
-              when(connection.isValid(anyInt())).thenReturn(true);
-              when(connection.getAutoCommit()).thenReturn(true);
-              when(connection.getTransactionIsolation())
-                  .thenReturn(Connection.TRANSACTION_READ_COMMITTED);
-              threeCreations.countDown();
-              if (counter.incrementAndGet() <= 3) {
-                testing.runWithSpan("get connection", () -> {});
-              }
-              return connection;
-            });
+        .thenAnswer(ignored -> {
+          Connection connection = mock(Connection.class);
+          when(connection.isValid(anyInt())).thenReturn(true);
+          when(connection.getAutoCommit()).thenReturn(true);
+          when(connection.getTransactionIsolation())
+              .thenReturn(Connection.TRANSACTION_READ_COMMITTED);
+          threeCreations.countDown();
+          if (counter.incrementAndGet() <= 3) {
+            testing.runWithSpan("get connection", () -> {});
+          }
+          return connection;
+        });
 
     // Disable validation so we could set a low max lifetime.
     HikariConfig config =

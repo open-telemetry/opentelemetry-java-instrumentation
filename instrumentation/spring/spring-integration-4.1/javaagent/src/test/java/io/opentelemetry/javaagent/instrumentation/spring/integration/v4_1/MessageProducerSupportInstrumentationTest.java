@@ -91,10 +91,9 @@ class MessageProducerSupportInstrumentationTest {
 
     producer.send(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -110,10 +109,9 @@ class MessageProducerSupportInstrumentationTest {
 
     producer.send(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -127,10 +125,9 @@ class MessageProducerSupportInstrumentationTest {
 
     outerChannel.send(MessageBuilder.withPayload("outer").build());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process outer").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process outer").hasKind(SpanKind.CONSUMER)));
     assertProcessMetrics(testing, "outer", false);
   }
 
@@ -146,10 +143,9 @@ class MessageProducerSupportInstrumentationTest {
 
     outerProducer.send(outerMessage);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -168,10 +164,9 @@ class MessageProducerSupportInstrumentationTest {
     producer.send(message);
 
     assertThat(handled).hasValue(2);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -183,10 +178,9 @@ class MessageProducerSupportInstrumentationTest {
 
     producer.send(newRawMessage());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertProcessMetrics(testing, "input", false);
   }
 
@@ -228,10 +222,9 @@ class MessageProducerSupportInstrumentationTest {
     }
     unrelatedProcessInstrumenter.end(context, message, null, null);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("lower process").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("lower process").hasKind(SpanKind.CONSUMER)));
     assertUnrelatedProcessMetrics();
     assertNoMetrics(testing);
   }
@@ -252,10 +245,9 @@ class MessageProducerSupportInstrumentationTest {
 
     producer.send(message);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
   }
 
@@ -278,10 +270,9 @@ class MessageProducerSupportInstrumentationTest {
     producer.send(message);
 
     assertThat(attempts).hasValue(2);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process input").hasKind(SpanKind.CONSUMER)));
     assertNoMetrics(testing);
     assertSpringRabbitProcessMetrics();
   }
@@ -319,19 +310,16 @@ class MessageProducerSupportInstrumentationTest {
         "test-lower-messaging-process",
         "messaging.client.consumed.messages",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(stringKey("messaging.system.name"), "test"),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "input"))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "test"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, "input"))))));
   }
 
   private static void assertSpringRabbitProcessMetrics() {
@@ -340,12 +328,10 @@ class MessageProducerSupportInstrumentationTest {
         SPRING_RABBIT_INSTRUMENTATION_NAME,
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasHistogramSatisfying(
+                        histogram -> histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
   }
 
   private static Message newRawMessage() {

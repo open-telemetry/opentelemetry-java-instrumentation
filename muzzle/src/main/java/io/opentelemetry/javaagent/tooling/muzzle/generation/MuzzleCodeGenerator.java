@@ -262,148 +262,147 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       mv.visitVarInsn(Opcodes.ASTORE, 1);
       // stack: <empty>
 
-      references.forEach(
-          reference -> {
-            mv.visitVarInsn(Opcodes.ALOAD, 1);
-            // stack: map
-            mv.visitLdcInsn(reference.getClassName());
-            // stack: map, className
+      references.forEach(reference -> {
+        mv.visitVarInsn(Opcodes.ALOAD, 1);
+        // stack: map
+        mv.visitLdcInsn(reference.getClassName());
+        // stack: map, className
 
-            mv.visitLdcInsn(reference.getClassName());
-            mv.visitMethodInsn(
-                Opcodes.INVOKESTATIC,
-                referenceType.getInternalName(),
-                "builder",
-                Type.getMethodDescriptor(referenceBuilderType, stringType),
-                /* isInterface= */ false);
-            // stack: map, className, builder
+        mv.visitLdcInsn(reference.getClassName());
+        mv.visitMethodInsn(
+            Opcodes.INVOKESTATIC,
+            referenceType.getInternalName(),
+            "builder",
+            Type.getMethodDescriptor(referenceBuilderType, stringType),
+            /* isInterface= */ false);
+        // stack: map, className, builder
 
-            for (Source source : reference.getSources()) {
-              mv.visitLdcInsn(source.getName());
-              mv.visitLdcInsn(source.getLine());
-              mv.visitMethodInsn(
-                  Opcodes.INVOKEVIRTUAL,
-                  referenceBuilderType.getInternalName(),
-                  "addSource",
-                  Type.getMethodDescriptor(referenceBuilderType, stringType, Type.INT_TYPE),
-                  /* isInterface= */ false);
+        for (Source source : reference.getSources()) {
+          mv.visitLdcInsn(source.getName());
+          mv.visitLdcInsn(source.getLine());
+          mv.visitMethodInsn(
+              Opcodes.INVOKEVIRTUAL,
+              referenceBuilderType.getInternalName(),
+              "addSource",
+              Type.getMethodDescriptor(referenceBuilderType, stringType, Type.INT_TYPE),
+              /* isInterface= */ false);
+        }
+        // stack: map, className, builder
+        for (Flag flag : reference.getFlags()) {
+          String enumClassName = getEnumClassInternalName(flag);
+          mv.visitFieldInsn(
+              Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
+          mv.visitMethodInsn(
+              Opcodes.INVOKEVIRTUAL,
+              referenceBuilderType.getInternalName(),
+              "addFlag",
+              Type.getMethodDescriptor(referenceBuilderType, referenceFlagType),
+              /* isInterface= */ false);
+        }
+        // stack: map, className, builder
+        if (reference.getSuperClassName() != null) {
+          mv.visitLdcInsn(reference.getSuperClassName());
+          mv.visitMethodInsn(
+              Opcodes.INVOKEVIRTUAL,
+              referenceBuilderType.getInternalName(),
+              "setSuperClassName",
+              Type.getMethodDescriptor(referenceBuilderType, stringType),
+              /* isInterface= */ false);
+        }
+        // stack: map, className, builder
+        for (String interfaceName : reference.getInterfaceNames()) {
+          mv.visitLdcInsn(interfaceName);
+          mv.visitMethodInsn(
+              Opcodes.INVOKEVIRTUAL,
+              referenceBuilderType.getInternalName(),
+              "addInterfaceName",
+              Type.getMethodDescriptor(referenceBuilderType, stringType),
+              /* isInterface= */ false);
+        }
+        // stack: map, className, builder
+        for (FieldRef field : reference.getFields()) {
+          writeSourcesArray(mv, field.getSources());
+          writeFlagsArray(mv, field.getFlags());
+          // field name
+          mv.visitLdcInsn(field.getName());
+          writeType(mv, field.getDescriptor());
+          // declared flag
+          mv.visitLdcInsn(field.isDeclared());
+
+          mv.visitMethodInsn(
+              Opcodes.INVOKEVIRTUAL,
+              referenceBuilderType.getInternalName(),
+              "addField",
+              Type.getMethodDescriptor(
+                  referenceBuilderType,
+                  referenceSourceArrayType,
+                  referenceFlagArrayType,
+                  stringType,
+                  typeType,
+                  Type.BOOLEAN_TYPE),
+              /* isInterface= */ false);
+        }
+        // stack: map, className, builder
+        for (MethodRef method : reference.getMethods()) {
+          writeSourcesArray(mv, method.getSources());
+          writeFlagsArray(mv, method.getFlags());
+          // method name
+          mv.visitLdcInsn(method.getName());
+          // method return and argument types
+          {
+            // we cannot pass the whole method descriptor string as it won't be shaded, so
+            // we
+            // have to pass the return and parameter types separately - strings in
+            // Type.getType()
+            // calls will be shaded correctly
+            Type methodType = Type.getMethodType(method.getDescriptor());
+
+            writeType(mv, methodType.getReturnType().getDescriptor());
+
+            mv.visitLdcInsn(methodType.getArgumentTypes().length);
+            mv.visitTypeInsn(Opcodes.ANEWARRAY, typeType.getInternalName());
+            int i = 0;
+            for (Type parameterType : methodType.getArgumentTypes()) {
+              mv.visitInsn(Opcodes.DUP);
+              mv.visitLdcInsn(i);
+              writeType(mv, parameterType.getDescriptor());
+              mv.visitInsn(Opcodes.AASTORE);
+              i++;
             }
-            // stack: map, className, builder
-            for (Flag flag : reference.getFlags()) {
-              String enumClassName = getEnumClassInternalName(flag);
-              mv.visitFieldInsn(
-                  Opcodes.GETSTATIC, enumClassName, flag.name(), "L" + enumClassName + ";");
-              mv.visitMethodInsn(
-                  Opcodes.INVOKEVIRTUAL,
-                  referenceBuilderType.getInternalName(),
-                  "addFlag",
-                  Type.getMethodDescriptor(referenceBuilderType, referenceFlagType),
-                  /* isInterface= */ false);
-            }
-            // stack: map, className, builder
-            if (reference.getSuperClassName() != null) {
-              mv.visitLdcInsn(reference.getSuperClassName());
-              mv.visitMethodInsn(
-                  Opcodes.INVOKEVIRTUAL,
-                  referenceBuilderType.getInternalName(),
-                  "setSuperClassName",
-                  Type.getMethodDescriptor(referenceBuilderType, stringType),
-                  /* isInterface= */ false);
-            }
-            // stack: map, className, builder
-            for (String interfaceName : reference.getInterfaceNames()) {
-              mv.visitLdcInsn(interfaceName);
-              mv.visitMethodInsn(
-                  Opcodes.INVOKEVIRTUAL,
-                  referenceBuilderType.getInternalName(),
-                  "addInterfaceName",
-                  Type.getMethodDescriptor(referenceBuilderType, stringType),
-                  /* isInterface= */ false);
-            }
-            // stack: map, className, builder
-            for (FieldRef field : reference.getFields()) {
-              writeSourcesArray(mv, field.getSources());
-              writeFlagsArray(mv, field.getFlags());
-              // field name
-              mv.visitLdcInsn(field.getName());
-              writeType(mv, field.getDescriptor());
-              // declared flag
-              mv.visitLdcInsn(field.isDeclared());
+          }
 
-              mv.visitMethodInsn(
-                  Opcodes.INVOKEVIRTUAL,
-                  referenceBuilderType.getInternalName(),
-                  "addField",
-                  Type.getMethodDescriptor(
-                      referenceBuilderType,
-                      referenceSourceArrayType,
-                      referenceFlagArrayType,
-                      stringType,
-                      typeType,
-                      Type.BOOLEAN_TYPE),
-                  /* isInterface= */ false);
-            }
-            // stack: map, className, builder
-            for (MethodRef method : reference.getMethods()) {
-              writeSourcesArray(mv, method.getSources());
-              writeFlagsArray(mv, method.getFlags());
-              // method name
-              mv.visitLdcInsn(method.getName());
-              // method return and argument types
-              {
-                // we cannot pass the whole method descriptor string as it won't be shaded, so
-                // we
-                // have to pass the return and parameter types separately - strings in
-                // Type.getType()
-                // calls will be shaded correctly
-                Type methodType = Type.getMethodType(method.getDescriptor());
+          mv.visitMethodInsn(
+              Opcodes.INVOKEVIRTUAL,
+              referenceBuilderType.getInternalName(),
+              "addMethod",
+              Type.getMethodDescriptor(
+                  referenceBuilderType,
+                  referenceSourceArrayType,
+                  referenceFlagArrayType,
+                  stringType,
+                  typeType,
+                  typeArrayType),
+              /* isInterface= */ false);
+        }
+        // stack: map, className, builder
+        mv.visitMethodInsn(
+            Opcodes.INVOKEVIRTUAL,
+            referenceBuilderType.getInternalName(),
+            "build",
+            Type.getMethodDescriptor(referenceType),
+            /* isInterface= */ false);
+        // stack: map, className, classRef
 
-                writeType(mv, methodType.getReturnType().getDescriptor());
-
-                mv.visitLdcInsn(methodType.getArgumentTypes().length);
-                mv.visitTypeInsn(Opcodes.ANEWARRAY, typeType.getInternalName());
-                int i = 0;
-                for (Type parameterType : methodType.getArgumentTypes()) {
-                  mv.visitInsn(Opcodes.DUP);
-                  mv.visitLdcInsn(i);
-                  writeType(mv, parameterType.getDescriptor());
-                  mv.visitInsn(Opcodes.AASTORE);
-                  i++;
-                }
-              }
-
-              mv.visitMethodInsn(
-                  Opcodes.INVOKEVIRTUAL,
-                  referenceBuilderType.getInternalName(),
-                  "addMethod",
-                  Type.getMethodDescriptor(
-                      referenceBuilderType,
-                      referenceSourceArrayType,
-                      referenceFlagArrayType,
-                      stringType,
-                      typeType,
-                      typeArrayType),
-                  /* isInterface= */ false);
-            }
-            // stack: map, className, builder
-            mv.visitMethodInsn(
-                Opcodes.INVOKEVIRTUAL,
-                referenceBuilderType.getInternalName(),
-                "build",
-                Type.getMethodDescriptor(referenceType),
-                /* isInterface= */ false);
-            // stack: map, className, classRef
-
-            mv.visitMethodInsn(
-                Opcodes.INVOKEINTERFACE,
-                "java/util/Map",
-                "put",
-                "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
-                /* isInterface= */ true);
-            // stack: previousValue
-            mv.visitInsn(Opcodes.POP);
-            // stack: <empty>
-          });
+        mv.visitMethodInsn(
+            Opcodes.INVOKEINTERFACE,
+            "java/util/Map",
+            "put",
+            "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;",
+            /* isInterface= */ true);
+        // stack: previousValue
+        mv.visitInsn(Opcodes.POP);
+        // stack: <empty>
+      });
 
       mv.visitVarInsn(Opcodes.ALOAD, 1);
       // stack: map
@@ -525,22 +524,21 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
       mv.visitVarInsn(Opcodes.ASTORE, 1);
       // stack: <empty>
 
-      helperClassNames.forEach(
-          helperClassName -> {
-            mv.visitVarInsn(Opcodes.ALOAD, 1);
-            // stack: list
-            mv.visitLdcInsn(helperClassName);
-            // stack: list, helperClassName
-            mv.visitMethodInsn(
-                Opcodes.INVOKEINTERFACE,
-                "java/util/List",
-                "add",
-                "(Ljava/lang/Object;)Z",
-                /* isInterface= */ true);
-            // stack: added
-            mv.visitInsn(Opcodes.POP);
-            // stack: <empty>
-          });
+      helperClassNames.forEach(helperClassName -> {
+        mv.visitVarInsn(Opcodes.ALOAD, 1);
+        // stack: list
+        mv.visitLdcInsn(helperClassName);
+        // stack: list, helperClassName
+        mv.visitMethodInsn(
+            Opcodes.INVOKEINTERFACE,
+            "java/util/List",
+            "add",
+            "(Ljava/lang/Object;)Z",
+            /* isInterface= */ true);
+        // stack: added
+        mv.visitInsn(Opcodes.POP);
+        // stack: <empty>
+      });
 
       mv.visitVarInsn(Opcodes.ALOAD, 1);
       // stack: list
@@ -569,22 +567,21 @@ final class MuzzleCodeGenerator implements AsmVisitorWrapper {
 
       mv.visitVarInsn(Opcodes.ALOAD, 1);
       // stack: builder
-      virtualFieldMappings.forEach(
-          (mapping) -> {
-            mv.visitLdcInsn(mapping.getTypeName());
-            // stack: builder, typeName
-            mv.visitLdcInsn(mapping.getFieldTypeName());
-            // stack: builder, typeName, fieldTypeName
-            mv.visitLdcInsn(mapping.getFieldName());
-            // stack: builder, typeName, fieldTypeName, fieldName
-            mv.visitMethodInsn(
-                Opcodes.INVOKEINTERFACE,
-                "io/opentelemetry/javaagent/tooling/muzzle/VirtualFieldMappingsBuilder",
-                "register",
-                "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/opentelemetry/javaagent/tooling/muzzle/VirtualFieldMappingsBuilder;",
-                /* isInterface= */ true);
-            // stack: builder
-          });
+      virtualFieldMappings.forEach(mapping -> {
+        mv.visitLdcInsn(mapping.getTypeName());
+        // stack: builder, typeName
+        mv.visitLdcInsn(mapping.getFieldTypeName());
+        // stack: builder, typeName, fieldTypeName
+        mv.visitLdcInsn(mapping.getFieldName());
+        // stack: builder, typeName, fieldTypeName, fieldName
+        mv.visitMethodInsn(
+            Opcodes.INVOKEINTERFACE,
+            "io/opentelemetry/javaagent/tooling/muzzle/VirtualFieldMappingsBuilder",
+            "register",
+            "(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;)Lio/opentelemetry/javaagent/tooling/muzzle/VirtualFieldMappingsBuilder;",
+            /* isInterface= */ true);
+        // stack: builder
+      });
       mv.visitInsn(Opcodes.POP);
       // stack: <empty>
       mv.visitInsn(Opcodes.RETURN);

@@ -164,31 +164,27 @@ class LettuceClusterClientTest {
     cleanup.deferCleanup(client.connect());
 
     List<Consumer<TraceAssert>> traceAsserts = new ArrayList<>();
-    traceAsserts.add(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("AUTH " + authenticatedTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_OPERATION_NAME, "AUTH"),
-                            equalTo(SERVER_ADDRESS, authenticatedTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, authenticatedIp),
-                            equalTo(NETWORK_PEER_PORT, (long) authenticatedPort))));
+    traceAsserts.add(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("AUTH " + authenticatedTarget)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_OPERATION_NAME, "AUTH"),
+                    equalTo(SERVER_ADDRESS, authenticatedTarget),
+                    equalTo(NETWORK_PEER_ADDRESS, authenticatedIp),
+                    equalTo(NETWORK_PEER_PORT, (long) authenticatedPort))));
     if (testLatestDeps()) {
-      traceAsserts.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("COMMAND " + authenticatedTarget)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, REDIS),
-                              equalTo(DB_OPERATION_NAME, "COMMAND"),
-                              equalTo(SERVER_ADDRESS, authenticatedTarget),
-                              equalTo(NETWORK_PEER_ADDRESS, authenticatedIp),
-                              equalTo(NETWORK_PEER_PORT, (long) authenticatedPort))));
+      traceAsserts.add(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("COMMAND " + authenticatedTarget)
+                  .hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(DB_SYSTEM_NAME, REDIS),
+                      equalTo(DB_OPERATION_NAME, "COMMAND"),
+                      equalTo(SERVER_ADDRESS, authenticatedTarget),
+                      equalTo(NETWORK_PEER_ADDRESS, authenticatedIp),
+                      equalTo(NETWORK_PEER_PORT, (long) authenticatedPort))));
     }
     testing.waitAndAssertTraces(traceAsserts);
   }
@@ -198,18 +194,16 @@ class LettuceClusterClientTest {
     RedisAdvancedClusterAsyncCommands<String, String> asyncCommands = connection.async();
     assertThat(asyncCommands.set("CLUSTER_COMMAND_KEY", "value").get(10, SECONDS)).isEqualTo("OK");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, (long) port))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + configuredTarget)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(SERVER_ADDRESS, configuredTarget),
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    equalTo(NETWORK_PEER_PORT, (long) port))));
   }
 
   @Test
@@ -223,19 +217,17 @@ class LettuceClusterClientTest {
     assertThat(first.get(10, SECONDS)).isEqualTo("OK");
     assertThat(second.get(10, SECONDS)).isEqualTo("OK");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("PIPELINE SET " + configuredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
-                            equalTo(SERVER_ADDRESS, configuredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("PIPELINE SET " + configuredTarget)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                    equalTo(SERVER_ADDRESS, configuredTarget),
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    equalTo(NETWORK_PEER_PORT, (long) port),
+                    equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
   }
 
   @Test
@@ -256,36 +248,34 @@ class LettuceClusterClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + peerConfiguredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(SERVER_ADDRESS, peerConfiguredTarget),
-                            satisfies(
-                                SERVER_PORT,
-                                val -> {
-                                  val.isNull();
-                                }),
-                            equalTo(NETWORK_PEER_ADDRESS, secondRedisServer.getHost()),
-                            equalTo(NETWORK_PEER_PORT, (long) secondRedisServer.getPort()))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + peerConfiguredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_OPERATION_NAME, "SET"),
+                        equalTo(SERVER_ADDRESS, peerConfiguredTarget),
+                        satisfies(
+                            SERVER_PORT,
+                            val -> {
+                              val.isNull();
+                            }),
+                        equalTo(NETWORK_PEER_ADDRESS, secondRedisServer.getHost()),
+                        equalTo(NETWORK_PEER_PORT, (long) secondRedisServer.getPort()))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("PIPELINE SET " + peerConfiguredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
-                            equalTo(SERVER_ADDRESS, peerConfiguredTarget),
-                            satisfies(
-                                SERVER_PORT,
-                                val -> {
-                                  val.isNull();
-                                }),
-                            equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("PIPELINE SET " + peerConfiguredTarget)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                        equalTo(SERVER_ADDRESS, peerConfiguredTarget),
+                        satisfies(
+                            SERVER_PORT,
+                            val -> {
+                              val.isNull();
+                            }),
+                        equalTo(DB_OPERATION_BATCH_SIZE, 2L))));
 
     firstRedisServer.assertReceivedSet(firstBatchKey);
     secondRedisServer.assertReceivedSet(routedKey, secondBatchKey);
@@ -304,19 +294,16 @@ class LettuceClusterClientTest {
 
     assertThat(asyncCommands.set(redirectedKey, "value").get(10, SECONDS)).isEqualTo("OK");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + peerConfiguredTarget)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(SERVER_ADDRESS, peerConfiguredTarget),
-                            equalTo(NETWORK_PEER_ADDRESS, secondRedisServer.getHost()),
-                            equalTo(
-                                NETWORK_PEER_PORT, Long.valueOf(secondRedisServer.getPort())))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + peerConfiguredTarget)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(SERVER_ADDRESS, peerConfiguredTarget),
+                    equalTo(NETWORK_PEER_ADDRESS, secondRedisServer.getHost()),
+                    equalTo(NETWORK_PEER_PORT, Long.valueOf(secondRedisServer.getPort())))));
 
     firstRedisServer.assertReceivedSet(redirectedKey);
     secondRedisServer.assertReceivedSet(redirectedKey);

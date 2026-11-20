@@ -157,11 +157,10 @@ public class IntegrationTestBase {
         await()
             .atMost(Duration.ofSeconds(30))
             .ignoreException(InvocationTargetException.class)
-            .until(
-                () -> {
-                  createTopic.invoke(null, nsAddr, clusterName, topic, 20, emptyMap(), 3);
-                  return true;
-                });
+            .until(() -> {
+              createTopic.invoke(null, nsAddr, clusterName, topic, 20, emptyMap(), 3);
+              return true;
+            });
       } catch (ClassNotFoundException | NoSuchMethodException e) {
         throw new IllegalStateException("Could not initialize topic", e);
       }

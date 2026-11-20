@@ -103,27 +103,24 @@ class RatpackServerHeaderSelectorTest {
 
   private static Attributes handleRequest(RatpackServerTelemetry telemetry) throws Exception {
     EmbeddedApp app =
-        EmbeddedApp.of(
-            spec -> {
-              spec.registry(Registry.of(telemetry::configureRegistry));
-              spec.handlers(
-                  chain ->
-                      chain.get(
-                          "test",
-                          ctx -> {
-                            ctx.getResponse().getHeaders().set("X-Test-Response", "test");
-                            ctx.render("hi");
-                          }));
-            });
+        EmbeddedApp.of(spec -> {
+          spec.registry(Registry.of(telemetry::configureRegistry));
+          spec.handlers(chain ->
+              chain.get(
+                  "test",
+                  ctx -> {
+                    ctx.getResponse().getHeaders().set("X-Test-Response", "test");
+                    ctx.render("hi");
+                  }));
+        });
     cleanup.deferCleanup(app);
 
     assertThat(
             app.getHttpClient()
-                .requestSpec(
-                    spec ->
-                        spec.getHeaders()
-                            .set("X-Test-Request", "test")
-                            .set("Authorization", "Bearer secret"))
+                .requestSpec(spec ->
+                    spec.getHeaders()
+                        .set("X-Test-Request", "test")
+                        .set("Authorization", "Bearer secret"))
                 .get("test")
                 .getBody()
                 .getText())

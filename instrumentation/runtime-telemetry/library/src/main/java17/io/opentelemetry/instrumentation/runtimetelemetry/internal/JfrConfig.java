@@ -97,13 +97,12 @@ public class JfrConfig {
       this.recordedEventHandlers = recordedEventHandlers;
       this.metricNames = Collections.unmodifiableSet(new HashSet<>(metricNames));
       recordingStream = new RecordingStream();
-      recordedEventHandlers.forEach(
-          handler -> {
-            EventSettings eventSettings = recordingStream.enable(handler.getEventName());
-            handler.getPollingDuration().ifPresent(eventSettings::withPeriod);
-            handler.getThreshold().ifPresent(eventSettings::withThreshold);
-            recordingStream.onEvent(handler.getEventName(), handler);
-          });
+      recordedEventHandlers.forEach(handler -> {
+        EventSettings eventSettings = recordingStream.enable(handler.getEventName());
+        handler.getPollingDuration().ifPresent(eventSettings::withPeriod);
+        handler.getThreshold().ifPresent(eventSettings::withThreshold);
+        recordingStream.onEvent(handler.getEventName(), handler);
+      });
       recordingStream.onMetadata(event -> startUpLatch.countDown());
       Thread daemonRunner =
           new Thread(this::startRecordingStream, "OpenTelemetry JFR-Metrics-Runner");

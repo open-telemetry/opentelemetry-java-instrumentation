@@ -130,6 +130,9 @@ class IncludeExcludeTest {
         argumentSet("exact include rejects", singletonList("foo"), emptyList(), "bar", false),
         argumentSet("matching is case sensitive", singletonList("foo"), emptyList(), "FOO", false),
         argumentSet("star matches empty value", singletonList("*"), emptyList(), "", true),
+        argumentSet("star matches any value", singletonList("*"), emptyList(), "foo.bar", true),
+        argumentSet(
+            "star exclude rejects any value", emptyList(), singletonList("*"), "foo", false),
         argumentSet(
             "star matches zero characters", singletonList("foo*"), emptyList(), "foo", true),
         argumentSet(

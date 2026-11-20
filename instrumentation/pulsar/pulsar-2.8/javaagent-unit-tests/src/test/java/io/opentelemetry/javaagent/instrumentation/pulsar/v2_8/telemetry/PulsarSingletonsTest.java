@@ -68,16 +68,15 @@ class PulsarSingletonsTest {
     boolean scopeAcquired = scope.tryAcquire();
 
     assertThatIllegalStateException()
-        .isThrownBy(
-            () -> {
-              try {
-                throw new IllegalStateException("boom");
-              } finally {
-                if (scopeAcquired) {
-                  scope.release();
-                }
-              }
-            });
+        .isThrownBy(() -> {
+          try {
+            throw new IllegalStateException("boom");
+          } finally {
+            if (scopeAcquired) {
+              scope.release();
+            }
+          }
+        });
 
     assertThat(scope.isActive()).isFalse();
   }

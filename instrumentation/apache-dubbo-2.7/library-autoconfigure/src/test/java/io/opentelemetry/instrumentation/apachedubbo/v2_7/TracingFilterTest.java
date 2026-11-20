@@ -113,15 +113,12 @@ class TracingFilterTest {
   }
 
   private static void assertFailure(Throwable failure) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(HelloService.class.getName() + "/hello")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfying(
-                            equalTo(ERROR_TYPE, failure.getClass().getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(HelloService.class.getName() + "/hello")
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfying(equalTo(ERROR_TYPE, failure.getClass().getName()))));
   }
 
   private static AsyncRpcResult invokeAsyncProvider(CompletableFuture<AppResponse> future) {
