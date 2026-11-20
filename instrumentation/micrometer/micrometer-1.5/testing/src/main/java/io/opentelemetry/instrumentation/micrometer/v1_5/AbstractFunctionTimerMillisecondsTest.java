@@ -71,12 +71,10 @@ public abstract class AbstractFunctionTimerMillisecondsTest {
                     .hasName("testFunctionTimerMilliseconds.sum")
                     .hasDescription("This is a test function timer")
                     .hasUnit("ms")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(42_000)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumPointsSatisfying(point ->
+                        point
+                            .hasValue(42_000)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(functionTimer);

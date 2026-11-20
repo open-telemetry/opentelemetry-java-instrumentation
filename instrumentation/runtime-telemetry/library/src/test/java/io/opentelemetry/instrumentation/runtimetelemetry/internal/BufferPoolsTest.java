@@ -59,9 +59,8 @@ class BufferPoolsTest {
                 .hasName("jvm.buffer.memory.used")
                 .hasDescription("Measure of memory used by buffers.")
                 .hasUnit("By")
-                .hasLongSumSatisfying(sum ->
-                    sum.hasPointsSatisfying(point ->
-                        point.hasValue(10).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
+                .hasLongSumPointsSatisfying(point ->
+                    point.hasValue(10).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1")));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -69,9 +68,8 @@ class BufferPoolsTest {
                 .hasName("jvm.buffer.memory.limit")
                 .hasDescription("Measure of total memory capacity of buffers.")
                 .hasUnit("By")
-                .hasLongSumSatisfying(sum ->
-                    sum.hasPointsSatisfying(point ->
-                        point.hasValue(11).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
+                .hasLongSumPointsSatisfying(point ->
+                    point.hasValue(11).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1")));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -79,9 +77,8 @@ class BufferPoolsTest {
                 .hasName("jvm.buffer.count")
                 .hasDescription("Number of buffers in the pool.")
                 .hasUnit("{buffer}")
-                .hasLongSumSatisfying(sum ->
-                    sum.hasPointsSatisfying(point ->
-                        point.hasValue(12).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1"))));
+                .hasLongSumPointsSatisfying(point ->
+                    point.hasValue(12).hasAttribute(JVM_BUFFER_POOL_NAME, "buffer_pool_1")));
   }
 
   @Test
