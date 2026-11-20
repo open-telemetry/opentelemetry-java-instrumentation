@@ -102,24 +102,22 @@ class DbConnectionPoolMetricsTest {
                     .hasName("db.client.connection.timeouts")
                     .hasUnit("{timeout}")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
-                                    equalTo(DB_NAMESPACE, "potatoes")))),
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
+                                equalTo(DB_NAMESPACE, "potatoes"))),
             metric ->
                 assertThat(metric)
                     .hasName("db.client.connection.create_time")
                     .hasUnit("s")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(0.025)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
-                                    equalTo(DB_NAMESPACE, "potatoes")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasSum(0.025)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(DB_CLIENT_CONNECTION_POOL_NAME, "test-pool"),
+                                equalTo(DB_NAMESPACE, "potatoes"))));
   }
 }

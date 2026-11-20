@@ -100,23 +100,22 @@ class HttpClientMetricsTest {
                 .hasName("http.client.request.duration")
                 .hasUnit("s")
                 .hasDescription("Duration of HTTP client requests.")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasSum(0.15 /* seconds */)
-                            .hasAttributesSatisfying(
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(ERROR_TYPE, "400"),
-                                equalTo(NETWORK_PROTOCOL_NAME, "http"),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, 1234))
-                            .hasExemplarsSatisfying(exemplar ->
-                                exemplar
-                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                    .hasSpanId("090a0b0c0d0e0f00"))
-                            .hasBucketBoundaries(DURATION_BUCKETS))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasSum(0.15 /* seconds */)
+                        .hasAttributesSatisfying(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(ERROR_TYPE, "400"),
+                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, 1234))
+                        .hasExemplarsSatisfying(exemplar ->
+                            exemplar
+                                .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                .hasSpanId("090a0b0c0d0e0f00"))
+                        .hasBucketBoundaries(DURATION_BUCKETS)));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -124,8 +123,7 @@ class HttpClientMetricsTest {
         .satisfiesExactlyInAnyOrder(metric ->
             assertThat(metric)
                 .hasName("http.client.request.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point -> point.hasSum(0.3 /* seconds */))));
+                .hasHistogramPointsSatisfying(point -> point.hasSum(0.3 /* seconds */)));
   }
 
   private static long nanos(int millis) {
