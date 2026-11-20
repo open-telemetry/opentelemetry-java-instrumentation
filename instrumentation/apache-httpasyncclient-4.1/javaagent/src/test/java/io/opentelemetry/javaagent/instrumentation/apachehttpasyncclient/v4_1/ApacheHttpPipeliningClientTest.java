@@ -12,7 +12,6 @@ import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -102,7 +101,8 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         .disableTestRedirects()
         .disableTestConnectionFailure()
         .disableTestRemoteConnection()
-        .spanEndsAfterBody();
+        .spanEndsAfterBody()
+        .setExpectNetworkPeerAttributes(true);
   }
 
   @Override
@@ -226,7 +226,8 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
-                    assertClientSpanWithPeer(span, innerUri, 200, null)
+                    assertClientSpan(span, innerUri, "GET", 200, null)
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, null))
                         .hasNoParent()
                         .hasStatus(StatusData.unset()),
                 span -> assertServerSpan(span).hasParent(trace.getSpan(0))),
@@ -290,11 +291,12 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    assertClientSpanWithPeer(span, successUri, 200, null)
+                    assertClientSpan(span, successUri, "GET", 200, null)
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, null))
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.unset()),
                 span ->
-                    assertClientSpanWithPeer(span, errorUri, 500, "500")
+                    assertClientSpan(span, errorUri, "GET", 500, null)
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error()),
                 span ->
@@ -387,13 +389,15 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
                         .hasNoParent()
                         .hasStatus(StatusData.error()),
                 span ->
-                    assertClientSpanWithPeer(
-                            span, firstUri, 200, consumerFailure.getClass().getName())
+                    assertClientSpan(span, firstUri, "GET", 200, null)
+                        .hasAttributesSatisfying(
+                            equalTo(ERROR_TYPE, consumerFailure.getClass().getName()))
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error()),
                 span ->
-                    assertClientSpanWithPeer(
-                            span, secondUri, null, consumerFailure.getClass().getName())
+                    assertClientSpan(span, secondUri, "GET", null, null)
+                        .hasAttributesSatisfying(
+                            equalTo(ERROR_TYPE, consumerFailure.getClass().getName()))
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.error()),
                 span ->
@@ -534,7 +538,8 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
             trace.hasSpansSatisfyingExactlyInAnyOrder(
                 span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
                 span ->
-                    assertClientSpanWithPeer(span, uri, 200, null)
+                    assertClientSpan(span, uri, "GET", 200, null)
+                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, null))
                         .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.unset()),
                 span ->
@@ -735,15 +740,6 @@ class ApacheHttpPipeliningClientTest extends AbstractHttpClientTest<HttpUriReque
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_PEER_PORT, uri.getPort()),
             equalTo(stringKey("server.service.name"), expectedMappedServiceName()));
-  }
-
-  private SpanDataAssert assertClientSpanWithPeer(
-      SpanDataAssert span, URI uri, Integer responseCode, String errorType) {
-    return assertClientSpan(span, uri, "GET", responseCode, null)
-        .hasAttributesSatisfying(
-            satisfies(NETWORK_PEER_ADDRESS, val -> val.isNotNull()),
-            satisfies(NETWORK_PEER_PORT, val -> val.isNotNull()),
-            equalTo(ERROR_TYPE, errorType));
   }
 
   private static HttpHost target(URI uri) {
