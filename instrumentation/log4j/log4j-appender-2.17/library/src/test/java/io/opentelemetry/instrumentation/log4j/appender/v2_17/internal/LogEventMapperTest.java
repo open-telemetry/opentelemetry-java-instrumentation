@@ -279,7 +279,7 @@ class LogEventMapperTest {
             false,
             include("*"));
 
-    StringMapMessage message = new StringMapMessage();
+    StringMapMessage message = spy(new StringMapMessage());
     message.put("key1", "value1");
     message.put("key2", "value2");
 
@@ -293,27 +293,6 @@ class LogEventMapperTest {
     verify(builder).setAttribute(stringKey("key1"), "value1");
     verify(builder).setAttribute(stringKey("key2"), "value2");
     verifyNoMoreInteractions(builder);
-  }
-
-  @Test
-  void testCaptureMapMessageAttributesWithoutCopyingData() {
-    LogEventMapper<Map<String, String>> mapper =
-        new LogEventMapper<>(
-            ContextDataAccessorImpl.INSTANCE,
-            false,
-            false,
-            include("*"),
-            false,
-            false,
-            false,
-            null);
-    StringMapMessage message = spy(new StringMapMessage());
-    message.put("order-id", "123");
-    LogRecordBuilder builder = mock(LogRecordBuilder.class);
-
-    mapper.captureMessage(builder, message);
-
-    verify(builder).setAttribute(stringKey("order-id"), "123");
     verify(message, never()).getData();
   }
 
