@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.cpu;
 
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.time.Duration;
@@ -56,24 +55,20 @@ public final class OverallCpuLoadHandler implements RecordedEventHandler {
     processSelected = metricNames.contains(METRIC_NAME_PROCESS);
     machineSelected = metricNames.contains(METRIC_NAME_MACHINE);
     if (processSelected) {
-      var builder =
+      observables.add(
           meter
               .gaugeBuilder(METRIC_NAME_PROCESS)
               .setDescription(METRIC_DESCRIPTION_PROCESS)
-              .setUnit(Constants.UNIT_UTILIZATION);
-      observables.add(
-          MetricCallbackRegistration.withoutContextClassLoader(
-              () -> builder.buildWithCallback(measurement -> measurement.record(process))));
+              .setUnit(Constants.UNIT_UTILIZATION)
+              .buildWithCallback(measurement -> measurement.record(process)));
     }
     if (machineSelected) {
-      var builder =
+      observables.add(
           meter
               .gaugeBuilder(METRIC_NAME_MACHINE)
               .setDescription(METRIC_DESCRIPTION_MACHINE)
-              .setUnit(Constants.UNIT_UTILIZATION);
-      observables.add(
-          MetricCallbackRegistration.withoutContextClassLoader(
-              () -> builder.buildWithCallback(measurement -> measurement.record(machine))));
+              .setUnit(Constants.UNIT_UTILIZATION)
+              .buildWithCallback(measurement -> measurement.record(machine)));
     }
   }
 

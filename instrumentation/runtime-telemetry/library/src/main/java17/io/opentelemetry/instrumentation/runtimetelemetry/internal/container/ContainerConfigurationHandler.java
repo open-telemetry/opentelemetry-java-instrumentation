@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal.container;
 
 import io.opentelemetry.api.metrics.Meter;
-import io.opentelemetry.instrumentation.api.incubator.metrics.internal.MetricCallbackRegistration;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.util.ArrayList;
 import java.util.List;
@@ -40,9 +39,7 @@ public final class ContainerConfigurationHandler implements RecordedEventHandler
             .upDownCounterBuilder(METRIC_NAME)
             .setUnit("{cpu}")
             .setDescription("Number of processors available to the Java virtual machine.");
-    observables.add(
-        MetricCallbackRegistration.withoutContextClassLoader(
-            () -> builder.buildWithCallback(codm -> codm.record(value))));
+    observables.add(builder.buildWithCallback(codm -> codm.record(value)));
   }
 
   @Override
