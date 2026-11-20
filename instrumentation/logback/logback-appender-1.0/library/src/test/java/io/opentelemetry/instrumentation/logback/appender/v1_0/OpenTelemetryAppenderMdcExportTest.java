@@ -82,24 +82,22 @@ class OpenTelemetryAppenderMdcExportTest {
       exporter.setOpenTelemetry(testing.getOpenTelemetry());
     }
 
-    testing.waitAndAssertLogRecords(
-        log ->
-            log.hasBody("test log")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(stringKey("request-id"), "123"),
-                    equalTo(stringKey("span_id"), "application-span"),
-                    equalTo(stringKey("trace_flags"), "application-flags"),
-                    equalTo(stringKey("baggage.key"), "application-baggage")));
+    testing.waitAndAssertLogRecords(log ->
+        log.hasBody("test log")
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("request-id"), "123"),
+                equalTo(stringKey("span_id"), "application-span"),
+                equalTo(stringKey("trace_flags"), "application-flags"),
+                equalTo(stringKey("baggage.key"), "application-baggage")));
     assertThat(applicationAppender.list)
         .singleElement()
-        .satisfies(
-            event ->
-                assertThat(event.getMDCPropertyMap())
-                    .containsEntry("trace_id", span.getSpanContext().getTraceId())
-                    .containsEntry("span_id", span.getSpanContext().getSpanId())
-                    .containsEntry("trace_flags", span.getSpanContext().getTraceFlags().asHex())
-                    .containsEntry("baggage.key", "enriched-baggage")
-                    .containsEntry("request-id", "123"));
+        .satisfies(event ->
+            assertThat(event.getMDCPropertyMap())
+                .containsEntry("trace_id", span.getSpanContext().getTraceId())
+                .containsEntry("span_id", span.getSpanContext().getSpanId())
+                .containsEntry("trace_flags", span.getSpanContext().getTraceFlags().asHex())
+                .containsEntry("baggage.key", "enriched-baggage")
+                .containsEntry("request-id", "123"));
   }
 
   @ParameterizedTest
@@ -119,10 +117,9 @@ class OpenTelemetryAppenderMdcExportTest {
         log -> log.hasSpanContext(span.getSpanContext()).hasAttributesSatisfyingExactly());
     assertThat(applicationAppender.list)
         .singleElement()
-        .satisfies(
-            event ->
-                assertThat(event.getMDCPropertyMap())
-                    .containsEntry(traceIdKey, span.getSpanContext().getTraceId()));
+        .satisfies(event ->
+            assertThat(event.getMDCPropertyMap())
+                .containsEntry(traceIdKey, span.getSpanContext().getTraceId()));
   }
 
   @ParameterizedTest
@@ -147,13 +144,12 @@ class OpenTelemetryAppenderMdcExportTest {
       span.end();
     }
 
-    testing.waitAndAssertLogRecords(
-        log ->
-            log.hasAttributesSatisfyingExactly(
-                equalTo(stringKey(traceIdKey), "application-trace"),
-                equalTo(stringKey(spanIdKey), "application-span"),
-                equalTo(stringKey(traceFlagsKey), "application-flags"),
-                equalTo(stringKey("baggage.key"), "application-baggage")));
+    testing.waitAndAssertLogRecords(log ->
+        log.hasAttributesSatisfyingExactly(
+            equalTo(stringKey(traceIdKey), "application-trace"),
+            equalTo(stringKey(spanIdKey), "application-span"),
+            equalTo(stringKey(traceFlagsKey), "application-flags"),
+            equalTo(stringKey("baggage.key"), "application-baggage")));
   }
 
   @Test
@@ -171,16 +167,14 @@ class OpenTelemetryAppenderMdcExportTest {
       span.end();
     }
 
-    testing.waitAndAssertLogRecords(
-        log ->
-            log.hasAttributesSatisfyingExactly(equalTo(stringKey("context-key"), "context-value")));
+    testing.waitAndAssertLogRecords(log ->
+        log.hasAttributesSatisfyingExactly(equalTo(stringKey("context-key"), "context-value")));
     assertThat(applicationAppender.list)
         .singleElement()
-        .satisfies(
-            event ->
-                assertThat(event.getLoggerContextVO().getPropertyMap())
-                    .containsEntry("context-key", "context-value")
-                    .doesNotContainKeys("trace_id", "span_id", "trace_flags", "baggage.key"));
+        .satisfies(event ->
+            assertThat(event.getLoggerContextVO().getPropertyMap())
+                .containsEntry("context-key", "context-value")
+                .doesNotContainKeys("trace_id", "span_id", "trace_flags", "baggage.key"));
   }
 
   private void startExporter(boolean replay, String position) {

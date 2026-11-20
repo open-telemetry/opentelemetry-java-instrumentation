@@ -15,14 +15,14 @@ final class SofaRpcNetworkServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public InetSocketAddress getNetworkLocalSocketAddress(
       SofaRpcRequest request, @Nullable SofaResponse response) {
     return request.localAddress();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       SofaRpcRequest request, @Nullable SofaResponse response) {
     return request.remoteAddress();
   }

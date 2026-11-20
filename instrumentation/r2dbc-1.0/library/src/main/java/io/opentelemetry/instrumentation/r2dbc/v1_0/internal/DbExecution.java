@@ -36,9 +36,8 @@ public final class DbExecution {
     this.rawQueryTexts =
         queryInfo.getQueries().stream()
             .map(QueryInfo::getQuery)
-            .map(
-                query ->
-                    R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
+            .map(query ->
+                R2dbcSqlCommenterUtil.getOriginalQuery(queryInfo.getConnectionInfo(), query))
             .collect(toList());
     int queryInfoBatchSize = queryInfo.getBatchSize();
     // r2dbc-proxy reports 0 as the default size for ordinary non-batch executions. Those still

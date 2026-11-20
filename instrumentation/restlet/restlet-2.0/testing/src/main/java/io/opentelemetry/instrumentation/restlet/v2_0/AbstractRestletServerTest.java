@@ -230,19 +230,18 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
     super.configure(options);
     options.setTestPathParam(true);
     options.setTestErrorBody(false);
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + endpoint.getPath();
-          }
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + endpoint.getPath();
+      }
 
-          if (PATH_PARAM.equals(endpoint)) {
-            return getContextPath() + "/path/{id}/param";
-          } else if (NOT_FOUND.equals(endpoint)) {
-            return getContextPath() + notFoundRoute();
-          }
+      if (PATH_PARAM.equals(endpoint)) {
+        return getContextPath() + "/path/{id}/param";
+      } else if (NOT_FOUND.equals(endpoint)) {
+        return getContextPath() + notFoundRoute();
+      }
 
-          return expectedHttpRoute(endpoint, method);
-        });
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 }

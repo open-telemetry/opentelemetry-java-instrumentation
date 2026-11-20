@@ -7,6 +7,8 @@ package org.apache.hadoop.hbase.ipc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -17,8 +19,30 @@ import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class OpenTelemetryCallUtilTest {
+
+  @Test
+  @EnabledForJreRange(min = JRE.JAVA_16)
+  void preservesUnixPeerUntilCallCompletion() throws ReflectiveOperationException {
+    Call call = mock(Call.class);
+    RequestAndContext requestAndContext = requestAndContext();
+    OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
+    SocketAddress peer =
+        (SocketAddress)
+            Class.forName("java.net.UnixDomainSocketAddress")
+                .getMethod("of", String.class)
+                .invoke(null, "hbase.sock");
+
+    OpenTelemetryCallUtil.setNetworkPeer(call, peer);
+
+    assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
+        .isSameAs(requestAndContext);
+    assertThat(requestAndContext.getRequest().getNetworkPeerSocketAddress()).isSameAs(peer);
+    assertThat(requestAndContext.getRequest().getServerTarget()).isEqualTo("logical-target");
+  }
 
   @Test
   void setsResolvedInetSocketAddress() throws UnknownHostException {
@@ -26,17 +50,18 @@ class OpenTelemetryCallUtilTest {
     RequestAndContext requestAndContext = requestAndContext();
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext);
 
-    InetSocketAddress networkPeer =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 1234);
+    InetAddress address = mock(InetAddress.class);
+    InetSocketAddress networkPeer = new InetSocketAddress(address, 1234);
     OpenTelemetryCallUtil.setNetworkPeer(call, networkPeer);
 
     RequestAndContext updated = OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
     assertThat(updated).isSameAs(requestAndContext);
     assertThat(updated.getRequest()).isSameAs(requestAndContext.getRequest());
-    assertThat(updated.getRequest().getNetworkPeerInetSocketAddress()).isSameAs(networkPeer);
+    assertThat(updated.getRequest().getNetworkPeerSocketAddress()).isSameAs(networkPeer);
     assertThat(updated.getRequest().getServerTarget()).isEqualTo("logical-target");
     assertThat(updated.getScope()).isSameAs(requestAndContext.getScope());
     assertThat(updated.getContext()).isSameAs(requestAndContext.getContext());
+    verify(address, never()).getHostAddress();
   }
 
   @Test
@@ -50,7 +75,7 @@ class OpenTelemetryCallUtilTest {
 
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
         .isSameAs(requestAndContext);
-    assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress()).isNull();
+    assertThat(requestAndContext.getRequest().getNetworkPeerSocketAddress()).isNull();
   }
 
   @Test
@@ -66,7 +91,7 @@ class OpenTelemetryCallUtilTest {
 
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call))
         .isSameAs(requestAndContext);
-    assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress()).isNull();
+    assertThat(requestAndContext.getRequest().getNetworkPeerSocketAddress()).isNull();
   }
 
   @Test
@@ -86,7 +111,7 @@ class OpenTelemetryCallUtilTest {
     assertThat(updated).isSameAs(requestAndContext);
     HbaseRequest request = updated.getRequest();
     assertThat(request).isSameAs(requestAndContext.getRequest());
-    assertThat(request.getNetworkPeerInetSocketAddress()).isSameAs(secondPeer);
+    assertThat(request.getNetworkPeerSocketAddress()).isSameAs(secondPeer);
   }
 
   @Test
@@ -95,10 +120,11 @@ class OpenTelemetryCallUtilTest {
     OpenTelemetryCallUtil.setRequestAndContext(call, requestAndContext());
     OpenTelemetryCallUtil.getAndClearRequestAndContext(call);
 
-    OpenTelemetryCallUtil.setNetworkPeer(
-        call, new InetSocketAddress(InetAddress.getLoopbackAddress(), 1234));
+    InetAddress address = mock(InetAddress.class);
+    OpenTelemetryCallUtil.setNetworkPeer(call, new InetSocketAddress(address, 1234));
 
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call)).isNull();
+    verify(address, never()).getHostAddress();
   }
 
   @Test
@@ -116,8 +142,7 @@ class OpenTelemetryCallUtilTest {
     OpenTelemetryCallUtil.setNetworkPeer(
         call, new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 41}), 5678));
 
-    assertThat(requestAndContext.getRequest().getNetworkPeerInetSocketAddress())
-        .isSameAs(firstPeer);
+    assertThat(requestAndContext.getRequest().getNetworkPeerSocketAddress()).isSameAs(firstPeer);
     assertThat(OpenTelemetryCallUtil.getAndClearRequestAndContext(call)).isNull();
   }
 

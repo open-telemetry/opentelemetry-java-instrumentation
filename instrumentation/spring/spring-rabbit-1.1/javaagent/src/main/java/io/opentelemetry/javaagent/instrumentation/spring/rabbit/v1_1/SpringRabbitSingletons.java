@@ -61,26 +61,24 @@ public class SpringRabbitSingletons {
     setMessagingProcessExceptionEventExtractor(builder);
 
     MessageHeaderGetter headerGetter = new MessageHeaderGetter();
-    builder.addSpanLinksExtractor(
-        (links, parentContext, request) -> {
-          for (Message message : request.getMessages()) {
-            SpanContext creationContext =
-                Span.fromContext(
-                        openTelemetry
-                            .getPropagators()
-                            .getTextMapPropagator()
-                            .extract(Context.root(), message, headerGetter))
-                    .getSpanContext();
-            links.addLink(creationContext);
-          }
-        });
+    builder.addSpanLinksExtractor((links, parentContext, request) -> {
+      for (Message message : request.getMessages()) {
+        SpanContext creationContext =
+            Span.fromContext(
+                    openTelemetry
+                        .getPropagators()
+                        .getTextMapPropagator()
+                        .extract(Context.root(), message, headerGetter))
+                .getSpanContext();
+        links.addLink(creationContext);
+      }
+    });
     builder.addContextCustomizer(
-        MessagingProcessContextCustomizer.create(
-            (parentContext, request) ->
-                openTelemetry
-                    .getPropagators()
-                    .getTextMapPropagator()
-                    .extract(parentContext, request.getMessage(), headerGetter)));
+        MessagingProcessContextCustomizer.create((parentContext, request) ->
+            openTelemetry
+                .getPropagators()
+                .getTextMapPropagator()
+                .extract(parentContext, request.getMessage(), headerGetter)));
     instrumenter = builder.buildInstrumenter(SpanKindExtractor.alwaysConsumer());
   }
 

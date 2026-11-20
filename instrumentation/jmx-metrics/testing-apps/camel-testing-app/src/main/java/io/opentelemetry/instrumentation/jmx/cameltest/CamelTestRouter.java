@@ -27,19 +27,18 @@ class CamelTestRouter extends RouteBuilder {
   public void configure() throws Exception {
     from("direct:bird-species")
         .routeId("Bird-Species-Route")
-        .process(
-            exchange -> {
-              try {
-                Thread.sleep(
-                    DEFAULT_EXCHANGE_DELAY_MS
-                        + ThreadLocalRandom.current().nextLong(MAXIMUM_EXCHANGE_DELAY_DELTA));
-              } catch (InterruptedException e) {
-                Thread.currentThread().interrupt();
-                throw new IllegalStateException(e);
-              }
-              Long id = exchange.getMessage().getHeader("id", Long.class);
-              exchange.getMessage().setBody(BIRD_SPECIES.get(id));
-            });
+        .process(exchange -> {
+          try {
+            Thread.sleep(
+                DEFAULT_EXCHANGE_DELAY_MS
+                    + ThreadLocalRandom.current().nextLong(MAXIMUM_EXCHANGE_DELAY_DELTA));
+          } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException(e);
+          }
+          Long id = exchange.getMessage().getHeader("id", Long.class);
+          exchange.getMessage().setBody(BIRD_SPECIES.get(id));
+        });
 
     from("timer:test-request-timer?period=50")
         .routeId("Camel-Test-Route")

@@ -125,26 +125,24 @@ class S3ClientTest extends AbstractS3ClientTest {
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("S3.HeadBucket")
-                            .hasKind(CLIENT)
-                            .hasStatus(StatusData.error())
-                            .hasException(caught)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_FULL, "https://s3.amazonaws.com"),
-                                equalTo(HTTP_REQUEST_METHOD, "HEAD"),
-                                equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
-                                equalTo(SERVER_PORT, 443L),
-                                equalTo(RPC_SYSTEM, "aws-api"),
-                                equalTo(RPC_SERVICE, "Amazon S3"),
-                                equalTo(RPC_METHOD, "HeadBucket"),
-                                equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
-                                equalTo(AWS_S3_BUCKET, "someBucket"),
-                                equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("S3.HeadBucket")
+                    .hasKind(CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasException(caught)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_FULL, "https://s3.amazonaws.com"),
+                        equalTo(HTTP_REQUEST_METHOD, "HEAD"),
+                        equalTo(SERVER_ADDRESS, "s3.amazonaws.com"),
+                        equalTo(SERVER_PORT, 443L),
+                        equalTo(RPC_SYSTEM, "aws-api"),
+                        equalTo(RPC_SERVICE, "Amazon S3"),
+                        equalTo(RPC_METHOD, "HeadBucket"),
+                        equalTo(stringKey("aws.agent"), experimental("java-aws-sdk")),
+                        equalTo(AWS_S3_BUCKET, "someBucket"),
+                        equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
   }
 
   @Test

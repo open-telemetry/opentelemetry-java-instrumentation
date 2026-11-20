@@ -160,13 +160,12 @@ class CouchbaseTracerTest {
     if (emitExceptionAsSpanEvents()) {
       assertThat(spanData.getEvents())
           .filteredOn(event -> event.getName().equals("exception"))
-          .satisfiesExactly(
-              event ->
-                  assertThat(event)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                          equalTo(EXCEPTION_MESSAGE, "failure"),
-                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+          .satisfiesExactly(event ->
+              assertThat(event)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "failure"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
     } else {
       assertThat(spanData.getEvents())
           .filteredOn(event -> event.getName().equals("exception"))
@@ -176,15 +175,14 @@ class CouchbaseTracerTest {
     List<LogRecordData> logs = logExporter.getFinishedLogRecordItems();
     if (emitExceptionAsLogs()) {
       assertThat(logs)
-          .satisfiesExactly(
-              log ->
-                  assertThat(log)
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("db.client.operation.exception")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                          equalTo(EXCEPTION_MESSAGE, "failure"),
-                          satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+          .satisfiesExactly(log ->
+              assertThat(log)
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("db.client.operation.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                      equalTo(EXCEPTION_MESSAGE, "failure"),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
       assertThat(logs.get(0).getSpanContext().getTraceId()).isEqualTo(spanData.getTraceId());
       assertThat(logs.get(0).getSpanContext().getSpanId()).isEqualTo(spanData.getSpanId());
     } else {

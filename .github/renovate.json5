@@ -370,6 +370,7 @@
       // intentionally testing against specific major Java versions
       matchPackageNames: [
         'eclipse-temurin',
+        'ibmjava',
       ],
       matchUpdateTypes: [
         'major',
@@ -470,11 +471,12 @@
       datasourceTemplate: 'docker',
       managerFilePatterns: [
         '**/build.gradle.kts',
+        '**/*.java',
       ],
       matchStrings: [
-        '"(?<depName>eclipse-temurin):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
-        '"(?<depName>ibm-semeru-runtimes):(?<currentValue>[^"@]+)@(?<currentDigest>sha256:[0-9a-f]+)"',
+        '"(?<depName>eclipse-temurin|ibm-semeru-runtimes|ibmjava):(?<currentValue>(?:open-)?\\d[\\w.-]*)(?:@(?<currentDigest>sha256:[0-9a-f]+))?"',
       ],
+      autoReplaceStringTemplate: '"{{{depName}}}:{{{newValue}}}{{#if newDigest}}@{{{newDigest}}}{{/if}}"',
     },
     {
       customType: 'regex',

@@ -16,9 +16,8 @@ class ReactorKafka133InstrumentationTest extends AbstractReactorKafkaTest {
 
   @Test
   void testReceiveAutoAck() {
-    testSingleRecordProcess(
-        recordConsumer ->
-            receiver.receiveAutoAck(1).subscribe(records -> records.subscribe(recordConsumer)));
+    testSingleRecordProcess(recordConsumer ->
+        receiver.receiveAutoAck(1).subscribe(records -> records.subscribe(recordConsumer)));
   }
 
   @Test

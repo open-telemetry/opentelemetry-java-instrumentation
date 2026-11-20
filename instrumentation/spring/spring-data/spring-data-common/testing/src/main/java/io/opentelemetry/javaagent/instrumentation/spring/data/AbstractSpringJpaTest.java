@@ -63,10 +63,9 @@ public abstract class AbstractSpringJpaTest<
     testing.runWithSpan("toString test", repo::toString);
 
     // Asserting that a span is NOT created for toString
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("toString test").hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("toString test").hasTotalAttributeCount(0)));
   }
 
   static void assertHibernate4Trace(TraceAssert trace, String repoClassName) {
@@ -96,12 +95,11 @@ public abstract class AbstractSpringJpaTest<
                     equalTo(CODE_FUNCTION_NAME, repoClassName + ".save")),
         span ->
             span.hasKind(SpanKind.CLIENT)
-                .satisfies(
-                    spanData -> {
-                      // Hibernate 5.x uses "hibernate_sequence", 6.x+ uses "JpaCustomer_SEQ"
-                      assertThat(spanData.getName())
-                          .isIn("call hibernate_sequence", "call JpaCustomer_SEQ");
-                    })
+                .satisfies(spanData -> {
+                  // Hibernate 5.x uses "hibernate_sequence", 6.x+ uses "JpaCustomer_SEQ"
+                  assertThat(spanData.getName())
+                      .isIn("call hibernate_sequence", "call JpaCustomer_SEQ");
+                })
                 .hasAttributesSatisfyingExactly(
                     equalTo(DB_SYSTEM_NAME, HSQLDB),
                     equalTo(DB_NAMESPACE, "test"),
@@ -133,23 +131,22 @@ public abstract class AbstractSpringJpaTest<
     assertThat(id(customer)).isNull();
     assertThat(repo.findAll()).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("JpaCustomerRepository.findAll")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".findAll")),
-                span ->
-                    span.hasName("select JpaCustomer")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
-                            equalTo(DB_QUERY_SUMMARY, "select JpaCustomer"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("JpaCustomerRepository.findAll")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, repoClassName + ".findAll")),
+            span ->
+                span.hasName("select JpaCustomer")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
+                        equalTo(DB_QUERY_SUMMARY, "select JpaCustomer"))));
     clearData();
 
     repo.save(customer);
@@ -165,81 +162,78 @@ public abstract class AbstractSpringJpaTest<
     setFirstName(customer, "Bill");
     repo.save(customer);
     assertThat(id(customer)).isEqualTo(savedId);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("JpaCustomerRepository.save")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".save")),
-                span ->
-                    span.hasName("select JpaCustomer")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
-                            equalTo(DB_QUERY_SUMMARY, "select JpaCustomer")),
-                span ->
-                    span.hasName("update JpaCustomer")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("update ")),
-                            equalTo(DB_QUERY_SUMMARY, "update JpaCustomer"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("JpaCustomerRepository.save")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, repoClassName + ".save")),
+            span ->
+                span.hasName("select JpaCustomer")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
+                        equalTo(DB_QUERY_SUMMARY, "select JpaCustomer")),
+            span ->
+                span.hasName("update JpaCustomer")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("update ")),
+                        equalTo(DB_QUERY_SUMMARY, "update JpaCustomer"))));
     clearData();
 
     customer = findByLastName(repo, "Anonymous").get(0);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("JpaCustomerRepository.findByLastName")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".findByLastName")),
-                span ->
-                    span.hasName("select JpaCustomer")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
-                            equalTo(DB_QUERY_SUMMARY, "select JpaCustomer"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("JpaCustomerRepository.findByLastName")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, repoClassName + ".findByLastName")),
+            span ->
+                span.hasName("select JpaCustomer")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
+                        equalTo(DB_QUERY_SUMMARY, "select JpaCustomer"))));
     clearData();
 
     repo.delete(customer);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("JpaCustomerRepository.delete")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".delete")),
-                span ->
-                    span.hasName("select JpaCustomer")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
-                            equalTo(DB_QUERY_SUMMARY, "select JpaCustomer")),
-                span ->
-                    span.hasName("delete JpaCustomer")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("delete ")),
-                            equalTo(DB_QUERY_SUMMARY, "delete JpaCustomer"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("JpaCustomerRepository.delete")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, repoClassName + ".delete")),
+            span ->
+                span.hasName("select JpaCustomer")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
+                        equalTo(DB_QUERY_SUMMARY, "select JpaCustomer")),
+            span ->
+                span.hasName("delete JpaCustomer")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("delete ")),
+                        equalTo(DB_QUERY_SUMMARY, "delete JpaCustomer"))));
   }
 
   @Test
@@ -250,23 +244,22 @@ public abstract class AbstractSpringJpaTest<
 
     assertThat(customers).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("JpaCustomerRepository.findSpecialCustomers")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".findSpecialCustomers")),
-                span ->
-                    span.hasName("select JpaCustomer")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
-                            equalTo(DB_QUERY_SUMMARY, "select JpaCustomer"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("JpaCustomerRepository.findSpecialCustomers")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, repoClassName + ".findSpecialCustomers")),
+            span ->
+                span.hasName("select JpaCustomer")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
+                        equalTo(DB_QUERY_SUMMARY, "select JpaCustomer"))));
   }
 
   @Test
@@ -288,24 +281,23 @@ public abstract class AbstractSpringJpaTest<
 
     // then
     assertThat(expectedException).isNotNull();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("JpaCustomerRepository.findOneByLastName")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasStatus(StatusData.error())
-                        .hasException(expectedException)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, repoClassName + ".findOneByLastName")),
-                span ->
-                    span.hasName("select JpaCustomer")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
-                            equalTo(DB_QUERY_SUMMARY, "select JpaCustomer"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("JpaCustomerRepository.findOneByLastName")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.error())
+                    .hasException(expectedException)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, repoClassName + ".findOneByLastName")),
+            span ->
+                span.hasName("select JpaCustomer")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        satisfies(DB_QUERY_TEXT, val -> val.startsWith("select ")),
+                        equalTo(DB_QUERY_SUMMARY, "select JpaCustomer"))));
   }
 }

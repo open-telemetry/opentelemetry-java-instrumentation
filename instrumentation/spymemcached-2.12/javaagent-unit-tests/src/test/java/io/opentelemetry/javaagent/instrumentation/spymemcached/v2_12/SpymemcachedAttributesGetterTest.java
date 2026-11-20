@@ -28,6 +28,8 @@ import net.spy.memcached.MemcachedConnection;
 import net.spy.memcached.MemcachedNode;
 import net.spy.memcached.ops.OperationException;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 class SpymemcachedAttributesGetterTest {
 
@@ -122,36 +124,61 @@ class SpymemcachedAttributesGetterTest {
         new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
     request.setHandlingNode(memcachedNode(peer));
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isEqualTo(peer);
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(peer);
     assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.20.30.40");
     assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(11211);
   }
 
   @Test
-  void unresolvedHandlingNodeIsNotResolved() {
+  void unresolvedHandlingNodeIsPreservedWithoutResolving() {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
     InetSocketAddress unresolved = node("unresolved.example", 11211);
     request.setHandlingNode(memcachedNode(unresolved));
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(unresolved);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(11211);
+  }
+
+  @Test
+  void unsupportedRetryHasNoNetworkAddressOrPort() throws UnknownHostException {
+    SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
+    InetSocketAddress peer =
+        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 20, 30, 40}), 11211);
+    request.setHandlingNode(memcachedNode(peer));
+
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.20.30.40");
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(11211);
+
+    MemcachedNode unsupportedNode = mock(MemcachedNode.class);
+    when(unsupportedNode.getSocketAddress())
+        .thenReturn(
+            new SocketAddress() {
+              private static final long serialVersionUID = 1L;
+            });
+    request.setRetryHandlingNode(unsupportedNode);
+
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
     assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @Test
-  void nonInetHandlingNodeIsNotReportedAsNetworkPeer() {
+  @EnabledForJreRange(min = JRE.JAVA_16)
+  void unixHandlingNodeSurvivesRetryButNotMultiNodeRouting() throws ReflectiveOperationException {
     SpymemcachedRequest request = request(singletonList(node("one.example", 11211)));
-    MemcachedNode node = mock(MemcachedNode.class);
-    when(node.getSocketAddress())
-        .thenReturn(
-            new SocketAddress() {
-              private static final long serialVersionUID = 1L;
-            });
-    request.setHandlingNode(node);
+    SocketAddress peer =
+        (SocketAddress)
+            Class.forName("java.net.UnixDomainSocketAddress")
+                .getMethod("of", String.class)
+                .invoke(null, "memcached.sock");
+    request.setHandlingNode(memcachedNode("one.example", 11211));
+    request.setRetryHandlingNode(memcachedNode(peer));
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
-    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isSameAs(peer);
+
+    request.setHandlingNode(memcachedNode("two.example", 11212));
+
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isNull();
   }
 
   @Test
@@ -184,7 +211,7 @@ class SpymemcachedAttributesGetterTest {
     request.setHandlingNode(memcachedNode(firstPeer));
     request.setHandlingNode(memcachedNode(secondPeer));
 
-    assertThat(getter.getNetworkPeerInetSocketAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isNull();
   }
 
   private static SpymemcachedRequest request(List<InetSocketAddress> nodes) {
@@ -197,7 +224,7 @@ class SpymemcachedAttributesGetterTest {
     return memcachedNode(node(host, port));
   }
 
-  private static MemcachedNode memcachedNode(InetSocketAddress address) {
+  private static MemcachedNode memcachedNode(SocketAddress address) {
     MemcachedNode node = mock(MemcachedNode.class);
     when(node.getSocketAddress()).thenReturn(address);
     return node;

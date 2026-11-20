@@ -102,22 +102,20 @@ class Jedis30ClientTest {
   void setCommand() {
     jedis.set("foo", "bar");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
 
     assertDurationMetric(
         testing,
@@ -459,52 +457,44 @@ class Jedis30ClientTest {
     assertThat(testing.spans())
         .filteredOn(span -> batchOperation.equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
-              assertThat(span.getStatus().getStatusCode())
-                  .isEqualTo(errorType == null ? StatusCode.UNSET : StatusCode.ERROR);
-            });
+        .satisfies(span -> {
+          assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
+          assertThat(span.getStatus().getStatusCode())
+              .isEqualTo(errorType == null ? StatusCode.UNSET : StatusCode.ERROR);
+        });
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-3.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .anySatisfy(
-                            point -> {
-                              assertThat(point.getAttributes().get(DB_OPERATION_NAME))
-                                  .isEqualTo(batchOperation);
-                              assertThat(point.getAttributes().get(ERROR_TYPE))
-                                  .isEqualTo(errorType);
-                            })));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .anySatisfy(point -> {
+                      assertThat(point.getAttributes().get(DB_OPERATION_NAME))
+                          .isEqualTo(batchOperation);
+                      assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
+                    })));
   }
 
   private static void assertSuccessfulOperationDoesNotInheritError() {
     testing.waitForTraces(1);
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getAttributes().get(DB_OPERATION_NAME)).isEqualTo("SET");
-              assertThat(span.getAttributes().get(ERROR_TYPE)).isNull();
-              assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET);
-            });
+        .satisfies(span -> {
+          assertThat(span.getAttributes().get(DB_OPERATION_NAME)).isEqualTo("SET");
+          assertThat(span.getAttributes().get(ERROR_TYPE)).isNull();
+          assertThat(span.getStatus().getStatusCode()).isEqualTo(StatusCode.UNSET);
+        });
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-3.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .singleElement()
-                        .satisfies(
-                            point -> {
-                              assertThat(point.getAttributes().get(DB_OPERATION_NAME))
-                                  .isEqualTo("SET");
-                              assertThat(point.getAttributes().get(ERROR_TYPE)).isNull();
-                            })));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .singleElement()
+                    .satisfies(point -> {
+                      assertThat(point.getAttributes().get(DB_OPERATION_NAME)).isEqualTo("SET");
+                      assertThat(point.getAttributes().get(ERROR_TYPE)).isNull();
+                    })));
   }
 
   private static class ReplyPipeline extends Pipeline {
@@ -604,21 +594,17 @@ class Jedis30ClientTest {
   }
 
   private static void assertErrorType(String errorType) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-3.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .anySatisfy(
-                            point ->
-                                assertThat(point.getAttributes().get(ERROR_TYPE))
-                                    .isEqualTo(errorType))));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .anySatisfy(point ->
+                        assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType))));
   }
 
   @Test
@@ -629,22 +615,20 @@ class Jedis30ClientTest {
       pooled.set("pooled", "value");
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET pooled ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET pooled ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
 
   @Test
@@ -661,11 +645,10 @@ class Jedis30ClientTest {
     testing.waitForTraces(1);
     assertThat(testing.spans())
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo("localhost");
-              assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
-            });
+        .satisfies(span -> {
+          assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo("localhost");
+          assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo((long) port);
+        });
   }
 
   @Test
@@ -677,35 +660,33 @@ class Jedis30ClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "GET foo"),
-                            equalTo(DB_OPERATION_NAME, "GET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("GET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "GET foo"),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
 
   @Test
@@ -717,35 +698,33 @@ class Jedis30ClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("RANDOMKEY " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
-                            equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("RANDOMKEY " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
+                        equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
 
   @Test
@@ -755,37 +734,35 @@ class Jedis30ClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SELECT 1"),
-                            equalTo(DB_OPERATION_NAME, "SELECT"),
-                            // jedis 3.x updates the database index only after SELECT succeeds, so
-                            // this span still reports the database it was sent on
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SELECT " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SELECT 1"),
+                        equalTo(DB_OPERATION_NAME, "SELECT"),
+                        // jedis 3.x updates the database index only after SELECT succeeds, so
+                        // this span still reports the database it was sent on
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "1"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"),
+                        equalTo(DB_NAMESPACE, "1"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
 
   @ParameterizedTest
@@ -800,23 +777,21 @@ class Jedis30ClientTest {
       return;
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(scenario.operationName + " " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, scenario.queryText),
-                            equalTo(DB_OPERATION_NAME, scenario.operationName),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(scenario.operationName + " " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, scenario.queryText),
+                    equalTo(DB_OPERATION_NAME, scenario.operationName),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
 
   @ParameterizedTest
@@ -834,23 +809,21 @@ class Jedis30ClientTest {
       return;
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(scenario.operationName + " " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, scenario.queryText),
-                            equalTo(DB_OPERATION_NAME, scenario.operationName),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(scenario.operationName + " " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, scenario.queryText),
+                    equalTo(DB_OPERATION_NAME, scenario.operationName),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative))));
   }
 
   @Test
