@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
  */
 public final class DbConnectionPoolMetrics {
 
+  // visible for testing
   static final AttributeKey<String> POOL_NAME = stringKey("db.client.connection.pool.name");
   static final AttributeKey<String> CONNECTION_STATE = stringKey("db.client.connection.state");
 

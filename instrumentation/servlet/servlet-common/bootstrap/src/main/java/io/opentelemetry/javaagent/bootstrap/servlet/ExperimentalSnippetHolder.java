@@ -17,6 +17,7 @@ public final class ExperimentalSnippetHolder {
         .getString("javascript_snippet/development", "");
   }
 
+  // only used by tests
   public static void setSnippet(String newValue) {
     snippet = newValue;
   }
