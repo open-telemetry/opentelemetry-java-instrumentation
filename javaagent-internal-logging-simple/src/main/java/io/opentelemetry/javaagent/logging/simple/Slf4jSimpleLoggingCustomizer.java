@@ -6,9 +6,9 @@
 package io.opentelemetry.javaagent.logging.simple;
 
 import com.google.auto.service.AutoService;
-import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.tooling.LoggingCustomizer;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
+import io.opentelemetry.javaagent.tooling.logging.LoggerInitializer;
 import org.slf4j.LoggerFactory;
 
 @AutoService(LoggingCustomizer.class)
@@ -46,7 +46,7 @@ public final class Slf4jSimpleLoggingCustomizer implements LoggingCustomizer {
     // trigger loading the provider from the agent CL
     LoggerFactory.getILoggerFactory();
 
-    InternalLogger.initialize(Slf4jSimpleLogger::create);
+    LoggerInitializer.initialize(Slf4jSimpleLogger::create);
   }
 
   @Override

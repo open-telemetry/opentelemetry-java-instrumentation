@@ -13,7 +13,6 @@ import static java.util.logging.Level.OFF;
 import static java.util.logging.Level.SEVERE;
 import static java.util.logging.Level.WARNING;
 
-import java.text.MessageFormat;
 import java.util.ResourceBundle;
 import java.util.function.Supplier;
 import java.util.logging.Filter;
@@ -131,7 +130,8 @@ public class PatchLogger {
   public void log(LogRecord record) {
     InternalLogger.Level internalLevel = toInternalLevel(record.getLevel());
     if (internalLogger.isLoggable(internalLevel)) {
-      internalLogger.log(internalLevel, getMessage(record), record.getThrown());
+      internalLogger.log(
+          internalLevel, record.getMessage(), record.getParameters(), record.getThrown());
     }
   }
 
@@ -142,14 +142,14 @@ public class PatchLogger {
   public void log(Level level, String msg, Object param1) {
     InternalLogger.Level internalLevel = toInternalLevel(level);
     if (internalLogger.isLoggable(internalLevel)) {
-      internalLogger.log(internalLevel, MessageFormat.format(msg, param1), null);
+      internalLogger.log(internalLevel, msg, new Object[] {param1}, null);
     }
   }
 
   public void log(Level level, String msg, Object[] params) {
     InternalLogger.Level internalLevel = toInternalLevel(level);
     if (internalLogger.isLoggable(internalLevel)) {
-      internalLogger.log(internalLevel, MessageFormat.format(msg, params), null);
+      internalLogger.log(internalLevel, msg, params, null);
     }
   }
 
@@ -366,15 +366,5 @@ public class PatchLogger {
 
   public boolean getUseParentHandlers() {
     return true;
-  }
-
-  private static String getMessage(LogRecord record) {
-    String msg = record.getMessage();
-    Object[] params = record.getParameters();
-    if (params == null) {
-      return msg;
-    } else {
-      return MessageFormat.format(msg, params);
-    }
   }
 }
