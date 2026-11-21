@@ -66,8 +66,9 @@ public class SpringAwsUtil {
   }
 
   // when a poll asks for more than 10 messages, spring combines the responses of several receive
-  // calls into a new collection, so the tracing list is carried on each of its messages instead;
-  // the state is removed when the message is converted
+  // calls into a new collection, so the tracing list is carried on each of its messages instead.
+  // spring converts the combined messages right after combining them, which removes the state; if
+  // conversion fails, spring drops the messages and the state goes with them
   public static void carryTracingState(Collection<?> messages) {
     if (!(messages instanceof TracingList tracingList)) {
       return;

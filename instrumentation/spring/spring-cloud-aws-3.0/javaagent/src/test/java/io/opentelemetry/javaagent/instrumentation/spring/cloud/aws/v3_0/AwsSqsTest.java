@@ -67,6 +67,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
@@ -113,12 +115,17 @@ class AwsSqsTest {
       combinedBatchQueueUrl =
           client.createQueue(request -> request.queueName("combined-batch-queue")).queueUrl();
     }
-    System.setProperty("test.combined-batch-queue-url", combinedBatchQueueUrl);
+    // discard the telemetry of the queue creation
+    testing.waitForTraces(2);
+  }
+
+  @DynamicPropertySource
+  static void queueUrls(DynamicPropertyRegistry registry) {
+    registry.add("test.combined-batch-queue-url", () -> combinedBatchQueueUrl);
   }
 
   @AfterAll
   static void cleanUp() {
-    System.clearProperty("test.combined-batch-queue-url");
     if (sqs != null) {
       sqs.stopAndWait();
     }
