@@ -86,6 +86,7 @@ tasks {
   val windowsBackendImageBuild = register<DockerBuildImage>("windowsBackendImageBuild") {
     dependsOn(windowsBackendImagePrepare)
     inputDir.set(backendDockerBuildDir)
+    pull.set(true)
 
     images.add("ghcr.io/$repo/smoke-test-fake-backend-windows:$extraTag")
     dockerFile.set(File(backendDockerBuildDir.get().asFile, "windows.dockerfile"))

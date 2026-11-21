@@ -1,0 +1,88 @@
+name: Refresh floating smoke-test image bases
+
+on:
+  schedule:
+    - cron: "17 6 * * 1"
+  workflow_dispatch:
+    inputs:
+      family:
+        description: Image family to refresh
+        required: true
+        type: choice
+        options:
+          - all
+          - fake-backend
+          - grpc
+          - play
+          - quarkus
+          - security-manager
+          - spring-boot
+
+permissions:
+  contents: read
+
+concurrency:
+  group: smoke-test-image-base-refresh
+  cancel-in-progress: false
+
+jobs:
+  families:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      matrix: ${{ steps.select.outputs.matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Require main branch
+        run: |
+          if [[ "$GITHUB_REF" != "refs/heads/main" ]]; then
+            echo "Smoke-test image refreshes must run from main."
+            exit 1
+          fi
+
+      - name: Select maintained image families
+        id: select
+        env:
+          FAMILY: ${{ inputs.family || 'all' }}
+        run: |
+          matrix="$(python3 .github/scripts/smoke_test_image_refresh.py "$GITHUB_EVENT_NAME" "$FAMILY")"
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
+  dispatch:
+    needs: families
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
+      contents: read
+    strategy:
+      fail-fast: false
+      matrix:
+        include: ${{ fromJSON(needs.families.outputs.matrix) }}
+    steps:
+      - name: Dispatch publisher on main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          WORKFLOW: ${{ matrix.workflow }}
+        run: |
+          gh api --method POST \
+            "repos/$GITHUB_REPOSITORY/actions/workflows/$WORKFLOW/dispatches" \
+            --field ref=main
+
+  workflow-notification:
+    permissions:
+      issues: write
+    needs:
+      - families
+      - dispatch
+    if: always()
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@efc55838c9769c5476e0a5cf7183a8c5b4ae70a5 # v0.24.0
+    with:
+      success: >-
+        ${{
+          needs.families.result == 'success' &&
+          needs.dispatch.result == 'success'
+        }}
