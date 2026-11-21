@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -35,9 +36,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation("org.springframework.ai:spring-ai-model:1.0.0")
     }
   }
@@ -66,6 +66,6 @@ testing.suites {
 
 tasks {
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites.named("version2Test"))
   }
 }
