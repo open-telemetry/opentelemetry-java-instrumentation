@@ -112,14 +112,24 @@ class PekkoHttpParsingErrorAttributesGetter
 
   /**
    * Returns the path and query of a request-target in origin form ({@code /path?query}) or absolute
-   * form with or without an authority. Returns {@code null} for the authority form of a CONNECT
-   * request, the asterisk form of a server-wide OPTIONS request, and anything else that is neither
-   * origin nor absolute form.
+   * form with or without an authority. Returns {@code null} for a CONNECT request, the asterisk
+   * form of a server-wide OPTIONS request, anything else that is neither origin nor absolute form,
+   * and a target that contains control characters.
    */
   @Nullable
   private static String pathAndQuery(PekkoHttpParsingErrorRequest request) {
+    // a CONNECT target is a host and port, not a path, even when pekko-http renders an IPv6 one
+    // with a leading // such as //[::1]:443
+    if ("CONNECT".equals(request.method())) {
+      return null;
+    }
     String target = withoutFragment(request.rawRequestTarget());
-    if (target == null || target.startsWith("/")) {
+    // a rejected target keeps any literal control characters, which exporters such as the logging
+    // one write unescaped
+    if (target == null || containsControlCharacter(target)) {
+      return null;
+    }
+    if (target.startsWith("/")) {
       return target;
     }
     int schemeEnd = findSchemeEnd(target);
@@ -128,8 +138,7 @@ class PekkoHttpParsingErrorAttributesGetter
     }
     int pathStart = schemeEnd + 1;
     if (!target.startsWith("//", pathStart)) {
-      // A CONNECT target such as example.com:443 is a host and port, not a scheme and path.
-      return "CONNECT".equals(request.method()) ? null : target.substring(pathStart);
+      return target.substring(pathStart);
     }
 
     // the authority ends at the first '/' or '?', a '/' after a '?' belongs to the query
@@ -151,6 +160,15 @@ class PekkoHttpParsingErrorAttributesGetter
     }
     int fragmentStart = target.indexOf('#');
     return fragmentStart >= 0 ? target.substring(0, fragmentStart) : target;
+  }
+
+  private static boolean containsControlCharacter(String target) {
+    for (int i = 0; i < target.length(); i++) {
+      if (Character.isISOControl(target.charAt(i))) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /** Returns the index of the colon after a valid URI scheme, or {@code -1} if absent. */
