@@ -214,17 +214,16 @@ class GwtTest {
                 .hasName("rpc.server.call.duration")
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasSumGreaterThan(0)
-                            .hasBucketBoundaries(
-                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
-                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM_NAME, "gwt"),
-                                equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"),
-                                equalTo(ERROR_TYPE, errorType)))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSumGreaterThan(0)
+                        .hasBucketBoundaries(
+                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1,
+                            0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM_NAME, "gwt"),
+                            equalTo(RPC_METHOD, "test.gwt.shared.MessageService/sendMessage"),
+                            equalTo(ERROR_TYPE, errorType))));
   }
 }

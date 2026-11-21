@@ -166,10 +166,9 @@ class CouchbaseBaselineTest {
             metric
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point -> assertKeyValueDurationPoint(point, "Bucket.upsert"),
-                        point -> assertKeyValueDurationPoint(point, "Bucket.get"))));
+                .hasHistogramPointsSatisfying(
+                    point -> assertKeyValueDurationPoint(point, "Bucket.upsert"),
+                    point -> assertKeyValueDurationPoint(point, "Bucket.get")));
   }
 
   private void assertKeyValueDurationPoint(HistogramPointAssert point, String operation) {

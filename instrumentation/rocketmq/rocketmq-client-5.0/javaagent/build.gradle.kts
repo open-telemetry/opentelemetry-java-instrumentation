@@ -25,6 +25,17 @@ dependencies {
 }
 
 testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+
+      val rocketmqVersion = baseVersion("5.0.0").orLatest()
+      implementation("org.apache.rocketmq:rocketmq-client-java:$rocketmqVersion")
+    }
+  }
+
   register<JvmTestSuite>("rocketmq52Test") {
     dependencies {
       val rocketmqVersion = baseVersion("5.2.2").orLatest()
@@ -34,7 +45,15 @@ testing.suites {
     }
   }
 
+  val disableWhenUnsafeDenied = Action<Test> {
+    if (otelProps.denyUnsafe) {
+      enabled = false
+    }
+  }
+
   executions("test") {
+    configureEach(disableWhenUnsafeDenied)
+
     configureDefault {
       filter {
         excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
@@ -79,6 +98,8 @@ testing.suites {
   }
 
   executions("rocketmq52Test") {
+    configureEach(disableWhenUnsafeDenied)
+
     register("Experimental") {
       telemetryConfig(
         "otel.instrumentation.rocketmq-client.experimental-span-attributes",
@@ -89,12 +110,6 @@ testing.suites {
         "true",
       )
     }
-  }
-}
-
-tasks.withType<Test>().configureEach {
-  if (otelProps.denyUnsafe) {
-    enabled = false
   }
 }
 

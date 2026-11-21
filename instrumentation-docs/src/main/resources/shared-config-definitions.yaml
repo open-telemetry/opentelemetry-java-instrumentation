@@ -18,7 +18,7 @@ configurations:
     declarative_name: java.common.http.known_methods
     description: "Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`."
     type: list
-    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE"
 
   common.server-service-mapping:
     name: otel.instrumentation.common.server-service-mapping
