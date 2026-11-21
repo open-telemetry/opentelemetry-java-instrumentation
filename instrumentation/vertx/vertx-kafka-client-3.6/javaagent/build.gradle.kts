@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -26,9 +27,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
       implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
       implementation(project(":javaagent-bootstrap"))
@@ -41,11 +41,5 @@ testing.suites {
     configureEach {
       jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
-  }
-}
-
-tasks {
-  check {
-    dependsOn(testing.suites)
   }
 }
