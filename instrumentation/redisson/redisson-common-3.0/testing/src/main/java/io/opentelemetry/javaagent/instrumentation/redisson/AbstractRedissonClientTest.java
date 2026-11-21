@@ -419,29 +419,24 @@ public abstract class AbstractRedissonClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram
-                        .satisfies(data -> assertThat(data.getPoints()).hasSize(3))
-                        .hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(ERROR_TYPE, "Custom.Callback!")),
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(
-                                                ERROR_TYPE, RedisException.class.getName())),
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(attributes ->
-                                        assertThat(attributes.asMap())
-                                            .doesNotContainKey(ERROR_TYPE)))));
+                .hasHistogramPointsSatisfying(
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap())
+                                    .containsEntry(ERROR_TYPE, "Custom.Callback!")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap())
+                                    .containsEntry(ERROR_TYPE, RedisException.class.getName())),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE))));
   }
 
   private static Class<?> loadCommandMapperType() throws ClassNotFoundException {
