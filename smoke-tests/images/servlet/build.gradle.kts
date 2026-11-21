@@ -337,7 +337,7 @@ fun configureImage(
       throw GradleException("Unexpected vm: $vm")
     } else {
       when (jdk) {
-        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:779c0c1133ebac0d599012c5a908e67adaa993352072eac21d7ced8d6a47f14d"
+        "8" -> "ibm-semeru-runtimes:open-8.0.492.0-jdk@sha256:d887824af5351695c476fdf1951bde9b3938632fdee110e0459b66b3c437d5c8"
         "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:00bbefbb2cf3690546338c0e4ba4cf85ec658f40de5b292e77774b55e8267d66"
         "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:3b4e9d649476ebecf6ea287dbd0011aa022a1b92ee47d4616d0bfe6fe7b1a9e9"
         "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:2edabc89c49cfa2b9f0c051aced57ca6dee81c2e6b8820a1257182e779b58a48"
