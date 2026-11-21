@@ -39,7 +39,7 @@ testing.suites {
     }
     register("DeclarativeConfig") {
       filter {
-        includeTestsMatching("WithSpanInstrumentationTest.excludedMethod")
+        includeTestsMatching("WithSpanInstrumentationTest.excludedMethod*")
         includeTestsMatching("WithSpanInstrumentationTest.deriveAutomaticName")
       }
       jvmArgs(

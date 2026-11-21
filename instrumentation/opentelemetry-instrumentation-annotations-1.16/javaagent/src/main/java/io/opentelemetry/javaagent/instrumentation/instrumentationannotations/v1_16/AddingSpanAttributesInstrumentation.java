@@ -74,6 +74,9 @@ class AddingSpanAttributesInstrumentation implements TypeInstrumentation {
     public static void onEnter(
         @Advice.Origin Method method,
         @Advice.AllArguments(typing = Assigner.Typing.DYNAMIC) Object[] args) {
+      if (MethodAnnotationResolver.findWithSpanOrNull(method) != null) {
+        return;
+      }
       Span otelSpan = Span.current();
       if (otelSpan.isRecording() && otelSpan.getSpanContext().isValid()) {
         otelSpan.setAllAttributes(attributes().extract(method, args));

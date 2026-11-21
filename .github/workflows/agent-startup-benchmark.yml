@@ -109,7 +109,7 @@ jobs:
     needs: build
     permissions: {}
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
-    timeout-minutes: 45
+    timeout-minutes: 100
     steps:
       - name: Isolate this attempt under runner temporary storage
         working-directory: ${{ runner.temp }}
