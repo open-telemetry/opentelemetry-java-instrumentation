@@ -5,10 +5,14 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.metrics.data.MetricData;
+import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.function.Consumer;
 
 /** Assertions for messaging metrics. */
 public final class MessagingMetricsAssertions {
@@ -50,19 +54,20 @@ public final class MessagingMetricsAssertions {
   }
 
   private static void verifyCounter(MetricData metric, long value, Attributes attributes) {
-    assertThat(metric.getLongSumData().getPoints())
-        .singleElement()
-        .satisfies(point -> {
-          assertThat(point.getValue()).isEqualTo(value);
-          assertThat(point.getAttributes()).isEqualTo(attributes);
-        });
+    assertThat(metric)
+        .hasLongSumPointsSatisfying(point -> point.hasValue(value).hasAttributes(attributes));
   }
 
   private static void verifyHistogram(MetricData metric, Attributes... attributes) {
-    assertThat(metric.getHistogramData().getPoints())
-        .allSatisfy(point -> assertThat(point.getCount()).isEqualTo(1))
-        .extracting(point -> point.getAttributes())
-        .containsExactlyInAnyOrder(attributes);
+    if (attributes.length == 0) {
+      assertThat(metric.getHistogramData().getPoints()).isEmpty();
+      return;
+    }
+    List<Consumer<HistogramPointAssert>> points = new ArrayList<>();
+    for (Attributes attribute : attributes) {
+      points.add(point -> point.hasCount(1).hasAttributes(attribute));
+    }
+    assertThat(metric).hasHistogramPointsSatisfying(points);
   }
 
   private MessagingMetricsAssertions() {}
