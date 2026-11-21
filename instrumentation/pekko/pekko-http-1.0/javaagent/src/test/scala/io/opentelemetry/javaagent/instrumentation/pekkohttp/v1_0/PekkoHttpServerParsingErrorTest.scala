@@ -198,7 +198,16 @@ class PekkoHttpServerParsingErrorTest {
     * Its request-target is an authority rather than a path, so no `url.path` is
     * reported.
     */
-  @Test def connectRequestIsTraced(): Unit = {
+  @Test def connectRequestIsTraced(): Unit =
+    assertConnectTraced("example.com:443")
+
+  /** pekko-http renders an IPv6 authority with a leading `//`, which must not
+    * be taken for an origin-form path.
+    */
+  @Test def ipv6ConnectRequestIsTraced(): Unit =
+    assertConnectTraced("[::1]:443")
+
+  private def assertConnectTraced(target: String): Unit = {
     implicit val system: ActorSystem = ActorSystem("parsing-error-connect-test")
     try {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
@@ -212,7 +221,7 @@ class PekkoHttpServerParsingErrorTest {
       try {
         val response = send(
           port,
-          "CONNECT example.com:443 HTTP/1.1\r\nHost: example.com\r\n\r\n"
+          "CONNECT " + target + " HTTP/1.1\r\nHost: example.com\r\n\r\n"
         )
         assertThat(response.head).contains("400 Bad Request")
 
@@ -277,6 +286,13 @@ class PekkoHttpServerParsingErrorTest {
       path = Some("/%%"),
       query = Some("q=1")
     )
+
+  /** A rejected target keeps literal control characters, which the logging
+    * exporter would write to the terminal unescaped, so neither the path nor
+    * the query of such a target is reported.
+    */
+  @Test def targetWithControlCharactersIsNotReported(): Unit =
+    assertRejectedTargetTraced("/%%\u001b[2J?q=1")
 
   /** A `://` further into a target that does not start with a scheme does not
     * make it an absolute-form target, so nothing before it is reported as the
