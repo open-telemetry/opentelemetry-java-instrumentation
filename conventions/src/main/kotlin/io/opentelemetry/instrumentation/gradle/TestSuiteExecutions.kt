@@ -17,12 +17,21 @@ import org.gradle.testing.base.TestingExtension
 import org.gradle.testing.base.TestSuite
 
 class TestSuiteExecutionsPlugin : Plugin<Project> {
+  private val variantSuites = mutableMapOf<String, JvmTestSuite>()
+
   override fun apply(project: Project) {
     project.pluginManager.apply("jvm-test-suite")
     project.extensions.getByType(TestingExtension::class.java).suites
       .withType(JvmTestSuite::class.java).configureEach {
         (this as ExtensionAware).extensions.add("executions", TestSuiteExecutions(project, this))
       }
+  }
+  fun suiteFor(task: Test): JvmTestSuite? =
+    task.project.extensions.getByType(TestingExtension::class.java).suites
+      .findByName(task.name) as? JvmTestSuite ?: variantSuites[task.name]
+
+  internal fun registerVariant(suite: JvmTestSuite, taskName: String) {
+    variantSuites[taskName] = suite
   }
 }
 
@@ -110,6 +119,7 @@ class TestSuiteExecutions internal constructor(
     }
     variants.forEach { (suffix, variant) ->
       val taskName = suite.name + suffix
+      project.plugins.getPlugin(TestSuiteExecutionsPlugin::class.java).registerVariant(suite, taskName)
       val task = project.tasks.register(taskName, Test::class.java) {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath

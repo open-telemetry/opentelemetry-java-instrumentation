@@ -470,8 +470,8 @@ is no need to write unit tests that directly access the javaagent instrumentatio
 
 If you still want to write a unit test against javaagent instrumentation, use the `unitTests`
 helper in the `javaagent` module. It registers a JVM test suite with the current project as a
-dependency and includes it in `check`. Its normal test task runs without the javaagent and keeps the
-instrumentation classes on the test classpath:
+dependency and includes it in `check`. Its test task and execution variants run without the
+javaagent and keep the instrumentation classes on the test classpath:
 
 ```kotlin
 import io.opentelemetry.instrumentation.gradle.unitTests
@@ -486,4 +486,5 @@ Pass a configuration block to `unitTests` to add suite-local dependencies. The c
 already provide the common test libraries, instrumentation API, and incubating API.
 
 For a separate unit-test source set or dependency graph, register a `JvmTestSuite` with a name
-ending in `unitTests`, case-insensitively. Wire that suite into `check` explicitly.
+ending in `unitTests`, case-insensitively. Its test task and execution variants also run without the
+javaagent. Wire that suite into `check` explicitly.
