@@ -25,7 +25,7 @@ import org.apache.pekko.http.scaladsl.model.{HttpRequest, HttpResponse}
 import org.apache.pekko.http.scaladsl.settings.ServerSettings
 import org.apache.pekko.stream.scaladsl.Flow
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
 
 import java.io.{BufferedReader, InputStreamReader, OutputStreamWriter}
@@ -46,6 +46,7 @@ import PekkoHttpServerParsingErrorTest.send
   * reports what was read of the request before it was rejected, and the span
   * carries that as well.
   */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoHttpServerParsingErrorTest {
 
   @RegisterExtension val testing: InstrumentationExtension =
