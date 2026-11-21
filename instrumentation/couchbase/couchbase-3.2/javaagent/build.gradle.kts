@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -47,9 +48,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":instrumentation:couchbase:couchbase-common-3.1:javaagent"))
       implementation("com.couchbase.client:java-client:3.4.3")
       implementation("org.objenesis:objenesis")
@@ -101,6 +101,10 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites)
+    dependsOn(
+      testing.suites.named("version343Test"),
+      testing.suites.named("version344Test"),
+      testing.suites.named("version334Test"),
+    )
   }
 }

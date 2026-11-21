@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -34,9 +36,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
       implementation(project(":instrumentation:jms:jms-common-1.1:javaagent"))
@@ -55,7 +56,7 @@ testing.suites {
 
 tasks {
   check {
-    dependsOn(testing.suites)
+    dependsOn(testing.suites.named("jms2Test"))
   }
 }
 
