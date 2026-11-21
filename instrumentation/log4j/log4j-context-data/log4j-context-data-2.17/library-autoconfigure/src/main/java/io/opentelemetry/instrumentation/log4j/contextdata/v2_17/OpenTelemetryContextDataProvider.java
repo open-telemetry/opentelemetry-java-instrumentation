@@ -106,7 +106,8 @@ public final class OpenTelemetryContextDataProvider implements ContextDataProvid
         if (result == data) {
           result = new HashMap<>(data);
         }
-        result.put(key, ThreadContext.get(key));
+        // Log4j retains the original MDC entry, which may have a non-string value.
+        result.remove(key);
       }
     }
     return result;

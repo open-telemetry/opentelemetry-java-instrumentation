@@ -304,6 +304,51 @@ public abstract class LogPatternTest {
         });
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"maxLen", "maxLength"})
+  void preservesMessageLengthBudget(String converter) {
+    assertRenderedPattern(
+        "%" + converter + "{%p %m}{20}%n",
+        (layout, rendered) -> {
+          assertThat(rendered).endsWith("INFO pattern message" + System.lineSeparator());
+          if (ENABLED) {
+            assertThat(rendered)
+                .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+          }
+        });
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"equals", "equalsIgnoreCase"})
+  void preservesEqualsComparison(String converter) {
+    assertRenderedPattern(
+        "%" + converter + "{%m}{pattern message}{pong}%n",
+        (layout, rendered) -> {
+          assertThat(rendered).endsWith("pong" + System.lineSeparator());
+          if (ENABLED) {
+            assertThat(rendered)
+                .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+          }
+        });
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"%X{trace_id}", "%X"})
+  void recognizesMdcInsideEquals(String mdc) {
+    assertRenderedPattern(
+        "%equals{" + mdc + "}{missing}{-} %m%n",
+        (layout, rendered) -> {
+          assertThat(rendered).contains("pattern message");
+          if (ENABLED) {
+            assertThat(rendered)
+                .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+          }
+        });
+  }
+
   private void assertRenderedPattern(String pattern, BiConsumer<PatternLayout, String> assertion) {
     assertRenderedPattern(PatternLayout.newBuilder().withPattern(pattern).build(), assertion);
   }

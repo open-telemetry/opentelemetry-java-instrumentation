@@ -295,7 +295,7 @@ public final class LogPatternInjection {
       i = end - 1;
       if (end < pattern.length() && pattern.charAt(end) == '{') {
         int close = balancedEnd(pattern, end, '{', '}', framework);
-        if (framework == Framework.LOG4J2 && isLog4j2Wrapper(converter)) {
+        if (framework == Framework.LOG4J2 && hasLog4j2NestedPattern(converter)) {
           if (contains(pattern.substring(end + 1, close - 1), framework, key, mdcOption)) {
             return true;
           }
@@ -420,8 +420,10 @@ public final class LogPatternInjection {
     return framework == Framework.LOGBACK || framework == Framework.LOGBACK_LEGACY;
   }
 
-  private static boolean isLog4j2Wrapper(String converter) {
-    return converter.equals("highlight")
+  private static boolean hasLog4j2NestedPattern(String converter) {
+    return converter.equals("equals")
+        || converter.equals("equalsIgnoreCase")
+        || converter.equals("highlight")
         || converter.equals("style")
         || converter.equals("replace")
         || converter.equals("enc")
@@ -439,6 +441,13 @@ public final class LogPatternInjection {
         || converter.equals("red")
         || converter.equals("white")
         || converter.equals("yellow");
+  }
+
+  private static boolean preservesLog4j2NestedText(String converter) {
+    return !converter.equals("maxLen")
+        && !converter.equals("maxLength")
+        && !converter.equals("equals")
+        && !converter.equals("equalsIgnoreCase");
   }
 
   // Returns an insertion offset, -1 for literal-only text, or -2 for prefix fields without a
@@ -485,13 +494,14 @@ public final class LogPatternInjection {
       if (end < pattern.length()
           && pattern.charAt(end) == open
           && (isLogback(framework)
-              || (framework == Framework.LOG4J2 && isLog4j2Wrapper(converter)))) {
+              || (framework == Framework.LOG4J2 && hasLog4j2NestedPattern(converter)))) {
         int wrapperEnd = balancedEnd(pattern, end, open, close, framework);
         int nested =
             messageInsertion(
                 pattern.substring(end + 1, wrapperEnd - 1), framework, nestedInsertion);
         if (nested >= 0) {
-          if (!nestedInsertion) {
+          if (!nestedInsertion
+              || (framework == Framework.LOG4J2 && !preservesLog4j2NestedText(converter))) {
             return precedingEnd;
           }
           return nested == 0 ? precedingEnd : end + 1 + nested;

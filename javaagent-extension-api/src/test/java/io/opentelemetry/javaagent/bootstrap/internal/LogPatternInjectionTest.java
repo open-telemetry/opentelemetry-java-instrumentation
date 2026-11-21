@@ -138,8 +138,6 @@ class LogPatternInjectionTest {
         "notEmpty",
         "varsNotEmpty",
         "variablesNotEmpty",
-        "maxLen",
-        "maxLength",
         "black",
         "blue",
         "green",
@@ -157,6 +155,24 @@ class LogPatternInjectionTest {
     assertPattern(
         "%d %" + converter + "{%X{trace_id}}" + options + " %m%n",
         "%d %" + converter + "{%X{trace_id}}" + options + " span_id=%X{span_id} %m%n",
+        Framework.LOG4J2);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"maxLen", "maxLength", "equals", "equalsIgnoreCase"})
+  void recognizesNestedPatternsWithoutChangingTheirInput(String converter) {
+    String options = converter.startsWith("max") ? "{20}" : "{ping}{pong}";
+    assertPattern(
+        "%d %" + converter + "{%p %m}" + options + "%n",
+        "%d " + FIELDS + " %" + converter + "{%p %m}" + options + "%n",
+        Framework.LOG4J2);
+    assertPattern(
+        "%" + converter + "{%X{trace_id}}" + options + " %m%n",
+        "%" + converter + "{%X{trace_id}}" + options + " span_id=%X{span_id} %m%n",
+        Framework.LOG4J2);
+    assertPattern(
+        "%cyan{%d %" + converter + "{%m}" + options + "}%n",
+        "%cyan{%d " + FIELDS + " %" + converter + "{%m}" + options + "}%n",
         Framework.LOG4J2);
   }
 
