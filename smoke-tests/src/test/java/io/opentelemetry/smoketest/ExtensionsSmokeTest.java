@@ -40,7 +40,8 @@ class ExtensionsSmokeTest {
   private static final String appPath =
       System.getProperty("io.opentelemetry.smoketest.extension.testapp.path");
 
-  private static final String IMAGE = "eclipse-temurin:21";
+  private static final String IMAGE =
+      "eclipse-temurin:21@sha256:db5cc6341a1d7bc40cdb51e1f0d9824f3bb2cc8107d29da421dc4df7d11f05f1";
 
   @Test
   void inlinedExtension() throws InterruptedException {
