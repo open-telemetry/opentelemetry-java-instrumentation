@@ -74,8 +74,6 @@ class TestSuiteExecutionsTest {
     assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
       .contains("unitTests", "customUNITTESTS", "customUNITTESTSVariant")
       .doesNotContain("optInTest", "unitTestsVariant")
-    (project as ProjectInternal).evaluate()
-
     for ((suite, version) in listOf(baseline to "1.0", named to "2.0")) {
       assertThat(
         project.configurations.getByName(suite.sources.implementationConfigurationName)
@@ -88,13 +86,24 @@ class TestSuiteExecutionsTest {
       ).containsExactly(version)
       assertBinding(test(suite.name), suite)
     }
+    assertBinding(test("customUNITTESTSVariant"), named)
+    assertThat(project.tasks.names).doesNotContain("unitTestsVariant")
+  }
+
+  @JunitTest
+  fun `named unit tests and variants run without the agent`() {
+    project.pluginManager.apply("io.opentelemetry.instrumentation.javaagent-testing")
+    val named = suites().unitTests("customUNITTESTS") {
+      executions { register("Variant") {} }
+    }
+    (project as ProjectInternal).evaluate()
+
     for (taskName in listOf("customUNITTESTS", "customUNITTESTSVariant")) {
       val task = test(taskName)
       assertBinding(task, named)
       assertThat(task.jvmArgumentProviders).isEmpty()
       assertThat(task.jvmArgs).noneMatch { it.startsWith("-javaagent:") }
     }
-    assertThat(project.tasks.names).doesNotContain("unitTestsVariant")
   }
 
   @JunitTest
