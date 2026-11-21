@@ -149,7 +149,7 @@ cd benchmark-overhead
 ./gradlew agentStartupBenchmark \
   -PstartupBenchmarkWorkload=petclinic \
   -PstartupBenchmarkAgentJar=/absolute/path/to/opentelemetry-javaagent.jar \
-  -PstartupBenchmarkAnnotationsJar=/absolute/path/to/opentelemetry-instrumentation-annotations.jar
+  -PstartupBenchmarkAnnotationsJar=/absolute/path/to/opentelemetry-instrumentation-annotations-VERSION.jar
 ```
 
 Petclinic uses the pinned `petclinic-rest-base:20230601125442` image (Spring Petclinic REST 2.4.2, Liberica JDK 17.0.7) and PostgreSQL 9.6.22 image, both pinned by digest in the harness. It starts and seeds PostgreSQL before the measured launches, sets owner 1's first name to `StartupBenchmark`, uses the `postgresql,spring-data-jpa` profiles, and checks `/petclinic/api/owners/1` for that record. The database-specific marker distinguishes it from Petclinic's default in-memory data. The same read-only database and annotation JAR on the application classloader are used for every configuration; no inherited spans are added. The database and application containers are removed after the run, including on failure.
