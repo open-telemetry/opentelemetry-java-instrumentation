@@ -1,4 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+import org.gradle.api.plugins.jvm.JvmTestSuite
+import org.gradle.testing.base.TestingExtension
 
 plugins {
   `java-library`
@@ -122,6 +124,12 @@ class JavaagentTestArgumentsProvider(
 // need to run this after evaluate because testSets plugin adds new test tasks
 afterEvaluate {
   tasks.withType<Test>().configureEach {
+    val suite = project.extensions.getByType(TestingExtension::class.java).suites
+      .findByName(name) as? JvmTestSuite
+    if (suite?.name?.endsWith("unitTests", ignoreCase = true) == true) {
+      return@configureEach
+    }
+
     val shadowJar = tasks.shadowJar.get()
     val agentShadowJar = agentForTesting.resolve().first()
 
@@ -131,11 +139,6 @@ afterEvaluate {
     dependsOn(agentForTesting.buildDependencies)
 
     val failOnContextLeakOverride = failOnContextLeakProperty.get()
-
-    val suite = testing.suites.findByName(name) as? JvmTestSuite
-    if (suite != null && suite.name.endsWith("unitTests", true)) {
-      return@configureEach
-    }
 
     jvmArgumentProviders.add(
       JavaagentTestArgumentsProvider(
