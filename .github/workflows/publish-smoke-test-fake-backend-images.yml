@@ -13,13 +13,34 @@ permissions:
   contents: read
 
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      tag: ${{ steps.set-tag.outputs.tag }}
+      attempt: ${{ steps.set-tag.outputs.attempt }}
+    steps:
+      - id: set-tag
+        run: |
+          echo "tag=$(date -u '+%Y%m%d').${GITHUB_RUN_ID}$(printf '%06d' "$GITHUB_RUN_ATTEMPT")" >> "$GITHUB_OUTPUT"
+          echo "attempt=$GITHUB_RUN_ATTEMPT" >> "$GITHUB_OUTPUT"
+
   publishLinux:
+    needs: prepare
     permissions:
       contents: read
       packages: write
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
+      - name: Require a fresh publication attempt
+        env:
+          PREPARE_ATTEMPT: ${{ needs.prepare.outputs.attempt }}
+        run: |
+          if [[ "$PREPARE_ATTEMPT" != "$GITHUB_RUN_ATTEMPT" ]]; then
+            echo "Re-run all jobs to publish with a fresh identifier."
+            exit 1
+          fi
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
@@ -40,9 +61,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set tag
-        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
@@ -50,8 +68,11 @@ jobs:
 
       - name: Build Docker image
         run: ./gradlew :smoke-tests:images:fake-backend:jib -Djib.httpTimeout=120000 -Djib.console=plain -PextraTag=${TAG}
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
 
   publishWindows:
+    needs: prepare
     permissions:
       contents: read
       packages: write
@@ -61,6 +82,14 @@ jobs:
       run:
         shell: bash
     steps:
+      - name: Require a fresh publication attempt
+        env:
+          PREPARE_ATTEMPT: ${{ needs.prepare.outputs.attempt }}
+        run: |
+          if [[ "$PREPARE_ATTEMPT" != "$GITHUB_RUN_ATTEMPT" ]]; then
+            echo "Re-run all jobs to publish with a fresh identifier."
+            exit 1
+          fi
       - name: Support long paths
         run: git config --system core.longpaths true
 
@@ -81,9 +110,6 @@ jobs:
           username: ${{ github.repository_owner }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Set tag
-        run: echo "TAG=$(date '+%Y%m%d').$GITHUB_RUN_ID" >> $GITHUB_ENV
-
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
@@ -92,6 +118,43 @@ jobs:
       - name: Build Docker image
         shell: bash
         run: ./gradlew :smoke-tests:images:fake-backend:dockerPush -PextraTag=${TAG}
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+
+  verify:
+    needs: [prepare, publishLinux, publishWindows]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      packages: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Login to GitHub package registry
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify published image family
+        env:
+          TAG: ${{ needs.prepare.outputs.tag }}
+          LINUX_RESULT: ${{ needs.publishLinux.result }}
+          WINDOWS_RESULT: ${{ needs.publishWindows.result }}
+        run: |
+          printf 'ghcr.io/%s/smoke-test-fake-backend:%s\nghcr.io/%s/smoke-test-fake-backend-windows:%s\n' \
+            "${GITHUB_REPOSITORY,,}" "$TAG" "${GITHUB_REPOSITORY,,}" "$TAG" > "$RUNNER_TEMP/publication-images.txt"
+          python3 .github/scripts/smoke_test_publication.py \
+            --family fake-backend --tag "$TAG" --references "$RUNNER_TEMP/publication-images.txt" \
+            --results "$LINUX_RESULT" "$WINDOWS_RESULT" --output "$RUNNER_TEMP/publication-candidate.json"
+      - name: Upload publication candidate
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: smoke-test-publication-fake-backend-${{ github.run_attempt }}
+          path: ${{ runner.temp }}/publication-candidate.json
+          if-no-files-found: error
 
   workflow-notification:
     permissions:
@@ -99,11 +162,13 @@ jobs:
     needs:
       - publishLinux
       - publishWindows
+      - verify
     if: always()
     uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@f73c28e3be66444181acb54f07ada23f144c0c39 # v0.25.0
     with:
       success: >-
         ${{
           needs.publishLinux.result == 'success' &&
-          needs.publishWindows.result == 'success'
+          needs.publishWindows.result == 'success' &&
+          needs.verify.result == 'success'
         }}
