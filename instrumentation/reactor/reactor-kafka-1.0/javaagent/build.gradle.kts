@@ -76,14 +76,6 @@ testing.suites {
     }
   }
 
-  executions("unitTests") {
-    configureDefault {
-      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    }
-
-    register("ReceiveTelemetryDisabled") {}
-  }
-
   executions("test") {
     configureEach {
       systemProperty("hasConsumerGroup", otelProps.testLatestDeps)

@@ -17,27 +17,18 @@ import org.gradle.testing.base.TestingExtension
 import org.gradle.testing.base.TestSuite
 
 class TestSuiteExecutionsPlugin : Plugin<Project> {
-  private val executionSuites = mutableMapOf<String, JvmTestSuite>()
-
   override fun apply(project: Project) {
     project.pluginManager.apply("jvm-test-suite")
     project.extensions.getByType(TestingExtension::class.java).suites
       .withType(JvmTestSuite::class.java).configureEach {
-        (this as ExtensionAware).extensions.add(
-          "executions", TestSuiteExecutions(project, this, this@TestSuiteExecutionsPlugin)
-        )
+        (this as ExtensionAware).extensions.add("executions", TestSuiteExecutions(project, this))
       }
   }
 
-  internal fun registerExecution(name: String, suite: JvmTestSuite) {
-    executionSuites[name] = suite
-  }
-
   internal fun isUnitTestSuite(task: Test): Boolean {
-    val suite = executionSuites[task.name]
-      ?: task.project.extensions.getByType(TestingExtension::class.java).suites
-        .findByName(task.name) as? JvmTestSuite
-    return suite != null && suite.name.endsWith("unitTests", true)
+    val suite = task.project.extensions.getByType(TestingExtension::class.java).suites
+      .findByName(task.name) as? JvmTestSuite
+    return suite?.name?.endsWith("unitTests", true) == true
   }
 }
 
@@ -85,7 +76,6 @@ fun NamedDomainObjectCollection<TestSuite>.executions(
 class TestSuiteExecutions internal constructor(
   private val project: Project,
   private val suite: JvmTestSuite,
-  private val plugin: TestSuiteExecutionsPlugin,
 ) {
   private val common = mutableListOf<Action<Test>>()
   private val defaultOnly = mutableListOf<Action<Test>>()
@@ -129,7 +119,6 @@ class TestSuiteExecutions internal constructor(
     }
     variants.forEach { (suffix, variant) ->
       val taskName = suite.name + suffix
-      plugin.registerExecution(taskName, suite)
       val task = project.tasks.register(taskName, Test::class.java) {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath

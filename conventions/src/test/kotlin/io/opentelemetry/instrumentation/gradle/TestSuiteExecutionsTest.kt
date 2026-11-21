@@ -73,7 +73,7 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
-  fun `agent-free classification follows the owning suite before task configuration`() {
+  fun `agent-free classification applies only to unit test suite tasks`() {
     val agentTests = mutableListOf<String>()
     project.tasks.withType(Test::class.java).configureEach {
       if (!isUnitTestSuite()) {
@@ -101,7 +101,13 @@ class TestSuiteExecutionsTest {
       "standaloneUnitTests"
     ).forEach { test(it) }
 
-    assertThat(agentTests).containsExactlyInAnyOrder("test", "testUnitTests", "standaloneUnitTests")
+    assertThat(agentTests).containsExactlyInAnyOrder(
+      "test",
+      "testUnitTests",
+      "unitTestsExperimental",
+      "legacyUNITTESTSExperimental",
+      "standaloneUnitTests"
+    )
   }
 
   @JunitTest
