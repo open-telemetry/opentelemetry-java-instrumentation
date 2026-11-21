@@ -189,8 +189,10 @@ and distinct compatibility paths separate.
 
 ### Dependencies, classpaths, and naming
 
-For direct javaagent helper tests, use `unitTests()` inside `testing.suites` and put tests under
-`src/unitTests/java`. The helper adds `implementation(project())` and wires the suite into `check`.
+For direct javaagent helper tests in projects applying `otel.javaagent-testing` (including through
+`otel.javaagent-instrumentation`), use `unitTests()` inside `testing.suites` and put tests under
+`src/unitTests/java`. The helper requires the Javaagent testing plugin; ordinary Java and library
+projects use `src/test`. The helper adds `implementation(project())` and wires the suite into `check`.
 The suite's test task and execution variants run without the agent. Keep test-only dependencies
 local and reuse convention-provided dependencies and compiler options, such as testing-common and
 `-parameters`.
