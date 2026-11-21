@@ -108,17 +108,13 @@ class SpringRabbit11SimpleMessageListenerContainerTest {
         "messaging.process.duration",
         metrics ->
             metrics.satisfiesExactly(metric ->
-                assertThat(metric)
-                    .hasHistogramSatisfying(
-                        histogram -> histogram.hasPointsSatisfying(point -> point.hasCount(1)))));
+                assertThat(metric).hasHistogramPointsSatisfying(point -> point.hasCount(1))));
     testing.waitAndAssertMetrics(
         SPRING_INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(metric ->
-                assertThat(metric)
-                    .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
+                assertThat(metric).hasLongSumPointsSatisfying(point -> point.hasValue(1))));
     assertThat(testing.metrics())
         .filteredOn(metric ->
             metric.getInstrumentationScopeInfo().getName().equals(RABBIT_INSTRUMENTATION_NAME)

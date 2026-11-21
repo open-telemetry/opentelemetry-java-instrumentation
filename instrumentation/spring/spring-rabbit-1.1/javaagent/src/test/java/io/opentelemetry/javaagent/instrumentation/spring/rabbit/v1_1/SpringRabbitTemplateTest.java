@@ -85,9 +85,7 @@ class SpringRabbitTemplateTest {
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(metric ->
-                assertThat(metric)
-                    .hasLongSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(1)))));
+                assertThat(metric).hasLongSumPointsSatisfying(point -> point.hasValue(1))));
   }
 
   private static class StubChannel extends ChannelN {
