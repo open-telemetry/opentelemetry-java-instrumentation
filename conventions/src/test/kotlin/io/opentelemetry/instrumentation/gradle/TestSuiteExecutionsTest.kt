@@ -73,44 +73,6 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
-  fun `agent-free classification applies only to unit test suite tasks`() {
-    val agentTests = mutableListOf<String>()
-    project.tasks.withType(Test::class.java).configureEach {
-      if (!isUnitTestSuite()) {
-        agentTests.add(name)
-      }
-    }
-    suite("test").executions {
-      register("UnitTests") {}
-    }
-    suites().unitTests().executions {
-      register("Experimental") {}
-    }
-    suites().register("legacyUNITTESTS", JvmTestSuite::class.java).get().executions {
-      register("Experimental") {}
-    }
-    project.tasks.register("standaloneUnitTests", Test::class.java)
-
-    listOf(
-      "test",
-      "testUnitTests",
-      "unitTests",
-      "unitTestsExperimental",
-      "legacyUNITTESTS",
-      "legacyUNITTESTSExperimental",
-      "standaloneUnitTests"
-    ).forEach { test(it) }
-
-    assertThat(agentTests).containsExactlyInAnyOrder(
-      "test",
-      "testUnitTests",
-      "unitTestsExperimental",
-      "legacyUNITTESTSExperimental",
-      "standaloneUnitTests"
-    )
-  }
-
-  @JunitTest
   fun `bind default and named suites without new compilations or default tasks`() {
     val default = suite("test")
     val defaultTask = test("test")

@@ -24,12 +24,6 @@ class TestSuiteExecutionsPlugin : Plugin<Project> {
         (this as ExtensionAware).extensions.add("executions", TestSuiteExecutions(project, this))
       }
   }
-
-  internal fun isUnitTestSuite(task: Test): Boolean {
-    val suite = task.project.extensions.getByType(TestingExtension::class.java).suites
-      .findByName(task.name) as? JvmTestSuite
-    return suite?.name?.endsWith("unitTests", true) == true
-  }
 }
 
 /** Register helper unit tests with the current project as a dependency and include them in check. */
@@ -45,9 +39,6 @@ fun PolymorphicDomainObjectContainer<TestSuite>.unitTests(
   suite.executionConventions.includeInCheck()
   return suite
 }
-
-fun Test.isUnitTestSuite(): Boolean =
-  project.plugins.getPlugin(TestSuiteExecutionsPlugin::class.java).isUnitTestSuite(this)
 
 fun JvmTestSuite.executions(action: Action<TestSuiteExecutions>) {
   executionConventions.configure(action)
