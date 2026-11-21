@@ -194,8 +194,11 @@ or throughput measurements.
 Manually dispatch `agent-startup-benchmark.yml` on the branch or tag to measure.
 For example, run `gh workflow run agent-startup-benchmark.yml --ref my-startup-change`.
 Pass `-f baseline-ref=<revision-on-main>` to also build and measure a baseline
-agent in the same run. Pass `-f workload=petclinic` to select Petclinic; the default is `smoke`. The workflow rejects baseline revisions that are not
-reachable from upstream `main` before executing their build.
+agent in the same run. Pass `-f workload=petclinic` to select Petclinic; the
+default is `smoke`. The measurement job allows 90 minutes for Petclinic and
+45 minutes for smoke, including the optional baseline and JFR capture.
+The workflow rejects baseline revisions that are not reachable from upstream
+`main` before executing their build.
 The selected revision must contain the workflow and benchmark.
 Dispatch requires
 repository write access; only run trusted code, since it executes on a shared host.
