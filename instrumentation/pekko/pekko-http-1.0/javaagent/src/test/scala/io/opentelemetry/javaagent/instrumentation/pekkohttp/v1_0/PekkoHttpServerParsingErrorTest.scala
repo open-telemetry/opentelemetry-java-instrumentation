@@ -245,6 +245,14 @@ class PekkoHttpServerParsingErrorTest {
       query = Some("q=/%%")
     )
 
+  @Test def absoluteTargetWithoutAuthorityIsTraced(): Unit =
+    assertRejectedTargetTraced(
+      "scheme:/path?q=1",
+      path = Some("/path"),
+      query = Some("q=1"),
+      includeHost = false
+    )
+
   /** A request-target has no fragment, and query redaction does not look past a
     * `#`, so whatever follows one in a rejected target is not reported.
     */
@@ -269,7 +277,8 @@ class PekkoHttpServerParsingErrorTest {
       target: String,
       scheme: Option[String] = None,
       path: Option[String] = None,
-      query: Option[String] = None
+      query: Option[String] = None,
+      includeHost: Boolean = true
   ): Unit = {
     implicit val system: ActorSystem = ActorSystem(
       "parsing-error-rejected-target-test"
@@ -284,9 +293,10 @@ class PekkoHttpServerParsingErrorTest {
       val port = binding.localAddress.getPort
 
       try {
+        val hostHeader = if (includeHost) "Host: example.com\r\n" else ""
         val response = send(
           port,
-          "GET " + target + " HTTP/1.1\r\nHost: example.com\r\n\r\n"
+          "GET " + target + " HTTP/1.1\r\n" + hostHeader + "\r\n"
         )
         assertThat(response.head).contains("400 Bad Request")
 
@@ -300,7 +310,8 @@ class PekkoHttpServerParsingErrorTest {
                   method = Some("GET"),
                   scheme = scheme,
                   path = path,
-                  query = query
+                  query = query,
+                  protocolVersion = if (includeHost) None else Some("1.1")
                 )
                 ()
               }
