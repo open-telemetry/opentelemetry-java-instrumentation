@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -34,6 +35,18 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:spring:spring-pulsar-1.0:javaagent"))
+      implementation(project(":instrumentation-api"))
+      implementation(project(":instrumentation-api-incubator"))
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
+      implementation("org.apache.pulsar:pulsar-client:2.8.0")
+    }
+  }
+
   register<JvmTestSuite>("version5Test") {
     sources {
       java {
@@ -53,6 +66,12 @@ testing.suites {
   }
 
   executions("version5Test") {
+    configureEach {
+      systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
     configureDefault {
       val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
       if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
@@ -67,6 +86,12 @@ testing.suites {
   }
 
   executions("test") {
+    configureEach {
+      systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
     configureDefault {
       filter {
         excludeTestsMatching("PulsarClientSuppressReceiveSpansTest")
@@ -92,13 +117,6 @@ testing.suites {
 }
 
 tasks {
-  withType<Test>().configureEach {
-    systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
-    if (otelProps.denyUnsafe) {
-      enabled = false
-    }
-  }
-
   check {
     dependsOn(testing.suites)
   }
