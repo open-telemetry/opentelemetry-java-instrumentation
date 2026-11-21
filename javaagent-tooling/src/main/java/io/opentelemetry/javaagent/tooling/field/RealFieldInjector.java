@@ -131,16 +131,21 @@ final class RealFieldInjector implements AsmVisitorWrapper {
         // they enhance a class.
         // For this reason we check separately for the field and for the two accessors.
         if (!foundField) {
-          cv.visitField(
-              // Field should be transient to avoid being serialized with the object.
-              Opcodes.ACC_PRIVATE
-                  | Opcodes.ACC_VOLATILE
-                  | Opcodes.ACC_TRANSIENT
-                  | Opcodes.ACC_SYNTHETIC,
-              realFieldName,
-              fieldType.getDescriptor(),
-              null,
-              null);
+          FieldVisitor fv =
+              cv.visitField(
+                  // Field should be transient to avoid being serialized with the object.
+                  Opcodes.ACC_PRIVATE
+                      | Opcodes.ACC_VOLATILE
+                      | Opcodes.ACC_TRANSIENT
+                      | Opcodes.ACC_SYNTHETIC,
+                  realFieldName,
+                  fieldType.getDescriptor(),
+                  null,
+                  null);
+          // The JDK ClassFile API bridge only writes the field once visitEnd() is called
+          if (fv != null) {
+            fv.visitEnd();
+          }
         }
         if (!foundGetter) {
           addGetter();
