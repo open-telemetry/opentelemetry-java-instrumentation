@@ -40,6 +40,7 @@ import org.apache.logging.log4j.util.StringMap;
  */
 public final class OpenTelemetryAppenderContextDataInjector implements ContextDataInjector {
 
+  // visible for testing
   static final String DELEGATE_CONTEXT_DATA_INJECTOR_PROPERTY =
       "otel.instrumentation.log4j-appender.context-data-injector.delegate";
 

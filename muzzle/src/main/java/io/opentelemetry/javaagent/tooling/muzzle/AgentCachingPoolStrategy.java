@@ -56,6 +56,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
   @Nullable private static final Method findLoadedClassMethod = getFindLoadedClassMethod();
 
   private static final int TYPE_CAPACITY = 64;
+  // visible for testing
   static final int BOOTSTRAP_HASH = 7236344; // Just a random number
 
   /**
@@ -180,6 +181,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
 
     private final int hashCode;
 
+    // visible for testing
     TypeCacheKey(int loaderHash, @Nullable WeakReference<ClassLoader> loaderRef, String className) {
       // classes in java package are always loaded from boot loader
       // set loader to boot loader to avoid creating multiple cache entries
