@@ -20,6 +20,7 @@ import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import io.vertx.core.Promise;
 import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.concurrent.CyclicBarrier;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
@@ -164,7 +165,7 @@ class VertxSqlClientUtilTest {
   }
 
   @Test
-  void claimsRequestOnlyOnceWhenCallbacksRace() throws Exception {
+  void claimsRequestOnlyOnceWhenCallbacksRace() throws ExecutionException, InterruptedException {
     Promise<Object> promise = Promise.promise();
     VertxSqlClientUtil.attachRequest(promise, request("race"), Context.root(), Context.root());
     CyclicBarrier barrier = new CyclicBarrier(2);
