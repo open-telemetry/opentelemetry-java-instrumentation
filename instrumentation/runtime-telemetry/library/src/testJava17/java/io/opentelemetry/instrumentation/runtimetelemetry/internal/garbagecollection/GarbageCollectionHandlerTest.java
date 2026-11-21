@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.JvmAttributes.JVM_GC_NAME;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static org.awaitility.Awaitility.await;
 
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.GarbageCollector;
 import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryMetricReader;
@@ -56,6 +57,8 @@ class GarbageCollectionHandlerTest {
           .allSatisfy(
               point -> {
                 assertThat(point.getSum()).isPositive();
+                assertThat(point.getBoundaries())
+                    .containsExactlyElementsOf(GarbageCollector.GC_DURATION_BUCKETS);
                 assertThat(point.getAttributes().get(JVM_GC_NAME)).isNotBlank();
                 assertThat(point.getAttributes().get(JVM_GC_ACTION)).isNull();
               });

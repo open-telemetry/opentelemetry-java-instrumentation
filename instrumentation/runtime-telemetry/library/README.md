@@ -215,7 +215,9 @@ The attributes reported on the memory metrics (`jvm.memory.*`) and gc metrics (`
 
 The following lists attributes reported for a variety of garbage collectors. Notice that attributes are not necessarily constant across `*.used`, `*.committed`, and `*.limit` since not all memory pools report a limit.
 
-Every JMX-sourced `jvm.gc.duration` point also includes `jvm.gc.cause`, omitted from the examples below because its value varies by collection (for example, `Allocation Failure` or `System.gc()`). When selected for JFR on Java 17+, `jvm.gc.duration` points include only `jvm.gc.name` and `jvm.gc.action`, not `jvm.gc.cause`.
+Every JMX-sourced `jvm.gc.duration` point also includes `jvm.gc.cause`, omitted from the examples below because its value varies by collection (for example, `Allocation Failure` or `System.gc()`).
+
+On Java 17+, JFR-sourced `jvm.gc.duration` points include `jvm.gc.name` but not `jvm.gc.cause`. They also include `jvm.gc.action` unless they come from the generic `jdk.GarbageCollection` event. GraalVM Native Image's serial collector emits this event without identifying the collection as young or full.
 
 - CMS Garbage Collector
   - `jvm.memory.used`: {jvm.memory.pool.name=Compressed Class Space,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Par Eden Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Tenured Gen,jvm.memory.type=heap}, {jvm.memory.pool.name=Par Survivor Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Code Cache,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Metaspace,jvm.memory.type=non_heap}

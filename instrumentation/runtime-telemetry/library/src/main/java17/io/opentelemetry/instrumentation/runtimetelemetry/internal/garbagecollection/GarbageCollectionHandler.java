@@ -12,6 +12,7 @@ import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.Constants;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.DurationUtil;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.GarbageCollector;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.RecordedEventHandler;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -45,6 +46,7 @@ public final class GarbageCollectionHandler implements RecordedEventHandler {
             .histogramBuilder(Constants.METRIC_NAME_GC_DURATION)
             .setDescription(Constants.METRIC_DESCRIPTION_GC_DURATION)
             .setUnit(Constants.SECONDS)
+            .setExplicitBucketBoundariesAdvice(GarbageCollector.GC_DURATION_BUCKETS)
             .build();
   }
 
