@@ -1,7 +1,17 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
   id("otel.testcontainers-testing")
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("com.github.etaty:rediscala_2.11:1.8.0")
+    }
+  }
 }
 
 muzzle {
