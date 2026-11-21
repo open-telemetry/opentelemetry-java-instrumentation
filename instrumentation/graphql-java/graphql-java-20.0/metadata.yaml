@@ -39,12 +39,12 @@ configurations:
       fetcher spans, if enabled, are unaffected.
     type: boolean
     default: true
-  - name: otel.instrumentation.graphql.add-attributes-to-current-span
-    declarative_name: java.graphql.add_attributes_to_current_span
+  - name: otel.instrumentation.graphql.span-enrichment.enabled
+    declarative_name: java.graphql.span_enrichment.enabled
     description: >
-      Whether to add GraphQL attributes (graphql.operation.name, graphql.operation.type, graphql.document) and
-      exception events to the current span (typically the enclosing HTTP server span), in addition to or instead of
-      the operation span. WARNING: when enabled, the current span's status is set to ERROR if the GraphQL result
+      Whether to enrich the current span (typically the enclosing HTTP server span) with GraphQL attributes
+      (graphql.operation.name, graphql.operation.type, graphql.document) and exception events, in addition to or
+      instead of the operation span. WARNING: when enabled, the current span's status is set to ERROR if the GraphQL result
       contains any errors, which can mark an otherwise successful (e.g. HTTP 200) server span as errored.
     type: boolean
     default: false

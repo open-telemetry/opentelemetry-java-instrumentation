@@ -58,7 +58,7 @@ public class OpenTelemetryInstrumentationHelper {
   private final boolean sanitizeQuery;
   private final boolean addOperationNameToSpanName;
   private final boolean operationSpanEnabled;
-  private final boolean addAttributesToCurrentSpan;
+  private final boolean spanEnrichmentEnabled;
 
   public static OpenTelemetryInstrumentationHelper create(
       OpenTelemetry openTelemetry,
@@ -73,7 +73,7 @@ public class OpenTelemetryInstrumentationHelper {
         sanitizeQuery,
         addOperationNameToSpanName,
         /* operationSpanEnabled= */ true,
-        /* addAttributesToCurrentSpan= */ false);
+        /* spanEnrichmentEnabled= */ false);
   }
 
   public static OpenTelemetryInstrumentationHelper create(
@@ -83,7 +83,7 @@ public class OpenTelemetryInstrumentationHelper {
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName,
       boolean operationSpanEnabled,
-      boolean addAttributesToCurrentSpan) {
+      boolean spanEnrichmentEnabled) {
     // The GraphQL convention recommends SERVER spans, but execution can run beneath an HTTP
     // server or controller span, where a nested SERVER span could be suppressed. Keep the default
     // INTERNAL kind.
@@ -112,7 +112,7 @@ public class OpenTelemetryInstrumentationHelper {
         sanitizeQuery,
         addOperationNameToSpanName,
         operationSpanEnabled,
-        addAttributesToCurrentSpan);
+        spanEnrichmentEnabled);
   }
 
   private OpenTelemetryInstrumentationHelper(
@@ -122,14 +122,14 @@ public class OpenTelemetryInstrumentationHelper {
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName,
       boolean operationSpanEnabled,
-      boolean addAttributesToCurrentSpan) {
+      boolean spanEnrichmentEnabled) {
     this.instrumenter = instrumenter;
     this.errorRecorder = errorRecorder;
     this.captureQuery = captureQuery;
     this.sanitizeQuery = sanitizeQuery;
     this.addOperationNameToSpanName = addOperationNameToSpanName;
     this.operationSpanEnabled = operationSpanEnabled;
-    this.addAttributesToCurrentSpan = addAttributesToCurrentSpan;
+    this.spanEnrichmentEnabled = spanEnrichmentEnabled;
   }
 
   public InstrumentationContext<ExecutionResult> beginExecution(
@@ -145,7 +145,7 @@ public class OpenTelemetryInstrumentationHelper {
     // so GraphQL telemetry can be stamped onto it. Null when there is no recording current span,
     // e.g. the standalone case or a non-recording remote parent.
     Span currentSpan = null;
-    if (addAttributesToCurrentSpan && shouldStart) {
+    if (spanEnrichmentEnabled && shouldStart) {
       Span span = Span.fromContext(parentContext);
       if (span.isRecording()) {
         currentSpan = span;
@@ -157,7 +157,7 @@ public class OpenTelemetryInstrumentationHelper {
     // current span was requested but there is no recording current span to stamp onto (so telemetry
     // is never silently lost).
     boolean wantOperationSpan =
-        operationSpanEnabled || (addAttributesToCurrentSpan && currentSpan == null);
+        operationSpanEnabled || (spanEnrichmentEnabled && currentSpan == null);
     boolean createOperationSpan = wantOperationSpan && shouldStart;
     state.setOperationSpanCreated(createOperationSpan);
 
@@ -223,7 +223,7 @@ public class OpenTelemetryInstrumentationHelper {
       state.setQuery(query);
     }
 
-    // Only rename our own operation span; never rename the local root (e.g. the server span).
+    // Only rename our own operation span; never rename the current span (e.g. the server span).
     // Guarded on whether we actually created the span, not merely on the config flag, so that a
     // suppressed span (state context == parent context) is never renamed.
     if (state.isOperationSpanCreated()) {

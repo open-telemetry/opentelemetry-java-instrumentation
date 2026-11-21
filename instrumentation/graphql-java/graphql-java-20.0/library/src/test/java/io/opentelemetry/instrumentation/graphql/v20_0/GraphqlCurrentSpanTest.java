@@ -105,7 +105,7 @@ class GraphqlCurrentSpanTest {
 
   @Test
   void stampCurrentSpanAndCreateOwnSpan() {
-    GraphQL graphql = graphql(b -> b.setAddAttributesToCurrentSpan(true));
+    GraphQL graphql = graphql(b -> b.setSpanEnrichmentEnabled(true));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
@@ -129,7 +129,7 @@ class GraphqlCurrentSpanTest {
   @Test
   void stampCurrentSpanWithoutOwnSpan() {
     GraphQL graphql =
-        graphql(b -> b.setAddAttributesToCurrentSpan(true).setOperationSpanEnabled(false));
+        graphql(b -> b.setSpanEnrichmentEnabled(true).setOperationSpanEnabled(false));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
@@ -151,7 +151,7 @@ class GraphqlCurrentSpanTest {
     // Operation span disabled and current-span stamping requested, but there is no enclosing span:
     // an operation span must be created anyway so telemetry is not lost.
     GraphQL graphql =
-        graphql(b -> b.setAddAttributesToCurrentSpan(true).setOperationSpanEnabled(false));
+        graphql(b -> b.setSpanEnrichmentEnabled(true).setOperationSpanEnabled(false));
 
     ExecutionResult result = graphql.execute(QUERY);
     assertThat(result.getErrors()).isEmpty();
@@ -190,7 +190,7 @@ class GraphqlCurrentSpanTest {
 
   @Test
   void errorsPromoteStatusOnCurrentSpan() {
-    GraphQL graphql = graphql(b -> b.setAddAttributesToCurrentSpan(true));
+    GraphQL graphql = graphql(b -> b.setSpanEnrichmentEnabled(true));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(ERROR_QUERY));
     assertThat(result.getErrors()).isNotEmpty();
@@ -216,7 +216,7 @@ class GraphqlCurrentSpanTest {
 
   @Test
   void suppressedExecutionDoesNotEnrichCurrentSpan() {
-    GraphQL graphql = graphql(b -> b.setAddAttributesToCurrentSpan(true));
+    GraphQL graphql = graphql(b -> b.setSpanEnrichmentEnabled(true));
 
     ExecutionResult result =
         testing.runWithHttpServerSpan(() -> {
@@ -266,7 +266,7 @@ class GraphqlCurrentSpanTest {
 
   @Test
   void captureQueryFalseOmitsDocumentOnCurrentSpan() {
-    GraphQL graphql = graphql(b -> b.setAddAttributesToCurrentSpan(true).setCaptureQuery(false));
+    GraphQL graphql = graphql(b -> b.setSpanEnrichmentEnabled(true).setCaptureQuery(false));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();

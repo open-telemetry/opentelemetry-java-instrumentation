@@ -28,7 +28,7 @@ final class GraphqlInstrumenterFactory {
       boolean sanitizeQuery,
       boolean addOperationNameToSpanName,
       boolean operationSpanEnabled,
-      boolean addAttributesToCurrentSpan) {
+      boolean spanEnrichmentEnabled) {
     return OpenTelemetryInstrumentationHelper.create(
         openTelemetry,
         INSTRUMENTATION_NAME,
@@ -36,7 +36,7 @@ final class GraphqlInstrumenterFactory {
         sanitizeQuery,
         addOperationNameToSpanName,
         operationSpanEnabled,
-        addAttributesToCurrentSpan);
+        spanEnrichmentEnabled);
   }
 
   static Instrumenter<DataFetchingEnvironment, Object> createDataFetcherInstrumenter(

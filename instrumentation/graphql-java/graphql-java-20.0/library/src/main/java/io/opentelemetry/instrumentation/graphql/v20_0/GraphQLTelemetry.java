@@ -39,7 +39,7 @@ public final class GraphQLTelemetry {
       boolean createSpansForTrivialDataFetcher,
       boolean addOperationNameToSpanName,
       boolean operationSpanEnabled,
-      boolean addAttributesToCurrentSpan) {
+      boolean spanEnrichmentEnabled) {
     helper =
         GraphqlInstrumenterFactory.createInstrumentationHelper(
             openTelemetry,
@@ -47,7 +47,7 @@ public final class GraphQLTelemetry {
             sanitizeQuery,
             addOperationNameToSpanName,
             operationSpanEnabled,
-            addAttributesToCurrentSpan);
+            spanEnrichmentEnabled);
     this.dataFetcherInstrumenter = dataFetcherInstrumenter;
     dataFetcherErrorRecorder =
         GraphqlInstrumenterFactory.createDataFetcherErrorRecorder(openTelemetry);

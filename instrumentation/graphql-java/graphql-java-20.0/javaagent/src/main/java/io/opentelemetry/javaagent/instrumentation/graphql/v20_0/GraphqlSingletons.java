@@ -30,7 +30,7 @@ public class GraphqlSingletons {
             .setTrivialDataFetcherInstrumentationEnabled(config.trivialDataFetcherEnabled)
             .setOperationNameInSpanNameEnabled(config.operationNameInSpanNameEnabled)
             .setOperationSpanEnabled(config.operationSpanEnabled)
-            .setAddAttributesToCurrentSpan(config.addAttributesToCurrentSpan)
+            .setSpanEnrichmentEnabled(config.spanEnrichmentEnabled)
             .build();
   }
 
@@ -53,7 +53,8 @@ public class GraphqlSingletons {
   //         enabled: false
   //       operation_span:
   //         enabled: true
-  //       add_attributes_to_current_span: false
+  //       span_enrichment:
+  //         enabled: false
   private static final class Configuration {
 
     private final boolean captureQuery;
@@ -62,7 +63,7 @@ public class GraphqlSingletons {
     private final boolean trivialDataFetcherEnabled;
     private final boolean operationNameInSpanNameEnabled;
     private final boolean operationSpanEnabled;
-    private final boolean addAttributesToCurrentSpan;
+    private final boolean spanEnrichmentEnabled;
 
     Configuration(OpenTelemetry openTelemetry) {
       DeclarativeConfigProperties config =
@@ -75,7 +76,7 @@ public class GraphqlSingletons {
           config.get("trivial_data_fetcher").getBoolean("enabled", false);
       this.operationNameInSpanNameEnabled = GraphqlConfig.getOperationNameInSpanNameEnabled(config);
       this.operationSpanEnabled = config.get("operation_span").getBoolean("enabled", true);
-      this.addAttributesToCurrentSpan = config.getBoolean("add_attributes_to_current_span", false);
+      this.spanEnrichmentEnabled = config.get("span_enrichment").getBoolean("enabled", false);
     }
   }
 

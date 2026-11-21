@@ -20,7 +20,7 @@ public final class GraphQLTelemetryBuilder {
   private boolean trivialDataFetcherInstrumentationEnabled = false;
   private boolean addOperationNameToSpanName = false;
   private boolean operationSpanEnabled = true;
-  private boolean addAttributesToCurrentSpan = false;
+  private boolean spanEnrichmentEnabled = false;
 
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -80,8 +80,8 @@ public final class GraphQLTelemetryBuilder {
    *
    * <p>When disabled, no {@code GraphQL Operation} span is created; spans for data fetchers, if
    * enabled, are unaffected and continue to nest under the current span. If disabled while {@link
-   * #setAddAttributesToCurrentSpan(boolean)} is enabled but there is no recording current span to
-   * stamp onto, the operation span is created anyway so that telemetry is not lost.
+   * #setSpanEnrichmentEnabled(boolean)} is enabled but there is no recording current span to stamp
+   * onto, the operation span is created anyway so that telemetry is not lost.
    */
   @CanIgnoreReturnValue
   public GraphQLTelemetryBuilder setOperationSpanEnabled(boolean operationSpanEnabled) {
@@ -90,9 +90,10 @@ public final class GraphQLTelemetryBuilder {
   }
 
   /**
-   * Sets whether GraphQL attributes ({@code graphql.operation.name}, {@code graphql.operation.type}
-   * and, when {@link #setCaptureQuery(boolean) enabled}, {@code graphql.document}) and exception
-   * events are added to the current span. Default is {@code false}.
+   * Sets whether the current span is enriched with GraphQL attributes ({@code
+   * graphql.operation.name}, {@code graphql.operation.type} and, when {@link
+   * #setCaptureQuery(boolean) enabled}, {@code graphql.document}) and exception events. Default is
+   * {@code false}.
    *
    * <p>The current span is the span that is active when GraphQL execution begins, which in an HTTP
    * context is typically the server span (e.g. {@code POST /graphql}). This lets GraphQL telemetry
@@ -108,8 +109,8 @@ public final class GraphQLTelemetryBuilder {
    * #setOperationSpanEnabled(boolean)} is disabled) so that telemetry is not lost.
    */
   @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder setAddAttributesToCurrentSpan(boolean addAttributesToCurrentSpan) {
-    this.addAttributesToCurrentSpan = addAttributesToCurrentSpan;
+  public GraphQLTelemetryBuilder setSpanEnrichmentEnabled(boolean spanEnrichmentEnabled) {
+    this.spanEnrichmentEnabled = spanEnrichmentEnabled;
     return this;
   }
 
@@ -127,6 +128,6 @@ public final class GraphQLTelemetryBuilder {
         trivialDataFetcherInstrumentationEnabled,
         addOperationNameToSpanName,
         operationSpanEnabled,
-        addAttributesToCurrentSpan);
+        spanEnrichmentEnabled);
   }
 }
