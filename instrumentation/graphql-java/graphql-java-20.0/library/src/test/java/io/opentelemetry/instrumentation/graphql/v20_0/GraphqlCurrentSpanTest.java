@@ -110,38 +110,34 @@ class GraphqlCurrentSpanTest {
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SERVER_SPAN_NAME)
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
-                        .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")
-                        .hasAttribute(GRAPHQL_DOCUMENT, "query findBookById{bookById(id:?){name}}"),
-                span ->
-                    span.hasName("query")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
-                        .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(SERVER_SPAN_NAME)
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
+                    .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")
+                    .hasAttribute(GRAPHQL_DOCUMENT, "query findBookById{bookById(id:?){name}}"),
+            span ->
+                span.hasName("query")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
+                    .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")));
   }
 
   @Test
   void stampCurrentSpanWithoutOwnSpan() {
-    GraphQL graphql =
-        graphql(b -> b.setSpanEnrichmentEnabled(true).setOperationSpanEnabled(false));
+    GraphQL graphql = graphql(b -> b.setSpanEnrichmentEnabled(true).setOperationSpanEnabled(false));
 
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SERVER_SPAN_NAME)
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
-                        .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(SERVER_SPAN_NAME)
+                .hasKind(SpanKind.SERVER)
+                .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
+                .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")));
     // Exactly one span: no GraphQL operation span was created.
     assertThat(testing.spans()).hasSize(1);
   }
@@ -150,21 +146,18 @@ class GraphqlCurrentSpanTest {
   void createsOwnSpanAsFallbackWhenNoCurrentSpan() {
     // Operation span disabled and current-span stamping requested, but there is no enclosing span:
     // an operation span must be created anyway so telemetry is not lost.
-    GraphQL graphql =
-        graphql(b -> b.setSpanEnrichmentEnabled(true).setOperationSpanEnabled(false));
+    GraphQL graphql = graphql(b -> b.setSpanEnrichmentEnabled(true).setOperationSpanEnabled(false));
 
     ExecutionResult result = graphql.execute(QUERY);
     assertThat(result.getErrors()).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("query")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
-                        .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("query")
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
+                .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")));
   }
 
   @Test
@@ -177,15 +170,14 @@ class GraphqlCurrentSpanTest {
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName(SERVER_SPAN_NAME).hasKind(SpanKind.SERVER).hasNoParent(),
-                span ->
-                    span.hasName("bookById")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttribute(stringKey("graphql.field.name"), "bookById")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName(SERVER_SPAN_NAME).hasKind(SpanKind.SERVER).hasNoParent(),
+            span ->
+                span.hasName("bookById")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttribute(stringKey("graphql.field.name"), "bookById")));
   }
 
   @Test
@@ -195,23 +187,21 @@ class GraphqlCurrentSpanTest {
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(ERROR_QUERY));
     assertThat(result.getErrors()).isNotEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SERVER_SPAN_NAME)
-                        .hasKind(SpanKind.SERVER)
-                        // status is promoted to error because we stamp onto the current span
-                        .hasStatus(StatusData.error())
-                        .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(EXCEPTION_TYPE, "DataFetchingException"),
-                                        equalTo(EXCEPTION_MESSAGE, "failed to fetch book"))),
-                span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(SERVER_SPAN_NAME)
+                    .hasKind(SpanKind.SERVER)
+                    // status is promoted to error because we stamp onto the current span
+                    .hasStatus(StatusData.error())
+                    .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
+                    .hasEventsSatisfyingExactly(event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, "DataFetchingException"),
+                                equalTo(EXCEPTION_MESSAGE, "failed to fetch book"))),
+            span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -248,20 +238,18 @@ class GraphqlCurrentSpanTest {
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SERVER_SPAN_NAME)
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.unset())
-                        .hasAttributesSatisfying(
-                            attrs -> {
-                              assertThat(attrs.get(GRAPHQL_OPERATION_NAME)).isNull();
-                              assertThat(attrs.get(GRAPHQL_OPERATION_TYPE)).isNull();
-                              assertThat(attrs.get(GRAPHQL_DOCUMENT)).isNull();
-                            }),
-                span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(SERVER_SPAN_NAME)
+                    .hasKind(SpanKind.SERVER)
+                    .hasStatus(StatusData.unset())
+                    .hasAttributesSatisfying(attrs -> {
+                      assertThat(attrs.get(GRAPHQL_OPERATION_NAME)).isNull();
+                      assertThat(attrs.get(GRAPHQL_OPERATION_TYPE)).isNull();
+                      assertThat(attrs.get(GRAPHQL_DOCUMENT)).isNull();
+                    }),
+            span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -271,16 +259,15 @@ class GraphqlCurrentSpanTest {
     ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(QUERY));
     assertThat(result.getErrors()).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(SERVER_SPAN_NAME)
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
-                        .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")
-                        .hasAttributesSatisfying(
-                            attrs -> assertThat(attrs.get(GRAPHQL_DOCUMENT)).isNull()),
-                span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(SERVER_SPAN_NAME)
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
+                    .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")
+                    .hasAttributesSatisfying(
+                        attrs -> assertThat(attrs.get(GRAPHQL_DOCUMENT)).isNull()),
+            span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
   }
 }
