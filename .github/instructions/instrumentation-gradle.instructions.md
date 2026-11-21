@@ -191,8 +191,9 @@ and distinct compatibility paths separate.
 
 For direct javaagent helper tests, use `unitTests()` inside `testing.suites` and put tests under
 `src/unitTests/java`. The helper adds `implementation(project())` and wires the suite into `check`.
-The suite's normal test task runs without the agent. Keep test-only dependencies local and reuse
-convention-provided dependencies and compiler options, such as testing-common and `-parameters`.
+The suite's test task and execution variants run without the agent. Keep test-only dependencies
+local and reuse convention-provided dependencies and compiler options, such as testing-common and
+`-parameters`.
 
 Prefer suite-local dependencies and compilation setup. When configuration/task names are needed,
 use `sources.implementationConfigurationName`, `sources.runtimeOnlyConfigurationName`, and
