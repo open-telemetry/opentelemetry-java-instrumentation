@@ -174,18 +174,19 @@ public class OpenTelemetryInstrumentationHelper {
     return SimpleInstrumentationContext.whenCompleted((result, throwable) -> {
       if (result != null) {
         List<GraphQLError> errors = result.getErrors();
+        // Record each error once: on the operation span when we created it, otherwise on the
+        // current span. parentContext carries the current span. Recording on both would emit
+        // duplicate exception logs.
         if (createOperationSpan) {
           recordErrors(state.getContext(), errors);
-        }
-        if (currentSpanForCompletion != null) {
-          // parentContext carries the current span, so errors are recorded against it.
+        } else if (currentSpanForCompletion != null) {
           recordErrors(parentContext, errors);
-          // The error status is promoted onto the current span whenever GraphQL attributes are
-          // stamped onto it. This can mark an otherwise successful (e.g. HTTP 200) server span
-          // as errored.
-          if (!errors.isEmpty()) {
-            currentSpanForCompletion.setStatus(StatusCode.ERROR);
-          }
+        }
+        // The error status is promoted onto the current span whenever GraphQL attributes are
+        // stamped onto it. This can mark an otherwise successful (e.g. HTTP 200) server span
+        // as errored.
+        if (currentSpanForCompletion != null && !errors.isEmpty()) {
+          currentSpanForCompletion.setStatus(StatusCode.ERROR);
         }
       }
 

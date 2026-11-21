@@ -43,8 +43,9 @@ configurations:
     declarative_name: java.graphql.span_enrichment.enabled
     description: >
       Whether to enrich the current span (typically the enclosing HTTP server span) with GraphQL attributes
-      (graphql.operation.name, graphql.operation.type, graphql.document) and exception events, in addition to or
-      instead of the operation span. WARNING: when enabled, the current span's status is set to ERROR if the GraphQL result
+      (graphql.operation.name, graphql.operation.type, graphql.document), in addition to or instead of the
+      operation span. GraphQL errors are recorded once as exception events, on the operation span when it is
+      created and on the current span otherwise. WARNING: when enabled, the current span's status is set to ERROR if the GraphQL result
       contains any errors, which can mark an otherwise successful (e.g. HTTP 200) server span as errored.
     type: boolean
     default: false

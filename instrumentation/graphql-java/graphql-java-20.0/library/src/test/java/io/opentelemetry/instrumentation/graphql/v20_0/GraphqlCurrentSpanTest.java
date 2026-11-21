@@ -6,9 +6,6 @@
 package io.opentelemetry.instrumentation.graphql.v20_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
-import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_DOCUMENT;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GraphqlIncubatingAttributes.GRAPHQL_OPERATION_TYPE;
@@ -194,14 +191,26 @@ class GraphqlCurrentSpanTest {
                     .hasKind(SpanKind.SERVER)
                     // status is promoted to error because we stamp onto the current span
                     .hasStatus(StatusData.error())
-                    .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
-                    .hasEventsSatisfyingExactly(event ->
-                        event
-                            .hasName("exception")
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(EXCEPTION_TYPE, "DataFetchingException"),
-                                equalTo(EXCEPTION_MESSAGE, "failed to fetch book"))),
+                    .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById"),
             span -> span.hasName("query").hasKind(SpanKind.INTERNAL)));
+  }
+
+  @Test
+  void stampCurrentSpanWithoutOwnSpanWhenResultHasErrors() {
+    GraphQL graphql = graphql(b -> b.setSpanEnrichmentEnabled(true).setOperationSpanEnabled(false));
+
+    ExecutionResult result = testing.runWithHttpServerSpan(() -> graphql.execute(ERROR_QUERY));
+    assertThat(result.getErrors()).isNotEmpty();
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(SERVER_SPAN_NAME)
+                .hasKind(SpanKind.SERVER)
+                .hasAttribute(GRAPHQL_OPERATION_NAME, "findBookById")
+                .hasAttribute(GRAPHQL_OPERATION_TYPE, "query")
+                .hasAttribute(GRAPHQL_DOCUMENT, "query findBookById{bookById(id:?){name}}")));
+    // Exactly one span: no GraphQL operation span was created.
+    assertThat(testing.spans()).hasSize(1);
   }
 
   @Test

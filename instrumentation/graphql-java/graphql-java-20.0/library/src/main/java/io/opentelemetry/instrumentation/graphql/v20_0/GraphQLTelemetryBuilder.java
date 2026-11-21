@@ -92,13 +92,15 @@ public final class GraphQLTelemetryBuilder {
   /**
    * Sets whether the current span is enriched with GraphQL attributes ({@code
    * graphql.operation.name}, {@code graphql.operation.type} and, when {@link
-   * #setCaptureQuery(boolean) enabled}, {@code graphql.document}) and exception events. Default is
-   * {@code false}.
+   * #setCaptureQuery(boolean) enabled}, {@code graphql.document}). Default is {@code false}.
    *
    * <p>The current span is the span that is active when GraphQL execution begins, which in an HTTP
    * context is typically the server span (e.g. {@code POST /graphql}). This lets GraphQL telemetry
    * be recorded on that span in addition to, or instead of (see {@link
    * #setOperationSpanEnabled(boolean)}), the dedicated GraphQL operation span.
+   *
+   * <p>GraphQL errors are recorded once, as {@code exception} events: on the operation span when it
+   * is created, otherwise on the current span.
    *
    * <p>WARNING: when this is enabled and the GraphQL result contains errors, the current span's
    * status is set to {@code ERROR}. This can mark an otherwise successful (e.g. HTTP 200) server
