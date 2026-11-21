@@ -1,6 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
-import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -26,22 +25,14 @@ dependencies {
 }
 
 testing.suites {
-  unitTests {
+  register<JvmTestSuite>("unitTests") {
     dependencies {
+      implementation(project())
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":javaagent-extension-api"))
 
       val rocketmqVersion = baseVersion("5.0.0").orLatest()
       implementation("org.apache.rocketmq:rocketmq-client-java:$rocketmqVersion")
-    }
-  }
-
-  register<JvmTestSuite>("fixedVersionUnitTests") {
-    dependencies {
-      implementation(project())
-      implementation(project(":instrumentation-api"))
-      implementation(project(":instrumentation-api-incubator"))
-      implementation("org.apache.rocketmq:rocketmq-client-java:5.0.0")
     }
   }
 
