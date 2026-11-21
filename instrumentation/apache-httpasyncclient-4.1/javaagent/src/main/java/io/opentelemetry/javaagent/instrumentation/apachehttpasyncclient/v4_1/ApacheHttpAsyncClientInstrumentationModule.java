@@ -22,6 +22,7 @@ public class ApacheHttpAsyncClientInstrumentationModule extends InstrumentationM
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new ApacheHttpAsyncClientInstrumentation(),
+        new ApacheHttpAsyncClientConnectionInstrumentation(),
         new ApacheHttpPipeliningClientInstrumentation());
   }
 }

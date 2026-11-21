@@ -61,6 +61,20 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
 
   @Override
   @Nullable
+  public String getNetworkPeerAddress(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getNetworkPeerAddress();
+  }
+
+  @Override
+  @Nullable
+  public Integer getNetworkPeerPort(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getNetworkPeerPort();
+  }
+
+  @Override
+  @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
     return request.getServerAddress();
   }
@@ -69,19 +83,5 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
     return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request.getScheme());
-  }
-
-  @Nullable
-  @Override
-  public String getNetworkPeerAddress(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.getNetworkPeerAddress();
-  }
-
-  @Nullable
-  @Override
-  public Integer getNetworkPeerPort(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.getNetworkPeerPort();
   }
 }

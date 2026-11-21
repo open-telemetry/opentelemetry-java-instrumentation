@@ -49,6 +49,8 @@ public abstract class HttpClientTestOptions {
 
   public abstract boolean getExpectResponseCodeOnRedirectError();
 
+  public abstract boolean getExpectResponseCodeOnRedirectConnectionError();
+
   public abstract BiFunction<URI, Throwable, Throwable> getClientSpanErrorMapper();
 
   /**
@@ -72,6 +74,9 @@ public abstract class HttpClientTestOptions {
   public abstract boolean getTestProxy();
 
   public abstract boolean getExpectProxyNetworkPeerAttributes();
+
+  /** Requires observed peer attributes, and their absence before any connection succeeds. */
+  public abstract boolean getExpectNetworkPeerAttributes();
 
   public abstract boolean getTestRedirects();
 
@@ -126,6 +131,7 @@ public abstract class HttpClientTestOptions {
     default Builder withDefaults() {
       return setHttpAttributes(x -> DEFAULT_HTTP_ATTRIBUTES)
           .setExpectResponseCodeOnRedirectError(true)
+          .setExpectResponseCodeOnRedirectConnectionError(false)
           .setClientSpanErrorMapper((uri, exception) -> exception)
           .setSingleConnectionFactory((host, port) -> null)
           .setExpectedClientSpanNameMapper(DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER)
@@ -135,6 +141,7 @@ public abstract class HttpClientTestOptions {
           .setTestWithClientParent(true)
           .setTestProxy(false)
           .setExpectProxyNetworkPeerAttributes(false)
+          .setExpectNetworkPeerAttributes(false)
           .setTestRedirects(true)
           .setTestCircularRedirects(true)
           .setMaxRedirects(2)
@@ -158,6 +165,8 @@ public abstract class HttpClientTestOptions {
 
     Builder setExpectResponseCodeOnRedirectError(boolean value);
 
+    Builder setExpectResponseCodeOnRedirectConnectionError(boolean value);
+
     Builder setClientSpanErrorMapper(BiFunction<URI, Throwable, Throwable> value);
 
     Builder setSingleConnectionFactory(BiFunction<String, Integer, SingleConnection> value);
@@ -175,6 +184,8 @@ public abstract class HttpClientTestOptions {
     Builder setTestProxy(boolean value);
 
     Builder setExpectProxyNetworkPeerAttributes(boolean value);
+
+    Builder setExpectNetworkPeerAttributes(boolean value);
 
     Builder setTestRedirects(boolean value);
 

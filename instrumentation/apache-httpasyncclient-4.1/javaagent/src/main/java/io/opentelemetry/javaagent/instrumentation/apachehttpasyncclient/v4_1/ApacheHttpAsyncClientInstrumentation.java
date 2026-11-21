@@ -31,6 +31,7 @@ import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.nio.ContentEncoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
+import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 
@@ -61,21 +62,25 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToArguments({
       @ToArgument(value = 0, index = 0),
-      @ToArgument(value = 3, index = 1)
+      @ToArgument(value = 2, index = 1),
+      @ToArgument(value = 3, index = 2)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) HttpAsyncRequestProducer requestProducer,
-        @Advice.Argument(2) HttpContext httpContext,
+        @Advice.Argument(2) @Nullable HttpContext httpContext,
         @Advice.Argument(3) FutureCallback<?> futureCallback) {
 
       Context parentContext = Context.current();
+      if (httpContext == null) {
+        httpContext = new BasicHttpContext();
+      }
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
       HttpAsyncRequestProducer modifiedRequestProducer =
           new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
-      return new Object[] {modifiedRequestProducer, wrappedFutureCallback};
+      return new Object[] {modifiedRequestProducer, httpContext, wrappedFutureCallback};
     }
   }
 
@@ -91,6 +96,14 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       this.parentContext = parentContext;
       this.delegate = delegate;
       this.wrappedFutureCallback = wrappedFutureCallback;
+    }
+
+    void captureNetworkPeer() {
+      ApacheHttpClientRequest request = wrappedFutureCallback.otelRequest;
+      if (request != null) {
+        request.setNetworkPeer(
+            ApacheHttpClientRequest.captureNetworkPeer(wrappedFutureCallback.httpContext));
+      }
     }
 
     @Override
@@ -149,16 +162,14 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
 
     private final Context parentContext;
-    @Nullable private final HttpContext httpContext;
+    private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
     @Nullable private volatile Context context;
     @Nullable private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
-        Context parentContext,
-        @Nullable HttpContext httpContext,
-        @Nullable FutureCallback<T> delegate) {
+        Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
       this.parentContext = parentContext;
       this.httpContext = httpContext;
       this.delegate = delegate;
@@ -173,7 +184,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
+      end(null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
@@ -190,7 +201,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
 
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
+      end(ex);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
@@ -208,11 +219,19 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
+      end(null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();
       }
+    }
+
+    private void end(@Nullable Throwable error) {
+      ApacheHttpClientRequest request = otelRequest;
+      if (request != null) {
+        request.freezeNetworkPeer();
+      }
+      instrumenter().end(context, request, getResponseFromHttpContext(), error);
     }
 
     private void completeDelegate(T result) {
@@ -235,9 +254,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     private HttpResponse getResponseFromHttpContext() {
-      if (httpContext == null) {
-        return null;
-      }
       return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }
