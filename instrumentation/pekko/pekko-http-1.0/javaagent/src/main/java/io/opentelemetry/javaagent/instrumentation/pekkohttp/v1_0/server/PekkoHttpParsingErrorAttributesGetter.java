@@ -130,6 +130,12 @@ class PekkoHttpParsingErrorAttributesGetter
       return null;
     }
     if (target.startsWith("/")) {
+      // pekko-http renders an authority-form target, userinfo included, as a single segment with a
+      // leading //, for example when it cannot resolve the effective URI of an HTTP/1.0 request
+      // without a Host header
+      if (target.startsWith("//") && target.indexOf('/', 2) < 0 && target.indexOf('?') < 0) {
+        return null;
+      }
       return target;
     }
     int schemeEnd = findSchemeEnd(target);

@@ -295,6 +295,18 @@ class PekkoHttpServerParsingErrorTest {
   @Test def targetWithControlCharactersIsNotReported(): Unit =
     assertRejectedTargetTraced("/%%\u001b[2J?q=1")
 
+  /** pekko-http accepts an authority-form target for any method, and when it
+    * cannot resolve the effective URI of an HTTP/1.0 request without a Host
+    * header it renders that authority with a leading `//`. That is not a path,
+    * and reporting it would expose the userinfo.
+    */
+  @Test def renderedAuthorityIsNotReported(): Unit =
+    assertRejectedTargetTraced(
+      "user@[::1]:80",
+      includeHost = false,
+      httpVersion = "1.0"
+    )
+
   /** A `://` further into a target that does not start with a scheme does not
     * make it an absolute-form target, so nothing before it is reported as the
     * scheme.
@@ -310,7 +322,8 @@ class PekkoHttpServerParsingErrorTest {
       scheme: Option[String] = None,
       path: Option[String] = None,
       query: Option[String] = None,
-      includeHost: Boolean = true
+      includeHost: Boolean = true,
+      httpVersion: String = "1.1"
   ): Unit = {
     implicit val system: ActorSystem = ActorSystem(
       "parsing-error-rejected-target-test"
@@ -328,7 +341,8 @@ class PekkoHttpServerParsingErrorTest {
         val hostHeader = if (includeHost) "Host: example.com\r\n" else ""
         val response = send(
           port,
-          "GET " + target + " HTTP/1.1\r\n" + hostHeader + "\r\n"
+          "GET " + target + " HTTP/" + httpVersion + "\r\n" + hostHeader +
+            "\r\n"
         )
         assertThat(response.head).contains("400 Bad Request")
 
@@ -343,7 +357,7 @@ class PekkoHttpServerParsingErrorTest {
                   scheme = scheme,
                   path = path,
                   query = query,
-                  protocolVersion = if (includeHost) None else Some("1.1")
+                  protocolVersion = if (includeHost) None else Some(httpVersion)
                 )
                 ()
               }
