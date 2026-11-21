@@ -63,6 +63,7 @@ testing.suites {
   unitTests {
     dependencies {
       implementation(project(":instrumentation:cassandra:cassandra-4.4:library"))
+      implementation(project(":javaagent-extension-api"))
       implementation("com.datastax.oss:java-driver-core:4.4.0")
     }
   }

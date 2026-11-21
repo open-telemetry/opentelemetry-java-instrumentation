@@ -49,6 +49,7 @@ fun shadedRuntimeClasspath(name: String, version: String) = configurations.creat
 testing.suites {
   unitTests {
     dependencies {
+      implementation(project(":javaagent-extension-api"))
       // SniEndPoint arrived in driver 4.3; test reflective detection against that version.
       implementation("com.datastax.oss:java-driver-core:4.3.1")
     }
