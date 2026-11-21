@@ -56,7 +56,7 @@ testing.suites {
 
 tasks {
   check {
-    dependsOn(testing.suites.named("jms2Test"))
+    dependsOn(testing.suites)
   }
 }
 

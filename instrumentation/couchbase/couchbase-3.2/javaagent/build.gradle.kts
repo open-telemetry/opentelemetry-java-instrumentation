@@ -101,10 +101,6 @@ tasks {
   }
 
   check {
-    dependsOn(
-      testing.suites.named("version343Test"),
-      testing.suites.named("version344Test"),
-      testing.suites.named("version334Test"),
-    )
+    dependsOn(testing.suites)
   }
 }

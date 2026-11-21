@@ -134,10 +134,6 @@ configurations {
 
 tasks {
   check {
-    dependsOn(
-      testing.suites.named("version20Test"),
-      testing.suites.named("version30Test"),
-      testing.suites.named("testReceiveSpansDisabled"),
-    )
+    dependsOn(testing.suites)
   }
 }

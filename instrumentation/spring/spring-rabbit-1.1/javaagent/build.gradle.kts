@@ -82,7 +82,7 @@ tasks {
   }
 
   check {
-    dependsOn(testing.suites.named("version11Test"), testing.suites.named("version20Test"))
+    dependsOn(testing.suites)
   }
 }
 

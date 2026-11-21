@@ -102,10 +102,6 @@ testing.suites {
 
 tasks {
   check {
-    dependsOn(
-      testing.suites.named("lettuce51Test"),
-      testing.suites.named("lettuce60Test"),
-      testing.suites.named("lettuce65Test"),
-    )
+    dependsOn(testing.suites)
   }
 }
