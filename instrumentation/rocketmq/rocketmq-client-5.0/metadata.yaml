@@ -7,6 +7,13 @@ semantic_conventions:
   - MESSAGING_METRICS
 library_link: https://rocketmq.apache.org/
 configurations:
+  - name: otel.instrumentation.rocketmq-client.experimental-span-attributes
+    declarative_name: java.rocketmq_client.experimental_span_attributes/development
+    description: >
+      Enables capturing experimental attributes `rocketmq.message.lite_topic` and
+      `rocketmq.message.priority` on messaging spans and receive-span links.
+    type: boolean
+    default: false
   - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
     description: >

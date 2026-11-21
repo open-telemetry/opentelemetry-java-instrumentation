@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqMessageAttributes.ROCKETMQ_MESSAGE_LITE_TOPIC;
+import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0.RocketMqMessageAttributes.ROCKETMQ_MESSAGE_PRIORITY;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -33,9 +35,20 @@ class RocketMqConsumerProcessAttributeExtractor
   private static final AttributeKey<String> ROCKETMQ_NAMESPACE =
       AttributeKey.stringKey("rocketmq.namespace");
 
+  private final boolean captureExperimentalSpanAttributes;
+
+  RocketMqConsumerProcessAttributeExtractor(boolean captureExperimentalSpanAttributes) {
+    this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
+  }
+
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, MessageView messageView) {
+    if (captureExperimentalSpanAttributes) {
+      attributes.put(
+          ROCKETMQ_MESSAGE_LITE_TOPIC, RocketMqMessageAttributes.getLiteTopic(messageView));
+      attributes.put(ROCKETMQ_MESSAGE_PRIORITY, RocketMqMessageAttributes.getPriority(messageView));
+    }
     messageView.getTag().ifPresent(s -> attributes.put(ROCKETMQ_MESSAGE_TAG, s));
     messageView.getMessageGroup().ifPresent(s -> attributes.put(ROCKETMQ_MESSAGE_GROUP, s));
     messageView

@@ -6,5 +6,5 @@ dependencies {
   testImplementation(project(":instrumentation-api"))
   testImplementation(project(":instrumentation-api-incubator"))
   testImplementation(project(":instrumentation:rocketmq:rocketmq-client-5.0:javaagent"))
-  testImplementation("org.apache.rocketmq:rocketmq-client-java:5.0.0")
+  testImplementation("org.apache.rocketmq:rocketmq-client-java:5.2.2")
 }

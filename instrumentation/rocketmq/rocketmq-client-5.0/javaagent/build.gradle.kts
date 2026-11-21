@@ -36,18 +36,46 @@ testing.suites {
     }
   }
 
-  executions("test") {
-    configureEach {
-      if (otelProps.denyUnsafe) {
-        enabled = false
-      }
+  register<JvmTestSuite>("rocketmq52Test") {
+    dependencies {
+      val rocketmqVersion = baseVersion("5.2.2").orLatest()
+      implementation("org.apache.rocketmq:rocketmq-client-java:$rocketmqVersion")
+      implementation("org.apache.rocketmq:rocketmq-tools:5.5.1")
+      implementation("org.testcontainers:testcontainers")
     }
+  }
+
+  val disableWhenUnsafeDenied = Action<Test> {
+    if (otelProps.denyUnsafe) {
+      enabled = false
+    }
+  }
+
+  executions("test") {
+    configureEach(disableWhenUnsafeDenied)
 
     configureDefault {
       filter {
         excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
       }
-      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+    }
+
+    register("Experimental") {
+      filter {
+        excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+      }
+      systemProperty(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+      systemProperty(
+        "otel.instrumentation.rocketmq-client.experimental-span-attributes",
+        "true",
+      )
     }
 
     register("ReceiveSpanDisabled") {
@@ -66,6 +94,21 @@ testing.suites {
         )
       }
       include("**/RocketMqSimpleConsumerTest.*")
+    }
+  }
+
+  executions("rocketmq52Test") {
+    configureEach(disableWhenUnsafeDenied)
+
+    register("Experimental") {
+      telemetryConfig(
+        "otel.instrumentation.rocketmq-client.experimental-span-attributes",
+        "true",
+      )
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
     }
   }
 }
