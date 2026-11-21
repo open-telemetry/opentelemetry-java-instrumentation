@@ -30,7 +30,6 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.threads.Virtua
 import java.lang.management.GarbageCollectorMXBean;
 import java.lang.management.ManagementFactory;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,9 +42,6 @@ final class HandlerRegistry {
 
   // These handlers cover only a subset of memory pools, so JMX must remain the source of the
   // metric.
-  private static final Set<String> COLLECTOR_SPECIFIC_GC_EVENTS =
-      Set.of("jdk.G1GarbageCollection", "jdk.YoungGarbageCollection", "jdk.OldGarbageCollection");
-
   private static final Set<String> INCOMPLETE_JMX_REPLACEMENTS =
       Set.of(
           "jvm.memory.committed",
@@ -162,12 +158,10 @@ final class HandlerRegistry {
         default -> {}
       }
     }
-    if (handlers.isEmpty()
-        && Collections.disjoint(availableEventNames, COLLECTOR_SPECIFIC_GC_EVENTS)) {
-      // Only a JVM without any collector-specific event type, such as a GraalVM native image,
-      // falls back to the generic jdk.GarbageCollection event. HotSpot registers these event
-      // types for every collector. With ZGC or Shenandoah, which the switch does not handle,
-      // jvm.gc.duration therefore stays on JMX, which reports pauses and cycles separately.
+    // Native Image Serial GC can list collector-specific JFR events without emitting them.
+    // Register the generic handler once, even when both Serial GC MXBeans are present.
+    if (garbageCollectorNames.contains("young generation scavenger")
+        || garbageCollectorNames.contains("complete scavenger")) {
       addIfAvailable(
           handlers,
           availableEventNames,

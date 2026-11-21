@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.runtimetelemetry.internal;
 
 import static java.util.Collections.emptySet;
-import static java.util.Collections.singleton;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -18,6 +17,8 @@ import io.opentelemetry.sdk.metrics.SdkMeterProvider;
 import java.util.List;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class HandlerRegistryTest {
 
@@ -32,7 +33,7 @@ class HandlerRegistryTest {
   }
 
   @Test
-  void doesNotFallBackWhenCollectorSpecificEventsExist() {
+  void usesG1GarbageCollectionEvent() {
     Meter meter = SdkMeterProvider.builder().build().get("test");
 
     assertThat(
@@ -47,8 +48,9 @@ class HandlerRegistryTest {
         .isInstanceOf(G1GarbageCollectionHandler.class);
   }
 
-  @Test
-  void doesNotFallBackOnHotSpotWithZgc() {
+  @ParameterizedTest
+  @CsvSource({"ZGC Pauses,ZGC Cycles", "Shenandoah Pauses,Shenandoah Cycles"})
+  void leavesGcDurationToJmx(String pauses, String cycles) {
     Meter meter = SdkMeterProvider.builder().build().get("test");
 
     assertThat(
@@ -62,12 +64,12 @@ class HandlerRegistryTest {
                     "jdk.YoungGarbageCollection",
                     "jdk.OldGarbageCollection",
                     "jdk.GarbageCollection"),
-                List.of("ZGC Pauses", "ZGC Cycles")))
+                List.of(pauses, cycles)))
         .isEmpty();
   }
 
   @Test
-  void fallsBackToGenericGarbageCollectionEvent() {
+  void usesGenericGarbageCollectionEventOnceForNativeImageSerialGc() {
     Meter meter = SdkMeterProvider.builder().build().get("test");
 
     assertThat(
@@ -76,7 +78,11 @@ class HandlerRegistryTest {
                 "jvm.gc.duration"::equals,
                 false,
                 false,
-                singleton("jdk.GarbageCollection"),
+                Set.of(
+                    "jdk.G1GarbageCollection",
+                    "jdk.YoungGarbageCollection",
+                    "jdk.OldGarbageCollection",
+                    "jdk.GarbageCollection"),
                 List.of("young generation scavenger", "complete scavenger")))
         .singleElement()
         .isInstanceOf(GarbageCollectionHandler.class);
