@@ -342,11 +342,10 @@ class ClickHouseClientV2Test {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasAttribute(DB_RESPONSE_STATUS_CODE, "60")
-                            .hasAttribute(ERROR_TYPE, "60"))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasAttribute(DB_RESPONSE_STATUS_CODE, "60")
+                        .hasAttribute(ERROR_TYPE, "60")));
   }
 
   @Test

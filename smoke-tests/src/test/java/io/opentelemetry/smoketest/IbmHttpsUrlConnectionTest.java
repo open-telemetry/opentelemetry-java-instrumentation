@@ -59,7 +59,9 @@ class IbmHttpsUrlConnectionTest {
         new TelemetryRetriever(backend.getMappedPort(BACKEND_PORT), Duration.ofSeconds(30));
 
     target =
-        new GenericContainer<>(DockerImageName.parse("ibmjava:8-sdk"))
+        new GenericContainer<>(
+                DockerImageName.parse(
+                    "ibmjava:8-sdk@sha256:8186fd806847caea9fe91837b0c825c8036781f181bb51c80655c395a769dcc8"))
             .withStartupTimeout(Duration.ofMinutes(5))
             .withNetwork(network)
             .withLogConsumer(new Slf4jLogConsumer(logger))
