@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.couchbase.client.core.ClusterFacade;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -48,7 +48,7 @@ class CouchbaseClusterTargetInstrumentation implements TypeInstrumentation {
     public static void captureConfiguredTarget(
         @Advice.FieldValue("core") ClusterFacade core,
         @Advice.Argument(1) Object connectionString) {
-      DbServerTarget target = CouchbaseConnectionStrings.target(connectionString);
+      ServerTarget target = CouchbaseConnectionStrings.target(connectionString);
       if (target != null) {
         COUCHBASE_SERVER_TARGET.set(core, target);
       }

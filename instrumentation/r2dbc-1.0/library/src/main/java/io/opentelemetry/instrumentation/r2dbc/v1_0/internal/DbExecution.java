@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.r2dbc.v1_0.internal;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
 import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.spi.ConnectionFactoryOptions;
@@ -57,13 +57,13 @@ public final class DbExecution {
 
   @Nullable
   public String getConfiguredServerAddress() {
-    DbServerTarget target = connectionInfo.getConfiguredServerTarget();
+    ServerTarget target = connectionInfo.getConfiguredServerTarget();
     return target == null ? null : target.getAddress();
   }
 
   @Nullable
   public Integer getConfiguredServerPort() {
-    DbServerTarget target = connectionInfo.getConfiguredServerTarget();
+    ServerTarget target = connectionInfo.getConfiguredServerTarget();
     return target == null ? null : target.getPort();
   }
 

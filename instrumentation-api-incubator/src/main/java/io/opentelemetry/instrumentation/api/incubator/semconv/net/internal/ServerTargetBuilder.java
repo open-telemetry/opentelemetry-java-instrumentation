@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
+package io.opentelemetry.instrumentation.api.incubator.semconv.net.internal;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import java.net.InetSocketAddress;
@@ -12,8 +12,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 /**
- * Collects the endpoints a database client was configured with and renders them as a single {@link
- * DbServerTarget}. A caller that knows which single endpoint served an operation collects that one
+ * Collects the endpoints a client was configured with and renders them as a single {@link
+ * ServerTarget}. A caller that knows which single endpoint served an operation collects that one
  * endpoint instead, and reports the result as {@code network.peer.address} and {@code
  * network.peer.port}.
  *
@@ -33,7 +33,7 @@ import javax.annotation.Nullable;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
-public class DbServerTargetBuilder {
+public class ServerTargetBuilder {
 
   public static final int MAX_ENDPOINTS = 5;
 
@@ -49,11 +49,11 @@ public class DbServerTargetBuilder {
   @Nullable private String suffix;
   private boolean complete = true;
 
-  DbServerTargetBuilder(@Nullable Integer defaultPort) {
+  ServerTargetBuilder(@Nullable Integer defaultPort) {
     this.defaultPort = defaultPort;
   }
 
-  /** Returns whether {@code host} can be represented safely as a database server host. */
+  /** Returns whether {@code host} can be represented safely as a server host. */
   public static boolean isValidHost(@Nullable String host) {
     return sanitizeHost(host) != null;
   }
@@ -63,7 +63,7 @@ public class DbServerTargetBuilder {
    * order. Turn sorting on only when endpoint order carries no semantic meaning.
    */
   @CanIgnoreReturnValue
-  public DbServerTargetBuilder setSorted(boolean sorted) {
+  public ServerTargetBuilder setSorted(boolean sorted) {
     this.sorted = sorted;
     return this;
   }
@@ -74,7 +74,7 @@ public class DbServerTargetBuilder {
    * that names a discovery or coordination service rather than the server that runs the operation.
    */
   @CanIgnoreReturnValue
-  public DbServerTargetBuilder setPortAlwaysInline(boolean portAlwaysInline) {
+  public ServerTargetBuilder setPortAlwaysInline(boolean portAlwaysInline) {
     this.portAlwaysInline = portAlwaysInline;
     return this;
   }
@@ -86,7 +86,7 @@ public class DbServerTargetBuilder {
    * suffix cannot be read as part of an endpoint.
    */
   @CanIgnoreReturnValue
-  public DbServerTargetBuilder setSuffix(@Nullable String suffix) {
+  public ServerTargetBuilder setSuffix(@Nullable String suffix) {
     this.suffix = sanitizePathSegment(suffix);
     return this;
   }
@@ -96,7 +96,7 @@ public class DbServerTargetBuilder {
    * target's default port is used when known.
    */
   @CanIgnoreReturnValue
-  public DbServerTargetBuilder addEndpoint(@Nullable String host, int port) {
+  public ServerTargetBuilder addEndpoint(@Nullable String host, int port) {
     return addEndpointInternal(host, port, defaultPort);
   }
 
@@ -105,7 +105,7 @@ public class DbServerTargetBuilder {
    * whose default port follows from its scheme.
    */
   @CanIgnoreReturnValue
-  public DbServerTargetBuilder addEndpoint(@Nullable String host, int port, int defaultPort) {
+  public ServerTargetBuilder addEndpoint(@Nullable String host, int port, int defaultPort) {
     return addEndpointInternal(host, port, defaultPort);
   }
 
@@ -115,7 +115,7 @@ public class DbServerTargetBuilder {
    * literal form.
    */
   @CanIgnoreReturnValue
-  public DbServerTargetBuilder addEndpoint(@Nullable InetSocketAddress address) {
+  public ServerTargetBuilder addEndpoint(@Nullable InetSocketAddress address) {
     if (address == null) {
       complete = false;
       return this;
@@ -124,7 +124,7 @@ public class DbServerTargetBuilder {
   }
 
   @CanIgnoreReturnValue
-  private DbServerTargetBuilder addEndpointInternal(
+  private ServerTargetBuilder addEndpointInternal(
       @Nullable String host, int port, @Nullable Integer defaultPort) {
     String sanitizedHost = sanitizeHost(host);
     Integer effectivePort = port < 0 ? defaultPort : Integer.valueOf(port);
@@ -142,7 +142,7 @@ public class DbServerTargetBuilder {
 
   /** Returns the target, or {@code null} when it cannot be rendered safely. */
   @Nullable
-  public DbServerTarget build() {
+  public ServerTarget build() {
     if (!complete || endpoints.isEmpty()) {
       return null;
     }
@@ -183,8 +183,8 @@ public class DbServerTargetBuilder {
     return String.join(",", rendered.subList(0, Math.min(MAX_ENDPOINTS, rendered.size())));
   }
 
-  private DbServerTarget target(String address, @Nullable Integer port) {
-    return DbServerTarget.create(suffix == null ? address : address + "/" + suffix, port);
+  private ServerTarget target(String address, @Nullable Integer port) {
+    return ServerTarget.create(suffix == null ? address : address + "/" + suffix, port);
   }
 
   private static String renderHostAndPort(String host, int port) {
@@ -219,13 +219,13 @@ public class DbServerTargetBuilder {
       return null;
     }
     if (sanitized.indexOf(':') >= 0) {
-      return DbServerEndpointUtil.isIpv6Literal(sanitized) ? sanitized : null;
+      return ServerEndpointUtil.isIpv6Literal(sanitized) ? sanitized : null;
     }
     if (bracketed) {
       return null;
     }
     if (looksLikeIpv4Literal(sanitized)) {
-      return DbServerEndpointUtil.isIpv4Literal(sanitized) ? sanitized : null;
+      return ServerEndpointUtil.isIpv4Literal(sanitized) ? sanitized : null;
     }
     return isHostName(sanitized) ? sanitized : null;
   }
