@@ -56,14 +56,16 @@ class PekkoHttpParsingErrorAttributesGetter
     if (target == null) {
       return null;
     }
-    int schemeEnd = absoluteFormSchemeEnd(target);
-    return schemeEnd > 0 ? target.substring(0, schemeEnd) : null;
+    int schemeEnd = findSchemeEnd(target);
+    return schemeEnd >= 0 && target.startsWith("://", schemeEnd)
+        ? target.substring(0, schemeEnd)
+        : null;
   }
 
   @Nullable
   @Override
   public String getUrlPath(PekkoHttpParsingErrorRequest request) {
-    String target = pathAndQuery(request.rawRequestTarget());
+    String target = pathAndQuery(request);
     if (target == null) {
       return null;
     }
@@ -76,7 +78,7 @@ class PekkoHttpParsingErrorAttributesGetter
   @Nullable
   @Override
   public String getUrlQuery(PekkoHttpParsingErrorRequest request) {
-    String target = pathAndQuery(request.rawRequestTarget());
+    String target = pathAndQuery(request);
     if (target == null) {
       return null;
     }
@@ -102,26 +104,32 @@ class PekkoHttpParsingErrorAttributesGetter
 
   /**
    * Returns the path and query of a request-target in origin form ({@code /path?query}) or absolute
-   * form ({@code http://host/path?query}, where the path may be empty), and {@code null} for the
-   * authority form of a CONNECT request, the asterisk form of a server-wide OPTIONS request, and
-   * anything else that is neither origin nor absolute form.
+   * form with or without an authority. Returns {@code null} for the authority form of a CONNECT
+   * request, the asterisk form of a server-wide OPTIONS request, and anything else that is neither
+   * origin nor absolute form.
    */
   @Nullable
-  private static String pathAndQuery(@Nullable String rawTarget) {
-    String target = withoutFragment(rawTarget);
+  private static String pathAndQuery(PekkoHttpParsingErrorRequest request) {
+    String target = withoutFragment(request.rawRequestTarget());
     if (target == null || target.startsWith("/")) {
       return target;
     }
-    int schemeEnd = absoluteFormSchemeEnd(target);
-    if (schemeEnd <= 0) {
+    int schemeEnd = findSchemeEnd(target);
+    if (schemeEnd < 0) {
       return null;
     }
-    // the authority ends at the first '/' or '?', a '/' after a '?' belongs to the query
-    int authorityEnd = schemeEnd + 3;
-    while (authorityEnd < target.length() && "/?".indexOf(target.charAt(authorityEnd)) < 0) {
-      authorityEnd++;
+    int pathStart = schemeEnd + 1;
+    if (!target.startsWith("//", pathStart)) {
+      // A CONNECT target such as example.com:443 is a host and port, not a scheme and path.
+      return "CONNECT".equals(request.method()) ? null : target.substring(pathStart);
     }
-    return authorityEnd < target.length() ? target.substring(authorityEnd) : null;
+
+    // the authority ends at the first '/' or '?', a '/' after a '?' belongs to the query
+    pathStart += 2;
+    while (pathStart < target.length() && "/?".indexOf(target.charAt(pathStart)) < 0) {
+      pathStart++;
+    }
+    return pathStart < target.length() ? target.substring(pathStart) : null;
   }
 
   /**
@@ -137,20 +145,15 @@ class PekkoHttpParsingErrorAttributesGetter
     return fragmentStart >= 0 ? target.substring(0, fragmentStart) : target;
   }
 
-  /**
-   * Returns where the scheme of an absolute-form request-target ends, that is the index of its
-   * {@code ://}, or {@code -1} when the target does not start with a valid scheme followed by
-   * {@code ://}. A scheme is a letter followed by letters, digits, {@code +}, {@code -} or {@code
-   * .}, so that a {@code ://} further into a malformed target is not taken for one.
-   */
-  private static int absoluteFormSchemeEnd(String target) {
+  /** Returns the index of the colon after a valid URI scheme, or {@code -1} if absent. */
+  private static int findSchemeEnd(String target) {
     if (target.isEmpty() || !isAsciiLetter(target.charAt(0))) {
       return -1;
     }
     for (int i = 1; i < target.length(); i++) {
       char c = target.charAt(i);
       if (c == ':') {
-        return target.startsWith("://", i) ? i : -1;
+        return i;
       }
       if (!isAsciiLetter(c) && !(c >= '0' && c <= '9') && c != '+' && c != '-' && c != '.') {
         return -1;
