@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.gradle
 
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectCollection
-import org.gradle.api.NamedDomainObjectProvider
 import org.gradle.api.Plugin
 import org.gradle.api.PolymorphicDomainObjectContainer
 import org.gradle.api.Project
@@ -45,14 +44,14 @@ class TestSuiteExecutionsPlugin : Plugin<Project> {
 /** Register helper unit tests with the current project as a dependency and include them in check. */
 fun PolymorphicDomainObjectContainer<TestSuite>.unitTests(
   action: Action<JvmTestSuite> = Action {},
-): NamedDomainObjectProvider<JvmTestSuite> {
-  val suite = register("unitTests", JvmTestSuite::class.java) {
+): JvmTestSuite {
+  val suite = create("unitTests", JvmTestSuite::class.java) {
     dependencies {
       implementation.add(project())
     }
     action.execute(this)
   }
-  suite.get().executionConventions.includeInCheck()
+  suite.executionConventions.includeInCheck()
   return suite
 }
 
@@ -121,13 +120,11 @@ class TestSuiteExecutions internal constructor(
     action.execute(this)
 
     // Collect the whole block first so common configuration always precedes variant configuration.
+    includeInCheck()
     suite.targets.configureEach {
       testTask.configure {
         common.forEach { it.execute(this) }
         defaultOnly.forEach { it.execute(this) }
-      }
-      project.tasks.named("check").configure {
-        dependsOn(testTask)
       }
     }
     variants.forEach { (suffix, variant) ->

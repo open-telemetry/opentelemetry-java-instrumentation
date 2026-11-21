@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -42,27 +43,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
-      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
-      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
-      implementation(project(":instrumentation:reactor:reactor-3.1:library"))
-      implementation(project(":javaagent-bootstrap"))
-      implementation(project(":javaagent-extension-api"))
-      implementation("io.projectreactor.kafka:reactor-kafka:1.0.0.RELEASE")
-    }
-  }
-
-  register<JvmTestSuite>("receiveTelemetryDisabledUnitTests") {
-    sources {
-      java {
-        srcDir("src/unitTests/java")
-      }
-    }
-
-    dependencies {
-      implementation(project())
       implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
       implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
       implementation(project(":instrumentation:reactor:reactor-3.1:library"))
@@ -95,9 +77,11 @@ testing.suites {
   }
 
   executions("unitTests") {
-    configureEach {
+    configureDefault {
       jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
+
+    register("ReceiveTelemetryDisabled") {}
   }
 
   executions("test") {

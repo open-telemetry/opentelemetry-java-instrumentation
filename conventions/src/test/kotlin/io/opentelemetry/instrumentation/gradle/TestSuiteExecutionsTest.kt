@@ -36,7 +36,8 @@ class TestSuiteExecutionsTest {
     }
     suites().register("optInTest", JvmTestSuite::class.java)
     suites().invoke {
-      unitTests()
+      val unitTests = unitTests()
+      assertThat(unitTests.name).isEqualTo("unitTests")
     }
     val unitTests = suites().named("unitTests", JvmTestSuite::class.java)
 
@@ -61,7 +62,7 @@ class TestSuiteExecutionsTest {
       dependencies {
         implementation.add("example:library:2.0")
       }
-    }.get()
+    }
 
     assertThat(
       project.configurations.getByName(unitTests.sources.compileClasspathConfigurationName)
@@ -82,7 +83,7 @@ class TestSuiteExecutionsTest {
     suite("test").executions {
       register("UnitTests") {}
     }
-    suites().unitTests().get().executions {
+    suites().unitTests().executions {
       register("Experimental") {}
     }
     suites().register("legacyUNITTESTS", JvmTestSuite::class.java).get().executions {
