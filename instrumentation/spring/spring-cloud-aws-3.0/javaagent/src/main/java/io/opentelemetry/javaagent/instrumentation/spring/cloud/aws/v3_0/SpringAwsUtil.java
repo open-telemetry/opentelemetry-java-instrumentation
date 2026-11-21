@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInt
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -32,17 +33,13 @@ import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 public class SpringAwsUtil {
-  private static final ScopedThreadValue<TracingList> currentTracingList =
+  private static final ScopedThreadValue<Collection<?>> currentReceivedMessages =
       new ScopedThreadValue<>();
   private static final VirtualField<AbstractMessageConvertingMessageSource<?, ?>, ListenerMode>
       LISTENER_MODE =
           VirtualField.find(AbstractMessageConvertingMessageSource.class, ListenerMode.class);
   private static final VirtualField<Message<?>, TracingContext> TRACING_CONTEXT =
       VirtualField.find(Message.class, TracingContext.class);
-  private static final VirtualField<software.amazon.awssdk.services.sqs.model.Message, TracingList>
-      SQS_MESSAGE_TRACING_LIST =
-          VirtualField.find(
-              software.amazon.awssdk.services.sqs.model.Message.class, TracingList.class);
 
   public static void setListenerMode(
       AbstractMessageConvertingMessageSource<?, ?> messageSource,
@@ -51,32 +48,40 @@ public class SpringAwsUtil {
   }
 
   @Nullable
-  public static TracingList initialize(
+  public static Collection<?> initialize(
       AbstractMessageConvertingMessageSource<?, ?> messageSource, Collection<?> messages) {
-    TracingList tracingList =
-        messages instanceof TracingList currentTracingList ? currentTracingList : null;
-    if (tracingList != null && LISTENER_MODE.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
-      tracingList.markProcessingOwnedOutsideSqsSdk();
+    Collection<?> receivedMessages = null;
+    if (messages instanceof TracingList tracingList) {
+      if (LISTENER_MODE.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
+        tracingList.markProcessingOwnedOutsideSqsSdk();
+      }
+      receivedMessages = tracingList;
+    } else if (messages instanceof CombinedMessages) {
+      receivedMessages = messages;
     }
-    return currentTracingList.set(tracingList);
+    return currentReceivedMessages.set(receivedMessages);
   }
 
-  public static void restore(@Nullable TracingList previous) {
-    currentTracingList.restore(previous);
+  public static void restore(@Nullable Collection<?> previous) {
+    currentReceivedMessages.restore(previous);
   }
 
   // when a poll asks for more than 10 messages, spring combines the responses of several receive
-  // calls into a new collection, so the tracing list is carried on each of its messages instead.
-  // spring converts the combined messages right after combining them, which removes the state; if
-  // conversion fails, spring drops the messages and the state goes with them
-  public static void carryTracingState(Collection<?> messages) {
-    if (!(messages instanceof TracingList tracingList)) {
-      return;
+  // calls into a new list, which loses the tracing lists of the responses; the combined list is
+  // replaced with one that keeps the tracing list of each of its messages
+  public static Collection<?> combineTracingState(
+      Collection<?> firstBatch, Collection<?> secondBatch, Collection<?> combinedBatch) {
+    if (!hasTracingState(firstBatch) && !hasTracingState(secondBatch)) {
+      return combinedBatch;
     }
-    // iterating the tracing list would start sdk process spans
-    for (int i = 0; i < tracingList.size(); i++) {
-      SQS_MESSAGE_TRACING_LIST.set(tracingList.get(i), tracingList);
-    }
+    CombinedMessages combinedMessages = new CombinedMessages(combinedBatch);
+    combinedMessages.addTracingState(firstBatch);
+    combinedMessages.addTracingState(secondBatch);
+    return combinedMessages;
+  }
+
+  private static boolean hasTracingState(Collection<?> messages) {
+    return messages instanceof TracingList || messages instanceof CombinedMessages;
   }
 
   // copy tracing state from the sqs message to spring message, we'll use that state when the
@@ -85,13 +90,15 @@ public class SpringAwsUtil {
     if (!(originalMessage instanceof software.amazon.awssdk.services.sqs.model.Message message)) {
       return;
     }
-    TracingList tracingList = currentTracingList.get();
+    Collection<?> receivedMessages = currentReceivedMessages.get();
+    TracingList tracingList = null;
+    if (receivedMessages instanceof TracingList currentTracingList) {
+      tracingList = currentTracingList;
+    } else if (receivedMessages instanceof CombinedMessages combinedMessages) {
+      tracingList = combinedMessages.getTracingList(message);
+    }
     if (tracingList == null) {
-      tracingList = SQS_MESSAGE_TRACING_LIST.get(message);
-      if (tracingList == null) {
-        return;
-      }
-      SQS_MESSAGE_TRACING_LIST.set(message, null);
+      return;
     }
 
     SqsMessage tracingMessage = tracingList.getTracingMessage(message);
@@ -215,6 +222,33 @@ public class SpringAwsUtil {
       }
       future.whenComplete((unused, completionError) ->
           instrumenter.end(context, request, response, completionError));
+    }
+  }
+
+  // the messages of several receive responses, with the tracing list of each message
+  private static class CombinedMessages extends ArrayList<Object> {
+    private static final long serialVersionUID = 1L;
+
+    private final IdentityHashMap<Object, TracingList> tracingLists = new IdentityHashMap<>();
+
+    private CombinedMessages(Collection<?> messages) {
+      super(messages);
+    }
+
+    private void addTracingState(Collection<?> batch) {
+      if (batch instanceof TracingList tracingList) {
+        // iterating the tracing list would start sdk process spans
+        for (int i = 0; i < tracingList.size(); i++) {
+          tracingLists.put(tracingList.get(i), tracingList);
+        }
+      } else if (batch instanceof CombinedMessages combinedMessages) {
+        tracingLists.putAll(combinedMessages.tracingLists);
+      }
+    }
+
+    @Nullable
+    private TracingList getTracingList(Object message) {
+      return tracingLists.get(message);
     }
   }
 

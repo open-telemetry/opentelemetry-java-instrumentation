@@ -12,6 +12,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -31,12 +32,13 @@ class AbstractSqsMessageSourceInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class CombineBatchesAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void methodEnter(
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static Collection<?> methodExit(
         @Advice.Argument(0) Collection<?> firstBatch,
-        @Advice.Argument(1) Collection<?> secondBatch) {
-      SpringAwsUtil.carryTracingState(firstBatch);
-      SpringAwsUtil.carryTracingState(secondBatch);
+        @Advice.Argument(1) Collection<?> secondBatch,
+        @Advice.Return Collection<?> combinedBatch) {
+      return SpringAwsUtil.combineTracingState(firstBatch, secondBatch, combinedBatch);
     }
   }
 }
