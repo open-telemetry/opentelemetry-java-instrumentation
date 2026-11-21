@@ -45,6 +45,6 @@ class JfrVirtualThreadPinnedTest {
         metric
             .hasName("jvm.thread.virtual.pinned")
             .hasUnit(Constants.SECONDS)
-            .hasHistogramSatisfying(histogram -> histogram.hasPointsSatisfying(point -> {})));
+            .hasHistogramPointsSatisfying(point -> {}));
   }
 }
