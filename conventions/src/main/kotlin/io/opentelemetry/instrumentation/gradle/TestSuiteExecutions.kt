@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.gradle
 import org.gradle.api.Action
 import org.gradle.api.NamedDomainObjectCollection
 import org.gradle.api.Plugin
+import org.gradle.api.PolymorphicDomainObjectContainer
 import org.gradle.api.Project
 import org.gradle.api.plugins.ExtensionAware
 import org.gradle.api.plugins.jvm.JvmTestSuite
@@ -16,6 +17,8 @@ import org.gradle.testing.base.TestingExtension
 import org.gradle.testing.base.TestSuite
 
 class TestSuiteExecutionsPlugin : Plugin<Project> {
+  private val variantSuites = mutableMapOf<String, JvmTestSuite>()
+
   override fun apply(project: Project) {
     project.pluginManager.apply("jvm-test-suite")
     project.extensions.getByType(TestingExtension::class.java).suites
@@ -23,11 +26,35 @@ class TestSuiteExecutionsPlugin : Plugin<Project> {
         (this as ExtensionAware).extensions.add("executions", TestSuiteExecutions(project, this))
       }
   }
+  fun suiteFor(task: Test): JvmTestSuite? =
+    task.project.extensions.getByType(TestingExtension::class.java).suites
+      .findByName(task.name) as? JvmTestSuite ?: variantSuites[task.name]
+
+  internal fun registerVariant(suite: JvmTestSuite, taskName: String) {
+    variantSuites[taskName] = suite
+  }
+}
+
+/** Register helper unit tests with the current project as a dependency and include them in check. */
+fun PolymorphicDomainObjectContainer<TestSuite>.unitTests(
+  action: Action<JvmTestSuite> = Action {},
+): JvmTestSuite {
+  val suite = create("unitTests", JvmTestSuite::class.java) {
+    dependencies {
+      implementation.add(project())
+    }
+    action.execute(this)
+  }
+  suite.executionConventions.includeInCheck()
+  return suite
 }
 
 fun JvmTestSuite.executions(action: Action<TestSuiteExecutions>) {
-  (this as ExtensionAware).extensions.getByType(TestSuiteExecutions::class.java).configure(action)
+  executionConventions.configure(action)
 }
+
+private val JvmTestSuite.executionConventions: TestSuiteExecutions
+  get() = (this as ExtensionAware).extensions.getByType(TestSuiteExecutions::class.java)
 
 fun NamedDomainObjectCollection<TestSuite>.executions(
   vararg suiteNames: String,
@@ -71,23 +98,29 @@ class TestSuiteExecutions internal constructor(
     variants[suffix] = action
   }
 
+  internal fun includeInCheck() {
+    project.tasks.named("check").configure {
+      dependsOn(suite)
+    }
+  }
+
   internal fun configure(action: Action<TestSuiteExecutions>) {
     check(!configured) { "Declare one executions block per suite" }
     configured = true
     action.execute(this)
 
     // Collect the whole block first so common configuration always precedes variant configuration.
+    includeInCheck()
     suite.targets.configureEach {
       testTask.configure {
         common.forEach { it.execute(this) }
         defaultOnly.forEach { it.execute(this) }
       }
-      project.tasks.named("check").configure {
-        dependsOn(testTask)
-      }
     }
     variants.forEach { (suffix, variant) ->
-      val task = project.tasks.register(suite.name + suffix, Test::class.java) {
+      val taskName = suite.name + suffix
+      project.plugins.getPlugin(TestSuiteExecutionsPlugin::class.java).registerVariant(suite, taskName)
+      val task = project.tasks.register(taskName, Test::class.java) {
         testClassesDirs = suite.sources.output.classesDirs
         classpath = suite.sources.runtimeClasspath
         common.forEach { it.execute(this) }

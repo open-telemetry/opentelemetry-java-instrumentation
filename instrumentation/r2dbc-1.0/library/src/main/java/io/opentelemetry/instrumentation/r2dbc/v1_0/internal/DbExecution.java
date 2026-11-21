@@ -50,6 +50,7 @@ public final class DbExecution {
     R2dbcSqlCommenterUtil.clearQueries(queryInfo.getConnectionInfo());
   }
 
+  // only used by tests
   R2dbcConnectionInfo connectionInfo() {
     return connectionInfo;
   }

@@ -55,6 +55,7 @@ final class CassandraServerTarget {
     }
   }
 
+  // only used by tests
   @Nullable
   static DbServerTarget of(@Nullable List<String> contactPoints) {
     if (contactPoints == null || contactPoints.isEmpty()) {

@@ -339,6 +339,7 @@ public final class UrlParsingUtils {
   }
 
   /** Sanitize a comma-separated host list, returning {@code null} when it is not valid. */
+  // visible for testing
   @Nullable
   public static String sanitizeHostList(String authority) {
     String hostList = stripUserInfo(authority);
