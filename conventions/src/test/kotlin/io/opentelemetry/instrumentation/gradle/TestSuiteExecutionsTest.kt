@@ -71,6 +71,9 @@ class TestSuiteExecutionsTest {
       dependencies { implementation.add("example:library:2.0") }
       executions { register("Variant") {} }
     }
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains("unitTests", "customUNITTESTS", "customUNITTESTSVariant")
+      .doesNotContain("optInTest", "unitTestsVariant")
     (project as ProjectInternal).evaluate()
 
     for ((suite, version) in listOf(baseline to "1.0", named to "2.0")) {
@@ -91,9 +94,6 @@ class TestSuiteExecutionsTest {
       assertThat(task.jvmArgumentProviders).isEmpty()
       assertThat(task.jvmArgs).noneMatch { it.startsWith("-javaagent:") }
     }
-    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
-      .contains("unitTests", "customUNITTESTS", "customUNITTESTSVariant")
-      .doesNotContain("optInTest", "unitTestsVariant")
     assertThat(project.tasks.names).doesNotContain("unitTestsVariant")
   }
 
