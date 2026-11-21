@@ -9,10 +9,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import io.opentelemetry.sdk.testing.assertj.HistogramPointAssert;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.function.Consumer;
 
 /** Assertions for messaging metrics. */
 public final class MessagingMetricsAssertions {
@@ -59,15 +55,10 @@ public final class MessagingMetricsAssertions {
   }
 
   private static void verifyHistogram(MetricData metric, Attributes... attributes) {
-    if (attributes.length == 0) {
-      assertThat(metric.getHistogramData().getPoints()).isEmpty();
-      return;
-    }
-    List<Consumer<HistogramPointAssert>> points = new ArrayList<>();
-    for (Attributes attribute : attributes) {
-      points.add(point -> point.hasCount(1).hasAttributes(attribute));
-    }
-    assertThat(metric).hasHistogramPointsSatisfying(points);
+    assertThat(metric.getHistogramData().getPoints())
+        .allSatisfy(point -> assertThat(point.getCount()).isEqualTo(1))
+        .extracting(point -> point.getAttributes())
+        .containsExactlyInAnyOrder(attributes);
   }
 
   private MessagingMetricsAssertions() {}
