@@ -12,16 +12,21 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import org.springframework.messaging.Message;
+import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 class SpringAwsSqsBatchProcessRequest {
   private final List<Message<?>> messages;
   private final List<SqsMessage> sqsMessages;
+  private final ExecutionAttributes receiveRequest;
 
   SpringAwsSqsBatchProcessRequest(
-      Collection<? extends Message<?>> messages, List<SqsMessage> sqsMessages) {
+      Collection<? extends Message<?>> messages,
+      List<SqsMessage> sqsMessages,
+      ExecutionAttributes receiveRequest) {
     // the listener receives the same collection and may modify it before processing completes
     this.messages = unmodifiableList(new ArrayList<>(messages));
     this.sqsMessages = sqsMessages;
+    this.receiveRequest = receiveRequest;
   }
 
   List<Message<?>> getMessages() {
@@ -31,5 +36,11 @@ class SpringAwsSqsBatchProcessRequest {
   // the sqs messages of the batch that carry tracing state
   List<SqsMessage> getSqsMessages() {
     return sqsMessages;
+  }
+
+  // a receive request the batch came from; a batch is polled from a single queue, so every receive
+  // request of the batch has the same queue url and endpoint
+  ExecutionAttributes getReceiveRequest() {
+    return receiveRequest;
   }
 }

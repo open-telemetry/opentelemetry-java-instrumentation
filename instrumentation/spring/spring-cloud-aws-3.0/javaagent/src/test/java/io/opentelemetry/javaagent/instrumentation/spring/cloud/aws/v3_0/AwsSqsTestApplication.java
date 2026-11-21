@@ -70,4 +70,21 @@ class AwsSqsTestApplication {
       batchMessageHandler.accept(messages);
     }
   }
+
+  // configured with the queue url, and with more than 10 messages per poll, which makes spring
+  // combine the responses of several receive calls into one batch
+  @SqsListener(
+      value = "${test.combined-batch-queue-url}",
+      maxConcurrentMessages = "20",
+      maxMessagesPerPoll = "20",
+      pollTimeoutSeconds = "1")
+  void receiveCombinedBatch(List<String> messages) {
+    receiveBatch(messages);
+  }
+
+  // fifo queues acknowledge immediately by default
+  @SqsListener("batch-queue.fifo")
+  void receiveFifoBatch(List<String> messages) {
+    receiveBatch(messages);
+  }
 }

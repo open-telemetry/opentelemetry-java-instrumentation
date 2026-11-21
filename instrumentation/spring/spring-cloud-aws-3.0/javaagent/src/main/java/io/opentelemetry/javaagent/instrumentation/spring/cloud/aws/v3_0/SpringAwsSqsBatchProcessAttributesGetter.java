@@ -5,21 +5,28 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
-import io.awspring.cloud.sqs.listener.SqsHeaders;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.AwsSdkHttpAttributesGetter;
+import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsAttributesGetter;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import javax.annotation.Nullable;
-import org.springframework.messaging.Message;
 
 class SpringAwsSqsBatchProcessAttributesGetter
-    implements MessagingAttributesGetter<SpringAwsSqsBatchProcessRequest, Void> {
+    implements MessagingAttributesGetter<SpringAwsSqsBatchProcessRequest, Void>,
+        ServerAttributesGetter<SpringAwsSqsBatchProcessRequest> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws.sqs";
+
+  // the queue and endpoint are taken from the sdk receive request, as the sdk does
+  private static final SqsAttributesGetter sqsAttributesGetter = new SqsAttributesGetter();
+  private static final AwsSdkHttpAttributesGetter httpAttributesGetter =
+      new AwsSdkHttpAttributesGetter();
 
   @Override
   public String getSystem(SpringAwsSqsBatchProcessRequest request) {
@@ -29,14 +36,7 @@ class SpringAwsSqsBatchProcessAttributesGetter
   @Nullable
   @Override
   public String getDestination(SpringAwsSqsBatchProcessRequest request) {
-    // all messages of a batch come from the same queue
-    for (Message<?> message : request.getMessages()) {
-      Object queueName = message.getHeaders().get(SqsHeaders.SQS_QUEUE_NAME_HEADER);
-      if (queueName != null) {
-        return queueName.toString();
-      }
-    }
-    return null;
+    return sqsAttributesGetter.getDestination(request.getReceiveRequest());
   }
 
   @Nullable
@@ -99,5 +99,17 @@ class SpringAwsSqsBatchProcessAttributesGetter
       names.addAll(message.getMessageAttributeNames());
     }
     return names;
+  }
+
+  @Nullable
+  @Override
+  public String getServerAddress(SpringAwsSqsBatchProcessRequest request) {
+    return httpAttributesGetter.getServerAddress(request.getReceiveRequest());
+  }
+
+  @Nullable
+  @Override
+  public Integer getServerPort(SpringAwsSqsBatchProcessRequest request) {
+    return httpAttributesGetter.getServerPort(request.getReceiveRequest());
   }
 }

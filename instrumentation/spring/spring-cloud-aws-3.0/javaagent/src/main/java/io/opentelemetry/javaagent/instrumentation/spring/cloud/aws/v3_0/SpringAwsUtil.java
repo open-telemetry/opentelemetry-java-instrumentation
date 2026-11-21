@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInt
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -38,6 +39,10 @@ public class SpringAwsUtil {
           VirtualField.find(AbstractMessageConvertingMessageSource.class, ListenerMode.class);
   private static final VirtualField<Message<?>, TracingContext> TRACING_CONTEXT =
       VirtualField.find(Message.class, TracingContext.class);
+  private static final VirtualField<software.amazon.awssdk.services.sqs.model.Message, TracingList>
+      SQS_MESSAGE_TRACING_LIST =
+          VirtualField.find(
+              software.amazon.awssdk.services.sqs.model.Message.class, TracingList.class);
 
   public static void setListenerMode(
       AbstractMessageConvertingMessageSource<?, ?> messageSource,
@@ -60,15 +65,32 @@ public class SpringAwsUtil {
     currentTracingList.restore(previous);
   }
 
+  // when a poll asks for more than 10 messages, spring combines the responses of several receive
+  // calls into a new collection, so the tracing list is carried on each of its messages instead;
+  // the state is removed when the message is converted
+  public static void carryTracingState(Collection<?> messages) {
+    if (!(messages instanceof TracingList tracingList)) {
+      return;
+    }
+    // iterating the tracing list would start sdk process spans
+    for (int i = 0; i < tracingList.size(); i++) {
+      SQS_MESSAGE_TRACING_LIST.set(tracingList.get(i), tracingList);
+    }
+  }
+
   // copy tracing state from the sqs message to spring message, we'll use that state when the
   // message handler is called
   public static void attachTracingState(Object originalMessage, Message<?> convertedMessage) {
-    TracingList tracingList = currentTracingList.get();
-    if (tracingList == null) {
-      return;
-    }
     if (!(originalMessage instanceof software.amazon.awssdk.services.sqs.model.Message message)) {
       return;
+    }
+    TracingList tracingList = currentTracingList.get();
+    if (tracingList == null) {
+      tracingList = SQS_MESSAGE_TRACING_LIST.get(message);
+      if (tracingList == null) {
+        return;
+      }
+      SQS_MESSAGE_TRACING_LIST.set(message, null);
     }
 
     SqsMessage tracingMessage = tracingList.getTracingMessage(message);
@@ -113,7 +135,7 @@ public class SpringAwsUtil {
 
     Instrumenter<SpringAwsSqsBatchProcessRequest, Void> instrumenter = batchProcessInstrumenter();
     SpringAwsSqsBatchProcessRequest request =
-        new SpringAwsSqsBatchProcessRequest(messages, sqsMessages);
+        new SpringAwsSqsBatchProcessRequest(messages, sqsMessages, tracingContexts.get(0).request);
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return null;
@@ -126,19 +148,25 @@ public class SpringAwsUtil {
     return new ProcessingInvocation<>(instrumenter, context, request, null);
   }
 
-  // restore context of the batch process span, or of the first message of the batch when there
-  // was none
+  // restore context of the batch process span when it processed all acknowledged messages, which
+  // may come from several listener invocations, otherwise of the first acknowledged message
   @Nullable
   public static Scope handleBatch(Collection<Message<?>> messages) {
     if (messages.isEmpty()) {
       return null;
     }
-    Message<?> message = messages.iterator().next();
-    TracingContext tracingContext = TRACING_CONTEXT.get(message);
+    Iterator<Message<?>> iterator = messages.iterator();
+    TracingContext tracingContext = TRACING_CONTEXT.get(iterator.next());
     if (tracingContext == null) {
       return null;
     }
     Context batchProcessContext = tracingContext.batchProcessContext;
+    while (batchProcessContext != null && iterator.hasNext()) {
+      TracingContext other = TRACING_CONTEXT.get(iterator.next());
+      if (other == null || other.batchProcessContext != batchProcessContext) {
+        batchProcessContext = null;
+      }
+    }
     if (batchProcessContext != null) {
       return batchProcessContext.makeCurrent();
     }

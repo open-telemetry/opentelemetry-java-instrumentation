@@ -16,7 +16,12 @@ import software.amazon.awssdk.core.SdkRequest;
 import software.amazon.awssdk.core.SdkResponse;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
-class SqsAttributesGetter implements MessagingAttributesGetter<ExecutionAttributes, Response> {
+/**
+ * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+ * any time.
+ */
+public final class SqsAttributesGetter
+    implements MessagingAttributesGetter<ExecutionAttributes, Response> {
 
   // copied from MessagingIncubatingAttributes.MessagingSystemIncubatingValues
   private static final String AWS_SQS = "aws.sqs";

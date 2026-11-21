@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
@@ -84,6 +85,7 @@ final class SpringAwsSqsSingletons {
                 MessagingAttributesExtractor.builder(getter, operationType, PROCESS_OPERATION_NAME)
                     .setHeaders(ExperimentalConfig.get().getMessagingHeaders())
                     .build())
+            .addAttributesExtractor(ServerAttributesExtractor.create(getter))
             // a batch has no single creation context to use as a parent, so the creation context
             // of every message is linked instead
             .addSpanLinksExtractor((spanLinks, parentContext, request) -> {
