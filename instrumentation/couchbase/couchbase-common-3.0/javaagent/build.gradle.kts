@@ -10,15 +10,7 @@ plugins {
 }
 
 testing.suites {
-  unitTests {
-    dependencies {
-      implementation(project(":instrumentation-api-incubator"))
-      implementation(project(":javaagent-extension-api"))
-      implementation("io.opentelemetry:opentelemetry-sdk-testing")
-    }
-  }
-
-  executions("unitTests") {
+  unitTests().executions {
     register("ExceptionSignalLogs") {
       jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     }
