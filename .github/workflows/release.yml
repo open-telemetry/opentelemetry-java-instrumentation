@@ -5,6 +5,10 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: publish-release
+  cancel-in-progress: false
+
 jobs:
   common:
     uses: $/.github/workflows/build-common.yml
@@ -20,24 +24,19 @@ jobs:
 
   release:
     environment: protected
-    concurrency:
-      group: publish-release
-      cancel-in-progress: false
     permissions:
-      contents: write # for creating the release
-      id-token: write # for signing artifacts with Sigstore
-      attestations: write # for uploading attestations
+      contents: read
     runs-on: ubuntu-latest
     needs:
       - common
     outputs:
-      version: ${{ steps.create-github-release.outputs.version }}
-      prior-version: ${{ steps.create-github-release.outputs.prior-version }}
-      development-branch: ${{ steps.create-github-release.outputs.development-branch }}
+      version: ${{ steps.release-version.outputs.VERSION }}
+      prior-version: ${{ steps.release-version.outputs.PRIOR_VERSION }}
+      development-branch: ${{ steps.release-version.outputs.DEVELOPMENT_BRANCH }}
     steps:
       - run: |
-          if [[ $GITHUB_REF_NAME != release/* ]]; then
-            echo this workflow should only be run against release branches
+          if [[ ! $GITHUB_REF =~ ^refs/tags/v[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo this workflow should only be run against release tags
             exit 1
           fi
 
@@ -47,9 +46,13 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
 
-      - name: Set environment variables
+      - id: release-version
+        name: Set environment variables
         # Sets VERSION, DEVELOPMENT_BRANCH, and PRIOR_VERSION.
-        run: python .github/scripts/release-config.py release --ref "$GITHUB_REF_NAME" >> "$GITHUB_ENV"
+        run: |
+          config=$(python .github/scripts/release-config.py release --ref "$GITHUB_REF_NAME")
+          echo "$config" >> "$GITHUB_ENV"
+          echo "$config" >> "$GITHUB_OUTPUT"
 
         # check out the development branch to verify there won't be problems merging the change log
         # at the end of this workflow
@@ -68,21 +71,12 @@ jobs:
             fi
           fi
 
-        # back to the release branch
+        # back to the release tag
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # tags are needed for the generate-release-contributors.sh script
           fetch-depth: 0
           persist-credentials: false
-
-      - name: Determine whether to mark the release as latest
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        # Sets MAKE_LATEST.
-        run: |
-          gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
-            --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name' \
-            | python .github/scripts/release-config.py latest --version "$VERSION" >> "$GITHUB_ENV"
 
       - name: Free disk space
         run: .github/scripts/gha-free-disk-space.sh
@@ -130,21 +124,71 @@ jobs:
           name: opentelemetry-java-instrumentation-SBOM
           path: "sboms/*.json"
 
+      - name: Simplify paths for attaching
+        run: |
+          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
+          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: release-artifacts
+          if-no-files-found: error
+          path: |
+            opentelemetry-javaagent.jar
+            opentelemetry-javaagent.jar.asc
+            opentelemetry-java-instrumentation-SBOM.zip
+
+  sign-and-release:
+    permissions:
+      contents: write # for creating the release
+      id-token: write # for signing artifacts with Sigstore
+      attestations: write # for uploading attestations
+    runs-on: ubuntu-latest
+    needs:
+      - release
+    env:
+      DEVELOPMENT_BRANCH: ${{ needs.release.outputs.development-branch }}
+    outputs:
+      version: ${{ steps.create-github-release.outputs.version }}
+      prior-version: ${{ steps.create-github-release.outputs.prior-version }}
+      development-branch: ${{ steps.create-github-release.outputs.development-branch }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+
+      - name: Download release artifacts
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: release-artifacts
+
+      - name: Determine whether to mark the release as latest
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ needs.release.outputs.version }}
+        # Sets MAKE_LATEST.
+        run: |
+          gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
+            --jq '.[] | select(.draft == false and .prerelease == false) | .tag_name' \
+            | python .github/scripts/release-config.py latest --version "$VERSION" >> "$GITHUB_ENV"
+
       - name: Generate release notes
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRIOR_VERSION: ${{ needs.release.outputs.prior-version }}
+          VERSION: ${{ needs.release.outputs.version }}
         run: |
-          # CHANGELOG_SECTION.md is also used at the end of the release workflow
-          # for copying the change log updates to the development branch
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/CHANGELOG_SECTION.md
 
-          # the complex perl regex is needed because markdown docs render newlines as soft wraps
-          # while release notes render them as line breaks
+          # The complex perl regex is needed because markdown docs render newlines as soft wraps
+          # while release notes render them as line breaks.
           perl -0pe 's/(?<!\n)\n *(?!\n)(?![-*] )(?![1-9]+\. )/ /g' /tmp/CHANGELOG_SECTION.md \
             > /tmp/release-notes.txt
 
-          # conditional block not indented because of the heredoc
+          # Conditional block not indented because of the heredoc.
           if [[ $VERSION == *.0 ]]; then
           cat >> /tmp/release-notes.txt << EOF
           ### 🙇 Thank you
@@ -156,10 +200,26 @@ jobs:
           .github/scripts/generate-release-contributors.sh "v$PRIOR_VERSION" "$DEVELOPMENT_BRANCH" >> /tmp/release-notes.txt
           fi
 
-      - name: Simplify paths for attaching
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@6f9f17788090df1f26f669e9d70d6ae9567deba6 # v4.1.2
+
+      - name: Sign release artifacts
         run: |
-          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar opentelemetry-javaagent.jar
-          cp javaagent/build/libs/opentelemetry-javaagent-${VERSION}.jar.asc opentelemetry-javaagent.jar.asc
+          for artifact in opentelemetry-javaagent.jar opentelemetry-java-instrumentation-SBOM.zip; do
+            cosign sign-blob --yes --bundle "${artifact}.sigstore.json" "${artifact}"
+          done
+
+      - name: Verify release artifact signatures
+        env:
+          CERTIFICATE_IDENTITY: https://github.com/${{ github.workflow_ref }}
+          CERTIFICATE_OIDC_ISSUER: https://token.actions.githubusercontent.com
+        run: |
+          for artifact in opentelemetry-javaagent.jar opentelemetry-java-instrumentation-SBOM.zip; do
+            cosign verify-blob "${artifact}" \
+              --bundle "${artifact}.sigstore.json" \
+              --certificate-identity "${CERTIFICATE_IDENTITY}" \
+              --certificate-oidc-issuer "${CERTIFICATE_OIDC_ISSUER}"
+          done
 
       - name: Generate checksums
         run: |
@@ -179,15 +239,19 @@ jobs:
         name: Create GitHub release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PRIOR_VERSION: ${{ needs.release.outputs.prior-version }}
+          VERSION: ${{ needs.release.outputs.version }}
         run: |
-          gh release create --target $GITHUB_REF_NAME \
+          gh release create --verify-tag \
                             --title "Version $VERSION" \
                             --latest="$MAKE_LATEST" \
                             --notes-file /tmp/release-notes.txt \
                             v$VERSION \
                             opentelemetry-javaagent.jar \
                             opentelemetry-javaagent.jar.asc \
+                            opentelemetry-javaagent.jar.sigstore.json \
                             opentelemetry-java-instrumentation-SBOM.zip \
+                            opentelemetry-java-instrumentation-SBOM.zip.sigstore.json \
                             checksums.txt
 
           # these are used as job outputs
@@ -200,15 +264,15 @@ jobs:
       contents: read
       issues: write
     needs:
-      - release
+      - sign-and-release
     uses: $/.github/workflows/documentation-synchronization-audit.yml
 
   post-release-updates:
     runs-on: ubuntu-latest
     needs:
-      - release
+      - sign-and-release
     env:
-      DEVELOPMENT_BRANCH: ${{ needs.release.outputs.development-branch }}
+      DEVELOPMENT_BRANCH: ${{ needs.sign-and-release.outputs.development-branch }}
     steps:
       # add change log sync (if any) into this PR since the apidiff update
       # is required before any other PR can be merged anyway
@@ -216,9 +280,9 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Copy change log section from release branch
+      - name: Copy change log section from release tag
         env:
-          VERSION: ${{ needs.release.outputs.version }}
+          VERSION: ${{ needs.sign-and-release.outputs.version }}
         run: |
           sed -n "0,/^## Version $VERSION /d;/^## Version /q;p" CHANGELOG.md \
             > /tmp/changelog-section.md
@@ -230,14 +294,14 @@ jobs:
 
       - name: Determine whether to update the API baseline
         env:
-          VERSION: ${{ needs.release.outputs.version }}
+          VERSION: ${{ needs.sign-and-release.outputs.version }}
         # Sets UPDATE_API_BASELINE.
         run: |
           python .github/scripts/release-config.py post-release --version "$VERSION" >> "$GITHUB_ENV"
 
       - name: Merge change log to the development branch
         env:
-          VERSION: ${{ needs.release.outputs.version }}
+          VERSION: ${{ needs.sign-and-release.outputs.version }}
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           release_date=$(gh release view v$VERSION --json publishedAt --jq .publishedAt | sed 's/T.*//')
@@ -246,7 +310,7 @@ jobs:
       - name: Wait for release to be available in maven central
         if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         env:
-          VERSION: ${{ needs.release.outputs.version }}
+          VERSION: ${{ needs.sign-and-release.outputs.version }}
         run: |
           until curl --silent \
                      --show-error \
@@ -273,8 +337,8 @@ jobs:
       - name: Update apidiff baseline
         if: ${{ env.UPDATE_API_BASELINE == 'true' }}
         env:
-          VERSION: ${{ needs.release.outputs.version }}
-          PRIOR_VERSION: ${{ needs.release.outputs.prior-version }}
+          VERSION: ${{ needs.sign-and-release.outputs.version }}
+          PRIOR_VERSION: ${{ needs.sign-and-release.outputs.prior-version }}
         run: |
           ./gradlew japicmp -PapiBaseVersion=$PRIOR_VERSION -PapiNewVersion=$VERSION
           # Pin the apidiff baseline to the just-released version.
@@ -284,7 +348,7 @@ jobs:
       - name: Update development branch download link
         if: ${{ startsWith(env.DEVELOPMENT_BRANCH, 'maintenance/v') && env.UPDATE_API_BASELINE == 'true' }}
         env:
-          VERSION: ${{ needs.release.outputs.version }}
+          VERSION: ${{ needs.sign-and-release.outputs.version }}
         run: |
           sed -Ei "s,https://github\.com/open-telemetry/opentelemetry-java-instrumentation/releases/(latest/download|download/v[0-9]+\.[0-9]+\.[0-9]+)/,https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v$VERSION/," README.md
 
@@ -301,7 +365,7 @@ jobs:
 
       - name: Create pull request against the development branch
         env:
-          VERSION: ${{ needs.release.outputs.version }}
+          VERSION: ${{ needs.sign-and-release.outputs.version }}
           # pull requests from secrets.GITHUB_TOKEN do not run workflows
           GH_TOKEN: ${{ steps.otelbot-token.outputs.token }}
         run: |
