@@ -11,7 +11,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.couchbase.client.core.utils.ConnectionString;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.net.InetSocketAddress;
 import java.util.List;
 import org.junit.jupiter.api.Test;
@@ -20,7 +20,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void omitsTheCouchbaseDefaultPort() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(ConnectionString.create("couchbase://node:11210"));
 
     assertThat(target).isNotNull();
@@ -30,7 +30,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void omitsTheCouchbasesDefaultPort() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(ConnectionString.create("couchbases://node:11207"));
 
     assertThat(target).isNotNull();
@@ -40,7 +40,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void keepsSharedCouchbasesNonDefaultPortsInline() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example:11208,one.example:11208"));
 
@@ -51,7 +51,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void keepsDifferentCouchbasesPortsInline() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example:11208,one.example"));
 
@@ -62,7 +62,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void sortsSeveralSeedsLexicographically() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(
             ConnectionString.create("couchbases://two.example,one.example"));
 
@@ -73,7 +73,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void stripsCredentialsFromAConnectionStringTheDriverParsed() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(ConnectionString.create("couchbase://user@node.example"));
 
     assertThat(target).isNotNull();
@@ -82,7 +82,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void readsTheSeedsOfTheDriver20Shape() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 asList(
@@ -96,7 +96,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void keepsCommonNonDefaultPortsInline() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 asList(
@@ -110,7 +110,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void keepsDifferentPortsInline() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 asList(
@@ -124,7 +124,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void prefersTheConfiguredSeedsOverTheResolvedOnes() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(
             new ResolvedSeedListConnectionString(
                 asList(
@@ -138,7 +138,7 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void readsTheSeedsOfTheDriver27Shape() {
-    DbServerTarget target =
+    ServerTarget target =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 asList(new Seed("node.example", 0), new Seed("2001:db8::1", 11207)), "COUCHBASES"));
@@ -150,10 +150,10 @@ class CouchbaseConnectionStringsTest {
 
   @Test
   void loneSeedNamesItselfWhateverTheShape() {
-    DbServerTarget seedTarget =
+    ServerTarget seedTarget =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(singletonList(new Seed("cluster.example", 0))));
-    DbServerTarget socketTarget =
+    ServerTarget socketTarget =
         CouchbaseConnectionStrings.target(
             new SeedListConnectionString(
                 singletonList(InetSocketAddress.createUnresolved("[2001:db8::1]", 11210))));

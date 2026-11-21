@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
@@ -101,7 +101,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getServerAddress(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
-    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    ServerTarget target = dbInfo.getConfiguredServerTarget();
     return target == null ? null : target.getAddress();
   }
 
@@ -109,7 +109,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public Integer getServerPort(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
-    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    ServerTarget target = dbInfo.getConfiguredServerTarget();
     return target == null ? null : target.getPort();
   }
 }

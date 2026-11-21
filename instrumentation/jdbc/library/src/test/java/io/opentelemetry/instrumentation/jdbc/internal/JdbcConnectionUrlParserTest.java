@@ -21,7 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.ClickhouseUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.Db2UrlParser;
@@ -102,8 +102,7 @@ class JdbcConnectionUrlParserTest {
   void singletonUrlIsNotMarkedAsMultiTarget() {
     DbInfo dbInfo = parse("jdbc:postgresql://pg.host:5432/db", null);
 
-    assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("pg.host", null));
   }
 
   @ParameterizedTest
@@ -142,7 +141,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getDbSystemName()).isEqualTo("other_sql");
     assertThat(dbInfo.getDbNamespace()).isEqualTo("property_db");
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("property.host", 5433));
+        .isEqualTo(ServerTarget.create("property.host", 5433));
   }
 
   @Test
@@ -152,7 +151,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getDbSystemName()).isEqualTo("other_sql");
     assertThat(dbInfo.getDbNamespace()).isEqualTo("orders");
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("db.example", 5432));
+        .isEqualTo(ServerTarget.create("db.example", 5432));
   }
 
   @Test
@@ -162,15 +161,14 @@ class JdbcConnectionUrlParserTest {
     assertThat(dbInfo.getDbSystemName()).isEqualTo(MYSQL);
     assertThat(dbInfo.getDbNamespace()).isEqualTo("orders");
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("db.example", null));
+        .isEqualTo(ServerTarget.create("db.example", null));
   }
 
   @Test
   void omittedDefaultPortIsNotReportedInConfiguredTarget() {
     DbInfo dbInfo = parse("jdbc:postgresql://pg.host/db", null);
 
-    assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("pg.host", null));
   }
 
   @Test
@@ -181,8 +179,7 @@ class JdbcConnectionUrlParserTest {
                 + "?user=admin@corp.com&currentSchema=test,public",
             null);
 
-    assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("pg.host", null));
     assertThat(dbInfo.getDbNamespace()).isEqualTo("db@corp.com|test,public");
   }
 
@@ -190,16 +187,14 @@ class JdbcConnectionUrlParserTest {
   void commaAfterAtInFinalQueryParameterDoesNotMarkSingletonAsMultiTarget() {
     DbInfo dbInfo = parse("jdbc:postgresql://pg.host:5432/db?password=prefix@domain,suffix", null);
 
-    assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("pg.host", null));
   }
 
   @Test
   void commaAfterAtInSqlServerPropertyDoesNotMarkSingletonAsMultiTarget() {
     DbInfo dbInfo = parse("jdbc:sqlserver://ss.host;password=prefix@domain,suffix", null);
 
-    assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("ss.host", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("ss.host", null));
   }
 
   @ParameterizedTest
@@ -240,7 +235,7 @@ class JdbcConnectionUrlParserTest {
       })
   void mariaDbAuthorityBoundariesFollowUrlGrammar(String url, String target, String namespace) {
     DbInfo dbInfo = parse(url, null);
-    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create(target, null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create(target, null));
     assertThat(dbInfo.getDbNamespace()).isEqualTo(namespace);
   }
 
@@ -252,7 +247,7 @@ class JdbcConnectionUrlParserTest {
                 + "?user=admin@corp.com&currentSchema=test,public",
             null);
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host1:5432,pg.host2:5433", null));
+        .isEqualTo(ServerTarget.create("pg.host1:5432,pg.host2:5433", null));
     assertThat(dbInfo.getDbNamespace()).isEqualTo("pgdb@corp.com|test,public");
   }
 
@@ -261,7 +256,7 @@ class JdbcConnectionUrlParserTest {
     DbInfo dbInfo =
         parse("jdbc:postgresql://h1:5432,h2:5432?options=email=user@example.com,mode=strict", null);
 
-    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1,h2", null));
   }
 
   @ParameterizedTest
@@ -282,7 +277,7 @@ class JdbcConnectionUrlParserTest {
 
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1,h2", null));
     assertThat(dbInfo.getDbNamespace()).isEqualTo("db");
   }
 
@@ -324,7 +319,7 @@ class JdbcConnectionUrlParserTest {
                 + "?sessionVariables=email='user%40example.com',sql_mode=ANSI",
             null);
 
-    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1,h2", null));
   }
 
   @ParameterizedTest
@@ -337,7 +332,7 @@ class JdbcConnectionUrlParserTest {
   void encodedAtInMariaDbSingletonQueryPreservesOrdinaryParsing(String url) {
     DbInfo dbInfo = parse(url, null);
 
-    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1", null));
   }
 
   @Test
@@ -348,7 +343,7 @@ class JdbcConnectionUrlParserTest {
                 + "?sessionVariables=email='user%40example.com',sql_mode=ANSI",
             null);
 
-    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1,h2", null));
+    assertThat(dbInfo.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1,h2", null));
   }
 
   private static Stream<Arguments> mySqlArguments() {
@@ -608,8 +603,7 @@ class JdbcConnectionUrlParserTest {
         .isEqualTo(
             DbInfo.builder()
                 .dbSystemName(url.startsWith("jdbc:mysql:") ? MYSQL : MARIADB)
-                .configuredServerTarget(
-                    address == null ? null : DbServerTarget.create(address, port))
+                .configuredServerTarget(address == null ? null : ServerTarget.create(address, port))
                 .dbNamespace(namespace)
                 .build());
   }
@@ -1063,7 +1057,7 @@ class JdbcConnectionUrlParserTest {
     DbInfo info = parse("jdbc:sqlserver://url.host1:1433;failoverPartner=url.host2", properties);
 
     assertThat(info.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("property.host1:1444,property.host2:1433", null));
+        .isEqualTo(ServerTarget.create("property.host1:1444,property.host2:1433", null));
   }
 
   @Test
@@ -1076,7 +1070,7 @@ class JdbcConnectionUrlParserTest {
 
     assertThat(info.getDbNamespace()).isEqualTo("orclsn");
     assertThat(info.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("[2001:db8::1]:2521,[2001:db8::2]:2521", null));
+        .isEqualTo(ServerTarget.create("[2001:db8::1]:2521,[2001:db8::2]:2521", null));
   }
 
   @Test
@@ -1088,8 +1082,7 @@ class JdbcConnectionUrlParserTest {
             null);
 
     assertThat(info.getConfiguredServerTarget())
-        .isEqualTo(
-            DbServerTarget.create("ldap://orcl.host:389/some,cn=oraclecontext,dc=com", null));
+        .isEqualTo(ServerTarget.create("ldap://orcl.host:389/some,cn=oraclecontext,dc=com", null));
   }
 
   private static Stream<Arguments> oracleArguments() {
@@ -2059,7 +2052,7 @@ class JdbcConnectionUrlParserTest {
     DbInfo dbInfo = parse(url, null);
 
     assertThat(dbInfo.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create(expectedServerAddressGroup, null));
+        .isEqualTo(ServerTarget.create(expectedServerAddressGroup, null));
   }
 
   private static Stream<Arguments> limitedServerAddressGroupArguments() {
@@ -2092,7 +2085,7 @@ class JdbcConnectionUrlParserTest {
   void limitsServerAddressGroupAfterInspectingTheCompleteList(
       String url, String expectedServerAddressGroup) {
     assertThat(parse(url, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create(expectedServerAddressGroup, null));
+        .isEqualTo(ServerTarget.create(expectedServerAddressGroup, null));
   }
 
   @Test
@@ -2118,7 +2111,7 @@ class JdbcConnectionUrlParserTest {
   @MethodSource("configuredOrderServerAddressGroupArguments")
   void preservesConfiguredServerAddressGroupOrder(String url, String expectedServerAddressGroup) {
     assertThat(parse(url, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create(expectedServerAddressGroup, null));
+        .isEqualTo(ServerTarget.create(expectedServerAddressGroup, null));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -2146,7 +2139,7 @@ class JdbcConnectionUrlParserTest {
     String userInfo = "alice" + ':' + "test-secret" + '@';
     assertThat(
             parse("jdbc:" + type + "://" + userInfo + "h1,h2/db", null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("h1,h2", null));
+        .isEqualTo(ServerTarget.create("h1,h2", null));
   }
 
   @Test
@@ -2159,7 +2152,7 @@ class JdbcConnectionUrlParserTest {
             + credentials
             + "/db";
     assertThat(parse(url, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("h1,h2", null));
+        .isEqualTo(ServerTarget.create("h1,h2", null));
   }
 
   @ParameterizedTest
@@ -2182,7 +2175,7 @@ class JdbcConnectionUrlParserTest {
   void semicolonParametersDoNotChangeTargetCount(String connection) {
     String url = "jdbc:" + connection + ";property=a,b";
     assertThat(parse(url, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("h1", null));
+        .isEqualTo(ServerTarget.create("h1", null));
   }
 
   @ParameterizedTest
@@ -2220,7 +2213,7 @@ class JdbcConnectionUrlParserTest {
     assertThat(ctx.system()).isNotNull();
     if (expectedAuthority != null && hasMultipleTargets(expectedAuthority)) {
       assertThat(ctx.toDbInfo().getConfiguredServerTarget())
-          .isNotEqualTo(DbServerTarget.create("fallback.host", null));
+          .isNotEqualTo(ServerTarget.create("fallback.host", null));
     }
   }
 
@@ -2275,7 +2268,7 @@ class JdbcConnectionUrlParserTest {
       this.properties = builder.properties;
 
       String namespace = builder.namespace != null ? builder.namespace : builder.name;
-      DbServerTarget configuredServerTarget;
+      ServerTarget configuredServerTarget;
       if (builder.noConfiguredTarget || builder.multiTarget) {
         configuredServerTarget = null;
       } else if (builder.configuredServerTarget != null) {
@@ -2283,9 +2276,9 @@ class JdbcConnectionUrlParserTest {
       } else if (builder.serverAddressGroup == null && builder.host == null) {
         configuredServerTarget = null;
       } else if (builder.serverAddressGroup != null) {
-        configuredServerTarget = DbServerTarget.create(builder.serverAddressGroup, null);
+        configuredServerTarget = ServerTarget.create(builder.serverAddressGroup, null);
       } else {
-        configuredServerTarget = DbServerTarget.create(builder.host, builder.port);
+        configuredServerTarget = ServerTarget.create(builder.host, builder.port);
       }
 
       this.dbInfo =
@@ -2303,7 +2296,7 @@ class JdbcConnectionUrlParserTest {
     }
 
     private ParseTestArgument withoutConfiguredDefaultPort(int defaultPort) {
-      DbServerTarget target = dbInfo.getConfiguredServerTarget();
+      ServerTarget target = dbInfo.getConfiguredServerTarget();
       if (target == null || !Integer.valueOf(defaultPort).equals(target.getPort())) {
         return this;
       }
@@ -2311,7 +2304,7 @@ class JdbcConnectionUrlParserTest {
           url,
           properties,
           dbInfo.toBuilder()
-              .configuredServerTarget(DbServerTarget.create(target.getAddress(), null))
+              .configuredServerTarget(ServerTarget.create(target.getAddress(), null))
               .build());
     }
 
@@ -2330,7 +2323,7 @@ class JdbcConnectionUrlParserTest {
     String namespace;
     String name;
     String serverAddressGroup;
-    DbServerTarget configuredServerTarget;
+    ServerTarget configuredServerTarget;
     boolean multiTarget;
     boolean noConfiguredTarget;
 
@@ -2374,7 +2367,7 @@ class JdbcConnectionUrlParserTest {
     }
 
     ParseTestArgumentBuilder setConfiguredServerTarget(String address, Integer port) {
-      this.configuredServerTarget = DbServerTarget.create(address, port);
+      this.configuredServerTarget = ServerTarget.create(address, port);
       return this;
     }
 

@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v4_0;
 
 import static com.datastax.oss.driver.api.core.config.DefaultDriverOption.CONTACT_POINTS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil.isIpv6Literal;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerEndpointUtil.isIpv6Literal;
 import static io.opentelemetry.javaagent.instrumentation.cassandra.v4_0.CassandraEndPoints.isDefaultEndPoint;
 import static java.util.Collections.emptyList;
 
@@ -14,8 +14,8 @@ import com.datastax.oss.driver.api.core.config.DriverExecutionProfile;
 import com.datastax.oss.driver.api.core.context.DriverContext;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.session.Session;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
@@ -27,14 +27,14 @@ class CassandraServerTarget {
   private static final int DEFAULT_PORT = 9042;
 
   @Nullable
-  static DbServerTarget of(Session session, Set<EndPoint> programmaticContactPoints) {
+  static ServerTarget of(Session session, Set<EndPoint> programmaticContactPoints) {
     try {
       DriverContext context = session.getContext();
       DriverExecutionProfile config = context.getConfig().getDefaultProfile();
       // The basic.contact-points option has no default, so the single-argument lookup would throw
       // when a session names its contact points on the builder alone.
       List<String> configuredContactPoints = config.getStringList(CONTACT_POINTS, emptyList());
-      DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
+      ServerTargetBuilder target = ServerTarget.builder(DEFAULT_PORT).setSorted(true);
       for (String contactPoint : configuredContactPoints) {
         addContactPoint(target, contactPoint);
       }
@@ -60,18 +60,18 @@ class CassandraServerTarget {
   }
 
   @Nullable
-  static DbServerTarget of(@Nullable List<String> contactPoints) {
+  static ServerTarget of(@Nullable List<String> contactPoints) {
     if (contactPoints == null || contactPoints.isEmpty()) {
       return null;
     }
-    DbServerTargetBuilder target = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
+    ServerTargetBuilder target = ServerTarget.builder(DEFAULT_PORT).setSorted(true);
     for (String contactPoint : contactPoints) {
       addContactPoint(target, contactPoint);
     }
     return target.build();
   }
 
-  private static void addContactPoint(DbServerTargetBuilder target, @Nullable String contactPoint) {
+  private static void addContactPoint(ServerTargetBuilder target, @Nullable String contactPoint) {
     if (contactPoint == null) {
       target.addEndpoint((String) null, -1);
       return;

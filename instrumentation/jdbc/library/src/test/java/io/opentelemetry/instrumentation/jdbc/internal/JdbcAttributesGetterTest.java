@@ -20,7 +20,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
@@ -154,7 +154,7 @@ class JdbcAttributesGetterTest {
     DbInfo dbInfo =
         DbInfo.builder()
             .dbSystemName(MARIADB)
-            .configuredServerTarget(DbServerTarget.create("h1:15432,h2:15432", null))
+            .configuredServerTarget(ServerTarget.create("h1:15432,h2:15432", null))
             .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
 
@@ -196,7 +196,7 @@ class JdbcAttributesGetterTest {
     DbInfo dbInfo =
         DbInfo.builder()
             .dbSystemName(MARIADB)
-            .configuredServerTarget(DbServerTarget.create("h1", 3306))
+            .configuredServerTarget(ServerTarget.create("h1", 3306))
             .build();
     DbRequest request = DbRequest.create(dbInfo, "SELECT 1", false);
 

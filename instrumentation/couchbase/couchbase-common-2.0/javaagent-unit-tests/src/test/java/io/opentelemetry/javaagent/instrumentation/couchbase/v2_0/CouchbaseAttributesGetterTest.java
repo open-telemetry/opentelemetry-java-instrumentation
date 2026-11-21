@@ -22,7 +22,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import java.net.InetSocketAddress;
@@ -122,7 +122,7 @@ class CouchbaseAttributesGetterTest {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "bucket",
-            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
+            ServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
             getClass(),
             "get");
     request.setNode(new InetSocketAddress("192.0.2.1", 32768));
@@ -137,7 +137,7 @@ class CouchbaseAttributesGetterTest {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "bucket",
-            DbServerTarget.builder(11210).addEndpoint("node.example", 11210).build(),
+            ServerTarget.builder(11210).addEndpoint("node.example", 11210).build(),
             getClass(),
             "get");
 
@@ -150,7 +150,7 @@ class CouchbaseAttributesGetterTest {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "bucket",
-            DbServerTarget.builder(11210).addEndpoint("node.example", 11211).build(),
+            ServerTarget.builder(11210).addEndpoint("node.example", 11211).build(),
             getClass(),
             "get");
 
@@ -186,7 +186,7 @@ class CouchbaseAttributesGetterTest {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "bucket",
-            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
+            ServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
             getClass(),
             "get");
     request.setNode(new InetSocketAddress("192.0.2.1", 32768));
@@ -230,7 +230,7 @@ class CouchbaseAttributesGetterTest {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "bucket",
-            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
+            ServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
             getClass(),
             "get");
     InetSocketAddress firstPeer = new InetSocketAddress("192.0.2.1", 32768);
@@ -250,7 +250,7 @@ class CouchbaseAttributesGetterTest {
     CouchbaseRequestInfo request =
         CouchbaseRequestInfo.create(
             "bucket",
-            DbServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
+            ServerTarget.builder(11210).addEndpoint("cluster.example", -1).build(),
             getClass(),
             "get");
 

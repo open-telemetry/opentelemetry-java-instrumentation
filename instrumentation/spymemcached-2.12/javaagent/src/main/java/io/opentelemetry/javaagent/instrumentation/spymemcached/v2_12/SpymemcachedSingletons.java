@@ -13,8 +13,8 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
@@ -39,8 +39,8 @@ public class SpymemcachedSingletons {
       VirtualField.find(GetFuture.class, OperationStatus.class);
   private static final VirtualField<BulkGetFuture<?>, OperationStatus> BULK_FUTURE_STATUS =
       VirtualField.find(BulkGetFuture.class, OperationStatus.class);
-  private static final VirtualField<MemcachedConnection, DbServerTarget> CONFIGURED_TARGETS =
-      VirtualField.find(MemcachedConnection.class, DbServerTarget.class);
+  private static final VirtualField<MemcachedConnection, ServerTarget> CONFIGURED_TARGETS =
+      VirtualField.find(MemcachedConnection.class, ServerTarget.class);
 
   static {
     SpymemcachedAttributesGetter dbAttributesGetter = new SpymemcachedAttributesGetter();
@@ -70,7 +70,7 @@ public class SpymemcachedSingletons {
   }
 
   @Nullable
-  static DbServerTarget serverTarget(MemcachedConnection connection) {
+  static ServerTarget serverTarget(MemcachedConnection connection) {
     return CONFIGURED_TARGETS.get(connection);
   }
 
@@ -107,11 +107,11 @@ public class SpymemcachedSingletons {
   }
 
   @Nullable
-  static DbServerTarget createServerTarget(@Nullable List<InetSocketAddress> nodes) {
+  static ServerTarget createServerTarget(@Nullable List<InetSocketAddress> nodes) {
     if (nodes == null) {
       return null;
     }
-    DbServerTargetBuilder builder = DbServerTarget.builder(DEFAULT_PORT);
+    ServerTargetBuilder builder = ServerTarget.builder(DEFAULT_PORT);
     for (InetSocketAddress node : nodes) {
       builder.addEndpoint(node);
     }
