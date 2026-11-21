@@ -1125,7 +1125,9 @@ class Jedis40ClientTest {
             metrics.anySatisfy(metric ->
                 assertThat(metric)
                     .hasHistogramPointsSatisfying(point ->
-                        point.hasCount(1).hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
   }
 
   @ParameterizedTest
@@ -1368,7 +1370,9 @@ class Jedis40ClientTest {
             metrics.anySatisfy(metric ->
                 assertThat(metric)
                     .hasHistogramPointsSatisfying(point ->
-                        point.hasCount(1).hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
     jedis.resetState();
     testing.clearData();
     assertThat(jedis.set("after-transaction", "value")).isEqualTo("OK");
