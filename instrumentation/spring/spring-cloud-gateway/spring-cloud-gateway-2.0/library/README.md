@@ -1,7 +1,9 @@
-# Library Instrumentation for Spring Cloud Gateway 2.0 and higher
+# Library Instrumentation for Spring Cloud Gateway
 
-Provides a Spring Cloud Gateway `GlobalFilter` that records the matched route ID as `http.route`
-on existing HTTP server spans and metrics.
+Records the matched Spring Cloud Gateway route ID on WebFlux server spans and metrics when WebFlux
+does not provide a route template. This library requires Spring WebFlux 5.3 or later. The oldest
+combination covered by its integration tests is Spring Cloud Gateway 3.1.8 on Spring Boot 2.7.18.
+The Java agent supports Spring Cloud Gateway 2.0 and later.
 
 ## Quickstart
 
@@ -24,25 +26,27 @@ For Gradle, add to your dependencies:
 implementation("io.opentelemetry.instrumentation:opentelemetry-spring-cloud-gateway-2.0:OPENTELEMETRY_VERSION")
 ```
 
-Then register the route filter as a Spring bean:
+The OpenTelemetry Spring Boot starter configures this automatically. For standalone use, also add
+the [OpenTelemetry WebFlux library](../../../spring-webflux/spring-webflux-5.3/library) and set the
+route fallback on its server telemetry builder:
 
 ```java
-import io.opentelemetry.instrumentation.spring.cloud.gateway.v2_0.SpringCloudGatewayRouteFilter;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.v2_0.SpringCloudGatewayRouteGetter;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetry;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.server.WebFilter;
 
 @Configuration
 class OpenTelemetryGatewayConfiguration {
 
   @Bean
-  SpringCloudGatewayRouteFilter openTelemetrySpringCloudGatewayRouteFilter() {
-    return new SpringCloudGatewayRouteFilter();
+  WebFilter openTelemetryWebFluxFilter(OpenTelemetry openTelemetry) {
+    return SpringWebfluxServerTelemetry.builder(openTelemetry)
+        .setRouteFallback(new SpringCloudGatewayRouteGetter())
+        .build()
+        .createWebFilterAndRegisterReactorHook();
   }
 }
 ```
-
-The filter enriches telemetry produced by HTTP server instrumentation and does not create spans or
-metrics itself. It requires the WebFlux Reactor context hook provided by the OpenTelemetry Spring
-Boot starter or by registering the WebFlux library instrumentation with
-`createWebFilterAndRegisterReactorHook()`. When using the starter, the route filter is registered
-automatically unless the application already provides one.

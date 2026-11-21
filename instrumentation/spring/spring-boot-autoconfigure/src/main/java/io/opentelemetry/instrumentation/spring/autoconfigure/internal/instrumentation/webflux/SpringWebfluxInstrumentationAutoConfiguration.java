@@ -7,7 +7,11 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.v2_0.SpringCloudGatewayRouteGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetry;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetryBuilder;
+import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.web.reactive.function.client.WebClientCustomizer;
@@ -41,9 +45,13 @@ public class SpringWebfluxInstrumentationAutoConfiguration {
   }
 
   @Bean
-  WebFilter telemetryFilter(OpenTelemetry openTelemetry) {
-    return WebClientBeanPostProcessor.getWebfluxServerTelemetry(openTelemetry)
-        .createWebFilterAndRegisterReactorHook();
+  WebFilter telemetryFilter(
+      OpenTelemetry openTelemetry, ObjectProvider<SpringCloudGatewayRouteGetter> routeGetter) {
+    SpringWebfluxServerTelemetryBuilder builder =
+        SpringWebfluxBuilderUtil.applyServerCommonConfig(
+            SpringWebfluxServerTelemetry.builder(openTelemetry), openTelemetry);
+    routeGetter.ifAvailable(builder::setRouteFallback);
+    return builder.build().createWebFilterAndRegisterReactorHook();
   }
 
   @Configuration

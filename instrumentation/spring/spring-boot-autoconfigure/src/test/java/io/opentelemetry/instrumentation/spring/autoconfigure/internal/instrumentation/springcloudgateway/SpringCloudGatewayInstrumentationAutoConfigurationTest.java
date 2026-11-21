@@ -8,7 +8,7 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.cloud.gateway.v2_0.SpringCloudGatewayRouteFilter;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.v2_0.SpringCloudGatewayRouteGetter;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.FilteredClassLoader;
@@ -26,32 +26,33 @@ class SpringCloudGatewayInstrumentationAutoConfigurationTest {
   @Test
   void instrumentationEnabledByDefault() {
     contextRunner.run(
-        context -> assertThat(context).hasSingleBean(SpringCloudGatewayRouteFilter.class));
+        context -> assertThat(context).hasSingleBean(SpringCloudGatewayRouteGetter.class));
   }
 
   @Test
   void gatewayAbsent() {
     contextRunner
         .withClassLoader(new FilteredClassLoader("org.springframework.cloud.gateway"))
-        .run(context -> assertThat(context).doesNotHaveBean(SpringCloudGatewayRouteFilter.class));
+        .run(context -> assertThat(context).doesNotHaveBean(SpringCloudGatewayRouteGetter.class));
   }
 
   @Test
-  void applicationProvidedFilter() {
+  void applicationProvidedGetter() {
     contextRunner
         .withUserConfiguration(CustomFilterConfiguration.class)
-        .run(context -> {
-          assertThat(context).hasSingleBean(SpringCloudGatewayRouteFilter.class);
-          assertThat(context.getBean(SpringCloudGatewayRouteFilter.class))
-              .isSameAs(context.getBean("customRouteFilter"));
-        });
+        .run(
+            context -> {
+              assertThat(context).hasSingleBean(SpringCloudGatewayRouteGetter.class);
+              assertThat(context.getBean(SpringCloudGatewayRouteGetter.class))
+                  .isSameAs(context.getBean("customRouteGetter"));
+            });
   }
 
   @Configuration(proxyBeanMethods = false)
   static final class CustomFilterConfiguration {
     @Bean
-    SpringCloudGatewayRouteFilter customRouteFilter() {
-      return new SpringCloudGatewayRouteFilter();
+    SpringCloudGatewayRouteGetter customRouteGetter() {
+      return new SpringCloudGatewayRouteGetter();
     }
   }
 }
