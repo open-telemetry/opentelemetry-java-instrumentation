@@ -55,8 +55,10 @@ class AgentStartupBenchmark {
     }
     Path annotations =
         workload.equals("petclinic") ? Path.of(required("annotations")).toAbsolutePath() : null;
+    Path helper =
+        workload.equals("petclinic") ? Path.of(required("petclinicHelper")).toAbsolutePath() : null;
     try (PetclinicStartupFixture petclinic =
-        annotations == null ? null : PetclinicStartupFixture.start(annotations)) {
+        annotations == null ? null : PetclinicStartupFixture.start(annotations, helper)) {
       measureStartup(petclinic, annotations);
     }
   }
@@ -94,9 +96,12 @@ class AgentStartupBenchmark {
       metadata.setProperty("readiness", PetclinicStartupFixture.READINESS_PATH + " seeded owner 1");
       metadata.setProperty("annotations.sha256", checksum(annotations));
       metadata.setProperty("annotations.path", annotations.toString());
-      metadata.setProperty(
-          "timing", "container process start to host receipt of seeded owner response");
+      metadata.setProperty("helper.sha256", checksum(petclinic.helper()));
+      metadata.setProperty("helper.path", petclinic.helper().toString());
     }
+    metadata.setProperty(
+        "timing",
+        "application JVM uptime at the first successful readiness response; includes JVM/agent initialization and application/request work before sampling; excludes container setup, database provisioning, and return network transit; probe polling affects when the successful request reaches the application");
     metadata.setProperty("samples", Integer.toString(samples));
     metadata.setProperty("warmups", Integer.toString(warmups));
     metadata.setProperty("resources", "quota=2 CPUs; memory=1 GiB; heap=512 MiB");
@@ -134,7 +139,7 @@ class AgentStartupBenchmark {
 
     DockerClient docker = DockerClientFactory.instance().client();
     List<AgentStartupReport.Sample> observations = new ArrayList<>();
-    AgentStartupReport report = new AgentStartupReport(directory, petclinic != null);
+    AgentStartupReport report = new AgentStartupReport(directory);
     for (int round = 0; round < warmups + samples; round++) {
       for (int offset = 0; offset < configurations.size(); offset++) {
         Configuration configuration = configurations.get((round + offset) % configurations.size());
@@ -219,16 +224,7 @@ class AgentStartupBenchmark {
         HttpResponse<String> response = awaitReadiness(application, client, petclinic != null);
         Instant cutoff = Instant.now();
         double startupSeconds =
-            petclinic != null
-                ? Duration.between(
-                            Instant.parse(application.getContainerInfo().getState().getStartedAt()),
-                            cutoff)
-                        .toNanos()
-                    / 1_000_000_000.0
-                : startupSeconds(
-                    response.statusCode(),
-                    response.body(),
-                    response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null));
+            uptimeSeconds(response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null));
         String jvmVersion =
             petclinic == null
                 ? response.headers().firstValue(JVM_VERSION_HEADER).orElse(null)
@@ -299,7 +295,10 @@ class AgentStartupBenchmark {
             client.send(request, HttpResponse.BodyHandlers.ofString(UTF_8));
         if (response.statusCode() == 200) {
           if (petclinic) {
-            PetclinicStartupFixture.validateResponse(response.statusCode(), response.body());
+            petclinicStartupSeconds(
+                response.statusCode(),
+                response.body(),
+                response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null));
           } else {
             startupSeconds(
                 response.statusCode(),
@@ -333,6 +332,15 @@ class AgentStartupBenchmark {
       throw new IllegalArgumentException(
           "Readiness must return HTTP 200 and body Hi!, got HTTP " + status + " and " + body);
     }
+    return uptimeSeconds(uptimeHeader);
+  }
+
+  static double petclinicStartupSeconds(int status, String body, String uptimeHeader) {
+    PetclinicStartupFixture.validateResponse(status, body);
+    return uptimeSeconds(uptimeHeader);
+  }
+
+  private static double uptimeSeconds(String uptimeHeader) {
     if (uptimeHeader == null) {
       throw new IllegalArgumentException("Missing application JVM uptime response header");
     }
@@ -364,7 +372,7 @@ class AgentStartupBenchmark {
     if (petclinic) {
       arguments.addAll(
           List.of(
-              "-Dloader.path=/app/annotations",
+              "-Dloader.path=/app/annotations,/app/startup-helper",
               "-cp",
               "/app/spring-petclinic-rest.jar",
               "org.springframework.boot.loader.PropertiesLauncher"));

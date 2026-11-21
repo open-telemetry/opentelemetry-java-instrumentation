@@ -26,21 +26,36 @@ final class PetclinicStartupFixture implements AutoCloseable {
   private final Network network;
   private final PostgreSQLContainer<?> database;
   private final Path annotations;
+  private final Path helper;
 
   private PetclinicStartupFixture(
-      Network network, PostgreSQLContainer<?> database, Path annotations) {
+      Network network, PostgreSQLContainer<?> database, Path annotations, Path helper) {
     this.network = network;
     this.database = database;
     this.annotations = annotations;
+    this.helper = helper;
   }
 
-  static PetclinicStartupFixture start(Path annotations) throws Exception {
+  static PetclinicStartupFixture start(Path annotations, Path helper) throws Exception {
     if (!Files.isRegularFile(annotations)) {
       throw new IllegalArgumentException("Annotation JAR does not exist: " + annotations);
     }
     try (JarFile jar = new JarFile(annotations.toFile())) {
       if (jar.getJarEntry("io/opentelemetry/instrumentation/annotations/WithSpan.class") == null) {
         throw new IllegalArgumentException("Invalid annotation JAR: " + annotations);
+      }
+    }
+    if (!Files.isRegularFile(helper)) {
+      throw new IllegalArgumentException("Petclinic startup helper JAR does not exist: " + helper);
+    }
+    try (JarFile jar = new JarFile(helper.toFile())) {
+      if (jar.getJarEntry("io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.class")
+              == null
+          || jar.getJarEntry(
+                  "io/opentelemetry/startup/PetclinicStartupUptimeAutoConfiguration.class")
+              == null
+          || jar.getJarEntry("META-INF/spring.factories") == null) {
+        throw new IllegalArgumentException("Invalid Petclinic startup helper JAR: " + helper);
       }
     }
     Network network = Network.newNetwork();
@@ -60,7 +75,7 @@ final class PetclinicStartupFixture implements AutoCloseable {
       if (seed.getExitCode() != 0 || !seed.getStdout().contains("StartupBenchmark Franklin")) {
         throw new IllegalStateException("Postgres seed verification failed: " + seed);
       }
-      return new PetclinicStartupFixture(network, database, annotations);
+      return new PetclinicStartupFixture(network, database, annotations, helper);
     } catch (Throwable t) {
       if (database != null) {
         database.close();
@@ -75,6 +90,8 @@ final class PetclinicStartupFixture implements AutoCloseable {
         .withNetwork(network)
         .withCopyFileToContainer(
             MountableFile.forHostPath(annotations), "/app/annotations/annotations.jar")
+        .withCopyFileToContainer(
+            MountableFile.forHostPath(helper), "/app/startup-helper/petclinic-startup-helper.jar")
         .withEnv("spring_profiles_active", "postgresql,spring-data-jpa")
         .withEnv(
             "spring_datasource_url",
@@ -82,6 +99,10 @@ final class PetclinicStartupFixture implements AutoCloseable {
         .withEnv("spring_datasource_username", PostgresContainer.USERNAME)
         .withEnv("spring_datasource_password", PostgresContainer.PASSWORD)
         .withEnv("spring_jpa_hibernate_ddl-auto", "none");
+  }
+
+  Path helper() {
+    return helper;
   }
 
   static void validateResponse(int status, String body) {

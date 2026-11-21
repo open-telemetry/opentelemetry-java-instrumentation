@@ -47,7 +47,7 @@ jobs:
 
       - name: Format and validate standalone benchmark
         working-directory: benchmark-overhead
-        run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
+        run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar petclinicStartupHelperJar
 
       - name: Check out upstream main history for baseline validation
         if: inputs.baseline-ref != ''
@@ -86,9 +86,10 @@ jobs:
           cp smoke-tests/images/spring-boot/build/classes/java/main/io/opentelemetry/smoketest/springboot/controller/WebController.class \
             "$RUNNER_TEMP/startup-benchmark/fixture/"
           cp benchmark-overhead/build/libs/startup-recorder.jar "$RUNNER_TEMP/startup-benchmark/"
+          cp benchmark-overhead/build/libs/petclinic-startup-helper.jar "$RUNNER_TEMP/startup-benchmark/"
           cp instrumentation-annotations/build/libs/opentelemetry-instrumentation-annotations-*.jar "$RUNNER_TEMP/startup-benchmark/annotations.jar"
           git rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/revision.txt"
-          (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar annotations.jar fixture/WebController.class > sha256.txt)
+          (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar petclinic-startup-helper.jar annotations.jar fixture/WebController.class > sha256.txt)
           if [ -n "$BASELINE_REF" ]; then
             cp baseline/javaagent/build/libs/opentelemetry-javaagent.jar "$RUNNER_TEMP/startup-benchmark/baseline-agent.jar"
             git -C baseline rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/baseline-revision.txt"
@@ -158,6 +159,7 @@ jobs:
             "-PstartupBenchmarkFixtureClass=$AGENTS/fixture/WebController.class" \
             "-PstartupBenchmarkWorkload=$WORKLOAD" \
             "-PstartupBenchmarkAnnotationsJar=$AGENTS/annotations.jar" \
+            "-PstartupBenchmarkPetclinicHelperJar=$AGENTS/petclinic-startup-helper.jar" \
             "-PstartupBenchmarkRevision=$source_revision" \
             "${baseline_arguments[@]}"
 

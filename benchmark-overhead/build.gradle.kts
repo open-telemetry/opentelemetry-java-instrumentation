@@ -28,6 +28,8 @@ dependencies {
   testImplementation("com.jayway.jsonpath:json-path:3.0.0")
   testImplementation("org.slf4j:slf4j-simple:2.0.20")
   testImplementation("org.assertj:assertj-core:3.27.7")
+  testImplementation("org.springframework.boot:spring-boot-autoconfigure:2.4.2")
+  testImplementation("org.springframework:spring-webmvc:5.3.3")
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
@@ -56,6 +58,26 @@ val startupRecorderJar = tasks.register<Jar>("startupRecorderJar") {
   manifest.attributes("Premain-Class" to "io.opentelemetry.startup.StartupRecorder")
 }
 
+val compilePetclinicStartupHelper =
+  tasks.register<JavaCompile>("compilePetclinicStartupHelper") {
+    source(
+      "src/test/java/io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.java",
+      "src/test/java/io/opentelemetry/startup/PetclinicStartupUptimeAutoConfiguration.java"
+    )
+    classpath = sourceSets.test.get().compileClasspath
+    destinationDirectory.set(layout.buildDirectory.dir("classes/petclinicStartupHelper"))
+    options.release.set(17)
+  }
+
+val petclinicStartupHelperJar = tasks.register<Jar>("petclinicStartupHelperJar") {
+  dependsOn(compilePetclinicStartupHelper)
+  from(compilePetclinicStartupHelper) {
+    include("io/opentelemetry/startup/PetclinicStartupUptime*.class")
+  }
+  from("src/startupHelper/resources")
+  archiveFileName.set("petclinic-startup-helper.jar")
+}
+
 tasks.register<Test>("agentStartupBenchmark") {
   description = "Measures ordinary Java agent startup overhead against a no-agent control."
   group = "verification"
@@ -70,6 +92,19 @@ tasks.register<Test>("agentStartupBenchmark") {
   systemProperty("startup.benchmark.enabled", "true")
   systemProperty("startup.benchmark.workload", providers.gradleProperty("startupBenchmarkWorkload").orElse("smoke").get())
   systemProperty("startup.benchmark.annotations", providers.gradleProperty("startupBenchmarkAnnotationsJar").orElse("").get())
+  val startupWorkload = providers.gradleProperty("startupBenchmarkWorkload").orElse("smoke")
+  val suppliedPetclinicHelper = providers.gradleProperty("startupBenchmarkPetclinicHelperJar")
+  if (startupWorkload.get() == "petclinic") {
+    if (suppliedPetclinicHelper.isPresent) {
+      systemProperty("startup.benchmark.petclinicHelper", suppliedPetclinicHelper.get())
+    } else {
+      dependsOn(petclinicStartupHelperJar)
+      systemProperty(
+        "startup.benchmark.petclinicHelper",
+        petclinicStartupHelperJar.get().archiveFile.get().asFile.absolutePath
+      )
+    }
+  }
   systemProperty("startup.benchmark.output", layout.buildDirectory.dir("reports/agent-startup").get().asFile.absolutePath)
   systemProperty("startup.benchmark.agent", providers.gradleProperty("startupBenchmarkAgentJar").orElse("").get())
   systemProperty("startup.benchmark.revision", providers.gradleProperty("startupBenchmarkRevision").orElse("unknown").get())

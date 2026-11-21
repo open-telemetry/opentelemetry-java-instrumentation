@@ -141,7 +141,9 @@ cd benchmark-overhead
 The workflow also packages the recorder JAR with the agent and fixture so a
 measurement-only rerun reuses the same built inputs.
 
-For Petclinic, build the annotation library and select the workload:
+For Petclinic, build the annotation library and select the workload. The workflow also
+builds the Java 17 helper JAR against Spring Boot 2.4.2 / Spring MVC 5.3.3; it is
+benchmark-only, loaded from `PropertiesLauncher`, and does not bundle Spring:
 
 ```sh
 ./gradlew :javaagent:shadowJar :instrumentation-annotations:jar -PremoveJarVersionNumbers=true
@@ -152,7 +154,8 @@ cd benchmark-overhead
   -PstartupBenchmarkAnnotationsJar=/absolute/path/to/opentelemetry-instrumentation-annotations-VERSION.jar
 ```
 
-Petclinic uses the pinned `petclinic-rest-base:20230601125442` image (Spring Petclinic REST 2.4.2, Liberica JDK 17.0.7) and PostgreSQL 9.6.22 image, both pinned by digest in the harness. It starts and seeds PostgreSQL before the measured launches, sets owner 1's first name to `StartupBenchmark`, uses the `postgresql,spring-data-jpa` profiles, and checks `/petclinic/api/owners/1` for that record. The database-specific marker distinguishes it from Petclinic's default in-memory data. The same read-only database and annotation JAR on the application classloader are used for every configuration; no inherited spans are added. The database and application containers are removed after the run, including on failure.
+The benchmark task builds `petclinic-startup-helper.jar` automatically for this workload.
+Petclinic uses the pinned `petclinic-rest-base:20230601125442` image (Spring Petclinic REST 2.4.2, Liberica JDK 17.0.7) and PostgreSQL 9.6.22 image, both pinned by digest in the harness. It starts and seeds PostgreSQL before the measured launches, sets owner 1's first name to `StartupBenchmark`, uses the `postgresql,spring-data-jpa` profiles, and checks `/petclinic/api/owners/1` for that record. The benchmark-only response advice adds the uptime header only to that GET response and leaves its body unchanged. The same read-only database, annotations JAR, and helper JAR are used for every configuration; no inherited spans are added. The database and application containers are removed after the run, including on failure.
 
 To compare two agents, also pass
 `-PstartupBenchmarkBaselineAgentJar=/absolute/path/to/baseline-agent.jar`.
@@ -165,15 +168,17 @@ configuration. Configurations run serially, rotating their order each round.
 Set `-PstartupBenchmarkWarmups=0 -PstartupBenchmarkSamples=1` for a short
 functional run, not a performance conclusion.
 
-For smoke, the metric is JVM uptime sampled by the `/greeting` handler while producing
-the first successful HTTP 200 response with body `Hi!`. The application reports
-its own JVM-relative uptime, sampled immediately before returning the response;
-this includes JVM startup and `premain()` but excludes container setup and
-host-side request timing. Uptime is reported with millisecond resolution.
-Readiness polling waits for that response; failed starts abort the benchmark and
-retain diagnostics, and measured starts are not retried or filtered as outliers.
-
-For Petclinic, the metric is **container process start to host receipt of the validated seeded-owner response**. It includes JVM startup, `premain()`, readiness polling, HTTP, and host scheduling; it excludes container creation and PostgreSQL setup. This is not the smoke fixture's JVM-uptime metric and the two must not be compared as identical measurements.
+For both workloads, the metric is **JVM uptime sampled inside the application while
+producing the first successful readiness response**: `/greeting` with body `Hi!`
+for smoke, or the PostgreSQL-validated seeded owner from
+`GET /petclinic/api/owners/1` for Petclinic. The Petclinic-only response advice runs
+after the controller returns and before Spring writes the response body. The common
+metric includes JVM startup, agent `premain()`, and application/request work before
+sampling; it excludes container setup, database provisioning, and return network
+transit. Probe polling cadence can affect when the successful request reaches the
+application. The uptime header has millisecond resolution. Failed starts abort the
+benchmark and retain diagnostics; measured starts are not retried or filtered as
+outliers.
 
 Agent-added startup overhead is the agent's median minus the no-agent median.
 When a baseline agent is supplied, the report also shows the absolute reduction
