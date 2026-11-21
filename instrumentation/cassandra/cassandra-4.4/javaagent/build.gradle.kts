@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -59,6 +60,13 @@ fun shadedRuntimeClasspath(name: String, version: String) = configurations.creat
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:cassandra:cassandra-4.4:library"))
+      implementation("com.datastax.oss:java-driver-core:4.4.0")
+    }
+  }
+
   executions("test") {
     mapOf("Shaded" to "4.4.0", "ShadedLatest" to "4.17.0").forEach { (suffix, version) ->
       val shadedClasspath = shadedRuntimeClasspath("test${suffix}RuntimeClasspath", version)

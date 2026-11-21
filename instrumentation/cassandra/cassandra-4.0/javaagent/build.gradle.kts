@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -46,6 +47,13 @@ fun shadedRuntimeClasspath(name: String, version: String) = configurations.creat
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      // SniEndPoint arrived in driver 4.3; test reflective detection against that version.
+      implementation("com.datastax.oss:java-driver-core:4.3.1")
+    }
+  }
+
   executions("test") {
     mapOf("Shaded" to "4.0.0", "ShadedLatest" to "4.3.1").forEach { (suffix, version) ->
       val shadedClasspath = shadedRuntimeClasspath("test${suffix}RuntimeClasspath", version)
