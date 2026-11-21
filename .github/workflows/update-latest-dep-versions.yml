@@ -50,7 +50,7 @@ jobs:
         if: steps.check-changes.outputs.changed == 'true'
         run: .github/scripts/use-cla-approved-bot.sh
 
-      - uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
+      - uses: actions/create-github-app-token@f418cff399f7aef4c2f0ad47e25ca7a6abbdd6fc # v3.4.0
         if: steps.check-changes.outputs.changed == 'true'
         id: otelbot-token
         with:
@@ -115,6 +115,6 @@ jobs:
     needs:
       - update-latest-dep-versions
     if: always()
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@efc55838c9769c5476e0a5cf7183a8c5b4ae70a5 # v0.24.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@f73c28e3be66444181acb54f07ada23f144c0c39 # v0.25.0
     with:
       success: ${{ needs.update-latest-dep-versions.result == 'success' }}

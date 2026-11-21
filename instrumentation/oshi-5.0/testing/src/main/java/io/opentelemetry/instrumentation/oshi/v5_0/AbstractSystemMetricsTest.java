@@ -68,18 +68,17 @@ public abstract class AbstractSystemMetricsTest {
                     assertThat(metric)
                         .hasDescription("Fraction of memory bytes by state.")
                         .hasUnit("1")
-                        .hasDoubleGaugeSatisfying(gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(SYSTEM_MEMORY_STATE, "used"))
-                                        .hasValueSatisfying(v -> v.isNotNegative()),
-                                point ->
-                                    point
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(SYSTEM_MEMORY_STATE, "available"))
-                                        .hasValueSatisfying(v -> v.isNotNegative())))));
+                        .hasDoubleGaugePointsSatisfying(
+                            point ->
+                                point
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(SYSTEM_MEMORY_STATE, "used"))
+                                    .hasValueSatisfying(v -> v.isNotNegative()),
+                            point ->
+                                point
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(SYSTEM_MEMORY_STATE, "available"))
+                                    .hasValueSatisfying(v -> v.isNotNegative()))));
   }
 
   @Test

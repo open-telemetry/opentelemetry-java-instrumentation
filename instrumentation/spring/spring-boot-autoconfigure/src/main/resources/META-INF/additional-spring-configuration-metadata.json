@@ -315,7 +315,7 @@
       "name": "otel.instrumentation.http.known-methods",
       "type": "java.util.List<java.lang.String>",
       "description": "Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as <code>_OTHER</code>.",
-      "defaultValue": "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+      "defaultValue": "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE"
     },
     {
       "name": "otel.instrumentation.http.server.capture-request-headers",

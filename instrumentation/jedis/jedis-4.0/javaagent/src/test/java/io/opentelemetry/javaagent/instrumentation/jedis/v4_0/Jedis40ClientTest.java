@@ -1518,12 +1518,11 @@ class Jedis40ClientTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasAttribute(DB_OPERATION_NAME, "SET")
-                            .hasAttribute(SERVER_ADDRESS, configuredHost)
-                            .hasAttribute(SERVER_PORT, (long) configuredPort))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasAttribute(DB_OPERATION_NAME, "SET")
+                        .hasAttribute(SERVER_ADDRESS, configuredHost)
+                        .hasAttribute(SERVER_PORT, (long) configuredPort)));
   }
 
   @Test

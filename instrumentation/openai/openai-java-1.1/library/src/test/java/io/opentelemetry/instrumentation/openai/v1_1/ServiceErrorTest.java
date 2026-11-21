@@ -282,16 +282,15 @@ class ServiceErrorTest {
             metric
                 .hasName("gen_ai.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasSumGreaterThan(0)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(ERROR_TYPE, expectedErrorType),
-                                equalTo(GEN_AI_PROVIDER_NAME, "openai"),
-                                equalTo(GEN_AI_OPERATION_NAME, operation.name),
-                                equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                equalTo(GEN_AI_RESPONSE_MODEL, hasResponse ? MODEL : null)))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSumGreaterThan(0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, expectedErrorType),
+                            equalTo(GEN_AI_PROVIDER_NAME, "openai"),
+                            equalTo(GEN_AI_OPERATION_NAME, operation.name),
+                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                            equalTo(GEN_AI_RESPONSE_MODEL, hasResponse ? MODEL : null))));
   }
 }

@@ -117,39 +117,37 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
                 metric
                     .hasName("gen_ai.client.operation.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSumGreaterThan(0.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL)))),
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasSumGreaterThan(0.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                                equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL))),
             metric ->
                 metric
                     .hasName("gen_ai.client.token.usage")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasSum(22.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
-                            point ->
-                                point
-                                    .hasSum(4.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
-                                        equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                        equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
-                                        equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
-                                        equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
+                    .hasHistogramPointsSatisfying(
+                        point ->
+                            point
+                                .hasSum(22.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                                    equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+                        point ->
+                            point
+                                .hasSum(4.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(GEN_AI_PROVIDER_NAME, OPENAI),
+                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                    equalTo(GEN_AI_REQUEST_MODEL, TEST_MODEL),
+                                    equalTo(GEN_AI_RESPONSE_MODEL, TEST_RESPONSE_MODEL),
+                                    equalTo(GEN_AI_TOKEN_TYPE, OUTPUT))));
   }
 
   @Test

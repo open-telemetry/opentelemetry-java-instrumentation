@@ -16,6 +16,7 @@ import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.apis.consumer.SimpleConsumer;
 import org.apache.rocketmq.client.apis.message.MessageView;
+import org.apache.rocketmq.shaded.com.google.common.util.concurrent.AbstractFuture;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.FutureCallback;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.Futures;
 import org.apache.rocketmq.shaded.com.google.common.util.concurrent.ListenableFuture;
@@ -48,25 +49,7 @@ public class SimpleConsumerReceiveOperation {
 
   public ListenableFuture<List<MessageView>> wrap(
       ListenableFuture<List<MessageView>> originalFuture) {
-    Futures.addCallback(
-        originalFuture,
-        new FutureCallback<List<MessageView>>() {
-          @Override
-          public void onSuccess(List<MessageView> unused) {}
-
-          @Override
-          public void onFailure(Throwable t) {
-            endSafely(null, t);
-          }
-        },
-        MoreExecutors.directExecutor());
-    return Futures.transform(
-        originalFuture,
-        messages -> {
-          endSuccessfully(messages);
-          return messages;
-        },
-        MoreExecutors.directExecutor());
+    return new ReceiveFuture(originalFuture, this);
   }
 
   private void endSuccessfully(List<MessageView> messages) {
@@ -99,6 +82,47 @@ public class SimpleConsumerReceiveOperation {
     if (instrumenter.shouldStart(parentContext, request)) {
       InstrumenterUtil.startAndEnd(
           instrumenter, parentContext, request, messages, error, timer.startTime(), timer.now());
+    }
+  }
+
+  private static final class ReceiveFuture extends AbstractFuture<List<MessageView>> {
+
+    @Nullable private ListenableFuture<List<MessageView>> originalFuture;
+
+    private ReceiveFuture(
+        ListenableFuture<List<MessageView>> sourceFuture,
+        SimpleConsumerReceiveOperation operation) {
+      this.originalFuture = sourceFuture;
+
+      // Observe source completion even if this future is cancelled. Publish its outcome only
+      // after telemetry; setFuture preserves success, failure, and cancellation.
+      Futures.addCallback(
+          sourceFuture,
+          new FutureCallback<List<MessageView>>() {
+            @Override
+            public void onSuccess(List<MessageView> messages) {
+              operation.endSuccessfully(messages);
+              setFuture(sourceFuture);
+            }
+
+            @Override
+            public void onFailure(Throwable t) {
+              operation.endSafely(null, t);
+              setFuture(sourceFuture);
+            }
+          },
+          MoreExecutors.directExecutor());
+    }
+
+    @Override
+    @SuppressWarnings("Interruption") // propagate the caller's cancellation interrupt flag
+    protected void afterDone() {
+      ListenableFuture<List<MessageView>> future = originalFuture;
+      // Release this reference; the callback captures sourceFuture independently.
+      originalFuture = null;
+      if (isCancelled() && future != null) {
+        future.cancel(wasInterrupted());
+      }
     }
   }
 }

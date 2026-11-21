@@ -193,9 +193,8 @@ class JdbcTelemetryTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point -> point.hasAttribute(ERROR_TYPE, expectedErrorType))));
+                .hasHistogramPointsSatisfying(
+                    point -> point.hasAttribute(ERROR_TYPE, expectedErrorType)));
   }
 
   private static Stream<Arguments> errorCodes() {
