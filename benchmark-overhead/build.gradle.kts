@@ -41,9 +41,16 @@ tasks {
   }
 }
 
+val compileStartupRecorder = tasks.register<JavaCompile>("compileStartupRecorder") {
+  source("src/test/java/io/opentelemetry/startup/StartupRecorder.java")
+  classpath = files()
+  destinationDirectory.set(layout.buildDirectory.dir("classes/startupRecorder"))
+  options.release.set(17)
+}
+
 val startupRecorderJar = tasks.register<Jar>("startupRecorderJar") {
-  dependsOn(tasks.testClasses)
-  from(sourceSets.test.get().output.classesDirs)
+  dependsOn(compileStartupRecorder)
+  from(compileStartupRecorder)
   include("io/opentelemetry/startup/StartupRecorder.class")
   archiveFileName.set("startup-recorder.jar")
   manifest.attributes("Premain-Class" to "io.opentelemetry.startup.StartupRecorder")
@@ -61,6 +68,8 @@ tasks.register<Test>("agentStartupBenchmark") {
   outputs.upToDateWhen { false }
   outputs.cacheIf { false }
   systemProperty("startup.benchmark.enabled", "true")
+  systemProperty("startup.benchmark.workload", providers.gradleProperty("startupBenchmarkWorkload").orElse("smoke").get())
+  systemProperty("startup.benchmark.annotations", providers.gradleProperty("startupBenchmarkAnnotationsJar").orElse("").get())
   systemProperty("startup.benchmark.output", layout.buildDirectory.dir("reports/agent-startup").get().asFile.absolutePath)
   systemProperty("startup.benchmark.agent", providers.gradleProperty("startupBenchmarkAgentJar").orElse("").get())
   systemProperty("startup.benchmark.revision", providers.gradleProperty("startupBenchmarkRevision").orElse("unknown").get())

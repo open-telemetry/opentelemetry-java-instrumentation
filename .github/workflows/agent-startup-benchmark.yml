@@ -3,6 +3,14 @@ name: Agent startup benchmark
 on:
   workflow_dispatch:
     inputs:
+      workload:
+        description: Startup workload
+        required: true
+        default: smoke
+        type: choice
+        options:
+          - smoke
+          - petclinic
       baseline-ref:
         description: Optional revision reachable from upstream main to compare against the selected agent
         required: false
@@ -35,7 +43,7 @@ jobs:
           cache-read-only: true
 
       - name: Build agent from selected revision
-        run: ./gradlew :javaagent:shadowJar :smoke-tests:images:spring-boot:classes -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
+        run: ./gradlew :javaagent:shadowJar :instrumentation-annotations:jar :smoke-tests:images:spring-boot:classes -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
 
       - name: Format and validate standalone benchmark
         working-directory: benchmark-overhead
@@ -78,8 +86,9 @@ jobs:
           cp smoke-tests/images/spring-boot/build/classes/java/main/io/opentelemetry/smoketest/springboot/controller/WebController.class \
             "$RUNNER_TEMP/startup-benchmark/fixture/"
           cp benchmark-overhead/build/libs/startup-recorder.jar "$RUNNER_TEMP/startup-benchmark/"
+          cp instrumentation-annotations/build/libs/opentelemetry-instrumentation-annotations.jar "$RUNNER_TEMP/startup-benchmark/annotations.jar"
           git rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/revision.txt"
-          (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar > sha256.txt)
+          (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar annotations.jar fixture/WebController.class > sha256.txt)
           if [ -n "$BASELINE_REF" ]; then
             cp baseline/javaagent/build/libs/opentelemetry-javaagent.jar "$RUNNER_TEMP/startup-benchmark/baseline-agent.jar"
             git -C baseline rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/baseline-revision.txt"
@@ -130,6 +139,7 @@ jobs:
           TMPDIR: ${{ runner.temp }}
           TMP: ${{ runner.temp }}
           TEMP: ${{ runner.temp }}
+          WORKLOAD: ${{ inputs.workload }}
         run: |
           mkdir -p build/reports/agent-startup
           uname -a > build/reports/agent-startup/host.txt
@@ -146,6 +156,8 @@ jobs:
             "-PstartupBenchmarkAgentJar=$AGENTS/opentelemetry-javaagent.jar" \
             "-PstartupBenchmarkRecorderJar=$AGENTS/startup-recorder.jar" \
             "-PstartupBenchmarkFixtureClass=$AGENTS/fixture/WebController.class" \
+            "-PstartupBenchmarkWorkload=$WORKLOAD" \
+            "-PstartupBenchmarkAnnotationsJar=$AGENTS/annotations.jar" \
             "-PstartupBenchmarkRevision=$source_revision" \
             "${baseline_arguments[@]}"
 

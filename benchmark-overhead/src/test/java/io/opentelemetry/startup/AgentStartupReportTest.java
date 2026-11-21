@@ -49,6 +49,53 @@ class AgentStartupReportTest {
   }
 
   @Test
+  void petclinicLaunchUsesTheSameApplicationClasspathForEachConfiguration() {
+    var control = AgentStartupBenchmark.arguments(false, false, true);
+    var agent = AgentStartupBenchmark.arguments(true, false, true);
+    assertThat(control)
+        .containsExactly(
+            "-Xmx512m",
+            "-Dloader.path=/app/annotations",
+            "-cp",
+            "/app/spring-petclinic-rest.jar",
+            "org.springframework.boot.loader.PropertiesLauncher");
+    assertThat(agent)
+        .containsExactly(
+            "-Xmx512m",
+            "-javaagent:/tmp/agent.jar",
+            "-Dloader.path=/app/annotations",
+            "-cp",
+            "/app/spring-petclinic-rest.jar",
+            "org.springframework.boot.loader.PropertiesLauncher");
+  }
+
+  @Test
+  void petclinicReadinessRequiresTheSeededOwner() {
+    PetclinicStartupFixture.validateResponse(
+        200, "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}");
+    assertThatThrownBy(() ->
+            PetclinicStartupFixture.validateResponse(
+                200, "{\"id\":1,\"firstName\":\"Other\",\"lastName\":\"Franklin\"}"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> PetclinicStartupFixture.validateResponse(200, "{}"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() ->
+            PetclinicStartupFixture.validateResponse(
+                503, "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}"))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void petclinicSummaryLabelsItsDifferentTimingBoundary() throws Exception {
+    AgentStartupReport report = new AgentStartupReport(directory, true);
+    report.summarize(List.of(new AgentStartupReport.Sample("no-agent", 0, false, "ok", 1, 0)));
+    assertThat(Files.readString(directory.resolve("summary.md")))
+        .contains(
+            "container process start to host receipt", "not the smoke fixture's JVM uptime metric")
+        .doesNotContain("The application reports its JVM-relative uptime");
+  }
+
+  @Test
   void acceptsOnlyTheSuccessfulReadinessResponseAndJVMUptime() {
     assertThat(AgentStartupBenchmark.startupSeconds(200, "Hi!", "1250")).isEqualTo(1.25);
     assertThatThrownBy(() -> AgentStartupBenchmark.startupSeconds(503, "Hi!", "1250"))
