@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -25,6 +26,13 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      // Redisson 3.24.3 routes configuration through ServiceManager.
+      implementation("org.redisson:redisson:3.24.3")
+    }
+  }
+
   register<JvmTestSuite>("redisson324Test") {
     sources {
       java {
@@ -56,6 +64,9 @@ testing.suites {
 
   executions("redisson324Test") {
     configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
       filter {
         includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
         includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
@@ -65,8 +76,19 @@ testing.suites {
 
   executions("redisson344Test") {
     configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
       filter {
         includeTestsMatching("*RedissonUnixSocketTest.*")
+      }
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
       }
     }
   }
@@ -79,11 +101,5 @@ tasks {
 
   check {
     dependsOn(testing.suites)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
   }
 }
