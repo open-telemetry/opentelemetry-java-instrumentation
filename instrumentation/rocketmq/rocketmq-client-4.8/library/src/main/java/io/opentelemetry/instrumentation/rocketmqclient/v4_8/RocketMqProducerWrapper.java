@@ -51,6 +51,7 @@ final class RocketMqProducerWrapper implements InvocationHandler {
       DefaultMQProducer producer,
       Instrumenter<SendMessageContext, Void> instrumenter,
       TextMapPropagator propagator) {
+    RocketMqServerAttributesHelper.initialize(producer);
     producer
         .getDefaultMQProducerImpl()
         .registerSendMessageHook(createSendMessageHook(instrumenter));
@@ -68,6 +69,8 @@ final class RocketMqProducerWrapper implements InvocationHandler {
 
   @Override
   @Nullable
+  @SuppressWarnings(
+      "deprecation") // Batch requests need the producer implementation before routing.
   public Object invoke(Object proxy, Method method, @Nullable Object[] args) throws Throwable {
     if (!method.getName().equals("send")
         || method.getParameterCount() == 0
@@ -98,6 +101,7 @@ final class RocketMqProducerWrapper implements InvocationHandler {
     BatchSendContext request =
         new BatchSendContext(
             envelope, RocketMqNamespaceUtil.getNamespace(producer), messages.size());
+    request.setProducer(producer.getDefaultMQProducerImpl());
     int callbackIndex = -1;
     for (int i = 1; i < method.getParameterTypes().length; i++) {
       if (method.getParameterTypes()[i] == SendCallback.class) {

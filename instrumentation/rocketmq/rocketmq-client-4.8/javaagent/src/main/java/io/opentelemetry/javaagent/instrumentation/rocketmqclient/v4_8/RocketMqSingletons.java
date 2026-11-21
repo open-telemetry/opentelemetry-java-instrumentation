@@ -14,8 +14,10 @@ import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHel
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqBatchSendHelper.BatchSendState;
 import io.opentelemetry.instrumentation.rocketmqclient.v4_8.RocketMqTelemetry;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
+import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageHook;
+import org.apache.rocketmq.client.producer.DefaultMQProducer;
 
 public class RocketMqSingletons {
 
@@ -41,24 +43,20 @@ public class RocketMqSingletons {
           MessagingConfig.isBatchSendMessageCreationSpansEnabled(
               GlobalOpenTelemetry.get(), "rocketmq_client"));
 
-  private static final ConsumeMessageHook consumeMessageHook = telemetry.createConsumeMessageHook();
-
-  private static final SendMessageHook sendMessageHook = batchSendHelper.createSendMessageHook();
-
   public static RocketMqBatchSendHelper batchSendHelper() {
     return batchSendHelper;
   }
 
-  public static ConsumeMessageHook consumeMessageHook() {
-    return consumeMessageHook;
+  public static ConsumeMessageHook createConsumeMessageHook(ClientConfig clientConfig) {
+    return telemetry.createConsumeMessageHook(clientConfig);
   }
 
   public static ScopedThreadValue<BatchSendState> currentBatchSendState() {
     return currentBatchSendState;
   }
 
-  public static SendMessageHook sendMessageHook() {
-    return sendMessageHook;
+  public static SendMessageHook createSendMessageHook(DefaultMQProducer producer) {
+    return batchSendHelper.createSendMessageHook(producer);
   }
 
   private RocketMqSingletons() {}

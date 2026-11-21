@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- RocketMQ Remoting instrumentation replaces `rocketmq.broker_address` with
+  `network.peer.address` and `network.peer.port`, and captures configured NameServer
+  endpoints in `server.address` and `server.port` by default.
 - Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
   `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.

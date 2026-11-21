@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.batchSendHelper;
 import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.currentBatchSendState;
-import static io.opentelemetry.javaagent.instrumentation.rocketmqclient.v4_8.RocketMqSingletons.sendMessageHook;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
@@ -59,9 +58,11 @@ class RocketMqProducerInstrumentation implements TypeInstrumentation {
   public static class StartAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(
+        @Advice.This DefaultMQProducer client,
         @Advice.FieldValue(value = "defaultMQProducerImpl", declaringType = DefaultMQProducer.class)
             DefaultMQProducerImpl defaultMqProducerImpl) {
-      defaultMqProducerImpl.registerSendMessageHook(sendMessageHook());
+      defaultMqProducerImpl.registerSendMessageHook(
+          RocketMqSingletons.createSendMessageHook(client));
     }
   }
 

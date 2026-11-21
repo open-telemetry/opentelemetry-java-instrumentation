@@ -8,6 +8,11 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.PRODUCER;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -241,8 +246,19 @@ class RocketMqProducerWrapperTest {
     assertThat(callbackError.get()).isSameAs(error);
     assertStateCleared();
     testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("send topic").hasKind(PRODUCER).hasException(error)));
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("send topic")
+                .hasKind(PRODUCER)
+                .hasException(error)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2),
+                    equalTo(SERVER_ADDRESS, "ns.example"),
+                    equalTo(SERVER_PORT, 9876),
+                    equalTo(ERROR_TYPE, MQClientException.class.getName()))));
   }
 
   @Test
@@ -259,8 +275,19 @@ class RocketMqProducerWrapperTest {
     assertThatThrownBy(() -> producer.send(messages)).isSameAs(error);
     assertStateCleared();
     testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("send topic").hasKind(PRODUCER).hasException(error)));
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("send topic")
+                .hasKind(PRODUCER)
+                .hasException(error)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2),
+                    equalTo(SERVER_ADDRESS, "ns.example"),
+                    equalTo(SERVER_PORT, 9876),
+                    equalTo(ERROR_TYPE, MQClientException.class.getName()))));
   }
 
   @Test
@@ -430,6 +457,9 @@ class RocketMqProducerWrapperTest {
               if (invocation.getMethod().getName().equals("getDefaultMQProducerImpl")) {
                 return implementation;
               }
+              if (invocation.getMethod().getName().equals("getNamesrvAddr")) {
+                return "ns.example:9876";
+              }
               if (invocation.getMethod().getName().equals("send")) {
                 sentMessages.set(invocation.getArgument(0));
               }
@@ -479,6 +509,10 @@ class RocketMqProducerWrapperTest {
                         equalTo(MESSAGING_OPERATION_NAME, "send"),
                         equalTo(MESSAGING_OPERATION_TYPE, "send"),
                         equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
+                        equalTo(SERVER_ADDRESS, "ns.example"),
+                        equalTo(SERVER_PORT, 9876),
+                        equalTo(NETWORK_PEER_ADDRESS, "localhost"),
+                        equalTo(NETWORK_PEER_PORT, 10911),
                         equalTo(MESSAGING_MESSAGE_ID, null))));
   }
 }
