@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 import com.couchbase.client.core.Core;
 import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.env.SeedNode;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -75,7 +75,7 @@ public class CouchbaseServerTargets {
   @Nullable
   static CouchbaseServerTarget target(Set<SeedNode> seedNodes, boolean tlsEnabled) {
     int defaultPort = CouchbaseServerTarget.defaultPort(tlsEnabled ? "couchbases" : "couchbase");
-    DbServerTargetBuilder target = DbServerTarget.builder(defaultPort).setSorted(true);
+    ServerTargetBuilder target = ServerTarget.builder(defaultPort).setSorted(true);
     Map<String, Set<Integer>> portsByAddress = new HashMap<>();
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {
@@ -100,7 +100,7 @@ public class CouchbaseServerTargets {
   }
 
   private static void addSeed(
-      DbServerTargetBuilder target,
+      ServerTargetBuilder target,
       Map<String, Set<Integer>> portsByAddress,
       @Nullable String address,
       int port,

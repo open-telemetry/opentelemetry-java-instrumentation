@@ -45,13 +45,11 @@ public abstract class AbstractTimerMillisecondsTest {
                     .hasName("testTimerMilliseconds")
                     .hasDescription("This is a test timer")
                     .hasUnit("ms")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(23_345)
-                                .hasCount(3)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasSum(23_345)
+                            .hasCount(3)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(timer);

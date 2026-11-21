@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
+package io.opentelemetry.instrumentation.api.incubator.semconv.net.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -18,13 +18,13 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class DbServerTargetTest {
+class ServerTargetTest {
 
   private static final int DEFAULT_PORT = 9042;
 
   @Test
   void alreadyParsedTargetPreservesDefaultPort() {
-    DbServerTarget target = DbServerTarget.create("cassandra.example.com", DEFAULT_PORT);
+    ServerTarget target = ServerTarget.create("cassandra.example.com", DEFAULT_PORT);
 
     assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
     assertThat(target.getPort()).isEqualTo(DEFAULT_PORT);
@@ -33,7 +33,7 @@ class DbServerTargetTest {
   @ParameterizedTest
   @ValueSource(strings = {"host1\\instance,host2", "/var/run/db.sock,host2:5432"})
   void alreadyParsedTargetPreservesSpecialAddressGroup(String address) {
-    DbServerTarget target = DbServerTarget.create(address, null);
+    ServerTarget target = ServerTarget.create(address, null);
 
     assertThat(target.getAddress()).isEqualTo(address);
     assertThat(target.getPort()).isNull();
@@ -41,23 +41,23 @@ class DbServerTargetTest {
 
   @Test
   void targetsHaveValueEquality() {
-    DbServerTarget target = DbServerTarget.create("cassandra.example.com", 19042);
+    ServerTarget target = ServerTarget.create("cassandra.example.com", 19042);
 
     assertThat(builder().addEndpoint("cassandra.example.com", 19042).build())
         .isEqualTo(target)
         .hasSameHashCodeAs(target);
-    assertThat(DbServerTarget.create("cassandra.example.com", null))
-        .isEqualTo(DbServerTarget.create("cassandra.example.com", null))
-        .hasSameHashCodeAs(DbServerTarget.create("cassandra.example.com", null))
+    assertThat(ServerTarget.create("cassandra.example.com", null))
+        .isEqualTo(ServerTarget.create("cassandra.example.com", null))
+        .hasSameHashCodeAs(ServerTarget.create("cassandra.example.com", null))
         .isNotEqualTo(target);
-    assertThat(DbServerTarget.create("cassandra.example.com", DEFAULT_PORT)).isNotEqualTo(target);
-    assertThat(DbServerTarget.create("other.example.com", 19042)).isNotEqualTo(target);
+    assertThat(ServerTarget.create("cassandra.example.com", DEFAULT_PORT)).isNotEqualTo(target);
+    assertThat(ServerTarget.create("other.example.com", 19042)).isNotEqualTo(target);
   }
 
   @ParameterizedTest
   @MethodSource("unixSocketPaths")
   void unixSocketPreservesAcceptedPathAndHasNoPort(String path) {
-    DbServerTarget target = DbServerTarget.unixSocket(path);
+    ServerTarget target = ServerTarget.unixSocket(path);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo(path);
@@ -75,7 +75,7 @@ class DbServerTargetTest {
   @ParameterizedTest
   @MethodSource("invalidUnixSocketPaths")
   void unixSocketRejectsInvalidPath(String path) {
-    assertThat(DbServerTarget.unixSocket(path)).isNull();
+    assertThat(ServerTarget.unixSocket(path)).isNull();
   }
 
   private static Stream<Arguments> invalidUnixSocketPaths() {
@@ -95,7 +95,7 @@ class DbServerTargetTest {
 
   @Test
   void singleEndpointOnDefaultPortReportsNoPort() {
-    DbServerTarget target = builder().addEndpoint("cassandra.example.com", DEFAULT_PORT).build();
+    ServerTarget target = builder().addEndpoint("cassandra.example.com", DEFAULT_PORT).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
@@ -104,7 +104,7 @@ class DbServerTargetTest {
 
   @Test
   void singleEndpointWithoutConfiguredPortReportsNoPort() {
-    DbServerTarget target = builder().addEndpoint("cassandra.example.com", -1).build();
+    ServerTarget target = builder().addEndpoint("cassandra.example.com", -1).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
@@ -113,7 +113,7 @@ class DbServerTargetTest {
 
   @Test
   void singleEndpointReportsNonDefaultPortSeparately() {
-    DbServerTarget target = builder().addEndpoint("cassandra.example.com", 19042).build();
+    ServerTarget target = builder().addEndpoint("cassandra.example.com", 19042).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("cassandra.example.com");
@@ -122,7 +122,7 @@ class DbServerTargetTest {
 
   @Test
   void singleIpv6EndpointIsNotBracketedWhenThePortIsSeparate() {
-    DbServerTarget target = builder().addEndpoint("2001:db8::1", 19042).build();
+    ServerTarget target = builder().addEndpoint("2001:db8::1", 19042).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("2001:db8::1");
@@ -131,8 +131,7 @@ class DbServerTargetTest {
 
   @Test
   void endpointSpecificDefaultPortIsHonored() {
-    DbServerTarget target =
-        DbServerTarget.builder(-1).addEndpoint("es.example.com", -1, 443).build();
+    ServerTarget target = ServerTarget.builder(-1).addEndpoint("es.example.com", -1, 443).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("es.example.com");
@@ -141,8 +140,8 @@ class DbServerTargetTest {
 
   @Test
   void endpointSpecificDefaultPortsAreComparedPerEndpoint() {
-    DbServerTarget target =
-        DbServerTarget.builder(-1)
+    ServerTarget target =
+        ServerTarget.builder(-1)
             .addEndpoint("plain.example.com", -1, 80)
             .addEndpoint("secure.example.com", -1, 443)
             .build();
@@ -154,12 +153,12 @@ class DbServerTargetTest {
 
   @Test
   void endpointWithoutConfiguredPortAndWithoutDefaultPortDropsTheTarget() {
-    assertThat(DbServerTarget.builder(-1).addEndpoint("es.example.com", -1).build()).isNull();
+    assertThat(ServerTarget.builder(-1).addEndpoint("es.example.com", -1).build()).isNull();
   }
 
   @Test
   void unknownDefaultPortKeepsEndpointWithoutConfiguredPort() {
-    DbServerTarget target = DbServerTarget.builder().addEndpoint("unknown.example.com", -1).build();
+    ServerTarget target = ServerTarget.builder().addEndpoint("unknown.example.com", -1).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("unknown.example.com");
@@ -168,8 +167,7 @@ class DbServerTargetTest {
 
   @Test
   void unknownDefaultPortReportsSingleConfiguredPortSeparately() {
-    DbServerTarget target =
-        DbServerTarget.builder().addEndpoint("unknown.example.com", 1234).build();
+    ServerTarget target = ServerTarget.builder().addEndpoint("unknown.example.com", 1234).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("unknown.example.com");
@@ -178,8 +176,8 @@ class DbServerTargetTest {
 
   @Test
   void unknownDefaultPortRendersOnlyConfiguredPortsForMultipleEndpoints() {
-    DbServerTarget target =
-        DbServerTarget.builder()
+    ServerTarget target =
+        ServerTarget.builder()
             .addEndpoint("host1.example.com", 1234)
             .addEndpoint("2001:db8::1", -1)
             .build();
@@ -191,7 +189,7 @@ class DbServerTargetTest {
 
   @Test
   void multipleEndpointsOnDefaultPortsOmitEveryPort() {
-    DbServerTarget target =
+    ServerTarget target =
         builder()
             .addEndpoint("a.example.com", DEFAULT_PORT)
             .addEndpoint("b.example.com", -1)
@@ -204,7 +202,7 @@ class DbServerTargetTest {
 
   @Test
   void multipleEndpointsSharingANonDefaultPortCarryEveryPort() {
-    DbServerTarget target =
+    ServerTarget target =
         builder().addEndpoint("a.example.com", 19042).addEndpoint("b.example.com", 19042).build();
 
     assertThat(target).isNotNull();
@@ -214,7 +212,7 @@ class DbServerTargetTest {
 
   @Test
   void multipleEndpointsWithMixedPortsCarryEveryPortIncludingTheDefaultOne() {
-    DbServerTarget target =
+    ServerTarget target =
         builder()
             .addEndpoint("a.example.com", DEFAULT_PORT)
             .addEndpoint("b.example.com", 19042)
@@ -227,9 +225,9 @@ class DbServerTargetTest {
 
   @Test
   void ipv6EndpointsAreBracketedOnlyWhenTheyCarryAPort() {
-    DbServerTarget withoutPorts =
+    ServerTarget withoutPorts =
         builder().addEndpoint("2001:db8::1", -1).addEndpoint("2001:db8::2", -1).build();
-    DbServerTarget withPorts =
+    ServerTarget withPorts =
         builder().addEndpoint("2001:db8::1", 19042).addEndpoint("2001:db8::2", -1).build();
 
     assertThat(withoutPorts).isNotNull();
@@ -240,7 +238,7 @@ class DbServerTargetTest {
 
   @Test
   void duplicateEndpointsArePreserved() {
-    DbServerTarget target =
+    ServerTarget target =
         builder().addEndpoint("a.example.com", -1).addEndpoint("a.example.com", -1).build();
 
     assertThat(target).isNotNull();
@@ -249,7 +247,7 @@ class DbServerTargetTest {
 
   @Test
   void nativeOrderIsPreservedByDefault() {
-    DbServerTarget target =
+    ServerTarget target =
         builder()
             .addEndpoint("c.example.com", -1)
             .addEndpoint("a.example.com", -1)
@@ -262,7 +260,7 @@ class DbServerTargetTest {
 
   @Test
   void endpointsAreSortedWhenSortingIsOn() {
-    DbServerTarget target =
+    ServerTarget target =
         builder()
             .setSorted(true)
             .addEndpoint("c.example.com", -1)
@@ -276,11 +274,11 @@ class DbServerTargetTest {
 
   @Test
   void endpointListIsCappedAtFiveEndpoints() {
-    DbServerTargetBuilder builder = builder();
+    ServerTargetBuilder builder = builder();
     for (int i = 1; i <= 7; i++) {
       builder.addEndpoint("node" + i + ".example.com", -1);
     }
-    DbServerTarget target = builder.build();
+    ServerTarget target = builder.build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
@@ -291,7 +289,7 @@ class DbServerTargetTest {
 
   @Test
   void endpointsAreSortedBeforeTheyAreCapped() {
-    DbServerTarget target =
+    ServerTarget target =
         builder()
             .setSorted(true)
             .addEndpoint("c.example.com", -1)
@@ -309,7 +307,7 @@ class DbServerTargetTest {
 
   @Test
   void anUnsafeEndpointBeyondTheCapStillDropsTheTarget() {
-    DbServerTargetBuilder builder = builder();
+    ServerTargetBuilder builder = builder();
     for (int i = 1; i <= 5; i++) {
       builder.addEndpoint("node" + i + ".example.com", -1);
     }
@@ -320,7 +318,7 @@ class DbServerTargetTest {
 
   @Test
   void portAlwaysInlineRendersTheDefaultPortOfASingleEndpoint() {
-    DbServerTarget target =
+    ServerTarget target =
         builder().setPortAlwaysInline(true).addEndpoint("locator.example.com", -1).build();
 
     assertThat(target).isNotNull();
@@ -330,7 +328,7 @@ class DbServerTargetTest {
 
   @Test
   void portAlwaysInlineRendersEveryDefaultPortOfSeveralEndpoints() {
-    DbServerTarget target =
+    ServerTarget target =
         builder()
             .setPortAlwaysInline(true)
             .addEndpoint("a.example.com", -1)
@@ -343,7 +341,7 @@ class DbServerTargetTest {
 
   @Test
   void suffixIsAppendedAsAPathSegmentAndForcesInlinePorts() {
-    DbServerTarget target =
+    ServerTarget target =
         builder().setSuffix("group-1").addEndpoint("locator.example.com", 10334).build();
 
     assertThat(target).isNotNull();
@@ -357,7 +355,7 @@ class DbServerTargetTest {
         "", " ", ".", "..", "a/b", "a,b", "a b", "a?b", "a#b", "a%b", "a\\b", "a@b", "a\nb", "é"
       })
   void unsafeSuffixIsDroppedAndTheTargetIsKept(String suffix) {
-    DbServerTarget target = builder().setSuffix(suffix).addEndpoint("a.example.com", -1).build();
+    ServerTarget target = builder().setSuffix(suffix).addEndpoint("a.example.com", -1).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("a.example.com");
@@ -366,7 +364,7 @@ class DbServerTargetTest {
 
   @Test
   void nullSuffixIsDropped() {
-    DbServerTarget target = builder().setSuffix(null).addEndpoint("a.example.com", -1).build();
+    ServerTarget target = builder().setSuffix(null).addEndpoint("a.example.com", -1).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("a.example.com");
@@ -374,7 +372,7 @@ class DbServerTargetTest {
 
   @Test
   void suffixIsTrimmed() {
-    DbServerTarget target =
+    ServerTarget target =
         builder().setSuffix("  group-1  ").addEndpoint("a.example.com", -1).build();
 
     assertThat(target).isNotNull();
@@ -399,7 +397,7 @@ class DbServerTargetTest {
 
   @Test
   void hostIsTrimmed() {
-    DbServerTarget target = builder().addEndpoint("  a.example.com  ", -1).build();
+    ServerTarget target = builder().addEndpoint("  a.example.com  ", -1).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("a.example.com");
@@ -407,7 +405,7 @@ class DbServerTargetTest {
 
   @Test
   void bracketsAreStrippedFromAnIpv6Host() {
-    DbServerTarget target = builder().addEndpoint("[2001:db8::1]", 19042).build();
+    ServerTarget target = builder().addEndpoint("[2001:db8::1]", 19042).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("2001:db8::1");
@@ -435,7 +433,7 @@ class DbServerTargetTest {
         "FE80::1"
       })
   void safeHostIsAccepted(String host) {
-    DbServerTarget target = builder().addEndpoint(host, -1).build();
+    ServerTarget target = builder().addEndpoint(host, -1).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo(host.trim());
@@ -504,8 +502,7 @@ class DbServerTargetTest {
   @ParameterizedTest
   @ValueSource(ints = {0, -1, 65536, Integer.MAX_VALUE})
   void invalidDefaultPortDropsTheTarget(int defaultPort) {
-    assertThat(DbServerTarget.builder(defaultPort).addEndpoint("a.example.com", -1).build())
-        .isNull();
+    assertThat(ServerTarget.builder(defaultPort).addEndpoint("a.example.com", -1).build()).isNull();
   }
 
   @Test
@@ -520,7 +517,7 @@ class DbServerTargetTest {
 
   @Test
   void highestValidPortIsAccepted() {
-    DbServerTarget target = builder().addEndpoint("a.example.com", 65535).build();
+    ServerTarget target = builder().addEndpoint("a.example.com", 65535).build();
 
     assertThat(target).isNotNull();
     assertThat(target.getPort()).isEqualTo(65535);
@@ -528,7 +525,7 @@ class DbServerTargetTest {
 
   @Test
   void socketAddressIsAddedWithoutResolvingIt() {
-    DbServerTarget target =
+    ServerTarget target =
         builder().addEndpoint(InetSocketAddress.createUnresolved("a.example.com", 19042)).build();
 
     assertThat(target).isNotNull();
@@ -539,7 +536,7 @@ class DbServerTargetTest {
   @Test
   void numericSocketAddressKeepsItsLiteralForm() throws UnknownHostException {
     InetAddress loopback = InetAddress.getByAddress(new byte[] {127, 0, 0, 1});
-    DbServerTarget target =
+    ServerTarget target =
         builder().addEndpoint(new InetSocketAddress(loopback, DEFAULT_PORT)).build();
 
     assertThat(target).isNotNull();
@@ -554,19 +551,19 @@ class DbServerTargetTest {
 
   @Test
   void buildCanBeCalledRepeatedly() {
-    DbServerTargetBuilder builder =
+    ServerTargetBuilder builder =
         builder().addEndpoint("b.example.com", -1).addEndpoint("a.example.com", -1);
 
-    DbServerTarget first = builder.build();
-    DbServerTarget second = builder.build();
+    ServerTarget first = builder.build();
+    ServerTarget second = builder.build();
 
     assertThat(first).isNotNull();
     assertThat(second).isNotNull();
     assertThat(second.getAddress()).isEqualTo(first.getAddress());
   }
 
-  private static DbServerTargetBuilder builder() {
-    return DbServerTarget.builder(DEFAULT_PORT);
+  private static ServerTargetBuilder builder() {
+    return ServerTarget.builder(DEFAULT_PORT);
   }
 
   private static String repeated(char c, int count) {

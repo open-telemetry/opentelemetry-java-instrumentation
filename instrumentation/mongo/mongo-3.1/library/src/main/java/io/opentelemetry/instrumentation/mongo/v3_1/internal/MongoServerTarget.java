@@ -6,8 +6,8 @@
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import com.mongodb.ServerAddress;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -34,8 +34,8 @@ public class MongoServerTarget {
     if (host == null || host.isEmpty()) {
       return null;
     }
-    DbServerTarget target =
-        DbServerTarget.builder(DEFAULT_PORT).addEndpoint(host, DEFAULT_PORT).build();
+    ServerTarget target =
+        ServerTarget.builder(DEFAULT_PORT).addEndpoint(host, DEFAULT_PORT).build();
     return target == null || !target.getAddress().equals(host)
         ? null
         : new MongoServerTarget(SRV_SCHEME + host, null);
@@ -49,7 +49,7 @@ public class MongoServerTarget {
 
     List<String> hosts = new ArrayList<>(seeds.size());
     List<Integer> ports = new ArrayList<>(seeds.size());
-    DbServerTarget unixSocketTarget = null;
+    ServerTarget unixSocketTarget = null;
     for (ServerAddress seed : seeds) {
       String host = host(seed);
       if (host == null) {
@@ -57,7 +57,7 @@ public class MongoServerTarget {
       }
       boolean unixSocket = isUnixSocket(seed, host);
       if (unixSocket) {
-        unixSocketTarget = DbServerTarget.unixSocket(host);
+        unixSocketTarget = ServerTarget.unixSocket(host);
         if (unixSocketTarget == null) {
           return null;
         }
@@ -75,7 +75,7 @@ public class MongoServerTarget {
       return from(unixSocketTarget);
     }
 
-    DbServerTargetBuilder targetBuilder = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
+    ServerTargetBuilder targetBuilder = ServerTarget.builder(DEFAULT_PORT).setSorted(true);
     for (int i = 0; i < hosts.size(); i++) {
       targetBuilder.addEndpoint(hosts.get(i), ports.get(i));
     }
@@ -97,7 +97,7 @@ public class MongoServerTarget {
   }
 
   @Nullable
-  private static MongoServerTarget from(@Nullable DbServerTarget target) {
+  private static MongoServerTarget from(@Nullable ServerTarget target) {
     if (target == null) {
       return null;
     }

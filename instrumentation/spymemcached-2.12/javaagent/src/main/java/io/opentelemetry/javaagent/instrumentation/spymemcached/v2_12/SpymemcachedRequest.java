@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.net.SocketAddress;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
@@ -47,7 +47,7 @@ public abstract class SpymemcachedRequest {
   public abstract String getQueryText();
 
   @Nullable
-  public abstract DbServerTarget getServerTarget();
+  public abstract ServerTarget getServerTarget();
 
   // Sequential single-key retries replace the peer, as recommended by database semantic
   // conventions. Bulk and optimized retries suppress the address instead of tracking per-key

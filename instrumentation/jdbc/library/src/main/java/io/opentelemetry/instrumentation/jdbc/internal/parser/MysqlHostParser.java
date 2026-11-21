@@ -10,7 +10,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.stripIpv6Brackets;
 import static java.util.Collections.emptyList;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -101,7 +101,7 @@ final class MysqlHostParser {
         entry.startsWith("(") || isAddressHost(entry)
             ? parseHostProperties(entry, mysql)
             : parseHostPort(entry, mysql);
-    return host != null && DbServerTargetBuilder.isValidHost(host.host())
+    return host != null && ServerTargetBuilder.isValidHost(host.host())
         ? new HostPort(host.host().toLowerCase(Locale.ROOT), host.port(), null)
         : null;
   }
@@ -113,7 +113,7 @@ final class MysqlHostParser {
       int bracketEnd = entry.indexOf(']');
       if (bracketEnd < 0
           || (bracketEnd + 1 < entry.length() && entry.charAt(bracketEnd + 1) != ':')
-          || !DbServerTargetBuilder.isValidHost(entry.substring(0, bracketEnd + 1))) {
+          || !ServerTargetBuilder.isValidHost(entry.substring(0, bracketEnd + 1))) {
         return null;
       }
       portStart = bracketEnd + 1 < entry.length() ? bracketEnd + 2 : -1;
@@ -203,7 +203,7 @@ final class MysqlHostParser {
     port = port == null || port.isEmpty() ? null : port;
     if (host == null
         || !host.equals(host.trim())
-        || !DbServerTargetBuilder.isValidHost(host)
+        || !ServerTargetBuilder.isValidHost(host)
         || (!address && host.indexOf('%') >= 0)
         || (port != null && !isValidPort(port))) {
       return null;
