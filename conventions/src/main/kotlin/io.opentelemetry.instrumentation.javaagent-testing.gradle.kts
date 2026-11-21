@@ -1,6 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.OtelPropsExtension
+import io.opentelemetry.instrumentation.gradle.TestSuiteExecutionsPlugin
 import org.gradle.api.plugins.jvm.JvmTestSuite
-import org.gradle.testing.base.TestingExtension
 
 plugins {
   `java-library`
@@ -124,8 +124,7 @@ class JavaagentTestArgumentsProvider(
 // need to run this after evaluate because testSets plugin adds new test tasks
 afterEvaluate {
   tasks.withType<Test>().configureEach {
-    val suite = project.extensions.getByType(TestingExtension::class.java).suites
-      .findByName(name) as? JvmTestSuite
+    val suite = project.plugins.getPlugin(TestSuiteExecutionsPlugin::class.java).suiteFor(this)
     if (suite?.name?.endsWith("unitTests", ignoreCase = true) == true) {
       return@configureEach
     }

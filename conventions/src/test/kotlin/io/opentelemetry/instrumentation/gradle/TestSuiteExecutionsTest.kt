@@ -73,6 +73,65 @@ class TestSuiteExecutionsTest {
   }
 
   @JunitTest
+  fun `suite lookup identifies owners without guessing from task names`() {
+    val owners = mutableMapOf<String, String?>()
+    project.tasks.withType(Test::class.java).configureEach {
+      owners[name] = project.plugins.getPlugin(TestSuiteExecutionsPlugin::class.java).suiteFor(this)?.name
+    }
+    suite("test").executions {
+      register("UnitTests") {}
+      register("Experimental") {}
+    }
+    suites().unitTests().executions {
+      register("Experimental") {}
+    }
+    suites().register("legacyUNITTESTS", JvmTestSuite::class.java).get().executions {
+      register("Experimental") {}
+    }
+    project.tasks.register("standaloneUnitTests", Test::class.java)
+    project.tasks.register("unitTestsStandalone", Test::class.java)
+
+    listOf(
+      "test",
+      "testUnitTests",
+      "testExperimental",
+      "unitTests",
+      "unitTestsExperimental",
+      "legacyUNITTESTS",
+      "legacyUNITTESTSExperimental",
+      "standaloneUnitTests",
+      "unitTestsStandalone"
+    ).forEach { test(it) }
+
+    assertThat(owners).containsExactlyInAnyOrderEntriesOf(
+      mapOf(
+        "test" to "test",
+        "testUnitTests" to "test",
+        "testExperimental" to "test",
+        "unitTests" to "unitTests",
+        "unitTestsExperimental" to "unitTests",
+        "legacyUNITTESTS" to "legacyUNITTESTS",
+        "legacyUNITTESTSExperimental" to "legacyUNITTESTS",
+        "standaloneUnitTests" to null,
+        "unitTestsStandalone" to null
+      )
+    )
+  }
+
+  @JunitTest
+  fun `variant owner is available when tasks are eagerly configured`() {
+    val owners = mutableMapOf<String, String?>()
+    project.tasks.withType(Test::class.java).all {
+      owners[name] = project.plugins.getPlugin(TestSuiteExecutionsPlugin::class.java).suiteFor(this)?.name
+    }
+    suites().unitTests().executions {
+      register("Variant") {}
+    }
+
+    assertThat(owners).containsEntry("unitTests", "unitTests").containsEntry("unitTestsVariant", "unitTests")
+  }
+
+  @JunitTest
   fun `bind default and named suites without new compilations or default tasks`() {
     val default = suite("test")
     val defaultTask = test("test")
