@@ -86,7 +86,7 @@ jobs:
           cp smoke-tests/images/spring-boot/build/classes/java/main/io/opentelemetry/smoketest/springboot/controller/WebController.class \
             "$RUNNER_TEMP/startup-benchmark/fixture/"
           cp benchmark-overhead/build/libs/startup-recorder.jar "$RUNNER_TEMP/startup-benchmark/"
-          cp instrumentation-annotations/build/libs/opentelemetry-instrumentation-annotations.jar "$RUNNER_TEMP/startup-benchmark/annotations.jar"
+          cp instrumentation-annotations/build/libs/opentelemetry-instrumentation-annotations-*.jar "$RUNNER_TEMP/startup-benchmark/annotations.jar"
           git rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/revision.txt"
           (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar annotations.jar fixture/WebController.class > sha256.txt)
           if [ -n "$BASELINE_REF" ]; then

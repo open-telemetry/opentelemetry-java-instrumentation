@@ -86,7 +86,12 @@ class AgentStartupBenchmark {
         "image.reference",
         petclinic == null ? StartupFixture.IMAGE : PetclinicStartupFixture.IMAGE);
     if (petclinic != null) {
+      metadata.setProperty("application.version", "spring-petclinic-rest 2.4.2");
+      metadata.setProperty("application.image.tag", "petclinic-rest-base:20230601125442");
+      metadata.setProperty("application.profiles", "postgresql,spring-data-jpa");
       metadata.setProperty("database.image.reference", PetclinicStartupFixture.DATABASE_IMAGE);
+      metadata.setProperty("database.version", "postgres 9.6.22");
+      metadata.setProperty("readiness", PetclinicStartupFixture.READINESS_PATH + " seeded owner 1");
       metadata.setProperty("annotations.sha256", checksum(annotations));
       metadata.setProperty("annotations.path", annotations.toString());
       metadata.setProperty(

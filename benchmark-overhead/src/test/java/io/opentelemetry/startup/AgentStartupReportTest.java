@@ -11,8 +11,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.jar.JarOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.testcontainers.utility.DockerImageName;
 
 class AgentStartupReportTest {
   @TempDir Path directory;
@@ -83,6 +85,23 @@ class AgentStartupReportTest {
             PetclinicStartupFixture.validateResponse(
                 503, "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}"))
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void petclinicValidatesInputsBeforeStartingDocker() throws Exception {
+    assertThat(
+            DockerImageName.parse(PetclinicStartupFixture.DATABASE_IMAGE)
+                .isCompatibleWith(DockerImageName.parse("postgres")))
+        .isTrue();
+    Path missing = directory.resolve("missing.jar");
+    assertThatThrownBy(() -> PetclinicStartupFixture.start(missing))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Annotation JAR does not exist");
+    Path invalid = directory.resolve("invalid.jar");
+    new JarOutputStream(Files.newOutputStream(invalid)).close();
+    assertThatThrownBy(() -> PetclinicStartupFixture.start(invalid))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Invalid annotation JAR");
   }
 
   @Test

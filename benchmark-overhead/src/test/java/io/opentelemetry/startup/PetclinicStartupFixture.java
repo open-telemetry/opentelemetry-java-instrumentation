@@ -18,9 +18,9 @@ import org.testcontainers.utility.MountableFile;
 final class PetclinicStartupFixture implements AutoCloseable {
   static final String IMAGE =
       "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/"
-          + "petclinic-rest-base:20230601125442@sha256:2f1c1ef26b7e847a5b175326ed998b1fa7a50177cb0e0cacb555d6f15cb96d8e";
+          + "petclinic-rest-base@sha256:2f1c1ef26b7e847a5b175326ed998b1fa7a50177cb0e0cacb555d6f15cb96d8e";
   static final String DATABASE_IMAGE =
-      "postgres:9.6.22@sha256:3273a713362e7bc2c2c4ea9a653b24febf2653c5d5c95003d81f6d2fdd415f18";
+      "postgres@sha256:3273a713362e7bc2c2c4ea9a653b24febf2653c5d5c95003d81f6d2fdd415f18";
   static final String READINESS_PATH = "/petclinic/api/owners/1";
 
   private final Network network;
