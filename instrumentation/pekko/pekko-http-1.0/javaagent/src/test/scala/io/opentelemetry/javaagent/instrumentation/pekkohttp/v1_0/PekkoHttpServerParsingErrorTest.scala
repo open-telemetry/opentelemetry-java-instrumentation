@@ -240,8 +240,23 @@ class PekkoHttpServerParsingErrorTest {
     */
   @Test def absoluteTargetWithoutPathIsTraced(): Unit =
     assertRejectedTargetTraced(
-      "http://example.com?q=/%%",
+      "HTTP://example.com?q=/%%",
       scheme = Some("http"),
+      query = Some("q=/%%")
+    )
+
+  @Test def httpsSchemeIsNormalized(): Unit =
+    assertRejectedTargetTraced(
+      "HtTpS://example.com/path?q=/%%",
+      scheme = Some("https"),
+      path = Some("/path"),
+      query = Some("q=/%%")
+    )
+
+  @Test def nonHttpSchemeIsDropped(): Unit =
+    assertRejectedTargetTraced(
+      "custom://example.com/path?q=/%%",
+      path = Some("/path"),
       query = Some("q=/%%")
     )
 

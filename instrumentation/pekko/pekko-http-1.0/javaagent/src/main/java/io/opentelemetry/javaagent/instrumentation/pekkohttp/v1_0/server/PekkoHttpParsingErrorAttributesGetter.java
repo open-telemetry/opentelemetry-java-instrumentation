@@ -57,9 +57,17 @@ class PekkoHttpParsingErrorAttributesGetter
       return null;
     }
     int schemeEnd = findSchemeEnd(target);
-    return schemeEnd >= 0 && target.startsWith("://", schemeEnd)
-        ? target.substring(0, schemeEnd)
-        : null;
+    if (schemeEnd < 0 || !target.startsWith("://", schemeEnd)) {
+      return null;
+    }
+    // The scheme also labels the request duration metric, so only report known values.
+    if (schemeEnd == 4 && target.regionMatches(true, 0, "http", 0, 4)) {
+      return "http";
+    }
+    if (schemeEnd == 5 && target.regionMatches(true, 0, "https", 0, 5)) {
+      return "https";
+    }
+    return null;
   }
 
   @Nullable
