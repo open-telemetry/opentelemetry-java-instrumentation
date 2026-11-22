@@ -18,7 +18,6 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.jms.Connection;
 import javax.jms.JMSException;
@@ -45,6 +44,7 @@ import org.jetbrains.annotations.NotNull;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 import org.springframework.jms.core.JmsTemplate;
 import org.springframework.jms.core.MessagePostProcessor;
 
@@ -64,10 +64,7 @@ class SpringTemplateTest extends AbstractJmsTest {
   private static Connection connection;
 
   @BeforeAll
-  static void setup() throws Exception {
-    File tempDir = Files.createTempDirectory("tmp").toFile();
-    tempDir.deleteOnExit();
-
+  static void setup(@TempDir File tempDir) throws Exception {
     Configuration config = new ConfigurationImpl();
     config.setBindingsDirectory(tempDir.getPath());
     config.setJournalDirectory(tempDir.getPath());
@@ -128,16 +125,15 @@ class SpringTemplateTest extends AbstractJmsTest {
           producerSpan.set(trace.getSpan(0));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertConsumerSpan(
-                        span,
-                        producerSpan.get(),
-                        null,
-                        "SpringTemplateJms2",
-                        "receive",
-                        false,
-                        receivedMsgId)));
+            trace.hasSpansSatisfyingExactly(span ->
+                assertConsumerSpan(
+                    span,
+                    producerSpan.get(),
+                    null,
+                    "SpringTemplateJms2",
+                    "receive",
+                    false,
+                    receivedMsgId)));
   }
 
   @Test
@@ -154,7 +150,7 @@ class SpringTemplateTest extends AbstractJmsTest {
             // There's a chance this might be reported last, messing up the assertion.
             template.send(
                 msg.getJMSReplyTo(),
-                (session) ->
+                session ->
                     requireNonNull(template.getMessageConverter())
                         .toMessage("responded!", session));
           } catch (Exception e) {
@@ -186,31 +182,29 @@ class SpringTemplateTest extends AbstractJmsTest {
           producerSpan.set(trace.getSpan(0));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertConsumerSpan(
-                        span,
-                        producerSpan.get(),
-                        null,
-                        "SpringTemplateJms2",
-                        "receive",
-                        false,
-                        msgId.get())),
+            trace.hasSpansSatisfyingExactly(span ->
+                assertConsumerSpan(
+                    span,
+                    producerSpan.get(),
+                    null,
+                    "SpringTemplateJms2",
+                    "receive",
+                    false,
+                    msgId.get())),
         trace -> {
           trace.hasSpansSatisfyingExactly(span -> assertProducerSpan(span, "(temporary)", false));
           tmpProducerSpan.set(trace.getSpan(0));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertConsumerSpan(
-                        span,
-                        tmpProducerSpan.get(),
-                        null,
-                        "(temporary)",
-                        "receive",
-                        false,
-                        receivedMsgId)));
+            trace.hasSpansSatisfyingExactly(span ->
+                assertConsumerSpan(
+                    span,
+                    tmpProducerSpan.get(),
+                    null,
+                    "(temporary)",
+                    "receive",
+                    false,
+                    receivedMsgId)));
   }
 
   @Test
@@ -242,15 +236,14 @@ class SpringTemplateTest extends AbstractJmsTest {
           producerSpan.set(trace.getSpan(0));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertConsumerSpan(
-                        span,
-                        producerSpan.get(),
-                        null,
-                        "SpringTemplateJms2",
-                        "receive",
-                        true,
-                        receivedMsgId)));
+            trace.hasSpansSatisfyingExactly(span ->
+                assertConsumerSpan(
+                    span,
+                    producerSpan.get(),
+                    null,
+                    "SpringTemplateJms2",
+                    "receive",
+                    true,
+                    receivedMsgId)));
   }
 }

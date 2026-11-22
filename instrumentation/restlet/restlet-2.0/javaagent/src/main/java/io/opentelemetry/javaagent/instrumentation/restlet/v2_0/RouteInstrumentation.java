@@ -6,12 +6,12 @@
 package io.opentelemetry.javaagent.instrumentation.restlet.v2_0;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.CONTROLLER;
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.restlet.v2_0.RestletSingletons.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -44,7 +44,7 @@ class RouteInstrumentation implements TypeInstrumentation {
         @Advice.This TemplateRoute route, @Advice.Argument(0) Request request) {
       String pattern = route.getTemplate().getPattern();
 
-      HttpServerRoute.update(currentContext(), CONTROLLER, serverSpanName(), pattern);
+      HttpServerRoute.update(Context.current(), CONTROLLER, serverSpanName(), pattern);
     }
   }
 }

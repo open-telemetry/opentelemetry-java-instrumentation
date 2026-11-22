@@ -72,26 +72,22 @@ class S3CrtClientTest {
         "parent",
         () ->
             s3Client
-                .copyObject(
-                    request ->
-                        request
-                            .sourceBucket("bucket")
-                            .sourceKey("file1.txt")
-                            .destinationBucket("bucket")
-                            .destinationKey("file2.txt"))
+                .copyObject(request ->
+                    request
+                        .sourceBucket("bucket")
+                        .sourceKey("file1.txt")
+                        .destinationBucket("bucket")
+                        .destinationKey("file2.txt"))
                 .join());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("S3.HeadObject")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CLIENT),
-                span ->
-                    span.hasName("S3.CopyObject")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CLIENT)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("S3.HeadObject").hasParent(trace.getSpan(0)).hasKind(SpanKind.CLIENT),
+            span ->
+                span.hasName("S3.CopyObject")
+                    .hasParent(trace.getSpan(0))
+                    .hasKind(SpanKind.CLIENT)));
   }
 }

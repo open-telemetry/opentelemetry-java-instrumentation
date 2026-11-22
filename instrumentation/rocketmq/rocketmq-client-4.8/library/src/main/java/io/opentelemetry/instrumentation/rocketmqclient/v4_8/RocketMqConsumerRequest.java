@@ -20,7 +20,7 @@ final class RocketMqConsumerRequest {
   private final List<MessageExt> messages;
   private final String consumerGroup;
   private final int batchSize;
-  private final String namespace;
+  @Nullable private final String namespace;
   private boolean destinationInitialized;
   @Nullable private String destination;
   private boolean messageIdInitialized;
@@ -48,7 +48,7 @@ final class RocketMqConsumerRequest {
     this.messages = messages;
     this.consumerGroup = RocketMqNamespaceUtil.withoutNamespace(consumerGroup, namespace);
     this.batchSize = batchSize;
-    this.namespace = namespace == null ? "" : namespace;
+    this.namespace = namespace;
   }
 
   MessageExt getMessage() {
@@ -72,6 +72,7 @@ final class RocketMqConsumerRequest {
     return batchSize;
   }
 
+  @Nullable
   String getNamespace() {
     return namespace;
   }

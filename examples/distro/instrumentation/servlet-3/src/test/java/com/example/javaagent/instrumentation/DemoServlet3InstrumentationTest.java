@@ -8,7 +8,6 @@ package com.example.javaagent.instrumentation;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import java.io.IOException;
 import java.io.Writer;
@@ -42,8 +41,7 @@ class DemoServlet3InstrumentationTest {
 
   @BeforeAll
   static void startServer() throws Exception {
-    port = PortUtils.findOpenPort();
-    server = new Server(port);
+    server = new Server(0);
     for (var connector : server.getConnectors()) {
       connector.setHost("localhost");
     }
@@ -54,6 +52,7 @@ class DemoServlet3InstrumentationTest {
     server.setHandler(servletContext);
 
     server.start();
+    port = server.getConnectors()[0].getLocalPort();
   }
 
   @AfterAll
@@ -78,10 +77,9 @@ class DemoServlet3InstrumentationTest {
     assertThat(response.code()).isEqualTo(200);
     assertThat(response.body().string()).isEqualTo("result");
 
-    instrumentation.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET /servlet").hasKind(SpanKind.SERVER)));
+    instrumentation.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("GET /servlet").hasKind(SpanKind.SERVER)));
 
     var traceId = instrumentation.spans().get(0).getTraceId();
     assertThat(response.header("X-server-id")).isEqualTo(traceId);

@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -7,4 +9,12 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
 
   annotationProcessor("com.google.auto.value:auto-value")
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("org.apache.httpcomponents:httpcore:4.4.16")
+    }
+  }
 }

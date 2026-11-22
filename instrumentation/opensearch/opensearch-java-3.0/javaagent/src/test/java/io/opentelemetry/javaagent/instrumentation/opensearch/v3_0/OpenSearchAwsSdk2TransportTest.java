@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
@@ -176,22 +177,18 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
     assertThat(healthResponse).isNotNull();
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(
-                                "GET "
-                                    + "os.example"
-                                    + (expectedPort == null ? "" : ":" + expectedPort))
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
-                                equalTo(DB_OPERATION_NAME, "GET"),
-                                equalTo(SERVER_ADDRESS, "os.example"),
-                                equalTo(
-                                    SERVER_PORT,
-                                    (expectedPort != null) ? Long.valueOf(expectedPort) : null))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(
+                        "GET " + "os.example" + (expectedPort == null ? "" : ":" + expectedPort))
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(SERVER_ADDRESS, "os.example"),
+                        equalTo(
+                            SERVER_PORT,
+                            (expectedPort != null) ? Long.valueOf(expectedPort) : null))));
   }
 
   private static Stream<Arguments> bareAuthorityCases() {
@@ -242,46 +239,44 @@ class OpenSearchAwsSdk2TransportTest extends AbstractOpenSearchTest {
                     openSearchAsyncClient
                         .cluster()
                         .health()
-                        .whenComplete(
-                            (response, throwable) ->
-                                getTesting().runWithSpan("callback", countDownLatch::countDown)));
+                        .whenComplete((response, throwable) ->
+                            getTesting().runWithSpan("callback", countDownLatch::countDown)));
 
     countDownLatch.await();
     HealthResponse healthResponse = responseCompletableFuture.get();
     assertThat(healthResponse).isNotNull();
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
-                    span ->
-                        span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
-                                equalTo(DB_OPERATION_NAME, "GET"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
-                    span ->
-                        span.hasName("GET")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(URL_FULL, httpHost + "/_cluster/health"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                // Netty 4.1 Instrumentation collects NETWORK_PEER_ADDRESS
-                                equalTo(NETWORK_PEER_ADDRESS, httpHost.getHost()),
-                                // Netty 4.1 Instrumentation collects NETWORK_PEER_PORT
-                                equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
-                                equalTo(maybeStablePeerService(), testing.expectedPeerService())),
-                    span ->
-                        span.hasName("callback")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_FULL, httpHost + "/_cluster/health"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            // Netty 4.1 Instrumentation collects NETWORK_PEER_ADDRESS
+                            equalTo(NETWORK_PEER_ADDRESS, httpHost.getHost()),
+                            // Netty 4.1 Instrumentation collects NETWORK_PEER_PORT
+                            equalTo(NETWORK_PEER_PORT, httpHost.getPort()),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 }

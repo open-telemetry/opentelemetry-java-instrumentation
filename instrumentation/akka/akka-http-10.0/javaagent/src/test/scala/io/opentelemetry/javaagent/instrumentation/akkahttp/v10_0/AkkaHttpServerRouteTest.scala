@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.StatusCodes
 import akka.http.scaladsl.server.Directives._
 import akka.http.scaladsl.server.Route
 import akka.stream.ActorMaterializer
-import io.opentelemetry.instrumentation.test.utils.PortUtils
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.testing.internal.armeria.client.WebClient
@@ -51,6 +51,14 @@ class AkkaHttpServerRouteTest {
     }
 
     test(route, "/test", "GET /test")
+  }
+
+  @Test def testApplicationBadRequest(): Unit = {
+    val route = path("test") {
+      complete(StatusCodes.BadRequest, "bad request")
+    }
+
+    test(route, "/test", "GET /test", 400, "bad request")
   }
 
   @Test def testPathPrefix(): Unit = {
@@ -265,10 +273,9 @@ class AkkaHttpServerRouteTest {
       expectedStatus: Int = 200,
       expectedMsg: String = "ok"
   ): Unit = {
-    val port = PortUtils.findOpenPort
-    val address: URI = buildAddress(port)
     val binding =
-      Await.result(Http().bindAndHandle(route, "localhost", port), 10.seconds)
+      Await.result(Http().bindAndHandle(route, "localhost", 0), 10.seconds)
+    val address: URI = buildAddress(binding.localAddress.getPort)
     try {
       val request = AggregatedHttpRequest.of(
         HttpMethod.GET,

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdacore.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.amazonaws.services.lambda.runtime.Context;
@@ -48,14 +48,12 @@ class AwsLambdaTest extends AbstractAwsLambdaTest {
     assertThat(result).isEqualTo("world");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("my_function")
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -65,14 +63,12 @@ class AwsLambdaTest extends AbstractAwsLambdaTest {
     assertThat(result).isEqualTo("world");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("my_function")
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   private static class TestRequestHandler implements RequestHandler<String, String> {

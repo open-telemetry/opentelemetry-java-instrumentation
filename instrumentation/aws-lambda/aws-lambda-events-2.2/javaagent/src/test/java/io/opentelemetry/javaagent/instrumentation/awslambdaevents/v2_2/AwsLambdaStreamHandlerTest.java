@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.awslambdaevents.v2_2;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -61,13 +61,12 @@ class AwsLambdaStreamHandlerTest {
     RequestStreamHandlerTestImpl handler = new RequestStreamHandlerTestImpl();
     handler.handleRequest(input, output, context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -79,15 +78,14 @@ class AwsLambdaStreamHandlerTest {
     Throwable thrown = catchThrowable(() -> handler.handleRequest(input, output, context));
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.error())
+                .hasException(thrown)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   private static class RequestStreamHandlerTestImpl implements RequestStreamHandler {

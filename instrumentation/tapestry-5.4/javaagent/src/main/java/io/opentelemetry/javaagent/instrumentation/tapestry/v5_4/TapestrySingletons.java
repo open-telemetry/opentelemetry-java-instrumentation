@@ -20,13 +20,12 @@ class TapestrySingletons {
     instrumenter =
         Instrumenter.<TapestryRequest, Void>builder(
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, TapestryRequest::spanName)
-            .setErrorCauseExtractor(
-                error -> {
-                  if (error instanceof ComponentEventException) {
-                    error = error.getCause();
-                  }
-                  return ErrorCauseExtractor.getDefault().extract(error);
-                })
+            .setErrorCauseExtractor(error -> {
+              if (error instanceof ComponentEventException) {
+                error = error.getCause();
+              }
+              return ErrorCauseExtractor.getDefault().extract(error);
+            })
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             .buildInstrumenter();
   }

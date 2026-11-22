@@ -37,7 +37,6 @@ import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpRequest;
 import jakarta.servlet.ServletException;
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
 import java.util.List;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
@@ -48,6 +47,7 @@ import org.apache.catalina.startup.Tomcat;
 import org.apache.catalina.valves.ValveBase;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
 
@@ -77,12 +77,11 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
           AUTH_ERROR,
           INDEXED_CHILD,
           INDEXED_CHILD_FROM_REQUEST_BODY);
+  @TempDir private static File baseDir;
 
   @Override
   public Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();
-    File baseDir = Files.createTempDirectory("tomcat").toFile();
-    baseDir.deleteOnExit();
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
     tomcatServer.setPort(port);
     tomcatServer.getConnector();
@@ -115,18 +114,17 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
             request.headers().toBuilder().add("X-Test-Principal", "true").build());
     client.execute(request).aggregate().join();
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasKind(SpanKind.SERVER), span -> span.hasName("controller"));
-          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
-              .isEqualTo("io.opentelemetry.tomcat-10.0");
-          assertThat(trace.getSpan(0).getAttributes().get(USER_NAME))
-              .isEqualTo(
-                  Boolean.getBoolean("otel.instrumentation.common.user.name.enabled")
-                      ? "test-user"
-                      : null);
-        });
+    testing.waitAndAssertTraces(trace -> {
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasKind(SpanKind.SERVER), span -> span.hasName("controller"));
+      assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
+          .isEqualTo("io.opentelemetry.tomcat-10.0");
+      assertThat(trace.getSpan(0).getAttributes().get(USER_NAME))
+          .isEqualTo(
+              Boolean.getBoolean("otel.instrumentation.common.user.name.enabled")
+                  ? "test-user"
+                  : null);
+    });
   }
 
   @Override
@@ -147,13 +145,12 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
 
-    options.setExpectedHttpRoute(
-        (ServerEndpoint endpoint, String method) -> {
-          if (method.equals(HttpConstants._OTHER)) {
-            return getContextPath() + endpoint.getPath();
-          }
-          return super.expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((ServerEndpoint endpoint, String method) -> {
+      if (method.equals(HttpConstants._OTHER)) {
+        return getContextPath() + endpoint.getPath();
+      }
+      return super.expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Override

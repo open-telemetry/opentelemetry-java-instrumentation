@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -18,10 +20,26 @@ muzzle {
 dependencies {
   api(project(":instrumentation:servlet:servlet-common:javaagent"))
   api(project(":instrumentation:servlet:servlet-3.0:library"))
+  api(project(":instrumentation:servlet:servlet-common-javax:library"))
   bootstrap(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
   compileOnly("javax.servlet:javax.servlet-api:3.0.1")
 
   testInstrumentation(project(":instrumentation:servlet:servlet-2.2:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
+      implementation("javax.servlet:javax.servlet-api:3.0.1")
+    }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
+  }
 }

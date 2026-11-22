@@ -86,8 +86,7 @@ class CallbackGcCloseTest {
         metric ->
             metric
                 .hasName("test.gc.close")
-                .hasLongGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
+                .hasLongGaugePointsSatisfying(point -> point.hasValue(42)));
 
     // 4. Release the classloader — simulates app undeploy.
     WeakReference<ClassLoader> clRef = new WeakReference<>(childCl);
@@ -123,8 +122,7 @@ class CallbackGcCloseTest {
         metric ->
             metric
                 .hasName("test.gc.alive")
-                .hasLongGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(99))));
+                .hasLongGaugePointsSatisfying(point -> point.hasValue(99)));
 
     // prevent callback from being collected during the test
     assertThat(callback).isNotNull();

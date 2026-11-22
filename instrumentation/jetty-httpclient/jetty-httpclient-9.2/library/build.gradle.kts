@@ -13,38 +13,26 @@ dependencies {
   latestDepTestLibrary("org.eclipse.jetty:jetty-client:9.+") // documented limitation
 }
 
-testing {
-  suites {
-    // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16405
-    register<JvmTestSuite>("testDemandedContentListener") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
+testing.suites {
+  // regression test for https://github.com/open-telemetry/opentelemetry-java-instrumentation/issues/16405
+  register<JvmTestSuite>("testDemandedContentListener") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing"))
-        // Test the first and last Jetty versions affected by the DemandedContentListener bug.
-        val jettyVersion = baseVersion("9.4.24.v20191120").orLatest("9.4.43.v20210629")
-        implementation("org.eclipse.jetty:jetty-client:$jettyVersion")
-      }
+    }
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-9.2:testing"))
+      // Test the first and last Jetty versions affected by the DemandedContentListener bug.
+      val jettyVersion = baseVersion("9.4.24.v20191120").orLatest("9.4.43.v20210629")
+      implementation("org.eclipse.jetty:jetty-client:$jettyVersion")
     }
   }
 }
 
 tasks {
-  val previewSemconvSuites = testing.suites.withType(JvmTestSuite::class)
-    .map { suite ->
-      register<Test>("${suite.name}PreviewSemconv") {
-        testClassesDirs = suite.sources.output.classesDirs
-        classpath = suite.sources.runtimeClasspath
-
-        jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-      }
-    }
-
   check {
-    dependsOn(testing.suites, previewSemconvSuites)
+    dependsOn(testing.suites)
   }
 }

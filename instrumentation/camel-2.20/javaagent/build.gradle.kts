@@ -1,5 +1,10 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 val camelversion = "2.20.1" // first version that the tests pass on
@@ -99,119 +104,106 @@ dependencies {
   latestDepTestLibrary("org.apache.camel:camel-sjms:2.+") // documented limitation
 }
 
-tasks {
-  withType<Test>().configureEach {
-    jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:javaagent"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+      implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
+      implementation(project(":instrumentation-api-incubator"))
+      implementation(project(":javaagent-extension-api"))
 
-    // required on jdk17
-    jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-    jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.camel.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.camel.experimental-span-attributes=true")
-  }
-
-  val testSpanKindBasedSuppression = register<Test>("testSpanKindBasedSuppression") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.span-suppression-strategy=span-kind")
-    systemProperty("metadataConfig", "otel.instrumentation.common.span-suppression-strategy=span-kind")
-    filter {
-      includeTestsMatching("*RestCamelTest")
-      includeTestsMatching("*SingleServiceCamelTest")
-      includeTestsMatching("*TwoServicesWithDirectClientCamelTest")
-    }
-  }
-
-  val testReceiveTelemetry = register<Test>("testReceiveTelemetry") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    filter {
-      includeTestsMatching("*KafkaCamelTest")
-    }
-  }
-
-  val testJmsDisabled = register<Test>("testJmsDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.jms.enabled=false")
-    systemProperty("testNoLowerMessaging", "true")
-    filter {
-      includeTestsMatching("*JmsCamelStandaloneTest")
-      includeTestsMatching("*SjmsCamelTest")
-      includeTestsMatching("*SjmsRegisteredListenerTest")
-    }
-  }
-
-  val testSjmsWithoutCamelJms = register<Test>("testSjmsWithoutCamelJms") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath =
-      sourceSets.test.get().runtimeClasspath.filter {
-        !it.name.startsWith("camel-jms-")
+      implementation("org.apache.camel:camel-core:$camelversion")
+      implementation("org.apache.camel:camel-aws:$camelversion")
+      implementation("org.apache.camel:camel-http:$camelversion")
+      implementation("org.apache.camel:camel-rabbitmq:$camelRabbitmqVersion") {
+        exclude(group = "org.apache.camel", module = "camel-core")
       }
-
-    filter {
-      includeTestsMatching("*SjmsCamelTest")
-      includeTestsMatching("*SjmsRegisteredListenerTest")
+      implementation("org.apache.kafka:kafka-clients:0.11.0.0")
+      implementation("javax.jms:jms-api:1.1-rev-1")
+      implementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
+      implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
     }
   }
 
-  val testCamelDisabled = register<Test>("testCamelDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+  executions("test") {
+    configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+      jvmArgs("-Dotel.instrumentation.aws-sdk.experimental-span-attributes=true")
 
-    jvmArgs("-Dotel.instrumentation.camel.enabled=false")
-    systemProperty("testCamelDisabled", "true")
-    filter {
-      includeTestsMatching("*SqsCamelTest.awsSdkSqsProducerToCamelSqsConsumer")
-      includeTestsMatching("*KafkaCamelTest")
-      includeTestsMatching("*SqsCamelOwnershipInstrumentationTest")
-      includeTestsMatching("*RabbitCamelRegistrationInstrumentationTest")
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     }
-  }
 
-  val testAdaptersDisabled = register<Test>("testAdaptersDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.camel-kafka.enabled=false")
-    jvmArgs("-Dotel.instrumentation.camel-rabbitmq.enabled=false")
-    jvmArgs("-Dotel.instrumentation.camel-aws-sqs.enabled=false")
-    systemProperty("testAdapterDisabled", "true")
-    filter {
-      includeTestsMatching("*KafkaCamelTest")
-      includeTestsMatching("*SqsCamelOwnershipInstrumentationTest")
-      includeTestsMatching("*RabbitCamelRegistrationInstrumentationTest")
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.camel.experimental-span-attributes", "true")
     }
-  }
 
-  check {
-    dependsOn(
-      testSpanKindBasedSuppression,
-      testReceiveTelemetry,
-      testExperimental,
-      testJmsDisabled,
-      testSjmsWithoutCamelJms,
-      testCamelDisabled,
-      testAdaptersDisabled,
-    )
-  }
+    register("SpanKindBasedSuppression") {
+      telemetryConfig("otel.instrumentation.common.span-suppression-strategy", "span-kind")
+      filter {
+        includeTestsMatching("*RestCamelTest")
+        includeTestsMatching("*SingleServiceCamelTest")
+        includeTestsMatching("*TwoServicesWithDirectClientCamelTest")
+      }
+    }
 
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
+    register("ReceiveTelemetry") {
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+      filter {
+        includeTestsMatching("*KafkaCamelTest")
+      }
+    }
+
+    register("JmsDisabled") {
+      jvmArgs("-Dotel.instrumentation.jms.enabled=false")
+      systemProperty("testNoLowerMessaging", "true")
+      filter {
+        includeTestsMatching("*JmsCamelStandaloneTest")
+        includeTestsMatching("*SjmsCamelTest")
+        includeTestsMatching("*SjmsRegisteredListenerTest")
+      }
+    }
+
+    register("SjmsWithoutCamelJms") {
+      classpath =
+        classpath.filter {
+          !it.name.startsWith("camel-jms-")
+        }
+      filter {
+        includeTestsMatching("*SjmsCamelTest")
+        includeTestsMatching("*SjmsRegisteredListenerTest")
+      }
+    }
+
+    register("CamelDisabled") {
+      jvmArgs("-Dotel.instrumentation.camel.enabled=false")
+      systemProperty("testCamelDisabled", "true")
+      filter {
+        includeTestsMatching("*SqsCamelTest.awsSdkSqsProducerToCamelSqsConsumer")
+        includeTestsMatching("*KafkaCamelTest")
+        includeTestsMatching("*SqsCamelOwnershipInstrumentationTest")
+        includeTestsMatching("*RabbitCamelRegistrationInstrumentationTest")
+      }
+    }
+
+    register("AdaptersDisabled") {
+      jvmArgs("-Dotel.instrumentation.camel-kafka.enabled=false")
+      jvmArgs("-Dotel.instrumentation.camel-rabbitmq.enabled=false")
+      jvmArgs("-Dotel.instrumentation.camel-aws-sqs.enabled=false")
+      systemProperty("testAdapterDisabled", "true")
+      filter {
+        includeTestsMatching("*KafkaCamelTest")
+        includeTestsMatching("*SqsCamelOwnershipInstrumentationTest")
+        includeTestsMatching("*RabbitCamelRegistrationInstrumentationTest")
+      }
     }
   }
 }

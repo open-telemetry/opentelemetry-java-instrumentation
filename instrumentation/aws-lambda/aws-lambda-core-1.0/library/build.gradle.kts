@@ -19,9 +19,6 @@ dependencies {
   // it here.
   implementation("com.fasterxml.jackson.core:jackson-core")
 
-  // allows to get the function ARN
-  testLibrary("com.amazonaws:aws-lambda-java-core:1.2.1")
-
   testImplementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
   testImplementation("io.opentelemetry:opentelemetry-extension-trace-propagators")
@@ -30,20 +27,42 @@ dependencies {
   testImplementation("uk.org.webcompere:system-stubs-jupiter")
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        }
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
+testing.suites {
+  register<JvmTestSuite>("version12Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java", "src/version12Test/java"))
       }
     }
+
+    dependencies {
+      implementation(project())
+      implementation(
+        "com.amazonaws:aws-lambda-java-core:${baseVersion("1.2.1").orLatest()}"
+      )
+    }
+
+    project.configurations.named(sources.implementationConfigurationName) {
+      extendsFrom(configurations["testImplementation"])
+    }
+    project.configurations.named(sources.runtimeOnlyConfigurationName) {
+      extendsFrom(configurations["testRuntimeOnly"])
+    }
   }
+
+  executions("test", "version12Test") {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    }
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

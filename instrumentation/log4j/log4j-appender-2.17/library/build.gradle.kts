@@ -5,6 +5,8 @@ plugins {
 }
 
 dependencies {
+  compileOnly(project(":muzzle"))
+
   library("org.apache.logging.log4j:log4j-core:2.17.0")
   annotationProcessor("org.apache.logging.log4j:log4j-core:2.17.0")
 
@@ -18,20 +20,16 @@ dependencies {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("AsyncLogger") {
-          jvmArgs(
-            "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
-            "-Dlog4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector",
-          )
-        }
-      }
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("AsyncLogger") {
+      jvmArgs(
+        "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
+        "-Dlog4j2.ContextDataInjector=io.opentelemetry.instrumentation.log4j.appender.v2_17.OpenTelemetryAppenderContextDataInjector",
+      )
     }
   }
 }

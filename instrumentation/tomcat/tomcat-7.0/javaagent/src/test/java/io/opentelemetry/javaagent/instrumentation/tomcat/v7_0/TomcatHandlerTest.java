@@ -33,13 +33,13 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import java.io.File;
-import java.nio.file.Files;
 import java.util.List;
 import org.apache.catalina.Context;
 import org.apache.catalina.LifecycleException;
 import org.apache.catalina.core.StandardHost;
 import org.apache.catalina.startup.Tomcat;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.api.io.TempDir;
 
 class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
 
@@ -70,11 +70,11 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
           INDEXED_CHILD,
           INDEXED_CHILD_FROM_REQUEST_BODY);
 
+  @TempDir private static File baseDir;
+
   @Override
   public Tomcat setupServer() throws Exception {
     Tomcat tomcatServer = new Tomcat();
-    File baseDir = Files.createTempDirectory("tomcat").toFile();
-    baseDir.deleteOnExit();
     tomcatServer.setBaseDir(baseDir.getAbsolutePath());
     tomcatServer.setPort(port);
     tomcatServer.getConnector();
@@ -115,13 +115,12 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
 
-    options.setExpectedHttpRoute(
-        (ServerEndpoint endpoint, String method) -> {
-          if (method.equals(HttpConstants._OTHER)) {
-            return getContextPath() + endpoint.getPath();
-          }
-          return super.expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((ServerEndpoint endpoint, String method) -> {
+      if (method.equals(HttpConstants._OTHER)) {
+        return getContextPath() + endpoint.getPath();
+      }
+      return super.expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Override

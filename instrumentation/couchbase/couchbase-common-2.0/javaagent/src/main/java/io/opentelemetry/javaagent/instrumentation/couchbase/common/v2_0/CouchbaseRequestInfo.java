@@ -10,7 +10,7 @@ import static io.opentelemetry.context.ContextKey.named;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -34,10 +34,11 @@ public abstract class CouchbaseRequestInfo {
   @Nullable private String localAddress;
   @Nullable private String operationId;
   @Nullable private volatile Node node;
+  @Nullable private CouchbaseRequestInfo assemblyRequest;
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket,
-      @Nullable DbServerTarget serverTarget,
+      @Nullable ServerTarget serverTarget,
       Class<?> declaringClass,
       String methodName) {
     String operation =
@@ -48,7 +49,7 @@ public abstract class CouchbaseRequestInfo {
   }
 
   public static CouchbaseRequestInfo create(
-      @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
+      @Nullable String bucket, @Nullable ServerTarget serverTarget, Object query) {
     String sqlQueryText = CouchbaseQueryText.getSqlQueryText(query);
     return new AutoValue_CouchbaseRequestInfo(
         bucket,
@@ -85,7 +86,7 @@ public abstract class CouchbaseRequestInfo {
   public abstract String getOperation();
 
   @Nullable
-  public abstract DbServerTarget getServerTarget();
+  public abstract ServerTarget getServerTarget();
 
   // Each subscription needs independent mutable node state.
   public Supplier<CouchbaseRequestInfo> copySupplier() {
@@ -98,8 +99,11 @@ public abstract class CouchbaseRequestInfo {
   }
 
   private CouchbaseRequestInfo copy() {
-    return new AutoValue_CouchbaseRequestInfo(
-        getBucket(), getQueryText(), isSqlQuery(), getOperation(), getServerTarget());
+    CouchbaseRequestInfo copy =
+        new AutoValue_CouchbaseRequestInfo(
+            getBucket(), getQueryText(), isSqlQuery(), getOperation(), getServerTarget());
+    copy.assemblyRequest = this;
+    return copy;
   }
 
   @Nullable
@@ -122,7 +126,9 @@ public abstract class CouchbaseRequestInfo {
 
   @Nullable
   public Node getNode() {
-    return node;
+    Node node = this.node;
+    // SDK 2.0 sends eagerly during observable assembly, before the subscription has its own state.
+    return node != null || assemblyRequest == null ? node : assemblyRequest.node;
   }
 
   public void setNode(@Nullable SocketAddress peerAddress) {

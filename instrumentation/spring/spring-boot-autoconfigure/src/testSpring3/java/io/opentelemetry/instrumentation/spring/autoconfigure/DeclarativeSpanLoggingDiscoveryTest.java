@@ -28,17 +28,15 @@ class DeclarativeSpanLoggingDiscoveryTest {
     // Import through Spring Boot, not by explicitly registering the logging configuration.
     runner
         .withPropertyValues("otel.instrumentation/development.java.spring_starter.debug=true")
-        .run(
-            context ->
-                assertThat(context.getBean(OpenTelemetry.class).toString())
-                    .containsOnlyOnce("LoggingSpanExporter"));
+        .run(context ->
+            assertThat(context.getBean(OpenTelemetry.class).toString())
+                .containsOnlyOnce("LoggingSpanExporter"));
   }
 
   @Test
   void debugUnset() {
-    runner.run(
-        context ->
-            assertThat(context.getBean(OpenTelemetry.class).toString())
-                .doesNotContain("LoggingSpanExporter"));
+    runner.run(context ->
+        assertThat(context.getBean(OpenTelemetry.class).toString())
+            .doesNotContain("LoggingSpanExporter"));
   }
 }

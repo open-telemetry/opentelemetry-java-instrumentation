@@ -50,13 +50,13 @@ class GraphqlErrorRecorderTest {
       InstrumentationScopeInfo expectedScope =
           InstrumentationScopeInfo.builder(INSTRUMENTATION_NAME)
               .setVersion(version)
-              .setSchemaUrl(SchemaUrls.V1_44_0)
+              .setSchemaUrl(SchemaUrls.V1_45_0)
               .build();
       Span span =
           openTelemetry
               .tracerBuilder(INSTRUMENTATION_NAME)
               .setInstrumentationVersion(version)
-              .setSchemaUrl(SchemaUrls.V1_44_0)
+              .setSchemaUrl(SchemaUrls.V1_45_0)
               .build()
               .spanBuilder("GraphQL Operation")
               .setNoParent()
@@ -66,43 +66,40 @@ class GraphqlErrorRecorderTest {
 
       // Completion callbacks may run with an unrelated current context.
       try (Scope ignored = Context.root().makeCurrent()) {
-        new GraphqlErrorRecorder(openTelemetry, INSTRUMENTATION_NAME, SchemaUrls.V1_44_0)
+        new GraphqlErrorRecorder(openTelemetry, INSTRUMENTATION_NAME, SchemaUrls.V1_45_0)
             .record(context, error);
       }
       span.end();
 
       assertThat(spans.getFinishedSpanItems())
           .singleElement()
-          .satisfies(
-              spanData -> {
-                assertThat(spanData).hasInstrumentationScopeInfo(expectedScope);
-                if (emitExceptionAsSpanEvents()) {
-                  assertThat(spanData.getEvents())
-                      .singleElement()
-                      .satisfies(
-                          event ->
-                              assertThat(event)
-                                  .hasName("exception")
-                                  .hasAttributesSatisfyingExactly(
-                                      equalTo(EXCEPTION_TYPE, "ValidationError"),
-                                      equalTo(EXCEPTION_MESSAGE, "invalid field")));
-                } else {
-                  assertThat(spanData.getEvents()).isEmpty();
-                }
-              });
+          .satisfies(spanData -> {
+            assertThat(spanData).hasInstrumentationScopeInfo(expectedScope);
+            if (emitExceptionAsSpanEvents()) {
+              assertThat(spanData.getEvents())
+                  .singleElement()
+                  .satisfies(event ->
+                      assertThat(event)
+                          .hasName("exception")
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(EXCEPTION_TYPE, "ValidationError"),
+                              equalTo(EXCEPTION_MESSAGE, "invalid field")));
+            } else {
+              assertThat(spanData.getEvents()).isEmpty();
+            }
+          });
       if (emitExceptionAsLogs()) {
         assertThat(logs.getFinishedLogRecordItems())
             .singleElement()
-            .satisfies(
-                log ->
-                    assertThat(log)
-                        .hasEventName("exception")
-                        .hasSeverity(Severity.WARN)
-                        .hasSpanContext(span.getSpanContext())
-                        .hasInstrumentationScope(expectedScope)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(EXCEPTION_TYPE, "ValidationError"),
-                            equalTo(EXCEPTION_MESSAGE, "invalid field")));
+            .satisfies(log ->
+                assertThat(log)
+                    .hasEventName("exception")
+                    .hasSeverity(Severity.WARN)
+                    .hasSpanContext(span.getSpanContext())
+                    .hasInstrumentationScope(expectedScope)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(EXCEPTION_TYPE, "ValidationError"),
+                        equalTo(EXCEPTION_MESSAGE, "invalid field")));
       } else {
         assertThat(logs.getFinishedLogRecordItems()).isEmpty();
       }

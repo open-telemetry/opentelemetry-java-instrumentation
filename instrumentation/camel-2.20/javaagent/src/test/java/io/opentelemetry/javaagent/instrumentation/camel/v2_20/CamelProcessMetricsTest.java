@@ -169,14 +169,12 @@ class CamelProcessMetricsTest {
         metrics ->
             metrics
                 .singleElement()
-                .satisfies(
-                    metric ->
-                        assertThat(metric.getData().getPoints())
-                            .singleElement()
-                            .satisfies(
-                                point ->
-                                    assertThat(point.getAttributes().get(ERROR_TYPE))
-                                        .isEqualTo(faulted ? "_OTHER" : null))));
+                .satisfies(metric ->
+                    assertThat(metric.getData().getPoints())
+                        .singleElement()
+                        .satisfies(point ->
+                            assertThat(point.getAttributes().get(ERROR_TYPE))
+                                .isEqualTo(faulted ? "_OTHER" : null))));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> INSTRUMENTATION_NAME.equals(metric.getInstrumentationScopeInfo().getName()))
@@ -221,7 +219,7 @@ class CamelProcessMetricsTest {
     String className = INSTRUMENTATION_PACKAGE + simpleName;
     Class<?> registryClass =
         AgentClassLoaderAccess.loadClass(
-            "io.opentelemetry.javaagent.tooling.instrumentation.indy.IndyModuleRegistry");
+            "io.opentelemetry.javaagent.tooling.instrumentation.indy.InstrumentationClassLoaderRegistry");
     ClassLoader moduleClassLoader =
         (ClassLoader)
             registryClass

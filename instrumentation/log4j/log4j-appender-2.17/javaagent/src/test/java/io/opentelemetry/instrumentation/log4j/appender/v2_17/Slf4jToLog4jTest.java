@@ -91,36 +91,31 @@ class Slf4jToLog4jTest {
     }
 
     if (expectedSeverity != null) {
-      testing.waitAndAssertLogRecords(
-          logRecord -> {
-            logRecord
-                .hasBody("xyz: 123")
-                .hasInstrumentationScope(
-                    InstrumentationScopeInfo.builder(expectedLoggerName).build())
-                .hasSeverity(expectedSeverity)
-                .hasSeverityText(expectedSeverityText)
-                .hasSpanContext(
-                    withParent
-                        ? testing.spans().get(0).getSpanContext()
-                        : SpanContext.getInvalid());
+      testing.waitAndAssertLogRecords(logRecord -> {
+        logRecord
+            .hasBody("xyz: 123")
+            .hasInstrumentationScope(InstrumentationScopeInfo.builder(expectedLoggerName).build())
+            .hasSeverity(expectedSeverity)
+            .hasSeverityText(expectedSeverityText)
+            .hasSpanContext(
+                withParent ? testing.spans().get(0).getSpanContext() : SpanContext.getInvalid());
 
-            List<AttributeAssertion> attributeAsserts =
-                new ArrayList<>(threadAttributesAssertions());
-            attributeAsserts.add(
-                equalTo(CODE_FUNCTION_NAME, Slf4jToLog4jTest.class.getName() + ".performLogging"));
-            attributeAsserts.add(equalTo(CODE_FILE_PATH, "Slf4jToLog4jTest.java"));
-            attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
-            if (logException) {
-              attributeAsserts.addAll(
-                  asList(
-                      equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
-                      equalTo(EXCEPTION_MESSAGE, "hello"),
-                      satisfies(
-                          EXCEPTION_STACKTRACE,
-                          val -> val.contains(Slf4jToLog4jTest.class.getName()))));
-            }
-            logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
-          });
+        List<AttributeAssertion> attributeAsserts = new ArrayList<>(threadAttributesAssertions());
+        attributeAsserts.add(
+            equalTo(CODE_FUNCTION_NAME, Slf4jToLog4jTest.class.getName() + ".performLogging"));
+        attributeAsserts.add(equalTo(CODE_FILE_PATH, "Slf4jToLog4jTest.java"));
+        attributeAsserts.add(satisfies(CODE_LINE_NUMBER, val -> val.isPositive()));
+        if (logException) {
+          attributeAsserts.addAll(
+              asList(
+                  equalTo(EXCEPTION_TYPE, IllegalStateException.class.getName()),
+                  equalTo(EXCEPTION_MESSAGE, "hello"),
+                  satisfies(
+                      EXCEPTION_STACKTRACE,
+                      val -> val.contains(Slf4jToLog4jTest.class.getName()))));
+        }
+        logRecord.hasAttributesSatisfyingExactly(attributeAsserts);
+      });
     } else {
       Thread.sleep(500); // sleep a bit just to make sure no log is captured
       assertThat(testing.logRecords()).isEmpty();
@@ -151,14 +146,13 @@ class Slf4jToLog4jTest {
     attributeAsserts.add(equalTo(stringKey("key1"), "val1"));
     attributeAsserts.add(equalTo(stringKey("key2"), "val2"));
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasBody("xyz: 123")
-                .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
-                .hasSeverity(Severity.INFO)
-                .hasSeverityText("INFO")
-                .hasAttributesSatisfyingExactly(attributeAsserts));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasBody("xyz: 123")
+            .hasInstrumentationScope(InstrumentationScopeInfo.builder("abc").build())
+            .hasSeverity(Severity.INFO)
+            .hasSeverityText("INFO")
+            .hasAttributesSatisfyingExactly(attributeAsserts));
   }
 
   @Test

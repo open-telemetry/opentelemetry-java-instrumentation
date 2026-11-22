@@ -36,6 +36,7 @@ public class VertxClientInstrumentationModule extends InstrumentationModule {
     return asList(
         new ConnectionManagerInstrumentation(),
         new HttpClientConnectionInstrumentation(),
+        new HttpClientResponseInstrumentation(),
         new HttpRequestInstrumentation(),
         new TaskQueueInstrumentation());
   }

@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.kubernetesclient.v7_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.kubernetesclient.v7_0.KubernetesClientSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
@@ -57,7 +56,7 @@ class ApiClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Request onExit(@Advice.Return Request originalReturnValue) {
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       if (!instrumenter().shouldStart(parentContext, originalReturnValue)) {
         return originalReturnValue;
       }

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
 import org.apache.pekko.actor.ActorSystem
-import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.Http.ServerBinding
 
 import scala.concurrent.{Await, ExecutionContextExecutor}
@@ -22,7 +21,7 @@ object PekkoHttpTestAsyncWebServer {
     if (binding == null) {
       import scala.concurrent.duration._
       binding = Await.result(
-        Http().bindAndHandleAsync(
+        PekkoHttpTestBinding.bindAsync(
           PekkoHttpTestAsyncHandler.asyncHandler,
           "localhost",
           port

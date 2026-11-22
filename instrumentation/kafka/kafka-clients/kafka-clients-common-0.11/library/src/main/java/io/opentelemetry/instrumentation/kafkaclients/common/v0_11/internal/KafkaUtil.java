@@ -19,7 +19,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.logging.Logger;
@@ -56,17 +55,18 @@ public final class KafkaUtil {
   private static final VirtualField<Producer<?, ?>, KafkaClusterId> PRODUCER_CLUSTER_ID_FIELD =
       VirtualField.find(Producer.class, KafkaClusterId.class);
 
-  // ClassValue: thread-safe per-class cache; Optional.empty() prevents repeated failed lookups.
+  // ClassValue is a thread-safe per-class cache, including for null lookup results.
   // Superclass walk needed: Kafka 3.7+ delegate classes may inherit 'metadata' from a parent.
-  private static final ClassValue<Optional<Field>> metadataFieldCache =
-      new ClassValue<Optional<Field>>() {
+  private static final ClassValue<Field> metadataFieldCache =
+      new ClassValue<Field>() {
+        @Nullable
         @Override
-        protected Optional<Field> computeValue(Class<?> holderClass) {
+        protected Field computeValue(Class<?> holderClass) {
           for (Class<?> cls = holderClass; cls != null; cls = cls.getSuperclass()) {
             try {
               Field field = cls.getDeclaredField("metadata");
               field.setAccessible(true);
-              return Optional.of(field);
+              return field;
             } catch (NoSuchFieldException ignored) {
               // 'metadata' not declared on this class; check superclass
             } catch (RuntimeException | LinkageError e) {
@@ -75,11 +75,11 @@ public final class KafkaUtil {
               // types of every declared field. Reflection can't succeed for this class, so stop
               // walking and cache the miss.
               logReflectionFailureOnce(holderClass, e.toString());
-              return Optional.empty();
+              return null;
             }
           }
           logReflectionFailureOnce(holderClass, "no 'metadata' field found");
-          return Optional.empty();
+          return null;
         }
       };
 
@@ -239,6 +239,7 @@ public final class KafkaUtil {
    * Caches this client's holder, publishing it before the metadata is read so a concurrent send
    * finds it rather than starting its own lookup.
    */
+  // visible for testing
   @Nullable
   static <T> String initializeClusterId(
       T client, VirtualField<T, KafkaClusterId> field, @Nullable Object holder) {
@@ -252,6 +253,7 @@ public final class KafkaUtil {
     return readClusterId(created);
   }
 
+  // visible for testing
   @Nullable
   static String readClusterId(KafkaClusterId cached) {
     String id = cached.clusterId();
@@ -291,9 +293,10 @@ public final class KafkaUtil {
 
   @Nullable
   private static Field metadataField(Class<?> holderClass) {
-    return metadataFieldCache.get(holderClass).orElse(null);
+    return metadataFieldCache.get(holderClass);
   }
 
+  // visible for testing
   @Nullable
   static Metadata extractMetadataFromHolder(@Nullable Object holder) {
     if (holder == null) {
@@ -311,6 +314,7 @@ public final class KafkaUtil {
     }
   }
 
+  // visible for testing
   @Nullable
   public static String clusterIdFromMetadata(@Nullable Metadata metadata) {
     if (metadata == null) {
@@ -336,7 +340,7 @@ public final class KafkaUtil {
     if (logger.isLoggable(FINE) && reflectionFailuresLogged.add(holderClass.getName())) {
       logger.log(
           FINE,
-          "Unable to resolve Kafka cluster id from {0}: {1}. messaging.kafka.cluster.id will be"
+          "Unable to resolve Kafka cluster id from {0}: {1}. kafka.cluster.id will be"
               + " absent for this client type.",
           new Object[] {holderClass.getName(), detail});
     }

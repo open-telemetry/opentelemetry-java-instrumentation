@@ -25,7 +25,6 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import io.javalin.Javalin;
 import io.opentelemetry.api.trace.SpanKind;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.testing.internal.armeria.client.WebClient;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
@@ -49,8 +48,8 @@ public abstract class AbstractJavalinTest {
 
   @BeforeAll
   void setup() {
-    port = PortUtils.findOpenPort();
-    app = setupJavalin(port);
+    app = setupJavalin(0);
+    port = app.port();
     client = WebClient.of("h1c://localhost:" + port);
   }
 
@@ -68,28 +67,24 @@ public abstract class AbstractJavalinTest {
     assertThat(content).isEqualTo(id);
     assertThat(response.status().code()).isEqualTo(200);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET /param/{id}")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_SCHEME, "http"),
-                                equalTo(URL_PATH, "/param/" + id),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                satisfies(
-                                    USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                                equalTo(HTTP_ROUTE, "/param/{id}"),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, port),
-                                equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(
-                                    NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("GET /param/{id}")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_SCHEME, "http"),
+                        equalTo(URL_PATH, "/param/" + id),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, "/param/{id}"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 
   @Test
@@ -97,29 +92,25 @@ public abstract class AbstractJavalinTest {
     client.get("/error").aggregate().join();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET /error")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_SCHEME, "http"),
-                                equalTo(URL_PATH, "/error"),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
-                                satisfies(
-                                    USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                                equalTo(HTTP_ROUTE, "/error"),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, port),
-                                equalTo(ERROR_TYPE, "500"),
-                                equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(
-                                    NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("GET /error")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_SCHEME, "http"),
+                        equalTo(URL_PATH, "/error"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 500),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, "/error"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(ERROR_TYPE, "500"),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 
   @Test
@@ -128,28 +119,24 @@ public abstract class AbstractJavalinTest {
 
     assertThat(response.status().code()).isEqualTo(200);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET /async")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(URL_SCHEME, "http"),
-                                equalTo(URL_PATH, "/async"),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                satisfies(
-                                    USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                                equalTo(HTTP_ROUTE, "/async"),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, port),
-                                equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                                equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                                satisfies(
-                                    NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("GET /async")
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_SCHEME, "http"),
+                        equalTo(URL_PATH, "/async"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(HTTP_ROUTE, "/async"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 
   @Test
@@ -166,9 +153,7 @@ public abstract class AbstractJavalinTest {
             metric ->
                 metric
                     .hasName("http.server.request.duration")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}"))));
+                    .hasHistogramPointsSatisfying(
+                        point -> point.hasAttribute(HTTP_ROUTE, "/param/{id}")));
   }
 }

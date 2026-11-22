@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.awssdk.v1_11;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -13,8 +14,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingSystemIncubatingValues.AWS_SQS;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -76,31 +75,25 @@ final class SqsMetricsAssertions {
         INSTRUMENTATION_NAME,
         "messaging.client.operation.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription(
-                            "Duration of messaging operation initiated by a producer or consumer client.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .satisfies(
-                                                data ->
-                                                    assertThat(data.getCount())
-                                                        .isEqualTo(operationCount))
-                                            .hasSumGreaterThan(0)
-                                            .hasBucketBoundaries(DURATION_BUCKETS)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(ERROR_TYPE, null),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                                equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, serverPort))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("s")
+                    .hasDescription(
+                        "Duration of messaging operation initiated by a producer or consumer client.")
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .satisfies(
+                                data -> assertThat(data.getCount()).isEqualTo(operationCount))
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                equalTo(ERROR_TYPE, null),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, serverPort)))));
   }
 
   private static void assertProcessDuration(
@@ -109,29 +102,23 @@ final class SqsMetricsAssertions {
         INSTRUMENTATION_NAME,
         "messaging.process.duration",
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("s")
-                        .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .satisfies(
-                                                data ->
-                                                    assertThat(data.getCount())
-                                                        .isEqualTo(operationCount))
-                                            .hasSumGreaterThan(0)
-                                            .hasBucketBoundaries(DURATION_BUCKETS)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(ERROR_TYPE, null),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, serverPort))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("s")
+                    .hasDescription("Duration of processing operation.")
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .satisfies(
+                                data -> assertThat(data.getCount()).isEqualTo(operationCount))
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                equalTo(ERROR_TYPE, null),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, serverPort)))));
   }
 
   private static void assertMessageCounter(
@@ -144,27 +131,23 @@ final class SqsMetricsAssertions {
         INSTRUMENTATION_NAME,
         metricName,
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasUnit("{message}")
-                        .hasDescription(
-                            metricName.equals("messaging.client.sent.messages")
-                                ? "Number of messages producer attempted to send to the broker."
-                                : "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, AWS_SQS),
-                                                equalTo(ERROR_TYPE, null),
-                                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                                equalTo(SERVER_ADDRESS, "localhost"),
-                                                equalTo(SERVER_PORT, serverPort))
-                                            .hasValue(messageCount)))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasUnit("{message}")
+                    .hasDescription(
+                        metricName.equals("messaging.client.sent.messages")
+                            ? "Number of messages producer attempted to send to the broker."
+                            : "Number of messages that were delivered to the application.")
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                equalTo(ERROR_TYPE, null),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, serverPort))
+                            .hasValue(messageCount))));
   }
 
   private SqsMetricsAssertions() {}

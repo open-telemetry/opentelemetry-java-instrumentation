@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -28,14 +30,35 @@ dependencies {
   // TODO: Switch to aws-lambda-java-serialization to more robustly follow Lambda's serialization logic.
   implementation("com.fasterxml.jackson.core:jackson-databind")
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
-
-  // allows to get the default events
-  testLibrary("com.amazonaws:aws-lambda-java-events:3.10.0")
 }
 
-tasks.test {
-  // required on jdk17
-  jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-  jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-  jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+testing.suites {
+  register<JvmTestSuite>("version310Test") {
+    dependencies {
+      implementation(project())
+      implementation(
+        "com.amazonaws:aws-lambda-java-events:${baseVersion("3.10.0").orLatest()}"
+      )
+    }
+
+    project.configurations.named(sources.implementationConfigurationName) {
+      extendsFrom(configurations["testImplementation"])
+    }
+    project.configurations.named(sources.runtimeOnlyConfigurationName) {
+      extendsFrom(configurations["testRuntimeOnly"])
+    }
+  }
+
+  executions("test", "version310Test") {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

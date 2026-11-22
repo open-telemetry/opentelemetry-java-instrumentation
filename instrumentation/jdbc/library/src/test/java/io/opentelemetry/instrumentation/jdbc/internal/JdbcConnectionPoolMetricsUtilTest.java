@@ -13,7 +13,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.util.Properties;
 import java.util.stream.Stream;
@@ -82,7 +82,7 @@ class JdbcConnectionPoolMetricsUtilTest {
   @ParameterizedTest
   @MethodSource("propertyArguments")
   void parsesConfiguredTargetFromProperties(
-      String serverName, String portNumber, DbServerTarget expectedTarget) {
+      String serverName, String portNumber, ServerTarget expectedTarget) {
     Properties properties = new Properties();
     if (serverName != null) {
       properties.setProperty("serverName", serverName);
@@ -99,16 +99,16 @@ class JdbcConnectionPoolMetricsUtilTest {
   private static Stream<Arguments> propertyArguments() {
     return Stream.of(
         argumentSet(
-            "address and port", "db.example", "5432", DbServerTarget.create("db.example", 5432)),
+            "address and port", "db.example", "5432", ServerTarget.create("db.example", 5432)),
         argumentSet(
-            "portless address", "db.example", null, DbServerTarget.create("db.example", null)),
+            "portless address", "db.example", null, ServerTarget.create("db.example", null)),
         argumentSet(
-            "invalid port", "db.example", "invalid", DbServerTarget.create("db.example", null)),
+            "invalid port", "db.example", "invalid", ServerTarget.create("db.example", null)),
         argumentSet(
             "bracketed IPv6 address",
             "[2001:db8::1]",
             "5432",
-            DbServerTarget.create("2001:db8::1", 5432)),
+            ServerTarget.create("2001:db8::1", 5432)),
         argumentSet("missing address", null, "5432", null),
         argumentSet("empty address", "", "5432", null),
         argumentSet("empty bracketed address", "[]", "5432", null),
@@ -117,7 +117,7 @@ class JdbcConnectionPoolMetricsUtilTest {
 
   @ParameterizedTest
   @MethodSource("databaseAttributesArguments")
-  void returnsConfiguredDatabaseAttributes(DbServerTarget target, Attributes expectedAttributes) {
+  void returnsConfiguredDatabaseAttributes(ServerTarget target, Attributes expectedAttributes) {
     DbInfo dbInfo =
         DbInfo.builder()
             .dbSystemName("postgresql")
@@ -133,7 +133,7 @@ class JdbcConnectionPoolMetricsUtilTest {
     return Stream.of(
         argumentSet(
             "configured address and port",
-            DbServerTarget.create("db.example", 5432),
+            ServerTarget.create("db.example", 5432),
             Attributes.of(
                 DB_SYSTEM_NAME, "postgresql",
                 DB_NAMESPACE, "orders",
@@ -141,14 +141,14 @@ class JdbcConnectionPoolMetricsUtilTest {
                 SERVER_PORT, 5432L)),
         argumentSet(
             "portless configured address",
-            DbServerTarget.create("db.example", null),
+            ServerTarget.create("db.example", null),
             Attributes.of(
                 DB_SYSTEM_NAME, "postgresql",
                 DB_NAMESPACE, "orders",
                 SERVER_ADDRESS, "db.example")),
         argumentSet(
             "configured target list",
-            DbServerTarget.create("db-a:5432,db-b:6432", null),
+            ServerTarget.create("db-a:5432,db-b:6432", null),
             Attributes.of(
                 DB_SYSTEM_NAME, "postgresql",
                 DB_NAMESPACE, "orders",
@@ -165,7 +165,7 @@ class JdbcConnectionPoolMetricsUtilTest {
         DbInfo.builder()
             .dbSystemName("postgresql")
             .dbNamespace("orders")
-            .configuredServerTarget(DbServerTarget.create("db.example", 5432))
+            .configuredServerTarget(ServerTarget.create("db.example", 5432))
             .build();
 
     assertThat(JdbcConnectionPoolMetricsUtil.poolName(dbInfo, "explicit", FALLBACK_NAME))
@@ -192,46 +192,46 @@ class JdbcConnectionPoolMetricsUtilTest {
         argumentSet(
             "namespace takes precedence over target",
             DbInfo.builder()
-                .configuredServerTarget(DbServerTarget.create("db.example", 5432))
+                .configuredServerTarget(ServerTarget.create("db.example", 5432))
                 .dbNamespace("orders")
                 .build(),
             "orders"),
         argumentSet(
             "configured address and port",
             DbInfo.builder()
-                .configuredServerTarget(DbServerTarget.create("db.example", 5432))
+                .configuredServerTarget(ServerTarget.create("db.example", 5432))
                 .build(),
             "db.example:5432"),
         argumentSet(
             "configured IPv6 address and port",
             DbInfo.builder()
-                .configuredServerTarget(DbServerTarget.create("2001:db8::1", 5432))
+                .configuredServerTarget(ServerTarget.create("2001:db8::1", 5432))
                 .build(),
             "[2001:db8::1]:5432"),
         argumentSet(
             "configured target list",
             DbInfo.builder()
-                .configuredServerTarget(DbServerTarget.create("db-a:5432,db-b:6432", null))
+                .configuredServerTarget(ServerTarget.create("db-a:5432,db-b:6432", null))
                 .build(),
             "db-a:5432,db-b:6432"),
         argumentSet(
             "portless configured IPv6 address",
             DbInfo.builder()
-                .configuredServerTarget(DbServerTarget.create("2001:db8::1", null))
+                .configuredServerTarget(ServerTarget.create("2001:db8::1", null))
                 .build(),
             "2001:db8::1"),
         argumentSet(
             "empty namespace",
             DbInfo.builder()
                 .dbNamespace("")
-                .configuredServerTarget(DbServerTarget.create("db.example", null))
+                .configuredServerTarget(ServerTarget.create("db.example", null))
                 .build(),
             "db.example"),
         argumentSet(
             "empty configured address",
             DbInfo.builder()
                 .dbSystemName("postgresql")
-                .configuredServerTarget(DbServerTarget.create("", null))
+                .configuredServerTarget(ServerTarget.create("", null))
                 .build(),
             "postgresql"),
         argumentSet(

@@ -76,21 +76,20 @@ class HystrixObservableTest {
 
     assertThat(result).isEqualTo("Hello!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("tracedMethod")
+                    .hasParent(trace.getSpan(1))
+                    .hasTotalAttributeCount(0)));
   }
 
   private static Stream<Arguments> baseArguments() {
@@ -284,26 +283,25 @@ class HystrixObservableTest {
 
     assertThat(result).isEqualTo("Fallback!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.fallback")
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(new IllegalArgumentException())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.fallback")
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
   }
 
   private static Stream<Arguments> provideCommandFallbackArguments() {
@@ -358,46 +356,43 @@ class HystrixObservableTest {
     }
 
     Throwable exception =
-        catchException(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () -> {
-                      HystrixObservableCommand<String> val =
-                          new TestCommand(setter("FailingGroup"));
-                      return parameter.operation.apply(val);
-                    }));
+        catchException(() ->
+            testing.runWithSpan(
+                "parent",
+                () -> {
+                  HystrixObservableCommand<String> val = new TestCommand(setter("FailingGroup"));
+                  return parameter.operation.apply(val);
+                }));
 
     assertThat(exception)
         .isInstanceOf(HystrixRuntimeException.class)
         .hasCauseInstanceOf(IllegalArgumentException.class);
     HystrixRuntimeException hystrixRuntimeException = (HystrixRuntimeException) exception;
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(exception),
-                span ->
-                    span.hasName("FailingGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(exception.getCause())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("FailingGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("FailingGroup.TestCommand.fallback")
-                        .hasParent(trace.getSpan(1))
-                        .hasException(hystrixRuntimeException.getFallbackException())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("FailingGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(exception),
+            span ->
+                span.hasName("FailingGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(exception.getCause())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("FailingGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("FailingGroup.TestCommand.fallback")
+                    .hasParent(trace.getSpan(1))
+                    .hasException(hystrixRuntimeException.getFallbackException())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("FailingGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
   }
 
   private static Stream<Arguments> provideCommandNoFallbackResultsInErrorArguments() {

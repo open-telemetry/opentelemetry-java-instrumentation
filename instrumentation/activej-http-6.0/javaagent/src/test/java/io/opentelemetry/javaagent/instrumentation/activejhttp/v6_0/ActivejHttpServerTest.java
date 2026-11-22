@@ -66,11 +66,10 @@ class ActivejHttpServerTest extends AbstractHttpServerTest<HttpServer> {
           controller(
               INDEXED_CHILD,
               () -> {
-                INDEXED_CHILD.collectSpanAttributes(
-                    id ->
-                        id.equals(ID_PARAMETER_NAME)
-                            ? request.getQueryParameter(ID_PARAMETER_NAME)
-                            : null);
+                INDEXED_CHILD.collectSpanAttributes(id ->
+                    id.equals(ID_PARAMETER_NAME)
+                        ? request.getQueryParameter(ID_PARAMETER_NAME)
+                        : null);
                 return httpResponse;
               });
           return httpResponse.toPromise();

@@ -265,17 +265,16 @@ public class PulsarSingletons {
   public static CompletableFuture<Void> wrap(CompletableFuture<Void> future) {
     Context parent = Context.current();
     CompletableFuture<Void> result = new CompletableFuture<>();
-    future.whenComplete(
-        (unused, t) ->
-            runWithContext(
-                parent,
-                () -> {
-                  if (t != null) {
-                    result.completeExceptionally(t);
-                  } else {
-                    result.complete(null);
-                  }
-                }));
+    future.whenComplete((unused, t) ->
+        runWithContext(
+            parent,
+            () -> {
+              if (t != null) {
+                result.completeExceptionally(t);
+              } else {
+                result.complete(null);
+              }
+            }));
 
     return result;
   }
@@ -289,24 +288,23 @@ public class PulsarSingletons {
     boolean listenerProcessingActive = listenerProcessingScope.isActive();
     Context parent = Context.current();
     CompletableFuture<Message<?>> result = new CompletableFuture<>();
-    future.whenComplete(
-        (message, throwable) -> {
-          // we create a "receive" span when receive telemetry is enabled or when we know that
-          // this message will not be passed to a listener that would create the "process" span
-          Context context =
-              receiveInstrumentationEnabled || !listenerProcessingActive
-                  ? startAndEndConsumerReceive(parent, message, timer, consumer, throwable)
-                  : prepareListenerContext(parent, message);
-          runWithContext(
-              context,
-              () -> {
-                if (throwable != null) {
-                  result.completeExceptionally(throwable);
-                } else {
-                  result.complete(message);
-                }
-              });
-        });
+    future.whenComplete((message, throwable) -> {
+      // we create a "receive" span when receive telemetry is enabled or when we know that
+      // this message will not be passed to a listener that would create the "process" span
+      Context context =
+          receiveInstrumentationEnabled || !listenerProcessingActive
+              ? startAndEndConsumerReceive(parent, message, timer, consumer, throwable)
+              : prepareListenerContext(parent, message);
+      runWithContext(
+          context,
+          () -> {
+            if (throwable != null) {
+              result.completeExceptionally(throwable);
+            } else {
+              result.complete(message);
+            }
+          });
+    });
 
     return result;
   }
@@ -319,20 +317,18 @@ public class PulsarSingletons {
 
     Context parent = Context.current();
     CompletableFuture<Messages<?>> result = new CompletableFuture<>();
-    future.whenComplete(
-        (messages, throwable) -> {
-          Context context =
-              startAndEndConsumerReceive(parent, messages, timer, consumer, throwable);
-          runWithContext(
-              context,
-              () -> {
-                if (throwable != null) {
-                  result.completeExceptionally(throwable);
-                } else {
-                  result.complete(messages);
-                }
-              });
-        });
+    future.whenComplete((messages, throwable) -> {
+      Context context = startAndEndConsumerReceive(parent, messages, timer, consumer, throwable);
+      runWithContext(
+          context,
+          () -> {
+            if (throwable != null) {
+              result.completeExceptionally(throwable);
+            } else {
+              result.complete(messages);
+            }
+          });
+    });
 
     return result;
   }

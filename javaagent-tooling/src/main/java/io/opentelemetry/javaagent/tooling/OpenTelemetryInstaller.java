@@ -55,14 +55,13 @@ public final class OpenTelemetryInstaller {
   }
 
   private static void setForceFlush(OpenTelemetrySdk sdk) {
-    OpenTelemetrySdkAccess.internalSetForceFlush(
-        (timeout, unit) -> {
-          CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
-          CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
-          CompletableResultCode logsResult = sdk.getSdkLoggerProvider().forceFlush();
-          CompletableResultCode.ofAll(asList(traceResult, metricsResult, logsResult))
-              .join(timeout, unit);
-        });
+    OpenTelemetrySdkAccess.internalSetForceFlush((timeout, unit) -> {
+      CompletableResultCode traceResult = sdk.getSdkTracerProvider().forceFlush();
+      CompletableResultCode metricsResult = sdk.getSdkMeterProvider().forceFlush();
+      CompletableResultCode logsResult = sdk.getSdkLoggerProvider().forceFlush();
+      CompletableResultCode.ofAll(asList(traceResult, metricsResult, logsResult))
+          .join(timeout, unit);
+    });
   }
 
   private OpenTelemetryInstaller() {}

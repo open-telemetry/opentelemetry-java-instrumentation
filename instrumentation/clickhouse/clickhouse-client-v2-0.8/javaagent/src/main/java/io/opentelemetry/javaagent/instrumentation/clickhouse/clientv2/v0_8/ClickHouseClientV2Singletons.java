@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
 import com.clickhouse.client.api.Client;
 import com.clickhouse.client.api.ServerException;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerEndpointUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5.ClickHouseDbRequest;
@@ -22,8 +22,8 @@ public class ClickHouseClientV2Singletons {
 
   private static final String INSTRUMENTER_NAME = "io.opentelemetry.clickhouse-client-v2-0.8";
   private static final Instrumenter<ClickHouseDbRequest, Void> instrumenter;
-  private static final VirtualField<Client, DbServerTarget> CONFIGURED_SERVER_TARGET =
-      VirtualField.find(Client.class, DbServerTarget.class);
+  private static final VirtualField<Client, ServerTarget> CONFIGURED_SERVER_TARGET =
+      VirtualField.find(Client.class, ServerTarget.class);
   private static final VirtualField<Client, CurrentServerInfo> CURRENT_SERVER_INFO_FIELD =
       VirtualField.find(Client.class, CurrentServerInfo.class);
   // the selected node is a ClickHouseNode or a transport Endpoint depending on the library version,
@@ -58,7 +58,7 @@ public class ClickHouseClientV2Singletons {
   }
 
   @Nullable
-  public static DbServerTarget configuredServerTarget(Client client) {
+  public static ServerTarget configuredServerTarget(Client client) {
     return CONFIGURED_SERVER_TARGET.get(client);
   }
 
@@ -72,8 +72,8 @@ public class ClickHouseClientV2Singletons {
   }
 
   @Nullable
-  static DbServerTarget parseConfiguredServerTarget(Set<String> endpoints) {
-    DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
+  static ServerTarget parseConfiguredServerTarget(Set<String> endpoints) {
+    ServerTargetBuilder builder = ServerTarget.builder(-1).setSorted(true);
     for (String endpoint : endpoints) {
       EndpointTarget extracted = EndpointTarget.parse(endpoint);
       if (extracted == null) {
@@ -116,16 +116,16 @@ public class ClickHouseClientV2Singletons {
       }
       String host = (String) getHost.invoke(selectedNode);
       int port = (Integer) getPort.invoke(selectedNode);
-      request.setPeer(DbServerTarget.builder(-1).addEndpoint(host, port).build());
+      request.setPeer(ServerTarget.builder(-1).addEndpoint(host, port).build());
     }
   }
 
   public static class CurrentServerInfo {
     private static final CurrentServerInfo EMPTY = new CurrentServerInfo(null);
 
-    @Nullable private final DbServerTarget peer;
+    @Nullable private final ServerTarget peer;
 
-    private CurrentServerInfo(@Nullable DbServerTarget peer) {
+    private CurrentServerInfo(@Nullable ServerTarget peer) {
       this.peer = peer;
     }
 
@@ -135,19 +135,19 @@ public class ClickHouseClientV2Singletons {
       }
       String endpoint = endpoints.iterator().next();
       EndpointTarget extracted = EndpointTarget.parse(endpoint);
-      int peerPort =
-          extracted == null
-              ? -1
-              : extracted.port == null ? extracted.defaultPort() : extracted.port;
-      DbServerTarget peer =
+      int peerPort = -1;
+      if (extracted != null) {
+        peerPort = extracted.port == null ? extracted.defaultPort() : extracted.port;
+      }
+      ServerTarget peer =
           extracted == null
               ? null
-              : DbServerTarget.builder(-1).addEndpoint(extracted.address, peerPort).build();
+              : ServerTarget.builder(-1).addEndpoint(extracted.address, peerPort).build();
       return new CurrentServerInfo(peer);
     }
 
     @Nullable
-    public DbServerTarget getPeer() {
+    public ServerTarget getPeer() {
       return peer;
     }
   }
@@ -202,14 +202,14 @@ public class ClickHouseClientV2Singletons {
         int bracketEnd = authority.indexOf(']');
         if (bracketEnd <= 1
             || authority.indexOf(']', bracketEnd + 1) >= 0
-            || !DbServerEndpointUtil.isIpv6Literal(authority.substring(1, bracketEnd))) {
+            || !ServerEndpointUtil.isIpv6Literal(authority.substring(1, bracketEnd))) {
           return null;
         }
         String rest = authority.substring(bracketEnd + 1);
         Integer port =
             rest.isEmpty()
                 ? null
-                : DbServerEndpointUtil.parsePort(rest.startsWith(":") ? rest.substring(1) : "");
+                : ServerEndpointUtil.parsePort(rest.startsWith(":") ? rest.substring(1) : "");
         return !rest.isEmpty() && port == null
             ? null
             : new EndpointTarget(scheme, authority.substring(0, bracketEnd + 1), port);
@@ -221,14 +221,14 @@ public class ClickHouseClientV2Singletons {
       int lastColon = authority.lastIndexOf(':');
       if (firstColon >= 0) {
         if (firstColon == lastColon) {
-          Integer port = DbServerEndpointUtil.parsePort(authority.substring(firstColon + 1));
+          Integer port = ServerEndpointUtil.parsePort(authority.substring(firstColon + 1));
           return firstColon == 0 || port == null
               ? null
               : new EndpointTarget(scheme, authority.substring(0, firstColon), port);
         }
-        Integer port = DbServerEndpointUtil.parsePort(authority.substring(lastColon + 1));
+        Integer port = ServerEndpointUtil.parsePort(authority.substring(lastColon + 1));
         String address = authority.substring(0, lastColon);
-        if (port != null && DbServerEndpointUtil.isIpv6Literal(address)) {
+        if (port != null && ServerEndpointUtil.isIpv6Literal(address)) {
           return new EndpointTarget(scheme, address, port);
         }
       }

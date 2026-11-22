@@ -17,7 +17,7 @@ configurations:
   - ref: http.server.emit-experimental-telemetry
   - ref: http.client.capture-request-headers
   - ref: http.client.capture-response-headers
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping
   - ref: http.client.emit-experimental-telemetry
   - declarative_name: java.common.http.client.url_template_rules
     description: >

@@ -83,16 +83,11 @@ public abstract class AbstractDruidInstrumentationTest {
     testing().clearData();
 
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing().metrics())
-                    .filteredOn(
-                        metricData ->
-                            metricData
-                                .getInstrumentationScopeInfo()
-                                .getName()
-                                .equals(INSTRUMENTATION_NAME))
-                    .isEmpty());
+        .untilAsserted(() ->
+            assertThat(testing().metrics())
+                .filteredOn(metricData ->
+                    metricData.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME))
+                .isEmpty());
   }
 
   protected static DruidDataSource createDataSource() {
@@ -109,12 +104,11 @@ public abstract class AbstractDruidInstrumentationTest {
             INSTRUMENTATION_NAME,
             CONNECTION_USAGE_METRIC_NAME,
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(
-                                metric.getLongSumData().getPoints().stream()
-                                    .map(point -> point.getAttributes().get(POOL_NAME_KEY))
-                                    .collect(toSet()))
-                            .containsExactlyInAnyOrder(poolNames)));
+                metrics.anySatisfy(metric ->
+                    assertThat(
+                            metric.getLongSumData().getPoints().stream()
+                                .map(point -> point.getAttributes().get(POOL_NAME_KEY))
+                                .collect(toSet()))
+                        .containsExactlyInAnyOrder(poolNames)));
   }
 }

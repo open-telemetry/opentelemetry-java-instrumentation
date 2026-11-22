@@ -43,15 +43,13 @@ class ContextPropagationOperatorContextViewInstrumentationTest {
           Span.fromContext(otelContext2).setAttribute("foo2", "bar2");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("foo"), "bar"), equalTo(stringKey("foo2"), "bar2"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("parent")
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("foo"), "bar"), equalTo(stringKey("foo2"), "bar2"))));
   }
 
   @Test

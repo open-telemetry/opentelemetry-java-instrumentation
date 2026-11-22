@@ -42,7 +42,7 @@ public final class JavaHttpClientTelemetryBuilder {
    */
   @CanIgnoreReturnValue
   public JavaHttpClientTelemetryBuilder addAttributesExtractor(
-      AttributesExtractor<? super HttpRequest, ? super HttpResponse<?>> attributesExtractor) {
+      AttributesExtractor<HttpRequest, HttpResponse<?>> attributesExtractor) {
     builder.addAttributesExtractor(attributesExtractor);
     return this;
   }
@@ -87,8 +87,9 @@ public final class JavaHttpClientTelemetryBuilder {
    * Configures recognized HTTP request methods.
    *
    * <p>By default, recognizes methods from <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
-   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a>, PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a> and QUERY from <a
+   * href="https://www.rfc-editor.org/rfc/rfc10008.html">RFC10008</a>.
    *
    * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *

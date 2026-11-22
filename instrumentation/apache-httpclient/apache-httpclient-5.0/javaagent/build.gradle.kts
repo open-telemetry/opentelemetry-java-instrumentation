@@ -1,6 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -23,17 +20,6 @@ dependencies {
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-        }
-      }
-    }
-  }
+tasks.named<Test>("test") {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }

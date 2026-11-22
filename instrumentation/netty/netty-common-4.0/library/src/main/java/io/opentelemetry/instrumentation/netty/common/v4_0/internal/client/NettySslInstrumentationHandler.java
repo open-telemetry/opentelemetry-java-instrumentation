@@ -92,18 +92,17 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
     // netty SslHandler starts the handshake after it receives the channelActive() signal; this
     // happens just after the connection is established
     // this makes connect() promise a good place to start the SSL handshake span
-    promise.addListener(
-        future -> {
-          // there won't be any SSL handshake if the channel fails to connect
-          // give up when channelRegistered wasn't called and parentContext is null
-          if (!future.isSuccess() || parentContext == null) {
-            return;
-          }
-          request = NettySslRequest.create(ctx.channel());
-          if (instrumenter.shouldStart(parentContext, request)) {
-            context = instrumenter.start(parentContext, request);
-          }
-        });
+    promise.addListener(future -> {
+      // there won't be any SSL handshake if the channel fails to connect
+      // give up when channelRegistered wasn't called and parentContext is null
+      if (!future.isSuccess() || parentContext == null) {
+        return;
+      }
+      request = NettySslRequest.create(ctx.channel());
+      if (instrumenter.shouldStart(parentContext, request)) {
+        context = instrumenter.start(parentContext, request);
+      }
+    });
     super.connect(ctx, remoteAddress, localAddress, promise);
   }
 

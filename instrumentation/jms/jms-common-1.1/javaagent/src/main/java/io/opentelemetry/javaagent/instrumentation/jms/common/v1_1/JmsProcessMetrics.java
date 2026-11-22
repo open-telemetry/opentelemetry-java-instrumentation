@@ -22,6 +22,7 @@ final class JmsProcessMetrics {
     return meter -> create(MessagingProcessMetrics.get().create(meter));
   }
 
+  // visible for testing
   static OperationListener create(OperationListener duration) {
     return new OperationListener() {
       @Override

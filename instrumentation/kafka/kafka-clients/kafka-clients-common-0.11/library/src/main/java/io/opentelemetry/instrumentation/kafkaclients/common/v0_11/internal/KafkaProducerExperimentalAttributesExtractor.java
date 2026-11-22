@@ -15,13 +15,13 @@ import org.apache.kafka.clients.producer.RecordMetadata;
 final class KafkaProducerExperimentalAttributesExtractor
     implements AttributesExtractor<KafkaProducerRequest, RecordMetadata> {
 
-  private static final AttributeKey<String> MESSAGING_KAFKA_BOOTSTRAP_SERVERS =
-      AttributeKey.stringKey("messaging.kafka.bootstrap.servers");
+  private static final AttributeKey<String> KAFKA_BOOTSTRAP_SERVERS =
+      AttributeKey.stringKey("kafka.bootstrap.servers");
 
   @Override
   public void onStart(
       AttributesBuilder attributes, Context parentContext, KafkaProducerRequest request) {
-    attributes.put(MESSAGING_KAFKA_BOOTSTRAP_SERVERS, request.getBootstrapServers());
+    attributes.put(KAFKA_BOOTSTRAP_SERVERS, request.getBootstrapServers());
   }
 
   @Override

@@ -18,7 +18,7 @@ import java.util.TreeMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
-final class StreamListener {
+final class StreamListener implements ChunkListener<ChatCompletionChunk> {
 
   private final Context context;
   private final ChatCompletionRequest request;
@@ -51,7 +51,8 @@ final class StreamListener {
     hasEnded = new AtomicBoolean();
   }
 
-  void onChunk(ChatCompletionChunk chunk) {
+  @Override
+  public void onChunk(ChatCompletionChunk chunk) {
     model = chunk.model();
     responseId = chunk.id();
     chunk.usage().ifPresent(u -> usage = u);
@@ -71,7 +72,8 @@ final class StreamListener {
     }
   }
 
-  void endSpan(@Nullable Throwable error) {
+  @Override
+  public void endSpan(@Nullable Throwable error) {
     // Use an atomic operation since close() type of methods are exposed to the user
     // and can come from any thread.
     if (!hasEnded.compareAndSet(false, true)) {

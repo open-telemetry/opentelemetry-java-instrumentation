@@ -10,6 +10,7 @@ import io.netty.handler.codec.http.HttpResponse;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHttpServerInstrumenterBuilder;
+import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
@@ -32,11 +33,10 @@ public final class NettyServerTelemetryBuilder {
   static {
     NettyServerInstrumenterBuilderUtil.setBuilderExtractor(
         nettyServerTelemetryBuilder -> nettyServerTelemetryBuilder.builder);
-    Experimental.internalSetEmitExperimentalServerTelemetry(
-        (builder, emit) -> {
-          builder.builder.setEmitExperimentalHttpServerTelemetry(emit);
-          builder.emitExperimentalHttpServerEvents = emit;
-        });
+    Experimental.internalSetEmitExperimentalServerTelemetry((builder, emit) -> {
+      builder.builder.setEmitExperimentalHttpServerTelemetry(emit);
+      builder.emitExperimentalHttpServerEvents = emit;
+    });
   }
 
   NettyServerTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -85,11 +85,23 @@ public final class NettyServerTelemetryBuilder {
   }
 
   /**
+   * Adds an {@link AttributesExtractor} to extract attributes from requests and responses. Executed
+   * after all default extractors.
+   */
+  @CanIgnoreReturnValue
+  public NettyServerTelemetryBuilder addAttributesExtractor(
+      AttributesExtractor<NettyRequest, HttpResponse> attributesExtractor) {
+    builder.addAttributesExtractor(new AttributesExtractorAdapter(attributesExtractor));
+    return this;
+  }
+
+  /**
    * Configures recognized HTTP request methods.
    *
    * <p>By default, recognizes methods from <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
-   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a>, PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a> and QUERY from <a
+   * href="https://www.rfc-editor.org/rfc/rfc10008.html">RFC10008</a>.
    *
    * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *

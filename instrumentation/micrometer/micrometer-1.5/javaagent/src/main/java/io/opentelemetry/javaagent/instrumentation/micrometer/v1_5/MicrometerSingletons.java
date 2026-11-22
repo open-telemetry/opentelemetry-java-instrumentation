@@ -32,9 +32,11 @@ public class MicrometerSingletons {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "micrometer");
     OpenTelemetryMeterRegistryBuilder builder =
-        OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get())
-            .setPrometheusMode(config.get("prometheus_mode").getBoolean("enabled", false))
-            .setBaseTimeUnit(TimeUnitParser.parseConfigValue(config.getString("base_time_unit")));
+        OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get());
+    Experimental.setPrometheusMode(
+        builder, config.get("prometheus_mode").getBoolean("enabled", false));
+    Experimental.setBaseTimeUnit(
+        builder, TimeUnitParser.parseConfigValue(config.getString("base_time_unit")));
     Experimental.setMicrometerHistogramGaugesEnabled(
         builder, config.get("histogram_gauges/development").getBoolean("enabled", false));
     meterRegistry = builder.build();

@@ -13,8 +13,8 @@ import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.common.AsyncResponseData;
@@ -88,7 +88,7 @@ class JaxrsAsyncResponseInstrumentation implements TypeInstrumentation {
         ASYNC_RESPONSE_DATA.set(asyncResponse, null);
         Context context = data.getContext();
         if (JaxrsConfig.CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-          Java8BytecodeBridge.spanFromContext(context).setAttribute("jaxrs.canceled", true);
+          Span.fromContext(context).setAttribute("jaxrs.canceled", true);
         }
         instrumenter().end(context, data.getHandlerData(), null, null);
       }

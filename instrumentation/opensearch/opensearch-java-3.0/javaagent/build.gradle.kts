@@ -1,5 +1,10 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -42,34 +47,33 @@ dependencies {
   testImplementation("software.amazon.awssdk:regions:2.26.0")
 }
 
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("com.fasterxml.jackson.core:jackson-databind")
+      implementation("org.opensearch.client:opensearch-java:3.0.0")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+        excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
+      }
+    }
+    register("QuerySanitizationDisabled") {
+      filter {
+        includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
+        includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
+      }
+      telemetryConfig("otel.instrumentation.opensearch.query-sanitization.enabled", "false")
+    }
+  }
+}
+
 tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      excludeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
-    }
-  }
-
-  val testQuerySanitizationDisabled = register<Test>("testQuerySanitizationDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("OpenSearchQuerySanitizationDisabledTest")
-      includeTestsMatching("OpenSearchQuerySanitizationDisabledJsonbTest")
-    }
-    jvmArgs("-Dotel.instrumentation.opensearch.query-sanitization.enabled=false")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.opensearch.query-sanitization.enabled=false",
-    )
-  }
-
   check {
-    dependsOn(testQuerySanitizationDisabled)
+    dependsOn(testing.suites)
   }
 }

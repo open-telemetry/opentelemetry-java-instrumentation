@@ -13,6 +13,9 @@ import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisClusterCommandInstrumentation.CommandAdvice.AdviceState;
@@ -25,6 +28,8 @@ import java.net.SocketAddress;
 import java.net.UnknownHostException;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import redis.clients.jedis.Connection;
@@ -34,6 +39,24 @@ import redis.clients.jedis.Queable;
 import redis.clients.jedis.Transaction;
 
 class JedisNetworkAttributesGetterTest {
+
+  @Test
+  @EnabledForJreRange(min = JRE.JAVA_16)
+  void preservesUnixPeerInPipelinesAndTransactions() throws ReflectiveOperationException {
+    SocketAddress peer =
+        (SocketAddress)
+            Class.forName("java.net.UnixDomainSocketAddress")
+                .getMethod("of", String.class)
+                .invoke(null, "redis.sock");
+    JedisRequest request = requestWithPeer(peer);
+    request.capturePeerAddress();
+
+    assertThat(JedisRequest.createPipeline(singletonList(request)).getPeerAddress()).isSameAs(peer);
+    assertThat(JedisRequest.createTransaction(singletonList(request), null).getPeerAddress())
+        .isSameAs(peer);
+    JedisDbAttributesGetter getter = new JedisDbAttributesGetter();
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isSameAs(peer);
+  }
 
   @ParameterizedTest
   @MethodSource("resolvedAddresses")
@@ -65,12 +88,24 @@ class JedisNetworkAttributesGetterTest {
   }
 
   @Test
+  void doesNotFormatResolvedInetAddressWhileCapturing() {
+    InetAddress address = mock(InetAddress.class);
+    InetSocketAddress peerAddress = new InetSocketAddress(address, 6379);
+    JedisRequest request = requestWithPeer(peerAddress);
+
+    request.capturePeerAddress();
+
+    assertThat(request.getPeerAddress()).isSameAs(peerAddress);
+    verify(address, never()).getHostAddress();
+  }
+
+  @Test
   void emitsConnectedSocketAddress() {
     InetSocketAddress peerAddress = new InetSocketAddress(InetAddress.getLoopbackAddress(), 6379);
     JedisRequest request = requestWithPeer(peerAddress);
     request.capturePeerAddress();
 
-    assertThat(new JedisDbAttributesGetter().getNetworkPeerInetSocketAddress(request, null))
+    assertThat(new JedisDbAttributesGetter().getNetworkPeerSocketAddress(request, null))
         .isEqualTo(peerAddress);
   }
 
@@ -527,12 +562,12 @@ class JedisNetworkAttributesGetterTest {
       JedisInstrumentation.MultiAdvice.onExit(transaction, previous);
     }
 
-    JedisTransactionInstrumentation.ExecAdvice.AdviceState adviceState =
+    JedisTransactionInstrumentation.TransactionState adviceState =
         JedisTransactionInstrumentation.ExecAdvice.onEnter(transaction);
     try {
       assertThat(JedisPipelineContext.takeBatchState(transaction)).isNull();
     } finally {
-      JedisTransactionInstrumentation.ExecAdvice.stopSpan(null, adviceState);
+      JedisTransactionInstrumentation.ExecAdvice.stopSpan(null, null, adviceState);
     }
 
     assertThat(JedisPipelineContext.inTransactionFraming()).isFalse();
@@ -698,12 +733,12 @@ class JedisNetworkAttributesGetterTest {
     assertThat(transactionRequest.getPeerAddress()).isEqualTo(queuedPeer);
   }
 
-  private static JedisRequest requestWithPeer(InetSocketAddress peerAddress) {
+  private static JedisRequest requestWithPeer(SocketAddress peerAddress) {
     return JedisRequest.create(
         new MutableConnection(connectedSocket(peerAddress)), Protocol.Command.GET);
   }
 
-  private static Socket connectedSocket(InetSocketAddress peerAddress) {
+  private static Socket connectedSocket(SocketAddress peerAddress) {
     return new Socket() {
       @Override
       public SocketAddress getRemoteSocketAddress() {

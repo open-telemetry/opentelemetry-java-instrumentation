@@ -5,11 +5,10 @@
 
 package org.apache.hadoop.hbase.ipc;
 
+import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.hbase.client.common.RequestAndContext;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.RequestAndContext;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -30,20 +29,19 @@ public final class OpenTelemetryCallUtil {
   }
 
   public static void setNetworkPeer(Object message, @Nullable SocketAddress remoteAddress) {
-    if (!(message instanceof Call) || !(remoteAddress instanceof InetSocketAddress)) {
-      return;
-    }
-
-    InetSocketAddress inetSocketAddress = (InetSocketAddress) remoteAddress;
-    InetAddress inetAddress = inetSocketAddress.getAddress();
-    if (inetAddress == null) {
+    if (!(message instanceof Call) || remoteAddress == null) {
       return;
     }
 
     RequestAndContext requestAndContext = REQUEST_AND_CONTEXT.get((Call) message);
-    if (requestAndContext != null) {
-      requestAndContext.getRequest().setNetworkPeer(inetSocketAddress);
+    if (requestAndContext == null) {
+      return;
     }
+
+    if (!SocketAddressUtil.hasAddress(remoteAddress)) {
+      return;
+    }
+    requestAndContext.getRequest().setNetworkPeer(remoteAddress);
   }
 
   @Nullable

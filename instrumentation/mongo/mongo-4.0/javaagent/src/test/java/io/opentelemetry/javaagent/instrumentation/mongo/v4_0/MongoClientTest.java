@@ -132,11 +132,10 @@ class MongoClientTest extends AbstractMongoClientTest<MongoCollection<Document>>
         };
     MongoClientSettings settings =
         MongoClientSettings.builder()
-            .applyToClusterSettings(
-                builder ->
-                    builder
-                        .hosts(singletonList(new ServerAddress(host, port)))
-                        .addClusterListener(clusterIdCapture))
+            .applyToClusterSettings(builder ->
+                builder
+                    .hosts(singletonList(new ServerAddress(host, port)))
+                    .addClusterListener(clusterIdCapture))
             .addCommandListener(commandListener)
             .build();
     MongoClient mongoClient = MongoClients.create(settings);

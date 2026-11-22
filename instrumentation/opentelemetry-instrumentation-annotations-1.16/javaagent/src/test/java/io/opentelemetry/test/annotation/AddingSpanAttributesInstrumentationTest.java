@@ -34,22 +34,20 @@ class AddingSpanAttributesInstrumentationTest {
             new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanTakesPrecedence("foo", "bar", null, "baz"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("root").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(
-                            "ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParentSpanId(trace.getSpan(0).getSpanId())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                ExtractAttributesUsingAddingSpanAttributes.class.getName()
-                                    + ".withSpanTakesPrecedence"),
-                            equalTo(stringKey("implicitName"), "foo"),
-                            equalTo(stringKey("explicitName"), "bar"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("root").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("ExtractAttributesUsingAddingSpanAttributes.withSpanTakesPrecedence")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParentSpanId(trace.getSpan(0).getSpanId())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME,
+                            ExtractAttributesUsingAddingSpanAttributes.class.getName()
+                                + ".withSpanTakesPrecedence"),
+                        equalTo(stringKey("implicitName"), "foo"),
+                        equalTo(stringKey("explicitName"), "bar"))));
   }
 
   @Test
@@ -60,16 +58,14 @@ class AddingSpanAttributesInstrumentationTest {
             new ExtractAttributesUsingAddingSpanAttributes()
                 .withSpanAttributes("foo", "bar", null, "baz"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("root")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("implicitName"), "foo"),
-                            equalTo(stringKey("explicitName"), "bar"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("root")
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("implicitName"), "foo"),
+                    equalTo(stringKey("explicitName"), "bar"))));
   }
 
   @Test
@@ -96,17 +92,15 @@ class AddingSpanAttributesInstrumentationTest {
               .withSpanAttributes("foo", "bar", null, "baz");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("root")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("keep"), "willbekept"),
-                            equalTo(stringKey("implicitName"), "foo"),
-                            equalTo(stringKey("explicitName"), "bar"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("root")
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("keep"), "willbekept"),
+                    equalTo(stringKey("implicitName"), "foo"),
+                    equalTo(stringKey("explicitName"), "bar"))));
   }
 
   @Test
@@ -120,16 +114,14 @@ class AddingSpanAttributesInstrumentationTest {
               .withSpanAttributesParent("parentbegone", "parentbegone", null, "parentbegone");
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("root")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("keep"), "willbekept"),
-                            equalTo(stringKey("implicitName"), "foo"),
-                            equalTo(stringKey("explicitName"), "bar"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("root")
+                .hasKind(SpanKind.INTERNAL)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("keep"), "willbekept"),
+                    equalTo(stringKey("implicitName"), "foo"),
+                    equalTo(stringKey("explicitName"), "bar"))));
   }
 }

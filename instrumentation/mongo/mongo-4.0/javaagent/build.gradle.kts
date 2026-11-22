@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -26,11 +29,20 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:mongo:mongo-async-3.3:javaagent"))
   testInstrumentation(project(":instrumentation:mongo:mongo-3.1:javaagent"))
+  testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:mongo:mongo-3.1:library"))
+      implementation("org.mongodb:mongodb-driver-core:4.0.1")
+    }
+  }
 }
 
 tasks {
   withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 }

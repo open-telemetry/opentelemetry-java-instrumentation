@@ -6,23 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.rmi.server;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.rpc.RpcAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
+import javax.annotation.Nullable;
 
-final class RmiServerAttributesGetter implements RpcAttributesGetter<ClassAndMethod, Void> {
+final class RmiServerAttributesGetter implements RpcAttributesGetter<RmiServerRequest, Void> {
 
   @Override
-  public String getSystem(ClassAndMethod classAndMethod) {
+  public String getRpcSystemName(RmiServerRequest request) {
     return "java_rmi";
   }
 
   @Override
-  public String getService(ClassAndMethod classAndMethod) {
-    return classAndMethod.declaringClass().getName();
-  }
-
-  @Deprecated
-  @Override
-  public String getMethod(ClassAndMethod classAndMethod) {
-    return classAndMethod.methodName();
+  @Nullable
+  public String getRpcMethod(RmiServerRequest request) {
+    return request.rpcMethodName();
   }
 }

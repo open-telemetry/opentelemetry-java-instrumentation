@@ -24,6 +24,17 @@ class Aws2SqsSuppressReceiveSpansTest extends AbstractAws2SqsSuppressReceiveSpan
   }
 
   @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return EXPERIMENTAL_ATTRIBUTES;
+  }
+
+  @Override
+  protected boolean receiveTelemetryEnabled() {
+    return Boolean.getBoolean(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+  }
+
+  @Override
   protected SqsClient configureSqsClient(SqsClient sqsClient) {
     return sqsClient;
   }

@@ -34,32 +34,19 @@ dependencies {
   latestDepTestLibrary("io.projectreactor.netty:reactor-netty:0.+") // see reactor-netty-1.0 modules
 }
 
-tasks {
-  test {
-    filter {
-      excludeTestsMatching("ReactorNettyConnectionSpanTest")
-    }
-  }
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ConnectionSpan") {
-          filter {
-            includeTestsMatching("ReactorNettyConnectionSpanTest")
-          }
-          include("**/ReactorNettyConnectionSpanTest.*")
-          telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          filter {
-            excludeTestsMatching("ReactorNettyConnectionSpanTest")
-          }
-        }
+testing.suites {
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("ReactorNettyConnectionSpanTest")
       }
+    }
+    register("ConnectionSpan") {
+      filter {
+        includeTestsMatching("ReactorNettyConnectionSpanTest")
+      }
+      include("**/ReactorNettyConnectionSpanTest.*")
+      telemetryConfig("otel.instrumentation.netty.connection-telemetry.enabled", "true")
     }
   }
 }
