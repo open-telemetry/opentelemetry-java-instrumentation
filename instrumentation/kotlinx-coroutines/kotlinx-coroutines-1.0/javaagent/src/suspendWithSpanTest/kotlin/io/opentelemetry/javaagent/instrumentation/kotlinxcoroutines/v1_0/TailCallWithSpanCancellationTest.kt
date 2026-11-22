@@ -181,6 +181,9 @@ class TailCallWithSpanCancellationTest {
           continued.set(true)
         }
         started.await()
+        // The callee may signal before the caller has suspended; wait until the caller's thread is
+        // free, so the callee can not complete before the caller suspends and skip the dispatch.
+        callerExecutor.submit {}.get(10, TimeUnit.SECONDS)
         // Keep the caller's thread busy so that its resumption stays queued until it is cancelled.
         val unblock = CountDownLatch(1)
         callerExecutor.execute { unblock.await(10, TimeUnit.SECONDS) }
