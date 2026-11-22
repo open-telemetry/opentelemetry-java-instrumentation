@@ -126,6 +126,27 @@ def check_snapshot(pr: int, base: str, head: str, summary: Summary) -> None:
         raise RuntimeError("The PR changed or closed during review; start a new run")
 
 
+def verify_findings(prompt: str, checkout: Path, bundle: Path) -> dict[str, Any]:
+    for attempt in range(2):
+        answer = model_pass(OPUS, "high", prompt, checkout, bundle)
+        answer = re.sub(r"\A```(?:json)?\s*\n(.*)\n```\Z", r"\1", answer, flags=re.DOTALL)
+        try:
+            findings = json.loads(answer)
+            if not isinstance(findings, dict) or not isinstance(findings.get("comments"), list):
+                raise ValueError("expected an object with a comments array")
+            return findings
+        except ValueError as error:
+            if attempt:
+                raise RuntimeError(f"{OPUS} did not return valid findings JSON after two attempts: {error}") from error
+            progress(f"{OPUS} returned invalid findings JSON; retrying verification once")
+            prompt += (
+                "\nThe previous attempt did not return the required JSON. "
+                "After checking the findings, start the final message with { and end it with }. "
+                "Do not include an introduction, Markdown fences, or a closing note.\n"
+            )
+    raise AssertionError("unreachable")
+
+
 def prepare_result(repo: str, pr: int, result_path: Path, summary: Summary) -> None:
     with tempfile.TemporaryDirectory(prefix="pr-review-", dir=os.environ.get("RUNNER_TEMP")) as directory:
         root = Path(directory)
@@ -160,21 +181,17 @@ Only report findings on changed right-side lines.
         (bundle / "review.txt").write_text(findings, encoding="utf-8")
         (bundle / "simplifications.txt").write_text(simplifications, encoding="utf-8")
 
-        final = model_pass(OPUS, "high", f"""Double-check {bundle / 'review.txt'} and {bundle / 'simplifications.txt'} against {url}.
+        final_findings = verify_findings(f"""Double-check {bundle / 'review.txt'} and {bundle / 'simplifications.txt'} against {url}.
 Keep only findings worth posting, remove duplicates, and prefix simplifications with [Simplification].
 {context}
-Return only JSON: {{"body":"review summary","comments":[{{"kind":"review or simplification","path":"file",
+Your final message must be a single JSON object, with no text outside it. Format:
+{{"body":"review summary","comments":[{{"kind":"review","path":"file",
 "line":10,"body":"comment","start_line":8,"suggestion":"exact replacement text"}}]}}.
-Use kind "review" or "simplification". Omit start_line for single-line comments.
+Use kind "review" or "simplification". Omit start_line for single-line comments and omit suggestion if none.
 Only include a suggestion if it fits one diff hunk and adds fewer than 15 green lines.
 Mention any separate edits, such as an import, in the comment body. Don't put a suggestion fence in the body.
 If there are no findings, return {{"comments":[]}}.
 """, checkout, bundle)
-        final = re.sub(r"\A```(?:json)?\s*\n(.*)\n```\Z", r"\1", final, flags=re.DOTALL)
-        try:
-            final_findings = json.loads(final)
-        except json.JSONDecodeError as error:
-            raise RuntimeError(f"{OPUS} did not return valid findings JSON: {error}") from error
         result = prepare_review(final_findings, bundle, metadata, summary)
         check_snapshot(pr, base, head, summary)
         for note in summary.notes:

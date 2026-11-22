@@ -67,6 +67,28 @@ class ReviewTest(unittest.TestCase):
                 "body": "No findings.", "comments": [], "commit_id": "head",
             })
 
+    def test_verifier_retries_a_plain_text_answer(self):
+        checkout, bundle = Path("source"), Path("input")
+        with mock.patch.object(
+            runner, "model_pass", side_effect=["No findings.", '```json\n{"comments":[]}\n```']
+        ) as model:
+            self.assertEqual(runner.verify_findings("Check both passes.", checkout, bundle), {"comments": []})
+
+        first, retry = [call.args for call in model.call_args_list]
+        self.assertEqual(first, (runner.OPUS, "high", "Check both passes.", checkout, bundle))
+        self.assertEqual(retry[:2], first[:2])
+        self.assertTrue(retry[2].startswith(first[2]))
+        self.assertIn("did not return the required JSON", retry[2])
+        self.assertEqual(retry[3:], first[3:])
+
+    def test_verifier_fails_closed_after_two_invalid_answers(self):
+        with (
+            mock.patch.object(runner, "model_pass", side_effect=["No findings.", '{"body":"No findings."}']) as model,
+            self.assertRaisesRegex(RuntimeError, "did not return valid findings JSON after two attempts"),
+        ):
+            runner.verify_findings("Check both passes.", Path("source"), Path("input"))
+        self.assertEqual(model.call_count, 2)
+
     def test_model_pass_uses_the_final_answer_not_progress_or_tool_output(self):
         response = subprocess.CompletedProcess([], 0, stdout=(
             'AWF startup log\n'
