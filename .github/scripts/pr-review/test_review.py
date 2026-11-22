@@ -1,3 +1,4 @@
+import os
 import subprocess
 import tempfile
 import unittest
@@ -8,6 +9,7 @@ import common
 import gate
 import post
 import review as runner
+import sandbox
 from common import Summary, write_json
 
 
@@ -45,6 +47,7 @@ class ReviewTest(unittest.TestCase):
             path = Path(directory) / "review-result.json"
             with (
                 mock.patch.object(runner, "build_bundle", side_effect=build_bundle),
+                mock.patch.object(runner, "checkout_pr") as checkout,
                 mock.patch.object(runner, "check_snapshot") as check,
                 mock.patch.object(runner, "closer_look_context", return_value=", including Needs a closer look https://example.test"),
                 mock.patch.object(runner, "model_pass", side_effect=["review", "simplifications", '{"comments":[]}']) as model,
@@ -56,6 +59,9 @@ class ReviewTest(unittest.TestCase):
             self.assertTrue(second[2].startswith(f"are there any simplifications worth doing in {metadata['url']}?"))
             self.assertIn("review.txt", final[2])
             self.assertIn("simplifications.txt", final[2])
+            checkout.assert_called_once_with("org/repo", 123, "head", first[3])
+            self.assertEqual(second[3:], first[3:])
+            self.assertEqual(final[3:], first[3:])
             self.assertEqual(check.call_count, 2)
             self.assertEqual(post.load_json(path, "result")["review"], {
                 "body": "No findings.", "comments": [], "commit_id": "head",
@@ -63,23 +69,79 @@ class ReviewTest(unittest.TestCase):
 
     def test_model_pass_uses_the_final_answer_not_progress_or_tool_output(self):
         response = subprocess.CompletedProcess([], 0, stdout=(
+            'AWF startup log\n'
             '{"type":"assistant.message","data":{"content":"I will check the code."}}\n'
             '{"type":"tool.execution_complete","data":{"result":{"content":"File contents"}}}\n'
             '{"type":"assistant.message","data":{"content":"{\\"comments\\":[]}"}}\n'
             '{"type":"result","data":{}}\n'
         ))
-        with mock.patch.object(runner, "run", return_value=response):
-            self.assertEqual(runner.model_pass("model", "high", "prompt"), '{"comments":[]}')
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(runner, "run_in_sandbox", return_value=response) as launch,
+        ):
+            bundle = Path(directory)
+            self.assertEqual(runner.model_pass("model", "high", "prompt", bundle / "checkout", bundle), '{"comments":[]}')
+            self.assertEqual((bundle / "prompt.txt").read_text(encoding="utf-8"), "prompt")
+            self.assertIn("shell", launch.call_args.args[2])
 
     def test_model_pass_reports_the_cli_error_from_json(self):
         response = subprocess.CompletedProcess(
             [], 1, stdout='{"type":"session.error","data":{"message":"Model not available."}}\n', stderr=""
         )
         with (
-            mock.patch.object(runner, "run", return_value=response),
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(runner, "run_in_sandbox", return_value=response),
             self.assertRaisesRegex(RuntimeError, r"Model not available\."),
         ):
-            runner.model_pass("model", "max", "prompt")
+            bundle = Path(directory)
+            runner.model_pass("model", "max", "prompt", bundle / "checkout", bundle)
+
+    def test_checkout_rejects_a_moved_pr_head(self):
+        response = subprocess.CompletedProcess([], 0, stdout="e" * 40 + "\n")
+        with tempfile.TemporaryDirectory() as directory, mock.patch.object(sandbox, "run", return_value=response) as git:
+            with self.assertRaisesRegex(RuntimeError, "PR head changed"):
+                sandbox.checkout_pr("org/repo", 123, "d" * 40, Path(directory) / "checkout")
+            self.assertEqual(git.call_count, 3)
+            self.assertEqual(git.call_args.args[0][-2:], ["rev-parse", "FETCH_HEAD"])
+
+    def test_sandbox_cannot_change_seed_checkout_or_receive_repository_tokens(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            seed = root / "seed"
+            seed.mkdir()
+            (seed / ".git").mkdir()
+            (seed / ".git" / "HEAD").write_text("d" * 40 + "\n", encoding="utf-8")
+            (seed / "code").write_text("PR contents", encoding="utf-8")
+            inputs = root / "input"
+            inputs.mkdir()
+            cli = root / "npm" / ".bin" / "copilot"
+
+            def launch(args, *, cwd, env, **kwargs):
+                self.assertEqual(args[0], "awf")
+                self.assertIn(f"{inputs}:{inputs}:ro", args)
+                self.assertEqual(env["GITHUB_WORKSPACE"], str(cwd))
+                self.assertEqual(Path(env["HOME"]).parent, cwd.parent)
+                self.assertNotIn("GH_TOKEN", env)
+                self.assertNotIn("ACTIONS_RUNTIME_TOKEN", env)
+                self.assertNotIn("GITHUB_TOKEN", env)
+                self.assertEqual((cwd / "code").read_text(encoding="utf-8"), "PR contents")
+                (cwd / "code").write_text("scratch edit", encoding="utf-8")
+
+            with (
+                mock.patch.dict(os.environ, {
+                    "GH_TOKEN": "fixture",
+                    "GITHUB_TOKEN": "fixture",
+                    "ACTIONS_RUNTIME_TOKEN": "fixture",
+                    "JAVA_HOME": "/jdk",
+                    "AWF_IMAGE_TAG": "fixture",
+                }),
+                mock.patch.object(sandbox.shutil, "which", return_value=str(cli)),
+                mock.patch.object(sandbox, "run", side_effect=launch) as run,
+            ):
+                sandbox.run_in_sandbox(seed, inputs, ["--help"])
+                sandbox.run_in_sandbox(seed, inputs, ["--help"])
+                self.assertNotEqual(run.call_args_list[0].kwargs["cwd"], run.call_args_list[1].kwargs["cwd"])
+            self.assertEqual((seed / "code").read_text(encoding="utf-8"), "PR contents")
 
     def test_only_the_latest_submitted_copilot_review_can_supply_a_hint(self):
         reviews = [[{

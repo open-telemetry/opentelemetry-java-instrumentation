@@ -34,7 +34,13 @@ def progress(message: str) -> None:
 
 
 def run(
-    cmd: list[str], summary: Summary | None = None, check: bool = True, timeout: int | None = None
+    cmd: list[str],
+    summary: Summary | None = None,
+    check: bool = True,
+    timeout: int | None = None,
+    *,
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
 ) -> subprocess.CompletedProcess[str]:
     if summary is not None:
         progress("Running: " + " ".join(shlex.quote(part) for part in cmd))
@@ -46,6 +52,8 @@ def run(
         errors="replace",
         check=check,
         timeout=timeout,
+        cwd=cwd,
+        env=env,
         creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
 

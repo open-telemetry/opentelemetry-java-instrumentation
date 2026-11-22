@@ -66,11 +66,21 @@ jobs:
           npm ci --prefix .github/scripts/copilot-cli
           echo "$GITHUB_WORKSPACE/.github/scripts/copilot-cli/node_modules/.bin" >> "$GITHUB_PATH"
 
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
+        with:
+          distribution: temurin
+          java-version-file: .java-version
+
+      - uses: github/gh-aw-firewall@d9272015d8523b4c9cf3b00ce26b507046cbf1a3 # v0.29.11
+        id: firewall
+        with:
+          version: v0.29.11
+
       - name: Review, simplify, and double-check
         env:
           GH_TOKEN: ${{ github.token }}
-          GITHUB_TOKEN: ${{ github.token }}
           COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          AWF_IMAGE_TAG: ${{ steps.firewall.outputs.image-tag }}
           PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
         run: python .github/scripts/pr-review/review.py "$PR_NUMBER" prepare review-result.json
 
