@@ -1,4 +1,4 @@
-name: Manual PR review
+name: PR review
 
 on:
   workflow_dispatch:
@@ -7,19 +7,49 @@ on:
         description: Pull request number
         required: true
         type: number
+  # zizmor: ignore[dangerous-triggers] Only main is checked out on comment runs.
+  issue_comment:
+    types: [created]
   # Temporary pre-merge smoke test. Remove this trigger and its PR number before merging.
   push:
     branches: [trask-pr-review-workflow]
 
 permissions: {}
 
-concurrency:
-  group: manual-pr-review-${{ inputs.pr_number || github.ref }}
-  cancel-in-progress: true
-
 jobs:
+  gate:
+    if: >-
+      github.repository == 'open-telemetry/opentelemetry-java-instrumentation' &&
+      (github.event_name != 'issue_comment' ||
+       (github.event.issue.pull_request != null &&
+        github.event.issue.state == 'open' &&
+        github.event.comment.user.type == 'User' &&
+        github.event.comment.body == '/review'))
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      pr_number: ${{ steps.gate.outputs.pr_number }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Resolve PR number and check commenter's permission
+        id: gate
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event_name == 'push' && '21405' || format('{0}', inputs.pr_number || github.event.issue.number) }}
+          COMMENT_BODY: ${{ github.event.comment.body }}
+          COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
+        run: python .github/scripts/pr-review/gate.py
+
   review:
-    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+    needs: gate
+    if: needs.gate.outputs.pr_number != ''
+    concurrency:
+      group: pr-review-${{ needs.gate.outputs.pr_number }}-${{ github.event_name == 'push' && 'smoke' || 'live' }}
+      cancel-in-progress: true
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
@@ -41,8 +71,8 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           GITHUB_TOKEN: ${{ github.token }}
           COPILOT_GITHUB_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event_name == 'push' && '21405' || format('{0}', inputs.pr_number) }}
-        run: python .github/scripts/pr-review/manual.py "$PR_NUMBER" prepare review-result.json
+          PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
+        run: python .github/scripts/pr-review/review.py "$PR_NUMBER" prepare review-result.json
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -52,8 +82,8 @@ jobs:
           retention-days: 7
 
   post:
-    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
-    needs: review
+    if: github.event_name != 'push' && github.ref == 'refs/heads/main'
+    needs: [gate, review]
     environment: protected
     runs-on: ubuntu-latest
     permissions:
@@ -72,7 +102,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           PR_REVIEW_POST_TOKEN: ${{ secrets.PR_REVIEW_POST_TOKEN }}
-          PR_NUMBER: ${{ inputs.pr_number }}
+          PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
           REVIEWER: ${{ github.actor }}
           TRIGGERING_ACTOR: ${{ github.triggering_actor }}
-        run: python .github/scripts/pr-review/manual.py "$PR_NUMBER" post review-result.json
+        run: python .github/scripts/pr-review/review.py "$PR_NUMBER" post review-result.json

@@ -88,7 +88,6 @@
       ],
       matchFileNames: [
         '.github/workflows/module-cleanup.lock.yml',
-        '.github/workflows/pr-review.lock.yml',
       ],
       enabled: false,
     },

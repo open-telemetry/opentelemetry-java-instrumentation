@@ -6,12 +6,62 @@ from pathlib import Path
 from unittest import mock
 
 import common
-import manual
+import gate
 import post
+import review as runner
 from common import Summary, write_json
 
 
-class ManualReviewTest(unittest.TestCase):
+class ReviewTest(unittest.TestCase):
+    def test_slash_review_requires_write_access_and_does_not_accept_model_overrides(self):
+        env = {
+            "GITHUB_EVENT_NAME": "issue_comment", "GITHUB_REPOSITORY": "org/repo",
+            "COMMENT_AUTHOR": "maintainer", "COMMENT_BODY": "/review", "PR_NUMBER": "123",
+        }
+        with mock.patch.object(gate, "gh_json", return_value={"permission": "read"}) as api:
+            self.assertIsNone(gate.review_target(env))
+            api.assert_called_once_with(["api", "repos/org/repo/collaborators/maintainer/permission"])
+            api.return_value = {"permission": "write"}
+            self.assertEqual(gate.review_target(env), 123)
+            api.reset_mock()
+            self.assertIsNone(gate.review_target({**env, "COMMENT_BODY": "/review gpt-5.5"}))
+            api.assert_not_called()
+
+    def test_dispatch_and_smoke_test_use_the_provided_pr_number(self):
+        for event in ("workflow_dispatch", "push"):
+            with self.subTest(event=event), mock.patch.object(gate, "gh_json") as api:
+                self.assertEqual(gate.review_target({"GITHUB_EVENT_NAME": event, "PR_NUMBER": "123"}), 123)
+                api.assert_not_called()
+
+    def test_prepare_runs_the_three_passes_and_writes_the_checked_result(self):
+        metadata = {
+            "number": 123, "url": "https://github.com/org/repo/pull/123", "baseRefOid": "base", "headRefOid": "head",
+        }
+
+        def build_bundle(pr, bundle, summary):
+            write_json(bundle / "diff-scope.json", {})
+            return metadata
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "review-result.json"
+            with (
+                mock.patch.object(runner, "build_bundle", side_effect=build_bundle),
+                mock.patch.object(runner, "check_snapshot") as check,
+                mock.patch.object(runner, "closer_look_context", return_value=", including Needs a closer look https://example.test"),
+                mock.patch.object(runner, "model_pass", side_effect=["review", "simplifications", '{"comments":[]}']) as model,
+            ):
+                runner.prepare_result("org/repo", 123, path, Summary(pr=123))
+            first, second, final = [call.args for call in model.call_args_list]
+            self.assertEqual([first[:2], second[:2], final[:2]], [(runner.SOL, "max"), (runner.SOL, "max"), (runner.OPUS, "high")])
+            self.assertTrue(first[2].startswith(f"review {metadata['url']}, including Needs a closer look"))
+            self.assertTrue(second[2].startswith(f"are there any simplifications worth doing in {metadata['url']}?"))
+            self.assertIn("review.txt", final[2])
+            self.assertIn("simplifications.txt", final[2])
+            self.assertEqual(check.call_count, 2)
+            self.assertEqual(post.load_json(path, "result")["review"], {
+                "body": "No findings.", "comments": [], "commit_id": "head",
+            })
+
     def test_model_pass_uses_the_final_answer_not_progress_or_tool_output(self):
         response = subprocess.CompletedProcess([], 0, stdout=(
             '{"type":"assistant.message","data":{"content":"I will check the code."}}\n'
@@ -19,25 +69,25 @@ class ManualReviewTest(unittest.TestCase):
             '{"type":"assistant.message","data":{"content":"{\\"comments\\":[]}"}}\n'
             '{"type":"result","data":{}}\n'
         ))
-        with mock.patch.object(manual, "run", return_value=response):
-            self.assertEqual(manual.model_pass("model", "high", "prompt"), '{"comments":[]}')
+        with mock.patch.object(runner, "run", return_value=response):
+            self.assertEqual(runner.model_pass("model", "high", "prompt"), '{"comments":[]}')
 
     def test_model_pass_reports_the_cli_error_from_json(self):
         response = subprocess.CompletedProcess(
             [], 1, stdout='{"type":"session.error","data":{"message":"Model not available."}}\n', stderr=""
         )
         with (
-            mock.patch.object(manual, "run", return_value=response),
+            mock.patch.object(runner, "run", return_value=response),
             self.assertRaisesRegex(RuntimeError, r"Model not available\."),
         ):
-            manual.model_pass("model", "max", "prompt")
+            runner.model_pass("model", "max", "prompt")
 
     def test_only_the_latest_submitted_copilot_review_can_supply_a_hint(self):
         reviews = [[{
-            "id": 1, "user": {"login": manual.COPILOT_REVIEWER}, "submitted_at": "2026-01-01",
+            "id": 1, "user": {"login": runner.COPILOT_REVIEWER}, "submitted_at": "2026-01-01",
             "body": "Needs a closer look", "html_url": "old",
         }], [{
-            "id": 2, "user": {"login": manual.COPILOT_REVIEWER}, "submitted_at": "2026-01-02",
+            "id": 2, "user": {"login": runner.COPILOT_REVIEWER}, "submitted_at": "2026-01-02",
             "body": "Approval recommended", "html_url": "latest",
         }, {
             "id": 3, "user": {"login": "contributor"}, "submitted_at": "2026-01-03",
@@ -45,14 +95,14 @@ class ManualReviewTest(unittest.TestCase):
         }]]
         with tempfile.TemporaryDirectory() as directory:
             bundle = Path(directory)
-            with mock.patch.object(manual, "gh_json", side_effect=[reviews, [[]]]) as api:
-                self.assertEqual(manual.closer_look_context("org/repo", 123, bundle, Summary(pr=123)), "")
+            with mock.patch.object(runner, "gh_json", side_effect=[reviews, [[]]]) as api:
+                self.assertEqual(runner.closer_look_context("org/repo", 123, bundle, Summary(pr=123)), "")
                 self.assertIn("/reviews/2/comments?", api.call_args.args[0][-1])
-            with mock.patch.object(manual, "gh_json", side_effect=[reviews, [[{
+            with mock.patch.object(runner, "gh_json", side_effect=[reviews, [[{
                 "body": "Needs a closer look", "html_url": "inline",
             }]]]):
                 self.assertEqual(
-                    manual.closer_look_context("org/repo", 123, bundle, Summary(pr=123)),
+                    runner.closer_look_context("org/repo", 123, bundle, Summary(pr=123)),
                     ", including Needs a closer look inline",
                 )
 
@@ -64,18 +114,18 @@ class ManualReviewTest(unittest.TestCase):
             write_json(bundle / "diff-scope.json", {
                 "Example.java": {"hunks": [[1, 2]], "changed_lines": [2]},
             })
-            write_json(bundle / "metadata.json", {"number": 123, "baseRefOid": "base", "headRefOid": "head"})
+            metadata = {"number": 123, "baseRefOid": "base", "headRefOid": "head"}
             for added in (14, 15):
                 with self.subTest(added=added):
                     replacement = "unchanged\n" + "new\n" * added
-                    result = post.prepare_manual_review({
+                    result = post.prepare_review({
                         "body": "Review summary",
                         "comments": [{
                             "kind": "simplification", "path": "Example.java",
                             "start_line": 1, "line": 2, "body": "Simpler code. Update the import.",
                             "suggestion": replacement,
                         }],
-                    }, bundle, Summary(pr=123))
+                    }, bundle, metadata, Summary(pr=123))
                     review = result["review"]
                     self.assertNotIn("event", review)
                     self.assertEqual(review["commit_id"], "head")
@@ -92,12 +142,12 @@ class ManualReviewTest(unittest.TestCase):
                 mock.patch.dict(os.environ, {
                     "REVIEWER": "maintainer", "TRIGGERING_ACTOR": "maintainer", "PR_REVIEW_POST_TOKEN": "test-token",
                 }),
-                mock.patch.object(manual, "check_snapshot"),
-                mock.patch.object(manual, "gh_json", return_value={"login": "someone-else"}),
-                mock.patch.object(manual, "post_review") as publish,
-                self.assertRaisesRegex(RuntimeError, "does not belong to the dispatcher"),
+                mock.patch.object(runner, "check_snapshot"),
+                mock.patch.object(runner, "gh_json", return_value={"login": "someone-else"}),
+                mock.patch.object(runner, "post_review") as publish,
+                self.assertRaisesRegex(RuntimeError, "does not belong to the requester"),
             ):
-                manual.publish_result("org/repo", 123, path, Summary(pr=123))
+                runner.publish_result("org/repo", 123, path, Summary(pr=123))
             publish.assert_not_called()
 
     def test_empty_review_posts_a_top_level_comment_without_a_user_token(self):
@@ -106,10 +156,10 @@ class ManualReviewTest(unittest.TestCase):
             write_json(path, {"pr": 123, "base_sha": "base", "review": {"commit_id": "head", "comments": []}})
             summary = Summary(pr=123)
             with (
-                mock.patch.object(manual, "check_snapshot") as check,
-                mock.patch.object(manual, "gh_json", return_value={"html_url": "https://example.test"}) as api,
+                mock.patch.object(runner, "check_snapshot") as check,
+                mock.patch.object(runner, "gh_json", return_value={"html_url": "https://example.test"}) as api,
             ):
-                manual.publish_result("org/repo", 123, path, summary)
+                runner.publish_result("org/repo", 123, path, summary)
             check.assert_called_once_with(123, "base", "head", summary)
             api.assert_called_once_with(
                 ["api", "-X", "POST", "repos/org/repo/issues/123/comments", "-f", "body=No findings."], summary

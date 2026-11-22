@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Run the manual review passes and publish the validated result."""
+"""Run the review passes and publish the validated result."""
 
 from __future__ import annotations
 
@@ -14,7 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from common import Summary, gh_json, progress, run, write_json
-from post import load_json, post_review, prepare_manual_review
+from post import load_json, post_review, prepare_review
 from prepare import build_bundle, pr_metadata
 
 
@@ -100,10 +100,9 @@ def check_snapshot(pr: int, base: str, head: str, summary: Summary) -> None:
 
 
 def prepare_result(repo: str, pr: int, result_path: Path, summary: Summary) -> None:
-    with tempfile.TemporaryDirectory(prefix=".manual-review-", dir=Path.cwd()) as directory:
+    with tempfile.TemporaryDirectory(prefix=".pr-review-", dir=Path.cwd()) as directory:
         bundle = Path(directory).relative_to(Path.cwd())
-        build_bundle(pr, bundle, bundle / "findings.json", summary)
-        metadata = load_json(bundle / "metadata.json", "PR metadata")
+        metadata = build_bundle(pr, bundle, summary)
         base, head = metadata["baseRefOid"], metadata["headRefOid"]
         check_snapshot(pr, base, head, summary)
         url = metadata["url"]
@@ -137,7 +136,7 @@ If there are no findings, return {{"comments":[]}}.
             final_findings = json.loads(final)
         except json.JSONDecodeError as error:
             raise RuntimeError(f"{OPUS} did not return valid findings JSON: {error}") from error
-        result = prepare_manual_review(final_findings, bundle, summary)
+        result = prepare_review(final_findings, bundle, metadata, summary)
         check_snapshot(pr, base, head, summary)
         for note in summary.notes:
             progress(note)
@@ -161,13 +160,13 @@ def publish_result(repo: str, pr: int, result_path: Path, summary: Summary) -> N
 
     reviewer = os.environ["REVIEWER"]
     if os.environ["TRIGGERING_ACTOR"] != reviewer:
-        raise RuntimeError("Only the original dispatcher may publish the pending review")
+        raise RuntimeError("Only the original requester may publish the pending review")
     if not token:
         raise RuntimeError("PR_REVIEW_POST_TOKEN is required to open a pending review")
     os.environ["GH_TOKEN"] = token
     user = gh_json(["api", "user"], summary)
     if user["login"].casefold() != reviewer.casefold():
-        raise RuntimeError("PR_REVIEW_POST_TOKEN does not belong to the dispatcher")
+        raise RuntimeError("PR_REVIEW_POST_TOKEN does not belong to the requester")
     with tempfile.TemporaryDirectory() as directory:
         payload = Path(directory) / "review.json"
         write_json(payload, review)
