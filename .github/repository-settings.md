@@ -21,13 +21,6 @@ Secrets:
 - `SONATYPE_KEY` - owned by [@trask](https://github.com/trask)
 - `SONATYPE_USER` - owned by [@trask](https://github.com/trask)
 
-To enable pending reviews from **PR review**, add `PR_REVIEW_POST_TOKEN` to this
-environment. Use a fine-grained personal access token scoped to this repository with
-**Pull requests: Read and write**. The token must belong to the maintainer who comments
-`/review` on an open PR or dispatches the workflow with a PR number. The workflow only
-posts from `main`. The model calls and the public `No findings.` comment use the workflow
-token instead.
-
 ## Secrets and variables > Actions
 
 ### Organization secrets

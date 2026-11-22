@@ -1,4 +1,3 @@
-import os
 import subprocess
 import tempfile
 import unittest
@@ -134,21 +133,30 @@ class ReviewTest(unittest.TestCase):
                         body += "\n\n```suggestion\n" + replacement + "```"
                     self.assertEqual(review["comments"][0]["body"], body)
 
-    def test_pending_review_cannot_post_with_a_different_users_token(self):
+    def test_findings_publish_as_a_comment_review(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "review-result.json"
-            write_json(path, {"pr": 123, "base_sha": "base", "review": {"commit_id": "head", "comments": [{}]}})
+            review = {
+                "commit_id": "head",
+                "body": "One finding.",
+                "comments": [{"path": "Example.java", "line": 2, "side": "RIGHT", "body": "A finding"}],
+            }
+            write_json(path, {"pr": 123, "base_sha": "base", "review": review})
+            summary = Summary(pr=123)
+
+            def submit(args, current_summary):
+                self.assertEqual(args[:5], ["api", "repos/org/repo/pulls/123/reviews", "--method", "POST", "--input"])
+                self.assertEqual(post.load_json(Path(args[5]), "review"), {**review, "event": "COMMENT"})
+                self.assertIs(current_summary, summary)
+                return {"html_url": "https://example.test/review"}
+
             with (
-                mock.patch.dict(os.environ, {
-                    "REVIEWER": "maintainer", "TRIGGERING_ACTOR": "maintainer", "PR_REVIEW_POST_TOKEN": "test-token",
-                }),
-                mock.patch.object(runner, "check_snapshot"),
-                mock.patch.object(runner, "gh_json", return_value={"login": "someone-else"}),
-                mock.patch.object(runner, "post_review") as publish,
-                self.assertRaisesRegex(RuntimeError, "does not belong to the requester"),
+                mock.patch.object(runner, "check_snapshot") as check,
+                mock.patch.object(post, "gh_json", side_effect=submit) as api,
             ):
-                runner.publish_result("org/repo", 123, path, Summary(pr=123))
-            publish.assert_not_called()
+                runner.publish_result("org/repo", 123, path, summary)
+            check.assert_called_once_with(123, "base", "head", summary)
+            api.assert_called_once()
 
     def test_empty_review_posts_a_top_level_comment_without_a_user_token(self):
         with tempfile.TemporaryDirectory() as directory:

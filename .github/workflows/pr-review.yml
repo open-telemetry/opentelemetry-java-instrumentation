@@ -102,8 +102,5 @@ jobs:
       - name: Post the result
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_REVIEW_POST_TOKEN: ${{ secrets.PR_REVIEW_POST_TOKEN }}
           PR_NUMBER: ${{ needs.gate.outputs.pr_number }}
-          REVIEWER: ${{ github.actor }}
-          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
         run: python .github/scripts/pr-review/review.py "$PR_NUMBER" post review-result.json

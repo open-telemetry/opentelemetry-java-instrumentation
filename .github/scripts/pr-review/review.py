@@ -149,7 +149,6 @@ def publish_result(repo: str, pr: int, result_path: Path, summary: Summary) -> N
     if result["pr"] != pr:
         raise RuntimeError("Review result targets a different PR")
     review = result["review"]
-    token = os.environ.pop("PR_REVIEW_POST_TOKEN", "")
     check_snapshot(pr, result["base_sha"], review["commit_id"], summary)
     if not review["comments"]:
         comment = gh_json(
@@ -158,21 +157,12 @@ def publish_result(repo: str, pr: int, result_path: Path, summary: Summary) -> N
         progress(f"Posted {comment['html_url']}")
         return
 
-    reviewer = os.environ["REVIEWER"]
-    if os.environ["TRIGGERING_ACTOR"] != reviewer:
-        raise RuntimeError("Only the original requester may publish the pending review")
-    if not token:
-        raise RuntimeError("PR_REVIEW_POST_TOKEN is required to open a pending review")
-    os.environ["GH_TOKEN"] = token
-    user = gh_json(["api", "user"], summary)
-    if user["login"].casefold() != reviewer.casefold():
-        raise RuntimeError("PR_REVIEW_POST_TOKEN does not belong to the requester")
     with tempfile.TemporaryDirectory() as directory:
         payload = Path(directory) / "review.json"
-        write_json(payload, review)
+        write_json(payload, {**review, "event": "COMMENT"})
         post_review(repo, pr, payload, summary)
     if summary.review_url:
-        progress(f"Opened pending review {summary.review_url}")
+        progress(f"Published review {summary.review_url}")
 
 
 def main() -> None:

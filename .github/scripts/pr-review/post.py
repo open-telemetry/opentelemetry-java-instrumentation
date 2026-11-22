@@ -1,4 +1,4 @@
-"""Validate findings and create a pending GitHub review."""
+"""Validate findings and publish a GitHub review."""
 
 from __future__ import annotations
 
