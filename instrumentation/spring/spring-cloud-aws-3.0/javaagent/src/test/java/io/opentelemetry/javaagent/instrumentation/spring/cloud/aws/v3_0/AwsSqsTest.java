@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -36,6 +37,8 @@ import static org.awaitility.Awaitility.await;
 
 import io.awspring.cloud.sqs.MessageHeaderUtils;
 import io.awspring.cloud.sqs.listener.AsyncMessageListener;
+import io.awspring.cloud.sqs.listener.MessageListenerContainer;
+import io.awspring.cloud.sqs.listener.MessageListenerContainerRegistry;
 import io.awspring.cloud.sqs.listener.MessageProcessingContext;
 import io.awspring.cloud.sqs.listener.acknowledgement.handler.AcknowledgementHandler;
 import io.awspring.cloud.sqs.listener.pipeline.MessageListenerExecutionStage;
@@ -51,6 +54,7 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
@@ -73,7 +77,9 @@ import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
 import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @SpringBootTest(
@@ -91,6 +97,7 @@ class AwsSqsTest {
   private static String combinedBatchQueueUrl;
 
   @Autowired SqsTemplate sqsTemplate;
+  @Autowired MessageListenerContainerRegistry containerRegistry;
 
   @BeforeAll
   static void setUp() {
@@ -100,14 +107,7 @@ class AwsSqsTest {
 
     // spring creates missing queues without attributes, so the fifo queue is created here, as is
     // the queue that the listener refers to by url
-    try (SqsClient client =
-        SqsClient.builder()
-            .endpointOverride(URI.create("http://localhost:" + AwsSqsTestApplication.sqsPort))
-            .credentialsProvider(
-                StaticCredentialsProvider.create(
-                    AwsBasicCredentials.create("accessKey", "secretKey")))
-            .region(Region.AP_NORTHEAST_1)
-            .build()) {
+    try (SqsClient client = sqsClient()) {
       client.createQueue(request ->
           request
               .queueName("batch-queue.fifo")
@@ -117,6 +117,15 @@ class AwsSqsTest {
     }
     // discard the telemetry of the queue creation
     testing.waitForTraces(2);
+  }
+
+  private static SqsClient sqsClient() {
+    return SqsClient.builder()
+        .endpointOverride(URI.create("http://localhost:" + AwsSqsTestApplication.sqsPort))
+        .credentialsProvider(
+            StaticCredentialsProvider.create(AwsBasicCredentials.create("accessKey", "secretKey")))
+        .region(Region.AP_NORTHEAST_1)
+        .build();
   }
 
   @DynamicPropertySource
@@ -374,6 +383,66 @@ class AwsSqsTest {
   @Test
   void sqsFifoBatchListener() {
     assertBatchesProcessed("batch-queue.fifo", "batch-queue.fifo");
+  }
+
+  // runs with headers.included=* and headers.excluded=Excluded-Header
+  @Test
+  void sqsBatchListenerHeaders() {
+    List<List<String>> batches = new CopyOnWriteArrayList<>();
+    AwsSqsTestApplication.batchMessageHandler = batches::add;
+    MessageListenerContainer<?> container =
+        containerRegistry.getContainerById("header-batch-listener");
+    container.stop();
+    try (SqsClient client = sqsClient()) {
+      String queueUrl =
+          client.getQueueUrl(request -> request.queueName("header-batch-queue")).queueUrl();
+      client.sendMessageBatch(request ->
+          request
+              .queueUrl(queueUrl)
+              .entries(
+                  headerMessage("1", "hello", "first"), headerMessage("2", "world", "second")));
+    }
+    container.start();
+
+    await()
+        .untilAsserted(() -> {
+          assertThat(batches)
+              .singleElement()
+              .satisfies(batch -> assertThat(batch).containsExactlyInAnyOrder("hello", "world"));
+          assertThat(findSpans("process header-batch-queue")).hasSize(1);
+        });
+    // the exact attributes leave no room for the excluded attribute, the spring headers, the
+    // receipt handles or the message bodies
+    assertThat(findSpans("process header-batch-queue"))
+        .singleElement()
+        .satisfies(span ->
+            assertThat(span)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "header-batch-queue"),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                    satisfies(
+                        stringArrayKey("messaging.header.Test-Header"),
+                        values -> values.containsExactlyInAnyOrder("first", "second"))));
+  }
+
+  private static SendMessageBatchRequestEntry headerMessage(String id, String body, String value) {
+    return SendMessageBatchRequestEntry.builder()
+        .id(id)
+        .messageBody(body)
+        .messageAttributes(
+            Map.of(
+                "Test-Header", stringAttribute(value),
+                "Excluded-Header", stringAttribute("excluded-" + value)))
+        .build();
+  }
+
+  private static MessageAttributeValue stringAttribute(String value) {
+    return MessageAttributeValue.builder().dataType("String").stringValue(value).build();
   }
 
   // sends two messages and asserts that the batches they are delivered in are traced

@@ -29,6 +29,14 @@ dependencies {
 
 testing.suites {
   executions("test") {
+    configureDefault {
+      filter.excludeTestsMatching("*AwsSqsTest.sqsBatchListenerHeaders")
+    }
+    register("CaptureHeaders") {
+      filter.includeTestsMatching("*AwsSqsTest.sqsBatchListenerHeaders")
+      telemetryConfig("otel.instrumentation.common.messaging.headers.included", "*")
+      telemetryConfig("otel.instrumentation.common.messaging.headers.excluded", "Excluded-Header")
+    }
     // receive telemetry changes which operation counts consumed messages
     register("ReceiveTelemetry") {
       filter.includeTestsMatching("*AwsSqsTest.sqsBatchListener")

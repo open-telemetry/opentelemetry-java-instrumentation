@@ -87,4 +87,10 @@ class AwsSqsTestApplication {
   void receiveFifoBatch(List<String> messages) {
     receiveBatch(messages);
   }
+
+  // the test stops this listener while it sends messages, so that one poll receives all of them
+  @SqsListener(value = "header-batch-queue", id = "header-batch-listener", pollTimeoutSeconds = "1")
+  void receiveHeaderBatch(List<String> messages) {
+    receiveBatch(messages);
+  }
 }
