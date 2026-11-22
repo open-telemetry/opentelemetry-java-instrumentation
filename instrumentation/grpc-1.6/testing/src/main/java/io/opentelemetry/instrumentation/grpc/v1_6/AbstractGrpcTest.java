@@ -827,16 +827,15 @@ public abstract class AbstractGrpcTest {
                         assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
                             .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasCount(1)
-                                .hasBucketBoundaries(GRPC_DURATION_BUCKETS)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                    equalTo(RPC_METHOD, "_OTHER"),
-                                    equalTo(stringKey("rpc.status_code"), "UNIMPLEMENTED"),
-                                    equalTo(ERROR_TYPE, "UNIMPLEMENTED")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasBucketBoundaries(GRPC_DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(RPC_METHOD, "_OTHER"),
+                                equalTo(stringKey("rpc.status_code"), "UNIMPLEMENTED"),
+                                equalTo(ERROR_TYPE, "UNIMPLEMENTED"))));
   }
 
   @Test
@@ -1644,17 +1643,16 @@ public abstract class AbstractGrpcTest {
                         assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
                             .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(GRPC_DURATION_BUCKETS)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, server.getPort()),
-                                    equalTo(RPC_METHOD, "example.Greeter/SayHello"),
-                                    equalTo(stringKey("rpc.status_code"), statusCode.name()),
-                                    equalTo(ERROR_TYPE, serverErrorType)))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasBucketBoundaries(GRPC_DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                                equalTo(stringKey("rpc.status_code"), statusCode.name()),
+                                equalTo(ERROR_TYPE, serverErrorType))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -1665,16 +1663,15 @@ public abstract class AbstractGrpcTest {
                         assertThat(metricData.getInstrumentationScopeInfo().getSchemaUrl())
                             .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(GRPC_DURATION_BUCKETS)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, server.getPort()),
-                                    equalTo(RPC_METHOD, "example.Greeter/SayHello"),
-                                    equalTo(stringKey("rpc.status_code"), statusCode.name()),
-                                    equalTo(ERROR_TYPE, clientErrorType)))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasBucketBoundaries(GRPC_DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "grpc"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, server.getPort()),
+                                equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                                equalTo(stringKey("rpc.status_code"), statusCode.name()),
+                                equalTo(ERROR_TYPE, clientErrorType))));
   }
 }

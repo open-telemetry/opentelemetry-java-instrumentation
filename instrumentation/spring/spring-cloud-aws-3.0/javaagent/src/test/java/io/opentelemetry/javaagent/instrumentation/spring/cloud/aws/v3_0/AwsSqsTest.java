@@ -602,17 +602,16 @@ class AwsSqsTest {
         metrics ->
             metrics.satisfiesExactly(metric ->
                 assertThat(metric)
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                    equalTo(ERROR_TYPE, null),
-                                    equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort))))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                equalTo(ERROR_TYPE, null),
+                                equalTo(MESSAGING_DESTINATION_NAME, "test-queue"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort)))));
   }
 
   private static void assertAsyncCompletion(
