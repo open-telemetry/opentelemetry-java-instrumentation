@@ -19,7 +19,7 @@ from prepare import build_bundle, pr_metadata
 
 
 COPILOT_REVIEWER = "copilot-pull-request-reviewer[bot]"
-SOL = "gpt-6.2-sol"
+SOL = "gpt-6.1-sol"
 OPUS = "claude-opus-5.5"
 
 

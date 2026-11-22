@@ -75,6 +75,7 @@ jobs:
         run: python .github/scripts/pr-review/review.py "$PR_NUMBER" prepare review-result.json
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        if: github.event_name != 'push' && github.ref == 'refs/heads/main'
         with:
           name: review-result
           path: review-result.json
