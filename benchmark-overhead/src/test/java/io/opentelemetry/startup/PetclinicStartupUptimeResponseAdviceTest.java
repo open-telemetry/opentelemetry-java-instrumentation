@@ -48,8 +48,8 @@ class PetclinicStartupUptimeResponseAdviceTest {
         null,
         request(HttpMethod.GET, "/petclinic/api/owners/2"),
         response(headers));
-    assertThat(headers.getFirst(STARTUP_UPTIME_HEADER)).isNull();
-    assertThat(headers.getFirst(JVM_VERSION_HEADER)).isNull();
+    assertThat(headers).doesNotContainKey(STARTUP_UPTIME_HEADER);
+    assertThat(headers).doesNotContainKey(JVM_VERSION_HEADER);
   }
 
   @Test
@@ -65,8 +65,7 @@ class PetclinicStartupUptimeResponseAdviceTest {
             request(HttpMethod.POST, "/petclinic/api/owners/1"),
             response(headers));
 
-    assertThat(headers.getFirst(STARTUP_UPTIME_HEADER)).isNull();
-    assertThat(headers.getFirst(JVM_VERSION_HEADER)).isNull();
+    assertThat(headers).doesNotContainKeys(STARTUP_UPTIME_HEADER, JVM_VERSION_HEADER);
   }
 
   private static ServerHttpRequest request(HttpMethod method, String path) {

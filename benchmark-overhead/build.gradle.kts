@@ -32,8 +32,8 @@ dependencies {
   testImplementation("com.jayway.jsonpath:json-path:3.0.0")
   testImplementation("org.slf4j:slf4j-simple:2.0.20")
   testImplementation("org.assertj:assertj-core:3.27.7")
-  testImplementation("org.springframework:spring-webmvc:7.1.0")
-  add(startupHelper.compileOnlyConfigurationName, "org.springframework:spring-webmvc:7.1.0")
+  testImplementation("org.springframework:spring-webmvc:5.3.3")
+  add(startupHelper.compileOnlyConfigurationName, "org.springframework:spring-webmvc:5.3.3")
   testImplementation(startupHelper.output)
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -72,7 +72,6 @@ val petclinicStartupHelperJar = tasks.register<Jar>("petclinicStartupHelperJar")
   from(startupHelper.output) {
     include("io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.class")
     include("META-INF/spring.factories")
-    include("META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports")
   }
   archiveFileName.set("petclinic-startup-helper.jar")
 }

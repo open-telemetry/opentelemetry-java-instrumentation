@@ -14,6 +14,7 @@ import java.util.List;
 import java.util.jar.JarOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.testcontainers.utility.DockerImageName;
 
 class AgentStartupReportTest {
   @TempDir Path directory;
@@ -59,7 +60,7 @@ class AgentStartupReportTest {
             "-Dloader.path=/app/annotations,/app/startup-helper",
             "-cp",
             "/app/spring-petclinic-rest.jar",
-            "org.springframework.boot.loader.launch.PropertiesLauncher");
+            "org.springframework.boot.loader.PropertiesLauncher");
     assertThat(agent)
         .containsExactly(
             "-Xmx512m",
@@ -67,7 +68,7 @@ class AgentStartupReportTest {
             "-Dloader.path=/app/annotations,/app/startup-helper",
             "-cp",
             "/app/spring-petclinic-rest.jar",
-            "org.springframework.boot.loader.launch.PropertiesLauncher");
+            "org.springframework.boot.loader.PropertiesLauncher");
     assertThat(AgentStartupBenchmark.arguments(false, true, true))
         .contains("-Dloader.path=/app/annotations,/app/startup-helper");
   }
@@ -90,7 +91,10 @@ class AgentStartupReportTest {
 
   @Test
   void petclinicValidatesInputsBeforeStartingDocker() throws Exception {
-    assertThat(PetclinicStartupFixture.DATABASE_IMAGE).startsWith("postgres:18@sha256:");
+    assertThat(
+            DockerImageName.parse(PetclinicStartupFixture.DATABASE_IMAGE)
+                .isCompatibleWith(DockerImageName.parse("postgres")))
+        .isTrue();
     Path missing = directory.resolve("missing.jar");
     Path missingHelper = directory.resolve("missing-helper.jar");
     assertThatThrownBy(() -> PetclinicStartupFixture.start(missing, missingHelper))

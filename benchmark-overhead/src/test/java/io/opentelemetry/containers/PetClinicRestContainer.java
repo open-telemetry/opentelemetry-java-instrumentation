@@ -50,7 +50,7 @@ public class PetClinicRestContainer {
     GenericContainer<?> container =
         new GenericContainer<>(
                 DockerImageName.parse(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:latest"))
+                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:20230601125442"))
             .withNetwork(network)
             .withNetworkAliases("petclinic")
             .withLogConsumer(new Slf4jLogConsumer(logger))
@@ -60,7 +60,7 @@ public class PetClinicRestContainer {
             .withCopyFileToContainer(
                 MountableFile.forClasspathResource("overhead.jfc"), "/app/overhead.jfc")
             .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
-            .withEnv("spring_profiles_active", "postgres,spring-data-jpa")
+            .withEnv("spring_profiles_active", "postgresql,spring-data-jpa")
             .withEnv(
                 "spring_datasource_url",
                 "jdbc:postgresql://postgres:5432/" + PostgresContainer.DATABASE_NAME)
