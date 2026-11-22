@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.jdbc.internal.dbinfo;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import javax.annotation.Nullable;
 
 /**
@@ -34,7 +34,7 @@ public abstract class DbInfo {
    * not the endpoint that handled an individual query.
    */
   @Nullable
-  public abstract DbServerTarget getConfiguredServerTarget();
+  public abstract ServerTarget getConfiguredServerTarget();
 
   public Builder toBuilder() {
     return builder()
@@ -54,7 +54,7 @@ public abstract class DbInfo {
 
     public abstract Builder dbNamespace(String dbNamespace);
 
-    public abstract Builder configuredServerTarget(@Nullable DbServerTarget configuredServerTarget);
+    public abstract Builder configuredServerTarget(@Nullable ServerTarget configuredServerTarget);
 
     public abstract DbInfo build();
   }

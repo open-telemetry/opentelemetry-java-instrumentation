@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -15,12 +15,12 @@ public class ElasticsearchTransportServerTarget {
   private static final int DEFAULT_PORT = 9300;
 
   @Nullable
-  public static DbServerTarget of(@Nullable List<Endpoint> endpoints) {
+  public static ServerTarget of(@Nullable List<Endpoint> endpoints) {
     if (endpoints == null || endpoints.isEmpty()) {
       return null;
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(DEFAULT_PORT).setSorted(true);
+    ServerTargetBuilder builder = ServerTarget.builder(DEFAULT_PORT).setSorted(true);
     for (Endpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port);
     }

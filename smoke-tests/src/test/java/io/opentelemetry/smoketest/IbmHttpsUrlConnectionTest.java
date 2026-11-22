@@ -61,7 +61,7 @@ class IbmHttpsUrlConnectionTest {
     target =
         new GenericContainer<>(
                 DockerImageName.parse(
-                    "ibmjava:8-sdk@sha256:8186fd806847caea9fe91837b0c825c8036781f181bb51c80655c395a769dcc8"))
+                    "ibmjava:8-sdk@sha256:5341df408109ceb36c4283c8ab16237678dcbade94439c3570dd80d6a521c33c"))
             .withStartupTimeout(Duration.ofMinutes(5))
             .withNetwork(network)
             .withLogConsumer(new Slf4jLogConsumer(logger))

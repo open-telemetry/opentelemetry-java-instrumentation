@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -28,11 +30,9 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
-      implementation(project(":instrumentation-api-incubator"))
       implementation("redis.clients:jedis:3.0.0")
     }
   }

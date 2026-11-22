@@ -47,13 +47,12 @@ class RpcMetricsTest {
             assertThat(metric)
                 .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasSum(0.15)
-                            .hasBucketBoundaries(0.1, 0.2, 0.3)
-                            .hasAttributes(Attributes.empty()))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSum(0.15)
+                        .hasBucketBoundaries(0.1, 0.2, 0.3)
+                        .hasAttributes(Attributes.empty())));
   }
 
   @ParameterizedTest

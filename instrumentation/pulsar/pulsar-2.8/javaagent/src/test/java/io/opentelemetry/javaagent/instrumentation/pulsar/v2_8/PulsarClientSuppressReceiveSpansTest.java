@@ -77,16 +77,15 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
         metrics ->
             metrics.satisfiesExactly(metric ->
                 assertThat(metric)
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                    equalTo(stringKey("messaging.system.name"), "pulsar"),
-                                    equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                    equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
-                                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()))))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"),
+                                equalTo(ERROR_TYPE, IllegalStateException.class.getName())))));
   }
 
   @Test
@@ -123,16 +122,14 @@ class PulsarClientSuppressReceiveSpansTest extends AbstractPulsarClientTest {
                 assertThat(metric)
                     .hasUnit("{message}")
                     .hasDescription("Number of messages that were delivered to the application.")
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                    equalTo(stringKey("messaging.system.name"), "pulsar"),
-                                    equalTo(MESSAGING_DESTINATION_NAME, topic),
-                                    equalTo(
-                                        MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub"))))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "pulsar"),
+                                equalTo(MESSAGING_DESTINATION_NAME, topic),
+                                equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "test_sub")))));
 
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(

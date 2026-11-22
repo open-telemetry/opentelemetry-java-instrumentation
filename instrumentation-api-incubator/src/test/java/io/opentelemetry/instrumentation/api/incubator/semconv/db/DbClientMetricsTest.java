@@ -115,11 +115,9 @@ class DbClientMetricsTest {
         .satisfiesExactly(metric ->
             assertThat(metric)
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "myDb"),
-                            equalTo(ERROR_TYPE, expectedErrorType)))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "myDb"), equalTo(ERROR_TYPE, expectedErrorType))));
   }
 
   @Test
@@ -172,26 +170,25 @@ class DbClientMetricsTest {
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
                 .hasDescription("Duration of database client operations.")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasSum(0.15 /* seconds */)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, "myDb"),
-                                equalTo(DB_NAMESPACE, "potatoes"),
-                                equalTo(DB_OPERATION_NAME, "SELECT"),
-                                equalTo(DB_COLLECTION_NAME, "table"),
-                                equalTo(DB_QUERY_SUMMARY, "SELECT table"),
-                                equalTo(SERVER_ADDRESS, "db1.example:5432,db2.example:5432"),
-                                equalTo(ERROR_TYPE, "400"),
-                                equalTo(DB_RESPONSE_STATUS_CODE, "400"),
-                                equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
-                                equalTo(NETWORK_PEER_PORT, 8080))
-                            .hasExemplarsSatisfying(exemplar ->
-                                exemplar
-                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                    .hasSpanId("090a0b0c0d0e0f00"))
-                            .hasBucketBoundaries(DURATION_BUCKETS))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasSum(0.15 /* seconds */)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "myDb"),
+                            equalTo(DB_NAMESPACE, "potatoes"),
+                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                            equalTo(DB_COLLECTION_NAME, "table"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT table"),
+                            equalTo(SERVER_ADDRESS, "db1.example:5432,db2.example:5432"),
+                            equalTo(ERROR_TYPE, "400"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "400"),
+                            equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
+                            equalTo(NETWORK_PEER_PORT, 8080))
+                        .hasExemplarsSatisfying(exemplar ->
+                            exemplar
+                                .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                .hasSpanId("090a0b0c0d0e0f00"))
+                        .hasBucketBoundaries(DURATION_BUCKETS)));
   }
 
   @Test
@@ -214,44 +211,36 @@ class DbClientMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactly(metric -> {
           assertThat(metric).hasName("db.client.operation.duration");
-          assertThat(metric.getHistogramData().getPoints())
-              .satisfiesExactlyInAnyOrder(
+          assertThat(metric)
+              .hasHistogramPointsSatisfying(
                   point ->
-                      assertThat(point.getAttributes().asMap())
-                          .isEqualTo(
-                              Attributes.builder()
-                                  .put(DB_SYSTEM_NAME, "myDb")
-                                  .put(DB_OPERATION_NAME, "failedWithCode")
-                                  .put(ERROR_TYPE, "400")
-                                  .put(DB_RESPONSE_STATUS_CODE, "400")
-                                  .build()
-                                  .asMap()),
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "failedWithCode")
+                              .put(ERROR_TYPE, "400")
+                              .put(DB_RESPONSE_STATUS_CODE, "400")
+                              .build()),
                   point ->
-                      assertThat(point.getAttributes().asMap())
-                          .isEqualTo(
-                              Attributes.builder()
-                                  .put(DB_SYSTEM_NAME, "myDb")
-                                  .put(DB_OPERATION_NAME, "failedWithoutCode")
-                                  .put(ERROR_TYPE, "io.example.DbException")
-                                  .build()
-                                  .asMap()),
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "failedWithoutCode")
+                              .put(ERROR_TYPE, "io.example.DbException")
+                              .build()),
                   point ->
-                      assertThat(point.getAttributes().asMap())
-                          .isEqualTo(
-                              Attributes.builder()
-                                  .put(DB_SYSTEM_NAME, "myDb")
-                                  .put(DB_OPERATION_NAME, "successfulWithCode")
-                                  .put(DB_RESPONSE_STATUS_CODE, "200")
-                                  .build()
-                                  .asMap()),
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "successfulWithCode")
+                              .put(DB_RESPONSE_STATUS_CODE, "200")
+                              .build()),
                   point ->
-                      assertThat(point.getAttributes().asMap())
-                          .isEqualTo(
-                              Attributes.builder()
-                                  .put(DB_SYSTEM_NAME, "myDb")
-                                  .put(DB_OPERATION_NAME, "successfulWithoutCode")
-                                  .build()
-                                  .asMap()));
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "successfulWithoutCode")
+                              .build()));
         });
   }
 

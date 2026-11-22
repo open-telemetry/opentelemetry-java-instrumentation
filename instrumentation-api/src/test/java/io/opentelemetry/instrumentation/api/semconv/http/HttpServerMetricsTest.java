@@ -110,22 +110,21 @@ class HttpServerMetricsTest {
                 .hasName("http.server.request.duration")
                 .hasDescription("Duration of HTTP server requests.")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasSum(0.15 /* seconds */)
-                            .hasAttributesSatisfying(
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                equalTo(ERROR_TYPE, "500"),
-                                equalTo(NETWORK_PROTOCOL_NAME, "http"),
-                                equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
-                                equalTo(URL_SCHEME, "https"))
-                            .hasExemplarsSatisfying(exemplar ->
-                                exemplar
-                                    .hasTraceId(spanContext1.getTraceId())
-                                    .hasSpanId(spanContext1.getSpanId()))
-                            .hasBucketBoundaries(DURATION_BUCKETS))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasSum(0.15 /* seconds */)
+                        .hasAttributesSatisfying(
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                            equalTo(ERROR_TYPE, "500"),
+                            equalTo(NETWORK_PROTOCOL_NAME, "http"),
+                            equalTo(NETWORK_PROTOCOL_VERSION, "2.0"),
+                            equalTo(URL_SCHEME, "https"))
+                        .hasExemplarsSatisfying(exemplar ->
+                            exemplar
+                                .hasTraceId(spanContext1.getTraceId())
+                                .hasSpanId(spanContext1.getSpanId()))
+                        .hasBucketBoundaries(DURATION_BUCKETS)));
 
     listener.onEnd(context2, responseAttributes, nanos(300));
 
@@ -133,14 +132,13 @@ class HttpServerMetricsTest {
         .satisfiesExactlyInAnyOrder(metric ->
             assertThat(metric)
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasSum(0.3 /* seconds */)
-                            .hasExemplarsSatisfying(exemplar ->
-                                exemplar
-                                    .hasTraceId(spanContext2.getTraceId())
-                                    .hasSpanId(spanContext2.getSpanId())))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasSum(0.3 /* seconds */)
+                        .hasExemplarsSatisfying(exemplar ->
+                            exemplar
+                                .hasTraceId(spanContext2.getTraceId())
+                                .hasSpanId(spanContext2.getSpanId()))));
   }
 
   @Test
@@ -170,12 +168,11 @@ class HttpServerMetricsTest {
             assertThat(metric)
                 .hasName("http.server.request.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasSum(0.100 /* seconds */)
-                            .hasAttributesSatisfying(
-                                equalTo(URL_SCHEME, "https"), equalTo(HTTP_ROUTE, "/test/{id}")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasSum(0.100 /* seconds */)
+                        .hasAttributesSatisfying(
+                            equalTo(URL_SCHEME, "https"), equalTo(HTTP_ROUTE, "/test/{id}"))));
   }
 
   private static long nanos(int millis) {

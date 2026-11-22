@@ -182,17 +182,16 @@ class SpringRmiTest {
                 .hasName("rpc.client.call.duration")
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasSumGreaterThan(0)
-                            .hasBucketBoundaries(
-                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
-                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/hello")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSumGreaterThan(0)
+                        .hasBucketBoundaries(
+                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1,
+                            0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                            equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/hello"))));
     if (testSource == TestSource.RMI) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.spring-rmi-4.0",
@@ -201,17 +200,16 @@ class SpringRmiTest {
                   .hasName("rpc.server.call.duration")
                   .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                   .hasUnit("s")
-                  .hasHistogramSatisfying(histogram ->
-                      histogram.hasPointsSatisfying(point ->
-                          point
-                              .hasCount(1)
-                              .hasSumGreaterThan(0)
-                              .hasBucketBoundaries(
-                                  0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
-                                  0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                  equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/hello")))));
+                  .hasHistogramPointsSatisfying(point ->
+                      point
+                          .hasCount(1)
+                          .hasSumGreaterThan(0)
+                          .hasBucketBoundaries(
+                              0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1,
+                              0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                              equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/hello"))));
     }
   }
 
@@ -277,44 +275,41 @@ class SpringRmiTest {
                 .hasName("rpc.client.call.duration")
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasSumGreaterThan(0)
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        "springrmi.app.SpringRmiGreeterParent/inherited")),
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasSumGreaterThan(0)
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        "springrmi.app.SpringRmiGreeterParent/overloaded")),
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasSumGreaterThan(0)
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")))));
+                .hasHistogramPointsSatisfying(
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                equalTo(
+                                    RPC_METHOD, "springrmi.app.SpringRmiGreeterParent/inherited")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                equalTo(
+                                    RPC_METHOD, "springrmi.app.SpringRmiGreeterParent/overloaded")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                equalTo(
+                                    RPC_METHOD,
+                                    "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded"))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-rmi-4.0",
         metric ->
@@ -322,44 +317,41 @@ class SpringRmiTest {
                 .hasName("rpc.server.call.duration")
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasSumGreaterThan(0)
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        "springrmi.app.SpringRmiGreeterParent/inherited")),
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasSumGreaterThan(0)
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        "springrmi.app.SpringRmiGreeterParent/overloaded")),
-                        point ->
-                            point
-                                .hasCount(1)
-                                .hasSumGreaterThan(0)
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded")))));
+                .hasHistogramPointsSatisfying(
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                equalTo(
+                                    RPC_METHOD, "springrmi.app.SpringRmiGreeterParent/inherited")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                equalTo(
+                                    RPC_METHOD, "springrmi.app.SpringRmiGreeterParent/overloaded")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                                equalTo(
+                                    RPC_METHOD,
+                                    "springrmi.app.SpringRmiGreeterIntegerOverload/overloaded"))));
   }
 
   @ParameterizedTest
@@ -467,18 +459,17 @@ class SpringRmiTest {
                 .hasName("rpc.client.call.duration")
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasSumGreaterThan(0)
-                            .hasBucketBoundaries(
-                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
-                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/exceptional"),
-                                equalTo(ERROR_TYPE, error.getClass().getName())))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSumGreaterThan(0)
+                        .hasBucketBoundaries(
+                            0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1,
+                            0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                            equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/exceptional"),
+                            equalTo(ERROR_TYPE, error.getClass().getName()))));
     if (testSource == TestSource.RMI) {
       testing.waitAndAssertMetrics(
           "io.opentelemetry.spring-rmi-4.0",
@@ -487,18 +478,17 @@ class SpringRmiTest {
                   .hasName("rpc.server.call.duration")
                   .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                   .hasUnit("s")
-                  .hasHistogramSatisfying(histogram ->
-                      histogram.hasPointsSatisfying(point ->
-                          point
-                              .hasCount(1)
-                              .hasSumGreaterThan(0)
-                              .hasBucketBoundaries(
-                                  0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
-                                  0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                              .hasAttributesSatisfyingExactly(
-                                  equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
-                                  equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/exceptional"),
-                                  equalTo(ERROR_TYPE, error.getClass().getName())))));
+                  .hasHistogramPointsSatisfying(point ->
+                      point
+                          .hasCount(1)
+                          .hasSumGreaterThan(0)
+                          .hasBucketBoundaries(
+                              0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1,
+                              0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                          .hasAttributesSatisfyingExactly(
+                              equalTo(RPC_SYSTEM_NAME, "spring_rmi"),
+                              equalTo(RPC_METHOD, "springrmi.app.SpringRmiGreeter/exceptional"),
+                              equalTo(ERROR_TYPE, error.getClass().getName()))));
     }
   }
 }

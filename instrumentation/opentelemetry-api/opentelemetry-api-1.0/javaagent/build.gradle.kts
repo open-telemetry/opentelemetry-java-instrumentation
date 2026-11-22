@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -44,9 +45,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation("io.opentelemetry:opentelemetry-api")
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":opentelemetry-api-shaded-for-instrumenting")) {
@@ -78,12 +78,6 @@ testing.suites {
     }
   }
 }
-tasks {
-  check {
-    dependsOn(testing.suites)
-  }
-}
-
 configurations.configureEach {
   if (name == "testRuntimeClasspath" || name == "testCompileClasspath") {
     resolutionStrategy {

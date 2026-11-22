@@ -11,8 +11,10 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.jar.JarOutputStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.testcontainers.utility.DockerImageName;
 
 class AgentStartupReportTest {
   @TempDir Path directory;
@@ -49,6 +51,87 @@ class AgentStartupReportTest {
   }
 
   @Test
+  void petclinicLaunchUsesTheSameApplicationClasspathForEachConfiguration() {
+    var control = AgentStartupBenchmark.arguments(false, false, true);
+    var agent = AgentStartupBenchmark.arguments(true, false, true);
+    assertThat(control)
+        .containsExactly(
+            "-Xmx512m",
+            "-Dloader.path=/app/annotations,/app/startup-helper",
+            "-cp",
+            "/app/spring-petclinic-rest.jar",
+            "org.springframework.boot.loader.PropertiesLauncher");
+    assertThat(agent)
+        .containsExactly(
+            "-Xmx512m",
+            "-javaagent:/tmp/agent.jar",
+            "-Dloader.path=/app/annotations,/app/startup-helper",
+            "-cp",
+            "/app/spring-petclinic-rest.jar",
+            "org.springframework.boot.loader.PropertiesLauncher");
+    assertThat(AgentStartupBenchmark.arguments(false, true, true))
+        .contains("-Dloader.path=/app/annotations,/app/startup-helper");
+  }
+
+  @Test
+  void petclinicReadinessRequiresTheSeededOwner() {
+    PetclinicStartupFixture.validateResponse(
+        200, "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}");
+    assertThatThrownBy(() ->
+            PetclinicStartupFixture.validateResponse(
+                200, "{\"id\":1,\"firstName\":\"Other\",\"lastName\":\"Franklin\"}"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> PetclinicStartupFixture.validateResponse(200, "{}"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() ->
+            PetclinicStartupFixture.validateResponse(
+                503, "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}"))
+        .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void petclinicValidatesInputsBeforeStartingDocker() throws Exception {
+    assertThat(
+            DockerImageName.parse(PetclinicStartupFixture.DATABASE_IMAGE)
+                .isCompatibleWith(DockerImageName.parse("postgres")))
+        .isTrue();
+    Path missing = directory.resolve("missing.jar");
+    Path missingHelper = directory.resolve("missing-helper.jar");
+    assertThatThrownBy(() -> PetclinicStartupFixture.start(missing, missingHelper))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Annotation JAR does not exist");
+    Path invalid = directory.resolve("invalid.jar");
+    new JarOutputStream(Files.newOutputStream(invalid)).close();
+    assertThatThrownBy(() -> PetclinicStartupFixture.start(invalid, missingHelper))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Invalid annotation JAR");
+    Path validAnnotations = directory.resolve("annotations.jar");
+    try (var jar = new JarOutputStream(Files.newOutputStream(validAnnotations))) {
+      jar.putNextEntry(
+          new java.util.jar.JarEntry(
+              "io/opentelemetry/instrumentation/annotations/WithSpan.class"));
+      jar.closeEntry();
+    }
+    assertThatThrownBy(() -> PetclinicStartupFixture.start(validAnnotations, missingHelper))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Petclinic startup helper JAR does not exist");
+    assertThatThrownBy(() -> PetclinicStartupFixture.start(validAnnotations, invalid))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessageContaining("Invalid Petclinic startup helper JAR");
+  }
+
+  @Test
+  void petclinicSummaryUsesTheCommonJvmUptimeBoundary() throws Exception {
+    AgentStartupReport report = new AgentStartupReport(directory);
+    report.summarize(List.of(new AgentStartupReport.Sample("no-agent", 0, false, "ok", 1, 0)));
+    assertThat(Files.readString(directory.resolve("summary.md")))
+        .contains(
+            "JVM uptime sampled inside the application",
+            "return network transit",
+            "Probe polling cadence");
+  }
+
+  @Test
   void acceptsOnlyTheSuccessfulReadinessResponseAndJVMUptime() {
     assertThat(AgentStartupBenchmark.startupSeconds(200, "Hi!", "1250")).isEqualTo(1.25);
     assertThatThrownBy(() -> AgentStartupBenchmark.startupSeconds(503, "Hi!", "1250"))
@@ -61,6 +144,55 @@ class AgentStartupReportTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> AgentStartupBenchmark.startupSeconds(200, "Hi!", "0"))
         .isInstanceOf(IllegalArgumentException.class);
+  }
+
+  @Test
+  void readinessResultIncludesPositiveUptimeAndJvmVersion() {
+    var smoke = AgentStartupBenchmark.readinessResult(200, "Hi!", "1250", "17.0.7+7", false);
+    assertThat(smoke.uptimeSeconds()).isEqualTo(1.25);
+    assertThat(smoke.jvmVersion()).isEqualTo("17.0.7+7");
+
+    var petclinic =
+        AgentStartupBenchmark.readinessResult(
+            200,
+            "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}",
+            "2500",
+            "17.0.7+7",
+            true);
+    assertThat(petclinic.uptimeSeconds()).isEqualTo(2.5);
+    assertThat(petclinic.jvmVersion()).isEqualTo("17.0.7+7");
+
+    assertThatThrownBy(() -> AgentStartupBenchmark.readinessResult(200, "Hi!", "1250", " ", false))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing application JVM version response header");
+  }
+
+  @Test
+  void petclinicRequiresTheValidatedResponseAndPositiveApplicationUptime() {
+    assertThat(
+            AgentStartupBenchmark.petclinicStartupSeconds(
+                200,
+                "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}",
+                "1250"))
+        .isEqualTo(1.25);
+    assertThatThrownBy(() ->
+            AgentStartupBenchmark.petclinicStartupSeconds(
+                200, "{\"id\":1,\"firstName\":\"Other\",\"lastName\":\"Franklin\"}", "1250"))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() ->
+            AgentStartupBenchmark.petclinicStartupSeconds(
+                200,
+                "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}",
+                null))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing application JVM uptime response header");
+    assertThatThrownBy(() ->
+            AgentStartupBenchmark.petclinicStartupSeconds(
+                200,
+                "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}",
+                "0"))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Application JVM uptime must be positive");
   }
 
   @Test
