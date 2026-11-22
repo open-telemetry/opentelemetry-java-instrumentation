@@ -23,6 +23,7 @@ from sandbox import checkout_pr, run_in_sandbox
 COPILOT_REVIEWER = "copilot-pull-request-reviewer[bot]"
 SOL = "gpt-6.1-sol"
 OPUS = "claude-opus-5.5"
+SANDBOX_READY = "[review] Verified sandbox checkout, JDK, and credential isolation"
 
 
 def latest_copilot_review(
@@ -91,12 +92,23 @@ def model_pass(model: str, effort: str, prompt: str, checkout: Path, bundle: Pat
                 answer = content.strip()
         elif event.get("type") == "session.error" and isinstance(data.get("message"), str):
             error_message = data["message"]
+    streams = (result.stdout, result.stderr or "")
+    sandbox_ready = any(SANDBOX_READY in stream for stream in streams)
     if result.returncode:
-        detail = " ".join((error_message or result.stderr).split())[:500]
+        detail = error_message
+        if not detail and not sandbox_ready:
+            diagnostics = [
+                line for stream in streams for line in stream.splitlines()
+                if re.search(r"Sandbox check failed:|\[ERROR\]|Error:|permission denied|not found|No such file",
+                             line, re.IGNORECASE)
+            ]
+            detail = " ".join(diagnostics[-4:] or (result.stderr or "").splitlines()[-4:])
+        if token := os.environ.get("COPILOT_GITHUB_TOKEN"):
+            detail = detail.replace(token, "[redacted]")
+        detail = " ".join(detail.split())[:1000]
         raise RuntimeError(f"{model} failed (exit {result.returncode}): {detail}")
-    if any("Verified sandbox checkout, JDK, and credential isolation" in stream
-           for stream in (result.stdout, result.stderr or "")):
-        progress("Verified sandbox checkout, JDK, and credential isolation")
+    if sandbox_ready:
+        print(SANDBOX_READY, flush=True)
     if not answer:
         raise RuntimeError(f"{model} did not return an answer")
     return answer
