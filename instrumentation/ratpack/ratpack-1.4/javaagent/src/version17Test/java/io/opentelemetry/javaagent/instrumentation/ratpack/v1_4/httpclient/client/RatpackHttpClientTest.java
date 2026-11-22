@@ -68,13 +68,12 @@ class RatpackHttpClientTest extends AbstractRatpackHttpClientTest {
                 .hasName("http.client.request.duration")
                 .satisfies(metricData ->
                     assertThat(metricData.getInstrumentationScopeInfo().getVersion()).isNotEmpty())
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort())))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(SERVER_ADDRESS, uri.getHost()),
+                        equalTo(SERVER_PORT, uri.getPort()))));
   }
 }

@@ -114,12 +114,10 @@ public abstract class AbstractMeterTest {
                     .hasName("testMeter.duration")
                     .hasDescription("This is a test meter")
                     .hasUnit("things")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(12345)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugePointsSatisfying(point ->
+                        point
+                            .hasValue(12345)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -128,12 +126,10 @@ public abstract class AbstractMeterTest {
                     .hasName("testMeter.max")
                     .hasDescription("This is a test meter")
                     .hasUnit("things")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(12345)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugePointsSatisfying(point ->
+                        point
+                            .hasValue(12345)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -142,12 +138,10 @@ public abstract class AbstractMeterTest {
                     .hasName("testMeter.value")
                     .hasDescription("This is a test meter")
                     .hasUnit("things")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(12345)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugePointsSatisfying(point ->
+                        point
+                            .hasValue(12345)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -156,12 +150,10 @@ public abstract class AbstractMeterTest {
                     .hasName("testMeter.unknown")
                     .hasDescription("This is a test meter")
                     .hasUnit("things")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(12345)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugePointsSatisfying(point ->
+                        point
+                            .hasValue(12345)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(meter);

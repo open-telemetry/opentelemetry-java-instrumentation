@@ -80,21 +80,20 @@ final class SqsMetricsAssertions {
                     .hasUnit("s")
                     .hasDescription(
                         "Duration of messaging operation initiated by a producer or consumer client.")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .satisfies(
-                                    data -> assertThat(data.getCount()).isEqualTo(operationCount))
-                                .hasSumGreaterThan(0)
-                                .hasBucketBoundaries(DURATION_BUCKETS)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                    equalTo(ERROR_TYPE, null),
-                                    equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                    equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, serverPort))))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .satisfies(
+                                data -> assertThat(data.getCount()).isEqualTo(operationCount))
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                equalTo(ERROR_TYPE, null),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, serverPort)))));
   }
 
   private static void assertProcessDuration(
@@ -107,20 +106,19 @@ final class SqsMetricsAssertions {
                 assertThat(metric)
                     .hasUnit("s")
                     .hasDescription("Duration of processing operation.")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .satisfies(
-                                    data -> assertThat(data.getCount()).isEqualTo(operationCount))
-                                .hasSumGreaterThan(0)
-                                .hasBucketBoundaries(DURATION_BUCKETS)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                    equalTo(ERROR_TYPE, null),
-                                    equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, serverPort))))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .satisfies(
+                                data -> assertThat(data.getCount()).isEqualTo(operationCount))
+                            .hasSumGreaterThan(0)
+                            .hasBucketBoundaries(DURATION_BUCKETS)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                equalTo(ERROR_TYPE, null),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, serverPort)))));
   }
 
   private static void assertMessageCounter(
@@ -140,17 +138,16 @@ final class SqsMetricsAssertions {
                         metricName.equals("messaging.client.sent.messages")
                             ? "Number of messages producer attempted to send to the broker."
                             : "Number of messages that were delivered to the application.")
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                                    equalTo(ERROR_TYPE, null),
-                                    equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, serverPort))
-                                .hasValue(messageCount)))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                equalTo(ERROR_TYPE, null),
+                                equalTo(MESSAGING_DESTINATION_NAME, "testSdkSqs"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, serverPort))
+                            .hasValue(messageCount))));
   }
 
   private SqsMetricsAssertions() {}

@@ -25,6 +25,17 @@ dependencies {
 }
 
 testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+
+      val rocketmqVersion = baseVersion("5.0.0").orLatest()
+      implementation("org.apache.rocketmq:rocketmq-client-java:$rocketmqVersion")
+    }
+  }
+
   executions("test") {
     configureEach {
       if (otelProps.denyUnsafe) {
@@ -57,4 +68,8 @@ testing.suites {
       include("**/RocketMqSimpleConsumerTest.*")
     }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

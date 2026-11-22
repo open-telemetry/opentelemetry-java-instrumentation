@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 import static java.util.Arrays.asList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.vertx.sqlclient.SqlConnectOptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -19,7 +19,7 @@ class VertxServerTargetTest {
 
   @Test
   void separatesSingleNonDefaultPort() {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(
             new SqlConnectOptions().setHost("2001:db8::1").setPort(15432), "postgresql");
 
@@ -35,7 +35,7 @@ class VertxServerTargetTest {
     "ibm.db2, 50000"
   })
   void omitsKnownDefaultPort(String dbSystemName, int defaultPort) {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(
             new SqlConnectOptions().setHost("single.example").setPort(defaultPort), dbSystemName);
 
@@ -44,7 +44,7 @@ class VertxServerTargetTest {
 
   @Test
   void preservesOrderAndDuplicates() {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(
             asList(
                 options("db-b.example", 15432),
@@ -57,7 +57,7 @@ class VertxServerTargetTest {
 
   @Test
   void omitsSharedDefaultPorts() {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(
             asList(options("db-b.example", 5432), options("db-a.example", 5432)), "postgresql");
 
@@ -66,7 +66,7 @@ class VertxServerTargetTest {
 
   @Test
   void bracketsIpv6WhenPortsAreInline() {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(
             asList(options("db.example", 6432), options("[2001:db8::1]", 6432)), "postgresql");
 
@@ -75,7 +75,7 @@ class VertxServerTargetTest {
 
   @Test
   void retainsPortsWhenDefaultIsUnknown() {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(
             asList(options("192.0.2.1", 1234), options("2001:db8::1", 1234)), "other_sql");
 
@@ -84,7 +84,7 @@ class VertxServerTargetTest {
 
   @Test
   void preservesSingleUnixDomainSocket() {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(options("/var/run/postgres:primary", 5432), "postgresql");
 
     assertTarget(target, "/var/run/postgres:primary", null);
@@ -112,7 +112,7 @@ class VertxServerTargetTest {
 
   @Test
   void limitsRenderedEndpointsToFive() {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(
             asList(
                 options("db-1.example", 5432),
@@ -143,7 +143,7 @@ class VertxServerTargetTest {
 
   @Test
   void endpointBeyondRenderLimitControlsPortFormatting() {
-    DbServerTarget target =
+    ServerTarget target =
         VertxServerTarget.from(
             asList(
                 options("db-1.example", 5432),
@@ -184,7 +184,7 @@ class VertxServerTargetTest {
   }
 
   private static void assertTarget(
-      DbServerTarget target, String expectedAddress, Integer expectedPort) {
+      ServerTarget target, String expectedAddress, Integer expectedPort) {
     assertThat(target.getAddress()).isEqualTo(expectedAddress);
     assertThat(target.getPort()).isEqualTo(expectedPort);
   }

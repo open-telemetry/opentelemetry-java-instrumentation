@@ -39,17 +39,16 @@ class RabbitMqMetricsAssertions {
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("{message}")
                     .hasDescription("Number of messages producer attempted to send to the broker.")
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_OPERATION_NAME, "publish"),
-                                    equalTo(stringKey("messaging.system.name"), "rabbitmq"),
-                                    equalTo(ERROR_TYPE, errorType),
-                                    equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                    satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
-                                    satisfies(SERVER_PORT, AbstractLongAssert::isPositive))))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, "publish"),
+                                equalTo(stringKey("messaging.system.name"), "rabbitmq"),
+                                equalTo(ERROR_TYPE, errorType),
+                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
+                                satisfies(SERVER_PORT, AbstractLongAssert::isPositive)))));
   }
 
   static void assertReceiveMetrics(

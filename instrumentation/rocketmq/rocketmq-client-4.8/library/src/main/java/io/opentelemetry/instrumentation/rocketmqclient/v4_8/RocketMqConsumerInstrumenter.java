@@ -78,6 +78,7 @@ final class RocketMqConsumerInstrumenter {
       return context;
     }
 
+    // visible for testing
     RocketMqConsumerRequest getRequest() {
       return request;
     }

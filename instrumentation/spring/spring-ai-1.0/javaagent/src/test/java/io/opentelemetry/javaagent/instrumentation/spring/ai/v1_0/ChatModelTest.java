@@ -844,38 +844,36 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasSumGreaterThan(0.0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL))),
+        metric ->
+            metric
+                .hasName("gen_ai.client.token.usage")
+                .hasHistogramPointsSatisfying(
+                    point ->
                         point
-                            .hasSumGreaterThan(0.0)
+                            .hasSum(3.0)
                             .hasAttributesSatisfyingExactly(
                                 equalTo(GEN_AI_PROVIDER_NAME, "test"),
                                 equalTo(GEN_AI_OPERATION_NAME, CHAT),
                                 equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))),
-        metric ->
-            metric
-                .hasName("gen_ai.client.token.usage")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point ->
-                            point
-                                .hasSum(3.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                    equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
-                        point ->
-                            point
-                                .hasSum(2.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                    equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                    equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                    equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
-                                    equalTo(GEN_AI_TOKEN_TYPE, OUTPUT)))));
+                                equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                equalTo(GEN_AI_TOKEN_TYPE, INPUT)),
+                    point ->
+                        point
+                            .hasSum(2.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                                equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                                equalTo(GEN_AI_RESPONSE_MODEL, MODEL),
+                                equalTo(GEN_AI_TOKEN_TYPE, OUTPUT))));
   }
 
   private static void assertMetricsWithoutTokenUsage() {
@@ -884,15 +882,14 @@ class ChatModelTest {
         metric ->
             metric
                 .hasName("gen_ai.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasSumGreaterThan(0.0)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(GEN_AI_PROVIDER_NAME, "test"),
-                                equalTo(GEN_AI_OPERATION_NAME, CHAT),
-                                equalTo(GEN_AI_REQUEST_MODEL, MODEL),
-                                equalTo(GEN_AI_RESPONSE_MODEL, MODEL)))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasSumGreaterThan(0.0)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(GEN_AI_PROVIDER_NAME, "test"),
+                            equalTo(GEN_AI_OPERATION_NAME, CHAT),
+                            equalTo(GEN_AI_REQUEST_MODEL, MODEL),
+                            equalTo(GEN_AI_RESPONSE_MODEL, MODEL))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME, "gen_ai.client.token.usage", metrics -> metrics.isEmpty());
   }

@@ -154,16 +154,15 @@ class SpringWebfluxServerInstrumentationTest
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point -> {
-                      if (errorType != null) {
-                        point.hasAttribute(ERROR_TYPE, errorType);
-                      } else {
-                        point.hasAttributesSatisfying(attributes -> {
-                          assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE)).isEqualTo(200L);
-                          assertThat(attributes.get(ERROR_TYPE)).isNull();
-                        });
-                      }
-                    })));
+                .hasHistogramPointsSatisfying(point -> {
+                  if (errorType != null) {
+                    point.hasAttribute(ERROR_TYPE, errorType);
+                  } else {
+                    point.hasAttributesSatisfying(attributes -> {
+                      assertThat(attributes.get(HTTP_RESPONSE_STATUS_CODE)).isEqualTo(200L);
+                      assertThat(attributes.get(ERROR_TYPE)).isNull();
+                    });
+                  }
+                }));
   }
 }

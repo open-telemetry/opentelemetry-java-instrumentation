@@ -243,15 +243,13 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
             metric
                 .hasName("messaging.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(
-                                ERROR_TYPE,
-                                failure == null ? null : failure.getClass().getName())))),
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                        equalTo(
+                            ERROR_TYPE, failure == null ? null : failure.getClass().getName()))),
         metric ->
             metric
                 .hasName("messaging.client.sent.messages")

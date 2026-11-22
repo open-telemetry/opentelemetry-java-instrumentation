@@ -439,20 +439,19 @@ class VertxRedisClientErrorTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, "redis"),
-                                equalTo(DB_NAMESPACE, "0"),
-                                equalTo(DB_OPERATION_NAME, operation),
-                                equalTo(SERVER_ADDRESS, HOST),
-                                equalTo(SERVER_PORT, server.port),
-                                equalTo(NETWORK_PEER_ADDRESS, HOST),
-                                equalTo(NETWORK_PEER_PORT, server.port),
-                                equalTo(DB_RESPONSE_STATUS_CODE, responseStatusCode),
-                                equalTo(ERROR_TYPE, errorType)))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "redis"),
+                            equalTo(DB_NAMESPACE, "0"),
+                            equalTo(DB_OPERATION_NAME, operation),
+                            equalTo(SERVER_ADDRESS, HOST),
+                            equalTo(SERVER_PORT, server.port),
+                            equalTo(NETWORK_PEER_ADDRESS, HOST),
+                            equalTo(NETWORK_PEER_PORT, server.port),
+                            equalTo(DB_RESPONSE_STATUS_CODE, responseStatusCode),
+                            equalTo(ERROR_TYPE, errorType))));
     assertThat(server.failure.get()).isNull();
   }
 

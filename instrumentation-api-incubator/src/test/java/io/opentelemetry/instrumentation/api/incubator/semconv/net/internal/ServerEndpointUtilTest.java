@@ -3,20 +3,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
+package io.opentelemetry.instrumentation.api.incubator.semconv.net.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
-class DbServerEndpointUtilTest {
+class ServerEndpointUtilTest {
 
   @ParameterizedTest
   @ValueSource(
       strings = {"::", "::1", "2001:db8::1", "::ffff:192.0.2.1", "fe80::1%eth0", "FE80::1"})
   void acceptsIpv6Literals(String host) {
-    assertThat(DbServerEndpointUtil.isIpv6Literal(host)).isTrue();
+    assertThat(ServerEndpointUtil.isIpv6Literal(host)).isTrue();
   }
 
   @ParameterizedTest
@@ -58,31 +58,31 @@ class DbServerEndpointUtilTest {
         "fe80::1%3dpassword"
       })
   void rejectsNonIpv6Literals(String host) {
-    assertThat(DbServerEndpointUtil.isIpv6Literal(host)).isFalse();
+    assertThat(ServerEndpointUtil.isIpv6Literal(host)).isFalse();
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"0.0.0.0", "1.2.3.4", "255.255.255.255"})
   void acceptsIpv4Literals(String host) {
-    assertThat(DbServerEndpointUtil.isIpv4Literal(host)).isTrue();
+    assertThat(ServerEndpointUtil.isIpv4Literal(host)).isTrue();
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"1.2.3", "256.1.1.1", "010.1.1.1", "1.2.3.-4"})
   void rejectsNonIpv4Literals(String host) {
-    assertThat(DbServerEndpointUtil.isIpv4Literal(host)).isFalse();
+    assertThat(ServerEndpointUtil.isIpv4Literal(host)).isFalse();
   }
 
   @ParameterizedTest
   @ValueSource(ints = {1, 5432, 65535})
   void acceptsValidPorts(int port) {
-    assertThat(DbServerEndpointUtil.parsePort(Integer.toString(port))).isEqualTo(port);
+    assertThat(ServerEndpointUtil.parsePort(Integer.toString(port))).isEqualTo(port);
   }
 
   @ParameterizedTest
   @ValueSource(strings = {"01", "001", "0001", "00001"})
   void acceptsPortsWithLeadingZeros(String value) {
-    assertThat(DbServerEndpointUtil.parsePort(value)).isEqualTo(1);
+    assertThat(ServerEndpointUtil.parsePort(value)).isEqualTo(1);
   }
 
   @ParameterizedTest
@@ -107,6 +107,6 @@ class DbServerEndpointUtilTest {
         "1.5"
       })
   void rejectsInvalidPorts(String value) {
-    assertThat(DbServerEndpointUtil.parsePort(value)).isNull();
+    assertThat(ServerEndpointUtil.parsePort(value)).isNull();
   }
 }

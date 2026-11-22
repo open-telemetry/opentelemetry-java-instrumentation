@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.OTHER_SQL;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.List;
 import java.util.Objects;
@@ -17,7 +17,7 @@ public final class VertxSqlClientInfo {
 
   private final String dbSystemName;
   @Nullable private final String namespace;
-  @Nullable private final DbServerTarget serverTarget;
+  @Nullable private final ServerTarget serverTarget;
 
   @Nullable
   public static VertxSqlClientInfo create(
@@ -50,7 +50,7 @@ public final class VertxSqlClientInfo {
   }
 
   private VertxSqlClientInfo(
-      String dbSystemName, @Nullable String namespace, @Nullable DbServerTarget serverTarget) {
+      String dbSystemName, @Nullable String namespace, @Nullable ServerTarget serverTarget) {
     this.dbSystemName = dbSystemName;
     this.namespace = namespace;
     this.serverTarget = serverTarget;
@@ -66,7 +66,7 @@ public final class VertxSqlClientInfo {
   }
 
   @Nullable
-  public DbServerTarget getServerTarget() {
+  public ServerTarget getServerTarget() {
     return serverTarget;
   }
 

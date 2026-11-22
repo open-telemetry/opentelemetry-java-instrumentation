@@ -25,7 +25,7 @@ import com.datastax.oss.driver.api.core.session.Session;
 import com.datastax.oss.driver.internal.core.config.typesafe.DefaultDriverConfigLoader;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import com.datastax.oss.driver.internal.core.metadata.SniEndPoint;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.net.InetSocketAddress;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -55,7 +55,7 @@ class CassandraServerTargetTest {
   @MethodSource("validContactPointTargets")
   void contactPointsProduceTheExpectedTarget(
       List<String> contactPoints, String expectedAddress, Integer expectedPort) {
-    DbServerTarget target = CassandraServerTarget.of(contactPoints);
+    ServerTarget target = CassandraServerTarget.of(contactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo(expectedAddress);
@@ -135,9 +135,9 @@ class CassandraServerTargetTest {
 
   @Test
   void configuredMixedPortContactPointOrderIsNormalized() {
-    DbServerTarget first =
+    ServerTarget first =
         CassandraServerTarget.of(asList("node2.example.com:9142", "node1.example.com:9042"));
-    DbServerTarget second =
+    ServerTarget second =
         CassandraServerTarget.of(asList("node1.example.com:9042", "node2.example.com:9142"));
 
     assertThat(first).isNotNull();
@@ -152,7 +152,7 @@ class CassandraServerTargetTest {
   @MethodSource("validExplicitAddressTargets")
   void explicitAddressesProduceTheExpectedTarget(
       List<InetSocketAddress> contactPoints, String expectedAddress, Integer expectedPort) {
-    DbServerTarget target = CassandraServerTarget.ofAddresses(contactPoints);
+    ServerTarget target = CassandraServerTarget.ofAddresses(contactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo(expectedAddress);
@@ -297,7 +297,7 @@ class CassandraServerTargetTest {
     configureContactPoints(asList("configured2.example.com:9042", "configured1.example.com:9042"));
     when(session.getContext()).thenReturn(context);
 
-    DbServerTarget target = CassandraServerTarget.of(session, emptySet());
+    ServerTarget target = CassandraServerTarget.of(session, emptySet());
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("configured1.example.com,configured2.example.com");
@@ -314,7 +314,7 @@ class CassandraServerTargetTest {
                 new DefaultEndPoint(
                     InetSocketAddress.createUnresolved("programmatic.example.com", 9142))));
 
-    DbServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+    ServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
@@ -332,7 +332,7 @@ class CassandraServerTargetTest {
                 new DefaultEndPoint(
                     InetSocketAddress.createUnresolved("duplicate.example.com", 9042))));
 
-    DbServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+    ServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("duplicate.example.com,duplicate.example.com");
@@ -350,8 +350,8 @@ class CassandraServerTargetTest {
     Set<EndPoint> forward = new LinkedHashSet<>(asList(first, second));
     Set<EndPoint> reverse = new LinkedHashSet<>(asList(second, first));
 
-    DbServerTarget forwardTarget = CassandraServerTarget.of(session, forward);
-    DbServerTarget reverseTarget = CassandraServerTarget.of(session, reverse);
+    ServerTarget forwardTarget = CassandraServerTarget.of(session, forward);
+    ServerTarget reverseTarget = CassandraServerTarget.of(session, reverse);
 
     assertThat(forwardTarget).isNotNull();
     assertThat(reverseTarget).isNotNull();
@@ -370,7 +370,7 @@ class CassandraServerTargetTest {
         new DefaultEndPoint(InetSocketAddress.createUnresolved("node3.example.com", 9042));
     Set<EndPoint> programmaticContactPoints = new LinkedHashSet<>(asList(second, first));
 
-    DbServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
+    ServerTarget target = CassandraServerTarget.of(session, programmaticContactPoints);
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
@@ -384,7 +384,7 @@ class CassandraServerTargetTest {
     when(session.getContext()).thenReturn(context);
     when(context.getConfig()).thenReturn(new DefaultDriverConfigLoader().getInitialConfig());
 
-    DbServerTarget target =
+    ServerTarget target =
         CassandraServerTarget.of(
             session,
             singleton(

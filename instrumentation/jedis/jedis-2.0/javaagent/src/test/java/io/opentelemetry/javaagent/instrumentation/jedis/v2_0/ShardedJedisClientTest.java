@@ -142,9 +142,8 @@ class ShardedJedisClientTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget))));
+                .hasHistogramPointsSatisfying(
+                    point -> point.hasAttribute(SERVER_ADDRESS, configuredTarget)));
   }
 
   @Test

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import org.junit.jupiter.api.Test;
 
 class GeodeServerTargetBuilderTest {
@@ -19,7 +19,7 @@ class GeodeServerTargetBuilderTest {
     builder.setServerGroup("orders");
     builder.addServer("cache.example", 40404);
 
-    DbServerTarget target = builder.build();
+    ServerTarget target = builder.build();
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("cache.example");
     assertThat(target.getPort()).isNull();
@@ -45,7 +45,7 @@ class GeodeServerTargetBuilderTest {
     builder.addLocator("a.example", 10334);
     builder.setServerGroup("orders");
 
-    DbServerTarget target = builder.build();
+    ServerTarget target = builder.build();
     assertThat(target).isNotNull();
     assertThat(target.getAddress())
         .isEqualTo(
@@ -64,7 +64,7 @@ class GeodeServerTargetBuilderTest {
     builder.addServer("b.example", 40404);
     builder.addServer("a.example", 40404);
 
-    DbServerTarget target = builder.build();
+    ServerTarget target = builder.build();
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("a.example,b.example,c.example,d.example,e.example");
     assertThat(target.getPort()).isNull();
@@ -81,7 +81,7 @@ class GeodeServerTargetBuilderTest {
     assertThat(builder.build()).isNull();
 
     builder.addServer("two.example", 40405);
-    DbServerTarget target = builder.build();
+    ServerTarget target = builder.build();
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("two.example");
     assertThat(target.getPort()).isEqualTo(40405);
@@ -92,13 +92,13 @@ class GeodeServerTargetBuilderTest {
     GeodeServerTargetBuilder builder = new GeodeServerTargetBuilder();
     builder.addServer("one.example", 40404);
 
-    DbServerTarget target = builder.build();
+    ServerTarget target = builder.build();
     assertThat(target).isNotNull();
 
     builder.addServer("two.example", 40405);
     builder.setServerGroup("orders");
 
-    DbServerTarget updatedTarget = builder.build();
+    ServerTarget updatedTarget = builder.build();
     assertThat(updatedTarget).isNotNull();
     assertThat(target.getAddress()).isEqualTo("one.example");
     assertThat(target.getPort()).isNull();

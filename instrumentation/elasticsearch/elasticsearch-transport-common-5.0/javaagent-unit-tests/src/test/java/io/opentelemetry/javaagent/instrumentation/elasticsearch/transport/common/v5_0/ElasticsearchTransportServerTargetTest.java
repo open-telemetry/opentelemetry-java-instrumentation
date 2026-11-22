@@ -10,7 +10,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0.ElasticsearchTransportServerTarget.Endpoint;
 import org.junit.jupiter.api.Test;
 
@@ -24,7 +24,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void oneAddressKeepsItsNonDefaultPort() {
-    DbServerTarget target =
+    ServerTarget target =
         ElasticsearchTransportServerTarget.of(singletonList(new Endpoint("10.0.0.1", 9301)));
 
     assertThat(target).isNotNull();
@@ -34,7 +34,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void oneAddressOmitsTheDefaultPort() {
-    DbServerTarget target =
+    ServerTarget target =
         ElasticsearchTransportServerTarget.of(singletonList(new Endpoint("10.0.0.1", 9300)));
 
     assertThat(target).isNotNull();
@@ -44,7 +44,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void multipleAddressesOmitTheirSharedDefaultPort() {
-    DbServerTarget target =
+    ServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("10.0.0.1", 9300), new Endpoint("10.0.0.2", 9300)));
 
@@ -55,7 +55,7 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void multipleAddressesIncludeTheirSharedNonDefaultPort() {
-    DbServerTarget target =
+    ServerTarget target =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("10.0.0.1", 9400), new Endpoint("10.0.0.2", 9400)));
 
@@ -66,10 +66,10 @@ class ElasticsearchTransportServerTargetTest {
 
   @Test
   void configuredTransportAddressOrderDoesNotChangeTarget() {
-    DbServerTarget first =
+    ServerTarget first =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("::1", 9301), new Endpoint("10.0.0.1", 9300)));
-    DbServerTarget second =
+    ServerTarget second =
         ElasticsearchTransportServerTarget.of(
             asList(new Endpoint("10.0.0.1", 9300), new Endpoint("::1", 9301)));
 

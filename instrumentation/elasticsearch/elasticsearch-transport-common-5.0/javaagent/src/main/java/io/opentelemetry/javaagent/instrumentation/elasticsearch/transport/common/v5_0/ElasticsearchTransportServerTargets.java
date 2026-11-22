@@ -5,15 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.elasticsearch.client.support.AbstractClient;
 
 public class ElasticsearchTransportServerTargets {
-  private static final VirtualField<AbstractClient, DbServerTarget> SERVER_TARGET =
-      VirtualField.find(AbstractClient.class, DbServerTarget.class);
+  private static final VirtualField<AbstractClient, ServerTarget> SERVER_TARGET =
+      VirtualField.find(AbstractClient.class, ServerTarget.class);
   private static final VirtualField<AbstractClient, AbstractClient> DELEGATE =
       VirtualField.find(AbstractClient.class, AbstractClient.class);
   private static final VirtualField<AbstractClient, UpdateState> UPDATE_STATE =
@@ -49,7 +49,7 @@ public class ElasticsearchTransportServerTargets {
       AbstractClient client,
       @Nullable UpdateToken token,
       @Nullable List<ElasticsearchTransportServerTarget.Endpoint> endpoints) {
-    DbServerTarget target = ElasticsearchTransportServerTarget.of(endpoints);
+    ServerTarget target = ElasticsearchTransportServerTarget.of(endpoints);
     UpdateState state = UPDATE_STATE.get(client);
     if (token == null || state != token.state) {
       return;
@@ -68,8 +68,8 @@ public class ElasticsearchTransportServerTargets {
   }
 
   @Nullable
-  public static DbServerTarget get(AbstractClient client) {
-    DbServerTarget target = SERVER_TARGET.get(client);
+  public static ServerTarget get(AbstractClient client) {
+    ServerTarget target = SERVER_TARGET.get(client);
     if (target != null) {
       return target;
     }
