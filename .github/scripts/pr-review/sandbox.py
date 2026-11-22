@@ -41,6 +41,8 @@ def run_in_sandbox(checkout: Path, inputs: Path, args: list[str]) -> subprocess.
         raise RuntimeError("Copilot CLI is not installed")
     java_home = os.environ["JAVA_HOME"]
     cli_dir = Path(copilot).parent.parent
+    # AWF creates root-owned mount points beside its work directory. The disposable runner removes them.
+    awf_work = Path(tempfile.mkdtemp(prefix="pr-review-awf-", dir=os.environ.get("RUNNER_TEMP"))) / "work"
     with tempfile.TemporaryDirectory(prefix="pass-", dir=checkout.parent) as temp:
         root = Path(temp)
         workspace = root / "checkout"
@@ -67,7 +69,7 @@ def run_in_sandbox(checkout: Path, inputs: Path, args: list[str]) -> subprocess.
         env["GITHUB_WORKSPACE"] = str(workspace)
         return run(
             [
-                "awf", "--config", str(config), "--work-dir", str(root / "awf"),
+                "awf", "--config", str(config), "--work-dir", str(awf_work),
                 "--image-tag", os.environ["AWF_IMAGE_TAG"], "--container-workdir", str(workspace),
                 "--mount", f"{cli_dir}:{cli_dir}:ro", "--mount", f"{inputs}:{inputs}:ro",
                 "--mount", f"{java_home}:{java_home}:ro", "--env", f"JAVA_HOME={java_home}",

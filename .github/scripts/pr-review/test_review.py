@@ -134,6 +134,7 @@ class ReviewTest(unittest.TestCase):
                     "ACTIONS_RUNTIME_TOKEN": "fixture",
                     "JAVA_HOME": "/jdk",
                     "AWF_IMAGE_TAG": "fixture",
+                    "RUNNER_TEMP": directory,
                 }),
                 mock.patch.object(sandbox.shutil, "which", return_value=str(cli)),
                 mock.patch.object(sandbox, "run", side_effect=launch) as run,
