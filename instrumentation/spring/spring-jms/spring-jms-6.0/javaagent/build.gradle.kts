@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -42,9 +43,8 @@ otelJava {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
       implementation(project(":instrumentation:jms:jms-3.0:javaagent"))
@@ -80,11 +80,5 @@ testing.suites {
 
       systemProperty("testJmsDisabled", "true")
     }
-  }
-}
-
-tasks {
-  check {
-    dependsOn(testing.suites)
   }
 }

@@ -34,7 +34,7 @@ class CamelTest extends TargetSystemTest {
 
     GenericContainer<?> target =
         new GenericContainer<>(
-                "eclipse-temurin:17.0.21_9-jre@sha256:fb2cec8da84e3f086b59e29bf432d372e396fe0c247adcfb89303a28c2e313c0")
+                "eclipse-temurin:17.0.21.1_2-jre@sha256:1c8ecf975c9b8e4f1b574af0489c244fec250c4bb42bf8ea726b3e0c9169b1f1")
             .withCommand(String.format("java %s -jar /camel_test.jar", String.join(" ", jvmArgs)))
             .waitingFor(Wait.forLogMessage(".*Camel test application started.*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));

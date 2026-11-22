@@ -14,8 +14,8 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.mysql.cj.conf.ConnectionUrl;
 import com.mysql.cj.conf.HostInfo;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.jdbc.internal.JdbcConnectionUrlParser;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
@@ -125,7 +125,7 @@ class MysqlUrlParserTest {
       delimiter = '|')
   void mariaDbPreservesIpv6HostParsing(String url, String host, Integer port) {
     assertThat(JdbcConnectionUrlParser.parse(url, null).getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create(host, port));
+        .isEqualTo(ServerTarget.create(host, port));
   }
 
   @ParameterizedTest
@@ -146,7 +146,7 @@ class MysqlUrlParserTest {
                         .map(host -> tuple(normalizeHost(host.getHost()), host.getPort()))
                         .collect(toList())));
 
-    DbServerTargetBuilder target = DbServerTarget.builder(3306);
+    ServerTargetBuilder target = ServerTarget.builder(3306);
     for (HostInfo host : expected.getHostsList()) {
       target.addEndpoint(normalizeHost(host.getHost()), host.getPort());
     }
@@ -297,7 +297,7 @@ class MysqlUrlParserTest {
     DbInfo info = JdbcConnectionUrlParser.parse(url, null);
 
     assertThat(info.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create(multipleHosts ? "h1,h2" : "h1", null));
+        .isEqualTo(ServerTarget.create(multipleHosts ? "h1,h2" : "h1", null));
     assertThat(info.getDbNamespace()).isEqualTo(url.contains("/db") ? "db" : null);
   }
 
@@ -352,7 +352,7 @@ class MysqlUrlParserTest {
   void encodedAtSignsDoNotChangeHostOrNamespaceParsing(String url, String namespace) {
     DbInfo info = JdbcConnectionUrlParser.parse(url, null);
 
-    assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", null));
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1", null));
     assertThat(info.getDbNamespace()).isEqualTo(namespace);
   }
 
@@ -363,7 +363,7 @@ class MysqlUrlParserTest {
         JdbcConnectionUrlParser.parse(
             url + "#ignored@h2?serverName=wrong&portNumber=2222&databaseName=wrong", null);
 
-    assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", 1111));
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1", 1111));
     assertThat(info.getDbNamespace()).isEqualTo("db");
   }
 
@@ -383,7 +383,7 @@ class MysqlUrlParserTest {
     DbInfo info = JdbcConnectionUrlParser.parse(url, properties);
 
     assertThat(info.getConfiguredServerTarget())
-        .isEqualTo(host == null ? null : DbServerTarget.create(host, port));
+        .isEqualTo(host == null ? null : ServerTarget.create(host, port));
     assertThat(info.getDbNamespace()).isEqualTo("db");
   }
 
@@ -412,7 +412,7 @@ class MysqlUrlParserTest {
     DbInfo info = JdbcConnectionUrlParser.parse(url, null);
 
     assertThat(info.getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("h1:1111,h2:2222,h3:3333", null));
+        .isEqualTo(ServerTarget.create("h1:1111,h2:2222,h3:3333", null));
     assertThat(info.getDbNamespace()).isEqualTo("db");
   }
 
@@ -511,7 +511,7 @@ class MysqlUrlParserTest {
   void namespaceAndHostNormalizationRemainCompatible(String url) {
     DbInfo info = JdbcConnectionUrlParser.parse(url, null);
 
-    assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", 1111));
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1", 1111));
     assertThat(info.getDbNamespace()).isEqualTo("dbA");
   }
 
@@ -520,7 +520,7 @@ class MysqlUrlParserTest {
   void malformedDatabasePathsDoNotInvalidateConfiguredHosts(String authority) {
     DbInfo info = JdbcConnectionUrlParser.parse("jdbc:mysql://" + authority + "/db name", null);
 
-    assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("h1", 1111));
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("h1", 1111));
     assertThat(info.getDbNamespace()).isNull();
   }
 }

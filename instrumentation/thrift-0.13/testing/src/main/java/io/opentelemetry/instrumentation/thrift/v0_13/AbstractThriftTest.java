@@ -359,17 +359,15 @@ public abstract class AbstractThriftTest {
                     .hasName("rpc.server.call.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        getServerServiceName(handlerClassName) + "/say")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                equalTo(
+                                    RPC_METHOD, getServerServiceName(handlerClassName) + "/say"))));
     getTesting()
         .waitAndAssertMetrics(
             "io.opentelemetry.thrift-0.13",
@@ -378,17 +376,16 @@ public abstract class AbstractThriftTest {
                     .hasName("rpc.client.call.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, serverPort),
-                                    equalTo(RPC_METHOD, CustomService.class.getName() + "/say")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, serverPort),
+                                equalTo(RPC_METHOD, CustomService.class.getName() + "/say"))));
   }
 
   @ParameterizedTest
@@ -500,19 +497,18 @@ public abstract class AbstractThriftTest {
                     .hasName("rpc.server.call.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                    equalTo(
-                                        RPC_METHOD,
-                                        getServerServiceName(CustomHandler.class.getName())
-                                            + "/withError"),
-                                    equalTo(ERROR_TYPE, "_OTHER")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                equalTo(
+                                    RPC_METHOD,
+                                    getServerServiceName(CustomHandler.class.getName())
+                                        + "/withError"),
+                                equalTo(ERROR_TYPE, "_OTHER"))));
     getTesting()
         .waitAndAssertMetrics(
             "io.opentelemetry.thrift-0.13",
@@ -521,22 +517,20 @@ public abstract class AbstractThriftTest {
                     .hasName("rpc.client.call.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasBucketBoundaries(
-                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
-                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
-                                    equalTo(SERVER_ADDRESS, "localhost"),
-                                    equalTo(SERVER_PORT, port),
-                                    equalTo(
-                                        RPC_METHOD, CustomService.class.getName() + "/withError"),
-                                    equalTo(
-                                        stringKey("rpc.status_code"),
-                                        Integer.toString(TApplicationException.INTERNAL_ERROR)),
-                                    equalTo(ERROR_TYPE, TApplicationException.class.getName())))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasBucketBoundaries(
+                                0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05,
+                                0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(RPC_SYSTEM_NAME, "apache_thrift"),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, port),
+                                equalTo(RPC_METHOD, CustomService.class.getName() + "/withError"),
+                                equalTo(
+                                    stringKey("rpc.status_code"),
+                                    Integer.toString(TApplicationException.INTERNAL_ERROR)),
+                                equalTo(ERROR_TYPE, TApplicationException.class.getName()))));
   }
 
   @Test

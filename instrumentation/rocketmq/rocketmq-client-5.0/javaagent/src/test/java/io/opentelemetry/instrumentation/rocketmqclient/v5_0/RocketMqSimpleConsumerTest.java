@@ -196,31 +196,29 @@ class RocketMqSimpleConsumerTest {
         metrics ->
             metrics.satisfiesExactly(metric ->
                 assertThat(metric)
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasCount(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                    equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                    equalTo(MESSAGING_OPERATION_TYPE, "receive"))))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
+                                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                equalTo(MESSAGING_OPERATION_TYPE, "receive")))));
     testing.waitAndAssertMetrics(
         INSTRUMENTATION_NAME,
         "messaging.client.consumed.messages",
         metrics ->
             metrics.satisfiesExactly(metric ->
                 assertThat(metric)
-                    .hasLongSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(1)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                    equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
-                                    equalTo(MESSAGING_OPERATION_NAME, "receive"))))));
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(MESSAGING_DESTINATION_NAME, TOPIC),
+                                equalTo(MESSAGING_OPERATION_NAME, "receive")))));
   }
 
   @Test

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.common.v4_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import javax.annotation.Nullable;
 
 public class VertxSqlClientRequest {
@@ -37,13 +37,13 @@ public class VertxSqlClientRequest {
 
   @Nullable
   public String getConfiguredServerAddress() {
-    DbServerTarget serverTarget = getInfo().getServerTarget();
+    ServerTarget serverTarget = getInfo().getServerTarget();
     return serverTarget != null ? serverTarget.getAddress() : null;
   }
 
   @Nullable
   public Integer getConfiguredServerPort() {
-    DbServerTarget serverTarget = getInfo().getServerTarget();
+    ServerTarget serverTarget = getInfo().getServerTarget();
     return serverTarget != null ? serverTarget.getPort() : null;
   }
 

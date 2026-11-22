@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import javax.annotation.Nullable;
 
 public class CouchbaseServerTarget {
@@ -14,11 +14,11 @@ public class CouchbaseServerTarget {
   private static final int COUCHBASES_DEFAULT_PORT = 11207;
   private static final int COUCHBASE2_DEFAULT_PORT = 18098;
 
-  private final DbServerTarget target;
+  private final ServerTarget target;
   @Nullable private final String scheme;
 
   @Nullable
-  public static CouchbaseServerTarget direct(@Nullable DbServerTarget target) {
+  public static CouchbaseServerTarget direct(@Nullable ServerTarget target) {
     return target == null ? null : new CouchbaseServerTarget(target, null);
   }
 
@@ -33,12 +33,12 @@ public class CouchbaseServerTarget {
     } else {
       return null;
     }
-    DbServerTarget target =
-        DbServerTarget.builder(defaultPort(scheme)).addEndpoint(cleanHost(host), -1).build();
+    ServerTarget target =
+        ServerTarget.builder(defaultPort(scheme)).addEndpoint(cleanHost(host), -1).build();
     return target == null ? null : new CouchbaseServerTarget(target, canonicalScheme);
   }
 
-  private CouchbaseServerTarget(DbServerTarget target, @Nullable String scheme) {
+  private CouchbaseServerTarget(ServerTarget target, @Nullable String scheme) {
     this.target = target;
     this.scheme = scheme;
   }

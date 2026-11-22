@@ -11,7 +11,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.util.stream.Stream;
 import org.apache.http.HttpHost;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void singleHostKeepsItsHostAndPort() {
-    DbServerTarget target =
+    ServerTarget target =
         ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example", 9200, "https")));
 
     assertThat(target).isNotNull();
@@ -40,7 +40,7 @@ class ElasticsearchServerTargetTest {
   @ParameterizedTest
   @MethodSource("defaultPortCases")
   void singleHostOmitsItsDefaultPort(String scheme, int port) {
-    DbServerTarget target =
+    ServerTarget target =
         ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example", port, scheme)));
 
     assertThat(target).isNotNull();
@@ -50,7 +50,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void singleHostWithoutPortHasNoPort() {
-    DbServerTarget target = ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example")));
+    ServerTarget target = ElasticsearchServerTarget.of(singletonList(new HttpHost("es.example")));
 
     assertThat(target).isNotNull();
     assertThat(target.getAddress()).isEqualTo("es.example");
@@ -59,7 +59,7 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void mixedHttpAndHttpsDefaultPortsAreOmitted() {
-    DbServerTarget target =
+    ServerTarget target =
         ElasticsearchServerTarget.of(
             asList(
                 new HttpHost("secure.example", 443, "https"),
@@ -72,10 +72,10 @@ class ElasticsearchServerTargetTest {
 
   @Test
   void configuredNodeOrderDoesNotChangeTarget() {
-    DbServerTarget first =
+    ServerTarget first =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h3", 9202), new HttpHost("h1", 9200), new HttpHost("h2", 9201)));
-    DbServerTarget second =
+    ServerTarget second =
         ElasticsearchServerTarget.of(
             asList(new HttpHost("h2", 9201), new HttpHost("h3", 9202), new HttpHost("h1", 9200)));
 
