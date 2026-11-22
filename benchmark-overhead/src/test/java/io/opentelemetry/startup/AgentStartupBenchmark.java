@@ -221,17 +221,10 @@ class AgentStartupBenchmark {
               MountableFile.forHostPath(configuration.agent()), "/tmp/agent.jar");
         }
         application.start();
-        HttpResponse<String> response = awaitReadiness(application, client, petclinic != null);
+        ReadinessResult readiness = awaitReadiness(application, client, petclinic != null);
         Instant cutoff = Instant.now();
-        double startupSeconds =
-            uptimeSeconds(response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null));
-        String jvmVersion =
-            petclinic == null
-                ? response.headers().firstValue(JVM_VERSION_HEADER).orElse(null)
-                : application.execInContainer("java", "-version").getStderr().trim();
-        if (jvmVersion == null || jvmVersion.isBlank()) {
-          throw new IllegalArgumentException("Missing application JVM version response header");
-        }
+        double startupSeconds = readiness.uptimeSeconds();
+        String jvmVersion = readiness.jvmVersion();
 
         var image = docker.inspectImageCmd(application.getContainerInfo().getImageId()).exec();
         metadata.setProperty("image.id", image.getId());
@@ -277,7 +270,7 @@ class AgentStartupBenchmark {
     }
   }
 
-  private static HttpResponse<String> awaitReadiness(
+  private static ReadinessResult awaitReadiness(
       GenericContainer<?> application, HttpClient client, boolean petclinic) throws Exception {
     URI uri =
         URI.create(
@@ -294,18 +287,12 @@ class AgentStartupBenchmark {
         HttpResponse<String> response =
             client.send(request, HttpResponse.BodyHandlers.ofString(UTF_8));
         if (response.statusCode() == 200) {
-          if (petclinic) {
-            petclinicStartupSeconds(
-                response.statusCode(),
-                response.body(),
-                response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null));
-          } else {
-            startupSeconds(
-                response.statusCode(),
-                response.body(),
-                response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null));
-          }
-          return response;
+          return readinessResult(
+              response.statusCode(),
+              response.body(),
+              response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null),
+              response.headers().firstValue(JVM_VERSION_HEADER).orElse(null),
+              petclinic);
         }
         if (response.statusCode() != 404 && response.statusCode() != 503) {
           throw new IOException("Readiness returned HTTP " + response.statusCode());
@@ -338,6 +325,18 @@ class AgentStartupBenchmark {
   static double petclinicStartupSeconds(int status, String body, String uptimeHeader) {
     PetclinicStartupFixture.validateResponse(status, body);
     return uptimeSeconds(uptimeHeader);
+  }
+
+  static ReadinessResult readinessResult(
+      int status, String body, String uptimeHeader, String jvmVersionHeader, boolean petclinic) {
+    double uptimeSeconds =
+        petclinic
+            ? petclinicStartupSeconds(status, body, uptimeHeader)
+            : startupSeconds(status, body, uptimeHeader);
+    if (jvmVersionHeader == null || jvmVersionHeader.isBlank()) {
+      throw new IllegalArgumentException("Missing application JVM version response header");
+    }
+    return new ReadinessResult(uptimeSeconds, jvmVersionHeader);
   }
 
   private static double uptimeSeconds(String uptimeHeader) {
@@ -450,6 +449,8 @@ class AgentStartupBenchmark {
     }
     return value;
   }
+
+  record ReadinessResult(double uptimeSeconds, String jvmVersion) {}
 
   private static void saveMetadata(Path directory, Properties metadata) throws IOException {
     try (OutputStream out = Files.newOutputStream(directory.resolve("metadata.properties"))) {

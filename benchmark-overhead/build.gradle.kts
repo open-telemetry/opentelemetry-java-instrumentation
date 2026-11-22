@@ -3,6 +3,10 @@ plugins {
   id("com.diffplug.spotless") version "8.11.0"
 }
 
+val startupHelper = sourceSets.create("startupHelper") {
+  java.srcDir("src/startupHelper/java")
+}
+
 spotless {
   java {
     googleJavaFormat()
@@ -28,11 +32,16 @@ dependencies {
   testImplementation("com.jayway.jsonpath:json-path:3.0.0")
   testImplementation("org.slf4j:slf4j-simple:2.0.20")
   testImplementation("org.assertj:assertj-core:3.27.7")
-  testImplementation("org.springframework.boot:spring-boot-autoconfigure:2.4.2")
   testImplementation("org.springframework:spring-webmvc:5.3.3")
+  add(startupHelper.compileOnlyConfigurationName, "org.springframework:spring-webmvc:5.3.3")
+  testImplementation(startupHelper.output)
 
   testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
   testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+}
+
+tasks.named<JavaCompile>(startupHelper.compileJavaTaskName) {
+  options.release.set(17)
 }
 
 tasks {
@@ -58,23 +67,12 @@ val startupRecorderJar = tasks.register<Jar>("startupRecorderJar") {
   manifest.attributes("Premain-Class" to "io.opentelemetry.startup.StartupRecorder")
 }
 
-val compilePetclinicStartupHelper =
-  tasks.register<JavaCompile>("compilePetclinicStartupHelper") {
-    source(
-      "src/test/java/io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.java",
-      "src/test/java/io/opentelemetry/startup/PetclinicStartupUptimeAutoConfiguration.java"
-    )
-    classpath = sourceSets.test.get().compileClasspath
-    destinationDirectory.set(layout.buildDirectory.dir("classes/petclinicStartupHelper"))
-    options.release.set(17)
-  }
-
 val petclinicStartupHelperJar = tasks.register<Jar>("petclinicStartupHelperJar") {
-  dependsOn(compilePetclinicStartupHelper)
-  from(compilePetclinicStartupHelper) {
-    include("io/opentelemetry/startup/PetclinicStartupUptime*.class")
+  dependsOn(startupHelper.classesTaskName)
+  from(startupHelper.output) {
+    include("io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.class")
+    include("META-INF/spring.factories")
   }
-  from("src/startupHelper/resources")
   archiveFileName.set("petclinic-startup-helper.jar")
 }
 

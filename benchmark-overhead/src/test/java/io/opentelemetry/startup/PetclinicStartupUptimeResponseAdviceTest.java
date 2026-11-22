@@ -17,6 +17,7 @@ import org.springframework.http.server.ServerHttpResponse;
 
 class PetclinicStartupUptimeResponseAdviceTest {
   private static final String STARTUP_UPTIME_HEADER = "X-Startup-JVM-Uptime-Millis";
+  private static final String JVM_VERSION_HEADER = "X-Startup-JVM-Version";
 
   @Test
   void addsUptimeOnlyToSeededOwnerGetAndPreservesBody() {
@@ -36,6 +37,8 @@ class PetclinicStartupUptimeResponseAdviceTest {
     assertThat(result).isSameAs(body);
     assertThat(headers.getFirst(STARTUP_UPTIME_HEADER)).isNotNull();
     assertThat(Long.parseLong(headers.getFirst(STARTUP_UPTIME_HEADER))).isPositive();
+    assertThat(headers.getFirst(JVM_VERSION_HEADER))
+        .isEqualTo(System.getProperty("java.runtime.version"));
 
     headers.clear();
     advice.beforeBodyWrite(
@@ -46,6 +49,7 @@ class PetclinicStartupUptimeResponseAdviceTest {
         request(HttpMethod.GET, "/petclinic/api/owners/2"),
         response(headers));
     assertThat(headers).doesNotContainKey(STARTUP_UPTIME_HEADER);
+    assertThat(headers).doesNotContainKey(JVM_VERSION_HEADER);
   }
 
   @Test
@@ -61,7 +65,7 @@ class PetclinicStartupUptimeResponseAdviceTest {
             request(HttpMethod.POST, "/petclinic/api/owners/1"),
             response(headers));
 
-    assertThat(headers).doesNotContainKey(STARTUP_UPTIME_HEADER);
+    assertThat(headers).doesNotContainKeys(STARTUP_UPTIME_HEADER, JVM_VERSION_HEADER);
   }
 
   private static ServerHttpRequest request(HttpMethod method, String path) {

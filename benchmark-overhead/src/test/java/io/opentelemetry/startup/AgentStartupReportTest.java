@@ -147,6 +147,27 @@ class AgentStartupReportTest {
   }
 
   @Test
+  void readinessResultIncludesPositiveUptimeAndJvmVersion() {
+    var smoke = AgentStartupBenchmark.readinessResult(200, "Hi!", "1250", "17.0.7+7", false);
+    assertThat(smoke.uptimeSeconds()).isEqualTo(1.25);
+    assertThat(smoke.jvmVersion()).isEqualTo("17.0.7+7");
+
+    var petclinic =
+        AgentStartupBenchmark.readinessResult(
+            200,
+            "{\"id\":1,\"firstName\":\"StartupBenchmark\",\"lastName\":\"Franklin\"}",
+            "2500",
+            "17.0.7+7",
+            true);
+    assertThat(petclinic.uptimeSeconds()).isEqualTo(2.5);
+    assertThat(petclinic.jvmVersion()).isEqualTo("17.0.7+7");
+
+    assertThatThrownBy(() -> AgentStartupBenchmark.readinessResult(200, "Hi!", "1250", " ", false))
+        .isInstanceOf(IllegalArgumentException.class)
+        .hasMessage("Missing application JVM version response header");
+  }
+
+  @Test
   void petclinicRequiresTheValidatedResponseAndPositiveApplicationUptime() {
     assertThat(
             AgentStartupBenchmark.petclinicStartupSeconds(

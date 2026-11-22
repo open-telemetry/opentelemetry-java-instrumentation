@@ -7,6 +7,7 @@ package io.opentelemetry.startup;
 
 import com.jayway.jsonpath.JsonPath;
 import io.opentelemetry.containers.PostgresContainer;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.jar.JarFile;
@@ -49,12 +50,14 @@ final class PetclinicStartupFixture implements AutoCloseable {
       throw new IllegalArgumentException("Petclinic startup helper JAR does not exist: " + helper);
     }
     try (JarFile jar = new JarFile(helper.toFile())) {
-      if (jar.getJarEntry("io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.class")
-              == null
-          || jar.getJarEntry(
-                  "io/opentelemetry/startup/PetclinicStartupUptimeAutoConfiguration.class")
-              == null
-          || jar.getJarEntry("META-INF/spring.factories") == null) {
+      var advice =
+          jar.getJarEntry("io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.class");
+      var registration = jar.getJarEntry("META-INF/spring.factories");
+      if (advice == null
+          || registration == null
+          || !new String(jar.getInputStream(registration).readAllBytes(), StandardCharsets.UTF_8)
+              .contains(
+                  "org.springframework.boot.autoconfigure.EnableAutoConfiguration=io.opentelemetry.startup.PetclinicStartupUptimeResponseAdvice")) {
         throw new IllegalArgumentException("Invalid Petclinic startup helper JAR: " + helper);
       }
     }

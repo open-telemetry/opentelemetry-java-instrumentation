@@ -142,8 +142,9 @@ The workflow also packages the recorder JAR with the agent and fixture so a
 measurement-only rerun reuses the same built inputs.
 
 For Petclinic, build the annotation library and select the workload. The workflow also
-builds the Java 17 helper JAR against Spring Boot 2.4.2 / Spring MVC 5.3.3; it is
-benchmark-only, loaded from `PropertiesLauncher`, and does not bundle Spring:
+builds the Java 17 helper JAR against Spring MVC 5.3.3; Boot 2.4.2 discovers its
+advice through the `PropertiesLauncher` classpath. The helper is benchmark-only and
+does not bundle Spring:
 
 ```sh
 ./gradlew :javaagent:shadowJar :instrumentation-annotations:jar -PremoveJarVersionNumbers=true
