@@ -11,8 +11,10 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.function.Predicate;
 import javax.sql.DataSource;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -77,16 +79,9 @@ public abstract class AbstractViburInstrumentationTest {
   protected void assertNoConnectionPoolMetrics() {
     testing().clearData();
 
+    Predicate<MetricData> isViburMetric =
+        metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME);
     await()
-        .untilAsserted(
-            () ->
-                assertThat(testing().metrics())
-                    .filteredOn(
-                        metric ->
-                            metric
-                                .getInstrumentationScopeInfo()
-                                .getName()
-                                .equals(INSTRUMENTATION_NAME))
-                    .isEmpty());
+        .untilAsserted(() -> assertThat(testing().metrics()).filteredOn(isViburMetric).isEmpty());
   }
 }
