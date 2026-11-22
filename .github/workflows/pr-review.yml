@@ -39,7 +39,7 @@ jobs:
         id: gate
         env:
           GH_TOKEN: ${{ github.token }}
-          PR_NUMBER: ${{ github.event_name == 'push' && '21405' || format('{0}', inputs.pr_number || github.event.issue.number) }}
+          PR_NUMBER: ${{ github.event_name == 'push' && '21370' || format('{0}', inputs.pr_number || github.event.issue.number) }}
           COMMENT_BODY: ${{ github.event.comment.body }}
           COMMENT_AUTHOR: ${{ github.event.comment.user.login }}
         run: python .github/scripts/pr-review/gate.py
