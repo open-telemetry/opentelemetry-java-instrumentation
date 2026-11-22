@@ -28,11 +28,11 @@ muzzle {
     extraDependency("io.opentelemetry:opentelemetry-api:1.27.0")
   }
   pass {
-    // instrumentation-docs:ignore - verification only, @WithSpan on suspend functions needs 1.4.3+
+    // instrumentation-docs:ignore - verification only, @WithSpan on suspend functions needs 1.6.1+
     name.set("Kotlin Coroutines annotations")
     group.set("org.jetbrains.kotlinx")
     module.set("kotlinx-coroutines-core-jvm")
-    versions.set("[1.4.3,)")
+    versions.set("[1.6.1,)")
     assertInverse.set(true)
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.KotlinCoroutinesInstrumentationModule")
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.flow.KotlinCoroutinesFlowInstrumentationModule")
@@ -112,13 +112,13 @@ testing.suites {
     }
   }
 
-  // @WithSpan on suspend functions needs kotlinx-coroutines 1.4.3 or later
+  // @WithSpan on suspend functions needs kotlinx-coroutines 1.6.1 or later
   register<JvmTestSuite>("suspendWithSpanTest") {
     dependencies {
       implementation("io.opentelemetry:opentelemetry-extension-kotlin")
       implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8")
       implementation(
-        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.4.3").orLatest()}",
+        "org.jetbrains.kotlinx:kotlinx-coroutines-core:${baseVersion("1.6.1").orLatest()}",
       )
       implementation(project(":instrumentation-annotations"))
     }

@@ -298,6 +298,68 @@ class TailCallWithSpanCallerFrameTest {
     1
   }
 
+  // Before kotlinx-coroutines 1.6.1, a caller that finished the inner withContext on another
+  // thread cleared the state the callee's thread restores once it unwinds.
+  @Test
+  fun `inner withContext leaves both threads clean when the caller resumes on another thread`() {
+    val inner = tracer.spanBuilder("inner").startSpan()
+    try {
+      val expected = threadStatesWithCallerOnOtherThread(inner) { unannotatedDelayFrame() }
+      assertThat(expected).containsExactly(null to SpanContext.getInvalid(), null to SpanContext.getInvalid())
+      assertThat(threadStatesWithCallerOnOtherThread(inner) { annotatedDelayFrame() }).isEqualTo(expected)
+    } finally {
+      inner.end()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("inner").hasNoParent() },
+          { it.hasName("delay-frame").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  private fun threadStatesWithCallerOnOtherThread(inner: Span, call: suspend () -> Int): List<Pair<String?, SpanContext>> {
+    TwoThreadDispatcher().use { dispatcher ->
+      runBlocking {
+        withContext(dispatcher) {
+          withContext(TagElement("inner") + inner.storeInContext(Context.root()).asContextElement()) {
+            call()
+          }
+        }
+      }
+      return dispatcher.threadStates { tag.get() to Span.current().spanContext }
+    }
+  }
+
+  // Dispatches to the other of two threads. A dispatch from the first thread waits until the
+  // second one has run the task, so a caller dispatched from the first thread completes before
+  // the first thread unwinds the task that dispatched it.
+  private class TwoThreadDispatcher :
+    CoroutineDispatcher(),
+    AutoCloseable {
+    @Volatile private var firstThread: Thread? = null
+    private val first = Executors.newSingleThreadExecutor { runnable -> Thread(runnable).also { firstThread = it } }
+    private val second = Executors.newSingleThreadExecutor()
+
+    override fun dispatch(context: CoroutineContext, block: Runnable) {
+      if (Thread.currentThread() === firstThread) {
+        second.submit(block).get(10, TimeUnit.SECONDS)
+      } else {
+        first.execute(block)
+      }
+    }
+
+    fun <T> threadStates(block: () -> T): List<T> = listOf(first, second).map { it.submit(Callable(block)).get(10, TimeUnit.SECONDS) }
+
+    override fun close() {
+      first.shutdown()
+      second.shutdown()
+    }
+  }
+
   @Test
   fun `caller on a dispatcher that can not dispatch resumes after tail delegated WithSpan`() {
     assertThat(resultOnUnconfinedWrapper { unannotatedDelayFrame() }).isEqualTo(1)
