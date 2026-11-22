@@ -15,10 +15,33 @@ import io.opentelemetry.sdk.autoconfigure.spi.ConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.ResourceProvider;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.ComponentProvider;
 import io.opentelemetry.sdk.resources.Resource;
+import java.net.URL;
 import java.util.ServiceLoader;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 class ResourceProviderRegistrationTest {
+  private ClassLoader originalClassLoader;
+
+  @BeforeEach
+  void setUp() {
+    originalClassLoader = Thread.currentThread().getContextClassLoader();
+    // Keep the BOOT-INF fixture from changing these tests' ordinary classpath layout.
+    Thread.currentThread()
+        .setContextClassLoader(
+            new ClassLoader(originalClassLoader) {
+              @Override
+              public URL getResource(String name) {
+                return name.equals("BOOT-INF/classes/") ? null : super.getResource(name);
+              }
+            });
+  }
+
+  @AfterEach
+  void tearDown() {
+    Thread.currentThread().setContextClassLoader(originalClassLoader);
+  }
 
   @Test
   void serviceNameDetectorIsRegistered() {
