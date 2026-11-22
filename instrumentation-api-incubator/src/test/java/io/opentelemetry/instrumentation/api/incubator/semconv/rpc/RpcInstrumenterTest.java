@@ -73,14 +73,12 @@ class RpcInstrumenterTest {
           assertThat(metric)
               .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
               .hasUnit("s")
-              .hasHistogramSatisfying(histogram ->
-                  histogram.hasPointsSatisfying(point ->
-                      point
-                          .hasCount(1)
-                          .hasBucketBoundaries(DURATION_BUCKETS)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(RPC_SYSTEM_NAME, "test"),
-                              equalTo(RPC_METHOD, "Service/Method"))));
+              .hasHistogramPointsSatisfying(point ->
+                  point
+                      .hasCount(1)
+                      .hasBucketBoundaries(DURATION_BUCKETS)
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(RPC_SYSTEM_NAME, "test"), equalTo(RPC_METHOD, "Service/Method")));
           assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
               .isEqualTo(SchemaUrls.V1_45_0);
         });
@@ -118,16 +116,15 @@ class RpcInstrumenterTest {
             assertThat(metric)
                 .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasBucketBoundaries(DURATION_BUCKETS)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(ERROR_TYPE, "java.lang.IllegalStateException"),
-                                equalTo(stringKey("rpc.status_code"), "CANCELLED"),
-                                equalTo(RPC_SYSTEM_NAME, "test"),
-                                equalTo(RPC_METHOD, "Service/Method")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasBucketBoundaries(DURATION_BUCKETS)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(ERROR_TYPE, "java.lang.IllegalStateException"),
+                            equalTo(stringKey("rpc.status_code"), "CANCELLED"),
+                            equalTo(RPC_SYSTEM_NAME, "test"),
+                            equalTo(RPC_METHOD, "Service/Method"))));
     assertThat(metrics)
         .allSatisfy(metric ->
             assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
@@ -149,11 +146,9 @@ class RpcInstrumenterTest {
         .satisfies(metric ->
             assertThat(metric)
                 .hasName(client ? "rpc.client.call.duration" : "rpc.server.call.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM_NAME, "test"),
-                            equalTo(RPC_METHOD, "Service/Method")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "test"), equalTo(RPC_METHOD, "Service/Method"))));
   }
 
   private final class ConfiguredInstrumenter {

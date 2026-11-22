@@ -265,14 +265,13 @@ public abstract class AbstractGrpcStreamingTest {
                 metric
                     .hasName("rpc.server.call.duration")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point.hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(RPC_METHOD, "example.Greeter/Conversation"),
-                                equalTo(stringKey("rpc.status_code"), "OK")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM_NAME, "grpc"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, server.getPort()),
+                            equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                            equalTo(stringKey("rpc.status_code"), "OK"))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.grpc-1.6",
@@ -280,14 +279,13 @@ public abstract class AbstractGrpcStreamingTest {
                 metric
                     .hasName("rpc.client.call.duration")
                     .hasUnit("s")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point.hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                equalTo(SERVER_ADDRESS, "localhost"),
-                                equalTo(SERVER_PORT, server.getPort()),
-                                equalTo(RPC_METHOD, "example.Greeter/Conversation"),
-                                equalTo(stringKey("rpc.status_code"), "OK")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(RPC_SYSTEM_NAME, "grpc"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, server.getPort()),
+                            equalTo(RPC_METHOD, "example.Greeter/Conversation"),
+                            equalTo(stringKey("rpc.status_code"), "OK"))));
   }
 
   @Test

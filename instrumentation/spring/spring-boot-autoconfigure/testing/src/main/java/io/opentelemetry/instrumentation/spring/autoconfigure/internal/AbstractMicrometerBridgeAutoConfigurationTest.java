@@ -148,8 +148,7 @@ public abstract class AbstractMicrometerBridgeAutoConfigurationTest {
               .satisfies(metric ->
                   assertThat(metric)
                       .hasName("test.counter")
-                      .hasDoubleSumSatisfying(
-                          sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+                      .hasDoubleSumPointsSatisfying(point -> point.hasValue(2)));
         });
   }
 
