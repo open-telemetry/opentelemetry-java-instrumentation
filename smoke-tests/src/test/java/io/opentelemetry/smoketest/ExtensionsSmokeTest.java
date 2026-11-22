@@ -41,7 +41,8 @@ class ExtensionsSmokeTest {
   private static final String appPath =
       System.getProperty("io.opentelemetry.smoketest.extension.testapp.path");
 
-  private static final String IMAGE = "eclipse-temurin:21";
+  private static final String IMAGE =
+      "eclipse-temurin:21@sha256:8ad118b146aa92da815b576441acd6b42b38236797ad0b6edc8c200b85bb0734";
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
