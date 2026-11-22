@@ -63,13 +63,12 @@ class JerseyHttpServerTest extends JaxRsHttpServerTest<Server> {
     super.configure(options);
 
     options.setResponseCodeOnNonStandardHttpMethod(500);
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + "/*";
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + "/*";
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Override

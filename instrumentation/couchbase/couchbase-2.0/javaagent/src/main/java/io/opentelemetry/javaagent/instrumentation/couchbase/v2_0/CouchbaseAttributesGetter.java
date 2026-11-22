@@ -6,11 +6,10 @@
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v2_0.CouchbaseRequestInfo.Node;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -43,30 +42,23 @@ final class CouchbaseAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CouchbaseRequestInfo couchbaseRequest) {
-    DbServerTarget target = couchbaseRequest.getServerTarget();
+    ServerTarget target = couchbaseRequest.getServerTarget();
     return target == null ? null : target.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CouchbaseRequestInfo couchbaseRequest) {
-    DbServerTarget target = couchbaseRequest.getServerTarget();
+    ServerTarget target = couchbaseRequest.getServerTarget();
     // A target that names several seeds already carries the port of each of them
     return target == null ? null : target.getPort();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       CouchbaseRequestInfo request, @Nullable Void unused) {
     Node node = request.getNode();
-    if (node == null) {
-      return null;
-    }
-    SocketAddress address = node.getPeerAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return node == null ? null : node.getPeerAddress();
   }
 }

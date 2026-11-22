@@ -19,32 +19,28 @@ class QuarkusSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .image(
-            jdk ->
-                String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-%s",
-                    jdk, TestImageVersions.QUARKUS_VERSION))
+        .image(jdk ->
+            String.format(
+                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-quarkus:jdk%s-%s",
+                jdk, TestImageVersions.QUARKUS_VERSION))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Listening on.*"))
         .setServiceName(false);
   }
 
   @ParameterizedTest
-  @ValueSource(ints = {17, 21, 25, 27}) // Quarkus 3.7+ requires Java 17+
+  @ValueSource(ints = {21, 25, 27}) // Quarkus 4 requires Java 21+
   void quarkusSmokeTest(int jdk) {
     start(jdk);
 
     client().get("/hello").aggregate().join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /hello")
-                        .hasResourceSatisfying(
-                            resource -> {
-                              resource
-                                  .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
-                                  .hasAttribute(SERVICE_NAME, "quarkus");
-                            })));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /hello")
+                .hasResourceSatisfying(resource -> {
+                  resource
+                      .hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())
+                      .hasAttribute(SERVICE_NAME, "quarkus");
+                })));
   }
 }

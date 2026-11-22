@@ -20,15 +20,13 @@ class MetaspaceMemoryLimitMetricTest {
   @Test
   void shouldHaveMemoryLimitMetrics() {
     System.gc();
-    jfrExtension.waitAndAssertMetrics(
-        metric ->
-            metric
-                .hasName(METRIC_NAME_MEMORY_LIMIT)
-                .hasUnit(BYTES)
-                .hasDescription(METRIC_DESCRIPTION_MEMORY_LIMIT)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.containsPointsSatisfying(
-                            point -> point.hasAttributes(ATTR_COMPRESSED_CLASS_SPACE))));
+    jfrExtension.waitAndAssertMetrics(metric ->
+        metric
+            .hasName(METRIC_NAME_MEMORY_LIMIT)
+            .hasUnit(BYTES)
+            .hasDescription(METRIC_DESCRIPTION_MEMORY_LIMIT)
+            .hasLongSumSatisfying(sum ->
+                sum.containsPointsSatisfying(
+                    point -> point.hasAttributes(ATTR_COMPRESSED_CLASS_SPACE))));
   }
 }

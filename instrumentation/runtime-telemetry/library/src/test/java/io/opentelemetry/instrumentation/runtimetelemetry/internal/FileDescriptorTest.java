@@ -52,7 +52,7 @@ class FileDescriptorTest {
                 .hasName("jvm.file_descriptor.count")
                 .hasDescription("Number of open file descriptors as reported by the JVM.")
                 .hasUnit("{file_descriptor}")
-                .hasLongSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(42))));
+                .hasLongSumPointsSatisfying(point -> point.hasValue(42)));
 
     testing.waitAndAssertMetrics(
         "test",
@@ -61,7 +61,6 @@ class FileDescriptorTest {
                 .hasName("jvm.file_descriptor.limit")
                 .hasDescription("Measure of max open file descriptors as reported by the JVM.")
                 .hasUnit("{file_descriptor}")
-                .hasLongSumSatisfying(
-                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(100))));
+                .hasLongSumPointsSatisfying(point -> point.hasValue(100)));
   }
 }

@@ -16,6 +16,7 @@ public final class InjectionState {
     this.wrapper = wrapper;
   }
 
+  // only used by tests
   public int getHeadTagBytesSeen() {
     return headTagBytesSeen;
   }

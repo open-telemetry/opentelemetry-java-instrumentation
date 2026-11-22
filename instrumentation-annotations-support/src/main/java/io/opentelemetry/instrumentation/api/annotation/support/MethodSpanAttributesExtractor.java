@@ -33,6 +33,7 @@ public final class MethodSpanAttributesExtractor<REQUEST, RESPONSE>
         new MethodCache<>());
   }
 
+  // visible for testing
   MethodSpanAttributesExtractor(
       MethodExtractor<REQUEST> methodExtractor,
       ParameterAttributeNamesExtractor parameterAttributeNamesExtractor,

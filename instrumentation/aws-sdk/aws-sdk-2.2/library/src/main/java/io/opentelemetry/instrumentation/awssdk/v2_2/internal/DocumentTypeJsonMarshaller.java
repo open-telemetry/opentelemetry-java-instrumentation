@@ -63,11 +63,10 @@ final class DocumentTypeJsonMarshaller implements VoidDocumentVisitor {
     jsonGenerator.writeStartObject();
     documentMap
         .entrySet()
-        .forEach(
-            entry -> {
-              jsonGenerator.writeFieldName(entry.getKey());
-              entry.getValue().accept(this);
-            });
+        .forEach(entry -> {
+          jsonGenerator.writeFieldName(entry.getKey());
+          entry.getValue().accept(this);
+        });
     jsonGenerator.writeEndObject();
   }
 

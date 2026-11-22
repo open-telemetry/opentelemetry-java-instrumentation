@@ -172,15 +172,13 @@ public abstract class Log4j2Test {
       ThreadContext.clearAll();
     }
     assertThat(events)
-        .satisfiesExactly(
-            event -> {
-              assertThat(event.getMessage()).isEqualTo("log span parent");
-              assertThat(event.getContextData().get(getLoggingKey("trace_id")))
-                  .isEqualTo("test_traceId");
-              assertThat(event.getContextData().get(getLoggingKey("span_id")))
-                  .isEqualTo("test_spanId");
-              assertThat(event.getContextData().get(getLoggingKey("trace_flags")))
-                  .isEqualTo("test_traceFlag");
-            });
+        .satisfiesExactly(event -> {
+          assertThat(event.getMessage()).isEqualTo("log span parent");
+          assertThat(event.getContextData().get(getLoggingKey("trace_id")))
+              .isEqualTo("test_traceId");
+          assertThat(event.getContextData().get(getLoggingKey("span_id"))).isEqualTo("test_spanId");
+          assertThat(event.getContextData().get(getLoggingKey("trace_flags")))
+              .isEqualTo("test_traceFlag");
+        });
   }
 }

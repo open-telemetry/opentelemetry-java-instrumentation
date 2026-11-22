@@ -41,12 +41,12 @@ jobs:
           persist-credentials: false
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           languages: actions
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           category: "/language:actions"
 
@@ -76,7 +76,7 @@ jobs:
           cache-read-only: true
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           languages: java-kotlin
           build-mode: none
@@ -86,7 +86,7 @@ jobs:
               - '**/src/test/**'
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           category: "/language:java"
 
@@ -124,7 +124,7 @@ jobs:
         run: ./gradlew compileKotlin -Pkotlin.daemon.jvmargs=-Xmx4g
 
       - name: Initialize CodeQL
-        uses: github/codeql-action/init@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/init@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           languages: java-kotlin
           build-mode: manual
@@ -144,7 +144,7 @@ jobs:
           ./gradlew compileKotlin --rerun --no-build-cache --no-daemon -Pkotlin.compiler.execution.strategy=in-process
 
       - name: Perform CodeQL analysis
-        uses: github/codeql-action/analyze@33d7b85da1a04171e211befe2c739303b9a4c066 # v4.39.3
+        uses: github/codeql-action/analyze@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # v4.39.4
         with:
           category: "/language:kotlin-manual"
 
@@ -156,6 +156,6 @@ jobs:
       - analyze-java-none
       - analyze-kotlin-manual
     if: always() && github.event_name == 'schedule'
-    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@efc55838c9769c5476e0a5cf7183a8c5b4ae70a5 # v0.24.0
+    uses: open-telemetry/shared-workflows/.github/workflows/workflow-failure-issue.yml@f73c28e3be66444181acb54f07ada23f144c0c39 # v0.25.0
     with:
       success: ${{ needs.analyze-actions.result == 'success' && needs.analyze-java-none.result == 'success' && needs.analyze-kotlin-manual.result == 'success' }}

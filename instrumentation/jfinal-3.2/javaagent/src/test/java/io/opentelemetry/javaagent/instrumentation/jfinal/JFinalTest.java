@@ -48,19 +48,18 @@ class JFinalTest extends AbstractHttpServerTest<Server> {
   protected void configure(HttpServerTestOptions options) {
     options.setHasHandlerSpan(endpoint -> endpoint != NOT_FOUND);
     options.setHasResponseSpan(endpoint -> endpoint == REDIRECT);
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (endpoint == PATH_PARAM) {
-            return "/path/123/param";
-          }
-          if (HttpConstants._OTHER.equals(method)) {
-            return endpoint.getPath();
-          }
-          if (NOT_FOUND.equals(endpoint)) {
-            return "/*";
-          }
-          return expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (endpoint == PATH_PARAM) {
+        return "/path/123/param";
+      }
+      if (HttpConstants._OTHER.equals(method)) {
+        return endpoint.getPath();
+      }
+      if (NOT_FOUND.equals(endpoint)) {
+        return "/*";
+      }
+      return expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Override

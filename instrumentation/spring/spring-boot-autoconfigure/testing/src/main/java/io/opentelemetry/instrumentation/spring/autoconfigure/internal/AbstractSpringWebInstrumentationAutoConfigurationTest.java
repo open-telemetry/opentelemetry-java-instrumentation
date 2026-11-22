@@ -38,19 +38,17 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
     contextRunner
         .withPropertyValues("otel.instrumentation.spring-web.enabled=true")
         .withPropertyValues("otel.instrumentation.common.default-enabled=false")
-        .run(
-            context -> {
-              assertThat(
-                      context.getBean(
-                          "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
-                  .isNotNull();
+        .run(context -> {
+          assertThat(
+                  context.getBean(
+                      "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
+              .isNotNull();
 
-              assertThat(context.getBean(RestTemplate.class).getInterceptors())
-                  .filteredOn(
-                      rti ->
-                          rti.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
-                  .hasSize(1);
-            });
+          assertThat(context.getBean(RestTemplate.class).getInterceptors())
+              .filteredOn(
+                  rti -> rti.getClass().getName().startsWith("io.opentelemetry.instrumentation"))
+              .hasSize(1);
+        });
   }
 
   @Test
@@ -77,11 +75,10 @@ public abstract class AbstractSpringWebInstrumentationAutoConfigurationTest {
 
   @Test
   void defaultConfiguration() {
-    contextRunner.run(
-        context ->
-            assertThat(
-                    context.getBean(
-                        "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
-                .isNotNull());
+    contextRunner.run(context ->
+        assertThat(
+                context.getBean(
+                    "otelRestTemplateBeanPostProcessor", RestTemplateBeanPostProcessor.class))
+            .isNotNull());
   }
 }

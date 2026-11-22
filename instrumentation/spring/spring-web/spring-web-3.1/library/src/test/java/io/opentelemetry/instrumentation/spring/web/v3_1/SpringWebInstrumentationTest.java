@@ -27,6 +27,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+@SuppressWarnings("removal") // RestTemplate is deprecated for removal
 class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<String>> {
 
   @RegisterExtension
@@ -98,12 +99,11 @@ class SpringWebInstrumentationTest extends AbstractHttpClientTest<HttpEntity<Str
     optionsBuilder.disableTestReadTimeout();
     optionsBuilder.disableTestNonStandardHttpMethod();
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NETWORK_PROTOCOL_VERSION);
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(uri -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      return attributes;
+    });
   }
 }

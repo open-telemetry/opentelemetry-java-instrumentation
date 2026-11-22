@@ -94,6 +94,7 @@ public class MetricParser {
   }
 
   /** Helper class to aggregate metrics by scope and name. */
+  // visible for testing
   static class MetricAggregator {
     /**
      * Aggregates metrics for a given 'when' condition, metrics object, and target scope name.
@@ -103,6 +104,7 @@ public class MetricParser {
      * @param targetScopeName the scope name to filter by
      * @return a map of aggregated metrics by 'when' and metric name
      */
+    // visible for testing
     public static Map<String, Map<String, AggregatedMetricInfo>> aggregateMetrics(
         String when, EmittedMetrics metrics, String targetScopeName) {
       Map<String, Map<String, AggregatedMetricInfo>> aggregatedMetrics = new HashMap<>();
@@ -139,6 +141,7 @@ public class MetricParser {
      * @param aggregatedMetrics the aggregated metrics map
      * @return a map where the key is the 'when' condition and the value is a list of metrics
      */
+    // visible for testing
     public static Map<String, List<EmittedMetrics.Metric>> buildFilteredMetrics(
         Map<String, Map<String, AggregatedMetricInfo>> aggregatedMetrics) {
       Map<String, List<EmittedMetrics.Metric>> result = new HashMap<>();
@@ -162,6 +165,7 @@ public class MetricParser {
     }
 
     /** Data class to hold aggregated metric information. */
+    // visible for testing
     static class AggregatedMetricInfo {
       final String name;
       final String description;

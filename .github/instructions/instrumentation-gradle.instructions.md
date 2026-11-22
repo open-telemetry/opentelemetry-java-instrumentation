@@ -171,9 +171,11 @@ Do not use it for test-only switches selecting library builder options.
 
 Gradle wires built-in `test` into `check`, but not custom suite registrations. Execution configuration
 adds its suite's default and variants when that suite is realized; applying the plugin or declaring a
-lazy selector is not sufficient. Prefer unconditional `check { dependsOn(testing.suites) }` when all
-suites belong in `check`, including latest-dependency builds. Retain dependencies needed to realize
-and include suites; extra wiring is unnecessary when they are already reliably included.
+lazy selector is not sufficient. The `unitTests()` helper registers its suite and wires it into
+`check` without selecting unrelated suites; it needs no extra lifecycle wiring. Prefer unconditional
+`check { dependsOn(testing.suites) }` when all suites belong in `check`, including latest-dependency
+builds. Retain dependencies needed to realize and include suites; extra wiring is unnecessary when
+they are already reliably included.
 Wire standalone `Test` tasks separately.
 
 Preserve conditional execution declarations and compatibility/JDK/resource selection when moving
@@ -187,9 +189,16 @@ and distinct compatibility paths separate.
 
 ### Dependencies, classpaths, and naming
 
-For direct javaagent helper tests, use a `unitTests` suite under `src/unitTests/java` with
-`implementation(project())`, without installing the agent. Keep test-only dependencies local and reuse
-convention-provided dependencies and compiler options, such as testing-common and `-parameters`.
+For direct javaagent helper tests in projects applying `otel.javaagent-testing` (including through
+`otel.javaagent-instrumentation`), use `unitTests()` inside `testing.suites` and put tests under
+`src/unitTests/java`. The helper requires the Javaagent testing plugin; ordinary Java and library
+projects use `src/test`. The helper adds `implementation(project())` and wires the suite into `check`.
+The suite's test task and execution variants run without the agent. Keep test-only dependencies
+local and reuse convention-provided dependencies and compiler options, such as testing-common and
+`-parameters`.
+
+When helper tests need a separate dependency classpath, use `unitTests("nameUnitTests")` in the
+existing `javaagent` module.
 
 Prefer suite-local dependencies and compilation setup. When configuration/task names are needed,
 use `sources.implementationConfigurationName`, `sources.runtimeOnlyConfigurationName`, and

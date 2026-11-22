@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
@@ -259,29 +260,22 @@ class JmxTelemetryTest {
           metrics
               .filteredOn(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl() == null)
               .isNotEmpty()
-              .allSatisfy(
-                  metric -> {
-                    assertThat(metric.getLongSumData().getPoints())
-                        .singleElement()
-                        .satisfies(
-                            point ->
-                                assertThat(point.getAttributes().get(stringKey("test.source")))
-                                    .isEqualTo("custom"));
-                  });
+              .allSatisfy(metric -> {
+                assertThat(metric)
+                    .hasLongSumPointsSatisfying(point ->
+                        point.hasAttributesSatisfying(equalTo(stringKey("test.source"), "custom")));
+              });
           metrics
               .filteredOn(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl() != null)
               .isNotEmpty()
-              .allSatisfy(
-                  metric -> {
-                    assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
-                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0");
-                    assertThat(metric.getLongSumData().getPoints())
-                        .isNotEmpty()
-                        .allSatisfy(
-                            point ->
-                                assertThat(point.getAttributes().get(stringKey("test.source")))
-                                    .isNull());
-                  });
+              .allSatisfy(metric -> {
+                assertThat(metric.getInstrumentationScopeInfo().getSchemaUrl())
+                    .isEqualTo("https://opentelemetry.io/schemas/1.45.0");
+                assertThat(metric.getLongSumData().getPoints())
+                    .isNotEmpty()
+                    .allSatisfy(point ->
+                        assertThat(point.getAttributes().get(stringKey("test.source"))).isNull());
+              });
         });
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
@@ -338,9 +332,8 @@ class JmxTelemetryTest {
         metric ->
             metric
                 .hasName("test.collision.count")
-                .satisfies(
-                    data ->
-                        assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
+                .satisfies(data ->
+                    assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
     Collection<String> sources =
         testing.metrics().stream()
             .filter(metric -> metric.getName().equals("test.collision.count"))

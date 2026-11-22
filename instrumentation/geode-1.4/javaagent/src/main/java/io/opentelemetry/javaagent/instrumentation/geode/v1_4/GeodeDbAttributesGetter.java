@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
@@ -66,14 +66,14 @@ final class GeodeDbAttributesGetter implements DbClientAttributesGetter<GeodeReq
   @Override
   @Nullable
   public String getServerAddress(GeodeRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target == null ? null : target.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(GeodeRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target == null ? null : target.getPort();
   }
 }

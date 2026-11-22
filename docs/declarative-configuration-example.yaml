@@ -121,6 +121,7 @@ instrumentation/development:
           - PATCH
           - POST
           - PUT
+          - QUERY
           - TRACE
         server:
           # Enable the capture of experimental HTTP server telemetry. Adds the

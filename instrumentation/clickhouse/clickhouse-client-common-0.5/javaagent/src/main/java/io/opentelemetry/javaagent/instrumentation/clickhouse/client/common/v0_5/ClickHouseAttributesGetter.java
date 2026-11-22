@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.Collection;
 import java.util.function.Function;
@@ -63,14 +63,14 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Nullable
   @Override
   public String getServerAddress(ClickHouseDbRequest request) {
-    DbServerTarget serverTarget = request.getServerTarget();
+    ServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(ClickHouseDbRequest request) {
-    DbServerTarget serverTarget = request.getServerTarget();
+    ServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getPort();
   }
 

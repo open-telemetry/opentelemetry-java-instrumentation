@@ -80,43 +80,42 @@ class EntityManagerTest extends AbstractHibernateTest {
 
     boolean isPersistTest = "persist".equals(parameter.methodName);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (isPersistTest) {
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session." + parameter.methodName + " " + parameter.resource),
-                span -> assertClientSpan(span, trace.getSpan(1), "select Value"),
-                span ->
-                    assertClientSpan(
-                        span, !parameter.flushOnCommit ? trace.getSpan(1) : trace.getSpan(3)),
-                span ->
-                    assertTransactionCommitSpan(
-                        span,
-                        trace.getSpan(0),
-                        experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
-          } else {
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session." + parameter.methodName + " " + parameter.resource),
-                span ->
-                    assertClientSpan(
-                        span, !parameter.flushOnCommit ? trace.getSpan(1) : trace.getSpan(2)),
-                span ->
-                    assertTransactionCommitSpan(
-                        span,
-                        trace.getSpan(0),
-                        experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
-          }
-        });
+    testing.waitAndAssertTraces(trace -> {
+      if (isPersistTest) {
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Session." + parameter.methodName + " " + parameter.resource),
+            span -> assertClientSpan(span, trace.getSpan(1), "select Value"),
+            span ->
+                assertClientSpan(
+                    span, !parameter.flushOnCommit ? trace.getSpan(1) : trace.getSpan(3)),
+            span ->
+                assertTransactionCommitSpan(
+                    span,
+                    trace.getSpan(0),
+                    experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
+      } else {
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Session." + parameter.methodName + " " + parameter.resource),
+            span ->
+                assertClientSpan(
+                    span, !parameter.flushOnCommit ? trace.getSpan(1) : trace.getSpan(2)),
+            span ->
+                assertTransactionCommitSpan(
+                    span,
+                    trace.getSpan(0),
+                    experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
+      }
+    });
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -135,25 +134,24 @@ class EntityManagerTest extends AbstractHibernateTest {
           entityManager.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), parameter.sessionSpanName),
-                span ->
-                    span.hasName(parameter.clientSpanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "h2database"),
-                            equalTo(DB_NAMESPACE, "db1"),
-                            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
-                            equalTo(DB_QUERY_SUMMARY, parameter.clientSpanName)),
-                span ->
-                    assertTransactionCommitSpan(
-                        span,
-                        trace.getSpan(0),
-                        experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertSessionSpan(span, trace.getSpan(0), parameter.sessionSpanName),
+            span ->
+                span.hasName(parameter.clientSpanName)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "h2database"),
+                        equalTo(DB_NAMESPACE, "db1"),
+                        satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
+                        equalTo(DB_QUERY_SUMMARY, parameter.clientSpanName)),
+            span ->
+                assertTransactionCommitSpan(
+                    span,
+                    trace.getSpan(0),
+                    experimental(trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))));
   }
 
   @Test
@@ -164,20 +162,17 @@ class EntityManagerTest extends AbstractHibernateTest {
     assertThatThrownBy(query::getSingleResult).isInstanceOf(NoResultException.class);
     entityManager.close();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .hasEvents(emptyList()),
-                span ->
-                    span.hasName("select Value")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(
+                        "select io.opentelemetry.javaagent.instrumentation.hibernate.v6_0.Value")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.unset())
+                    .hasEvents(emptyList()),
+            span ->
+                span.hasName("select Value").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideHibernateActionParameters() {
