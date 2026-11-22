@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperat
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.extension.matcher.internal.MethodAnnotationPrefilter;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -37,17 +38,16 @@ import net.bytebuddy.matcher.ElementMatcher;
 
 class WithSpanInstrumentation implements TypeInstrumentation {
 
+  private static final String WITH_SPAN =
+      "application.io.opentelemetry.instrumentation.annotations.WithSpan";
+
   private final ElementMatcher.Junction<MethodDescription> annotatedMethodMatcher;
   private final ElementMatcher.Junction<MethodDescription> annotatedParametersMatcher;
   // this matcher matches all methods that should be excluded from transformation
   private final ElementMatcher.Junction<MethodDescription> excludedMethodsMatcher;
 
   WithSpanInstrumentation() {
-    annotatedMethodMatcher =
-        isMethod()
-            .and(
-                isAnnotatedWith(
-                    named("application.io.opentelemetry.instrumentation.annotations.WithSpan")));
+    annotatedMethodMatcher = isMethod().and(isAnnotatedWith(named(WITH_SPAN)));
     annotatedParametersMatcher =
         hasParameters(
             whereAny(
@@ -63,7 +63,10 @@ class WithSpanInstrumentation implements TypeInstrumentation {
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
     return declaresMethod(isMethod().and(not(isAbstract())).and(not(isNative())))
-        .and(hasSuperType(declaresMethod(annotatedMethodMatcher)));
+        .and(
+            hasSuperType(
+                new MethodAnnotationPrefilter(WITH_SPAN)
+                    .and(declaresMethod(annotatedMethodMatcher))));
   }
 
   @Override

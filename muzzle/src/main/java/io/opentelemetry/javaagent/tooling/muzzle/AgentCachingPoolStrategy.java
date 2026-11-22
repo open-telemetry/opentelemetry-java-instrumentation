@@ -14,6 +14,8 @@ import static java.util.Objects.requireNonNull;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.cache.Cache;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
+import io.opentelemetry.javaagent.extension.matcher.internal.MethodAnnotationPrefilter;
+import java.io.IOException;
 import java.lang.instrument.Instrumentation;
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
@@ -352,16 +354,41 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
      * Non-lazily resolves a type name.
      *
      * @param name The name of the type to resolve.
+     * @param prefilter The annotation to check if the class file needs to be read.
      * @return The resolution for the type of this name.
      */
-    private TypePool.Resolution doResolve(String name) {
+    private TypePool.Resolution doResolve(
+        String name, @Nullable MethodAnnotationPrefilter prefilter) {
       TypePool.Resolution resolution = cacheProvider.find(name);
       if (resolution == null) {
         // calling super.doDescribe that will locate the class bytes and parse them unlike
         // doDescribe in this class that returns a lazy resolution without parsing the class bytes
-        resolution = cacheProvider.register(name, super.doDescribe(name));
+        TypePool.Resolution parsed =
+            prefilter == null
+                ? super.doDescribe(name)
+                : describeWithAnnotationPrefilter(name, prefilter);
+        resolution = cacheProvider.register(name, parsed);
       }
       return resolution;
+    }
+
+    private TypePool.Resolution describeWithAnnotationPrefilter(
+        String name, MethodAnnotationPrefilter prefilter) {
+      try {
+        ClassFileLocator.Resolution source = classFileLocator.locate(name);
+        if (!source.isResolved()) {
+          return new TypePool.Resolution.Illegal(name);
+        }
+        byte[] classFile = source.resolve();
+        TypeDescription type = doParse(classReaderFactory.make(classFile));
+        if (!prefilter.mayBePresentIn(classFile)) {
+          // A cache hit can expose the resolved type directly, without the lazy wrapper.
+          type = new TypeDescriptionWithAbsentAnnotation(type, prefilter);
+        }
+        return new TypePool.Resolution.Simple(type);
+      } catch (IOException e) {
+        throw new IllegalStateException("Error while reading class file", e);
+      }
     }
 
     void enterLoadAnnotations() {
@@ -401,7 +428,7 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
         if (isLoadingAnnotations()) {
           return true;
         }
-        return doResolve(name).isResolved();
+        return doResolve(name, null).isResolved();
       }
 
       @Nullable private volatile TypeDescription cached;
@@ -423,15 +450,30 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
     }
 
     private abstract class CachingTypeDescription
-        extends TypeDescription.AbstractBase.OfSimpleType.WithDelegation {
+        extends TypeDescription.AbstractBase.OfSimpleType.WithDelegation
+        implements MethodAnnotationPrefilter.ClassFileBacked {
       @Nullable private volatile TypeDescription delegate;
 
       @Override
       protected TypeDescription delegate() {
         if (delegate == null) {
-          delegate = doResolve(getName()).resolve();
+          delegate = doResolve(getName(), null).resolve();
         }
         return delegate;
+      }
+
+      @Override
+      public boolean mayDeclareMethodAnnotation(MethodAnnotationPrefilter prefilter) {
+        TypeDescription type = delegate;
+        if (type == null) {
+          TypePool.Resolution resolution = doResolve(getName(), prefilter);
+          if (!resolution.isResolved()) {
+            return true;
+          }
+          type = resolution.resolve();
+          delegate = type;
+        }
+        return prefilter.matches(type);
       }
 
       @Nullable private volatile AnnotationList annotations;
@@ -648,6 +690,34 @@ public class AgentCachingPoolStrategy implements AgentBuilder.PoolStrategy {
       public int getModifiers() {
         return modifiers;
       }
+    }
+  }
+
+  private static final class TypeDescriptionWithAbsentAnnotation
+      extends TypeDescription.AbstractBase.OfSimpleType.WithDelegation
+      implements MethodAnnotationPrefilter.ClassFileBacked {
+    private final TypeDescription delegate;
+    private final MethodAnnotationPrefilter prefilter;
+
+    private TypeDescriptionWithAbsentAnnotation(
+        TypeDescription typeDescription, MethodAnnotationPrefilter prefilter) {
+      this.delegate = typeDescription;
+      this.prefilter = prefilter;
+    }
+
+    @Override
+    protected TypeDescription delegate() {
+      return delegate;
+    }
+
+    @Override
+    public String getName() {
+      return delegate.getName();
+    }
+
+    @Override
+    public boolean mayDeclareMethodAnnotation(MethodAnnotationPrefilter prefilter) {
+      return this.prefilter != prefilter;
     }
   }
 
