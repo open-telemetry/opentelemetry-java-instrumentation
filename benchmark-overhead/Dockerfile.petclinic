@@ -12,7 +12,7 @@ RUN git checkout 220f4ba8e92cec9ad1faa03324723a3e9da63d95
 RUN mvn package -Dmaven.test.skip=true
 RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
 
-FROM eclipse-temurin:25-jre-alpine@sha256:7029e62575e8abb072b5d68092bddf5544cbdb22691ad2a7c0a9390e3d58bcf9
+FROM eclipse-temurin:25-jdk-alpine@sha256:22edbb1021420ae6e248519d1af07577742314d67d4c60fcbb2e285b7e47fa78
 COPY --from=app-build /app/spring-petclinic-rest.jar /app/spring-petclinic-rest.jar
 WORKDIR /app
 EXPOSE 9966
