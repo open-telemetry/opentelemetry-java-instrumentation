@@ -23,11 +23,10 @@ class GrpcSmokeTest extends AbstractSmokeTest<Integer> {
   @Override
   protected void configure(SmokeTestOptions<Integer> options) {
     options
-        .image(
-            jdk ->
-                String.format(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-%s",
-                    jdk, TestImageVersions.GRPC_VERSION))
+        .image(jdk ->
+            String.format(
+                "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/smoke-test-grpc:jdk%s-%s",
+                jdk, TestImageVersions.GRPC_VERSION))
         .waitStrategy(new TargetWaitStrategy.Log(Duration.ofMinutes(1), ".*Server started.*"));
   }
 
@@ -42,16 +41,13 @@ class GrpcSmokeTest extends AbstractSmokeTest<Integer> {
       TraceServiceGrpc.TraceServiceBlockingStub stub = TraceServiceGrpc.newBlockingStub(channel);
 
       stub.export(ExportTraceServiceRequest.getDefaultInstance());
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("opentelemetry.proto.collector.trace.v1.TraceService/Export")
-                          .hasResourceSatisfying(
-                              resource ->
-                                  resource.hasAttribute(
-                                      TELEMETRY_DISTRO_VERSION, getAgentVersion())),
-                  span -> span.hasName("TestService.withSpan")));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("opentelemetry.proto.collector.trace.v1.TraceService/Export")
+                      .hasResourceSatisfying(resource ->
+                          resource.hasAttribute(TELEMETRY_DISTRO_VERSION, getAgentVersion())),
+              span -> span.hasName("TestService.withSpan")));
 
       // Verify correct traceIds are logged via MDC instrumentation
       assertThat(output.getLoggedTraceIds()).isEqualTo(getSpanTraceIds());

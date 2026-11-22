@@ -1,7 +1,26 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.scala-conventions")
   id("otel.testcontainers-testing")
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("com.github.etaty:rediscala_2.11:1.8.0")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
+  }
 }
 
 muzzle {
@@ -64,12 +83,6 @@ dependencies {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
   }
 }
 

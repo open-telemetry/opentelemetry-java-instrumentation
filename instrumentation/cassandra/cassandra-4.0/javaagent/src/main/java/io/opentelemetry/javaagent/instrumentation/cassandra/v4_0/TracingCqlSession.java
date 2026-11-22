@@ -17,7 +17,7 @@ import com.datastax.oss.driver.api.core.cql.Statement;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.lang.reflect.Proxy;
 import java.util.ArrayList;
 import java.util.List;
@@ -33,7 +33,7 @@ final class TracingCqlSession {
   static CqlSession wrapSession(CqlSession session, Set<EndPoint> programmaticContactPoints) {
     // Cassandra contact points are fixed for a live session. DriverConfigLoader reloads may expose
     // changed configuration values without retargeting it, so capture the configured target once.
-    DbServerTarget serverTarget = CassandraServerTarget.of(session, programmaticContactPoints);
+    ServerTarget serverTarget = CassandraServerTarget.of(session, programmaticContactPoints);
     List<Class<?>> interfaces = new ArrayList<>();
     Class<?> clazz = session.getClass();
     while (clazz != Object.class) {
@@ -71,7 +71,7 @@ final class TracingCqlSession {
   }
 
   private static ResultSet execute(
-      CqlSession session, @Nullable DbServerTarget serverTarget, String query) {
+      CqlSession session, @Nullable ServerTarget serverTarget, String query) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
@@ -86,7 +86,7 @@ final class TracingCqlSession {
   }
 
   private static ResultSet execute(
-      CqlSession session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
+      CqlSession session, @Nullable ServerTarget serverTarget, Statement<?> statement) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     Context context = instrumenter().start(Context.current(), request);
     ResultSet resultSet;
@@ -101,13 +101,13 @@ final class TracingCqlSession {
   }
 
   private static CompletionStage<AsyncResultSet> executeAsync(
-      CqlSession session, @Nullable DbServerTarget serverTarget, Statement<?> statement) {
+      CqlSession session, @Nullable ServerTarget serverTarget, Statement<?> statement) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, statement);
     return executeAsync(request, () -> session.executeAsync(statement));
   }
 
   private static CompletionStage<AsyncResultSet> executeAsync(
-      CqlSession session, @Nullable DbServerTarget serverTarget, String query) {
+      CqlSession session, @Nullable ServerTarget serverTarget, String query) {
     CassandraRequest request = CassandraRequest.create(session, serverTarget, query);
     return executeAsync(request, () -> session.executeAsync(query));
   }
@@ -119,30 +119,24 @@ final class TracingCqlSession {
     try (Scope ignored = context.makeCurrent()) {
       CompletionStage<AsyncResultSet> stage = query.get();
       return wrap(
-          stage.whenComplete(
-              (asyncResultSet, throwable) ->
-                  instrumenter()
-                      .end(
-                          context,
-                          request,
-                          getExecutionInfo(asyncResultSet, throwable),
-                          throwable)),
+          stage.whenComplete((asyncResultSet, throwable) ->
+              instrumenter()
+                  .end(context, request, getExecutionInfo(asyncResultSet, throwable), throwable)),
           parentContext);
     }
   }
 
   private static <T> CompletableFuture<T> wrap(CompletionStage<T> future, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
-    future.whenComplete(
-        (T value, Throwable throwable) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            if (throwable != null) {
-              result.completeExceptionally(throwable);
-            } else {
-              result.complete(value);
-            }
-          }
-        });
+    future.whenComplete((T value, Throwable throwable) -> {
+      try (Scope ignored = context.makeCurrent()) {
+        if (throwable != null) {
+          result.completeExceptionally(throwable);
+        } else {
+          result.complete(value);
+        }
+      }
+    });
 
     return result;
   }

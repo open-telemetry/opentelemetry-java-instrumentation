@@ -68,13 +68,10 @@ class StructuredTaskScopeTest {
 
     assertThat(result).isEqualTo("ab");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("task1").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("task2").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("task1").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+            span -> span.hasName("task2").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 }

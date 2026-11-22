@@ -99,19 +99,17 @@ class MySqlReplicationTest {
       }
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "mysql"),
-                            equalTo(DB_NAMESPACE, "shop"),
-                            equalTo(DB_QUERY_TEXT, sql),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT"),
-                            equalTo(SERVER_ADDRESS, target))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SELECT")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "mysql"),
+                    equalTo(DB_NAMESPACE, "shop"),
+                    equalTo(DB_QUERY_TEXT, sql),
+                    equalTo(DB_QUERY_SUMMARY, "SELECT"),
+                    equalTo(SERVER_ADDRESS, target))));
     testing.clearData();
     return serverId;
   }

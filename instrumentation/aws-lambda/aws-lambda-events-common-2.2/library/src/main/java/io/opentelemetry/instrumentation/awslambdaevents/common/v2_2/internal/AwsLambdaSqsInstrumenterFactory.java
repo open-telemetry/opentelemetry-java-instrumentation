@@ -72,14 +72,13 @@ public final class AwsLambdaSqsInstrumenterFactory {
                     getter, MessagingOperationType.PROCESS, PROCESS_OPERATION_NAME))
             .addAttributesExtractor(new MessageProcessingAttributesExtractor())
             .addOperationMetrics(MessagingProcessMetrics.get());
-    builder.setSpanStatusExtractor(
-        (spanStatusBuilder, request, response, error) -> {
-          if (error == null && Boolean.FALSE.equals(response)) {
-            spanStatusBuilder.setStatus(StatusCode.ERROR);
-          } else {
-            SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
-          }
-        });
+    builder.setSpanStatusExtractor((spanStatusBuilder, request, response, error) -> {
+      if (error == null && Boolean.FALSE.equals(response)) {
+        spanStatusBuilder.setStatus(StatusCode.ERROR);
+      } else {
+        SpanStatusExtractor.getDefault().extract(spanStatusBuilder, request, response, error);
+      }
+    });
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
         builder, AwsXrayPropagator.getInstance(), SqsMessageTextMapGetter.INSTANCE);

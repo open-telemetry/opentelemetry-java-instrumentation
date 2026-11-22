@@ -48,19 +48,18 @@ class SuppressionTest {
     if (!NESTED_HTTP_CLIENT_SPAN) {
       return;
     }
-    assertions.add(
-        span ->
-            span.hasName(method)
-                .hasKind(SpanKind.CLIENT)
-                .hasParent(parent)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(HTTP_REQUEST_METHOD, method),
-                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                    equalTo(stringKey("server.service.name"), expectedMappedServiceName),
-                    equalTo(SERVER_ADDRESS, serverAddress),
-                    equalTo(SERVER_PORT, serverPort),
-                    equalTo(URL_FULL, url)));
+    assertions.add(span ->
+        span.hasName(method)
+            .hasKind(SpanKind.CLIENT)
+            .hasParent(parent)
+            .hasAttributesSatisfyingExactly(
+                equalTo(HTTP_REQUEST_METHOD, method),
+                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName),
+                equalTo(SERVER_ADDRESS, serverAddress),
+                equalTo(SERVER_PORT, serverPort),
+                equalTo(URL_FULL, url)));
   }
 
   private SuppressionTest() {}

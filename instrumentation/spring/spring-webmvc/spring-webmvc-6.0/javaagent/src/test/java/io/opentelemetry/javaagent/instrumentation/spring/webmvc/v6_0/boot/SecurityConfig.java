@@ -47,9 +47,8 @@ public class SecurityConfig {
       HttpSecurity http, SavingAuthenticationProvider savingAuthenticationProvider)
       throws Exception {
     return http.csrf(AbstractHttpConfigurer::disable)
-        .authorizeHttpRequests(
-            auth ->
-                auth.requestMatchers("/formsecured/**").authenticated().anyRequest().permitAll())
+        .authorizeHttpRequests(auth ->
+            auth.requestMatchers("/formsecured/**").authenticated().anyRequest().permitAll())
         .authenticationProvider(savingAuthenticationProvider)
         .formLogin(Customizer.withDefaults())
         .build();

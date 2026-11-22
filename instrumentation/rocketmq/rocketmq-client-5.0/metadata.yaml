@@ -4,6 +4,7 @@ description: >
   using the gRPC/Protobuf Protocol.
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 library_link: https://rocketmq.apache.org/
 configurations:
   - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled

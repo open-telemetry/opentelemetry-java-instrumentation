@@ -25,6 +25,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 /** A builder of {@link OpenAITelemetry}. */
 @SuppressWarnings("IdentifierName") // Want to match library's convention
 public final class OpenAITelemetryBuilder {
+  // visible for testing
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.openai-java-1.1";
 
   private final OpenTelemetry openTelemetry;

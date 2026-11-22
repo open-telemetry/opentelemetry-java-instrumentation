@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.UrlParams;
@@ -28,7 +28,7 @@ public final class ParseContext {
   @Nullable private Integer parserDefaultPort;
   @Nullable private String singleServerHost;
   @Nullable private Integer singleServerPort;
-  @Nullable private DbServerTarget configuredServerTarget;
+  @Nullable private ServerTarget configuredServerTarget;
   private boolean allowSingleServerFallback = true;
   @Nullable private String user;
   @Nullable private String databaseName;
@@ -107,7 +107,7 @@ public final class ParseContext {
    * Resolve the configured target, or {@code null} when it cannot be represented safely. Disables
    * single-server fallback in either case.
    */
-  public void resolveConfiguredServerTarget(@Nullable DbServerTarget configuredServerTarget) {
+  public void resolveConfiguredServerTarget(@Nullable ServerTarget configuredServerTarget) {
     allowSingleServerFallback = false;
     this.configuredServerTarget = configuredServerTarget;
   }
@@ -268,6 +268,11 @@ public final class ParseContext {
       return;
     }
 
+    String authority = UrlParsingUtils.extractAuthority(urlPart);
+    if (authority != null && UrlParsingUtils.hasMultipleTargets(authority)) {
+      disableSingleServerFallback();
+    }
+
     // Parse URL host/port
     String serverName = urlPart.substring(hostIndex + 3);
     if (serverName.isEmpty()) {
@@ -311,7 +316,7 @@ public final class ParseContext {
   }
 
   @Nullable
-  private DbServerTarget buildConfiguredServerTarget() {
+  private ServerTarget buildConfiguredServerTarget() {
     if (!allowSingleServerFallback) {
       return configuredServerTarget;
     }
@@ -322,6 +327,6 @@ public final class ParseContext {
     if (parserDefaultPort != null && parserDefaultPort.equals(configuredPort)) {
       configuredPort = null;
     }
-    return DbServerTarget.create(singleServerHost, configuredPort);
+    return ServerTarget.create(singleServerHost, configuredPort);
   }
 }

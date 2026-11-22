@@ -88,29 +88,24 @@ class JedisAggregateTargetTest {
     }
 
     await()
-        .untilAsserted(
-            () -> {
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("SET"))
-                  .anySatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-              assertThat(testing.spans())
-                  .filteredOn(
-                      span ->
-                          span.getName().startsWith("SENTINEL")
-                              || span.getName().startsWith("SUBSCRIBE"))
-                  .isNotEmpty()
-                  .allSatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-            });
+        .untilAsserted(() -> {
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("SET"))
+              .anySatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+          assertThat(testing.spans())
+              .filteredOn(span ->
+                  span.getName().startsWith("SENTINEL") || span.getName().startsWith("SUBSCRIBE"))
+              .isNotEmpty()
+              .allSatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                    .isEqualTo(sentinelEndpoint + "/" + MASTER_NAME);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+        });
   }
 
   @Test
@@ -135,28 +130,23 @@ class JedisAggregateTargetTest {
     }
 
     await()
-        .untilAsserted(
-            () -> {
-              assertThat(testing.spans())
-                  .filteredOn(
-                      span -> span.getName().startsWith("SET") || span.getName().startsWith("GET"))
-                  .hasSize(2)
-                  .allSatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(clusterTarget);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("CLUSTER"))
-                  .isNotEmpty()
-                  .allSatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(clusterTarget);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                      });
-            });
+        .untilAsserted(() -> {
+          assertThat(testing.spans())
+              .filteredOn(
+                  span -> span.getName().startsWith("SET") || span.getName().startsWith("GET"))
+              .hasSize(2)
+              .allSatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("CLUSTER"))
+              .isNotEmpty()
+              .allSatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+              });
+        });
   }
 
   @Test
@@ -176,13 +166,12 @@ class JedisAggregateTargetTest {
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().startsWith("SET"))
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
-              assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-              assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo("127.0.0.1");
-              assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo((long) clusterPort);
-            });
+        .satisfies(span -> {
+          assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
+          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+          assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo("127.0.0.1");
+          assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo((long) clusterPort);
+        });
     assertThat(testing.spans()).filteredOn(span -> span.getName().startsWith("CLUSTER")).hasSize(1);
   }
 
@@ -216,27 +205,23 @@ class JedisAggregateTargetTest {
     }
 
     await()
-        .untilAsserted(
-            () -> {
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("SET"))
-                  .hasSize(1)
-                  .allSatisfy(
-                      span -> {
-                        assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                            .isEqualTo(clusterTarget);
-                        assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-                        assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS))
-                            .isEqualTo("127.0.0.1");
-                        assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
-                            .isEqualTo((long) clusterPort);
-                      });
-              // the redirection is followed by an ASKING command that the cluster command sends
-              // outside of running the redirected command, so it keeps a span of its own
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().startsWith("ASKING"))
-                  .hasSize(1);
-            });
+        .untilAsserted(() -> {
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("SET"))
+              .hasSize(1)
+              .allSatisfy(span -> {
+                assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
+                assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+                assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo("127.0.0.1");
+                assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
+                    .isEqualTo((long) clusterPort);
+              });
+          // the redirection is followed by an ASKING command that the cluster command sends
+          // outside of running the redirected command, so it keeps a span of its own
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().startsWith("ASKING"))
+              .hasSize(1);
+        });
   }
 
   @Test
@@ -251,14 +236,13 @@ class JedisAggregateTargetTest {
     assertThat(testing.spans())
         .filteredOn(span -> span.getName().startsWith("PUBLISH"))
         .singleElement()
-        .satisfies(
-            span -> {
-              assertThat(span.getName()).isEqualTo("PUBLISH " + clusterTarget);
-              assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
-              assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
-              assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo("127.0.0.1");
-              assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo((long) clusterPort);
-            });
+        .satisfies(span -> {
+          assertThat(span.getName()).isEqualTo("PUBLISH " + clusterTarget);
+          assertThat(span.getAttributes().get(SERVER_ADDRESS)).isEqualTo(clusterTarget);
+          assertThat(span.getAttributes().get(SERVER_PORT)).isNull();
+          assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo("127.0.0.1");
+          assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo((long) clusterPort);
+        });
   }
 
   private static void startSentinelServer() throws Exception {
@@ -315,12 +299,11 @@ class JedisAggregateTargetTest {
       throw new IllegalStateException(result.getStderr());
     }
     await()
-        .until(
-            () ->
-                clusterServer
-                    .execInContainer("redis-cli", "cluster", "info")
-                    .getStdout()
-                    .contains("cluster_state:ok"));
+        .until(() ->
+            clusterServer
+                .execInContainer("redis-cli", "cluster", "info")
+                .getStdout()
+                .contains("cluster_state:ok"));
 
     clusterHost = clusterServer.getHost();
     Class<?> hostAndPortClass = Class.forName("redis.clients.jedis.HostAndPort");

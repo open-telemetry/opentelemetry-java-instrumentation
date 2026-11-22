@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -25,6 +26,13 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      // Redisson 3.24.3 routes configuration through ServiceManager.
+      implementation("org.redisson:redisson:3.24.3")
+    }
+  }
+
   register<JvmTestSuite>("redisson324Test") {
     sources {
       java {
@@ -37,22 +45,50 @@ testing.suites {
       // Redisson 3.24.3 routes configuration through ServiceManager.
       implementation("org.redisson:redisson:3.24.3")
     }
+  }
 
-    targets.all {
-      testTask.configure {
-        filter {
-          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-        }
+  register<JvmTestSuite>("redisson344Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/redisson344Test/java"))
       }
     }
 
-    executions {
-      register("ServerTarget") {
-        filter {
-          includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
-          includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
-        }
+    dependencies {
+      implementation(project(":instrumentation:redisson:redisson-common-3.0:testing"))
+      implementation("org.redisson:redisson:3.44.0")
+      implementation("io.netty:netty-transport-native-epoll:4.1.116.Final:linux-x86_64")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
+
+  executions("redisson324Test") {
+    configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+      filter {
+        includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
+        includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+      }
+    }
+  }
+
+  executions("redisson344Test") {
+    configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+      filter {
+        includeTestsMatching("*RedissonUnixSocketTest.*")
+      }
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
       }
     }
   }
@@ -65,11 +101,5 @@ tasks {
 
   check {
     dependsOn(testing.suites)
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
-    }
   }
 }

@@ -26,6 +26,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 
+@SuppressWarnings("removal") // RestTemplate is deprecated for removal
 class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> {
 
   @RegisterExtension
@@ -136,13 +137,12 @@ class SpringRestTemplateTest extends AbstractHttpClientTest<HttpEntity<String>> 
 
     assertThat(responseCode).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertClientSpan(span, uri, method, responseCode, null)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset()),
-                span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                assertClientSpan(span, uri, method, responseCode, null)
+                    .hasNoParent()
+                    .hasStatus(StatusData.unset()),
+            span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
   }
 }

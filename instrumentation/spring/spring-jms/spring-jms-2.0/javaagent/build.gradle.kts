@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -46,9 +47,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":javaagent-bootstrap"))
       implementation(project(":instrumentation:jms:jms-common-1.1:bootstrap"))
       implementation(project(":instrumentation:jms:jms-1.1:javaagent"))
@@ -67,11 +67,6 @@ testing.suites {
       implementation("org.hornetq:hornetq-jms-server:2.4.7.Final") {
         // this doesn't exist in maven central, and doesn't seem to be needed anyways
         exclude("org.jboss.naming", "jnpserver")
-      }
-    }
-    executions {
-      register("ReceiveTelemetryEnabled") {
-        jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
       }
     }
   }
@@ -121,6 +116,12 @@ testing.suites {
       telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
 
       systemProperty("testJmsDisabled", "true")
+    }
+  }
+
+  executions("version20Test") {
+    register("ReceiveTelemetryEnabled") {
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
   }
 }

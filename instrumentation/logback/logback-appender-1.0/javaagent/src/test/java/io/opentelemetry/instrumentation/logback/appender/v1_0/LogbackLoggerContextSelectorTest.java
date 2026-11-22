@@ -41,12 +41,11 @@ class LogbackLoggerContextSelectorTest {
       LOGGER_CONTEXT_PROPERTIES.keySet().forEach(key -> loggerContext.putProperty(key, null));
     }
 
-    testing.waitAndAssertLogRecords(
-        logRecord -> {
-          Attributes attributes = logRecord.actual().getAttributes();
-          assertThat(capturedLoggerContextAttributes(attributes))
-              .containsExactlyInAnyOrderEntriesOf(expectedLoggerContextAttributes());
-        });
+    testing.waitAndAssertLogRecords(logRecord -> {
+      Attributes attributes = logRecord.actual().getAttributes();
+      assertThat(capturedLoggerContextAttributes(attributes))
+          .containsExactlyInAnyOrderEntriesOf(expectedLoggerContextAttributes());
+    });
   }
 
   private static Map<String, String> loggerContextProperties() {
@@ -61,13 +60,12 @@ class LogbackLoggerContextSelectorTest {
 
   private static Map<String, String> capturedLoggerContextAttributes(Attributes attributes) {
     Map<String, String> captured = new HashMap<>();
-    LOGGER_CONTEXT_PROPERTIES.forEach(
-        (key, value) -> {
-          String attributeValue = attributes.get(stringKey(key));
-          if (attributeValue != null) {
-            captured.put(key, attributeValue);
-          }
-        });
+    LOGGER_CONTEXT_PROPERTIES.forEach((key, value) -> {
+      String attributeValue = attributes.get(stringKey(key));
+      if (attributeValue != null) {
+        captured.put(key, attributeValue);
+      }
+    });
     return captured;
   }
 

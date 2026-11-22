@@ -22,15 +22,12 @@ class JaxWsAnnotationsTest {
   void webServiceProviderSpan() {
     new SoapProvider().invoke(null);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SoapProvider.invoke")
-                        .hasNoParent()
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME, SoapProvider.class.getName() + ".invoke"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SoapProvider.invoke")
+                .hasNoParent()
+                .hasKind(SpanKind.INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, SoapProvider.class.getName() + ".invoke"))));
   }
 }

@@ -87,61 +87,57 @@ class ArmeriaGrpcTest {
 
     assertThat(response.getMessage()).isEqualTo("Hello test");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.CLIENT)
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM_NAME, "grpc"),
-                            equalTo(RPC_METHOD, "example.Greeter/SayHello"),
-                            equalTo(stringKey("rpc.status_code"), "OK"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpPort()))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("message")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
-                            event ->
-                                event
-                                    .hasName("message")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGE_TYPE, "RECEIVED"),
-                                        equalTo(MESSAGE_ID, 1L))),
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.SERVER)
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM_NAME, "grpc"),
-                            equalTo(RPC_METHOD, "example.Greeter/SayHello"),
-                            equalTo(stringKey("rpc.status_code"), "OK"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpPort()))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("message")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGE_TYPE, "RECEIVED"), equalTo(MESSAGE_ID, 1L)),
-                            event ->
-                                event
-                                    .hasName("message")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.CLIENT)
+                    .satisfies(spanData ->
+                        assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "grpc"),
+                        equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                        equalTo(stringKey("rpc.status_code"), "OK"),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, server.httpPort()))
+                    .hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("message")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)),
+                        event ->
+                            event
+                                .hasName("message")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGE_TYPE, "RECEIVED"), equalTo(MESSAGE_ID, 1L))),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.SERVER)
+                    .satisfies(spanData ->
+                        assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                            .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "grpc"),
+                        equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                        equalTo(stringKey("rpc.status_code"), "OK"),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, server.httpPort()))
+                    .hasEventsSatisfyingExactly(
+                        event ->
+                            event
+                                .hasName("message")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGE_TYPE, "RECEIVED"), equalTo(MESSAGE_ID, 1L)),
+                        event ->
+                            event
+                                .hasName("message")
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)))));
   }
 
   @SuppressWarnings("deprecation") // message event attributes
@@ -158,30 +154,26 @@ class ArmeriaGrpcTest {
             e -> assertThat(e.getStatus().getCode()).isEqualTo(Status.Code.UNIMPLEMENTED));
 
     // Armeria rejects unknown service paths before invoking the gRPC interceptors.
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .satisfies(
-                            spanData ->
-                                assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
-                                    .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("example.Greeter/SayHello")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .satisfies(spanData ->
+                    assertThat(spanData.getInstrumentationScopeInfo().getSchemaUrl())
+                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(RPC_SYSTEM_NAME, "grpc"),
+                    equalTo(RPC_METHOD, "example.Greeter/SayHello"),
+                    equalTo(stringKey("rpc.status_code"), "UNIMPLEMENTED"),
+                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                    equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()),
+                    equalTo(ERROR_TYPE, "UNIMPLEMENTED"))
+                .hasEventsSatisfyingExactly(event ->
+                    event
+                        .hasName("message")
                         .hasAttributesSatisfyingExactly(
-                            equalTo(RPC_SYSTEM_NAME, "grpc"),
-                            equalTo(RPC_METHOD, "example.Greeter/SayHello"),
-                            equalTo(stringKey("rpc.status_code"), "UNIMPLEMENTED"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, serverWithoutGreeter.httpPort()),
-                            equalTo(ERROR_TYPE, "UNIMPLEMENTED"))
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("message")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)))));
+                            equalTo(MESSAGE_TYPE, "SENT"), equalTo(MESSAGE_ID, 1L)))));
   }
 }

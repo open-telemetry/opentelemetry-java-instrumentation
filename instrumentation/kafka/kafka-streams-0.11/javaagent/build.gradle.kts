@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -31,9 +32,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
       implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
       implementation(project(":javaagent-bootstrap"))
@@ -80,10 +80,6 @@ testing.suites {
       telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
     }
   }
-}
-
-tasks.check {
-  dependsOn(testing.suites)
 }
 
 // kafka 4.1 requires java 11

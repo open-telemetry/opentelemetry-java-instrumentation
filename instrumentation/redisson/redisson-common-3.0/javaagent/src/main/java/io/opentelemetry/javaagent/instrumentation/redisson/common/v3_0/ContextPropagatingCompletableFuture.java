@@ -16,18 +16,17 @@ public final class ContextPropagatingCompletableFuture<T> extends CompletableFut
 
   private ContextPropagatingCompletableFuture(CompletableFuture<T> delegate, Context context) {
     this.delegate = delegate;
-    delegate.whenComplete(
-        (result, error) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            if (delegate.isCancelled()) {
-              cancelFromDelegate();
-            } else if (error != null) {
-              completeExceptionally(error);
-            } else {
-              complete(result);
-            }
-          }
-        });
+    delegate.whenComplete((result, error) -> {
+      try (Scope ignored = context.makeCurrent()) {
+        if (delegate.isCancelled()) {
+          cancelFromDelegate();
+        } else if (error != null) {
+          completeExceptionally(error);
+        } else {
+          complete(result);
+        }
+      }
+    });
   }
 
   public static <T> CompletableFuture<T> wrap(CompletableFuture<T> delegate, Context context) {

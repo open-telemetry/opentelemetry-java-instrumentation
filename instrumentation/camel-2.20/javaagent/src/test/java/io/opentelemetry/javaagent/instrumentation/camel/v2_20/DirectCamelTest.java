@@ -63,20 +63,19 @@ class DirectCamelTest extends AbstractHttpServerUsingTest<ConfigurableApplicatio
 
     template.sendBody("direct:input", "Example request");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("input")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
-                span ->
-                    span.hasName("receiver")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("direct://receiver")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("input")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("camel.uri"), experimental("direct://input"))),
+            span ->
+                span.hasName("receiver")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("camel.uri"), experimental("direct://receiver")))));
   }
 }

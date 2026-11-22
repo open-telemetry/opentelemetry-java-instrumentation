@@ -55,11 +55,10 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
   @Test
   void nested() {
     Mono<String> mono =
-        Mono.defer(
-            () -> {
-              testing().runWithSpan("inner-manual", () -> {});
-              return Mono.just("Value");
-            });
+        Mono.defer(() -> {
+          testing().runWithSpan("inner-manual", () -> {});
+          return Mono.just("Value");
+        });
 
     TracedWithSpan traced = newTracedWithSpan();
     Mono<String> result = traced.outer(mono);
@@ -67,28 +66,26 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
     StepVerifier.create(result).expectNext("Value").verifyComplete();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.outer")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CODE_FUNCTION_NAME, traced.getClass().getName() + ".outer")),
-                    span ->
-                        span.hasName("TracedWithSpan.mono")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".mono")),
-                    span ->
-                        span.hasName("inner-manual")
-                            .hasKind(SpanKind.INTERNAL)
-                            // earliest tested and latest version behave differently
-                            .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
-                            .hasTotalAttributeCount(0)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.outer")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".outer")),
+                span ->
+                    span.hasName("TracedWithSpan.mono")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".mono")),
+                span ->
+                    span.hasName("inner-manual")
+                        .hasKind(SpanKind.INTERNAL)
+                        // earliest tested and latest version behave differently
+                        .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
+                        .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -101,35 +98,33 @@ abstract class BaseMonoWithSpanTest extends AbstractWithSpanTest<Mono<String>, M
             () -> {
               Mono<String> result =
                   traced.mono(
-                      Mono.defer(
-                          () -> {
-                            testing().runWithSpan("inner-manual", () -> {});
-                            return Mono.just("Value");
-                          }));
+                      Mono.defer(() -> {
+                        testing().runWithSpan("inner-manual", () -> {});
+                        return Mono.just("Value");
+                      }));
 
               StepVerifier.create(result).expectNext("Value").verifyComplete();
             });
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("parent")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasTotalAttributeCount(0),
-                    span ->
-                        span.hasName("TracedWithSpan.mono")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".mono")),
-                    span ->
-                        span.hasName("inner-manual")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
-                            .hasTotalAttributeCount(0)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("TracedWithSpan.mono")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".mono")),
+                span ->
+                    span.hasName("inner-manual")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(testLatestDeps() ? 0 : 1))
+                        .hasTotalAttributeCount(0)));
   }
 
   // Because we test on the Mono API but need to be able to complete the processor, we

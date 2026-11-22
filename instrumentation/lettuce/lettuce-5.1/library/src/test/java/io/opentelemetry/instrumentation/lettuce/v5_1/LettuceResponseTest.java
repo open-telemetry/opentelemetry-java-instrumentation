@@ -21,13 +21,12 @@ class LettuceResponseTest {
     output.setError(ByteBuffer.wrap("WRONGTYPE details".getBytes(UTF_8)));
     String applicationMessage = output.getError();
 
-    assertThat(LettuceResponse.fromCommandOutput(output).getRedisErrorType())
-        .isEqualTo("WRONGTYPE");
+    assertThat(LettuceResponse.fromCommandOutput(output).getErrorCode()).isEqualTo("WRONGTYPE");
     assertThat(output.getError()).isEqualTo(applicationMessage);
   }
 
   @Test
   void preservesLiteralStringVerbatim() {
-    assertThat(LettuceResponse.fromErrorMessage("ￃﾩ details").getRedisErrorType()).isEqualTo("ￃﾩ");
+    assertThat(LettuceResponse.fromErrorMessage("ￃﾩ details").getErrorCode()).isEqualTo("ￃﾩ");
   }
 }

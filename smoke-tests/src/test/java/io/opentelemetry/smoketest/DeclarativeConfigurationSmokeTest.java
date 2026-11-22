@@ -37,19 +37,15 @@ class DeclarativeConfigurationSmokeTest extends AbstractSmokeTest<Integer> {
 
     // There is one span (io.opentelemetry.opentelemetry-instrumentation-annotations-1.16 is
     // not used, because default_enabled=false)
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasResourceSatisfying(
-                        resource ->
-                            resource
-                                .hasAttribute(SERVICE_NAME, "declarative-config-smoke-test")
-                                .hasAttribute(satisfies(CONTAINER_ID, val -> val.isNotBlank()))
-                                .hasAttribute(
-                                    satisfies(PROCESS_EXECUTABLE_PATH, val -> val.isNotBlank()))
-                                .hasAttribute(satisfies(HOST_NAME, val -> val.isNotBlank()))
-                                .hasAttribute(TELEMETRY_DISTRO_NAME, "opentelemetry-javaagent"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasResourceSatisfying(resource ->
+                resource
+                    .hasAttribute(SERVICE_NAME, "declarative-config-smoke-test")
+                    .hasAttribute(satisfies(CONTAINER_ID, val -> val.isNotBlank()))
+                    .hasAttribute(satisfies(PROCESS_EXECUTABLE_PATH, val -> val.isNotBlank()))
+                    .hasAttribute(satisfies(HOST_NAME, val -> val.isNotBlank()))
+                    .hasAttribute(TELEMETRY_DISTRO_NAME, "opentelemetry-javaagent"))));
     testing.clearData();
     client().get("/actuator/health").aggregate().join();
     client().get("/greeting").aggregate().join();

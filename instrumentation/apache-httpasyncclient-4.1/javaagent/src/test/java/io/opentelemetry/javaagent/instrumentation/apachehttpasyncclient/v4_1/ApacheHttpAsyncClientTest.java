@@ -159,29 +159,24 @@ class ApacheHttpAsyncClientTest {
       assertThat(getResponseCode(response)).isEqualTo(200);
       assertThat(requestFuture.get(10, SECONDS)).isSameAs(response);
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                  span ->
-                      assertClientSpan(span, expectedUri, "GET", 200, null)
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfying(
-                              attributes -> {
-                                assertThat(attributes.get(NETWORK_PEER_ADDRESS))
-                                    .isEqualTo("127.0.0.1");
-                                if (explicitPort) {
-                                  assertThat(attributes.get(NETWORK_PEER_PORT))
-                                      .isEqualTo((long) serverPort);
-                                } else {
-                                  assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
-                                }
-                              }),
-                  span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
-                  span ->
-                      span.hasName("callback")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+              span ->
+                  assertClientSpan(span, expectedUri, "GET", 200, null)
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfying(attributes -> {
+                        assertThat(attributes.get(NETWORK_PEER_ADDRESS)).isEqualTo("127.0.0.1");
+                        if (explicitPort) {
+                          assertThat(attributes.get(NETWORK_PEER_PORT))
+                              .isEqualTo((long) serverPort);
+                        } else {
+                          assertThat(attributes.get(NETWORK_PEER_PORT)).isNull();
+                        }
+                      }),
+              span -> assertServerSpan(span).hasParent(trace.getSpan(1)),
+              span ->
+                  span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
     }
 
     @Override
