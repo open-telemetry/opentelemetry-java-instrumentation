@@ -12,6 +12,7 @@ import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import kotlinx.coroutines.CoroutineName
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.asCoroutineDispatcher
@@ -20,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.CompletableFuture
@@ -29,6 +31,7 @@ import java.util.concurrent.TimeUnit
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
+import kotlin.coroutines.coroutineContext
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.startCoroutineUninterceptedOrReturn
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
@@ -174,6 +177,55 @@ class TailCallWithSpanInlineResumeTest {
       return ranBeforeResumeReturned.get(10, TimeUnit.SECONDS)
     } finally {
       executor.shutdown()
+    }
+  }
+
+  // A coroutine launched with the callee's context inherits the marker that tells the runtime
+  // restored the callee's context, so the caller is dispatched instead.
+  @Test
+  @Disabled("A coroutine launched with the callee's context that resumes the raw continuation has the caller dispatched instead of run before resume returns")
+  fun `caller resumed without interception by a coroutine launched with the callee's context runs before resume returns`() {
+    val expected = callerRanBeforeChildResumeReturned { unannotatedChildResume(it) }
+    assertThat(expected).isTrue()
+    assertThat(callerRanBeforeChildResumeReturned { annotatedChildResume(it) }).isEqualTo(expected)
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("child-resume").hasNoParent() },
+        )
+      },
+    )
+  }
+
+  private fun callerRanBeforeChildResumeReturned(call: suspend (() -> Unit) -> Int): Boolean {
+    val executor = Executors.newSingleThreadExecutor()
+    try {
+      val callerRan = CompletableFuture<Unit>()
+      val ranBeforeResumeReturned = CompletableFuture<Boolean>()
+      runBlocking(executor.asCoroutineDispatcher() + Context.root().asContextElement()) {
+        withContext(CoroutineName("caller")) {
+          call { ranBeforeResumeReturned.complete(callerRan.isDone) }
+          callerRan.complete(Unit)
+        }
+      }
+      return ranBeforeResumeReturned.get(10, TimeUnit.SECONDS)
+    } finally {
+      executor.shutdown()
+    }
+  }
+
+  @WithSpan("child-resume")
+  private suspend fun annotatedChildResume(afterResume: () -> Unit): Int = unannotatedChildResume(afterResume)
+
+  private suspend fun unannotatedChildResume(afterResume: () -> Unit): Int {
+    val context = coroutineContext
+    return suspendCoroutineUninterceptedOrReturn { continuation ->
+      CoroutineScope(context).launch {
+        continuation.resume(7)
+        afterResume()
+      }
+      COROUTINE_SUSPENDED
     }
   }
 
