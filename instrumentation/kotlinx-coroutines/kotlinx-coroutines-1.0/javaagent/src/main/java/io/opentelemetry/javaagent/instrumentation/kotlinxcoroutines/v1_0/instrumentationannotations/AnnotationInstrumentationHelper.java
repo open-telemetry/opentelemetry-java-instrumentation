@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations;
 
 import static io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instrumentationannotations.AnnotationSingletons.instrumenter;
+import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -14,6 +15,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Field;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import kotlin.ResultKt;
 import kotlin.coroutines.Continuation;
@@ -82,7 +84,9 @@ public class AnnotationInstrumentationHelper {
   public static <T> Continuation<T> wrapContinuation(
       Continuation<T> continuation, Context context, Context parentContext, Object request) {
     return (Continuation<T>)
-        new SuspendFrame(new ContextContinuation<>(continuation, context, parentContext, request));
+        new SuspendFrame(
+            new ContextContinuation<>(continuation, context, parentContext, request),
+            continuation.getContext());
   }
 
   @Nullable
@@ -116,8 +120,8 @@ public class AnnotationInstrumentationHelper {
     if (continuation == null || result != IntrinsicsKt.getCOROUTINE_SUSPENDED()) {
       instrumenter().end(context, (MethodRequest) request, null, error);
       if (continuation != null && continuation instanceof SuspendFrame) {
-        // The frame doesn't resume when the callee returns synchronously, so release any
-        // interception the callee requested before returning.
+        // the callee completed without suspending, so the frame never completes and never
+        // releases the continuation it intercepted when it was created
         ((SuspendFrame) continuation).release();
       }
     }
@@ -323,13 +327,46 @@ public class AnnotationInstrumentationHelper {
    * Stands in for the frame the compiler omits when the annotated method tail calls another suspend
    * function. Coroutine runtimes intercept only {@link ContinuationImpl} frames, so without it a
    * callee completing on another dispatcher would resume the caller on the callee's thread.
-   * Interception uses the callee's context so suspension callbacks see its span.
    */
   public static final class SuspendFrame extends ContinuationImpl {
 
+    private static final Logger logger = Logger.getLogger(SuspendFrame.class.getName());
+
+    // the cache behind ContinuationImpl.intercepted()
+    @Nullable private static final Field INTERCEPTED = findInterceptedField();
+
     @SuppressWarnings("unchecked") // ContinuationImpl takes Continuation<Object>
-    SuspendFrame(Continuation<?> completion) {
+    SuspendFrame(Continuation<?> completion, CoroutineContext callerContext) {
       super((Continuation<Object>) completion);
+      // Intercept a stand-in that carries the caller's context instead of this frame, whose
+      // context also holds the span: the runtime then applies the caller's thread context when it
+      // resumes the caller, as it would without the annotation.
+      ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
+      if (interceptor != null && INTERCEPTED != null) {
+        try {
+          Continuation<Object> resumption = new CallerResumption(this, callerContext);
+          Continuation<Object> intercepted = interceptor.interceptContinuation(resumption);
+          // an interceptor that does not wrap the continuation must not be asked to release it,
+          // so keep the default, which intercepts this frame
+          if (intercepted != resumption) {
+            INTERCEPTED.set(this, intercepted);
+          }
+        } catch (IllegalAccessException | RuntimeException e) {
+          // fall back to intercepting this frame
+          logger.log(FINE, "Failed to set the intercepted continuation of the tail call frame", e);
+        }
+      }
+    }
+
+    @Nullable
+    private static Field findInterceptedField() {
+      try {
+        Field field = ContinuationImpl.class.getDeclaredField("intercepted");
+        field.setAccessible(true);
+        return field;
+      } catch (NoSuchFieldException | RuntimeException e) {
+        return null;
+      }
     }
 
     void release() {
@@ -371,6 +408,38 @@ public class AnnotationInstrumentationHelper {
     }
 
     private UndispatchedMarker() {}
+  }
+
+  private static final class CallerResumption implements Continuation<Object>, CoroutineStackFrame {
+    private final SuspendFrame frame;
+    private final CoroutineContext callerContext;
+
+    CallerResumption(SuspendFrame frame, CoroutineContext callerContext) {
+      this.frame = frame;
+      this.callerContext = callerContext;
+    }
+
+    @NotNull
+    @Override
+    public CoroutineContext getContext() {
+      return callerContext;
+    }
+
+    @Override
+    public void resumeWith(@NotNull Object result) {
+      frame.resumeWith(result);
+    }
+
+    @Override
+    public CoroutineStackFrame getCallerFrame() {
+      return frame;
+    }
+
+    @Nullable
+    @Override
+    public StackTraceElement getStackTraceElement() {
+      return null;
+    }
   }
 
   public static void init() {}
