@@ -146,6 +146,7 @@ public class LettuceSingletons {
     COMMAND_PEER.set(command, null);
   }
 
+  // only used by tests
   static boolean hasCommandPeer(RedisCommand<?, ?, ?> command) {
     return COMMAND_PEER.get(command) != null;
   }

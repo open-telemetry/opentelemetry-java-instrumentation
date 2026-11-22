@@ -7,9 +7,9 @@ pluginManagement {
     id("org.jetbrains.kotlin.jvm") version "2.4.21"
     id("org.xbib.gradle.plugin.jflex") version "3.0.2"
     id("com.github.bjornvester.xjc") version "1.9.1"
-    id("org.graalvm.buildtools.native") version "1.1.18"
+    id("org.graalvm.buildtools.native") version "1.1.19"
     id("com.google.osdetector") version "1.7.3"
-    id("com.google.protobuf") version "0.10.0"
+    id("com.google.protobuf") version "0.10.1"
   }
 }
 
@@ -273,7 +273,6 @@ include(":instrumentation:couchbase:couchbase-2.0:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent")
 include(":instrumentation:couchbase:couchbase-common-2.0:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-common-3.0:javaagent")
-include(":instrumentation:couchbase:couchbase-common-3.0:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-common-3.1:javaagent")
 include(":instrumentation:couchbase:couchbase-common-3.1:javaagent-unit-tests")
 include(":instrumentation:couchbase:couchbase-3.0:javaagent")
@@ -443,7 +442,6 @@ include(":instrumentation:jmx-metrics:library")
 include(":instrumentation:jmx-metrics:testing-apps:camel-testing-app")
 include(":instrumentation:jmx-metrics:testing-apps:testing-webapp")
 include(":instrumentation:jodd-http-4.2:javaagent")
-include(":instrumentation:jodd-http-4.2:javaagent-unit-tests")
 include(":instrumentation:jsf:jsf-common-jakarta:javaagent")
 include(":instrumentation:jsf:jsf-common-jakarta:testing")
 include(":instrumentation:jsf:jsf-common-javax:javaagent")
@@ -491,6 +489,7 @@ include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:javaa
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-2.17:library-autoconfigure")
 include(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing")
 include(":instrumentation:log4j:log4j-mdc-1.2:javaagent")
+include(":instrumentation:logback:bootstrap")
 include(":instrumentation:logback:logback-appender-1.0:javaagent")
 include(":instrumentation:logback:logback-appender-1.0:library")
 include(":instrumentation:logback:logback-appender-1.0:testing")

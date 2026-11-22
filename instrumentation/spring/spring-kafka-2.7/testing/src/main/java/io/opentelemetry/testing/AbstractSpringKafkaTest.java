@@ -151,11 +151,10 @@ public abstract class AbstractSpringKafkaTest {
           .runWithSpan(
               "producer",
               () -> {
-                kafkaTemplate.executeInTransaction(
-                    ops -> {
-                      keyToData.forEach((key, data) -> send("testBatchTopic", key, data));
-                      return 0;
-                    });
+                kafkaTemplate.executeInTransaction(ops -> {
+                  keyToData.forEach((key, data) -> send("testBatchTopic", key, data));
+                  return 0;
+                });
               });
 
       BatchRecordListener.waitForMessages();
@@ -176,23 +175,22 @@ public abstract class AbstractSpringKafkaTest {
       assertThat(links).hasSize(producerSpans.length);
       for (SpanData producerSpan : producerSpans) {
         assertThat(links)
-            .anySatisfy(
-                link -> {
-                  assertThat(link.getSpanContext().getTraceId())
-                      .isEqualTo(producerSpan.getSpanContext().getTraceId());
-                  assertThat(link.getSpanContext().getSpanId())
-                      .isEqualTo(producerSpan.getSpanContext().getSpanId());
-                  assertThat(link.getSpanContext().getTraceFlags())
-                      .isEqualTo(producerSpan.getSpanContext().getTraceFlags());
-                  assertThat(link.getSpanContext().getTraceState())
-                      .isEqualTo(producerSpan.getSpanContext().getTraceState());
-                  assertThat(link.getAttributes().asMap())
-                      .containsOnlyKeys(stringKey("kafka.message.key"), longKey("kafka.offset"));
-                  assertThat(link.getAttributes().get(stringKey("kafka.message.key")))
-                      .isEqualTo(producerSpan.getAttributes().get(stringKey("kafka.message.key")));
-                  assertThat(link.getAttributes().get(longKey("kafka.offset")))
-                      .isEqualTo(producerSpan.getAttributes().get(longKey("kafka.offset")));
-                });
+            .anySatisfy(link -> {
+              assertThat(link.getSpanContext().getTraceId())
+                  .isEqualTo(producerSpan.getSpanContext().getTraceId());
+              assertThat(link.getSpanContext().getSpanId())
+                  .isEqualTo(producerSpan.getSpanContext().getSpanId());
+              assertThat(link.getSpanContext().getTraceFlags())
+                  .isEqualTo(producerSpan.getSpanContext().getTraceFlags());
+              assertThat(link.getSpanContext().getTraceState())
+                  .isEqualTo(producerSpan.getSpanContext().getTraceState());
+              assertThat(link.getAttributes().asMap())
+                  .containsOnlyKeys(stringKey("kafka.message.key"), longKey("kafka.offset"));
+              assertThat(link.getAttributes().get(stringKey("kafka.message.key")))
+                  .isEqualTo(producerSpan.getAttributes().get(stringKey("kafka.message.key")));
+              assertThat(link.getAttributes().get(longKey("kafka.offset")))
+                  .isEqualTo(producerSpan.getAttributes().get(longKey("kafka.offset")));
+            });
       }
     };
   }

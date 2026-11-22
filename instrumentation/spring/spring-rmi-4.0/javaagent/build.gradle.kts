@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -28,11 +30,7 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
-    dependencies {
-      implementation(project())
-    }
-  }
+  unitTests()
 }
 
 otelJava {
@@ -43,10 +41,6 @@ otelJava {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
-  }
-
-  check {
-    dependsOn(testing.suites)
   }
 }
 

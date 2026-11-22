@@ -12,7 +12,7 @@ plugins {
 }
 
 dependencies {
-  implementation("com.linecorp.armeria:armeria-grpc:1.42.0")
+  implementation("com.linecorp.armeria:armeria-grpc:1.43.0")
   implementation("io.opentelemetry.proto:opentelemetry-proto")
   runtimeOnly("org.slf4j:slf4j-simple")
 }
@@ -29,7 +29,7 @@ java {
 
 jib {
   from {
-    image = "eclipse-temurin:21-jre"
+    image = "eclipse-temurin:21-jre@sha256:ca73b4d3961703d6d7830a4361f49ef0478f8f28b39defc07bb72f4cc7f834f6"
     platforms {
       platform {
         architecture = "amd64"

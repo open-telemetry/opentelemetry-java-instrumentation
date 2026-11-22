@@ -6,18 +6,18 @@
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class ClickHouseDbRequest {
   // The selected peer can change as an operation retries. It is intentionally excluded from
   // AutoValue's equality, hash code, and string representations.
-  @Nullable private volatile DbServerTarget peer;
+  @Nullable private volatile ServerTarget peer;
 
   public static ClickHouseDbRequest create(
-      @Nullable DbServerTarget peer,
-      @Nullable DbServerTarget serverTarget,
+      @Nullable ServerTarget peer,
+      @Nullable ServerTarget serverTarget,
       @Nullable String namespace,
       String sql) {
     ClickHouseDbRequest request = new AutoValue_ClickHouseDbRequest(serverTarget, namespace, sql);
@@ -27,22 +27,22 @@ public abstract class ClickHouseDbRequest {
 
   @Nullable
   public final String getPeerAddress() {
-    DbServerTarget peer = this.peer;
+    ServerTarget peer = this.peer;
     return peer == null ? null : peer.getAddress();
   }
 
   @Nullable
   public final Integer getPeerPort() {
-    DbServerTarget peer = this.peer;
+    ServerTarget peer = this.peer;
     return peer == null ? null : peer.getPort();
   }
 
-  public final void setPeer(@Nullable DbServerTarget peer) {
+  public final void setPeer(@Nullable ServerTarget peer) {
     this.peer = peer;
   }
 
   @Nullable
-  public abstract DbServerTarget getServerTarget();
+  public abstract ServerTarget getServerTarget();
 
   @Nullable
   public abstract String getNamespace();

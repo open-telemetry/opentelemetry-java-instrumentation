@@ -37,12 +37,8 @@ final class ThriftClientNetworkAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       ThriftRequest request, @Nullable ThriftResponse response) {
-    SocketAddress address = request.getRemoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return request.getRemoteAddress();
   }
 }

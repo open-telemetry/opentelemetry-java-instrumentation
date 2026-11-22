@@ -63,26 +63,25 @@ class MulticastDirectCamelTest extends AbstractHttpServerUsingTest<ConfigurableA
 
     template.sendBody("direct:input", "Example request");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span ->
-                    span.hasName("input")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("direct://input"))),
-                span ->
-                    span.hasName("first")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("direct://first"))),
-                span ->
-                    span.hasName("second")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("camel.uri"), experimental("direct://second")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span ->
+                span.hasName("input")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("camel.uri"), experimental("direct://input"))),
+            span ->
+                span.hasName("first")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("camel.uri"), experimental("direct://first"))),
+            span ->
+                span.hasName("second")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("camel.uri"), experimental("direct://second")))));
   }
 }

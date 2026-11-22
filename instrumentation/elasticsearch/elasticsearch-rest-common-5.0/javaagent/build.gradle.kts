@@ -3,6 +3,19 @@ plugins {
   id("otel.nullaway-conventions")
 }
 
+testing.suites {
+  register<JvmTestSuite>("unitTests") {
+    dependencies {
+      implementation(project())
+      implementation("org.elasticsearch.client:rest:5.0.0")
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
+}
+
 dependencies {
   compileOnly("org.elasticsearch.client:rest:5.0.0")
   compileOnly("com.google.auto.value:auto-value-annotations")

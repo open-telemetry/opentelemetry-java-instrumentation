@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.methods;
 
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableList;
 import static java.util.logging.Level.WARNING;
 import static java.util.stream.Collectors.toList;
 
@@ -34,7 +35,7 @@ class MethodConfiguration {
   private final List<TypeInstrumentation> typeInstrumentations;
 
   MethodConfiguration(OpenTelemetry openTelemetry) {
-    this.typeInstrumentations = parse(openTelemetry);
+    this.typeInstrumentations = unmodifiableList(new ArrayList<>(parse(openTelemetry)));
   }
 
   List<TypeInstrumentation> typeInstrumentations() {
@@ -106,10 +107,8 @@ class MethodConfiguration {
     Map<String, Set<String>> classMethodsToTrace = MethodsConfigurationParser.parse(include);
     return classMethodsToTrace.entrySet().stream()
         .filter(e -> !e.getValue().isEmpty())
-        .map(
-            e ->
-                new MethodInstrumentation(
-                    e.getKey(), singletonMap(SpanKind.INTERNAL, e.getValue())))
+        .map(e ->
+            new MethodInstrumentation(e.getKey(), singletonMap(SpanKind.INTERNAL, e.getValue())))
         .collect(toList());
   }
 }

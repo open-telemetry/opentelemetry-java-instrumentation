@@ -48,17 +48,15 @@ abstract class BaseRxJava2WithSpanTest {
     newTraced().completable(source).subscribe(observer);
     observer.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.completable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.completable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.completable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.completable")))));
   }
 
   @Test
@@ -76,17 +74,15 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertComplete();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.completable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.completable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.completable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.completable")))));
   }
 
   @Test
@@ -97,19 +93,17 @@ abstract class BaseRxJava2WithSpanTest {
     newTraced().completable(source).subscribe(observer);
     observer.assertError(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.completable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.completable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.completable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.completable")))));
   }
 
   @Test
@@ -127,19 +121,17 @@ abstract class BaseRxJava2WithSpanTest {
     source.onError(error);
     observer.assertError(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.completable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.completable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.completable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.completable")))));
   }
 
   @Test
@@ -155,18 +147,15 @@ abstract class BaseRxJava2WithSpanTest {
 
     observer.cancel();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.completable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.completable")),
-                                equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.completable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.completable")),
+                        equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
   }
 
   @Test
@@ -177,17 +166,14 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertValue("Value");
     observer.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.maybe")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.maybe")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.maybe")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.maybe")))));
   }
 
   @Test
@@ -197,17 +183,14 @@ abstract class BaseRxJava2WithSpanTest {
     newTraced().maybe(source).subscribe(observer);
     observer.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.maybe")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.maybe")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.maybe")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.maybe")))));
   }
 
   @Test
@@ -226,17 +209,14 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertComplete();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.maybe")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.maybe")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.maybe")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.maybe")))));
   }
 
   @Test
@@ -247,19 +227,16 @@ abstract class BaseRxJava2WithSpanTest {
     newTraced().maybe(source).subscribe(observer);
     observer.assertError(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.maybe")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.maybe")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.maybe")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.maybe")))));
   }
 
   @Test
@@ -278,19 +255,16 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertError(error);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.maybe")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.maybe")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.maybe")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.maybe")))));
   }
 
   @Test
@@ -306,18 +280,14 @@ abstract class BaseRxJava2WithSpanTest {
 
     observer.cancel();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.maybe")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.maybe")),
-                                equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.maybe")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.maybe")),
+                        equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
   }
 
   @Test
@@ -328,17 +298,14 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertValue("Value");
     observer.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.single")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.single")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.single")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.single")))));
   }
 
   @Test
@@ -357,17 +324,14 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertComplete();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.single")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.single")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.single")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.single")))));
   }
 
   @Test
@@ -378,19 +342,16 @@ abstract class BaseRxJava2WithSpanTest {
     newTraced().single(source).subscribe(observer);
     observer.assertError(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.single")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.single")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.single")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.single")))));
   }
 
   @Test
@@ -409,19 +370,16 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertError(error);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.single")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.single")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.single")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.single")))));
   }
 
   @Test
@@ -437,18 +395,14 @@ abstract class BaseRxJava2WithSpanTest {
 
     observer.cancel();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.single")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.single")),
-                                equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.single")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.single")),
+                        equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
   }
 
   @Test
@@ -459,17 +413,15 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertValue("Value");
     observer.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.observable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.observable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.observable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.observable")))));
   }
 
   @Test
@@ -494,17 +446,15 @@ abstract class BaseRxJava2WithSpanTest {
     source.onComplete();
     observer.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.observable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.observable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.observable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.observable")))));
   }
 
   @Test
@@ -515,19 +465,17 @@ abstract class BaseRxJava2WithSpanTest {
     newTraced().observable(source).subscribe(observer);
     observer.assertError(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.observable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.observable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.observable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.observable")))));
   }
 
   @Test
@@ -554,19 +502,17 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertError(error);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.observable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.observable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.observable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.observable")))));
   }
 
   @Test
@@ -590,18 +536,15 @@ abstract class BaseRxJava2WithSpanTest {
 
     observer.cancel();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.observable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.observable")),
-                                equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.observable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.observable")),
+                        equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
   }
 
   @Test
@@ -612,17 +555,14 @@ abstract class BaseRxJava2WithSpanTest {
     observe.assertValue("Value");
     observe.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.flowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.flowable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.flowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.flowable")))));
   }
 
   @Test
@@ -648,17 +588,14 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertComplete();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.flowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.flowable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.flowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.flowable")))));
   }
 
   @Test
@@ -668,19 +605,16 @@ abstract class BaseRxJava2WithSpanTest {
     Flowable<String> source = Flowable.error(error);
     newTraced().flowable(source).subscribe(observer);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.flowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.flowable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.flowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.flowable")))));
   }
 
   @Test
@@ -707,19 +641,16 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertError(error);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.flowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.flowable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.flowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.flowable")))));
   }
 
   @Test
@@ -743,18 +674,15 @@ abstract class BaseRxJava2WithSpanTest {
 
     observer.cancel();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.flowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.flowable")),
-                                equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.flowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.flowable")),
+                        equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
   }
 
   @Test
@@ -765,17 +693,15 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertValue("Value");
     observer.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.parallelFlowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.parallelFlowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
   }
 
   @Test
@@ -801,17 +727,15 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertComplete();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.parallelFlowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.parallelFlowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
   }
 
   @Test
@@ -822,19 +746,17 @@ abstract class BaseRxJava2WithSpanTest {
     newTraced().parallelFlowable(source.parallel()).sequential().subscribe(observer);
     observer.assertError(error);
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.parallelFlowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.parallelFlowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
   }
 
   @Test
@@ -861,19 +783,17 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertError(error);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.parallelFlowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.parallelFlowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.parallelFlowable")))));
   }
 
   @Test
@@ -898,18 +818,16 @@ abstract class BaseRxJava2WithSpanTest {
     observer.cancel();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.parallelFlowable")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.parallelFlowable")),
-                                equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.parallelFlowable")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME,
+                            val -> val.endsWith("TracedWithSpan.parallelFlowable")),
+                        equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
   }
 
   @Test
@@ -926,17 +844,14 @@ abstract class BaseRxJava2WithSpanTest {
     source.onComplete();
     observer.assertComplete();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.publisher")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.publisher")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.publisher")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.publisher")))));
   }
 
   @Test
@@ -955,19 +870,16 @@ abstract class BaseRxJava2WithSpanTest {
     observer.assertError(error);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.publisher")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasStatus(StatusData.error())
-                            .hasException(error)
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.publisher")))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.publisher")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.publisher")))));
   }
 
   @Test
@@ -983,18 +895,15 @@ abstract class BaseRxJava2WithSpanTest {
 
     observer.cancel();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.publisher")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.endsWith("TracedWithSpan.publisher")),
-                                equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("TracedWithSpan.publisher")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(
+                            CODE_FUNCTION_NAME, val -> val.endsWith("TracedWithSpan.publisher")),
+                        equalTo(booleanKey("rxjava.canceled"), experimental(true)))));
   }
 
   private static class CustomPublisher implements Publisher<String>, Subscription {

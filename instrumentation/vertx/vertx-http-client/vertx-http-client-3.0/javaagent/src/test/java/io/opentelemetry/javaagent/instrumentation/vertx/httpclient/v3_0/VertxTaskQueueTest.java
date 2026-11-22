@@ -51,18 +51,17 @@ class VertxTaskQueueTest {
     testing.runWithSpan(
         "parent1",
         () ->
-            orderedExecutor.execute(
-                () -> {
-                  // signal that the first task has started
-                  start1.countDown();
-                  // wait for the second task to be submitted
-                  try {
-                    start2.await(10, SECONDS);
-                  } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                  }
-                  testing.runWithSpan("span1", () -> {});
-                }));
+            orderedExecutor.execute(() -> {
+              // signal that the first task has started
+              start1.countDown();
+              // wait for the second task to be submitted
+              try {
+                start2.await(10, SECONDS);
+              } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+              }
+              testing.runWithSpan("span1", () -> {});
+            }));
     // wait for the first task to start
     start1.await(10, SECONDS);
     // start the second task

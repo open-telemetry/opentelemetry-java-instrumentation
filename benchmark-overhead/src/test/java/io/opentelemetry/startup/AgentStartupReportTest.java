@@ -21,14 +21,13 @@ class AgentStartupReportTest {
   void launchesOnlyTheSuppliedAgentAndKeepsProfilingSeparate() {
     assertThat(AgentStartupBenchmark.arguments(true, false))
         .contains("-Xmx512m", "-javaagent:/tmp/agent.jar")
-        .noneMatch(
-            value ->
-                value.contains("bootclasspath")
-                    || value.contains("AOT")
-                    || value.contains("FlightRecord")
-                    || value.contains("startup-recorder")
-                    || value.contains("otel.sdk.disabled")
-                    || value.contains("otel.instrumentation"));
+        .noneMatch(value ->
+            value.contains("bootclasspath")
+                || value.contains("AOT")
+                || value.contains("FlightRecord")
+                || value.contains("startup-recorder")
+                || value.contains("otel.sdk.disabled")
+                || value.contains("otel.instrumentation"));
     assertThat(AgentStartupBenchmark.arguments(true, true))
         .contains(
             "-XX:FlightRecorderOptions=stackdepth=256",
@@ -126,10 +125,8 @@ class AgentStartupReportTest {
   @Test
   void requiresAMeasuredNoAgentControl() {
     AgentStartupReport report = new AgentStartupReport(directory);
-    assertThatThrownBy(
-            () ->
-                report.summarize(
-                    List.of(new AgentStartupReport.Sample("agent", 0, false, "ok", 1, 0))))
+    assertThatThrownBy(() ->
+            report.summarize(List.of(new AgentStartupReport.Sample("agent", 0, false, "ok", 1, 0))))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessage("A measured no-agent control is required");
   }

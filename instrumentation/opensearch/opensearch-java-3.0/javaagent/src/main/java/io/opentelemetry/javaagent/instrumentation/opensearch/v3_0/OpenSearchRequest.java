@@ -6,14 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import com.google.auto.value.AutoValue;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import javax.annotation.Nullable;
 
 @AutoValue
 public abstract class OpenSearchRequest {
 
   public static OpenSearchRequest create(
-      String method, @Nullable String body, @Nullable DbServerTarget serverTarget) {
+      String method, @Nullable String body, @Nullable ServerTarget serverTarget) {
     return new AutoValue_OpenSearchRequest(method, body, serverTarget);
   }
 
@@ -23,5 +23,5 @@ public abstract class OpenSearchRequest {
   public abstract String getBody();
 
   @Nullable
-  public abstract DbServerTarget getServerTarget();
+  public abstract ServerTarget getServerTarget();
 }

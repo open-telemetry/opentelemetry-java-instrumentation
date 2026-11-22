@@ -67,24 +67,17 @@ class Jedis23PipelineErrorTest {
   }
 
   private static void assertErrorType(String errorType) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.satisfies(
-                        spanData ->
-                            assertThat(spanData.getAttributes().get(ERROR_TYPE))
-                                .isEqualTo(errorType))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.satisfies(spanData ->
+                assertThat(spanData.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-2.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .allSatisfy(
-                            point ->
-                                assertThat(point.getAttributes().get(ERROR_TYPE))
-                                    .isEqualTo(errorType))));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .allSatisfy(point ->
+                        assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType))));
   }
 }

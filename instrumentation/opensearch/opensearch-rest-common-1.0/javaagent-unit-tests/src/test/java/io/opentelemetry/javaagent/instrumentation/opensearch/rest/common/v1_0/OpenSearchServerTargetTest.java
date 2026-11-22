@@ -11,7 +11,7 @@ import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTarget.Endpoint;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -29,7 +29,7 @@ class OpenSearchServerTargetTest {
 
   @Test
   void singleEndpointKeepsItsHostAndPort() {
-    DbServerTarget target =
+    ServerTarget target =
         OpenSearchServerTarget.of(singletonList(new Endpoint("search.example", 9200, "https")));
 
     assertThat(target).isNotNull();
@@ -40,7 +40,7 @@ class OpenSearchServerTargetTest {
   @ParameterizedTest
   @MethodSource("defaultPortCases")
   void singleEndpointOmitsItsDefaultPort(String scheme, int port) {
-    DbServerTarget target =
+    ServerTarget target =
         OpenSearchServerTarget.of(singletonList(new Endpoint("search.example", port, scheme)));
 
     assertThat(target).isNotNull();
@@ -50,7 +50,7 @@ class OpenSearchServerTargetTest {
 
   @Test
   void singleEndpointWithoutPortHasNoPort() {
-    DbServerTarget target =
+    ServerTarget target =
         OpenSearchServerTarget.of(singletonList(new Endpoint("search.example", -1, "http")));
 
     assertThat(target).isNotNull();
@@ -60,7 +60,7 @@ class OpenSearchServerTargetTest {
 
   @Test
   void mixedHttpAndHttpsDefaultPortsAreOmitted() {
-    DbServerTarget target =
+    ServerTarget target =
         OpenSearchServerTarget.of(
             asList(
                 new Endpoint("secure.example", 443, "https"),
@@ -73,13 +73,13 @@ class OpenSearchServerTargetTest {
 
   @Test
   void configuredNodeOrderDoesNotChangeTarget() {
-    DbServerTarget first =
+    ServerTarget first =
         OpenSearchServerTarget.of(
             asList(
                 new Endpoint("h3", 9202, "http"),
                 new Endpoint("h1", 9200, "http"),
                 new Endpoint("h2", 9201, "http")));
-    DbServerTarget second =
+    ServerTarget second =
         OpenSearchServerTarget.of(
             asList(
                 new Endpoint("h2", 9201, "http"),

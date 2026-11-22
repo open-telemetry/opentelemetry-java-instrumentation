@@ -9,7 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.net.InetSocketAddress;
 import org.junit.jupiter.api.Test;
 
@@ -17,9 +17,9 @@ class SpymemcachedSingletonsTest {
 
   @Test
   void usesMemcachedDefaultPort() {
-    DbServerTarget defaultPort =
+    ServerTarget defaultPort =
         SpymemcachedSingletons.createServerTarget(singletonList(node("cache.example", 11211)));
-    DbServerTarget customPort =
+    ServerTarget customPort =
         SpymemcachedSingletons.createServerTarget(singletonList(node("cache.example", 11212)));
 
     assertThat(defaultPort.getAddress()).isEqualTo("cache.example");

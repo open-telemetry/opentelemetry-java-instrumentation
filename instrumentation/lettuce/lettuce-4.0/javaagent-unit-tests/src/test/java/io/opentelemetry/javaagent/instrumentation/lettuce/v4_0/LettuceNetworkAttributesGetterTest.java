@@ -19,6 +19,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -47,14 +48,28 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void commandDropsUnresolvedSelectedAddress() {
-    RedisCommand<?, ?, ?> command =
-        commandWithPeer(InetSocketAddress.createUnresolved("redis.example", PORT));
+  void commandPreservesUnresolvedSelectedAddress() {
+    InetSocketAddress unresolved = InetSocketAddress.createUnresolved("redis.example", PORT);
+    RedisCommand<?, ?, ?> command = commandWithPeer(unresolved);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
+    assertThat(getter.getNetworkPeerSocketAddress(command, null)).isEqualTo(unresolved);
     assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isEqualTo(PORT);
+  }
+
+  @Test
+  void batchPreservesUnresolvedSelectedAddress() {
+    InetSocketAddress unresolved = InetSocketAddress.createUnresolved("redis.example", PORT);
+    LettuceBatchRequest request =
+        LettuceBatchRequest.create(singletonList(commandWithPeer(unresolved)), null, null);
+
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(unresolved);
+    assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -85,7 +100,14 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandHandlerInstrumentation.WriteAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(LettuceSingletons.commandPeerAddress(command)).isEqualTo(address);
+    assertThat(LettuceSingletons.commandPeerAddress(command)).isSameAs(address);
+    assertThat(getter.getNetworkPeerSocketAddress(command, null))
+        .isInstanceOfSatisfying(
+            UnixSocketAddress.class,
+            normalized -> {
+              assertThat(normalized.getPath()).isEqualTo("/var/run/redis.sock");
+              assertThat(normalized.getOriginalAddress()).isSameAs(address);
+            });
     assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("/var/run/redis.sock");
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
   }

@@ -33,7 +33,8 @@ class CamelTest extends TargetSystemTest {
     jvmArgs.addAll(javaPropertiesToJvmArgs(otelConfigProperties(yamlFiles)));
 
     GenericContainer<?> target =
-        new GenericContainer<>("eclipse-temurin:17.0.18_8-jre")
+        new GenericContainer<>(
+                "eclipse-temurin:17.0.21_9-jre@sha256:fb2cec8da84e3f086b59e29bf432d372e396fe0c247adcfb89303a28c2e313c0")
             .withCommand(String.format("java %s -jar /camel_test.jar", String.join(" ", jvmArgs)))
             .waitingFor(Wait.forLogMessage(".*Camel test application started.*", 1))
             .withStartupTimeout(Duration.ofMinutes(1));
@@ -140,12 +141,11 @@ class CamelTest extends TargetSystemTest {
                 attributeWithAnyValue("camel.route"),
                 attributeWithAnyValue("camel.processor"),
                 attributeWithAnyValue("camel.destination"))
-            .applicableWhen(
-                (attributes) ->
-                    Optional.ofNullable(attributes.get("camel.processor"))
-                        // Test application uses only "to" destination-aware processor
-                        .filter((processorId) -> processorId.startsWith("to"))
-                        .isPresent());
+            .applicableWhen(attributes ->
+                Optional.ofNullable(attributes.get("camel.processor"))
+                    // Test application uses only "to" destination-aware processor
+                    .filter(processorId -> processorId.startsWith("to"))
+                    .isPresent());
 
     AttributeMatcherGroup threadPoolAttributes =
         attributeGroup(

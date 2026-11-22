@@ -43,30 +43,28 @@ class SpringListenerSuppressReceiveSpansTest extends AbstractJmsTest {
     cleanup.deferCleanup(context);
     JmsListenerEndpointRegistry registry = context.getBean(JmsListenerEndpointRegistry.class);
     await()
-        .until(
-            () ->
-                registry.getListenerContainers().stream()
-                    .map(DefaultMessageListenerContainer.class::cast)
-                    .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
+        .until(() ->
+            registry.getListenerContainers().stream()
+                .map(DefaultMessageListenerContainer.class::cast)
+                .allMatch(DefaultMessageListenerContainer::isRegisteredWithDestination));
     ConnectionFactory factory = context.getBean(ConnectionFactory.class);
     JmsTemplate template = new JmsTemplate(factory);
     template.setPubSubDomain(true);
 
     template.convertAndSend("SpringListenerJms2", "a message");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertProducerSpan(span, "SpringListenerJms2", false),
-                span ->
-                    assertConsumerSpan(
-                        span,
-                        trace.getSpan(0),
-                        trace.getSpan(0),
-                        "SpringListenerJms2",
-                        "process",
-                        false,
-                        null,
-                        "durable-subscription")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> assertProducerSpan(span, "SpringListenerJms2", false),
+            span ->
+                assertConsumerSpan(
+                    span,
+                    trace.getSpan(0),
+                    trace.getSpan(0),
+                    "SpringListenerJms2",
+                    "process",
+                    false,
+                    null,
+                    "durable-subscription")));
 
     Attributes sendAttributes =
         Attributes.of(

@@ -45,23 +45,21 @@ class CouchbaseQuerySanitizationTest {
 
     assertThat(bucket.query(N1qlQuery.simple(query)).toList().toBlocking().single()).isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT `test`")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "couchbase"),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                Boolean.parseBoolean(
-                                        System.getProperty("testQuerySanitizationEnabled", "true"))
-                                    ? "SELECT * FROM `test` WHERE field1 = ? AND field2 = ?"
-                                    : query),
-                            equalTo(DB_QUERY_SUMMARY, "SELECT `test`"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SELECT `test`")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "couchbase"),
+                    equalTo(DB_NAMESPACE, "test"),
+                    equalTo(
+                        DB_QUERY_TEXT,
+                        Boolean.parseBoolean(
+                                System.getProperty("testQuerySanitizationEnabled", "true"))
+                            ? "SELECT * FROM `test` WHERE field1 = ? AND field2 = ?"
+                            : query),
+                    equalTo(DB_QUERY_SUMMARY, "SELECT `test`"))));
   }
 
   @Test
@@ -81,16 +79,14 @@ class CouchbaseQuerySanitizationTest {
                 .single())
         .isEmpty();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "couchbase"),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_QUERY_TEXT, "SearchQuery"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "couchbase"),
+                    equalTo(DB_NAMESPACE, "test"),
+                    equalTo(DB_QUERY_TEXT, "SearchQuery"))));
   }
 }
