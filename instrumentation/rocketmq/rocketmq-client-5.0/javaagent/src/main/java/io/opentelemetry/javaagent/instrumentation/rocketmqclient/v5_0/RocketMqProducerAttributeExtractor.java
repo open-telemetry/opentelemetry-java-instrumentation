@@ -12,9 +12,9 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.semconv.incubating.RocketmqIncubatingAttributes.RocketmqMessageTypeIncubatingValues;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
@@ -51,7 +51,25 @@ class RocketMqProducerAttributeExtractor
         .getDeliveryTimestamp()
         .ifPresent(s -> attributes.put(ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, s));
     attributes.put(ROCKETMQ_MESSAGE_KEYS, new ArrayList<>(message.getKeys()));
-    attributes.put(ROCKETMQ_MESSAGE_TYPE, message.getMessageType().name().toLowerCase(Locale.ROOT));
+    switch (message.getMessageType().name()) {
+      case "FIFO":
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.FIFO);
+        break;
+      case "DELAY":
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.DELAY);
+        break;
+      case "TRANSACTION":
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.TRANSACTION);
+        break;
+      case "LITE":
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, "lite");
+        break;
+      case "PRIORITY":
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, "priority");
+        break;
+      default:
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.NORMAL);
+    }
     if (captureExperimentalSpanAttributes) {
       attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, RocketMqMessageAttributes.getLiteTopic(message));
       attributes.put(ROCKETMQ_MESSAGE_PRIORITY, RocketMqMessageAttributes.getPriority(message));

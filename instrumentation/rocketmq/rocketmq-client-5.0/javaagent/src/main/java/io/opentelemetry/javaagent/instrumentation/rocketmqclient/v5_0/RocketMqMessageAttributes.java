@@ -8,7 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.rocketmqclient.v5_0;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.api.common.AttributeKey;
-import java.lang.reflect.Method;
+import java.lang.invoke.MethodHandle;
+import java.lang.invoke.MethodHandles;
+import java.lang.invoke.MethodType;
 import java.util.Optional;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
@@ -23,17 +25,21 @@ final class RocketMqMessageAttributes {
   static final AttributeKey<Long> ROCKETMQ_MESSAGE_PRIORITY =
       AttributeKey.longKey("rocketmq.message.priority");
 
-  @Nullable
-  private static final Method MESSAGE_LITE_TOPIC = findMethod(Message.class, "getLiteTopic");
+  private static final MethodType GETTER_TYPE = MethodType.methodType(Optional.class);
 
   @Nullable
-  private static final Method MESSAGE_VIEW_LITE_TOPIC =
-      findMethod(MessageView.class, "getLiteTopic");
-
-  @Nullable private static final Method MESSAGE_PRIORITY = findMethod(Message.class, "getPriority");
+  private static final MethodHandle MESSAGE_LITE_TOPIC = findGetter(Message.class, "getLiteTopic");
 
   @Nullable
-  private static final Method MESSAGE_VIEW_PRIORITY = findMethod(MessageView.class, "getPriority");
+  private static final MethodHandle MESSAGE_VIEW_LITE_TOPIC =
+      findGetter(MessageView.class, "getLiteTopic");
+
+  @Nullable
+  private static final MethodHandle MESSAGE_PRIORITY = findGetter(Message.class, "getPriority");
+
+  @Nullable
+  private static final MethodHandle MESSAGE_VIEW_PRIORITY =
+      findGetter(MessageView.class, "getPriority");
 
   @Nullable
   static String getLiteTopic(Message message) {
@@ -58,9 +64,9 @@ final class RocketMqMessageAttributes {
   }
 
   @Nullable
-  private static Method findMethod(Class<?> declaringType, String name) {
+  private static MethodHandle findGetter(Class<?> declaringType, String name) {
     try {
-      return declaringType.getMethod(name);
+      return MethodHandles.publicLookup().findVirtual(declaringType, name, GETTER_TYPE);
     } catch (NoSuchMethodException ignored) {
       // The getters were added in 5.1 (LiteTopic) and 5.2 (priority).
       return null;
@@ -71,12 +77,12 @@ final class RocketMqMessageAttributes {
   }
 
   @Nullable
-  private static Object read(@Nullable Method method, Object message) {
-    if (method == null) {
+  private static Object read(@Nullable MethodHandle getter, Object message) {
+    if (getter == null) {
       return null;
     }
     try {
-      return ((Optional<?>) method.invoke(message)).orElse(null);
+      return ((Optional<?>) getter.invoke(message)).orElse(null);
     } catch (Throwable t) {
       logger.log(FINE, "Error reading RocketMQ message attribute", t);
       return null;
