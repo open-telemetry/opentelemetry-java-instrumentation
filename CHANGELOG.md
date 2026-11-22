@@ -59,7 +59,8 @@
 - `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
   (which didn't work properly anyways).
 - Kotlin suspend function `@WithSpan` instrumentation now uses only the
-  `kotlinx-coroutines-annotations` selector and is disabled by default. Use
+  `kotlinx-coroutines-annotations` selector, is disabled by default, and requires
+  kotlinx-coroutines 1.6.1 or later. Use
   `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true` instead of the
   `kotlinx-coroutines`, `kotlinx-coroutines-1.0`,
   `kotlinx-coroutines-opentelemetry-instrumentation-annotations`, or
