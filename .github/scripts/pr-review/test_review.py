@@ -118,6 +118,18 @@ class ReviewTest(unittest.TestCase):
             bundle = Path(directory)
             runner.model_pass("model", "max", "prompt", bundle / "checkout", bundle)
 
+    def test_model_pass_rejects_partial_output_on_timeout(self):
+        response = subprocess.CompletedProcess(
+            [], 124, stdout='{"type":"assistant.message","data":{"content":"{\\"comments\\":[]}"}}\n',
+        )
+        with (
+            tempfile.TemporaryDirectory() as directory,
+            mock.patch.object(runner, "run_in_sandbox", return_value=response),
+            self.assertRaisesRegex(RuntimeError, "exceeded its .* sandbox time limit"),
+        ):
+            bundle = Path(directory)
+            runner.model_pass("model", "max", "prompt", bundle / "checkout", bundle)
+
     def test_checkout_rejects_a_moved_pr_head(self):
         response = subprocess.CompletedProcess([], 0, stdout="e" * 40 + "\n")
         with tempfile.TemporaryDirectory() as directory, mock.patch.object(sandbox, "run", return_value=response) as git:

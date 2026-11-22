@@ -51,7 +51,7 @@ jobs:
       group: pr-review-${{ needs.gate.outputs.pr_number }}-${{ github.event_name == 'push' && 'smoke' || 'live' }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 60
     permissions:
       contents: read
       pull-requests: read

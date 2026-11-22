@@ -17,7 +17,7 @@ from typing import Any
 from common import Summary, gh_json, progress, write_json
 from post import load_json, post_review, prepare_review
 from prepare import build_bundle, pr_metadata
-from sandbox import checkout_pr, run_in_sandbox
+from sandbox import AGENT_TIMEOUT_MINUTES, checkout_pr, run_in_sandbox
 
 
 COPILOT_REVIEWER = "copilot-pull-request-reviewer[bot]"
@@ -67,15 +67,20 @@ def model_pass(model: str, effort: str, prompt: str, checkout: Path, bundle: Pat
     progress(f"Running {model} with {effort} reasoning")
     prompt_file = bundle / "prompt.txt"
     prompt_file.write_text(prompt, encoding="utf-8")
-    result = run_in_sandbox(
-        checkout, bundle,
-        [
-            "--model", model, "--reasoning-effort", effort, "--output-format", "json", "--no-ask-user",
-            "--no-auto-update", "--no-custom-instructions", "--disable-builtin-mcps", "--allow-all-paths",
-            "--available-tools", "view", "glob", "grep", "bash", "shell",
-            "--allow-tool", "view", "glob", "grep", "shell",
-        ],
-    )
+    try:
+        result = run_in_sandbox(
+            checkout, bundle,
+            [
+                "--model", model, "--reasoning-effort", effort, "--output-format", "json", "--no-ask-user",
+                "--no-auto-update", "--no-custom-instructions", "--disable-builtin-mcps", "--allow-all-paths",
+                "--available-tools", "view", "glob", "grep", "bash", "shell",
+                "--allow-tool", "view", "glob", "grep", "shell",
+            ],
+        )
+    except subprocess.TimeoutExpired as error:
+        raise RuntimeError(f"{model} sandbox timed out after {error.timeout:g} seconds") from error
+    if result.returncode == 124:
+        raise RuntimeError(f"{model} exceeded its {AGENT_TIMEOUT_MINUTES}-minute sandbox time limit")
     answer = ""
     error_message = ""
     for line in result.stdout.splitlines():

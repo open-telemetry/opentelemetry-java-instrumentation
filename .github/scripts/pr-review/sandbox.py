@@ -12,6 +12,9 @@ from pathlib import Path
 from common import run, write_json
 
 
+AGENT_TIMEOUT_MINUTES = 12
+
+
 def checkout_pr(repo: str, pr: int, head: str, checkout: Path) -> None:
     if not re.fullmatch(r"[a-f0-9]{40}", head):
         raise ValueError("Invalid PR head SHA")
@@ -77,12 +80,13 @@ def run_in_sandbox(checkout: Path, inputs: Path, args: list[str]) -> subprocess.
                 "--mount", f"{java_home}:{java_home}:ro", "--env", f"JAVA_HOME={java_home}",
                 "--env", "GITHUB_COPILOT_PROMPT_MODE_EXTENSIONS=false",
                 "--capture-command-output", str(capture),
+                "--agent-timeout", str(AGENT_TIMEOUT_MINUTES),
                 "--log-level", "info",
                 "--", "/bin/bash", str(inputs / "launch-copilot.sh"),
                 str(workspace), str(inputs), str(config), (checkout / ".git" / "HEAD").read_text().strip(),
                 copilot, *args,
             ],
-            cwd=workspace, env=env, check=False, timeout=540,
+            cwd=workspace, env=env, check=False, timeout=(AGENT_TIMEOUT_MINUTES + 2) * 60,
         )
         stdout = capture / "attempt-001.stdout.bin"
         stderr = capture / "attempt-001.stderr.bin"
