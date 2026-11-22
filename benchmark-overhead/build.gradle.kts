@@ -72,6 +72,7 @@ val petclinicStartupHelperJar = tasks.register<Jar>("petclinicStartupHelperJar")
   from(startupHelper.output) {
     include("io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.class")
     include("META-INF/spring.factories")
+    include("META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports")
   }
   archiveFileName.set("petclinic-startup-helper.jar")
 }

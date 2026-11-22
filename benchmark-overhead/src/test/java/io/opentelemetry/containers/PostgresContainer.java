@@ -23,7 +23,7 @@ public class PostgresContainer {
   private final String image;
 
   public PostgresContainer(Network network) {
-    this(network, "postgres:9.6.22");
+    this(network, "postgres:18@sha256:ec003ee60c23d320d1b81868f255a6fc724ac06d8f1ced4468532f7d8593f357");
   }
 
   public PostgresContainer(Network network, String image) {

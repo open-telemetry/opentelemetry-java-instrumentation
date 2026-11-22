@@ -142,8 +142,8 @@ The workflow also packages the recorder JAR with the agent and fixture so a
 measurement-only rerun reuses the same built inputs.
 
 For Petclinic, build the annotation library and select the workload. The workflow also
-builds the Java 17 helper JAR against Spring MVC 5.3.3; Boot 2.4.2 discovers its
-advice through the `PropertiesLauncher` classpath. The helper is benchmark-only and
+builds the Java 17 helper JAR against Spring MVC 7.1.0; Boot 4.1.2 discovers its
+advice through both legacy `spring.factories` and modern auto-configuration imports. The helper is benchmark-only and
 does not bundle Spring:
 
 ```sh
@@ -156,7 +156,7 @@ cd benchmark-overhead
 ```
 
 The benchmark task builds `petclinic-startup-helper.jar` automatically for this workload.
-Petclinic uses the pinned `petclinic-rest-base:20230601125442` image (Spring Petclinic REST 2.4.2, Liberica JDK 17.0.7) and PostgreSQL 9.6.22 image, both pinned by digest in the harness. It starts and seeds PostgreSQL before the measured launches, sets owner 1's first name to `StartupBenchmark`, uses the `postgresql,spring-data-jpa` profiles, and checks `/petclinic/api/owners/1` for that record. The benchmark-only response advice adds the uptime header only to that GET response and leaves its body unchanged. The same read-only database, annotations JAR, and helper JAR are used for every configuration; no inherited spans are added. The database and application containers are removed after the run, including on failure.
+Petclinic uses the current `petclinic-rest-base:latest` image (Spring Petclinic REST 4.0.2 / Spring Boot 4.1.2, JDK 25) and PostgreSQL 18 image pinned by digest in the harness. It starts and seeds PostgreSQL before the measured launches, sets owner 1's first name to `StartupBenchmark`, uses the `postgres,spring-data-jpa` profiles, and checks `/petclinic/api/owners/1` for that record. The benchmark-only response advice adds the uptime header only to that GET response and leaves its body unchanged. The same read-only database, annotations JAR, and helper JAR are used for every configuration; no inherited spans are added. The database and application containers are removed after the run, including on failure.
 
 To compare two agents, also pass
 `-PstartupBenchmarkBaselineAgentJar=/absolute/path/to/baseline-agent.jar`.

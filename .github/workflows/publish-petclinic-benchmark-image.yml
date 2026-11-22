@@ -39,7 +39,9 @@ jobs:
         with:
           push: true
           file: benchmark-overhead/Dockerfile.petclinic
-          tags: ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:${{ env.TS }}
+          tags: |
+            ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:${{ env.TS }}
+            ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:latest
 
   workflow-notification:
     permissions:
