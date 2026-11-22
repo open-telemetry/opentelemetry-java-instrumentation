@@ -148,7 +148,6 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
                         .hasLongSumPointsSatisfying(point ->
                             point
                                 .hasValue(1)
@@ -193,7 +192,6 @@ abstract class AbstractRocketMqClientSuppressReceiveSpanTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
                         .hasLongSumPointsSatisfying(point ->
                             point
                                 .hasValue(1)
