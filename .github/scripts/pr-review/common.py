@@ -40,7 +40,9 @@ def progress(message: str) -> None:
     print(f"[review] {message}", flush=True)
 
 
-def _run(cmd: list[str], summary: Summary | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
+def run(
+    cmd: list[str], summary: Summary | None = None, check: bool = True, timeout: int | None = None
+) -> subprocess.CompletedProcess[str]:
     if summary is not None:
         progress("Running: " + " ".join(shlex.quote(part) for part in cmd))
     return subprocess.run(
@@ -50,11 +52,13 @@ def _run(cmd: list[str], summary: Summary | None = None, check: bool = True) -> 
         encoding="utf-8",
         errors="replace",
         check=check,
+        timeout=timeout,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
     )
 
 
 def gh(args: list[str], summary: Summary | None = None, check: bool = True) -> subprocess.CompletedProcess[str]:
-    return _run(["gh", *args], summary, check)
+    return run(["gh", *args], summary, check)
 
 
 def gh_json(args: list[str], summary: Summary | None = None) -> Any:

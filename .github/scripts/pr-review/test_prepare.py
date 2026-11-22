@@ -9,6 +9,15 @@ from common import Summary
 
 
 class ReviewBundleTest(unittest.TestCase):
+    def test_added_line_starting_with_two_pluses_is_not_a_file_header(self):
+        scope = prepare.parse_diff(
+            "diff --git a/example.txt b/example.txt\n"
+            "--- a/example.txt\n+++ b/example.txt\n@@ -0,0 +1,2 @@\n"
+            "+++ text\n+more text\n"
+        )
+        self.assertEqual(list(scope), ["example.txt"])
+        self.assertEqual(scope["example.txt"]["changed_lines"], [1, 2])
+
     def test_fetches_changed_files_from_the_head_repository(self):
         metadata = {
             "headRepositoryOwner": {"login": "contributor"},

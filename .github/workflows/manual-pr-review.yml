@@ -1,0 +1,78 @@
+name: Manual PR review
+
+on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: Pull request number
+        required: true
+        type: number
+  # Temporary pre-merge smoke test. Remove this trigger and its PR number before merging.
+  push:
+    branches: [trask-pr-review-workflow]
+
+permissions: {}
+
+concurrency:
+  group: manual-pr-review-${{ inputs.pr_number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  review:
+    if: github.repository == 'open-telemetry/opentelemetry-java-instrumentation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      pull-requests: read
+      copilot-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Install Copilot CLI
+        run: |
+          npm ci --prefix .github/scripts/copilot-cli
+          echo "$GITHUB_WORKSPACE/.github/scripts/copilot-cli/node_modules/.bin" >> "$GITHUB_PATH"
+
+      - name: Review, simplify, and double-check
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GITHUB_TOKEN: ${{ github.token }}
+          COPILOT_GITHUB_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event_name == 'push' && '21405' || format('{0}', inputs.pr_number) }}
+        run: python .github/scripts/pr-review/manual.py "$PR_NUMBER" prepare review-result.json
+
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: review-result
+          path: review-result.json
+          if-no-files-found: error
+          retention-days: 7
+
+  post:
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: review
+    environment: protected
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: review-result
+
+      - name: Post the result
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_REVIEW_POST_TOKEN: ${{ secrets.PR_REVIEW_POST_TOKEN }}
+          PR_NUMBER: ${{ inputs.pr_number }}
+          REVIEWER: ${{ github.actor }}
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+        run: python .github/scripts/pr-review/manual.py "$PR_NUMBER" post review-result.json

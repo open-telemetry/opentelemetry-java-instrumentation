@@ -20,7 +20,7 @@ import argparse
 import re
 import sys
 from concurrent.futures import ThreadPoolExecutor
-from pathlib import Path
+from pathlib import Path, PurePosixPath, PureWindowsPath
 from typing import Any
 from urllib.parse import quote
 
@@ -49,6 +49,7 @@ def pr_metadata(pr: int, summary: Summary) -> dict[str, Any]:
     fields = ",".join(
         [
             "number",
+            "state",
             "title",
             "url",
             "baseRefName",
@@ -71,6 +72,7 @@ def parse_diff(diff: str) -> dict[str, dict[str, Any]]:
 
     for line in diff.splitlines():
         if line.startswith("diff --git "):
+            current_file = None
             new_file_marker = False
             deleted_file_marker = False
             continue
@@ -80,7 +82,7 @@ def parse_diff(diff: str) -> dict[str, dict[str, Any]]:
         if line.startswith("deleted file mode"):
             deleted_file_marker = True
             continue
-        if line.startswith("+++ "):
+        if current_file is None and line.startswith("+++ "):
             path = line[4:]
             if path == "/dev/null":
                 current_file = None
@@ -105,7 +107,7 @@ def parse_diff(diff: str) -> dict[str, dict[str, Any]]:
 
         if not current_file or not files[current_file]["hunks"]:
             continue
-        if line.startswith("+") and not line.startswith("+++"):
+        if line.startswith("+"):
             files[current_file]["changed_lines"].add(right_line)
             right_line += 1
         elif line.startswith(" "):
@@ -153,6 +155,14 @@ def write_review_bundle(
         for path, info in diff_scope.items()
         if is_reviewable(path) and info.get("changed_lines")
     ]
+    for path in paths_to_fetch:
+        if (
+            PurePosixPath(path).is_absolute()
+            or ".." in PurePosixPath(path).parts
+            or PureWindowsPath(path).drive
+            or "\\" in path
+        ):
+            raise RuntimeError(f"Invalid diff path: {path!r}")
     with ThreadPoolExecutor(max_workers=8) as pool:
         file_contents = dict(
             zip(

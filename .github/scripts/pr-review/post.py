@@ -12,7 +12,9 @@ non-approving).
 from __future__ import annotations
 
 import argparse
+import difflib
 import json
+import re
 import sys
 from pathlib import Path
 from typing import Any
@@ -55,10 +57,31 @@ def lines_inside_hunk(path: str, start_line: int, line: int, diff_scope: dict[st
     return True
 
 
+def small_suggestion(
+    path: str, start: int, end: int, hunks: list[list[int]], replacement: str, files: Path
+) -> bool:
+    if not any(first <= start <= end <= last for first, last in hunks) or "```" in replacement:
+        return False
+    source = files / path
+    if not source.is_file():
+        return False
+    lines = source.read_text(encoding="utf-8").splitlines()
+    if lines and lines[-1] == "...[file truncated]...":
+        lines = lines[:-2]
+    if end > len(lines):
+        return False
+    original = lines[start - 1 : end]
+    proposed = replacement.rstrip("\n").splitlines()
+    ops = difflib.SequenceMatcher(None, original, proposed, autojunk=False).get_opcodes()
+    return original != proposed and sum(j2 - j1 for op, _, _, j1, j2 in ops if op != "equal") < 15
+
+
 def validate_comments(
     findings: dict[str, Any],
     diff_scope: dict[str, dict[str, Any]],
     summary: Summary,
+    *,
+    suggestion_files: Path | None = None,
 ) -> list[dict[str, Any]]:
     comments: list[dict[str, Any]] = []
     for raw in findings.get("comments") or []:
@@ -86,9 +109,51 @@ def validate_comments(
             comment["start_side"] = "RIGHT"
         suggestion = raw.get("suggestion")
         if isinstance(suggestion, str):
-            comment["body"] = body.rstrip() + "\n\n```suggestion\n" + suggestion.rstrip("\n") + "\n```"
+            if suggestion_files is None or small_suggestion(
+                path, start_line, line, diff_scope[path]["hunks"], suggestion, suggestion_files
+            ):
+                comment["body"] = body.rstrip() + "\n\n```suggestion\n" + suggestion.rstrip("\n") + "\n```"
+            else:
+                summary.notes.append(f"Kept comment without suggestion for {path}:{line}")
         comments.append(comment)
     return comments
+
+
+def prepare_manual_review(
+    findings: dict[str, Any], bundle: Path, summary: Summary
+) -> dict[str, Any]:
+    diff_scope = load_json(bundle / "diff-scope.json", "diff scope")
+    metadata = load_json(bundle / "metadata.json", "PR metadata")
+    raw_comments = findings.get("comments") if isinstance(findings, dict) else None
+    if not isinstance(raw_comments, list):
+        raise ValueError("Final findings must contain a comments array")
+    for comment in raw_comments:
+        if (
+            not isinstance(comment, dict)
+            or comment.get("kind") not in ("review", "simplification")
+            or not isinstance(comment.get("body"), str)
+            or not comment["body"].strip()
+            or re.search(r"(?im)^\s*(?:`{3,}|~{3,})\s*suggestion\b", comment["body"])
+            or type(comment.get("line")) is not int
+            or ("start_line" in comment and (type(comment["start_line"]) is not int or comment["start_line"] < 1))
+            or ("suggestion" in comment and not isinstance(comment["suggestion"], str))
+        ):
+            raise ValueError("Invalid final review comment")
+        if comment["kind"] == "simplification":
+            body = comment["body"].lstrip()
+            comment["body"] = body if body.startswith("[Simplification] ") else f"[Simplification] {body}"
+
+    comments = validate_comments(findings, diff_scope, summary, suggestion_files=bundle / "files")
+    if len(comments) != len(raw_comments):
+        raise ValueError("Final findings contain an invalid diff anchor")
+    body = findings.get("body")
+    if comments and (not isinstance(body, str) or not body.strip()):
+        raise ValueError("Final findings with comments must include a review summary")
+    return {
+        "pr": metadata["number"],
+        "base_sha": metadata["baseRefOid"],
+        "review": {"commit_id": metadata["headRefOid"], "body": body if comments else "No findings.", "comments": comments},
+    }
 
 
 def post_review(repo: str, pr: int, payload_path: Path, summary: Summary) -> str:
