@@ -273,6 +273,7 @@ readonly INSTRUMENTATIONS=(
   "spring:spring-batch-3.0:javaagent:test"
   "spring:spring-batch-3.0:javaagent:testExperimental"
   "spring:spring-cloud-aws-3.0:javaagent:test"
+  "spring:spring-cloud-aws-3.0:javaagent:testCaptureHeaders"
   "spring:spring-cloud-aws-3.0:javaagent:testReceiveTelemetry"
   "spring:spring-data:spring-data-1.8:javaagent:test"
   "spring:spring-integration-4.1:javaagent:test"

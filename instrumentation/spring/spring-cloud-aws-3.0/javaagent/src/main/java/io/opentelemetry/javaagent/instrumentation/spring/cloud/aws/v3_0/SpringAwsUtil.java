@@ -145,15 +145,18 @@ public class SpringAwsUtil {
     SpringAwsSqsBatchProcessRequest request =
         new SpringAwsSqsBatchProcessRequest(messages, sqsMessages, tracingContexts.get(0).request);
     Context parentContext = Context.current();
-    if (!instrumenter.shouldStart(parentContext, request)) {
-      return null;
-    }
-    Context context = instrumenter.start(parentContext, request);
-    // acknowledgement of the batch happens later, possibly on another thread
+    Context context =
+        instrumenter.shouldStart(parentContext, request)
+            ? instrumenter.start(parentContext, request)
+            : null;
+    // acknowledgement of the batch happens later, possibly on another thread; a batch that is not
+    // traced clears the context of an earlier batch of the same messages
     for (TracingContext tracingContext : tracingContexts) {
       tracingContext.batchProcessContext = context;
     }
-    return new ProcessingInvocation<>(instrumenter, context, request, null);
+    return context != null
+        ? new ProcessingInvocation<>(instrumenter, context, request, null)
+        : null;
   }
 
   // restore context of the batch process span when it processed all acknowledged messages, which
