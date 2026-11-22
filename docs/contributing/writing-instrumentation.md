@@ -488,6 +488,7 @@ Place Java tests under `src/unitTests/java` and resources under `src/unitTests/r
 Pass a configuration block to `unitTests` to add suite-local dependencies. The conventions
 already provide the common test libraries, instrumentation API, and incubating API.
 
-For a separate unit-test source set or dependency graph, register a `JvmTestSuite` with a name
-ending in `unitTests`, case-insensitively. Its test task and execution variants also run without the
-javaagent. Wire that suite into `check` explicitly.
+For a separate unit-test source set or dependency graph, use a second named suite such as
+`unitTests("protostellarUnitTests") { ... }`. Its name must end in `unitTests`, case-insensitively,
+and its sources go under `src/protostellarUnitTests`. Use an execution variant instead when the
+same compiled tests and dependencies only need different flags or filters.

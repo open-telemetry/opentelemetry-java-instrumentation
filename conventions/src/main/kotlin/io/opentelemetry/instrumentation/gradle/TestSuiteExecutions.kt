@@ -38,6 +38,12 @@ class TestSuiteExecutionsPlugin : Plugin<Project> {
 /** Register Javaagent helper unit tests with the current project as a dependency and include them in check. */
 fun PolymorphicDomainObjectContainer<TestSuite>.unitTests(
   action: Action<JvmTestSuite> = Action {},
+): JvmTestSuite = unitTests("unitTests", action)
+
+/** Register a named Javaagent helper unit test suite. */
+fun PolymorphicDomainObjectContainer<TestSuite>.unitTests(
+  name: String,
+  action: Action<JvmTestSuite> = Action {},
 ): JvmTestSuite {
   val defaultSuite = findByName("test") as? ExtensionAware
   val conventions = defaultSuite?.extensions?.findByType(TestSuiteExecutions::class.java)
@@ -45,7 +51,10 @@ fun PolymorphicDomainObjectContainer<TestSuite>.unitTests(
     "unitTests() requires the Javaagent testing plugin (otel.javaagent-testing / " +
       "io.opentelemetry.instrumentation.javaagent-testing). Use src/test for ordinary Java or library tests."
   }
-  val suite = create("unitTests", JvmTestSuite::class.java) {
+  require(name.endsWith("unitTests", ignoreCase = true)) {
+    "Unit test suite name '$name' must end in unitTests"
+  }
+  val suite = create(name, JvmTestSuite::class.java) {
     dependencies {
       implementation.add(project())
     }

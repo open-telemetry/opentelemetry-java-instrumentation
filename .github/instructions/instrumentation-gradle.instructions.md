@@ -197,6 +197,9 @@ The suite's test task and execution variants run without the agent. Keep test-on
 local and reuse convention-provided dependencies and compiler options, such as testing-common and
 `-parameters`.
 
+When helper tests need a separate dependency classpath, use `unitTests("nameUnitTests")` in the
+existing `javaagent` module.
+
 Prefer suite-local dependencies and compilation setup. When configuration/task names are needed,
 use `sources.implementationConfigurationName`, `sources.runtimeOnlyConfigurationName`, and
 `sources.compileJavaTaskName`.

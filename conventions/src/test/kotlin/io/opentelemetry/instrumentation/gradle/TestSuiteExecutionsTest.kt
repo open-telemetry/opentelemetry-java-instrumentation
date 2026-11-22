@@ -49,12 +49,73 @@ class TestSuiteExecutionsTest {
         assertThatThrownBy { suites.unitTests { configured = true } }
           .isInstanceOf(IllegalArgumentException::class.java)
           .hasMessageContaining("Use src/test")
+        assertThatThrownBy { suites.unitTests("namedUnitTests") { configured = true } }
+          .isInstanceOf(IllegalArgumentException::class.java)
+          .hasMessageContaining("Use src/test")
 
         assertThat(configured).isFalse()
-        assertThat(suites.names).doesNotContain("unitTests")
-        assertThat(plainProject.tasks.names).doesNotContain("unitTests", "compileUnitTestsJava")
+        assertThat(suites.names).doesNotContain("unitTests", "namedUnitTests")
+        assertThat(plainProject.tasks.names).doesNotContain("unitTests", "compileUnitTestsJava", "namedUnitTests")
       }
     }
+  }
+
+  @JunitTest
+  fun `named unit tests coexist and isolate dependencies and variants`() {
+    project.pluginManager.apply("io.opentelemetry.instrumentation.javaagent-testing")
+    suites().register("optInTest", JvmTestSuite::class.java)
+    val baseline = suites().unitTests {
+      dependencies { implementation.add("example:library:1.0") }
+    }
+    val named = suites().unitTests("customUNITTESTS") {
+      dependencies { implementation.add("example:library:2.0") }
+      executions { register("Variant") {} }
+    }
+    assertThat(project.tasks.getByName("check").taskDependencies.getDependencies(null).map { it.name })
+      .contains("unitTests", "customUNITTESTS", "customUNITTESTSVariant")
+      .doesNotContain("optInTest", "unitTestsVariant")
+    for ((suite, version) in listOf(baseline to "1.0", named to "2.0")) {
+      assertThat(
+        project.configurations.getByName(suite.sources.implementationConfigurationName)
+          .dependencies.filterIsInstance<ProjectDependency>().map { it.path }
+      ).containsExactly(project.path)
+      assertThat(
+        project.configurations.getByName(suite.sources.compileClasspathConfigurationName)
+          .allDependencies.filterIsInstance<ExternalModuleDependency>()
+          .filter { it.group == "example" }.map { it.version }
+      ).containsExactly(version)
+      assertBinding(test(suite.name), suite)
+    }
+    assertBinding(test("customUNITTESTSVariant"), named)
+    assertThat(project.tasks.names).doesNotContain("unitTestsVariant")
+  }
+
+  @JunitTest
+  fun `named unit tests and variants run without the agent`() {
+    project.pluginManager.apply("io.opentelemetry.instrumentation.javaagent-testing")
+    val named = suites().unitTests("customUNITTESTS") {
+      executions { register("Variant") {} }
+    }
+    (project as ProjectInternal).evaluate()
+
+    for (taskName in listOf("customUNITTESTS", "customUNITTESTSVariant")) {
+      val task = test(taskName)
+      assertBinding(task, named)
+      assertThat(task.jvmArgumentProviders).isEmpty()
+      assertThat(task.jvmArgs).noneMatch { it.startsWith("-javaagent:") }
+    }
+  }
+
+  @JunitTest
+  fun `named unit tests reject invalid names before registering or configuring`() {
+    project.pluginManager.apply("io.opentelemetry.instrumentation.javaagent-testing")
+    var configured = false
+    assertThatThrownBy { suites().unitTests("integrationTest") { configured = true } }
+      .isInstanceOf(IllegalArgumentException::class.java)
+      .hasMessageContaining("must end in unitTests")
+    assertThat(configured).isFalse()
+    assertThat(suites().names).doesNotContain("integrationTest")
+    assertThat(project.tasks.names).doesNotContain("integrationTest", "compileIntegrationTestJava")
   }
 
   @JunitTest
