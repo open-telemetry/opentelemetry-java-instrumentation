@@ -22,6 +22,16 @@ class ManualReviewTest(unittest.TestCase):
         with mock.patch.object(manual, "run", return_value=response):
             self.assertEqual(manual.model_pass("model", "high", "prompt"), '{"comments":[]}')
 
+    def test_model_pass_reports_the_cli_error_from_json(self):
+        response = subprocess.CompletedProcess(
+            [], 1, stdout='{"type":"session.error","data":{"message":"Model not available."}}\n', stderr=""
+        )
+        with (
+            mock.patch.object(manual, "run", return_value=response),
+            self.assertRaisesRegex(RuntimeError, r"Model not available\."),
+        ):
+            manual.model_pass("model", "max", "prompt")
+
     def test_only_the_latest_submitted_copilot_review_can_supply_a_hint(self):
         reviews = [[{
             "id": 1, "user": {"login": manual.COPILOT_REVIEWER}, "submitted_at": "2026-01-01",

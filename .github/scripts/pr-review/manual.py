@@ -72,17 +72,22 @@ def model_pass(model: str, effort: str, prompt: str) -> str:
         check=False,
         timeout=540,
     )
-    if result.returncode:
-        raise RuntimeError(f"{model} failed (exit {result.returncode}): {result.stderr.strip()[:500]}")
     answer = ""
+    error_message = ""
     for line in result.stdout.splitlines():
         if not line.strip():
             continue
         event = json.loads(line)
+        data = event.get("data") or {}
         if event.get("type") == "assistant.message":
-            content = (event.get("data") or {}).get("content")
+            content = data.get("content")
             if isinstance(content, str) and content.strip():
                 answer = content.strip()
+        elif event.get("type") == "session.error" and isinstance(data.get("message"), str):
+            error_message = data["message"]
+    if result.returncode:
+        detail = " ".join((error_message or result.stderr).split())[:500]
+        raise RuntimeError(f"{model} failed (exit {result.returncode}): {detail}")
     if not answer:
         raise RuntimeError(f"{model} did not return an answer")
     return answer
