@@ -12,7 +12,7 @@ from pathlib import Path
 from common import run, write_json
 
 
-AGENT_TIMEOUT_MINUTES = 12
+AGENT_TIMEOUT_MINUTES = 60
 
 
 def checkout_pr(repo: str, pr: int, head: str, checkout: Path) -> None:
