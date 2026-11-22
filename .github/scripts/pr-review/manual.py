@@ -64,7 +64,7 @@ def model_pass(model: str, effort: str, prompt: str) -> str:
     progress(f"Running {model} with {effort} reasoning")
     result = run(
         [
-            "copilot", "--model", model, "--reasoning-effort", effort, "--silent", "--no-ask-user",
+            "copilot", "--model", model, "--reasoning-effort", effort, "--output-format", "json", "--no-ask-user",
             "--no-custom-instructions", "--disable-builtin-mcps",
             "--available-tools", "view", "glob", "grep", "--allow-tool", "view", "glob", "grep",
             "-p", prompt,
@@ -72,9 +72,20 @@ def model_pass(model: str, effort: str, prompt: str) -> str:
         check=False,
         timeout=540,
     )
-    if result.returncode or not result.stdout.strip():
-        raise RuntimeError(f"{model} returned no usable response (exit {result.returncode}): {result.stderr.strip()[:500]}")
-    return result.stdout.strip()
+    if result.returncode:
+        raise RuntimeError(f"{model} failed (exit {result.returncode}): {result.stderr.strip()[:500]}")
+    answer = ""
+    for line in result.stdout.splitlines():
+        if not line.strip():
+            continue
+        event = json.loads(line)
+        if event.get("type") == "assistant.message":
+            content = (event.get("data") or {}).get("content")
+            if isinstance(content, str) and content.strip():
+                answer = content.strip()
+    if not answer:
+        raise RuntimeError(f"{model} did not return an answer")
+    return answer
 
 
 def check_snapshot(pr: int, base: str, head: str, summary: Summary) -> None:
@@ -117,7 +128,11 @@ Mention any separate edits, such as an import, in the comment body. Don't put a 
 If there are no findings, return {{"comments":[]}}.
 """)
         final = re.sub(r"\A```(?:json)?\s*\n(.*)\n```\Z", r"\1", final, flags=re.DOTALL)
-        result = prepare_manual_review(json.loads(final), bundle, summary)
+        try:
+            final_findings = json.loads(final)
+        except json.JSONDecodeError as error:
+            raise RuntimeError(f"{OPUS} did not return valid findings JSON: {error}") from error
+        result = prepare_manual_review(final_findings, bundle, summary)
         check_snapshot(pr, base, head, summary)
         for note in summary.notes:
             progress(note)

@@ -1,4 +1,5 @@
 import os
+import subprocess
 import tempfile
 import unittest
 from pathlib import Path
@@ -11,6 +12,16 @@ from common import Summary, write_json
 
 
 class ManualReviewTest(unittest.TestCase):
+    def test_model_pass_uses_the_final_answer_not_progress_or_tool_output(self):
+        response = subprocess.CompletedProcess([], 0, stdout=(
+            '{"type":"assistant.message","data":{"content":"I will check the code."}}\n'
+            '{"type":"tool.execution_complete","data":{"result":{"content":"File contents"}}}\n'
+            '{"type":"assistant.message","data":{"content":"{\\"comments\\":[]}"}}\n'
+            '{"type":"result","data":{}}\n'
+        ))
+        with mock.patch.object(manual, "run", return_value=response):
+            self.assertEqual(manual.model_pass("model", "high", "prompt"), '{"comments":[]}')
+
     def test_only_the_latest_submitted_copilot_review_can_supply_a_hint(self):
         reviews = [[{
             "id": 1, "user": {"login": manual.COPILOT_REVIEWER}, "submitted_at": "2026-01-01",
