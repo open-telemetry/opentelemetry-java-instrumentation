@@ -51,8 +51,6 @@ jobs:
       group: pr-review-${{ needs.gate.outputs.pr_number }}-${{ github.event_name == 'push' && 'smoke' || 'live' }}
       cancel-in-progress: true
     runs-on: ubuntu-latest
-    # Allow for three passes, one verification retry, and sandbox setup and cleanup.
-    timeout-minutes: 270
     permissions:
       contents: read
       pull-requests: read
