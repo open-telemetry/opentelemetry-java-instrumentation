@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
+import io.opentelemetry.extension.kotlin.getOpenTelemetryContext
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
 import io.opentelemetry.sdk.testing.assertj.TraceAssert
@@ -22,6 +23,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.CompletableFuture
@@ -108,6 +110,31 @@ class TailCallWithSpanDispatcherTest {
       gate.await(10, TimeUnit.SECONDS)
       continuation.resume(42)
     }
+  }
+
+  // Code that propagates context from the continuation, such as CoroutineScope(continuation.context)
+  // .launch { ... }, should see the span that is current in the callee.
+  @Test
+  @Disabled("The frame of a tail delegated WithSpan is intercepted with the caller's context, so a suspendCancellableCoroutine callee sees the caller's context in continuation.context instead of the span")
+  fun `suspendCancellableCoroutine callee sees the current span in its continuation`() {
+    val expected = runBlocking { unannotatedContinuationContext() }
+    assertThat(expected).isTrue()
+    assertThat(runBlocking { annotatedContinuationContext() }).isEqualTo(expected)
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("continuation-context").hasNoParent() },
+        )
+      },
+    )
+  }
+
+  @WithSpan("continuation-context")
+  private suspend fun annotatedContinuationContext(): Boolean = unannotatedContinuationContext()
+
+  private suspend fun unannotatedContinuationContext(): Boolean = suspendCancellableCoroutine { continuation ->
+    continuation.resume(Span.fromContext(continuation.context.getOpenTelemetryContext()).spanContext == Span.current().spanContext)
   }
 
   @Test
