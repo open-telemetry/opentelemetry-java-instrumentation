@@ -67,7 +67,6 @@ testing.suites {
 
   executions("version5Test") {
     configureEach {
-      systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
       if (otelProps.denyUnsafe) {
         enabled = false
       }
@@ -87,7 +86,6 @@ testing.suites {
 
   executions("test") {
     configureEach {
-      systemProperty("io.opentelemetry.pulsar-2.8.debug", "true")
       if (otelProps.denyUnsafe) {
         enabled = false
       }
