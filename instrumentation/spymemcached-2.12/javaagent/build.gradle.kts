@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -25,9 +26,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation("net.spy:spymemcached:2.12.0")
     }
   }
