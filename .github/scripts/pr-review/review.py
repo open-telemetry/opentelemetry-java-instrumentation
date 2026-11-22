@@ -96,13 +96,19 @@ def model_pass(model: str, effort: str, prompt: str, checkout: Path, bundle: Pat
     sandbox_ready = any(SANDBOX_READY in stream for stream in streams)
     if result.returncode:
         detail = error_message
-        if not detail and not sandbox_ready:
+        if not detail:
             diagnostics = [
                 line for stream in streams for line in stream.splitlines()
-                if re.search(r"Sandbox check failed:|\[ERROR\]|Error:|permission denied|not found|No such file",
-                             line, re.IGNORECASE)
+                if re.search(
+                    r"Sandbox check failed:|\[ERROR\]|(?:^|\] )error:|permission denied|not found|No such file",
+                    line, re.IGNORECASE,
+                )
             ]
-            detail = " ".join(diagnostics[-4:] or (result.stderr or "").splitlines()[-4:])
+            if diagnostics:
+                detail = " ".join(diagnostics[-4:])
+            else:
+                phase = "Copilot launch" if sandbox_ready else "firewall startup"
+                detail = f"{phase} returned no diagnostic"
         if token := os.environ.get("COPILOT_GITHUB_TOKEN"):
             detail = detail.replace(token, "[redacted]")
         detail = " ".join(detail.split())[:1000]

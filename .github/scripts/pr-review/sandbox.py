@@ -58,6 +58,7 @@ def run_in_sandbox(checkout: Path, inputs: Path, args: list[str]) -> subprocess.
                 "central.sonatype.com", "dl.google.com",
             ]},
             "apiProxy": {"enabled": True, "modelFallback": {"enabled": False}},
+            "chroot": {"identity": {"home": str(home)}},
         })
         env = {
             key: os.environ[key] for key in (
@@ -67,17 +68,28 @@ def run_in_sandbox(checkout: Path, inputs: Path, args: list[str]) -> subprocess.
         }
         env["HOME"] = str(home)
         env["GITHUB_WORKSPACE"] = str(workspace)
-        return run(
+        capture = awf_work.parent / "output"
+        result = run(
             [
                 "awf", "--config", str(config), "--work-dir", str(awf_work),
                 "--image-tag", os.environ["AWF_IMAGE_TAG"], "--container-workdir", str(workspace),
                 "--mount", f"{cli_dir}:{cli_dir}:ro", "--mount", f"{inputs}:{inputs}:ro",
                 "--mount", f"{java_home}:{java_home}:ro", "--env", f"JAVA_HOME={java_home}",
                 "--env", "GITHUB_COPILOT_PROMPT_MODE_EXTENSIONS=false",
-                "--log-level", "warn",
+                "--capture-command-output", str(capture),
+                "--log-level", "info",
                 "--", "/bin/bash", str(inputs / "launch-copilot.sh"),
                 str(workspace), str(inputs), str(config), (checkout / ".git" / "HEAD").read_text().strip(),
                 copilot, *args,
             ],
             cwd=workspace, env=env, check=False, timeout=540,
         )
+        stdout = capture / "attempt-001.stdout.bin"
+        stderr = capture / "attempt-001.stderr.bin"
+        if stdout.is_file() and stderr.is_file():
+            return subprocess.CompletedProcess(
+                result.args, result.returncode,
+                stdout.read_text(encoding="utf-8", errors="replace"),
+                result.stderr + "\n" + stderr.read_text(encoding="utf-8", errors="replace"),
+            )
+        return result
