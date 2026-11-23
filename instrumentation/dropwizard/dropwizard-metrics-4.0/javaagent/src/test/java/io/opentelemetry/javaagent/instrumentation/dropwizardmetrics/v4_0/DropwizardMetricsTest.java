@@ -30,6 +30,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class DropwizardMetricsTest {
 
@@ -139,14 +141,10 @@ class DropwizardMetricsTest {
     }
   }
 
-  @Test
-  void sameGaugeNameInSeparateRegistriesKeepsOtherRegistrationWhenFirstIsRemoved() {
-    verifySeparateRegistryGaugeRemoval(true);
-  }
-
-  @Test
-  void sameGaugeNameInSeparateRegistriesKeepsOtherRegistrationWhenSecondIsRemoved() {
-    verifySeparateRegistryGaugeRemoval(false);
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void sameGaugeNameInSeparateRegistriesKeepsOtherRegistrationWhenRemoved(boolean removeFirst) {
+    verifySeparateRegistryGaugeRemoval(removeFirst);
   }
 
   private static void verifySeparateRegistryGaugeRemoval(boolean removeFirst) {
