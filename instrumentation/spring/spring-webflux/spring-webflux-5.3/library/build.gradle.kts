@@ -1,5 +1,4 @@
 import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
 plugins {
   id("otel.library-instrumentation")
@@ -48,9 +47,6 @@ testing.suites {
         "metadataConfig",
         "Experimental.setEmitExperimentalTelemetry(telemetryBuilder, true)",
       )
-    }
-    register("PreviewSemconv") {
-      telemetryConfig("otel.semconv-stability.preview", "service.peer")
     }
   }
 }

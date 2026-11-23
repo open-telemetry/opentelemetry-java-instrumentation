@@ -87,10 +87,6 @@ testing.suites {
       include("**/server/**")
       telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
     }
-    register("PreviewSemconv") {
-      exclude("**/server/**")
-      telemetryConfig("otel.semconv-stability.preview", "service.peer")
-    }
     register("Experimental") {
       include("**/client/**")
       telemetryConfig("otel.instrumentation.http.client.emit-experimental-telemetry", "true")
