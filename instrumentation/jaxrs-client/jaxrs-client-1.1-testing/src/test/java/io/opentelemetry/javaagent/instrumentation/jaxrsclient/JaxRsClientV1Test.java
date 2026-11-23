@@ -54,13 +54,12 @@ class JaxRsClientV1Test extends AbstractHttpClientTest<WebResource.Builder> {
     options.setTestCircularRedirects(false);
     options.setTestNonStandardHttpMethod(false);
     options.setTestCallback(false);
-    options.setHttpAttributes(
-        serverEndpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NETWORK_PROTOCOL_VERSION);
-          return attributes;
-        });
+    options.setHttpAttributes(serverEndpoint -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      return attributes;
+    });
   }
 
   private Client getClient(URI uri) {

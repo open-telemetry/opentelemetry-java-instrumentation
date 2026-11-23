@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerEndpointUtil.isIpv6Literal;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerEndpointUtil.isIpv6Literal;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerEndpoint.CONTROL_CHARACTERS;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerEndpoint.ENDPOINT_SEPARATOR;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerEndpoint.canonicalEndpoint;

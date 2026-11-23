@@ -147,11 +147,10 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
 
     IntStream.range(0, count)
         .mapToObj(i -> client.execute(request).aggregate().join())
-        .forEach(
-            response -> {
-              assertThat(response.status().code()).isEqualTo(ACCESS_LOG_SUCCESS.getStatus());
-              assertThat(response.contentUtf8()).isEqualTo(ACCESS_LOG_SUCCESS.getBody());
-            });
+        .forEach(response -> {
+          assertThat(response.status().code()).isEqualTo(ACCESS_LOG_SUCCESS.getStatus());
+          assertThat(response.contentUtf8()).isEqualTo(ACCESS_LOG_SUCCESS.getBody());
+        });
 
     accessLogValve.waitForLoggedIds(count);
     assertThat(accessLogValve.getLoggedIds()).hasSize(count);
@@ -163,24 +162,23 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
     testing()
         .waitAndAssertTraces(
             IntStream.range(0, count)
-                .mapToObj(
-                    i ->
-                        (Consumer<TraceAssert>)
-                            trace -> {
-                              trace.hasSpansSatisfyingExactly(
-                                  span ->
-                                      assertServerSpan(
-                                          span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
-                                  span -> assertControllerSpan(span, null));
-                              SpanData span = trace.getSpan(0);
-                              if (traceIdRequestAttributeEnabled()) {
-                                assertThat(loggedTraces).contains(span.getTraceId());
-                                assertThat(loggedSpans).contains(span.getSpanId());
-                              } else {
-                                assertThat(loggedTraces).containsOnlyNulls();
-                                assertThat(loggedSpans).containsOnlyNulls();
-                              }
-                            })
+                .mapToObj(i ->
+                    (Consumer<TraceAssert>)
+                        trace -> {
+                          trace.hasSpansSatisfyingExactly(
+                              span ->
+                                  assertServerSpan(
+                                      span, "GET", ACCESS_LOG_SUCCESS, SUCCESS.getStatus()),
+                              span -> assertControllerSpan(span, null));
+                          SpanData span = trace.getSpan(0);
+                          if (traceIdRequestAttributeEnabled()) {
+                            assertThat(loggedTraces).contains(span.getTraceId());
+                            assertThat(loggedSpans).contains(span.getSpanId());
+                          } else {
+                            assertThat(loggedTraces).containsOnlyNulls();
+                            assertThat(loggedSpans).containsOnlyNulls();
+                          }
+                        })
                 .collect(toList()));
   }
 
@@ -199,31 +197,29 @@ public abstract class AbstractTomcatServlet3Test extends AbstractServlet3Test<To
         (span, trace) -> assertServerSpan(span, "GET", ACCESS_LOG_ERROR, ERROR.getStatus()));
     spanDataAsserts.add((span, trace) -> assertControllerSpan(span, null));
     if (errorEndpointUsesSendError()) {
-      spanDataAsserts.add(
-          (span, trace) ->
-              span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendError"))
-                  .hasKind(SpanKind.INTERNAL)
-                  .hasParent(trace.getSpan(1)));
+      spanDataAsserts.add((span, trace) ->
+          span.satisfies(spanData -> assertThat(spanData.getName()).matches(".*\\.sendError"))
+              .hasKind(SpanKind.INTERNAL)
+              .hasParent(trace.getSpan(1)));
     }
 
     accessLogValve.waitForLoggedIds(1);
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              trace.hasSpansSatisfyingExactly(
-                  spanDataAsserts.stream()
-                      .map(e -> (Consumer<SpanDataAssert>) span -> e.accept(span, trace))
-                      .collect(toList()));
-              SpanData span = trace.getSpan(0);
-              Map.Entry<String, String> entry = accessLogValve.getLoggedIds().get(0);
-              if (traceIdRequestAttributeEnabled()) {
-                assertThat(entry.getKey()).isEqualTo(span.getTraceId());
-                assertThat(entry.getValue()).isEqualTo(span.getSpanId());
-              } else {
-                assertThat(entry.getKey()).isNull();
-                assertThat(entry.getValue()).isNull();
-              }
-            });
+        .waitAndAssertTraces(trace -> {
+          trace.hasSpansSatisfyingExactly(
+              spanDataAsserts.stream()
+                  .map(e -> (Consumer<SpanDataAssert>) span -> e.accept(span, trace))
+                  .collect(toList()));
+          SpanData span = trace.getSpan(0);
+          Map.Entry<String, String> entry = accessLogValve.getLoggedIds().get(0);
+          if (traceIdRequestAttributeEnabled()) {
+            assertThat(entry.getKey()).isEqualTo(span.getTraceId());
+            assertThat(entry.getValue()).isEqualTo(span.getSpanId());
+          } else {
+            assertThat(entry.getKey()).isNull();
+            assertThat(entry.getValue()).isNull();
+          }
+        });
   }
 
   private boolean traceIdRequestAttributeEnabled() {

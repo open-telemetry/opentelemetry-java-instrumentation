@@ -122,6 +122,18 @@ final class BedrockRuntimeAccess {
 
   @Nullable
   @NoMuzzle
+  static Long getUsageCacheReadInputTokens(Response response) {
+    return enabled ? BedrockRuntimeImpl.getUsageCacheReadInputTokens(response) : null;
+  }
+
+  @Nullable
+  @NoMuzzle
+  static Long getUsageCacheCreationInputTokens(Response response) {
+    return enabled ? BedrockRuntimeImpl.getUsageCacheCreationInputTokens(response) : null;
+  }
+
+  @Nullable
+  @NoMuzzle
   static Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
     return enabled ? BedrockRuntimeImpl.getUsageOutputTokens(executionAttributes, response) : null;
   }

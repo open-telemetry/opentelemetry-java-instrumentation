@@ -1,5 +1,15 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("org.apache.cxf:cxf-rt-frontend-jaxws:3.0.0")
+    }
+  }
 }
 
 muzzle {

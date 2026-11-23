@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0.DropwizardSingletons.metrics;
+import static io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0.DropwizardMetricsRecorder.counterAdd;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -36,7 +36,7 @@ class CounterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Counter counter, @Advice.Argument(0) long increment) {
-      metrics().counterAdd(counter, increment);
+      counterAdd(counter, increment);
     }
   }
 
@@ -45,7 +45,7 @@ class CounterInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Counter counter, @Advice.Argument(0) long decrement) {
-      metrics().counterAdd(counter, -decrement);
+      counterAdd(counter, -decrement);
     }
   }
 }

@@ -20,13 +20,19 @@ public class PostgresContainer {
   public static final String DATABASE_NAME = "petclinic";
 
   private final Network network;
+  private final String image;
 
   public PostgresContainer(Network network) {
+    this(network, "postgres:9.6.22");
+  }
+
+  public PostgresContainer(Network network, String image) {
     this.network = network;
+    this.image = image;
   }
 
   public PostgreSQLContainer<?> build() throws Exception {
-    return new PostgreSQLContainer<>("postgres:9.6.22")
+    return new PostgreSQLContainer<>(image)
         .withNetwork(network)
         .withNetworkAliases("postgres")
         .withLogConsumer(new Slf4jLogConsumer(logger))

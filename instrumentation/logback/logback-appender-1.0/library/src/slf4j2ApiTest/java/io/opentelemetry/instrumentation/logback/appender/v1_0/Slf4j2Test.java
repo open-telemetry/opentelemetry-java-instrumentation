@@ -77,14 +77,13 @@ class Slf4j2Test {
         .addKeyValue("otel.event.name", "MyEventName")
         .log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
-                .hasBody("log message 1")
-                .hasEventName("MyEventName")
-                .hasAttributesSatisfyingExactly(assertions));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasResource(resource)
+            .hasInstrumentationScope(instrumentationScopeInfo)
+            .hasBody("log message 1")
+            .hasEventName("MyEventName")
+            .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -99,14 +98,13 @@ class Slf4j2Test {
         .addKeyValue("key1", "val1")
         .log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
-                .hasBody("log message 1")
-                .hasEventName("MyEventName")
-                .hasAttributesSatisfyingExactly(assertions));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasResource(resource)
+            .hasInstrumentationScope(instrumentationScopeInfo)
+            .hasBody("log message 1")
+            .hasEventName("MyEventName")
+            .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -139,13 +137,12 @@ class Slf4j2Test {
         .addMarker(MarkerFactory.getMarker(markerName2))
         .log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
-                .hasBody("log message 1")
-                .hasAttributesSatisfyingExactly(assertions));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasResource(resource)
+            .hasInstrumentationScope(instrumentationScopeInfo)
+            .hasBody("log message 1")
+            .hasAttributesSatisfyingExactly(assertions));
   }
 
   @Test
@@ -171,14 +168,13 @@ class Slf4j2Test {
         .addArgument(Long.MAX_VALUE)
         .log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasResource(resource)
-                .hasInstrumentationScope(instrumentationScopeInfo)
-                .hasBody(
-                    "log message 'world' and 3.141592653589793, bool true, long 9223372036854775807")
-                .hasAttributesSatisfyingExactly(assertions));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasResource(resource)
+            .hasInstrumentationScope(instrumentationScopeInfo)
+            .hasBody(
+                "log message 'world' and 3.141592653589793, bool true, long 9223372036854775807")
+            .hasAttributesSatisfyingExactly(assertions));
   }
 
   private static List<AttributeAssertion> codeAssertions(String methodName) {

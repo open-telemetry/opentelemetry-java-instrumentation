@@ -61,6 +61,7 @@ public final class LambdaImpl {
     return request instanceof InvokeRequest;
   }
 
+  // visible for testing
   static SdkRequest modifyOrAddCustomContextHeader(InvokeRequest request, Context otelContext) {
     InvokeRequest.Builder builder = request.toBuilder();
     // Unfortunately the value of this thing is a base64-encoded json with a character limit; also
@@ -78,7 +79,7 @@ public final class LambdaImpl {
         jsonNode
             .asObject()
             .computeIfAbsent(
-                CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, (k) -> new ObjectJsonNode(new LinkedHashMap<>()));
+                CLIENT_CONTEXT_CUSTOM_FIELDS_KEY, k -> new ObjectJsonNode(new LinkedHashMap<>()));
     if (!customNode.isObject()) {
       return null;
     }

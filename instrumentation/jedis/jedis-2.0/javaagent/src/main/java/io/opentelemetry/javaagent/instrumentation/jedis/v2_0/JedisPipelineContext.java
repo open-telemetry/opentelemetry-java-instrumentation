@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSinglet
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.currentTransactionFraming;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -95,7 +95,7 @@ public final class JedisPipelineContext {
 
   public static final class BatchState {
     private final List<JedisRequest> requests = new ArrayList<>();
-    @Nullable private InetSocketAddress transactionFramingPeerAddress;
+    @Nullable private SocketAddress transactionFramingPeerAddress;
 
     private BatchState() {}
 
@@ -104,7 +104,7 @@ public final class JedisPipelineContext {
     }
 
     @Nullable
-    public InetSocketAddress getTransactionFramingPeerAddress() {
+    public SocketAddress getTransactionFramingPeerAddress() {
       return transactionFramingPeerAddress;
     }
   }

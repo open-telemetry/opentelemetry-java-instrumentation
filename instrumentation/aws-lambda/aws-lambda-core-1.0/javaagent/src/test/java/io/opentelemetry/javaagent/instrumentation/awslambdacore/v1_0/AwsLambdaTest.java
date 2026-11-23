@@ -48,14 +48,12 @@ class AwsLambdaTest extends AbstractAwsLambdaTest {
     assertThat(result).isEqualTo("world");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("my_function")
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -65,14 +63,12 @@ class AwsLambdaTest extends AbstractAwsLambdaTest {
     assertThat(result).isEqualTo("world");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("my_function")
-                            .hasKind(SpanKind.SERVER)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("my_function")
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   private static class TestRequestHandler implements RequestHandler<String, String> {

@@ -22,8 +22,11 @@ final class TracingAsyncStreamedResponse<T> implements AsyncStreamResponse<T> {
 
   @Override
   public void close() {
-    listener.endSpan(null);
-    delegate.close();
+    try {
+      listener.endSpan(null);
+    } finally {
+      delegate.close();
+    }
   }
 
   @Override

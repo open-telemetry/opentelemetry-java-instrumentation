@@ -148,36 +148,31 @@ public abstract class AbstractCassandraTest {
             "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)", 1));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("INSERT simple_values_test.users")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isNull()),
-                                equalTo(SERVER_ADDRESS, cassandraHost),
-                                equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                                equalTo(
-                                    DB_QUERY_TEXT,
-                                    "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)"),
-                                equalTo(DB_QUERY_SUMMARY, "INSERT simple_values_test.users"),
-                                equalTo(DB_OPERATION_NAME, "INSERT"),
-                                equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                                equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                                satisfies(
-                                    CASSANDRA_COORDINATOR_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                satisfies(
-                                    CASSANDRA_QUERY_IDEMPOTENT,
-                                    val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                                equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_COLLECTION_NAME, "simple_values_test.users"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("INSERT simple_values_test.users")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(NETWORK_TYPE, val -> val.isNull()),
+                        equalTo(SERVER_ADDRESS, cassandraHost),
+                        equalTo(SERVER_PORT, cassandraPort),
+                        equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                        equalTo(NETWORK_PEER_PORT, cassandraPort),
+                        equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                        equalTo(
+                            DB_QUERY_TEXT,
+                            "INSERT INTO simple_values_test.users (name, age) values ('alice', ?)"),
+                        equalTo(DB_QUERY_SUMMARY, "INSERT simple_values_test.users"),
+                        equalTo(DB_OPERATION_NAME, "INSERT"),
+                        equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                        equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                        satisfies(CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            CASSANDRA_QUERY_IDEMPOTENT, val -> val.isInstanceOf(Boolean.class)),
+                        equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                        equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                        equalTo(DB_COLLECTION_NAME, "simple_values_test.users"))));
   }
 
   @Test
@@ -204,35 +199,30 @@ public abstract class AbstractCassandraTest {
 
     String configuredTarget = cassandraIp + ":" + cassandraPort + "," + unreachableContactPoint;
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("INSERT contact_points_test.users")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isNull()),
-                                equalTo(SERVER_ADDRESS, configuredTarget),
-                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                                equalTo(
-                                    DB_QUERY_TEXT,
-                                    "INSERT INTO contact_points_test.users (name, age) values ('alice', ?)"),
-                                equalTo(DB_QUERY_SUMMARY, "INSERT contact_points_test.users"),
-                                equalTo(DB_OPERATION_NAME, "INSERT"),
-                                equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                                equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                                satisfies(
-                                    CASSANDRA_COORDINATOR_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                satisfies(
-                                    CASSANDRA_QUERY_IDEMPOTENT,
-                                    val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                                equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_COLLECTION_NAME, "contact_points_test.users"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("INSERT contact_points_test.users")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(NETWORK_TYPE, val -> val.isNull()),
+                        equalTo(SERVER_ADDRESS, configuredTarget),
+                        equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                        equalTo(NETWORK_PEER_PORT, cassandraPort),
+                        equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                        equalTo(
+                            DB_QUERY_TEXT,
+                            "INSERT INTO contact_points_test.users (name, age) values ('alice', ?)"),
+                        equalTo(DB_QUERY_SUMMARY, "INSERT contact_points_test.users"),
+                        equalTo(DB_OPERATION_NAME, "INSERT"),
+                        equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                        equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                        satisfies(CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            CASSANDRA_QUERY_IDEMPOTENT, val -> val.isInstanceOf(Boolean.class)),
+                        equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                        equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                        equalTo(DB_COLLECTION_NAME, "contact_points_test.users"))));
   }
 
   @ParameterizedTest
@@ -251,35 +241,30 @@ public abstract class AbstractCassandraTest {
     session.execute(scenario.buildBatch.apply(session));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(scenario.spanName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isNull()),
-                                equalTo(SERVER_ADDRESS, cassandraHost),
-                                equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                                equalTo(DB_QUERY_TEXT, scenario.queryText),
-                                equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                                equalTo(DB_QUERY_SUMMARY, scenario.querySummary),
-                                equalTo(DB_OPERATION_NAME, scenario.operationName),
-                                equalTo(DB_COLLECTION_NAME, scenario.collectionName),
-                                equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                                equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                                satisfies(
-                                    CASSANDRA_COORDINATOR_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                satisfies(
-                                    CASSANDRA_QUERY_IDEMPOTENT,
-                                    val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                                equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(scenario.spanName)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(NETWORK_TYPE, val -> val.isNull()),
+                        equalTo(SERVER_ADDRESS, cassandraHost),
+                        equalTo(SERVER_PORT, cassandraPort),
+                        equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                        equalTo(NETWORK_PEER_PORT, cassandraPort),
+                        equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                        equalTo(DB_QUERY_TEXT, scenario.queryText),
+                        equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                        equalTo(DB_QUERY_SUMMARY, scenario.querySummary),
+                        equalTo(DB_OPERATION_NAME, scenario.operationName),
+                        equalTo(DB_COLLECTION_NAME, scenario.collectionName),
+                        equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                        equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                        satisfies(CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            CASSANDRA_QUERY_IDEMPOTENT, val -> val.isInstanceOf(Boolean.class)),
+                        equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                        equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0))));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -295,12 +280,11 @@ public abstract class AbstractCassandraTest {
         argumentSet(
             "single",
             BatchScenario.builder()
-                .buildBatch(
-                    session -> {
-                      PreparedStatement insert =
-                          session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
-                      return BatchStatement.newInstance(DefaultBatchType.LOGGED, insert.bind(1, 1));
-                    })
+                .buildBatch(session -> {
+                  PreparedStatement insert =
+                      session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
+                  return BatchStatement.newInstance(DefaultBatchType.LOGGED, insert.bind(1, 1));
+                })
                 .spanName("INSERT batch_test.records")
                 .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
                 .querySummary("INSERT batch_test.records")
@@ -310,13 +294,12 @@ public abstract class AbstractCassandraTest {
         argumentSet(
             "twoSameOperation",
             BatchScenario.builder()
-                .buildBatch(
-                    session -> {
-                      PreparedStatement insert =
-                          session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
-                      return BatchStatement.newInstance(
-                          DefaultBatchType.LOGGED, insert.bind(1, 1), insert.bind(2, 2));
-                    })
+                .buildBatch(session -> {
+                  PreparedStatement insert =
+                      session.prepare("INSERT INTO batch_test.records (id, num) values (?, ?)");
+                  return BatchStatement.newInstance(
+                      DefaultBatchType.LOGGED, insert.bind(1, 1), insert.bind(2, 2));
+                })
                 .spanName("BATCH INSERT batch_test.records")
                 .queryText("INSERT INTO batch_test.records (id, num) values (?, ?)")
                 .querySummary("BATCH INSERT batch_test.records")
@@ -327,16 +310,15 @@ public abstract class AbstractCassandraTest {
         argumentSet(
             "twoDifferentOperations",
             BatchScenario.builder()
-                .buildBatch(
-                    session -> {
-                      PreparedStatement insert =
-                          session.prepare("INSERT INTO batch_test.records (id, num) values (4, ?)");
-                      return BatchStatement.newInstance(
-                          DefaultBatchType.LOGGED,
-                          insert.bind(4),
-                          SimpleStatement.newInstance(
-                              "UPDATE batch_test.records SET num = 5 WHERE id = 4"));
-                    })
+                .buildBatch(session -> {
+                  PreparedStatement insert =
+                      session.prepare("INSERT INTO batch_test.records (id, num) values (4, ?)");
+                  return BatchStatement.newInstance(
+                      DefaultBatchType.LOGGED,
+                      insert.bind(4),
+                      SimpleStatement.newInstance(
+                          "UPDATE batch_test.records SET num = 5 WHERE id = 4"));
+                })
                 .spanName("BATCH")
                 .queryText(
                     "INSERT INTO batch_test.records (id, num) values (4, ?); UPDATE batch_test.records SET num = ? WHERE id = ?")
@@ -356,35 +338,30 @@ public abstract class AbstractCassandraTest {
     session.execute(parameter.queryText);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(parameter.spanName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isNull()),
-                                equalTo(SERVER_ADDRESS, cassandraHost),
-                                equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                                equalTo(DB_NAMESPACE, parameter.keyspace),
-                                equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
-                                equalTo(DB_QUERY_SUMMARY, parameter.spanName),
-                                equalTo(DB_OPERATION_NAME, parameter.operation),
-                                equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                                equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                                satisfies(
-                                    CASSANDRA_COORDINATOR_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                satisfies(
-                                    CASSANDRA_QUERY_IDEMPOTENT,
-                                    val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                                equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_COLLECTION_NAME, parameter.table))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(parameter.spanName)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(NETWORK_TYPE, val -> val.isNull()),
+                        equalTo(SERVER_ADDRESS, cassandraHost),
+                        equalTo(SERVER_PORT, cassandraPort),
+                        equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                        equalTo(NETWORK_PEER_PORT, cassandraPort),
+                        equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                        equalTo(DB_NAMESPACE, parameter.keyspace),
+                        equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
+                        equalTo(DB_QUERY_SUMMARY, parameter.spanName),
+                        equalTo(DB_OPERATION_NAME, parameter.operation),
+                        equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                        equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                        satisfies(CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            CASSANDRA_QUERY_IDEMPOTENT, val -> val.isInstanceOf(Boolean.class)),
+                        equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                        equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                        equalTo(DB_COLLECTION_NAME, parameter.table))));
   }
 
   @ParameterizedTest(name = "{index}: {0}")
@@ -404,40 +381,35 @@ public abstract class AbstractCassandraTest {
                     .join());
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(parameter.spanName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(NETWORK_TYPE, val -> val.isNull()),
-                                equalTo(SERVER_ADDRESS, cassandraHost),
-                                equalTo(SERVER_PORT, cassandraPort),
-                                equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
-                                equalTo(NETWORK_PEER_PORT, cassandraPort),
-                                equalTo(DB_SYSTEM_NAME, CASSANDRA),
-                                equalTo(DB_NAMESPACE, parameter.keyspace),
-                                equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
-                                equalTo(DB_QUERY_SUMMARY, parameter.spanName),
-                                equalTo(DB_OPERATION_NAME, parameter.operation),
-                                equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
-                                equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
-                                satisfies(
-                                    CASSANDRA_COORDINATOR_ID,
-                                    val -> val.isInstanceOf(String.class)),
-                                satisfies(
-                                    CASSANDRA_QUERY_IDEMPOTENT,
-                                    val -> val.isInstanceOf(Boolean.class)),
-                                equalTo(CASSANDRA_PAGE_SIZE, 5000),
-                                equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
-                                equalTo(DB_COLLECTION_NAME, parameter.table)),
-                    span ->
-                        span.hasName("child")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(parameter.spanName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(NETWORK_TYPE, val -> val.isNull()),
+                            equalTo(SERVER_ADDRESS, cassandraHost),
+                            equalTo(SERVER_PORT, cassandraPort),
+                            equalTo(NETWORK_PEER_ADDRESS, cassandraIp),
+                            equalTo(NETWORK_PEER_PORT, cassandraPort),
+                            equalTo(DB_SYSTEM_NAME, CASSANDRA),
+                            equalTo(DB_NAMESPACE, parameter.keyspace),
+                            equalTo(DB_QUERY_TEXT, parameter.expectedQueryText),
+                            equalTo(DB_QUERY_SUMMARY, parameter.spanName),
+                            equalTo(DB_OPERATION_NAME, parameter.operation),
+                            equalTo(CASSANDRA_CONSISTENCY_LEVEL, "LOCAL_ONE"),
+                            equalTo(CASSANDRA_COORDINATOR_DC, "datacenter1"),
+                            satisfies(
+                                CASSANDRA_COORDINATOR_ID, val -> val.isInstanceOf(String.class)),
+                            satisfies(
+                                CASSANDRA_QUERY_IDEMPOTENT, val -> val.isInstanceOf(Boolean.class)),
+                            equalTo(CASSANDRA_PAGE_SIZE, 5000),
+                            equalTo(CASSANDRA_SPECULATIVE_EXECUTION_COUNT, 0),
+                            equalTo(DB_COLLECTION_NAME, parameter.table)),
+                span ->
+                    span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideSyncParameters() {

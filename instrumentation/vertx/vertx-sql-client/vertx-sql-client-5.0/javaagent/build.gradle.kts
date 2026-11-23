@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -49,9 +51,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent"))
       implementation(project(":javaagent-extension-api"))
       implementation("io.vertx:vertx-sql-client:5.0.0")
@@ -62,9 +63,5 @@ testing.suites {
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  check {
-    dependsOn(testing.suites)
   }
 }

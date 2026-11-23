@@ -77,9 +77,8 @@ final class KafkaReceiveAttributesGetter
   @Override
   public List<String> getMessageHeader(KafkaReceiveRequest request, String name) {
     return request.getRecordList().stream()
-        .flatMap(
-            consumerRecord ->
-                StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))
+        .flatMap(consumerRecord ->
+            StreamSupport.stream(consumerRecord.headers().headers(name).spliterator(), false))
         .filter(header -> header.value() != null)
         .map(header -> new String(header.value(), UTF_8))
         .collect(toList());

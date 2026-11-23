@@ -113,12 +113,11 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
                                         content =
                                             Unpooled.copiedBuffer(
                                                 endpoint.getBody(), CharsetUtil.UTF_8);
-                                        endpoint.collectSpanAttributes(
-                                            it ->
-                                                new QueryStringDecoder(uri)
-                                                    .parameters()
-                                                    .get(it)
-                                                    .get(0));
+                                        endpoint.collectSpanAttributes(it ->
+                                            new QueryStringDecoder(uri)
+                                                .parameters()
+                                                .get(it)
+                                                .get(0));
                                         response =
                                             new DefaultFullHttpResponse(
                                                 HTTP_1_1,
@@ -226,13 +225,12 @@ class Netty40ServerTest extends AbstractHttpServerTest<EventLoopGroup> {
 
   @Override
   protected void configure(HttpServerTestOptions options) {
-    options.setHttpAttributes(
-        serverEndpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HTTP_ROUTE);
-          return attributes;
-        });
+    options.setHttpAttributes(serverEndpoint -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(HTTP_ROUTE);
+      return attributes;
+    });
 
     options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
     options.setHasResponseCustomizer(serverEndpoint -> true);

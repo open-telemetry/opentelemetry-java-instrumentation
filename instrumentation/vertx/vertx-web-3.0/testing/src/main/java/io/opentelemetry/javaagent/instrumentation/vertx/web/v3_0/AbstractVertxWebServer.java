@@ -37,13 +37,12 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
         new String[] {"/standard", "/virtual", "/repeat/repeat", "/precedence/:id"}) {
       router
           .route(path)
-          .handler(
-              ctx -> {
-                if (path.equals("/standard") || path.equals("/virtual")) {
-                  Span.current().updateName(ctx.request().path());
-                }
-                ctx.next();
-              })
+          .handler(ctx -> {
+            if (path.equals("/standard") || path.equals("/virtual")) {
+              Span.current().updateName(ctx.request().path());
+            }
+            ctx.next();
+          })
           .handler(ctx -> end(ctx.response()));
     }
   }
@@ -74,107 +73,94 @@ public abstract class AbstractVertxWebServer extends AbstractVerticle {
             });
     router
         .route(INDEXED_CHILD.getPath())
-        .handler(
-            ctx ->
-                controller(
-                    INDEXED_CHILD,
-                    () -> {
-                      INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
-                      end(
-                          ctx.response().setStatusCode(INDEXED_CHILD.getStatus()),
-                          INDEXED_CHILD.getBody());
-                      return null;
-                    }));
+        .handler(ctx ->
+            controller(
+                INDEXED_CHILD,
+                () -> {
+                  INDEXED_CHILD.collectSpanAttributes(it -> ctx.request().getParam(it));
+                  end(
+                      ctx.response().setStatusCode(INDEXED_CHILD.getStatus()),
+                      INDEXED_CHILD.getBody());
+                  return null;
+                }));
     router
         .post(INDEXED_CHILD_FROM_REQUEST_BODY.getPath())
-        .handler(
-            ctx ->
-                ctx.request()
-                    .bodyHandler(
-                        body ->
-                            controller(
-                                INDEXED_CHILD_FROM_REQUEST_BODY,
-                                () -> {
-                                  String requestBody = body.toString();
-                                  bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
-                                  end(
-                                      ctx.response()
-                                          .setStatusCode(
-                                              INDEXED_CHILD_FROM_REQUEST_BODY.getStatus()),
-                                      requestBody);
-                                  return null;
-                                })));
+        .handler(ctx ->
+            ctx.request()
+                .bodyHandler(body ->
+                    controller(
+                        INDEXED_CHILD_FROM_REQUEST_BODY,
+                        () -> {
+                          String requestBody = body.toString();
+                          bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                          end(
+                              ctx.response()
+                                  .setStatusCode(INDEXED_CHILD_FROM_REQUEST_BODY.getStatus()),
+                              requestBody);
+                          return null;
+                        })));
     router
         .route(QUERY_PARAM.getPath())
-        .handler(
-            ctx ->
-                controller(
-                    QUERY_PARAM,
-                    () -> {
-                      end(
-                          ctx.response().setStatusCode(QUERY_PARAM.getStatus()),
-                          ctx.request().query());
-                      return null;
-                    }));
+        .handler(ctx ->
+            controller(
+                QUERY_PARAM,
+                () -> {
+                  end(ctx.response().setStatusCode(QUERY_PARAM.getStatus()), ctx.request().query());
+                  return null;
+                }));
     router
         .route(REDIRECT.getPath())
-        .handler(
-            ctx ->
-                controller(
-                    REDIRECT,
-                    () -> {
-                      end(
-                          ctx.response()
-                              .setStatusCode(REDIRECT.getStatus())
-                              .putHeader("location", REDIRECT.getBody()));
-                      return null;
-                    }));
+        .handler(ctx ->
+            controller(
+                REDIRECT,
+                () -> {
+                  end(
+                      ctx.response()
+                          .setStatusCode(REDIRECT.getStatus())
+                          .putHeader("location", REDIRECT.getBody()));
+                  return null;
+                }));
     router
         .route(ERROR.getPath())
-        .handler(
-            ctx ->
-                controller(
-                    ERROR,
-                    () -> {
-                      end(ctx.response().setStatusCode(ERROR.getStatus()), ERROR.getBody());
-                      return null;
-                    }));
+        .handler(ctx ->
+            controller(
+                ERROR,
+                () -> {
+                  end(ctx.response().setStatusCode(ERROR.getStatus()), ERROR.getBody());
+                  return null;
+                }));
     router
         .route(EXCEPTION.getPath())
-        .handler(
-            ctx ->
-                controller(
-                    EXCEPTION,
-                    () -> {
-                      throw new IllegalStateException(EXCEPTION.getBody());
-                    }));
+        .handler(ctx ->
+            controller(
+                EXCEPTION,
+                () -> {
+                  throw new IllegalStateException(EXCEPTION.getBody());
+                }));
     router
         .route("/path/:id/param")
-        .handler(
-            ctx ->
-                controller(
-                    PATH_PARAM,
-                    () -> {
-                      end(
-                          ctx.response().setStatusCode(PATH_PARAM.getStatus()),
-                          ctx.request().getParam("id"));
-                      return null;
-                    }));
+        .handler(ctx ->
+            controller(
+                PATH_PARAM,
+                () -> {
+                  end(
+                      ctx.response().setStatusCode(PATH_PARAM.getStatus()),
+                      ctx.request().getParam("id"));
+                  return null;
+                }));
     router
         .route(CAPTURE_HEADERS.getPath())
-        .handler(
-            ctx ->
-                controller(
-                    CAPTURE_HEADERS,
-                    () -> {
-                      end(
-                          ctx.response()
-                              .setStatusCode(CAPTURE_HEADERS.getStatus())
-                              .putHeader(
-                                  "X-Test-Response", ctx.request().getHeader("X-Test-Request")),
-                          CAPTURE_HEADERS.getBody());
-                      return null;
-                    }));
+        .handler(ctx ->
+            controller(
+                CAPTURE_HEADERS,
+                () -> {
+                  end(
+                      ctx.response()
+                          .setStatusCode(CAPTURE_HEADERS.getStatus())
+                          .putHeader("X-Test-Response", ctx.request().getHeader("X-Test-Request")),
+                      CAPTURE_HEADERS.getBody());
+                  return null;
+                }));
 
     return router;
   }

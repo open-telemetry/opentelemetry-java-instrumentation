@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -47,6 +48,13 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation("com.fasterxml.jackson.core:jackson-databind")
+      implementation("org.opensearch.client:opensearch-java:3.0.0")
+    }
+  }
+
   executions("test") {
     configureDefault {
       filter {
@@ -61,5 +69,11 @@ testing.suites {
       }
       telemetryConfig("otel.instrumentation.opensearch.query-sanitization.enabled", "false")
     }
+  }
+}
+
+tasks {
+  check {
+    dependsOn(testing.suites)
   }
 }

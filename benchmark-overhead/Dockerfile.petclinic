@@ -1,19 +1,18 @@
-FROM eclipse-temurin:11.0.32_9-jdk@sha256:51985b993d8f2461c357cd10dbac1760f228b3b80028861a18cccde764fb507a as app-build
+FROM eclipse-temurin:25-jdk@sha256:d1b500f1a2a8e2cb1b0fa84e21c4a52963050cbd46b8a53fcb6a8eec0f57675f AS app-build
 
 # This is the base image that will contain a built version of the spring-petclinic-rest
 # application. Installing the dependencies and maven compiling the application is time
 # consuming, so we do it in a base image to save time nightly.
 
-RUN apt update && apt install -y git
+RUN apt-get update && apt-get install -y git
 WORKDIR /app
-RUN git clone http://github.com/spring-petclinic/spring-petclinic-rest.git
+RUN git clone https://github.com/spring-petclinic/spring-petclinic-rest.git
 WORKDIR /app/spring-petclinic-rest
-# We have to pin the version because upstream petclinic has breaking api changes after this commit
-RUN git checkout 8aa4d49
+RUN git checkout 220f4ba8e92cec9ad1faa03324723a3e9da63d95
 RUN ./mvnw package -Dmaven.test.skip=true
 RUN cp target/spring-petclinic-rest*.jar /app/spring-petclinic-rest.jar
 
-FROM bellsoft/liberica-openjdk-alpine:25.0.5@sha256:0edfe1dd5920b605b4d2178e5620d6bc9e9ecc78f809156da81688b4ad6ce348
+FROM eclipse-temurin:25-jdk-alpine@sha256:22edbb1021420ae6e248519d1af07577742314d67d4c60fcbb2e285b7e47fa78
 COPY --from=app-build /app/spring-petclinic-rest.jar /app/spring-petclinic-rest.jar
 WORKDIR /app
 EXPOSE 9966

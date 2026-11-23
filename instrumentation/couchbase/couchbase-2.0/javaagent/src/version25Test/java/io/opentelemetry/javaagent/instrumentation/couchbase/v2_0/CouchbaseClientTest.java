@@ -63,23 +63,19 @@ class CouchbaseClientTest extends AbstractCouchbaseClientTest {
     boolean hasBucket = manager.hasBucket(bucketCouchbase.name());
     assertThat(hasBucket).isTrue();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(spanName("ClusterManager.hasBucket"))
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, COUCHBASE),
-                            equalTo(DB_OPERATION_NAME, "ClusterManager.hasBucket"),
-                            equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
-                            satisfies(NETWORK_PEER_PORT, networkPeerPort()),
-                            satisfies(SERVER_ADDRESS, serverAddress()),
-                            satisfies(SERVER_PORT, serverPort()),
-                            satisfies(
-                                stringKey("couchbase.local.address"),
-                                experimentalLocalAddress()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(spanName("ClusterManager.hasBucket"))
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, COUCHBASE),
+                    equalTo(DB_OPERATION_NAME, "ClusterManager.hasBucket"),
+                    equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress()),
+                    satisfies(NETWORK_PEER_PORT, networkPeerPort()),
+                    satisfies(SERVER_ADDRESS, serverAddress()),
+                    satisfies(SERVER_PORT, serverPort()),
+                    satisfies(stringKey("couchbase.local.address"), experimentalLocalAddress()))));
 
     assertDurationMetric(
         testing,

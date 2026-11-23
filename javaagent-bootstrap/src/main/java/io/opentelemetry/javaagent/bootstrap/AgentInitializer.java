@@ -280,6 +280,7 @@ public final class AgentInitializer {
 
   private AgentInitializer() {}
 
+  // visible for testing
   @SuppressWarnings("SystemOut")
   static void setSystemProperties(@Nullable String agentArgs) {
     boolean debug = false;
@@ -304,6 +305,7 @@ public final class AgentInitializer {
     }
   }
 
+  // visible for testing
   static boolean isJdkToolMainClass(@Nullable String cmd) {
     if (cmd == null) {
       return false;

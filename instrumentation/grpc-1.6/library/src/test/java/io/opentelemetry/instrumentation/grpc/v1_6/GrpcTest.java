@@ -188,21 +188,20 @@ class GrpcTest extends AbstractGrpcTest {
                     .sayHello(Helloworld.Request.newBuilder().setName("test").build()));
 
     assertThat(response.getMessage()).isEqualTo("Hello test");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttribute(
-                            SERVER_ADDRESS, targetPrefix == null ? "fallback.invalid" : "localhost")
-                        .hasAttribute(SERVER_PORT, targetPrefix == null ? 1234L : server.getPort()),
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttribute(
+                        SERVER_ADDRESS, targetPrefix == null ? "fallback.invalid" : "localhost")
+                    .hasAttribute(SERVER_PORT, targetPrefix == null ? 1234L : server.getPort()),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(1))));
   }
 
   @Test
@@ -271,22 +270,21 @@ class GrpcTest extends AbstractGrpcTest {
     assertThat(response.getMessage()).isEqualTo("Hello test");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttribute(stringKey("customKey2"), "clientSideValue")
-                            .hasAttribute(stringKey("customKey"), "customValue"),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttribute(stringKey("customKey2"), "serverSideValue")
-                            .hasAttribute(stringKey("customKey"), "customValue")));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("example.Greeter/SayHello")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttribute(stringKey("customKey2"), "clientSideValue")
+                        .hasAttribute(stringKey("customKey"), "customValue"),
+                span ->
+                    span.hasName("example.Greeter/SayHello")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttribute(stringKey("customKey2"), "serverSideValue")
+                        .hasAttribute(stringKey("customKey"), "customValue")));
   }
 
   private static class CustomAttributesExtractor

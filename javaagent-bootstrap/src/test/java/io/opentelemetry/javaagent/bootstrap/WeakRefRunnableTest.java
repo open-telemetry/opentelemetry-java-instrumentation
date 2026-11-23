@@ -66,10 +66,9 @@ class WeakRefRunnableTest {
   @Test
   void closeExceptionIsSuppressed() {
     WeakRefRunnable weak = new WeakRefRunnable(new WeakReference<>(null));
-    weak.closeWhenCollected(
-        () -> {
-          throw new Exception("boom");
-        });
+    weak.closeWhenCollected(() -> {
+      throw new Exception("boom");
+    });
 
     // Should not throw
     weak.run();

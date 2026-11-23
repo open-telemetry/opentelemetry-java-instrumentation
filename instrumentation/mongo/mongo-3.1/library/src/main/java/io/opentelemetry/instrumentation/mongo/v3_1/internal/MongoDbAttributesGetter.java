@@ -15,7 +15,7 @@ import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -71,6 +71,7 @@ class MongoDbAttributesGetter
   @Nullable private final MongoConnectionPeerResolver connectionPeerResolver;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
+  // only used by tests
   MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
     this(querySanitizationEnabled, maxNormalizedQueryLength, null);
   }
@@ -158,10 +159,10 @@ class MongoDbAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       CommandStartedEvent event, @Nullable CommandSucceededEvent unused) {
     MongoNetworkPeer peer = getNetworkPeer(event);
-    return peer == null ? null : peer.getInetSocketAddress();
+    return peer == null ? null : peer.getSocketAddress();
   }
 
   @Nullable
@@ -179,15 +180,40 @@ class MongoDbAttributesGetter
       CommandStartedEvent request,
       @Nullable CommandSucceededEvent response,
       @Nullable Throwable error) {
+    String errorCode = getServerErrorCode(response, error);
+    if (errorCode != null) {
+      return errorCode;
+    }
+    return error == null ? null : error.getClass().getName();
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      CommandStartedEvent request,
+      @Nullable CommandSucceededEvent response,
+      @Nullable Throwable error) {
     Integer writeErrorCode = getWriteErrorCode(response);
+    if (writeErrorCode != null) {
+      return writeErrorCode.toString();
+    }
+    if (error instanceof MongoException) {
+      return Integer.toString(((MongoException) error).getCode());
+    }
+    return null;
+  }
+
+  @Nullable
+  private static String getServerErrorCode(
+      @Nullable CommandSucceededEvent response, @Nullable Throwable error) {
+    Integer writeErrorCode = getServerWriteErrorCode(response);
     if (writeErrorCode != null) {
       return writeErrorCode.toString();
     }
     if (error instanceof MongoException) {
       // MongoException.getCode() only returns a real server error code (a positive value) when the
       // exception came from a server command error. For client-side exceptions the driver uses
-      // negative sentinels (e.g. -2, -3, -4), which are meaningless as an error.type. Returning
-      // null in that case lets the shared extractor fall back to the exception class name.
+      // negative sentinels (e.g. -2, -3, -4), which are meaningless as an error.type.
       int code = ((MongoException) error).getCode();
       if (code > 0) {
         return Integer.toString(code);
@@ -197,7 +223,7 @@ class MongoDbAttributesGetter
   }
 
   @Nullable
-  static Integer getWriteErrorCode(@Nullable CommandSucceededEvent response) {
+  private static Integer getWriteErrorCode(@Nullable CommandSucceededEvent response) {
     if (response == null) {
       return null;
     }
@@ -215,6 +241,25 @@ class MongoDbAttributesGetter
   }
 
   @Nullable
+  private static Integer getServerWriteErrorCode(@Nullable CommandSucceededEvent response) {
+    if (response == null) {
+      return null;
+    }
+    BsonDocument document = response.getResponse();
+    BsonValue writeErrors = document.get("writeErrors");
+    if (writeErrors != null && writeErrors.isArray()) {
+      for (BsonValue writeError : writeErrors.asArray()) {
+        Integer code = errorCode(writeError);
+        if (code != null && code > 0) {
+          return code;
+        }
+      }
+    }
+    Integer code = errorCode(document.get("writeConcernError"));
+    return code != null && code > 0 ? code : null;
+  }
+
+  @Nullable
   private static Integer errorCode(@Nullable BsonValue error) {
     if (error == null || !error.isDocument()) {
       return null;
@@ -224,9 +269,10 @@ class MongoDbAttributesGetter
       return null;
     }
     long value = code.asNumber().longValue();
-    return value > 0 && value <= Integer.MAX_VALUE ? (int) value : null;
+    return value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE ? (int) value : null;
   }
 
+  // visible for testing
   String sanitizeQuery(BsonDocument command) {
     StringBuilderWriter stringWriter = new StringBuilderWriter(128);
     // jsonWriterSettings is generally not null but could be due to security manager or unknown

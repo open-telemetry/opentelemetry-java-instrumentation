@@ -1432,13 +1432,12 @@ abstract class AbstractPulsarClientTest {
             () ->
                 consumer
                     .batchReceiveAsync()
-                    .whenComplete(
-                        (messages, throwable) -> {
-                          if (messages != null) {
-                            testing.runWithSpan(
-                                "callback", () -> acknowledgeMessages(consumer, messages));
-                          }
-                        }));
+                    .whenComplete((messages, throwable) -> {
+                      if (messages != null) {
+                        testing.runWithSpan(
+                            "callback", () -> acknowledgeMessages(consumer, messages));
+                      }
+                    }));
 
     assertThat(result.get(1, MINUTES)).hasSize(1);
 
@@ -1484,10 +1483,9 @@ abstract class AbstractPulsarClientTest {
 
     assertThatThrownBy(() -> receive.get(1, MINUTES))
         .hasCauseInstanceOf(PulsarClientException.class);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   @Test
@@ -1503,10 +1501,9 @@ abstract class AbstractPulsarClientTest {
 
     assertThatThrownBy(() -> receive.get(1, MINUTES))
         .hasCauseInstanceOf(PulsarClientException.class);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("receive-parent").hasKind(SpanKind.INTERNAL).hasNoParent()));
   }
 
   private static class CallerContextMessageCrypto implements MessageCrypto<Object, Object> {

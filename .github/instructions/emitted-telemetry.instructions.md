@@ -46,6 +46,12 @@ protocol code with that operation. Handle escaping callback exceptions under the
 failure and span-lifecycle policy, separately from its own response classification. Do not relay
 nested server-error confirmation just to classify the callback exception.
 
+Unless the applicable semantic convention says otherwise, prefer an available protocol failure code
+over a generic exception reporting that failure. Prefer useful typed exception classes for timeout,
+connection, and local-processing failures. Apply these choices consistently by failure category,
+not through per-code specificity checks. Fall back to the exception class when no applicable code is
+available. Record `db.response.status_code` independently.
+
 For example, Redis `PING` receives `PONG`, then an application response builder issues an independent
 `GET` that receives `WRONGTYPE`. If the builder catches the exception, that failure alone does not
 fail `PING`. If it escapes, the outer call may fail during callback processing. Either way,

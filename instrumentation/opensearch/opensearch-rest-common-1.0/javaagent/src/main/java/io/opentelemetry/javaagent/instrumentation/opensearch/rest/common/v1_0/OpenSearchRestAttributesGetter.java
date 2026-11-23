@@ -6,12 +6,20 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 
 final class OpenSearchRestAttributesGetter
     implements DbClientAttributesGetter<OpenSearchRestRequest, OpenSearchRestResponse> {
+
+  private final OpenSearchRestInstrumenterFactory.ExceptionStatusCodeExtractor
+      exceptionStatusCodeExtractor;
+
+  OpenSearchRestAttributesGetter(
+      OpenSearchRestInstrumenterFactory.ExceptionStatusCodeExtractor exceptionStatusCodeExtractor) {
+    this.exceptionStatusCodeExtractor = exceptionStatusCodeExtractor;
+  }
 
   @Override
   public String getDbSystemName(OpenSearchRestRequest request) {
@@ -41,27 +49,46 @@ final class OpenSearchRestAttributesGetter
       OpenSearchRestRequest request,
       @Nullable OpenSearchRestResponse response,
       @Nullable Throwable error) {
-
-    if (response != null) {
-      int statusCode = response.getStatusCode();
-      if (statusCode >= 400 || statusCode < 100) {
-        return Integer.toString(statusCode);
-      }
+    Integer statusCode = getResponseStatusCode(response, error);
+    if (statusCode != null && statusCode >= 400) {
+      return Integer.toString(statusCode);
     }
-    return null;
+    return error == null ? null : error.getClass().getName();
+  }
+
+  @Override
+  @Nullable
+  public String getDbResponseStatusCode(
+      OpenSearchRestRequest request,
+      @Nullable OpenSearchRestResponse response,
+      @Nullable Throwable error) {
+    Integer statusCode = getResponseStatusCode(response, error);
+    return statusCode == null ? null : Integer.toString(statusCode);
+  }
+
+  @Nullable
+  private Integer getResponseStatusCode(
+      @Nullable OpenSearchRestResponse response, @Nullable Throwable error) {
+    Integer statusCode = null;
+    if (response != null) {
+      statusCode = response.getStatusCode();
+    } else if (error != null) {
+      statusCode = exceptionStatusCodeExtractor.getStatusCode(error);
+    }
+    return statusCode == null || statusCode < 100 ? null : statusCode;
   }
 
   @Override
   @Nullable
   public String getServerAddress(OpenSearchRestRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
 
   @Override
   @Nullable
   public Integer getServerPort(OpenSearchRestRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
   }
 }

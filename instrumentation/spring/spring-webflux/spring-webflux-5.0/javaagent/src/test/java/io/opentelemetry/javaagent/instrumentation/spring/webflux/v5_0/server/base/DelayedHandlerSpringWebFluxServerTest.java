@@ -48,14 +48,13 @@ class DelayedHandlerSpringWebFluxServerTest extends AbstractHandlerSpringWebFlux
         ServerEndpoint endpoint, Mono<ServerResponse> response, Runnable spanAction) {
       return response
           .delayElement(Duration.ofMillis(10))
-          .map(
-              original ->
-                  controller(
-                      endpoint,
-                      () -> {
-                        spanAction.run();
-                        return original;
-                      }));
+          .map(original ->
+              controller(
+                  endpoint,
+                  () -> {
+                    spanAction.run();
+                    return original;
+                  }));
     }
   }
 }
