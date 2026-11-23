@@ -68,8 +68,7 @@ public final class ServletTelemetryBuilder {
             WARNING,
             "Invalid request body capture max size {0}, using default value {1}",
             new Object[] {value, DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE});
-        builder.captureRequestBodyMaxSize = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
-        return;
+        value = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
       }
       builder.captureRequestBodyMaxSize = value;
     });
