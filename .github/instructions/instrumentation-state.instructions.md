@@ -115,12 +115,13 @@ the HikariCP callback may capture `PoolStats`, which references the pool. When H
 the pool, the tracker must close the callback handle and clear the field that held it. If a
 shutdown path misses that cleanup, fix the hook rather than weakening the reference.
 
-**Saved TCCL.** Use `MetricCallbackRegistration.withoutContextClassLoader(...)` only after
-verifying that registration and callback execution work with a null TCCL. Check lazy
-initialization and supported providers or overrides. Configure builders and obtain factories
-before calling the helper. Otherwise, preserve the existing TCCL behavior. If you hold the
-loader weakly, make sure the SDK does not also save it strongly and define what the callback
-does when the loader is gone.
+**Saved TCCL.** The SDK strongly saves the registering thread's TCCL and uses it to run the
+callback. Verify that both registration and callback execution work with a null TCCL, including
+lazy initialization and supported providers or overrides. Configure builders and obtain factories
+before changing the TCCL. Save its current value, set it to `null` only around registration, and
+restore the saved value in a `finally` block, even if registration fails. If null is not
+supported, register with the usual TCCL. If you hold the loader weakly, make sure the SDK does not
+also save it strongly and define what the callback does when the loader is gone.
 
 **Collection without explicit shutdown.** If an object or class loader should be collectible
 while the registration is live, trace every strong reference to it from the SDK or other
