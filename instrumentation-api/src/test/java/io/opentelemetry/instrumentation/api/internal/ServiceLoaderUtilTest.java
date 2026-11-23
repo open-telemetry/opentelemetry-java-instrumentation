@@ -59,11 +59,10 @@ class ServiceLoaderUtilTest {
         .setContextClassLoader(
             sameClassLoader ? Runnable.class.getClassLoader() : new TestClassLoader());
     Runnable provider = () -> {};
-    ServiceLoaderUtil.setLoadFunction(
-        clazz -> {
-          assertThat(clazz).isEqualTo(Runnable.class);
-          return singletonList(provider);
-        });
+    ServiceLoaderUtil.setLoadFunction(clazz -> {
+      assertThat(clazz).isEqualTo(Runnable.class);
+      return singletonList(provider);
+    });
 
     assertThat(ServiceLoaderUtil.load(Runnable.class, () -> emptyList())).containsExactly(provider);
   }
@@ -101,10 +100,9 @@ class ServiceLoaderUtilTest {
   @Test
   void propagatesCustomLoaderFailure() {
     IllegalStateException failure = new IllegalStateException("custom loader failed");
-    ServiceLoaderUtil.setLoadFunction(
-        unused -> {
-          throw failure;
-        });
+    ServiceLoaderUtil.setLoadFunction(unused -> {
+      throw failure;
+    });
 
     assertThatThrownBy(() -> ServiceLoaderUtil.load(Runnable.class, () -> emptyList()))
         .isSameAs(failure);

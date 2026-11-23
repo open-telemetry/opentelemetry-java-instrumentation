@@ -112,37 +112,33 @@ public abstract class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Ser
     assertThat(testMethod.message(response)).isEqualTo("Hello Test");
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions =
-                  new ArrayList<>(
-                      asList(
-                          span ->
-                              span.hasName(serverSpanName(testMethod.methodName()))
-                                  .hasNoParent()
-                                  .hasKind(SpanKind.SERVER)
-                                  .hasStatus(StatusData.unset()),
-                          span ->
-                              span.hasName("HelloService/" + testMethod.methodName())
-                                  .satisfies(hasScopeName(expectedScopeName()))
-                                  .hasParent(trace.getSpan(0))
-                                  .hasKind(SpanKind.INTERNAL)));
-              if (hasAnnotationHandlerSpan(testMethod)) {
-                assertions.add(
-                    span ->
-                        span.hasName("HelloServiceImpl." + testMethod.methodName())
-                            .hasParent(trace.getSpan(1))
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CODE_FUNCTION_NAME,
-                                    HelloServiceImpl.class.getName()
-                                        + "."
-                                        + testMethod.methodName())));
-              }
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions =
+              new ArrayList<>(
+                  asList(
+                      span ->
+                          span.hasName(serverSpanName(testMethod.methodName()))
+                              .hasNoParent()
+                              .hasKind(SpanKind.SERVER)
+                              .hasStatus(StatusData.unset()),
+                      span ->
+                          span.hasName("HelloService/" + testMethod.methodName())
+                              .satisfies(hasScopeName(expectedScopeName()))
+                              .hasParent(trace.getSpan(0))
+                              .hasKind(SpanKind.INTERNAL)));
+          if (hasAnnotationHandlerSpan(testMethod)) {
+            assertions.add(span ->
+                span.hasName("HelloServiceImpl." + testMethod.methodName())
+                    .hasParent(trace.getSpan(1))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME,
+                            HelloServiceImpl.class.getName() + "." + testMethod.methodName())));
+          }
 
-              trace.hasSpansSatisfyingExactly(assertions);
-            });
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 
   @ParameterizedTest
@@ -154,41 +150,37 @@ public abstract class AbstractJaxWs2Test extends AbstractHttpServerUsingTest<Ser
 
     Exception expectedException = new IllegalStateException("hello exception");
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions =
-                  new ArrayList<>(
-                      asList(
-                          span ->
-                              span.hasName(serverSpanName(testMethod.methodName()))
-                                  .hasNoParent()
-                                  .hasKind(SpanKind.SERVER)
-                                  .hasStatus(StatusData.error()),
-                          span ->
-                              span.hasName("HelloService/" + testMethod.methodName())
-                                  .satisfies(hasScopeName(expectedScopeName()))
-                                  .hasParent(trace.getSpan(0))
-                                  .hasKind(SpanKind.INTERNAL)
-                                  .hasStatus(StatusData.error())
-                                  .hasException(expectedException)));
-              if (hasAnnotationHandlerSpan(testMethod)) {
-                assertions.add(
-                    span ->
-                        span.hasName("HelloServiceImpl." + testMethod.methodName())
-                            .hasParent(trace.getSpan(1))
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasStatus(StatusData.error())
-                            .hasException(expectedException)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    CODE_FUNCTION_NAME,
-                                    HelloServiceImpl.class.getName()
-                                        + "."
-                                        + testMethod.methodName())));
-              }
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions =
+              new ArrayList<>(
+                  asList(
+                      span ->
+                          span.hasName(serverSpanName(testMethod.methodName()))
+                              .hasNoParent()
+                              .hasKind(SpanKind.SERVER)
+                              .hasStatus(StatusData.error()),
+                      span ->
+                          span.hasName("HelloService/" + testMethod.methodName())
+                              .satisfies(hasScopeName(expectedScopeName()))
+                              .hasParent(trace.getSpan(0))
+                              .hasKind(SpanKind.INTERNAL)
+                              .hasStatus(StatusData.error())
+                              .hasException(expectedException)));
+          if (hasAnnotationHandlerSpan(testMethod)) {
+            assertions.add(span ->
+                span.hasName("HelloServiceImpl." + testMethod.methodName())
+                    .hasParent(trace.getSpan(1))
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasStatus(StatusData.error())
+                    .hasException(expectedException)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME,
+                            HelloServiceImpl.class.getName() + "." + testMethod.methodName())));
+          }
 
-              trace.hasSpansSatisfyingExactly(assertions);
-            });
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 
   private static boolean hasAnnotationHandlerSpan(TestMethod testMethod) {

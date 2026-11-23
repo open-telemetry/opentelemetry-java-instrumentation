@@ -106,10 +106,8 @@ class SpringKafkaInterceptorTest {
     interceptor.success(records, null);
     assertThat(Context.current()).isSameAs(parent);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
   }
 
   @Test
@@ -243,10 +241,9 @@ class SpringKafkaInterceptorTest {
     assertThat(interceptor.intercept(original, null)).isSameAs(replacement);
     interceptor.success(replacement, null);
     assertThat(Context.current()).isSameAs(parentContext);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertRecordSpan(span, original, null).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> assertRecordSpan(span, original, null).hasNoParent()));
   }
 
   @ParameterizedTest
@@ -275,9 +272,8 @@ class SpringKafkaInterceptorTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    assertRecordSpan(span, first, throwFromIntercept ? error : null).hasNoParent()),
+            trace.hasSpansSatisfyingExactly(span ->
+                assertRecordSpan(span, first, throwFromIntercept ? error : null).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> assertRecordSpan(span, second, null).hasNoParent()));
@@ -368,22 +364,21 @@ class SpringKafkaInterceptorTest {
           assertThat(Context.current()).isSameAs(parentContext);
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    assertRecordSpan(span, first, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(LinkData.create(FIRST_CREATION)),
-                span ->
-                    assertBatchSpan(span, 2, null, error)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(batchLinks()),
-                span ->
-                    assertBatchSpan(span, 2, null, null)
-                        .hasParent(trace.getSpan(0))
-                        .hasLinks(batchLinks())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                assertRecordSpan(span, first, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasLinks(LinkData.create(FIRST_CREATION)),
+            span ->
+                assertBatchSpan(span, 2, null, error)
+                    .hasParent(trace.getSpan(0))
+                    .hasLinks(batchLinks()),
+            span ->
+                assertBatchSpan(span, 2, null, null)
+                    .hasParent(trace.getSpan(0))
+                    .hasLinks(batchLinks())));
     assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, null, 1, null);
   }
 
@@ -433,10 +428,8 @@ class SpringKafkaInterceptorTest {
     firstInterceptor.success(first, null);
     assertThat(Context.current()).isSameAs(parentContext);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertRecordSpan(span, first, null).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> assertRecordSpan(span, first, null).hasNoParent()));
   }
 
   @Test
@@ -457,10 +450,8 @@ class SpringKafkaInterceptorTest {
     firstInterceptor.success(first, null);
     assertThat(Context.current()).isSameAs(parentContext);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
   }
 
   private static SpanDataAssert assertRecordSpan(

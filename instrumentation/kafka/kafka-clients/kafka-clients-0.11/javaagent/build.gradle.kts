@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -30,6 +31,19 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation-api-incubator"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+      implementation(project(":instrumentation:kafka:kafka-streams-0.11:javaagent"))
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("io.opentelemetry:opentelemetry-api")
+      implementation("org.apache.kafka:kafka-clients:0.11.0.0")
+    }
+  }
+
   executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -39,8 +53,8 @@ testing.suites {
       filter {
         excludeTestsMatching("KafkaClientPropagationDisabledTest")
         excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+        excludeTestsMatching("OpenTelemetryMetricsReporterTest")
       }
-      jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     }
 
     register("PropagationDisabled") {
@@ -58,35 +72,37 @@ testing.suites {
       include("**/KafkaClientSuppressReceiveSpansTest.*")
     }
 
-    register("Disabled") {
-      filter {
-        includeTestsMatching("*DefaultEnablementTest")
-      }
-    }
-
     register("ReceiveTelemetry") {
       filter {
         excludeTestsMatching("KafkaClientPropagationDisabledTest")
         excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+        excludeTestsMatching("OpenTelemetryMetricsReporterTest")
       }
       telemetryConfig(
         "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
         "true",
       )
-      jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
     }
 
     register("Experimental") {
       filter {
         excludeTestsMatching("KafkaClientPropagationDisabledTest")
         excludeTestsMatching("KafkaClientSuppressReceiveSpansTest")
+        excludeTestsMatching("OpenTelemetryMetricsReporterTest")
       }
       telemetryConfig(
         "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
         "true",
       )
       telemetryConfig("otel.instrumentation.kafka.experimental-span-attributes", "true")
-      jvmArgs("-Dotel.instrumentation.kafka-clients-metrics.enabled=true")
+    }
+
+    register("Metrics") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+        includeTestsMatching("OpenTelemetryMetricsReporterTest")
+      }
+      telemetryConfig("otel.instrumentation.kafka-clients-metrics.enabled", "true")
     }
   }
 }

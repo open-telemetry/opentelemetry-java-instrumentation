@@ -200,8 +200,9 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Configures the extractor to recognize an alternative set of HTTP request methods.
    *
    * <p>By default, this extractor defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>. If an
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a>, the PATCH method
+   * defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a> and the QUERY
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc10008.html">RFC10008</a>. If an
    * unknown method is encountered, the extractor will use the value {@value HttpConstants#_OTHER}
    * instead of it and put the original value in an extra {@code http.request.method_original}
    * attribute.
@@ -222,8 +223,9 @@ public final class HttpClientAttributesExtractorBuilder<REQUEST, RESPONSE> {
    * Configures the extractor to recognize an alternative set of HTTP request methods.
    *
    * <p>By default, this extractor defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>. If an
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a>, the PATCH method
+   * defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a> and the QUERY
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc10008.html">RFC10008</a>. If an
    * unknown method is encountered, the extractor will use the value {@value HttpConstants#_OTHER}
    * instead of it and put the original value in an extra {@code http.request.method_original}
    * attribute.

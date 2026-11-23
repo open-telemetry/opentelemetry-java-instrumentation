@@ -11,7 +11,6 @@ import io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 import io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo
 import io.opentelemetry.sdk.testing.assertj.{
-  HistogramAssert,
   HistogramPointAssert,
   MetricAssert,
   SpanDataAssert,
@@ -23,6 +22,7 @@ import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIn
 import io.opentelemetry.semconv.DbAttributes.{
   DB_NAMESPACE,
   DB_OPERATION_NAME,
+  DB_RESPONSE_STATUS_CODE,
   DB_SYSTEM_NAME
 }
 import io.opentelemetry.semconv.NetworkAttributes.{
@@ -203,7 +203,7 @@ class RediscalaClientTest {
       }
     }).isInstanceOf(classOf[ReplyErrorException])
 
-    assertErrorType("LPUSH", "WRONGTYPE")
+    assertErrorType("LPUSH", "WRONGTYPE", responseStatusCode = "WRONGTYPE")
   }
 
   @Test def testCustomServerErrorPrefixSetsErrorType(): Unit = {
@@ -223,7 +223,11 @@ class RediscalaClientTest {
       }
     }).isInstanceOf(classOf[ReplyErrorException])
 
-    assertErrorType("EVAL", "Custom.Code!É")
+    assertErrorType(
+      "EVAL",
+      "Custom.Code!É",
+      responseStatusCode = "Custom.Code!É"
+    )
   }
 
   @Test def testClientFailureUsesExceptionClassAsErrorType(): Unit = {
@@ -472,7 +476,8 @@ class RediscalaClientTest {
   private def assertErrorType(
       operationName: String,
       errorType: String,
-      serverPort: JLong = port
+      serverPort: JLong = port,
+      responseStatusCode: String = null
   ): Unit = {
     testing.waitAndAssertTraces(new Consumer[TraceAssert] {
       override def accept(trace: TraceAssert): Unit =
@@ -495,6 +500,10 @@ class RediscalaClientTest {
                   equalTo(DB_NAMESPACE, defaultDbIndex.toString),
                   equalTo(SERVER_ADDRESS, host),
                   equalTo(SERVER_PORT, serverPort),
+                  equalTo(
+                    DB_RESPONSE_STATUS_CODE,
+                    responseStatusCode
+                  ),
                   equalTo(ERROR_TYPE, errorType)
                 )
             }
@@ -508,18 +517,14 @@ class RediscalaClientTest {
         override def accept(metric: MetricAssert): Unit = {
           metric
             .hasName("db.client.operation.duration")
-            .hasHistogramSatisfying(new Consumer[HistogramAssert] {
-              override def accept(histogram: HistogramAssert): Unit = {
-                histogram.hasPointsSatisfying(
-                  new Consumer[HistogramPointAssert] {
-                    override def accept(point: HistogramPointAssert): Unit = {
-                      point
-                        .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))
-                    }
-                  }
-                )
+            .hasHistogramPointsSatisfying(
+              new Consumer[HistogramPointAssert] {
+                override def accept(point: HistogramPointAssert): Unit = {
+                  point
+                    .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))
+                }
               }
-            })
+            )
         }
       }
     )

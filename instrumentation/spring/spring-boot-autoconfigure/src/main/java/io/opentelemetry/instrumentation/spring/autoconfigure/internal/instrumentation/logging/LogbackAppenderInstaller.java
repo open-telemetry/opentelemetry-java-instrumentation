@@ -162,6 +162,7 @@ class LogbackAppenderInstaller {
         applicationEnvironmentPreparedEvent.getEnvironment(), openTelemetryAppender);
   }
 
+  // visible for testing
   static void initializeStructuredAttributesFromProperties(
       ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
     IncludeExclude selector = StructuredAttributesConfig.getSelector(environment);
@@ -170,6 +171,7 @@ class LogbackAppenderInstaller {
 
   // the appender resolves the precedence between these settings, ignoring the deprecated one when
   // a non-empty selector is configured
+  // visible for testing
   @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
   static void initializeMdcAttributesFromProperties(
       ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {
@@ -200,6 +202,7 @@ class LogbackAppenderInstaller {
 
   // the appender resolves the precedence between these settings, ignoring the deprecated one when
   // a non-empty selector is configured
+  // visible for testing
   @SuppressWarnings("deprecation") // the deprecated setter preserves the deprecated semantics
   static void initializeLoggerContextAttributesFromProperties(
       ConfigurableEnvironment environment, OpenTelemetryAppender openTelemetryAppender) {

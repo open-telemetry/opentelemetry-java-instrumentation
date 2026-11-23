@@ -51,16 +51,15 @@ class ThriftAsyncClientInstrumentation implements TypeInstrumentation {
 
     transformer.applyAdviceToMethod(
         isMethod()
-            .and(
-                target -> {
-                  ParameterList<?> parameterList = target.getParameters();
-                  if (!parameterList.isEmpty()) {
-                    String lastParameter =
-                        parameterList.get(parameterList.size() - 1).getType().asErasure().getName();
-                    return "org.apache.thrift.async.AsyncMethodCallback".equals(lastParameter);
-                  }
-                  return false;
-                }),
+            .and(target -> {
+              ParameterList<?> parameterList = target.getParameters();
+              if (!parameterList.isEmpty()) {
+                String lastParameter =
+                    parameterList.get(parameterList.size() - 1).getType().asErasure().getName();
+                return "org.apache.thrift.async.AsyncMethodCallback".equals(lastParameter);
+              }
+              return false;
+            }),
         getClass().getName() + "$MethodAdvice");
   }
 

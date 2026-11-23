@@ -67,70 +67,69 @@ class ArmeriaHttp2Test {
     AggregatedHttpResponse result = createWebClient(server2).get("/").aggregate().join();
     assertThat(result.contentAscii()).isEqualTo("hello");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_FULL, server2.httpUri() + "/"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "2"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, server2.httpPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
-                span ->
-                    span.hasName("GET /")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, "/"),
-                            equalTo(HTTP_ROUTE, "/"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "2"),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, server2.httpPort()),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_FULL, server1.httpUri() + "/"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "2"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, server1.httpPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
-                span ->
-                    span.hasName("GET /")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, "/"),
-                            equalTo(HTTP_ROUTE, "/"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "2"),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(SERVER_PORT, server1.httpPort()),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_FULL, server2.httpUri() + "/"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "2"),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_PORT, server2.httpPort()),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+            span ->
+                span.hasName("GET /")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_SCHEME, "http"),
+                        equalTo(URL_PATH, "/"),
+                        equalTo(HTTP_ROUTE, "/"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "2"),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_PORT, server2.httpPort()),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
+            span ->
+                span.hasName("GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_FULL, server1.httpUri() + "/"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "2"),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_PORT, server1.httpPort()),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+            span ->
+                span.hasName("GET /")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(2))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(URL_SCHEME, "http"),
+                        equalTo(URL_PATH, "/"),
+                        equalTo(HTTP_ROUTE, "/"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "2"),
+                        equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                        equalTo(SERVER_PORT, server1.httpPort()),
+                        satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 }

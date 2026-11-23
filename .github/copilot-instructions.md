@@ -133,4 +133,3 @@ For a stable API, the Javadoc states removal in the next major version instead.
   Missing coverage for behavior CI does not exercise can still matter. Do not ask the author
   to run a formatter.
 - For unchanged metadata, report only demonstrable mismatches introduced by the change.
-- Use category tags such as `[General]`, `[Javaagent]`, `[Config]`, `[Testing]`, and `[Naming]`.

@@ -15,6 +15,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.spy;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.verifyNoMoreInteractions;
@@ -278,7 +279,7 @@ class LogEventMapperTest {
             false,
             include("*"));
 
-    StringMapMessage message = new StringMapMessage();
+    StringMapMessage message = spy(new StringMapMessage());
     message.put("key1", "value1");
     message.put("key2", "value2");
 
@@ -292,6 +293,7 @@ class LogEventMapperTest {
     verify(builder).setAttribute(stringKey("key1"), "value1");
     verify(builder).setAttribute(stringKey("key2"), "value2");
     verifyNoMoreInteractions(builder);
+    verify(message, never()).getData();
   }
 
   @Test

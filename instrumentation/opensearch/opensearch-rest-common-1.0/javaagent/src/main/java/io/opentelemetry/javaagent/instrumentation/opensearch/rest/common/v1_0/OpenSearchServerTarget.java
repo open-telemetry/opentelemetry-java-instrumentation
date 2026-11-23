@@ -5,20 +5,20 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import java.util.List;
 import javax.annotation.Nullable;
 
 public class OpenSearchServerTarget {
 
   @Nullable
-  public static DbServerTarget of(@Nullable List<Endpoint> endpoints) {
+  public static ServerTarget of(@Nullable List<Endpoint> endpoints) {
     if (endpoints == null || endpoints.isEmpty()) {
       return null;
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(-1).setSorted(true);
+    ServerTargetBuilder builder = ServerTarget.builder(-1).setSorted(true);
     for (Endpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port, defaultPort(endpoint));
     }

@@ -76,9 +76,8 @@ class VertxKafkaOwnershipTest {
     assertThat(spans).hasSize(3);
     SpanData batch =
         spans.stream()
-            .filter(
-                span ->
-                    Long.valueOf(2).equals(span.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT)))
+            .filter(span ->
+                Long.valueOf(2).equals(span.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT)))
             .findFirst()
             .orElseThrow(AssertionError::new);
     assertThat(batch.getParentSpanContext().isValid()).isFalse();
@@ -100,13 +99,12 @@ class VertxKafkaOwnershipTest {
     prepareContexts(
         records, remoteSpanContext("00000000000000000000000000000013", "0000000000000013"));
 
-    assertThatThrownBy(
-            () ->
-                new InstrumentedBatchRecordsHandler<String, String>(
-                        ignored -> {
-                          throw new IllegalStateException("boom");
-                        })
-                    .handle(records))
+    assertThatThrownBy(() ->
+            new InstrumentedBatchRecordsHandler<String, String>(
+                    ignored -> {
+                      throw new IllegalStateException("boom");
+                    })
+                .handle(records))
         .isInstanceOf(IllegalStateException.class);
     new InstrumentedBatchRecordsHandler<String, String>(ignored -> {}).handle(records);
 
@@ -133,14 +131,13 @@ class VertxKafkaOwnershipTest {
     prepareContexts(records);
     AtomicInteger callbacks = new AtomicInteger();
 
-    new InstrumentedBatchRecordsHandler<String, String>(
-            ignored ->
-                new InstrumentedSingleRecordHandler<String, String>(
-                        inner -> {
-                          callbacks.incrementAndGet();
-                          assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                        })
-                    .handle(record))
+    new InstrumentedBatchRecordsHandler<String, String>(ignored ->
+        new InstrumentedSingleRecordHandler<String, String>(
+                inner -> {
+                  callbacks.incrementAndGet();
+                  assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                })
+            .handle(record))
         .handle(records);
 
     assertThat(callbacks).hasValue(1);
@@ -155,14 +152,13 @@ class VertxKafkaOwnershipTest {
     prepareContexts(records);
     AtomicInteger callbacks = new AtomicInteger();
 
-    new InstrumentedSingleRecordHandler<String, String>(
-            ignored ->
-                new InstrumentedBatchRecordsHandler<String, String>(
-                        batch -> {
-                          callbacks.incrementAndGet();
-                          assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                        })
-                    .handle(records))
+    new InstrumentedSingleRecordHandler<String, String>(ignored ->
+        new InstrumentedBatchRecordsHandler<String, String>(
+                batch -> {
+                  callbacks.incrementAndGet();
+                  assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                })
+            .handle(records))
         .handle(record);
 
     assertThat(callbacks).hasValue(1);

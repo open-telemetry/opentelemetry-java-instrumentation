@@ -182,10 +182,9 @@ class MessagingAttributesExtractorTest {
 
   @Test
   void shouldRequireOperationName() {
-    assertThatThrownBy(
-            () ->
-                MessagingAttributesExtractor.builder(
-                    TestGetter.INSTANCE, MessagingOperationType.SEND, null))
+    assertThatThrownBy(() ->
+            MessagingAttributesExtractor.builder(
+                TestGetter.INSTANCE, MessagingOperationType.SEND, null))
         .isInstanceOf(NullPointerException.class)
         .hasMessage("operationName");
   }

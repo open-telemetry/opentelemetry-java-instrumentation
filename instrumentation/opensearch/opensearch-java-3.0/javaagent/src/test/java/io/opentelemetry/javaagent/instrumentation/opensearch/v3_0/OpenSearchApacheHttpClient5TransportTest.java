@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -190,20 +191,17 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
             opensearch.getUsername(), opensearch.getPassword().toCharArray()));
 
     return ApacheHttpClient5TransportBuilder.builder(hosts)
-        .setHttpClientConfigCallback(
-            httpClientBuilder ->
-                httpClientBuilder
-                    .setConnectionManager(connectionManager)
-                    .setDefaultCredentialsProvider(credentialsProvider))
+        .setHttpClientConfigCallback(httpClientBuilder ->
+            httpClientBuilder
+                .setConnectionManager(connectionManager)
+                .setDefaultCredentialsProvider(credentialsProvider))
         .build();
   }
 
   @Test
   void shouldRecordErrorType() {
-    assertThatThrownBy(
-            () ->
-                openSearchClient.get(
-                    request -> request.index("invalid-index").id("1"), Object.class))
+    assertThatThrownBy(() ->
+            openSearchClient.get(request -> request.index("invalid-index").id("1"), Object.class))
         .isInstanceOf(OpenSearchException.class);
 
     assertErrorTypeSpan();
@@ -211,11 +209,10 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
 
   @Test
   void shouldRecordAsyncErrorType() {
-    assertThatThrownBy(
-            () ->
-                openSearchAsyncClient
-                    .get(request -> request.index("invalid-index").id("1"), Object.class)
-                    .join())
+    assertThatThrownBy(() ->
+            openSearchAsyncClient
+                .get(request -> request.index("invalid-index").id("1"), Object.class)
+                .join())
         .isInstanceOf(CompletionException.class)
         .hasCauseInstanceOf(OpenSearchException.class);
 
@@ -225,19 +222,18 @@ class OpenSearchApacheHttpClient5TransportTest extends AbstractOpenSearchTest {
   @SuppressWarnings("deprecation") // using deprecated semconv
   private void assertErrorTypeSpan() {
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
-                                equalTo(DB_OPERATION_NAME, "GET"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort())),
-                                equalTo(ERROR_TYPE, "404")),
-                    span ->
-                        span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort())),
+                            equalTo(ERROR_TYPE, "404"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "404")),
+                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 }

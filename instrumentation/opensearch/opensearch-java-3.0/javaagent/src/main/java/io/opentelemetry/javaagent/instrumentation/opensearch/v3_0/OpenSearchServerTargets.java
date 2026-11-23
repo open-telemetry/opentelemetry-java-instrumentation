@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTarget;
 import java.util.List;
@@ -14,15 +14,15 @@ import org.opensearch.client.transport.OpenSearchTransport;
 
 public class OpenSearchServerTargets {
 
-  private static final VirtualField<OpenSearchTransport, DbServerTarget> SERVER_TARGET =
-      VirtualField.find(OpenSearchTransport.class, DbServerTarget.class);
+  private static final VirtualField<OpenSearchTransport, ServerTarget> SERVER_TARGET =
+      VirtualField.find(OpenSearchTransport.class, ServerTarget.class);
 
   public static void capture(
       OpenSearchTransport transport, @Nullable List<OpenSearchServerTarget.Endpoint> endpoints) {
     capture(transport, OpenSearchServerTarget.of(endpoints));
   }
 
-  public static void capture(OpenSearchTransport transport, @Nullable DbServerTarget target) {
+  public static void capture(OpenSearchTransport transport, @Nullable ServerTarget target) {
     if (target == null) {
       return;
     }
@@ -30,7 +30,7 @@ public class OpenSearchServerTargets {
   }
 
   @Nullable
-  public static DbServerTarget get(OpenSearchTransport transport) {
+  public static ServerTarget get(OpenSearchTransport transport) {
     return SERVER_TARGET.get(transport);
   }
 

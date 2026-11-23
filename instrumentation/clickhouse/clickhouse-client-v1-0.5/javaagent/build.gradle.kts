@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -21,4 +23,14 @@ dependencies {
   testLibrary("org.apache.httpcomponents.client5:httpclient5:5.2.3")
 
   testInstrumentation(project(":instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent"))
+}
+
+testing {
+  suites {
+    unitTests {
+      dependencies {
+        implementation("com.clickhouse:clickhouse-client:0.5.0")
+      }
+    }
+  }
 }

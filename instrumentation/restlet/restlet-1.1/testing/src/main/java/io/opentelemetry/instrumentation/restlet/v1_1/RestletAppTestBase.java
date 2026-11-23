@@ -114,7 +114,7 @@ class RestletAppTestBase {
                 (Form)
                     getResponse()
                         .getAttributes()
-                        .computeIfAbsent("org.restlet.http.headers", (key) -> new Form());
+                        .computeIfAbsent("org.restlet.http.headers", key -> new Form());
             responseHeaders.add("X-Test-Response", requestHeaders.getValues("X-Test-Request"));
             return new StringRepresentation(CAPTURE_HEADERS.getBody());
           });

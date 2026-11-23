@@ -207,19 +207,18 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
           producerSpan.set(trace.getSpan(1));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("receive " + destinationName)
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, destinationName),
-                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("receive " + destinationName)
+                    .hasKind(CLIENT)
+                    .hasNoParent()
+                    .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, destinationName),
+                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                        satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                        equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, subscriptionName))));
   }
 
   @ParameterizedTest
@@ -300,26 +299,24 @@ class SpringJmsListenerTest extends AbstractSpringJmsListenerTest {
           producerSpan.set(trace.getSpan(1));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("receive spring-jms-listener")
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "jms"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
-                            equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                            satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
-                            equalTo(
-                                MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Header"),
-                                singletonList("test")),
-                            equalTo(
-                                stringArrayKey("messaging.header.Test_Message_Int_Header"),
-                                singletonList("1234")))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("receive spring-jms-listener")
+                    .hasKind(CLIENT)
+                    .hasNoParent()
+                    .hasLinks(LinkData.create(asRemote(producerSpan.get().getSpanContext())))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "jms"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "spring-jms-listener"),
+                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                        satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+                        equalTo(MESSAGING_DESTINATION_SUBSCRIPTION_NAME, "durable-subscription"),
+                        equalTo(
+                            stringArrayKey("messaging.header.Test_Message_Header"),
+                            singletonList("test")),
+                        equalTo(
+                            stringArrayKey("messaging.header.Test_Message_Int_Header"),
+                            singletonList("1234")))));
   }
 
   @ParameterizedTest
