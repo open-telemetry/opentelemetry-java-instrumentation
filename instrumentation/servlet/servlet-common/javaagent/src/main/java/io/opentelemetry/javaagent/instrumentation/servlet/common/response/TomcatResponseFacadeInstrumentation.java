@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.common.response;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
@@ -19,9 +20,11 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class TomcatResponseFacadeInstrumentation implements TypeInstrumentation {
   private static final String RESPONSE_FACADE = "org.apache.catalina.connector.ResponseFacade";
 
+  private final String basePackageName;
   private final String adviceClassName;
 
-  public TomcatResponseFacadeInstrumentation(String adviceClassName) {
+  public TomcatResponseFacadeInstrumentation(String basePackageName, String adviceClassName) {
+    this.basePackageName = basePackageName;
     this.adviceClassName = adviceClassName;
   }
 
@@ -32,7 +35,8 @@ public class TomcatResponseFacadeInstrumentation implements TypeInstrumentation 
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named(RESPONSE_FACADE);
+    return named(RESPONSE_FACADE)
+        .and(implementsInterface(named(basePackageName + ".ServletResponse")));
   }
 
   @Override

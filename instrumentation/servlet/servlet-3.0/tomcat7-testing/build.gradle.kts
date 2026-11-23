@@ -12,9 +12,21 @@ dependencies {
   }
   testImplementation(project(":instrumentation:servlet:servlet-common:bootstrap"))
 
-  testLibrary("org.apache.tomcat.embed:tomcat-embed-core:7.0.109")
-  testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:7.0.109")
-  testLibrary("org.apache.tomcat.embed:tomcat-embed-logging-juli:7.0.109")
+  testImplementation("org.apache.tomcat.embed:tomcat-embed-core") {
+    version {
+      strictly("7.0.109")
+    }
+  }
+  testImplementation("org.apache.tomcat.embed:tomcat-embed-jasper") {
+    version {
+      strictly("7.0.109")
+    }
+  }
+  testImplementation("org.apache.tomcat.embed:tomcat-embed-logging-juli") {
+    version {
+      strictly("7.0.109")
+    }
+  }
 }
 
 testing.suites {

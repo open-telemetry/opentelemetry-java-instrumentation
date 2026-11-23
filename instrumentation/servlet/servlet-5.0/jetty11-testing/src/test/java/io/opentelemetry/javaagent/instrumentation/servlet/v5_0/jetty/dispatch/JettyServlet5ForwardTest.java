@@ -37,6 +37,11 @@ class JettyServlet5ForwardTest extends JettyDispatchTest {
       new ServerEndpoint("SNIPPET_CACHED_WRITER_FORWARD", "snippetCachedWriterForward", 200, "");
   private static final ServerEndpoint SNIPPET_ASYNC_RESET =
       new ServerEndpoint("SNIPPET_ASYNC_RESET", "snippetAsyncReset", 200, "");
+  private static final ServerEndpoint SNIPPET_ASYNC_LENGTH =
+      new ServerEndpoint("SNIPPET_ASYNC_LENGTH", "snippetAsyncContentLength", 200, "");
+  private static final ServerEndpoint SNIPPET_ASYNC_LENGTH_CLEAR =
+      new ServerEndpoint(
+          "SNIPPET_ASYNC_LENGTH_CLEAR", "snippetAsyncContentLength?length=clear", 200, "", false);
   private static final ServerEndpoint SNIPPET_REJECTED_FORWARD =
       new ServerEndpoint("SNIPPET_REJECTED_FORWARD", "snippetRejectedForward", 200, "");
   private static final ServerEndpoint SNIPPET_WRITER_ACQUISITION_FAILURE =
@@ -79,11 +84,38 @@ class JettyServlet5ForwardTest extends JettyDispatchTest {
         context, "/snippetCachedWriterForward", TestServlet5.SnippetCachedWriterForward.class);
     addServlet(context, "/snippetCachedWriterTarget", TestServlet5.SnippetCachedWriterTarget.class);
     addServlet(context, "/snippetAsyncReset", TestServlet5.SnippetAsyncReset.class);
+    addServlet(context, "/snippetAsyncContentLength", TestServlet5.SnippetAsyncContentLength.class);
+    addServlet(
+        context,
+        "/snippetAsyncContentLengthTarget",
+        TestServlet5.SnippetAsyncContentLengthTarget.class);
     addServlet(context, "/snippetRejectedForward", TestServlet5.SnippetRejectedForward.class);
     addServlet(
         context,
         "/snippetWriterAcquisitionFailure",
         TestServlet5.SnippetWriterAcquisitionFailure.class);
+  }
+
+  @Test
+  void asyncRawContentLengthChanges() {
+    assertAsyncContentLength(SNIPPET_ASYNC_LENGTH, true);
+    assertAsyncContentLength(SNIPPET_ASYNC_LENGTH_CLEAR, false);
+  }
+
+  private void assertAsyncContentLength(ServerEndpoint endpoint, boolean fixedLength) {
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response = client.execute(request(endpoint, "GET")).aggregate().join();
+      assertThat(response.status().code()).isEqualTo(200);
+      assertThat(response.contentUtf8()).isEqualTo("<head>" + snippet + "async response</head>");
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      if (fixedLength || response.headers().contentLength() >= 0) {
+        assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+      }
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 
   @Test

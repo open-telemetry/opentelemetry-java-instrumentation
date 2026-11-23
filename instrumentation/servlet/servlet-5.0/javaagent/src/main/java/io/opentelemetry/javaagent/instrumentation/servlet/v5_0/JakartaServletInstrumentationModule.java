@@ -54,7 +54,7 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
         new HttpServletResponseInstrumentation(
             BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")),
         new TomcatResponseFacadeInstrumentation(
-            adviceClassName(".Servlet5TomcatResponseContentLengthAdvice")));
+            BASE_PACKAGE, adviceClassName(".Servlet5TomcatResponseContentLengthAdvice")));
   }
 
   private static String adviceClassName(String suffix) {

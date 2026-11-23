@@ -255,6 +255,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public boolean updateContentLengthIfPreviouslySet() {
+    reconcileRawJettyContentLength();
     if (!injectionState.hasContentLength() || injectionState.isContentLengthAdjusted()) {
       return true;
     }
@@ -269,6 +270,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void resetContentLengthIfPreviouslyAdjusted() {
+    reconcileRawJettyContentLength();
     if (injectionState.isContentLengthAdjusted()) {
       long length = injectionState.getContentLength() - snippetLength;
       if (setContentLengthAndVerify(length)) {
@@ -319,6 +321,20 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     }
   }
 
+  private void reconcileRawJettyContentLength() {
+    ServletResponse response = super.getResponse();
+    // startAsync() can expose the raw response, bypassing this wrapper's setters.
+    // Do not bypass application wrappers or rely on Tomcat's incomplete header view.
+    if (response.getClass().getName().equals("org.eclipse.jetty.server.Response")) {
+      long length = getContentLengthHeader();
+      if (length != Long.MIN_VALUE) {
+        recordContentLength(length);
+      } else if (injectionState.hasContentLength()) {
+        injectionState.setContentLength(-1);
+      }
+    }
+  }
+
   private void recordContentLength(long length) {
     if (!injectionState.hasContentLength() || injectionState.getContentLength() != length) {
       injectionState.setContentLength(length);
@@ -365,6 +381,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     // if content-length was set and response was already committed (headers sent to the client),
     // then it is not safe to inject because the content-length header cannot be updated to account
     // for the snippet length
+    reconcileRawJettyContentLength();
     return injectionState.hasContentLength() && isCommitted();
   }
 }

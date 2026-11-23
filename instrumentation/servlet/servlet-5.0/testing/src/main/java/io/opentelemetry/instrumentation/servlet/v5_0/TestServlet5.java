@@ -197,6 +197,32 @@ public class TestServlet5 {
   }
 
   @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncContentLength extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(1000);
+      resp.getOutputStream().write("<he".getBytes(UTF_8));
+      AsyncContext context = req.startAsync();
+      context
+          .getResponse()
+          .setContentLength(
+              "clear".equals(req.getParameter("length"))
+                  ? -1
+                  : "<head>async response</head>".length());
+      context.dispatch("/snippetAsyncContentLengthTarget");
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncContentLengthTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.getOutputStream().write("ad>async response</head>".getBytes(UTF_8));
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
   public static class SnippetAsyncReset extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {

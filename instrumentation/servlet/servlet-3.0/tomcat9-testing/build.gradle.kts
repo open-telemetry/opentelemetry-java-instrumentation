@@ -4,8 +4,18 @@ plugins {
 
 dependencies {
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
+  testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testImplementation(project(":instrumentation:servlet:servlet-3.0:testing"))
+  testRuntimeOnly("jakarta.servlet:jakarta.servlet-api:5.0.0")
 
-  testLibrary("org.apache.tomcat.embed:tomcat-embed-core:9.0.113")
-  testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:9.0.113")
+  testImplementation("org.apache.tomcat.embed:tomcat-embed-core") {
+    version {
+      strictly("9.0.113")
+    }
+  }
+  testImplementation("org.apache.tomcat.embed:tomcat-embed-jasper") {
+    version {
+      strictly("9.0.113")
+    }
+  }
 }

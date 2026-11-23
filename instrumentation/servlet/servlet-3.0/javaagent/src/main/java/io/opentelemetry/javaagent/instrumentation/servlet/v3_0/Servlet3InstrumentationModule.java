@@ -61,7 +61,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
         new HttpServletResponseInstrumentation(
             BASE_PACKAGE, adviceClassName(".Servlet3ResponseSendAdvice")),
         new TomcatResponseFacadeInstrumentation(
-            adviceClassName(".Servlet3TomcatResponseContentLengthAdvice")));
+            BASE_PACKAGE, adviceClassName(".Servlet3TomcatResponseContentLengthAdvice")));
   }
 
   private static String adviceClassName(String suffix) {
