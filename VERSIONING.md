@@ -31,9 +31,13 @@ See <https://github.com/open-telemetry/opentelemetry-java/blob/main/VERSIONING.m
 IN PARTICULAR:
 
 Not all of our artifacts are published as stable artifacts - any non-stable artifact has the suffix
-`-alpha` on its version. NONE of the guarantees described above apply to alpha artifacts. They may
-require code or environment changes on every release and are not meant for consumption for users
-where versioning stability is important.
+`-alpha` on its version. Except for stable user-facing configuration names, the guarantees described
+above do not apply to alpha artifacts. Their unstable APIs and behavior may require code or environment
+changes on every release and are not meant for consumption where versioning stability is important.
+
+Stable configuration names remain stable even when alpha code reads them. A deprecated stable name
+must be retained until the next major version. Experimental and preview names may be removed in a
+subsequent minor release. The `otel.javaagent.testing.*` namespace has no stability guarantee.
 
 ## Dropping support for older library versions
 
