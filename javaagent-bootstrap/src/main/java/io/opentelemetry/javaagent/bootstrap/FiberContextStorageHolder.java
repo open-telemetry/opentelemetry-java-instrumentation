@@ -39,11 +39,8 @@ public final class FiberContextStorageHolder {
     if (CURRENT.get() != activation) {
       throw new IllegalStateException("Fiber context activations must be closed in reverse order");
     }
-    if (activation.previousGlobalActivation == null) {
-      CURRENT.set(null);
-    } else {
-      CURRENT.set(activation.previousGlobalActivation);
-    }
+    // Storing null clears the activation while keeping the thread-local entry for reuse.
+    CURRENT.set(activation.previousGlobalActivation);
     return activation.previousFiberActivation;
   }
 
