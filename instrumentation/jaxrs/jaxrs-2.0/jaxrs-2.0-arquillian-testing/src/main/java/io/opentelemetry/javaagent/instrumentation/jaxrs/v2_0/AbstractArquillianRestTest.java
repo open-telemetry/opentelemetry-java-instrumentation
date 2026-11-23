@@ -67,14 +67,13 @@ abstract class AbstractArquillianRestTest {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8()).isEqualTo("hello");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + getContextRoot() + path)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent(),
-                span -> span.hasName(className + ".hello").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + getContextRoot() + path)
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent(),
+            span -> span.hasName(className + ".hello").hasParent(trace.getSpan(0))));
   }
 
   private String getContextRoot() {

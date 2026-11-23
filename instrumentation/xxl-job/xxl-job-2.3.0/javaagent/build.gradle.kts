@@ -44,20 +44,24 @@ testing.suites {
       implementation(project(":instrumentation:xxl-job:xxl-job-common-1.9.2:testing"))
     }
 
-    executions {
-      configureEach {
-        if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-          enabled = false
-        }
-      }
-
-      register("Experimental") {
-        telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
-      }
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(17)
     }
   }
 
   executions("test") {
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
+    }
+  }
+
+  executions("xxlJob33Test") {
+    configureEach {
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
+      }
+    }
+
     register("Experimental") {
       telemetryConfig("otel.instrumentation.xxl-job.experimental-span-attributes", "true")
     }
@@ -69,10 +73,6 @@ tasks {
     // required on jdk17
     jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
     jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-  }
-
-  named("compileXxlJob33TestJava", JavaCompile::class).configure {
-    options.release.set(17)
   }
 
   check {

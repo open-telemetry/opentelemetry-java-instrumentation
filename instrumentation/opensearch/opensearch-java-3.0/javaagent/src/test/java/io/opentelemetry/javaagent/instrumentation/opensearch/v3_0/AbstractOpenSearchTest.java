@@ -87,31 +87,29 @@ abstract class AbstractOpenSearchTest {
     HealthResponse healthResponse = openSearchClient.cluster().health();
     assertThat(healthResponse).isNotNull();
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
-                                equalTo(DB_OPERATION_NAME, "GET"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
-                    span ->
-                        span.hasName("GET")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(URL_FULL, httpHost + "/_cluster/health"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(
-                                    stringKey("server.service.name"),
-                                    expectedMappedServiceName()))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_FULL, httpHost + "/_cluster/health"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(
+                                stringKey("server.service.name"), expectedMappedServiceName()))));
   }
 
   @Test
@@ -125,45 +123,42 @@ abstract class AbstractOpenSearchTest {
                     openSearchAsyncClient
                         .cluster()
                         .health()
-                        .whenComplete(
-                            (response, throwable) ->
-                                getTesting().runWithSpan("callback", countDownLatch::countDown)));
+                        .whenComplete((response, throwable) ->
+                            getTesting().runWithSpan("callback", countDownLatch::countDown)));
 
     countDownLatch.await();
     HealthResponse healthResponse = responseCompletableFuture.get();
     assertThat(healthResponse).isNotNull();
 
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
-                    span ->
-                        span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(DB_SYSTEM_NAME, OPENSEARCH),
-                                equalTo(DB_OPERATION_NAME, "GET"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
-                    span ->
-                        span.hasName("GET")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                equalTo(SERVER_ADDRESS, httpHost.getHost()),
-                                equalTo(SERVER_PORT, httpHost.getPort()),
-                                equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                equalTo(URL_FULL, httpHost + "/_cluster/health"),
-                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
-                                equalTo(
-                                    stringKey("server.service.name"), expectedMappedServiceName())),
-                    span ->
-                        span.hasName("callback")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("client").hasKind(SpanKind.INTERNAL),
+                span ->
+                    span.hasName("GET " + httpHost.getHost() + ":" + httpHost.getPort())
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                            equalTo(DB_OPERATION_NAME, "GET"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, Long.valueOf(httpHost.getPort()))),
+                span ->
+                    span.hasName("GET")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                            equalTo(SERVER_ADDRESS, httpHost.getHost()),
+                            equalTo(SERVER_PORT, httpHost.getPort()),
+                            equalTo(HTTP_REQUEST_METHOD, "GET"),
+                            equalTo(URL_FULL, httpHost + "/_cluster/health"),
+                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L),
+                            equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+                span ->
+                    span.hasName("callback")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -184,14 +179,13 @@ abstract class AbstractOpenSearchTest {
 
   void assertNodeListTarget(String nodeList) {
     getTesting()
-        .waitAndAssertTraces(
-            trace ->
-                assertThat(trace.getSpan(0))
-                    .hasName("GET " + nodeList)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, OPENSEARCH),
-                        equalTo(DB_OPERATION_NAME, "GET"),
-                        equalTo(SERVER_ADDRESS, nodeList)));
+        .waitAndAssertTraces(trace ->
+            assertThat(trace.getSpan(0))
+                .hasName("GET " + nodeList)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, OPENSEARCH),
+                    equalTo(DB_OPERATION_NAME, "GET"),
+                    equalTo(SERVER_ADDRESS, nodeList)));
   }
 }

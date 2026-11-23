@@ -5,12 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.Collection;
 import java.util.function.Function;
@@ -34,14 +32,6 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
     return DbSystemNameIncubatingValues.CLICKHOUSE;
   }
 
-  @Override
-  public SqlDialect getSqlDialect(ClickHouseDbRequest request) {
-    // "String literals must be enclosed in single quotes.
-    // Double quotes are not supported."
-    // https://clickhouse.com/docs/en/sql-reference/syntax#string
-    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
-  }
-
   @Nullable
   @Override
   public String getDbNamespace(ClickHouseDbRequest request) {
@@ -56,20 +46,31 @@ class ClickHouseAttributesGetter implements SqlClientAttributesGetter<ClickHouse
   @Override
   public String getErrorType(
       ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
+    String errorCode = errorCodeExtractor.apply(error);
+    if (errorCode != null) {
+      return errorCode;
+    }
+    return error == null ? null : error.getClass().getName();
+  }
+
+  @Nullable
+  @Override
+  public String getDbResponseStatusCode(
+      ClickHouseDbRequest request, @Nullable Void response, @Nullable Throwable error) {
     return errorCodeExtractor.apply(error);
   }
 
   @Nullable
   @Override
   public String getServerAddress(ClickHouseDbRequest request) {
-    DbServerTarget serverTarget = request.getServerTarget();
+    ServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Nullable
   @Override
   public Integer getServerPort(ClickHouseDbRequest request) {
-    DbServerTarget serverTarget = request.getServerTarget();
+    ServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getPort();
   }
 

@@ -79,22 +79,20 @@ class VertxRedisClientTargetTest {
 
     await()
         .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              List<SpanData> spans =
-                  testing.spans().stream()
-                      .filter(span -> span.getName().contains("SENTINEL"))
-                      .collect(toList());
-              assertThat(spans).isNotEmpty();
-              for (SpanData span : spans) {
-                assertThat(span.getAttributes().get(SERVER_ADDRESS))
-                    .isEqualTo(host + ":" + port + "/themaster");
-                assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
-                assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
-                assertThat(span.getAttributes().get(NETWORK_PEER_PORT))
-                    .isEqualTo(Long.valueOf(port));
-              }
-            });
+        .untilAsserted(() -> {
+          List<SpanData> spans =
+              testing.spans().stream()
+                  .filter(span -> span.getName().contains("SENTINEL"))
+                  .collect(toList());
+          assertThat(spans).isNotEmpty();
+          for (SpanData span : spans) {
+            assertThat(span.getAttributes().get(SERVER_ADDRESS))
+                .isEqualTo(host + ":" + port + "/themaster");
+            assertThat(span.getAttributes().get(SERVER_PORT)).isEqualTo(null);
+            assertThat(span.getAttributes().get(NETWORK_PEER_ADDRESS)).isEqualTo(ip);
+            assertThat(span.getAttributes().get(NETWORK_PEER_PORT)).isEqualTo(Long.valueOf(port));
+          }
+        });
   }
 
   @Test
@@ -115,17 +113,15 @@ class VertxRedisClientTargetTest {
 
     await()
         .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              List<SpanData> spans =
-                  testing.spans().stream()
-                      .filter(span -> span.getName().startsWith("SET"))
-                      .collect(toList());
-              assertThat(spans).hasSize(1);
-              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isEqualTo(host);
-              assertThat(spans.get(0).getAttributes().get(SERVER_PORT))
-                  .isEqualTo(Long.valueOf(port));
-            });
+        .untilAsserted(() -> {
+          List<SpanData> spans =
+              testing.spans().stream()
+                  .filter(span -> span.getName().startsWith("SET"))
+                  .collect(toList());
+          assertThat(spans).hasSize(1);
+          assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isEqualTo(host);
+          assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isEqualTo(Long.valueOf(port));
+        });
   }
 
   @Test
@@ -154,20 +150,19 @@ class VertxRedisClientTargetTest {
 
     await()
         .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              List<SpanData> spans =
-                  testing.spans().stream()
-                      .filter(span -> span.getName().equals("SET"))
-                      .collect(toList());
-              assertThat(spans).hasSize(1);
-              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isNull();
-              assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
-              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS))
-                  .isEqualTo(redisCluster.getHost());
-              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
-                  .isEqualTo(Long.valueOf(redisCluster.getPort()));
-            });
+        .untilAsserted(() -> {
+          List<SpanData> spans =
+              testing.spans().stream()
+                  .filter(span -> span.getName().equals("SET"))
+                  .collect(toList());
+          assertThat(spans).hasSize(1);
+          assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isNull();
+          assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
+          assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS))
+              .isEqualTo(redisCluster.getHost());
+          assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
+              .isEqualTo(Long.valueOf(redisCluster.getPort()));
+        });
     redisCluster.assertNoFailure();
   }
 
@@ -196,21 +191,19 @@ class VertxRedisClientTargetTest {
         redisCluster.getHost() + ":" + redisCluster.getPort() + ",zz-unused-cluster-seed:7001";
     await()
         .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              List<SpanData> spans =
-                  testing.spans().stream()
-                      .filter(span -> span.getName().equals("SET " + configuredTarget))
-                      .collect(toList());
-              assertThat(spans).hasSize(1);
-              assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS))
-                  .isEqualTo(configuredTarget);
-              assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
-              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS))
-                  .isEqualTo(redisCluster.getHost());
-              assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
-                  .isEqualTo(Long.valueOf(redisCluster.getPort()));
-            });
+        .untilAsserted(() -> {
+          List<SpanData> spans =
+              testing.spans().stream()
+                  .filter(span -> span.getName().equals("SET " + configuredTarget))
+                  .collect(toList());
+          assertThat(spans).hasSize(1);
+          assertThat(spans.get(0).getAttributes().get(SERVER_ADDRESS)).isEqualTo(configuredTarget);
+          assertThat(spans.get(0).getAttributes().get(SERVER_PORT)).isNull();
+          assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_ADDRESS))
+              .isEqualTo(redisCluster.getHost());
+          assertThat(spans.get(0).getAttributes().get(NETWORK_PEER_PORT))
+              .isEqualTo(Long.valueOf(redisCluster.getPort()));
+        });
     redisCluster.assertNoFailure();
   }
 }

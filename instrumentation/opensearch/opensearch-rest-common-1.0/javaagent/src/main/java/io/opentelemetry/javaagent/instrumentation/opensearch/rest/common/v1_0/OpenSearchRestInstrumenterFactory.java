@@ -15,12 +15,14 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSche
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import javax.annotation.Nullable;
 
 public class OpenSearchRestInstrumenterFactory {
 
   public static Instrumenter<OpenSearchRestRequest, OpenSearchRestResponse> create(
-      String instrumentationName) {
-    OpenSearchRestAttributesGetter dbClientAttributesGetter = new OpenSearchRestAttributesGetter();
+      String instrumentationName, ExceptionStatusCodeExtractor exceptionStatusCodeExtractor) {
+    OpenSearchRestAttributesGetter dbClientAttributesGetter =
+        new OpenSearchRestAttributesGetter(exceptionStatusCodeExtractor);
 
     InstrumenterBuilder<OpenSearchRestRequest, OpenSearchRestResponse> builder =
         Instrumenter.<OpenSearchRestRequest, OpenSearchRestResponse>builder(
@@ -35,4 +37,10 @@ public class OpenSearchRestInstrumenterFactory {
   }
 
   private OpenSearchRestInstrumenterFactory() {}
+
+  @FunctionalInterface
+  public interface ExceptionStatusCodeExtractor {
+    @Nullable
+    Integer getStatusCode(Throwable error);
+  }
 }

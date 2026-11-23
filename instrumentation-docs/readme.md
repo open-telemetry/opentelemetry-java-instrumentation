@@ -194,6 +194,7 @@ public SpringWebMvcInstrumentationModule() {
     - RPC_SERVER_SPANS
     - RPC_SERVER_METRICS
     - MESSAGING_SPANS
+    - MESSAGING_METRICS
     - DATABASE_CLIENT_SPANS
     - DATABASE_CLIENT_METRICS
     - DATABASE_POOL_METRICS
@@ -277,7 +278,7 @@ definitions:
       declarative_name: java.common.http.known_methods
       description: ...
       type: list
-      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE
   metrics:
     http.client.request.duration-1a2b3c4d:   # <metric name>-<short content hash>
       name: http.client.request.duration

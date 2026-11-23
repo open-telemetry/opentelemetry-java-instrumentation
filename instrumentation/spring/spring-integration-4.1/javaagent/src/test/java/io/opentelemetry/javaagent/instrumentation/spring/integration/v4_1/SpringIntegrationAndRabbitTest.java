@@ -114,11 +114,10 @@ class SpringIntegrationAndRabbitTest {
                 span ->
                     span.hasName("consumer").hasParent(trace.getSpan(7)).hasTotalAttributeCount(0)),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("ack")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(ackAssertions())));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("ack")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(ackAssertions())));
 
     // Rabbit and Spring Rabbit own the active messaging layers, so Spring Integration must not
     // start operation listeners that could duplicate their metric points.

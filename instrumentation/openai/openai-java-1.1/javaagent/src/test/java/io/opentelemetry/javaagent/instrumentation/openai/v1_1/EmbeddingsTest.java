@@ -57,15 +57,14 @@ class EmbeddingsTest extends AbstractEmbeddingsTest {
 
   @Override
   protected List<Consumer<LogRecordDataAssert>> transportExceptionLogs() {
-    return singletonList(
-        transportLog ->
-            transportLog
-                .hasSeverity(Severity.WARN)
-                .hasEventName("http.client.request.exception")
-                .hasAttributesSatisfyingExactly(
-                    equalTo(EXCEPTION_TYPE, "java.net.ConnectException"),
-                    satisfies(
-                        EXCEPTION_MESSAGE, val -> val.startsWith("Failed to connect to localhost")),
-                    satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
+    return singletonList(transportLog ->
+        transportLog
+            .hasSeverity(Severity.WARN)
+            .hasEventName("http.client.request.exception")
+            .hasAttributesSatisfyingExactly(
+                equalTo(EXCEPTION_TYPE, "java.net.ConnectException"),
+                satisfies(
+                    EXCEPTION_MESSAGE, val -> val.startsWith("Failed to connect to localhost")),
+                satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())));
   }
 }

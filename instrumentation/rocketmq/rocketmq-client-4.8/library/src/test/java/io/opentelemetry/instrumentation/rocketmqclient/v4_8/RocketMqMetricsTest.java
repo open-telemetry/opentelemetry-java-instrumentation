@@ -189,24 +189,17 @@ class RocketMqMetricsTest {
         INSTRUMENTATION_NAME,
         metricName,
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(expectedCount)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "rocketmq"),
-                                                equalTo(ERROR_TYPE, errorType),
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, destination))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(expectedCount)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(ERROR_TYPE, errorType),
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                equalTo(MESSAGING_DESTINATION_NAME, destination)))));
   }
 
   private static void assertDuration(
@@ -220,24 +213,17 @@ class RocketMqMetricsTest {
         INSTRUMENTATION_NAME,
         metricName,
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(
-                                                    stringKey("messaging.system.name"), "rocketmq"),
-                                                equalTo(ERROR_TYPE, errorType),
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(
-                                                    MESSAGING_OPERATION_TYPE, operationType))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(ERROR_TYPE, errorType),
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                equalTo(MESSAGING_OPERATION_TYPE, operationType)))));
   }
 }

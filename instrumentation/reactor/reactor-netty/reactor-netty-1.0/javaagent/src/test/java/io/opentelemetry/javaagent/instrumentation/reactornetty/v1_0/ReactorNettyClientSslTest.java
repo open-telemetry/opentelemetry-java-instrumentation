@@ -77,72 +77,70 @@ class ReactorNettyClientSslTest {
         httpClient
             .get()
             .uri(uri)
-            .responseSingle(
-                (resp, content) -> {
-                  // Make sure to consume content since that's when we close the span.
-                  return content.map(unused -> resp);
-                });
+            .responseSingle((resp, content) -> {
+              // Make sure to consume content since that's when we close the span.
+              return content.map(unused -> resp);
+            });
 
     Throwable thrown =
         catchThrowable(() -> testing.runWithSpan("parent", () -> responseMono.block()));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(thrown),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        // netty swallows the exception, it doesn't make any sense to hard-code the
-                        // message
-                        .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_FULL, uri),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpsPort()),
-                            equalTo(ERROR_TYPE, SSLHandshakeException.class.getCanonicalName())),
-                span ->
-                    span.hasName("RESOLVE")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpsPort())),
-                span ->
-                    span.hasName("CONNECT")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TRANSPORT, "tcp"),
-                            equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpsPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative)),
-                span ->
-                    span.hasName("SSL handshake")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        // netty swallows the exception, it doesn't make any sense to hard-code the
-                        // message
-                        .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TRANSPORT, "tcp"),
-                            equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, server.httpsPort()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span ->
+                span.hasName("parent")
+                    .hasKind(INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(thrown),
+            span ->
+                span.hasName("GET")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    // netty swallows the exception, it doesn't make any sense to hard-code the
+                    // message
+                    .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(URL_FULL, uri),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, server.httpsPort()),
+                        equalTo(ERROR_TYPE, SSLHandshakeException.class.getCanonicalName())),
+            span ->
+                span.hasName("RESOLVE")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, server.httpsPort())),
+            span ->
+                span.hasName("CONNECT")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_TRANSPORT, "tcp"),
+                        equalTo(NETWORK_TYPE, "ipv4"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, server.httpsPort()),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative)),
+            span ->
+                span.hasName("SSL handshake")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    // netty swallows the exception, it doesn't make any sense to hard-code the
+                    // message
+                    .hasEventsSatisfying(ReactorNettyClientSslTest::isSslHandshakeException)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_TRANSPORT, "tcp"),
+                        equalTo(NETWORK_TYPE, "ipv4"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        equalTo(NETWORK_PEER_PORT, server.httpsPort()))));
   }
 
   @Test
@@ -155,63 +153,60 @@ class ReactorNettyClientSslTest {
             .headers(h -> h.set("User-Agent", USER_AGENT))
             .get()
             .uri(uri)
-            .responseSingle(
-                (resp, content) -> {
-                  // Make sure to consume content since that's when we close the span.
-                  return content.map(unused -> resp);
-                });
+            .responseSingle((resp, content) -> {
+              // Make sure to consume content since that's when we close the span.
+              return content.map(unused -> resp);
+            });
 
     testing.runWithSpan("parent", () -> responseMono.block());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("RESOLVE")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpsPort())),
-                span ->
-                    span.hasName("CONNECT")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TRANSPORT, "tcp"),
-                            equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpsPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative)),
-                span ->
-                    span.hasName("SSL handshake")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_TRANSPORT, "tcp"),
-                            equalTo(NETWORK_TYPE, "ipv4"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, server.httpsPort())),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_FULL, uri),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, server.httpsPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative)),
-                span ->
-                    span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(4))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("RESOLVE")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, server.httpsPort())),
+            span ->
+                span.hasName("CONNECT")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_TRANSPORT, "tcp"),
+                        equalTo(NETWORK_TYPE, "ipv4"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, server.httpsPort()),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative)),
+            span ->
+                span.hasName("SSL handshake")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_TRANSPORT, "tcp"),
+                        equalTo(NETWORK_TYPE, "ipv4"),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        equalTo(NETWORK_PEER_PORT, server.httpsPort())),
+            span ->
+                span.hasName("GET")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(URL_FULL, uri),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(SERVER_PORT, server.httpsPort()),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isNotNegative)),
+            span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(4))));
   }
 
   private static HttpClient createHttpClient() throws SSLException {
@@ -231,12 +226,11 @@ class ReactorNettyClientSslTest {
   private static void isSslHandshakeException(List<? extends EventData> events) {
     assertThat(events)
         .filteredOn(event -> event.getName().equals("exception"))
-        .satisfiesExactly(
-            event ->
-                assertThat(event)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(EXCEPTION_TYPE, SSLHandshakeException.class.getCanonicalName()),
-                        satisfies(EXCEPTION_MESSAGE, val -> val.isNotEmpty()),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotEmpty())));
+        .satisfiesExactly(event ->
+            assertThat(event)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(EXCEPTION_TYPE, SSLHandshakeException.class.getCanonicalName()),
+                    satisfies(EXCEPTION_MESSAGE, val -> val.isNotEmpty()),
+                    satisfies(EXCEPTION_STACKTRACE, val -> val.isNotEmpty())));
   }
 }

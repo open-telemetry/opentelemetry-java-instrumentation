@@ -46,23 +46,21 @@ public class EmittedSpanParser {
       try (Stream<Path> files = Files.list(telemetryDir)) {
         files
             .filter(path -> path.getFileName().toString().startsWith("spans-"))
-            .forEach(
-                path -> {
-                  String content = FileManager.readFileToString(path);
-                  if (content != null) {
-                    String whenKey = normalizeWhenCondition(content);
+            .forEach(path -> {
+              String content = FileManager.readFileToString(path);
+              if (content != null) {
+                String whenKey = normalizeWhenCondition(content);
 
-                    spansByScope.putIfAbsent(whenKey, new StringBuilder("spans_by_scope:\n"));
+                spansByScope.putIfAbsent(whenKey, new StringBuilder("spans_by_scope:\n"));
 
-                    // Skip the spans_by_scope line so we can aggregate into one list
-                    int spanIndex = content.indexOf("spans_by_scope:\n");
-                    if (spanIndex != -1) {
-                      String contentAfter =
-                          content.substring(spanIndex + "spans_by_scope:\n".length());
-                      spansByScope.get(whenKey).append(contentAfter);
-                    }
-                  }
-                });
+                // Skip the spans_by_scope line so we can aggregate into one list
+                int spanIndex = content.indexOf("spans_by_scope:\n");
+                if (spanIndex != -1) {
+                  String contentAfter = content.substring(spanIndex + "spans_by_scope:\n".length());
+                  spansByScope.get(whenKey).append(contentAfter);
+                }
+              }
+            });
       } catch (IOException e) {
         logger.severe(
             "Error reading span files from " + instrumentationDirectory + ": " + e.getMessage());

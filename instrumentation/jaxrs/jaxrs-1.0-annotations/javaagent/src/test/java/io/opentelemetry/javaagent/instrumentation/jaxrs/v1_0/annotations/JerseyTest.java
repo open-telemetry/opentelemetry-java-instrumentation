@@ -146,18 +146,17 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
                     equalTo(URL_SCHEME, "http"),
                     equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT));
     if (CONTROLLER_TELEMETRY_ENABLED) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  serverSpan,
-                  span ->
-                      span.hasName(controllerName)
-                          .satisfies(hasScopeName("io.opentelemetry.jaxrs-1.0-annotations"))
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(
-                                  CODE_FUNCTION_NAME,
-                                  Resource.class.getName() + "$" + className + "." + methodName))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              serverSpan,
+              span ->
+                  span.hasName(controllerName)
+                      .satisfies(hasScopeName("io.opentelemetry.jaxrs-1.0-annotations"))
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(
+                              CODE_FUNCTION_NAME,
+                              Resource.class.getName() + "$" + className + "." + methodName))));
     } else {
       testing.waitAndAssertTraces(trace -> trace.hasSpansSatisfyingExactly(serverSpan));
     }

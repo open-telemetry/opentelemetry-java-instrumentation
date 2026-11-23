@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.playws.common.v1_0;
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import play.shaded.ahc.org.asynchttpclient.Request;
@@ -58,11 +58,7 @@ final class PlayWsClientHttpAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      Request request, @Nullable Response response) {
-    if (response != null && response.getRemoteAddress() instanceof InetSocketAddress) {
-      return (InetSocketAddress) response.getRemoteAddress();
-    }
-    return null;
+  public SocketAddress getNetworkPeerSocketAddress(Request request, @Nullable Response response) {
+    return response != null ? response.getRemoteAddress() : null;
   }
 }

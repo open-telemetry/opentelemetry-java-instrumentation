@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.jdbc.internal;
 
 import static io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo.DEFAULT;
-import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.hasMultipleTargets;
 import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -136,8 +135,13 @@ public final class JdbcConnectionUrlParser {
     String type = jdbcUrl.substring(0, typeLoc);
     JdbcUrlParser parser = typeParsers.get(type);
     ParseContext ctx = ParseContext.of(type, props);
-    if (parser != MysqlUrlParser.INSTANCE && hasMultipleTargets(jdbcUrl)) {
-      ctx.disableSingleServerFallback();
+    // For unknown drivers, semicolons may separate properties or occur inside credentials.
+    // Without the driver's grammar, we may mistake part of a password for a host, port, or
+    // database name and emit it in telemetry. Use only separately supplied DataSource properties.
+    if (parser == null && jdbcUrl.indexOf(';') >= 0) {
+      ctx.system("other_sql");
+      ctx.applyDataSourceProperties();
+      return ctx.toDbInfo();
     }
 
     try {

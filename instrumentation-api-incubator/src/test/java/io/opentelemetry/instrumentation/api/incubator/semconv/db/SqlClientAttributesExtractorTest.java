@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -13,7 +12,9 @@ import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_QUERY_PARAMETER;
@@ -23,6 +24,7 @@ import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.entry;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -32,11 +34,70 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class SqlClientAttributesExtractorTest {
+
+  @Test
+  void shouldExtractResponseStatusAndErrorType() {
+    AttributesExtractor<Map<String, Object>, Void> extractor =
+        SqlClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getDbResponseStatusCode(
+                  Map<String, Object> request, Void response, Throwable error) {
+                return "42601";
+              }
+
+              @Override
+              public String getErrorType(
+                  Map<String, Object> request, Void response, Throwable error) {
+                return "42601";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build())
+        .containsOnly(entry(DB_RESPONSE_STATUS_CODE, "42601"), entry(ERROR_TYPE, "42601"));
+  }
+
+  @Test
+  void shouldInheritExceptionClassFallback() {
+    TestAttributesGetter getter = new TestAttributesGetter();
+    IllegalStateException error = new IllegalStateException();
+    assertThat(getter.getErrorType(emptyMap(), null, error))
+        .isEqualTo(IllegalStateException.class.getName());
+
+    AttributesBuilder attributes = Attributes.builder();
+    SqlClientAttributesExtractor.create(getter)
+        .onEnd(attributes, Context.root(), emptyMap(), null, error);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
+  }
+
+  @Test
+  void shouldRespectExplicitNullDespiteException() {
+    AttributesBuilder attributes = Attributes.builder();
+    SqlClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, Object> request, Void response, Throwable error) {
+                return null;
+              }
+            })
+        .onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build()).isEmpty();
+  }
 
   @Test
   void shouldRetainNetworkPeerWithoutProtocolAttributes() {
@@ -66,13 +127,29 @@ class SqlClientAttributesExtractorTest {
         .containsOnly(entry(NETWORK_PEER_ADDRESS, "192.0.2.1"), entry(NETWORK_PEER_PORT, 5432L));
   }
 
+  @ParameterizedTest
+  @MethodSource("dbSystemNamesAndExpectedSanitizedQueries")
+  void shouldUseDbSystemNameForDefaultSqlDialect(String dbSystemName, String expectedQueryText) {
+    Map<String, Object> request = new HashMap<>();
+    request.put("db.system.name", dbSystemName);
+    request.put("db.query.text", "SELECT \"name\" FROM catalog");
+    AttributesBuilder attributes = Attributes.builder();
+
+    SqlClientAttributesExtractor.create(new TestAttributesGetter())
+        .onStart(attributes, Context.root(), request);
+
+    assertThat(attributes.build().get(DB_QUERY_TEXT)).isEqualTo(expectedQueryText);
+  }
+
+  private static Stream<Arguments> dbSystemNamesAndExpectedSanitizedQueries() {
+    return Stream.of(
+        argumentSet("PostgreSQL", "postgresql", "SELECT \"name\" FROM catalog"),
+        argumentSet("unknown engine", "other_sql", "SELECT ? FROM catalog"),
+        argumentSet("missing system name", null, "SELECT ? FROM catalog"));
+  }
+
   static class TestAttributesGetter
       implements SqlClientAttributesGetter<Map<String, Object>, Void> {
-
-    @Override
-    public SqlDialect getSqlDialect(Map<String, Object> map) {
-      return DOUBLE_QUOTES_ARE_STRING_LITERALS;
-    }
 
     @Override
     public Collection<String> getRawQueryTexts(Map<String, Object> map) {

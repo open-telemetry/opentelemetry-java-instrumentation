@@ -47,6 +47,11 @@ public final class MssqlUrlParser implements JdbcUrlParser {
     ctx.defaultHost(DEFAULT_HOST);
     ctx.defaultPort(DEFAULT_PORT);
 
+    String authority = UrlParsingUtils.extractSemicolonAuthority(jdbcUrl);
+    if (authority != null && UrlParsingUtils.hasMultipleTargets(authority)) {
+      ctx.disableSingleServerFallback();
+    }
+
     // Layer 3: URL params (SQL Server-specific: servername)
     // Parse semicolon-delimited parameters once and apply both standard and
     // MSSQL-specific properties from the same map to avoid re-parsing the URL.

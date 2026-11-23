@@ -26,6 +26,7 @@ import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.unix.DomainSocketAddress;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketAddress;
@@ -63,14 +64,16 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void commandDropsUnresolvedSelectedAddress() {
+  void commandPreservesUnresolvedSelectedAddress() {
     RedisCommand<?, ?, ?> command = command();
-    LettuceCommandPeer.record(command, InetSocketAddress.createUnresolved("redis.example", PORT));
+    InetSocketAddress unresolved = InetSocketAddress.createUnresolved("redis.example", PORT);
+    LettuceCommandPeer.record(command, unresolved);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
+    assertThat(getter.getNetworkPeerSocketAddress(command, null)).isEqualTo(unresolved);
     assertThat(getter.getNetworkPeerAddress(command, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+    assertThat(getter.getNetworkPeerPort(command, null)).isEqualTo(PORT);
   }
 
   @Test
@@ -170,34 +173,15 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void batchDropsUnresolvedSelectedAddress() {
+  void batchPreservesUnresolvedSelectedAddress() {
+    InetSocketAddress unresolved = InetSocketAddress.createUnresolved("redis.example", PORT);
     LettuceBatchRequest request =
-        LettuceBatchRequest.create(
-            singletonList(
-                commandWithPeer(InetSocketAddress.createUnresolved("redis.example", PORT))),
-            null);
+        LettuceBatchRequest.create(singletonList(commandWithPeer(unresolved)), null);
 
     LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
 
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isEqualTo(unresolved);
     assertThat(getter.getNetworkPeerAddress(request, null)).isNull();
-    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
-  }
-
-  @Test
-  void batchUsesCommonFinalAddressAfterRetry() throws UnknownHostException {
-    InetSocketAddress firstAddress =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 3}), PORT);
-    InetSocketAddress finalAddress =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {10, 1, 2, 4}), PORT);
-    RedisCommand<?, ?, ?> firstCommand = commandWithPeer(firstAddress);
-    RedisCommand<?, ?, ?> secondCommand = commandWithPeer(finalAddress);
-    LettuceCommandPeer.record(firstCommand, finalAddress);
-    LettuceBatchRequest request =
-        LettuceBatchRequest.create(asList(firstCommand, secondCommand), null);
-
-    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
-
-    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("10.1.2.4");
     assertThat(getter.getNetworkPeerPort(request, null)).isEqualTo(PORT);
   }
 
@@ -234,7 +218,7 @@ class LettuceNetworkAttributesGetterTest {
   }
 
   @Test
-  void encoderCapturesDomainSocketPath() {
+  void encoderCapturesDomainSocketPeer() {
     DomainSocketAddress address = new DomainSocketAddress("/var/run/redis.sock");
     RedisCommand<?, ?, ?> command = command();
     Channel channel = mock(Channel.class);
@@ -245,9 +229,41 @@ class LettuceNetworkAttributesGetterTest {
     LettuceCommandEncoderInstrumentation.EncodeAdvice.onEnter(context, command);
 
     LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
-    assertThat(LettuceCommandPeer.address(command)).isEqualTo(address);
+    assertThat(LettuceCommandPeer.address(command)).isSameAs(address);
+    assertThat(getter.getNetworkPeerSocketAddress(command, null))
+        .isInstanceOfSatisfying(
+            UnixSocketAddress.class,
+            normalized -> {
+              assertThat(normalized.getPath()).isEqualTo("/var/run/redis.sock");
+              assertThat(normalized.getOriginalAddress()).isSameAs(address);
+            });
     assertThat(getter.getNetworkPeerAddress(command, null)).isEqualTo("/var/run/redis.sock");
     assertThat(getter.getNetworkPeerPort(command, null)).isNull();
+  }
+
+  @Test
+  void unixBatchUsesTheCommonFinalPeerAfterRetry() {
+    DomainSocketAddress initialPeer = new DomainSocketAddress("/var/run/redis-1.sock");
+    DomainSocketAddress finalPeer = new DomainSocketAddress("/var/run/redis-2.sock");
+    RedisCommand<?, ?, ?> first = commandWithPeer(initialPeer);
+    RedisCommand<?, ?, ?> second = commandWithPeer(finalPeer);
+    LettuceBatchRequest request = LettuceBatchRequest.create(asList(first, second), null);
+    LettuceBatchAttributesGetter getter = new LettuceBatchAttributesGetter();
+
+    assertThat(getter.getNetworkPeerSocketAddress(request, null)).isNull();
+    assertThat(LettuceCommandPeer.address(first)).isSameAs(initialPeer);
+    LettuceCommandPeer.record(first, finalPeer);
+
+    assertThat(LettuceCommandPeer.address(first)).isSameAs(finalPeer);
+    assertThat(getter.getNetworkPeerSocketAddress(request, null))
+        .isInstanceOfSatisfying(
+            UnixSocketAddress.class,
+            normalized -> {
+              assertThat(normalized.getPath()).isEqualTo("/var/run/redis-2.sock");
+              assertThat(normalized.getOriginalAddress()).isSameAs(finalPeer);
+            });
+    assertThat(getter.getNetworkPeerAddress(request, null)).isEqualTo("/var/run/redis-2.sock");
+    assertThat(getter.getNetworkPeerPort(request, null)).isNull();
   }
 
   @Test
@@ -294,19 +310,17 @@ class LettuceNetworkAttributesGetterTest {
     ExecutorService executor = Executors.newFixedThreadPool(2);
     try {
       Future<Boolean> first =
-          executor.submit(
-              () -> {
-                ready.countDown();
-                release.await();
-                return LettuceCommandPeer.markSpanStarted(command);
-              });
+          executor.submit(() -> {
+            ready.countDown();
+            release.await();
+            return LettuceCommandPeer.markSpanStarted(command);
+          });
       Future<Boolean> second =
-          executor.submit(
-              () -> {
-                ready.countDown();
-                release.await();
-                return LettuceCommandPeer.markSpanStarted(command);
-              });
+          executor.submit(() -> {
+            ready.countDown();
+            release.await();
+            return LettuceCommandPeer.markSpanStarted(command);
+          });
 
       assertThat(ready.await(10, SECONDS)).isTrue();
       release.countDown();

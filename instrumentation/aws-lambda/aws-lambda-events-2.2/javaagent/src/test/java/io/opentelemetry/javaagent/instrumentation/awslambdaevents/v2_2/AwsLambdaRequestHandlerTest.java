@@ -44,14 +44,12 @@ class AwsLambdaRequestHandlerTest implements Opcodes {
     RequestHandler<Object, Object> handler = generate().getConstructor().newInstance();
     handler.handleRequest("hello", context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @SuppressWarnings({"rawtypes", "unchecked"})

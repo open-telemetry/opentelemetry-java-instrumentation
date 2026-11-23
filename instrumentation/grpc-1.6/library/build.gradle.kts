@@ -9,6 +9,7 @@ val grpcVersion = "1.6.0"
 
 dependencies {
   library("io.grpc:grpc-core:$grpcVersion")
+  compileOnly("org.codehaus.mojo:animal-sniffer-annotations")
 
   testLibrary("io.grpc:grpc-netty:$grpcVersion")
   testLibrary("io.grpc:grpc-protobuf:$grpcVersion")
@@ -19,6 +20,14 @@ dependencies {
 }
 
 testing.suites {
+  register<JvmTestSuite>("unixSocketTest") {
+    dependencies {
+      implementation(project())
+      implementation("io.netty:netty-transport-native-unix-common:4.1.100.Final")
+      implementation("io.grpc:grpc-netty-shaded:1.85.1")
+    }
+  }
+
   executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
@@ -30,6 +39,10 @@ testing.suites {
       jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
     }
   }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }
 
 if (!otelProps.testLatestDeps) {

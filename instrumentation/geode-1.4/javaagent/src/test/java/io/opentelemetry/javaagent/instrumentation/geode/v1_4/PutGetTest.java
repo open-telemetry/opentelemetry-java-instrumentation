@@ -89,7 +89,10 @@ class PutGetTest {
         Arguments.of(
             "SELECT * FROM /test-region p WHERE p.cardNumber = '1234432156788765'"
                 + " AND p.expDate = '10/2020'",
-            "SELECT * FROM /test-region p WHERE p.cardNumber = ? AND p.expDate = ?"));
+            "SELECT * FROM /test-region p WHERE p.cardNumber = ? AND p.expDate = ?"),
+        Arguments.of(
+            "SELECT * FROM /test-region p WHERE p.\"cardNumber\" = '1234432156788765'",
+            "SELECT * FROM /test-region p WHERE p.\"cardNumber\" = ?"));
   }
 
   @Test
@@ -132,17 +135,15 @@ class PutGetTest {
     } else {
       target = SERVER_HOST + ":" + serverPort + "," + SERVER_HOST + ":" + (serverPort + 1);
     }
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("putAll test-region-" + suffix)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region-" + suffix),
-                            equalTo(DB_OPERATION_NAME, "putAll"),
-                            equalTo(SERVER_ADDRESS, target))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("putAll test-region-" + suffix)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, GEODE),
+                    equalTo(DB_COLLECTION_NAME, "test-region-" + suffix),
+                    equalTo(DB_OPERATION_NAME, "putAll"),
+                    equalTo(SERVER_ADDRESS, target))));
 
     assertDurationMetric(
         testing,
@@ -165,37 +166,36 @@ class PutGetTest {
               return region.get(key);
             });
     assertThat(cacheValue).isEqualTo(value);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("clear test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "clear"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("put test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "put"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("get test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "get"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("clear test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "clear"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("put test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "put"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("get test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "get"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort))));
   }
 
   @ParameterizedTest
@@ -209,37 +209,36 @@ class PutGetTest {
           region.remove(key);
         });
     assertThat(region.isEmptyOnServer()).isTrue();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("clear test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "clear"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("put test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "put"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("remove test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "remove"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("clear test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "clear"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("put test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "put"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("remove test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "remove"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort))));
   }
 
   @ParameterizedTest
@@ -254,38 +253,37 @@ class PutGetTest {
               return region.query("SELECT * FROM /test-region");
             });
     assertThat(cacheValue).hasSize(1);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("clear test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "clear"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("put test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "put"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("query test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "query"),
-                            equalTo(DB_QUERY_TEXT, "SELECT * FROM /test-region"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("clear test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "clear"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("put test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "put"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("query test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "query"),
+                        equalTo(DB_QUERY_TEXT, "SELECT * FROM /test-region"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort))));
   }
 
   @ParameterizedTest
@@ -300,38 +298,37 @@ class PutGetTest {
               return region.existsValue("SELECT * FROM /test-region");
             });
     assertThat(cacheValue).isTrue();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("clear test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "clear"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("put test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "put"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("existsValue test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "existsValue"),
-                            equalTo(DB_QUERY_TEXT, "SELECT * FROM /test-region"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("clear test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "clear"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("put test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "put"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("existsValue test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "existsValue"),
+                        equalTo(DB_QUERY_TEXT, "SELECT * FROM /test-region"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort))));
   }
 
   @ParameterizedTest
@@ -348,38 +345,37 @@ class PutGetTest {
             });
 
     assertThat(results.asList()).singleElement().usingRecursiveComparison().isEqualTo(value);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("clear test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "clear"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("put test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "put"),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort)),
-                span ->
-                    span.hasName("query test-region")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, GEODE),
-                            equalTo(DB_COLLECTION_NAME, "test-region"),
-                            equalTo(DB_OPERATION_NAME, "query"),
-                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
-                            equalTo(SERVER_ADDRESS, SERVER_HOST),
-                            equalTo(SERVER_PORT, serverPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("clear test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "clear"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("put test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "put"),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort)),
+            span ->
+                span.hasName("query test-region")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, GEODE),
+                        equalTo(DB_COLLECTION_NAME, "test-region"),
+                        equalTo(DB_OPERATION_NAME, "query"),
+                        equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                        equalTo(SERVER_ADDRESS, SERVER_HOST),
+                        equalTo(SERVER_PORT, serverPort))));
   }
 
   public static class Card implements PdxSerializable {

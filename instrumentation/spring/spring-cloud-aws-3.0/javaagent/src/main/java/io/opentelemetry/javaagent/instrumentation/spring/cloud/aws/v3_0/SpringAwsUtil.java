@@ -144,9 +144,8 @@ public class SpringAwsUtil {
         instrumenter.end(context, request, response, throwable);
         return;
       }
-      future.whenComplete(
-          (unused, completionError) ->
-              instrumenter.end(context, request, response, completionError));
+      future.whenComplete((unused, completionError) ->
+          instrumenter.end(context, request, response, completionError));
     }
   }
 
