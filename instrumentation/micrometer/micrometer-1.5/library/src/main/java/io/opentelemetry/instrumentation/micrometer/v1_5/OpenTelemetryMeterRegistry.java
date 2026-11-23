@@ -61,6 +61,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfigModifier distributionStatisticConfigModifier;
   private final boolean metersHiddenFromSearch;
+  private final boolean closeDisabled;
   private final ObservableCallbackRegistrar observableCallbackRegistrar;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
 
@@ -70,6 +71,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       NamingConvention namingConvention,
       DistributionStatisticConfigModifier distributionStatisticConfigModifier,
       boolean metersHiddenFromSearch,
+      boolean closeDisabled,
       ObservableCallbackRegistrar observableCallbackRegistrar,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
@@ -77,6 +79,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
     this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
     this.metersHiddenFromSearch = metersHiddenFromSearch;
+    this.closeDisabled = closeDisabled;
     this.observableCallbackRegistrar = observableCallbackRegistrar;
     this.otelMeter = otelMeter;
 
@@ -238,6 +241,9 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
 
   @Override
   public void close() {
+    if (closeDisabled) {
+      return;
+    }
     try {
       super.close();
     } finally {

@@ -20,6 +20,9 @@ public final class Internal {
       setMetersHiddenFromSearch;
 
   @Nullable
+  private static volatile BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean> setCloseDisabled;
+
+  @Nullable
   private static volatile BiConsumer<OpenTelemetryMeterRegistryBuilder, ObservableCallbackRegistrar>
       setObservableCallbackRegistrar;
 
@@ -49,6 +52,17 @@ public final class Internal {
   public static void internalSetMetersHiddenFromSearch(
       BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean> setMetersHiddenFromSearch) {
     Internal.setMetersHiddenFromSearch = setMetersHiddenFromSearch;
+  }
+
+  public static void setCloseDisabled(OpenTelemetryMeterRegistryBuilder builder, boolean disabled) {
+    if (setCloseDisabled != null) {
+      setCloseDisabled.accept(builder, disabled);
+    }
+  }
+
+  public static void internalSetCloseDisabled(
+      BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean> setCloseDisabled) {
+    Internal.setCloseDisabled = setCloseDisabled;
   }
 
   public static void setObservableCallbackRegistrar(

@@ -33,6 +33,31 @@ class ObservableCallbackLifecycleTest {
     verifyCloseUnregistersCallbacks(true);
   }
 
+  @Test
+  void closeDisabledStillAllowsMeterRemoval() {
+    OpenTelemetryMeterRegistryBuilder builder =
+        OpenTelemetryMeterRegistry.builder(testing.getOpenTelemetry());
+    Internal.setCloseDisabled(builder, true);
+    MeterRegistry registry = builder.build();
+    AtomicLong value = new AtomicLong(42);
+    Gauge gauge =
+        Gauge.builder("test.registry.shared", value, AtomicLong::doubleValue).register(registry);
+
+    registry.close();
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        metric ->
+            metric
+                .hasName("test.registry.shared")
+                .hasDoubleGaugeSatisfying(
+                    data -> data.hasPointsSatisfying(point -> point.hasValue(42))));
+
+    registry.remove(gauge);
+    testing.clearData();
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME, "test.registry.shared", AbstractIterableAssert::isEmpty);
+  }
+
   private static void verifyCloseUnregistersCallbacks(boolean hidden) {
     OpenTelemetryMeterRegistryBuilder builder =
         OpenTelemetryMeterRegistry.builder(testing.getOpenTelemetry());

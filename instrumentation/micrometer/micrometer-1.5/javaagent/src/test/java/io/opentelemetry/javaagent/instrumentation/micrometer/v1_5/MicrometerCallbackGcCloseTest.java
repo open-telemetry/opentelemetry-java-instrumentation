@@ -54,40 +54,37 @@ class MicrometerCallbackGcCloseTest {
       URL testClasses,
       ClassLoader parent)
       throws Exception {
-    URLClassLoader micrometerLoader =
-        new ChildFirstMicrometerClassLoader(new URL[] {micrometerJar}, parent);
-    URLClassLoader pluginLoader =
-        new ChildFirstGaugeClassLoader(new URL[] {testClasses}, micrometerLoader);
-    Class<?> registrar = pluginLoader.loadClass(GaugeRegistrar.class.getName());
-    assertThat(registrar.getClassLoader()).isSameAs(pluginLoader);
-    assertThat(
-            Class.forName("io.micrometer.core.instrument.Metrics", false, pluginLoader)
-                .getClassLoader())
-        .isSameAs(micrometerLoader);
+    try (URLClassLoader micrometerLoader =
+            new ChildFirstMicrometerClassLoader(new URL[] {micrometerJar}, parent);
+        URLClassLoader pluginLoader =
+            new ChildFirstGaugeClassLoader(new URL[] {testClasses}, micrometerLoader)) {
+      Class<?> registrar = pluginLoader.loadClass(GaugeRegistrar.class.getName());
+      assertThat(registrar.getClassLoader()).isSameAs(pluginLoader);
+      assertThat(
+              Class.forName("io.micrometer.core.instrument.Metrics", false, pluginLoader)
+                  .getClassLoader())
+          .isSameAs(micrometerLoader);
 
-    Thread thread = Thread.currentThread();
-    ClassLoader originalContextClassLoader = thread.getContextClassLoader();
-    try {
-      thread.setContextClassLoader(null);
-      registrar.getMethod("register", String.class).invoke(null, metricName);
-    } finally {
-      thread.setContextClassLoader(originalContextClassLoader);
+      Thread thread = Thread.currentThread();
+      ClassLoader originalContextClassLoader = thread.getContextClassLoader();
+      try {
+        thread.setContextClassLoader(null);
+        registrar.getMethod("register", String.class).invoke(null, metricName);
+      } finally {
+        thread.setContextClassLoader(originalContextClassLoader);
+      }
+
+      testing.waitAndAssertMetrics(
+          instrumentationName,
+          metric ->
+              metric
+                  .hasName(metricName)
+                  .hasDoubleGaugeSatisfying(
+                      gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
+
+      return new LoaderReferences(
+          new WeakReference<>(micrometerLoader), new WeakReference<>(pluginLoader));
     }
-
-    testing.waitAndAssertMetrics(
-        instrumentationName,
-        metric ->
-            metric
-                .hasName(metricName)
-                .hasDoubleGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
-
-    LoaderReferences references =
-        new LoaderReferences(
-            new WeakReference<>(micrometerLoader), new WeakReference<>(pluginLoader));
-    pluginLoader.close();
-    micrometerLoader.close();
-    return references;
   }
 
   private static final class LoaderReferences {

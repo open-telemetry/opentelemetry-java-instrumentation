@@ -34,6 +34,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
         (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
     Internal.internalSetMetersHiddenFromSearch(
         (builder, hidden) -> builder.metersHiddenFromSearch = hidden);
+    Internal.internalSetCloseDisabled((builder, disabled) -> builder.closeDisabled = disabled);
     Internal.internalSetObservableCallbackRegistrar(
         (builder, registrar) -> builder.observableCallbackRegistrar = registrar);
   }
@@ -44,6 +45,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
   private boolean metersHiddenFromSearch = false;
+  private boolean closeDisabled = false;
   private ObservableCallbackRegistrar observableCallbackRegistrar =
       ObservableCallbackRegistrar.direct();
 
@@ -83,6 +85,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
         namingConvention,
         modifier,
         metersHiddenFromSearch,
+        closeDisabled,
         observableCallbackRegistrar,
         meterBuilder.build());
   }

@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -80,6 +81,50 @@ class ActuatorTest {
 
     composite.remove(added);
     assertThat(registries).hasSize(registryCount);
+  }
+
+  @Test
+  void closingContextDoesNotCloseGlobalRegistry() {
+    Counter existing = Metrics.counter("test.global.existing");
+    try {
+      existing.increment();
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.micrometer-1.5",
+          metric ->
+              metric
+                  .hasName("test.global.existing")
+                  .hasDoubleSumSatisfying(
+                      sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
+
+      try (ConfigurableApplicationContext context = new SpringApplication(SpringApp.class).run()) {
+        assertThat(context.getBean("otelMeterRegistry")).isInstanceOf(MeterRegistry.class);
+      }
+
+      existing.increment(2);
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.micrometer-1.5",
+          metric ->
+              metric
+                  .hasName("test.global.existing")
+                  .hasDoubleSumSatisfying(
+                      sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+
+      Counter added = Metrics.counter("test.global.new");
+      try {
+        added.increment(4);
+        testing.waitAndAssertMetrics(
+            "io.opentelemetry.micrometer-1.5",
+            metric ->
+                metric
+                    .hasName("test.global.new")
+                    .hasDoubleSumSatisfying(
+                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(4))));
+      } finally {
+        Metrics.globalRegistry.remove(added);
+      }
+    } finally {
+      Metrics.globalRegistry.remove(existing);
+    }
   }
 
   private static void assertOtelMeterRegistryIsLast(Set<MeterRegistry> registries) {
