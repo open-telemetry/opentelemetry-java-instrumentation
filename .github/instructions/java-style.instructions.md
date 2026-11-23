@@ -8,9 +8,11 @@ Apply these rules to Java code, using the stated exceptions for advice, tests, a
 The null-comparison rules also apply to Kotlin and Scala.
 
 - **Visibility**: use the narrowest access that works. Static fields should be private,
-  except for constant-like fields with uppercase names. Add `// visible for
-  testing` if a production member has broader visibility solely for direct
-  test access. Keep advice classes and their static entry points public for
+  except for constant-like fields with uppercase names. For production members exposed solely
+  for direct test access, use `// only used by tests` when the declaration has no production
+  callers. Use `// visible for testing` when production code also uses the member, but tests
+  require broader visibility. Check usages of the exact overload, not just the method or
+  constructor name. Keep advice classes and their static entry points public for
   invokedynamic method-handle dispatch. Ordinary helpers may use narrower access when
   their callers and class-loader boundaries permit it. A single public class
   in a module may be needed for Javadoc.

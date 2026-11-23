@@ -121,8 +121,7 @@ class JexTest {
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}"))));
+                .hasHistogramPointsSatisfying(
+                    point -> point.hasAttribute(HTTP_ROUTE, "/test/param/{id}")));
   }
 }

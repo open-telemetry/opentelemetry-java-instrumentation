@@ -61,6 +61,7 @@ public final class LambdaImpl {
     return request instanceof InvokeRequest;
   }
 
+  // visible for testing
   static SdkRequest modifyOrAddCustomContextHeader(InvokeRequest request, Context otelContext) {
     InvokeRequest.Builder builder = request.toBuilder();
     // Unfortunately the value of this thing is a base64-encoded json with a character limit; also

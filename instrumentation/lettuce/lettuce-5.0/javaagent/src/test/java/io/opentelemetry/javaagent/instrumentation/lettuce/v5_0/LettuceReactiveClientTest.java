@@ -413,8 +413,7 @@ class LettuceReactiveClientTest extends AbstractLettuceClientTest {
           metrics ->
               metrics
                   .hasName("db.client.operation.duration")
-                  .hasHistogramSatisfying(
-                      histogram -> histogram.hasPointsSatisfying(point -> point.hasCount(1))));
+                  .hasHistogramPointsSatisfying(point -> point.hasCount(1)));
     });
   }
 

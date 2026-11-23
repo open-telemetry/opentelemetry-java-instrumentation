@@ -19,7 +19,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
@@ -37,7 +37,7 @@ class JdbcServiceMappingTest {
         request(
             DbInfo.builder()
                 .dbSystemName(POSTGRESQL)
-                .configuredServerTarget(DbServerTarget.create(GROUP_TARGET, null))
+                .configuredServerTarget(ServerTarget.create(GROUP_TARGET, null))
                 .build());
 
     assertThat(resolve(request, "localhost")).isEmpty();
@@ -51,7 +51,7 @@ class JdbcServiceMappingTest {
         request(
             DbInfo.builder()
                 .dbSystemName(POSTGRESQL)
-                .configuredServerTarget(DbServerTarget.create("localhost", 5432))
+                .configuredServerTarget(ServerTarget.create("localhost", 5432))
                 .build());
 
     assertThat(resolve(request, "localhost"))
@@ -64,7 +64,7 @@ class JdbcServiceMappingTest {
         request(
             DbInfo.builder()
                 .dbSystemName("oracle.db")
-                .configuredServerTarget(DbServerTarget.create(DEFAULT_PORT_GROUP_TARGET, null))
+                .configuredServerTarget(ServerTarget.create(DEFAULT_PORT_GROUP_TARGET, null))
                 .build());
 
     assertThat(resolve(request, DEFAULT_PORT_GROUP_TARGET))

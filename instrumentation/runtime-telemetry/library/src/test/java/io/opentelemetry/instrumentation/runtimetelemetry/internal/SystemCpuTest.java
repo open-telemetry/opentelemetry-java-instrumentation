@@ -41,8 +41,7 @@ class SystemCpuTest {
                 .hasDescription(
                     "Average CPU load of the whole system for the last minute as reported by the JVM.")
                 .hasUnit("{run_queue_item}")
-                .hasDoubleGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(2.2))));
+                .hasDoubleGaugePointsSatisfying(point -> point.hasValue(2.2)));
     testing.waitAndAssertMetrics(
         "test",
         metric ->
@@ -51,7 +50,6 @@ class SystemCpuTest {
                 .hasDescription(
                     "Recent CPU utilization for the whole system as reported by the JVM.")
                 .hasUnit("1")
-                .hasDoubleGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.11))));
+                .hasDoubleGaugePointsSatisfying(point -> point.hasValue(0.11)));
   }
 }

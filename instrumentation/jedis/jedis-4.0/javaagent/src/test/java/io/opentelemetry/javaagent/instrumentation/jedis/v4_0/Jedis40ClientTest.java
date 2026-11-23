@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -22,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -1047,10 +1047,9 @@ class Jedis40ClientTest {
         "db.client.operation.duration",
         metrics ->
             metrics.anySatisfy(metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .hasSize(1)
-                    .allSatisfy(
-                        point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(
+                        point -> point.hasAttributesSatisfying(equalTo(ERROR_TYPE, null)))));
   }
 
   @ParameterizedTest
@@ -1124,12 +1123,11 @@ class Jedis40ClientTest {
         "db.client.operation.duration",
         metrics ->
             metrics.anySatisfy(metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .singleElement()
-                    .satisfies(point -> {
-                      assertThat(point.getCount()).isEqualTo(1);
-                      assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
-                    })));
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
   }
 
   @ParameterizedTest
@@ -1160,12 +1158,11 @@ class Jedis40ClientTest {
         "db.client.operation.duration",
         metrics ->
             metrics.anySatisfy(metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .singleElement()
-                    .satisfies(point -> {
-                      assertThat(point.getCount()).isEqualTo(1);
-                      assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo("WRONGTYPE");
-                    })));
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, "WRONGTYPE")))));
   }
 
   @ParameterizedTest
@@ -1371,12 +1368,11 @@ class Jedis40ClientTest {
         "db.client.operation.duration",
         metrics ->
             metrics.anySatisfy(metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .singleElement()
-                    .satisfies(point -> {
-                      assertThat(point.getCount()).isEqualTo(1);
-                      assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType);
-                    })));
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
     jedis.resetState();
     testing.clearData();
     assertThat(jedis.set("after-transaction", "value")).isEqualTo("OK");
@@ -1518,12 +1514,11 @@ class Jedis40ClientTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasAttribute(DB_OPERATION_NAME, "SET")
-                            .hasAttribute(SERVER_ADDRESS, configuredHost)
-                            .hasAttribute(SERVER_PORT, (long) configuredPort))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasAttribute(DB_OPERATION_NAME, "SET")
+                        .hasAttribute(SERVER_ADDRESS, configuredHost)
+                        .hasAttribute(SERVER_PORT, (long) configuredPort)));
   }
 
   @Test

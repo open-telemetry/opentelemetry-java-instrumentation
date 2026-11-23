@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.indexOfAny;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -123,15 +123,15 @@ public final class OracleUrlParser implements JdbcUrlParser {
   }
 
   @Nullable
-  private static DbServerTarget parseLdapTarget(String connectInfo, String scheme) {
+  private static ServerTarget parseLdapTarget(String connectInfo, String scheme) {
     String authority = UrlParsingUtils.extractAuthority(connectInfo);
     if (authority == null || authority.indexOf(',') >= 0 || authority.indexOf('@') >= 0) {
       return null;
     }
 
     HostPort hostPort = extractHostPort(authority);
-    DbServerTarget discoveryEndpoint =
-        DbServerTarget.builder()
+    ServerTarget discoveryEndpoint =
+        ServerTarget.builder()
             .setPortAlwaysInline(true)
             .addEndpoint(hostPort.host(), hostPort.port() == null ? -1 : hostPort.port())
             .build();
@@ -153,7 +153,7 @@ public final class OracleUrlParser implements JdbcUrlParser {
     if (!isSafeLdapLookup(lookup)) {
       return null;
     }
-    return DbServerTarget.create(
+    return ServerTarget.create(
         scheme + "://" + discoveryEndpoint.getAddress() + "/" + lookup, null);
   }
 

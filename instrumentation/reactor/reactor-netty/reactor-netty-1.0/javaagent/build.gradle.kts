@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -46,6 +47,12 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation("io.projectreactor.netty:reactor-netty-http:1.0.0")
+    }
+  }
+
   executions("test") {
     configureDefault {
       filter {

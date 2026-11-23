@@ -121,7 +121,7 @@ definitions:
       description: Configures the instrumentation to recognize an alternative set
         of HTTP request methods. All other methods will be treated as `_OTHER`.
       type: list
-      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE
     http.server.capture-request-headers:
       name: otel.instrumentation.http.server.capture-request-headers
       declarative_name: general.http.server.request_captured_headers

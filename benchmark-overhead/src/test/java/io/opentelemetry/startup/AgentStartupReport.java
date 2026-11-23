@@ -69,7 +69,7 @@ final class AgentStartupReport {
     double noAgentMedian = quantile(noAgent, .5);
     StringBuilder result = new StringBuilder("# Ordinary Java agent startup\n\n");
     result.append(
-        "The metric is JVM uptime sampled by the `/greeting` handler while producing its successful `Hi!` response. It includes JVM startup and agent `premain` when enabled; all durations below are milliseconds. Agent-added overhead is each configuration's median minus the no-agent median, not a median of paired differences.\n\n");
+        "The metric is JVM uptime sampled inside the application while producing its first successful readiness response (`/greeting` with `Hi!` for smoke; the validated seeded owner for Petclinic). It includes JVM startup, agent `premain` when enabled, and application/request work before the sample; it excludes container setup, database provisioning, and return network transit. Probe polling cadence can affect when the successful request reaches the application. All durations below are milliseconds. Agent-added overhead is each configuration's median minus the no-agent median, not a median of paired differences.\n\n");
     result.append(
         "| Configuration | Measured starts | p25 | Median | p75 | p90 | Agent-added overhead |\n");
     result.append("| --- | ---: | ---: | ---: | ---: | ---: | ---: |\n");
@@ -95,7 +95,9 @@ final class AgentStartupReport {
       }
     }
     result.append(
-        "\nAll starts, including discarded fresh-process warmups, are retained in samples.csv. Configurations run serially in rotating order each round. Failed starts abort the run without a summary. The application reports its JVM-relative uptime, excluding Docker setup and host-side request timing. Filesystem/image caches are warm; this is not cold-machine startup. Agent configurations keep instrumentation and SDK active with exporters disabled. Separate JFR runs are excluded from timing samples. See metadata.properties for exact artifacts, source revisions, commands, image/JDK identity, and resources.\n");
+        "\nAll starts, including discarded fresh-process warmups, are retained in samples.csv. Configurations run serially in rotating order each round. Failed starts abort the run without a summary. ");
+    result.append(
+        "Filesystem/image caches are warm; this is not cold-machine startup. Agent configurations keep instrumentation and SDK active with exporters disabled. Separate JFR runs are excluded from timing samples. See metadata.properties for exact artifacts, source revisions, commands, image/JDK identity, and resources.\n");
     Files.writeString(directory.resolve("summary.md"), result, UTF_8);
   }
 

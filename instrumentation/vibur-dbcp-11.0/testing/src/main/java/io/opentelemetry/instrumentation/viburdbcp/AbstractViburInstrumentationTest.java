@@ -5,14 +5,17 @@
 
 package io.opentelemetry.instrumentation.viburdbcp;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.db.DbConnectionPoolMetricsAssertions;
+import io.opentelemetry.sdk.metrics.data.MetricData;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.function.Predicate;
 import javax.sql.DataSource;
-import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
@@ -21,7 +24,7 @@ import org.vibur.dbcp.ViburDBCPDataSource;
 
 @ExtendWith(MockitoExtension.class)
 public abstract class AbstractViburInstrumentationTest {
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
+  protected static final String INSTRUMENTATION_NAME = "io.opentelemetry.vibur-dbcp-11.0";
 
   @Mock protected DataSource dataSourceMock;
   @Mock protected Connection connectionMock;
@@ -57,16 +60,8 @@ public abstract class AbstractViburInstrumentationTest {
     viburDataSource.close();
     shutdown(viburDataSource);
 
-    testing().clearData();
-
     // then
-    String countMetricName = "db.client.connection.count";
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, countMetricName, AbstractIterableAssert::isEmpty);
-    testing()
-        .waitAndAssertMetrics(
-            INSTRUMENTATION_NAME, "db.client.connection.limit", AbstractIterableAssert::isEmpty);
+    assertNoConnectionPoolMetrics();
   }
 
   protected void assertConnectionPoolEmitsMetrics(String poolName) {
@@ -79,5 +74,14 @@ public abstract class AbstractViburInstrumentationTest {
         .disableWaitTime()
         .disableUseTime()
         .assertConnectionPoolEmitsMetrics();
+  }
+
+  protected void assertNoConnectionPoolMetrics() {
+    testing().clearData();
+
+    Predicate<MetricData> isViburMetric =
+        metric -> metric.getInstrumentationScopeInfo().getName().equals(INSTRUMENTATION_NAME);
+    await()
+        .untilAsserted(() -> assertThat(testing().metrics()).filteredOn(isViburMetric).isEmpty());
   }
 }

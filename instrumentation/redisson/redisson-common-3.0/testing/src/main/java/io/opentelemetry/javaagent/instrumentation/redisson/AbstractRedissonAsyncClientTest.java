@@ -202,10 +202,9 @@ public abstract class AbstractRedissonAsyncClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttributesSatisfying(attributes ->
-                            assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "CUSTOM")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfying(attributes ->
+                        assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "CUSTOM"))));
   }
 
   @Test
@@ -326,18 +325,17 @@ public abstract class AbstractRedissonAsyncClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point
-                            .hasCount(1)
-                            .hasAttributesSatisfying(attributes -> {
-                              if (expectedErrorType == null) {
-                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
-                              } else {
-                                assertThat(attributes.asMap())
-                                    .containsEntry(ERROR_TYPE, expectedErrorType);
-                              }
-                            }))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfying(attributes -> {
+                          if (expectedErrorType == null) {
+                            assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
+                          } else {
+                            assertThat(attributes.asMap())
+                                .containsEntry(ERROR_TYPE, expectedErrorType);
+                          }
+                        })));
     testing.clearData();
   }
 

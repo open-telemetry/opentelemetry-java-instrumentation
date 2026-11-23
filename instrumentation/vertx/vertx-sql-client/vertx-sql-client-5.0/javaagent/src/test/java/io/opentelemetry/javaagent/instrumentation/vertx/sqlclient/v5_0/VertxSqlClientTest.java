@@ -1285,12 +1285,11 @@ class VertxSqlClientTest {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point ->
-                        point.hasAttributesSatisfying(attributes ->
-                            assertThat(attributes.asMap())
-                                .containsEntry(DB_RESPONSE_STATUS_CODE, "12541")
-                                .containsEntry(ERROR_TYPE, "12541")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfying(attributes ->
+                        assertThat(attributes.asMap())
+                            .containsEntry(DB_RESPONSE_STATUS_CODE, "12541")
+                            .containsEntry(ERROR_TYPE, "12541"))));
   }
 
   @ParameterizedTest
