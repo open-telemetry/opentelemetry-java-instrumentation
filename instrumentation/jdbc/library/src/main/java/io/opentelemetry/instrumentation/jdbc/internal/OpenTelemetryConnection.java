@@ -454,12 +454,15 @@ public class OpenTelemetryConnection implements Connection {
 
   @Override
   public <T> T unwrap(Class<T> iface) throws SQLException {
+    if (iface.isInstance(this)) {
+      return iface.cast(this);
+    }
     return delegate.unwrap(iface);
   }
 
   @Override
   public boolean isWrapperFor(Class<?> iface) throws SQLException {
-    return delegate.isWrapperFor(iface);
+    return iface.isInstance(this) || delegate.isWrapperFor(iface);
   }
 
   // visible for testing

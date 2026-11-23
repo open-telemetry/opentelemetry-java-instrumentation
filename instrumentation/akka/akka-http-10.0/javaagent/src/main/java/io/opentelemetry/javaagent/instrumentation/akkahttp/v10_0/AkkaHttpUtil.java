@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.akkahttp.v10_0;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
+import akka.http.javadsl.model.HttpResponse;
 import akka.http.scaladsl.model.HttpRequest;
-import akka.http.scaladsl.model.HttpResponse;
 import java.util.List;
 import javax.annotation.Nullable;
 

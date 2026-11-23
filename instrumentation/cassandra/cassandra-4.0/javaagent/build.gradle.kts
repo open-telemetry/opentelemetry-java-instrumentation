@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -30,43 +34,36 @@ dependencies {
   testInstrumentation(project(":instrumentation:cassandra:cassandra-4.4:javaagent"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+// Run these tests with the shaded driver because the response-channel instrumentation
+// must also match and work with the driver's relocated Netty classes.
+fun shadedRuntimeClasspath(name: String, version: String) = configurations.create(name) {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+  extendsFrom(configurations.testRuntimeClasspath.get())
+  resolutionStrategy.dependencySubstitution {
+    substitute(module("com.datastax.oss:java-driver-core"))
+      .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
   }
+}
 
-  // Run these tests with the shaded driver because the response-channel instrumentation
-  // must also match and work with the driver's relocated Netty classes.
-  fun registerShadedTest(
-    name: String,
-    version: String,
-  ): org.gradle.api.tasks.TaskProvider<Test> {
-    val shadedClasspath =
-      configurations.create("${name}RuntimeClasspath") {
-        isCanBeConsumed = false
-        isCanBeResolved = true
-        extendsFrom(configurations.testRuntimeClasspath.get())
-        resolutionStrategy.dependencySubstitution {
-          substitute(module("com.datastax.oss:java-driver-core"))
-            .using(module("com.datastax.oss:java-driver-core-shaded:$version"))
-        }
-      }
-    return register<Test>(name) {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = files(sourceSets.test.get().output, shadedClasspath)
-      if (otelProps.denyUnsafe) {
-        systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
-      }
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":javaagent-extension-api"))
+      // SniEndPoint arrived in driver 4.3; test reflective detection against that version.
+      implementation("com.datastax.oss:java-driver-core:4.3.1")
     }
   }
 
-  val testShaded = registerShadedTest("testShaded", "4.0.0")
-  val testShadedLatest = registerShadedTest("testShadedLatest", "4.3.1")
-
-  check {
-    dependsOn(
-      testShaded,
-      testShadedLatest,
-    )
+  executions("test") {
+    mapOf("Shaded" to "4.0.0", "ShadedLatest" to "4.3.1").forEach { (suffix, version) ->
+      val shadedClasspath = shadedRuntimeClasspath("test${suffix}RuntimeClasspath", version)
+      register(suffix) {
+        classpath = files(sourceSets.test.get().output, shadedClasspath)
+        if (otelProps.denyUnsafe) {
+          systemProperty("com.datastax.oss.driver.shaded.netty.noUnsafe", "true")
+        }
+      }
+    }
   }
 }

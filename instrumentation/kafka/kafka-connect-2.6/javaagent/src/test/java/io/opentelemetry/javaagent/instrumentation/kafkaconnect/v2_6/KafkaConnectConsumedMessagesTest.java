@@ -5,10 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.kafkaconnect.v2_6;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -74,33 +74,27 @@ class KafkaConnectConsumedMessagesTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process mixed-retry-topic")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .satisfies(
-                            spanData -> {
-                              assertRecordLinks(spanData.getLinks());
-                              assertThat(
-                                      spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
-                                  .isEqualTo(2);
-                            })),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("process mixed-retry-topic")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .satisfies(spanData -> {
+                      assertRecordLinks(spanData.getLinks());
+                      assertThat(spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                          .isEqualTo(2);
+                    })),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process mixed-retry-topic")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .satisfies(
-                            spanData -> {
-                              assertRecordLinks(spanData.getLinks());
-                              assertThat(
-                                      spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
-                                  .isEqualTo(2);
-                            })));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("process mixed-retry-topic")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.unset())
+                    .satisfies(spanData -> {
+                      assertRecordLinks(spanData.getLinks());
+                      assertThat(spanData.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+                          .isEqualTo(2);
+                    })));
 
     assertProcessMetricsWithConsumedMessages(
         testing,
@@ -140,7 +134,7 @@ class KafkaConnectConsumedMessagesTest {
     assertThat(link.getSpanContext().getTraceId()).isEqualTo(traceId);
     assertThat(link.getSpanContext().getSpanId()).isEqualTo(spanId);
     assertThat(link.getAttributes())
-        .isEqualTo(Attributes.builder().put(MESSAGING_KAFKA_OFFSET, offset).build());
+        .isEqualTo(Attributes.builder().put(longKey("kafka.offset"), offset).build());
   }
 
   private static class RetryingSinkTask extends SinkTask {

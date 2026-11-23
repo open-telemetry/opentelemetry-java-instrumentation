@@ -5,10 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG;
-
 import com.rabbitmq.client.GetResponse;
+import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -16,6 +14,11 @@ import javax.annotation.Nullable;
 
 class RabbitReceiveExtraAttributesExtractor
     implements AttributesExtractor<ReceiveRequest, GetResponse> {
+  // copied from semconv
+  private static final AttributeKey<String> RABBITMQ_DESTINATION_ROUTING_KEY =
+      AttributeKey.stringKey("rabbitmq.destination.routing_key");
+  private static final AttributeKey<Long> RABBITMQ_MESSAGE_DELIVERY_TAG =
+      AttributeKey.longKey("rabbitmq.message.delivery_tag");
 
   @Override
   public void onStart(
@@ -36,9 +39,8 @@ class RabbitReceiveExtraAttributesExtractor
     }
     String routingKey = response.getEnvelope().getRoutingKey();
     if (routingKey != null && !routingKey.isEmpty()) {
-      attributes.put(MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
+      attributes.put(RABBITMQ_DESTINATION_ROUTING_KEY, routingKey);
     }
-    attributes.put(
-        MESSAGING_RABBITMQ_MESSAGE_DELIVERY_TAG, response.getEnvelope().getDeliveryTag());
+    attributes.put(RABBITMQ_MESSAGE_DELIVERY_TAG, response.getEnvelope().getDeliveryTag());
   }
 }

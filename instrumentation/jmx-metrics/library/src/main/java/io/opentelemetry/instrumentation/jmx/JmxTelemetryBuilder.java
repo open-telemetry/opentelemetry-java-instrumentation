@@ -173,21 +173,19 @@ public final class JmxTelemetryBuilder {
 
     // metric names from handlers are only available after handlers have been resolved
     // also, we should only include handlers that have been explicitly registered in the rules.
-    registeredHandlers.forEach(
-        h -> {
-          ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(h);
-          if (handler != null) {
-            registeredMetrics.addAll(handler.getMetricNames());
-          }
-        });
+    registeredHandlers.forEach(h -> {
+      ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(h);
+      if (handler != null) {
+        registeredMetrics.addAll(handler.getMetricNames());
+      }
+    });
     Set<String> userMetrics = new HashSet<>(registeredMetrics);
 
     MetricConfiguration metricConfiguration = new MetricConfiguration();
     userMetricDefs.forEach(metricConfiguration::addMetricDef);
 
     metricsDefinitions.loadInternalRules(internalMetricsSystemFilter, handlerRegistry);
-    metricsDefinitions.getMetricDefs(true).forEach(metricConfiguration::addMetricDef);
-    metricsDefinitions.getMetricDefs(false).forEach(metricConfiguration::addUnstableMetricDef);
+    metricsDefinitions.addMetricDefsTo(metricConfiguration);
 
     Set<String> stableMetrics = metricsDefinitions.getMetricNames(true);
     Set<String> unstableMetrics = metricsDefinitions.getMetricNames(false);

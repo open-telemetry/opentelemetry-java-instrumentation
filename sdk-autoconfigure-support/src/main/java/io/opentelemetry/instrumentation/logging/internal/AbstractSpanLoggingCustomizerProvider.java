@@ -29,11 +29,10 @@ public abstract class AbstractSpanLoggingCustomizerProvider
 
   @Override
   public void customize(DeclarativeConfigurationCustomizer customizer) {
-    customizer.addModelCustomizer(
-        model -> {
-          maybeEnableLoggingExporter(model);
-          return model;
-        });
+    customizer.addModelCustomizer(model -> {
+      maybeEnableLoggingExporter(model);
+      return model;
+    });
   }
 
   private void maybeEnableLoggingExporter(OpenTelemetryConfigurationModel model) {

@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -42,7 +41,7 @@ class CamelSpanAssertions {
                     stringKey("camel.uri"),
                     experimental(
                         "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=1000")),
-                equalTo(MESSAGING_SYSTEM, "aws_sqs"),
+                equalTo(stringKey("messaging.system.name"), "aws.sqs"),
                 equalTo(MESSAGING_DESTINATION_NAME, queueName),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send")));
@@ -65,7 +64,7 @@ class CamelSpanAssertions {
                 stringKey("camel.uri"),
                 experimental(
                     "aws-sqs://" + queueName + "?amazonSQSClient=%23sqsClient&delay=" + delay)),
-            equalTo(MESSAGING_SYSTEM, "aws_sqs"),
+            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
             equalTo(MESSAGING_DESTINATION_NAME, queueName),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -79,7 +78,7 @@ class CamelSpanAssertions {
                 equalTo(
                     stringKey("camel.uri"),
                     experimental("aws-sns://" + topicName + "?amazonSNSClient=%23snsClient")),
-                equalTo(MESSAGING_SYSTEM, "aws.sns"),
+                equalTo(stringKey("messaging.system.name"), "aws.sns"),
                 equalTo(MESSAGING_DESTINATION_NAME, topicName),
                 equalTo(MESSAGING_OPERATION_NAME, "send"),
                 equalTo(MESSAGING_OPERATION_TYPE, "send")));

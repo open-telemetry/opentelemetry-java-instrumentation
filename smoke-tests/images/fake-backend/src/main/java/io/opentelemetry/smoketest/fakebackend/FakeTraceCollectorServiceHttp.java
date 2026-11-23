@@ -28,19 +28,18 @@ class FakeTraceCollectorServiceHttp implements HttpService {
     return HttpResponse.of(
         request
             .aggregate()
-            .thenApply(
-                aggregatedRequest -> {
-                  try {
-                    storage.addTraceRequest(
-                        ExportTraceServiceRequest.parseFrom(aggregatedRequest.content().array()));
-                    return HttpResponse.of(
-                        HttpStatus.OK,
-                        MediaType.X_PROTOBUF,
-                        ExportTraceServiceResponse.getDefaultInstance().toByteArray());
-                  } catch (InvalidProtocolBufferException e) {
-                    return HttpResponse.of(
-                        HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, e.getMessage());
-                  }
-                }));
+            .thenApply(aggregatedRequest -> {
+              try {
+                storage.addTraceRequest(
+                    ExportTraceServiceRequest.parseFrom(aggregatedRequest.content().array()));
+                return HttpResponse.of(
+                    HttpStatus.OK,
+                    MediaType.X_PROTOBUF,
+                    ExportTraceServiceResponse.getDefaultInstance().toByteArray());
+              } catch (InvalidProtocolBufferException e) {
+                return HttpResponse.of(
+                    HttpStatus.BAD_REQUEST, MediaType.PLAIN_TEXT_UTF_8, e.getMessage());
+              }
+            }));
   }
 }

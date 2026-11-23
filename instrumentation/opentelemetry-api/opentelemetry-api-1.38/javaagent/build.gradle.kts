@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -27,28 +29,22 @@ configurations.configureEach {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("incubatorTest") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
-      }
+testing.suites {
+  register<JvmTestSuite>("incubatorTest") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
     }
   }
 
-  suites {
-    register<JvmTestSuite>("noopTest") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
-      }
+  register<JvmTestSuite>("noopTest") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-api-incubator:1.38.0-alpha")
+    }
+  }
 
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dtesting.exporter.enabled=false")
-          }
-        }
-      }
+  executions("noopTest") {
+    configureEach {
+      jvmArgs("-Dtesting.exporter.enabled=false")
     }
   }
 }

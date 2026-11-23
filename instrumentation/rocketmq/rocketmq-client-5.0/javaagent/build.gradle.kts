@@ -1,5 +1,10 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -20,55 +25,55 @@ dependencies {
   testLibrary("org.apache.rocketmq:rocketmq-client-java:5.0.2")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
 
-  val testReceiveSpanDisabled = register<Test>("testReceiveSpanDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter {
-      includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+      val rocketmqVersion = baseVersion("5.0.0").orLatest()
+      implementation("org.apache.rocketmq:rocketmq-client-java:$rocketmqVersion")
     }
-    include("**/RocketMqClientSuppressReceiveSpanTest.*")
   }
 
-  // A SimpleConsumer pull has no process span, so it gets a receive span even when receive
-  // telemetry is disabled by default.
-  val testSimpleConsumerReceiveTelemetryDisabled =
-    register<Test>("testSimpleConsumerReceiveTelemetryDisabled") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
+  unitTests("fixedVersionUnitTests") {
+    dependencies {
+      implementation(project(":instrumentation-api"))
+      implementation(project(":instrumentation-api-incubator"))
+      implementation("org.apache.rocketmq:rocketmq-client-java:5.0.0")
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
+
+    configureDefault {
+      filter {
+        excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+      }
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+
+    register("ReceiveSpanDisabled") {
+      filter {
+        includeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+      }
+      include("**/RocketMqClientSuppressReceiveSpanTest.*")
+    }
+
+    // A SimpleConsumer pull has no process span, so it gets a receive span even when receive
+    // telemetry is disabled by default.
+    register("SimpleConsumerReceiveTelemetryDisabled") {
       filter {
         includeTestsMatching(
           "RocketMqSimpleConsumerTest.shouldInstrumentReceiveWhenReceiveTelemetryDisabled",
         )
       }
       include("**/RocketMqSimpleConsumerTest.*")
-    }
-
-  test {
-    filter {
-      excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
-    }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true",
-    )
-  }
-
-  check {
-    dependsOn(
-      testReceiveSpanDisabled,
-      testSimpleConsumerReceiveTelemetryDisabled,
-    )
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
     }
   }
 }

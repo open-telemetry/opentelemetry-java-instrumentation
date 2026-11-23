@@ -74,21 +74,20 @@ public class TapirRouteHandler<T, B> implements EndpointHandler<Future<T>, B> {
       pekkoCtx
           .request()
           .getAttribute(PekkoRouteHolder.ATTRIBUTE_KEY)
-          .ifPresent(
-              routeHolder -> {
-                String path =
-                    endpoint.showPathTemplate(
-                        (index, pc) ->
-                            pc.name().isDefined()
-                                ? "{" + pc.name().get() + "}"
-                                : "{param" + index + "}",
-                        Option.empty(),
-                        false,
-                        "*",
-                        Option.apply("*"),
-                        Option.apply("*"));
-                routeHolder.push(pekkoCtx.unmatchedPath(), EMPTY, path);
-              });
+          .ifPresent(routeHolder -> {
+            String path =
+                endpoint.showPathTemplate(
+                    (index, pc) ->
+                        pc.name().isDefined()
+                            ? "{" + pc.name().get() + "}"
+                            : "{param" + index + "}",
+                    Option.empty(),
+                    false,
+                    "*",
+                    Option.apply("*"),
+                    Option.apply("*"));
+            routeHolder.push(pekkoCtx.unmatchedPath(), EMPTY, path);
+          });
     }
   }
 }

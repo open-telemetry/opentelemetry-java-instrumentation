@@ -70,11 +70,14 @@ final class TracingServerInterceptor implements ServerInterceptor {
       // field.
       authority = GrpcAuthorityStorage.getAuthority(call);
     }
+
+    io.grpc.Attributes attributes = call.getAttributes();
     GrpcRequest request =
-        new GrpcRequest(
+        GrpcRequest.createServerRequest(
             call.getMethodDescriptor(),
             headers,
-            call.getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR),
+            attributes.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR),
+            GrpcAttributesUtil.getLocalSocketAddress(attributes),
             authority);
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {

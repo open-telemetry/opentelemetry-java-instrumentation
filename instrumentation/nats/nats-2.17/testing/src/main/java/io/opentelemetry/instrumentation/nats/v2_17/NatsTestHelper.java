@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CLIENT_ID;
@@ -14,7 +15,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_BODY_SIZE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.nats.client.Message;
@@ -36,7 +36,7 @@ class NatsTestHelper {
         equalTo(
             MESSAGING_OPERATION_TYPE,
             send ? "send" : isSettlementOperation(operation) ? "settle" : operation));
-    assertions.add(equalTo(MESSAGING_SYSTEM, "nats"));
+    assertions.add(equalTo(stringKey("messaging.system.name"), "nats"));
     if (settlement) {
       assertions.add(equalTo(MESSAGING_DESTINATION_TEMPLATE, "$JS.ACK"));
     }

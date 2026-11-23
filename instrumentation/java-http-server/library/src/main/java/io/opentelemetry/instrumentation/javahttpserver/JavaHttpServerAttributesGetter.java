@@ -88,13 +88,13 @@ final class JavaHttpServerAttributesGetter
   }
 
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       HttpExchange exchange, @Nullable HttpExchange res) {
     return exchange.getRemoteAddress();
   }
 
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public InetSocketAddress getNetworkLocalSocketAddress(
       HttpExchange exchange, @Nullable HttpExchange res) {
     return exchange.getLocalAddress();
   }

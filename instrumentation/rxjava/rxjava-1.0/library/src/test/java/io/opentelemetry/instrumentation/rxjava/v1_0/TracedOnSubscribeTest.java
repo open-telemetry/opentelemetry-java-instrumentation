@@ -98,11 +98,10 @@ class TracedOnSubscribeTest {
     AtomicReference<Subscriber<? super String>> sourceSubscriber = new AtomicReference<>();
     AtomicInteger cancellations = new AtomicInteger();
     Observable<String> source =
-        Observable.create(
-            subscriber -> {
-              sourceSubscriber.set(subscriber);
-              subscriber.add(Subscriptions.create(cancellations::incrementAndGet));
-            });
+        Observable.create(subscriber -> {
+          sourceSubscriber.set(subscriber);
+          subscriber.add(Subscriptions.create(cancellations::incrementAndGet));
+        });
     Observable<String> result =
         Observable.create(new TracedOnSubscribe<>(source, instrumenter, "request"));
     TestSubscriber<String> observer = new TestSubscriber<>();

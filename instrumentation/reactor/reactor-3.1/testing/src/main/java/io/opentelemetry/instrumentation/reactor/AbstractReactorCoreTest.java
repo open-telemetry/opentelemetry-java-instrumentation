@@ -48,11 +48,10 @@ public abstract class AbstractReactorCoreTest {
     int result = testing.runWithSpan("parent", () -> Mono.just(1).map(this::addOne).block());
     assertThat(result).isEqualTo(2);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -62,12 +61,11 @@ public abstract class AbstractReactorCoreTest {
             "parent", () -> Mono.just(2).map(this::addOne).map(this::addOne).block());
     assertThat(result).isEqualTo(4);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -78,11 +76,10 @@ public abstract class AbstractReactorCoreTest {
             () -> Mono.just(3).delayElement(Duration.ofMillis(1)).map(this::addOne).block());
     assertThat(result).isEqualTo(4);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -99,12 +96,11 @@ public abstract class AbstractReactorCoreTest {
                     .block());
     assertThat(result).isEqualTo(6);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -115,12 +111,11 @@ public abstract class AbstractReactorCoreTest {
             () -> Flux.fromStream(Stream.of(5, 6)).map(this::addOne).collectList().block());
     assertThat(result).containsExactly(6, 7);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -136,14 +131,13 @@ public abstract class AbstractReactorCoreTest {
                     .block());
     assertThat(result).containsExactly(8, 9);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -159,12 +153,11 @@ public abstract class AbstractReactorCoreTest {
                     .block());
     assertThat(result).containsExactly(8, 9);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -182,14 +175,13 @@ public abstract class AbstractReactorCoreTest {
                     .block());
     assertThat(result).containsExactly(10, 11);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -199,12 +191,11 @@ public abstract class AbstractReactorCoreTest {
             "parent", () -> Mono.fromCallable(() -> addOne(10)).map(this::addOne).block());
     assertThat(result).isEqualTo(12);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -216,11 +207,10 @@ public abstract class AbstractReactorCoreTest {
 
     try (Scope ignored =
         Context.root().with(TEST_CONTEXT_KEY, "test-context-value").makeCurrent()) {
-      publisher.subscribe(
-          unused -> {
-            observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
-            observedSpan.set(Span.current());
-          });
+      publisher.subscribe(unused -> {
+        observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
+        observedSpan.set(Span.current());
+      });
     }
 
     testing.runWithSpan(
@@ -251,11 +241,10 @@ public abstract class AbstractReactorCoreTest {
     Context context =
         Context.root().with(TEST_CONTEXT_KEY, "test-context-value").with(Span.getInvalid());
     try (Scope ignored = context.makeCurrent()) {
-      publisher.subscribe(
-          unused -> {
-            observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
-            observedSpan.set(Span.current());
-          });
+      publisher.subscribe(unused -> {
+        observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
+        observedSpan.set(Span.current());
+      });
     }
 
     testing.runWithSpan(
@@ -280,14 +269,12 @@ public abstract class AbstractReactorCoreTest {
     assertThatThrownBy(() -> testing.runWithSpan("parent", () -> Mono.error(error).block()))
         .isEqualTo(error);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(error)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("parent")
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasException(error)));
   }
 
   @Test
@@ -297,97 +284,83 @@ public abstract class AbstractReactorCoreTest {
             () -> testing.runWithSpan("parent", () -> Flux.error(error).collectList().block()))
         .isEqualTo(error);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(error)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("parent")
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasException(error)));
   }
 
   @Test
   void monoStepError() {
     IllegalStateException error = new IllegalStateException("exception");
-    assertThatThrownBy(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        Mono.just(1)
-                            .map(this::addOne)
-                            .map(
-                                unused -> {
-                                  throw error;
-                                })
-                            .block()))
+    assertThatThrownBy(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    Mono.just(1)
+                        .map(this::addOne)
+                        .map(unused -> {
+                          throw error;
+                        })
+                        .block()))
         .isEqualTo(error);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(error),
-                span ->
-                    span.hasName("add one")
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error),
+            span ->
+                span.hasName("add one").hasParent(trace.getSpan(0)).hasStatus(StatusData.unset())));
   }
 
   @Test
   void fluxStepError() {
     IllegalStateException error = new IllegalStateException("exception");
-    assertThatThrownBy(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        Flux.just(5, 6)
-                            .map(this::addOne)
-                            .map(
-                                unused -> {
-                                  throw error;
-                                })
-                            .collectList()
-                            .block()))
+    assertThatThrownBy(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    Flux.just(5, 6)
+                        .map(this::addOne)
+                        .map(unused -> {
+                          throw error;
+                        })
+                        .collectList()
+                        .block()))
         .isEqualTo(error);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(error),
-                span ->
-                    span.hasName("add one")
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.unset())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error),
+            span ->
+                span.hasName("add one").hasParent(trace.getSpan(0)).hasStatus(StatusData.unset())));
   }
 
   @Test
   void cancelMono() {
     testing.runWithSpan("parent", () -> Mono.just(1).subscribe(CancellingSubscriber.INSTANCE));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasStatus(StatusData.unset())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasStatus(StatusData.unset())));
   }
 
   @Test
   void cancelFlux() {
     testing.runWithSpan("parent", () -> Flux.just(3, 4).subscribe(CancellingSubscriber.INSTANCE));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasStatus(StatusData.unset())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasStatus(StatusData.unset())));
   }
 
   @Test
@@ -403,13 +376,12 @@ public abstract class AbstractReactorCoreTest {
                     .block());
     assertThat(result).isEqualTo(2);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -425,15 +397,14 @@ public abstract class AbstractReactorCoreTest {
                     .block());
     assertThat(result).isEqualTo(2);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -447,13 +418,12 @@ public abstract class AbstractReactorCoreTest {
             });
     assertThat(result).isEqualTo(4);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("intermediate").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add two").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("intermediate").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add two").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -470,15 +440,14 @@ public abstract class AbstractReactorCoreTest {
             });
     assertThat(result).containsExactly(4, 5);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("intermediate").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add two").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add one").hasParent(trace.getSpan(0)),
-                span -> span.hasName("add two").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("intermediate").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add two").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add one").hasParent(trace.getSpan(0)),
+            span -> span.hasName("add two").hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -491,24 +460,22 @@ public abstract class AbstractReactorCoreTest {
               .delayElement(Duration.ofMillis(1))
               .map(Function.identity())
               .delayElement(Duration.ofMillis(1))
-              .doOnSuccess(
-                  unused -> {
-                    Mono<String> middle =
-                        Mono.just("")
-                            .map(Function.identity())
-                            .doOnSuccess(
-                                unused2 ->
-                                    testing.runWithSpan(
-                                        "inner",
-                                        () -> Span.current().setAttribute("iteration", iteration)));
+              .doOnSuccess(unused -> {
+                Mono<String> middle =
+                    Mono.just("")
+                        .map(Function.identity())
+                        .doOnSuccess(unused2 ->
+                            testing.runWithSpan(
+                                "inner",
+                                () -> Span.current().setAttribute("iteration", iteration)));
 
-                    testing.runWithSpan(
-                        "middle",
-                        () -> {
-                          Span.current().setAttribute("iteration", iteration);
-                          middle.subscribe();
-                        });
-                  });
+                testing.runWithSpan(
+                    "middle",
+                    () -> {
+                      Span.current().setAttribute("iteration", iteration);
+                      middle.subscribe();
+                    });
+              });
 
       // Context must propagate even if only subscribe is in root span scope
       testing.runWithSpan(
@@ -522,22 +489,20 @@ public abstract class AbstractReactorCoreTest {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < 100; i++) {
       int iteration = i;
-      assertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("outer")
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
-                  span ->
-                      span.hasName("middle")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
-                  span ->
-                      span.hasName("inner")
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(longKey("iteration"), iteration))));
+      assertions.add(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("outer")
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
+              span ->
+                  span.hasName("middle")
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
+              span ->
+                  span.hasName("inner")
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration))));
     }
     testing.waitAndAssertTraces(assertions);
   }
@@ -552,32 +517,29 @@ public abstract class AbstractReactorCoreTest {
               .delayElements(Duration.ofMillis(1))
               .map(Function.identity())
               .delayElements(Duration.ofMillis(1))
-              .doOnEach(
-                  middleSignal -> {
-                    if (middleSignal.hasValue()) {
-                      String value = middleSignal.get();
-                      Flux<String> middle =
-                          Flux.just("c", "d")
-                              .map(Function.identity())
-                              .delayElements(Duration.ofMillis(1))
-                              .doOnEach(
-                                  innerSignal -> {
-                                    if (innerSignal.hasValue()) {
-                                      testing.runWithSpan(
-                                          "inner " + value + innerSignal.get(),
-                                          () ->
-                                              Span.current().setAttribute("iteration", iteration));
-                                    }
-                                  });
-
-                      testing.runWithSpan(
-                          "middle " + value,
-                          () -> {
-                            Span.current().setAttribute("iteration", iteration);
-                            middle.subscribe();
+              .doOnEach(middleSignal -> {
+                if (middleSignal.hasValue()) {
+                  String value = middleSignal.get();
+                  Flux<String> middle =
+                      Flux.just("c", "d")
+                          .map(Function.identity())
+                          .delayElements(Duration.ofMillis(1))
+                          .doOnEach(innerSignal -> {
+                            if (innerSignal.hasValue()) {
+                              testing.runWithSpan(
+                                  "inner " + value + innerSignal.get(),
+                                  () -> Span.current().setAttribute("iteration", iteration));
+                            }
                           });
-                    }
-                  });
+
+                  testing.runWithSpan(
+                      "middle " + value,
+                      () -> {
+                        Span.current().setAttribute("iteration", iteration);
+                        middle.subscribe();
+                      });
+                }
+              });
 
       // Context must propagate even if only subscribe is in root span scope
       testing.runWithSpan(
@@ -591,38 +553,36 @@ public abstract class AbstractReactorCoreTest {
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
     for (int i = 0; i < 100; i++) {
       int iteration = i;
-      assertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("outer")
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
-                  span ->
-                      span.hasName("middle a")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
-                  span ->
-                      span.hasName("inner ac")
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
-                  span ->
-                      span.hasName("inner ad")
-                          .hasParent(trace.getSpan(1))
-                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
-                  span ->
-                      span.hasName("middle b")
-                          .hasParent(trace.getSpan(0))
-                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
-                  span ->
-                      span.hasName("inner bc")
-                          .hasParent(trace.getSpan(4))
-                          .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
-                  span ->
-                      span.hasName("inner bd")
-                          .hasParent(trace.getSpan(4))
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(longKey("iteration"), iteration))));
+      assertions.add(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span ->
+                  span.hasName("outer")
+                      .hasNoParent()
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
+              span ->
+                  span.hasName("middle a")
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
+              span ->
+                  span.hasName("inner ac")
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
+              span ->
+                  span.hasName("inner ad")
+                      .hasParent(trace.getSpan(1))
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
+              span ->
+                  span.hasName("middle b")
+                      .hasParent(trace.getSpan(0))
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
+              span ->
+                  span.hasName("inner bc")
+                      .hasParent(trace.getSpan(4))
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration)),
+              span ->
+                  span.hasName("inner bd")
+                      .hasParent(trace.getSpan(4))
+                      .hasAttributesSatisfyingExactly(equalTo(longKey("iteration"), iteration))));
     }
     testing.waitAndAssertTraces(assertions);
   }

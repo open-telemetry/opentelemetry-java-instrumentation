@@ -42,24 +42,22 @@ class OpenTelemetryDataSourceTest {
         JdbcTelemetry.builder(testing.getOpenTelemetry())
             .setDataSourceInstrumenterEnabled(true)
             .build();
-    DataSource dataSource = telemetry.wrap(new TestDataSource(url));
+    DataSource dataSource = telemetry.instrument(new TestDataSource(url));
 
     Connection connection = testing.runWithSpan("parent", () -> dataSource.getConnection());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("TestDataSource.getConnection")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                TestDataSource.class.getName() + ".getConnection"),
-                            equalTo(DB_SYSTEM_NAME, dbSystemName),
-                            equalTo(DB_NAMESPACE, "dbname"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("TestDataSource.getConnection")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME, TestDataSource.class.getName() + ".getConnection"),
+                        equalTo(DB_SYSTEM_NAME, dbSystemName),
+                        equalTo(DB_NAMESPACE, "dbname"))));
     assertThat(((OpenTelemetryConnection) connection).getDbInfo().getDbSystemName())
         .isEqualTo(dbSystemName);
   }
@@ -83,25 +81,23 @@ class OpenTelemetryDataSourceTest {
         JdbcTelemetry.builder(testing.getOpenTelemetry())
             .setDataSourceInstrumenterEnabled(true)
             .build();
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     Connection connection = testing.runWithSpan("parent", () -> getConnection.call(dataSource));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("TestDataSource.getConnection")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                TestDataSource.class.getName() + ".getConnection"),
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, "dbname"),
-                            equalTo(DB_CONNECTION_STRING, null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("TestDataSource.getConnection")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME, TestDataSource.class.getName() + ".getConnection"),
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, "dbname"),
+                        equalTo(DB_CONNECTION_STRING, null))));
 
     assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();
@@ -113,7 +109,7 @@ class OpenTelemetryDataSourceTest {
   void shouldNotEmitGetConnectionSpansWithoutParentSpan(GetConnectionFunction getConnection)
       throws SQLException {
     JdbcTelemetry telemetry = JdbcTelemetry.create(testing.getOpenTelemetry());
-    DataSource dataSource = telemetry.wrap(new TestDataSource());
+    DataSource dataSource = telemetry.instrument(new TestDataSource());
 
     Connection connection = getConnection.call(dataSource);
 

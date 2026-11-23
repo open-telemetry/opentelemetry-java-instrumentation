@@ -24,27 +24,25 @@ dependencies {
   testInstrumentation(project(":instrumentation:jsf:jsf-myfaces-3.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("myfaces12Test") {
-      dependencies {
-        implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
-        implementation("com.sun.facelets:jsf-facelets:1.1.14")
+testing.suites {
+  register<JvmTestSuite>("myfaces12Test") {
+    dependencies {
+      implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
+      implementation("com.sun.facelets:jsf-facelets:1.1.14")
 
-        val version = baseVersion("1.2.2").orLatest("1.2.+")
-        implementation("org.apache.myfaces.core:myfaces-impl:$version")
-      }
+      val version = baseVersion("1.2.2").orLatest("1.2.+")
+      implementation("org.apache.myfaces.core:myfaces-impl:$version")
     }
+  }
 
-    register<JvmTestSuite>("myfaces2Test") {
-      dependencies {
-        implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
-        implementation("javax.xml.bind:jaxb-api:2.2.11")
-        implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
+  register<JvmTestSuite>("myfaces2Test") {
+    dependencies {
+      implementation(project(":instrumentation:jsf:jsf-common-javax:testing"))
+      implementation("javax.xml.bind:jaxb-api:2.2.11")
+      implementation("com.sun.xml.bind:jaxb-impl:2.2.11")
 
-        val version = baseVersion("2.2.0").orLatest("2.+")
-        implementation("org.apache.myfaces.core:myfaces-impl:$version")
-      }
+      val version = baseVersion("2.2.0").orLatest("2.+")
+      implementation("org.apache.myfaces.core:myfaces-impl:$version")
     }
   }
 }

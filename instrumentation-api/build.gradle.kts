@@ -30,6 +30,7 @@ dependencies {
   implementation("io.opentelemetry.semconv:opentelemetry-semconv")
 
   compileOnly("com.google.auto.value:auto-value-annotations")
+  compileOnly("org.codehaus.mojo:animal-sniffer-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
@@ -55,23 +56,19 @@ tasks {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        }
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
-        register("ExceptionSignalLogsDup") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
-        }
-      }
+testing.suites {
+  executions("test") {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
+    }
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    }
+    register("ExceptionSignalLogsDup") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
     }
   }
 }

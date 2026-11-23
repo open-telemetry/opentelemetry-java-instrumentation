@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.azurecore.v1_36;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.azure.core.util.Context;
@@ -42,14 +43,13 @@ class AzureSdkTestOld {
     Context context = azTracer.start("hello", Context.NONE);
     azTracer.end(null, null, context);
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("hello")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasStatus(StatusData.unset())
-                        .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("hello")
+                .satisfies(hasScopeSchemaUrl("https://opentelemetry.io/schemas/1.23.1"))
+                .hasKind(SpanKind.INTERNAL)
+                .hasStatus(StatusData.unset())
+                .hasTotalAttributeCount(0)));
   }
 
   private static Tracer createAzTracer() {

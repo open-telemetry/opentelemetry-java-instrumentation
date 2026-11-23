@@ -19,7 +19,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.concurrent.TimeUnit.MINUTES;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -83,20 +82,18 @@ class JmsCamelTest {
             from("jms:queue:testQueue").to("mock:result");
             from("direct:errorInput").to("jms:queue:errorQueue");
             from("jms:queue:errorQueue")
-                .process(
-                    exchange -> {
-                      errorProcessed.countDown();
-                      throw new IllegalStateException("test");
-                    });
+                .process(exchange -> {
+                  errorProcessed.countDown();
+                  throw new IllegalStateException("test");
+                });
             from("direct:faultInput")
                 .to("jms:queue:faultQueue?exchangePattern=InOut&transferFault=true");
             from("jms:queue:faultQueue?transferFault=true")
-                .process(
-                    exchange -> {
-                      exchange.getOut().setBody("fault reply");
-                      exchange.getOut().setFault(true);
-                      faultProcessed.countDown();
-                    });
+                .process(exchange -> {
+                  exchange.getOut().setBody("fault reply");
+                  exchange.getOut().setFault(true);
+                  faultProcessed.countDown();
+                });
           }
         });
 
@@ -149,54 +146,51 @@ class JmsCamelTest {
   }
 
   private static void assertReplyReceiveTrace(TraceAssert trace) {
-    trace.hasSpansSatisfyingExactly(
-        span ->
-            span.hasName("receive")
-                .hasKind(SpanKind.CLIENT)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
-                    satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty()),
-                    equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
-                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                    satisfies(
-                        MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
+    trace.hasSpansSatisfyingExactly(span ->
+        span.hasName("receive")
+            .hasKind(SpanKind.CLIENT)
+            .hasNoParent()
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("messaging.system.name"), "jms"),
+                satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty()),
+                equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
+                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                satisfies(
+                    MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
   }
 
   private static void assertFaultJmsReceiveTrace(TraceAssert trace) {
-    trace.hasSpansSatisfyingExactly(
-        span ->
-            span.hasName("receive faultQueue")
-                .hasKind(SpanKind.CLIENT)
-                .hasNoParent()
-                .hasTotalRecordedLinks(1)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
-                    equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
-                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                    satisfies(
-                        MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
+    trace.hasSpansSatisfyingExactly(span ->
+        span.hasName("receive faultQueue")
+            .hasKind(SpanKind.CLIENT)
+            .hasNoParent()
+            .hasTotalRecordedLinks(1)
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("messaging.system.name"), "jms"),
+                equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
+                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                satisfies(
+                    MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
   }
 
   private static void assertReplySendTrace(TraceAssert trace) {
-    trace.hasSpansSatisfyingExactly(
-        span ->
-            span.hasName("send")
-                .hasKind(SpanKind.PRODUCER)
-                .hasNoParent()
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
-                    satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty()),
-                    equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
-                    equalTo(MESSAGING_OPERATION_NAME, "send"),
-                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
-                    satisfies(
-                        MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
+    trace.hasSpansSatisfyingExactly(span ->
+        span.hasName("send")
+            .hasKind(SpanKind.PRODUCER)
+            .hasNoParent()
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("messaging.system.name"), "jms"),
+                satisfies(MESSAGING_DESTINATION_NAME, val -> val.isNotEmpty()),
+                equalTo(MESSAGING_DESTINATION_TEMPORARY, true),
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
+                satisfies(
+                    MESSAGING_MESSAGE_CONVERSATION_ID, val -> val.isInstanceOf(String.class))));
   }
 
   private static void assertFaultCamelTrace(TraceAssert trace) {
@@ -208,7 +202,7 @@ class JmsCamelTest {
                 .hasParent(trace.getSpan(0))
                 .hasStatus(StatusData.error())
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
@@ -223,7 +217,7 @@ class JmsCamelTest {
                 .hasParent(trace.getSpan(1))
                 .hasStatus(StatusData.error())
                 .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
+                    equalTo(stringKey("messaging.system.name"), "jms"),
                     equalTo(MESSAGING_DESTINATION_NAME, "faultQueue"),
                     equalTo(MESSAGING_OPERATION_NAME, "process"),
                     equalTo(MESSAGING_OPERATION_TYPE, "process"),
@@ -235,55 +229,49 @@ class JmsCamelTest {
   }
 
   private static void assertJmsReceiveTrace(TraceAssert trace) {
-    trace.hasSpansSatisfyingExactly(
-        span ->
-            span.hasName("receive testQueue")
-                .hasKind(SpanKind.CLIENT)
-                .hasNoParent()
-                .hasTotalRecordedLinks(1)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
-                    equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
-                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                    equalTo(MESSAGING_OPERATION_TYPE, "receive"),
-                    satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
+    trace.hasSpansSatisfyingExactly(span ->
+        span.hasName("receive testQueue")
+            .hasKind(SpanKind.CLIENT)
+            .hasNoParent()
+            .hasTotalRecordedLinks(1)
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("messaging.system.name"), "jms"),
+                equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
+                equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                equalTo(MESSAGING_OPERATION_TYPE, "receive"),
+                satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class))));
   }
 
   private static void assertCamelTrace(TraceAssert trace) {
     List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
     assertions.add(span -> span.hasName("input").hasKind(SpanKind.INTERNAL).hasNoParent());
-    assertions.add(
-        span ->
-            span.hasName("send testQueue")
-                .hasKind(SpanKind.PRODUCER)
-                .hasParent(trace.getSpan(0))
-                .hasAttributesSatisfyingExactly(
-                    equalTo(MESSAGING_SYSTEM, "jms"),
-                    equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
-                    equalTo(MESSAGING_OPERATION_NAME, "send"),
-                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                    equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))));
+    assertions.add(span ->
+        span.hasName("send testQueue")
+            .hasKind(SpanKind.PRODUCER)
+            .hasParent(trace.getSpan(0))
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("messaging.system.name"), "jms"),
+                equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
+                equalTo(MESSAGING_OPERATION_NAME, "send"),
+                equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue"))));
 
     int processSpanIndex = assertions.size();
-    assertions.add(
-        span -> {
-          span.hasName("process testQueue")
-              .hasKind(SpanKind.CONSUMER)
-              .hasParent(trace.getSpan(1))
-              .hasAttributesSatisfyingExactly(
-                  equalTo(MESSAGING_SYSTEM, "jms"),
-                  equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
-                  equalTo(MESSAGING_OPERATION_NAME, "process"),
-                  equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                  equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
-                  satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
-          span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
-        });
-    assertions.add(
-        span ->
-            span.hasName("mock")
-                .hasKind(SpanKind.CLIENT)
-                .hasParent(trace.getSpan(processSpanIndex)));
+    assertions.add(span -> {
+      span.hasName("process testQueue")
+          .hasKind(SpanKind.CONSUMER)
+          .hasParent(trace.getSpan(1))
+          .hasAttributesSatisfyingExactly(
+              equalTo(stringKey("messaging.system.name"), "jms"),
+              equalTo(MESSAGING_DESTINATION_NAME, "testQueue"),
+              equalTo(MESSAGING_OPERATION_NAME, "process"),
+              equalTo(MESSAGING_OPERATION_TYPE, "process"),
+              equalTo(stringKey("camel.uri"), experimental("jms://queue:testQueue")),
+              satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)));
+      span.hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())));
+    });
+    assertions.add(span ->
+        span.hasName("mock").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(processSpanIndex)));
     trace.hasSpansSatisfyingExactly(assertions);
   }
 }

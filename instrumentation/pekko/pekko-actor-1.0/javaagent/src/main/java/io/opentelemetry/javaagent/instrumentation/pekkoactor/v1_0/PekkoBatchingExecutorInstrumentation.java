@@ -8,11 +8,9 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
 import static io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.VirtualFields.RUNNABLE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -46,7 +44,7 @@ class PekkoBatchingExecutorInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("execute").and(takesArguments(1)).and(takesArgument(0, Runnable.class)),
+        named("execute").and(takesArguments(Runnable.class)),
         getClass().getName() + "$ExecuteAdvice");
   }
 
@@ -56,7 +54,7 @@ class PekkoBatchingExecutorInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterExecute(@Advice.Argument(0) Runnable task) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, task)) {
         return ExecutorAdviceHelper.attachContextToTask(context, RUNNABLE_PROPAGATED_CONTEXT, task);
       }

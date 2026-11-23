@@ -62,7 +62,7 @@ public final class OsResource {
     String osDescription = version != null ? os + ' ' + version : os;
     attributes.put(OS_DESCRIPTION, osDescription);
 
-    return Resource.create(attributes.build(), SchemaUrls.V1_24_0);
+    return Resource.create(attributes.build(), SchemaUrls.V1_40_0);
   }
 
   @Nullable

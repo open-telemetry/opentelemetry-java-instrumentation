@@ -93,7 +93,7 @@ class PekkoHttpServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       HttpRequest request, @Nullable HttpResponse httpResponse) {
     return HTTP_REQUEST_PEER_ADDRESS.get(request);
   }

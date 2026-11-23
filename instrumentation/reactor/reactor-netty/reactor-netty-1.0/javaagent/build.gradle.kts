@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -45,36 +46,28 @@ dependencies {
   testImplementation(project(":instrumentation-annotations"))
 }
 
-tasks {
-  test {
-    filter {
-      excludeTestsMatching("ReactorNettyConnectionSpanTest")
-      excludeTestsMatching("ReactorNettyClientSslTest")
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("io.projectreactor.netty:reactor-netty-http:1.0.0")
     }
   }
-}
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ConnectionSpan") {
-          filter {
-            includeTestsMatching("ReactorNettyConnectionSpanTest")
-            includeTestsMatching("ReactorNettyClientSslTest")
-          }
-          include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
-          telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
-          telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
-        }
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-          filter {
-            excludeTestsMatching("ReactorNettyConnectionSpanTest")
-            excludeTestsMatching("ReactorNettyClientSslTest")
-          }
-        }
+  executions("test") {
+    configureDefault {
+      filter {
+        excludeTestsMatching("ReactorNettyConnectionSpanTest")
+        excludeTestsMatching("ReactorNettyClientSslTest")
       }
+    }
+    register("ConnectionSpan") {
+      filter {
+        includeTestsMatching("ReactorNettyConnectionSpanTest")
+        includeTestsMatching("ReactorNettyClientSslTest")
+      }
+      include("**/ReactorNettyConnectionSpanTest.*", "**/ReactorNettyClientSslTest.*")
+      telemetryConfig("otel.instrumentation.netty.ssl-telemetry.enabled", "true")
+      telemetryConfig("otel.instrumentation.reactor-netty.connection-telemetry.enabled", "true")
     }
   }
 }

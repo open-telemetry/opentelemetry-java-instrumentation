@@ -101,16 +101,14 @@ abstract class AbstractKtorServerMetricsTest : AbstractHttpServerUsingTest<Embed
       metrics.anySatisfy { metric ->
         assertThat(metric)
           .hasDescription("Number of active HTTP server requests.")
-          .hasUnit("{requests}")
-          .hasLongSumSatisfying { sum ->
-            sum.hasPointsSatisfying({ point ->
-              point.hasValue(0)
-                .hasAttributesSatisfyingExactly(
-                  equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
-                  equalTo(UrlAttributes.URL_SCHEME, "http"),
-                )
-            })
-          }
+          .hasUnit("{request}")
+          .hasLongSumPointsSatisfying({ point ->
+            point.hasValue(0)
+              .hasAttributesSatisfyingExactly(
+                equalTo(HttpAttributes.HTTP_REQUEST_METHOD, "GET"),
+                equalTo(UrlAttributes.URL_SCHEME, "http"),
+              )
+          })
       }
     }
   }

@@ -5,9 +5,9 @@
 
 package io.opentelemetry.testing;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.asRemote;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
@@ -151,11 +151,10 @@ public abstract class AbstractSpringKafkaTest {
           .runWithSpan(
               "producer",
               () -> {
-                kafkaTemplate.executeInTransaction(
-                    ops -> {
-                      keyToData.forEach((key, data) -> send("testBatchTopic", key, data));
-                      return 0;
-                    });
+                kafkaTemplate.executeInTransaction(ops -> {
+                  keyToData.forEach((key, data) -> send("testBatchTopic", key, data));
+                  return 0;
+                });
               });
 
       BatchRecordListener.waitForMessages();
@@ -176,23 +175,22 @@ public abstract class AbstractSpringKafkaTest {
       assertThat(links).hasSize(producerSpans.length);
       for (SpanData producerSpan : producerSpans) {
         assertThat(links)
-            .anySatisfy(
-                link -> {
-                  assertThat(link.getSpanContext().getTraceId())
-                      .isEqualTo(producerSpan.getSpanContext().getTraceId());
-                  assertThat(link.getSpanContext().getSpanId())
-                      .isEqualTo(producerSpan.getSpanContext().getSpanId());
-                  assertThat(link.getSpanContext().getTraceFlags())
-                      .isEqualTo(producerSpan.getSpanContext().getTraceFlags());
-                  assertThat(link.getSpanContext().getTraceState())
-                      .isEqualTo(producerSpan.getSpanContext().getTraceState());
-                  assertThat(link.getAttributes().asMap())
-                      .containsOnlyKeys(MESSAGING_KAFKA_MESSAGE_KEY, MESSAGING_KAFKA_OFFSET);
-                  assertThat(link.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
-                      .isEqualTo(producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY));
-                  assertThat(link.getAttributes().get(MESSAGING_KAFKA_OFFSET))
-                      .isEqualTo(producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET));
-                });
+            .anySatisfy(link -> {
+              assertThat(link.getSpanContext().getTraceId())
+                  .isEqualTo(producerSpan.getSpanContext().getTraceId());
+              assertThat(link.getSpanContext().getSpanId())
+                  .isEqualTo(producerSpan.getSpanContext().getSpanId());
+              assertThat(link.getSpanContext().getTraceFlags())
+                  .isEqualTo(producerSpan.getSpanContext().getTraceFlags());
+              assertThat(link.getSpanContext().getTraceState())
+                  .isEqualTo(producerSpan.getSpanContext().getTraceState());
+              assertThat(link.getAttributes().asMap())
+                  .containsOnlyKeys(stringKey("kafka.message.key"), longKey("kafka.offset"));
+              assertThat(link.getAttributes().get(stringKey("kafka.message.key")))
+                  .isEqualTo(producerSpan.getAttributes().get(stringKey("kafka.message.key")));
+              assertThat(link.getAttributes().get(longKey("kafka.offset")))
+                  .isEqualTo(producerSpan.getAttributes().get(longKey("kafka.offset")));
+            });
       }
     };
   }
@@ -204,10 +202,10 @@ public abstract class AbstractSpringKafkaTest {
     return LinkData.create(
         asRemote(producerSpan.getSpanContext()),
         Attributes.builder()
-            .put(MESSAGING_KAFKA_OFFSET, producerSpan.getAttributes().get(MESSAGING_KAFKA_OFFSET))
+            .put(longKey("kafka.offset"), producerSpan.getAttributes().get(longKey("kafka.offset")))
             .put(
-                MESSAGING_KAFKA_MESSAGE_KEY,
-                producerSpan.getAttributes().get(MESSAGING_KAFKA_MESSAGE_KEY))
+                stringKey("kafka.message.key"),
+                producerSpan.getAttributes().get(stringKey("kafka.message.key")))
             .build());
   }
 }

@@ -12,7 +12,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
@@ -58,7 +57,7 @@ class DelegatingErrorHandlingRunnableInstrumentation implements TypeInstrumentat
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter() {
-      Context parentContext = Java8BytecodeBridge.currentContext();
+      Context parentContext = Context.current();
       return TaskContextHolder.init(parentContext).makeCurrent();
     }
 

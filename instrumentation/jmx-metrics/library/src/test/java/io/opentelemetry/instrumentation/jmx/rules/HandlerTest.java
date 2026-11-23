@@ -71,6 +71,11 @@ class HandlerTest {
     JmxTelemetry telemetry =
         JmxTelemetry.builder(testing.getOpenTelemetry())
             .addRules(getClass().getResourceAsStream("/jmx/rules/handler.yaml"))
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm").build())
+            .setMetrics(
+                IncludeExclude.builder()
+                    .setIncluded("test.thread.count", "jvm.thread.count")
+                    .build())
             .setServiceClassLoader(
                 new ClassLoader(this.getClass().getClassLoader()) {
                   @Override
@@ -90,12 +95,22 @@ class HandlerTest {
         metric ->
             metric
                 .hasName("test.thread.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+                .satisfies(
+                    data -> assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull())
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0)))),
+        metric ->
+            metric
+                .hasName("jvm.thread.count")
+                .satisfies(data ->
+                    assertThat(data.getInstrumentationScopeInfo().getSchemaUrl())
+                        .isEqualTo("https://opentelemetry.io/schemas/1.45.0"))
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
     assertThat(BaseThreadHandler.createCount.get()).isEqualTo(1);
   }
 
@@ -128,21 +143,17 @@ class HandlerTest {
         metric ->
             metric
                 .hasName("test.thread.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))),
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0)))),
         metric ->
             metric
                 .hasName("test.thread.count2")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
     assertThat(BaseThreadHandler.createCount.get()).isEqualTo(2);
   }
 
@@ -176,12 +187,10 @@ class HandlerTest {
         metric ->
             metric
                 .hasName("test.thread.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
     assertThat(testing.metrics())
         .filteredOn(
             metric -> metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.jmx"))
@@ -216,21 +225,17 @@ class HandlerTest {
         metric ->
             metric
                 .hasName("test.thread.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))),
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0)))),
         metric ->
             metric
                 .hasName("test.thread.count3")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isNotMonotonic()
-                            .hasPointsSatisfying(
-                                point ->
-                                    point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
+                .hasLongSumSatisfying(sum ->
+                    sum.isNotMonotonic()
+                        .hasPointsSatisfying(
+                            point -> point.hasValueSatisfying(value -> value.isGreaterThan(0)))));
     assertThat(BaseThreadHandler.createCount.get()).isEqualTo(1);
   }
 
@@ -267,23 +272,22 @@ class HandlerTest {
       createCount.incrementAndGet();
       return meter
           .upDownCounterBuilder(metricName)
-          .buildWithCallback(
-              measurement -> {
-                Detector detector = detectorSupplier.get();
-                if (detector != null) {
-                  MBeanServerConnection connection = detector.getConnection();
-                  for (ObjectName objectName : detector.getObjectNames()) {
-                    try {
-                      Object value = connection.getAttribute(objectName, "ThreadCount");
-                      if (value instanceof Number) {
-                        measurement.record(((Number) value).longValue(), Attributes.empty());
-                      }
-                    } catch (Exception e) {
-                      throw new IllegalStateException(e);
-                    }
+          .buildWithCallback(measurement -> {
+            Detector detector = detectorSupplier.get();
+            if (detector != null) {
+              MBeanServerConnection connection = detector.getConnection();
+              for (ObjectName objectName : detector.getObjectNames()) {
+                try {
+                  Object value = connection.getAttribute(objectName, "ThreadCount");
+                  if (value instanceof Number) {
+                    measurement.record(((Number) value).longValue(), Attributes.empty());
                   }
+                } catch (Exception e) {
+                  throw new IllegalStateException(e);
                 }
-              });
+              }
+            }
+          });
     }
 
     @Override

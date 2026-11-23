@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -12,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
@@ -189,23 +189,17 @@ class RocketMqMetricsTest {
         INSTRUMENTATION_NAME,
         metricName,
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasLongSumSatisfying(
-                            sum ->
-                                sum.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasValue(expectedCount)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                equalTo(ERROR_TYPE, errorType),
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                                equalTo(
-                                                    MESSAGING_DESTINATION_NAME, destination))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasLongSumPointsSatisfying(point ->
+                        point
+                            .hasValue(expectedCount)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(ERROR_TYPE, errorType),
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                equalTo(MESSAGING_DESTINATION_NAME, destination)))));
   }
 
   private static void assertDuration(
@@ -219,23 +213,17 @@ class RocketMqMetricsTest {
         INSTRUMENTATION_NAME,
         metricName,
         metrics ->
-            metrics.satisfiesExactly(
-                metric ->
-                    assertThat(metric)
-                        .hasHistogramSatisfying(
-                            histogram ->
-                                histogram.hasPointsSatisfying(
-                                    point ->
-                                        point
-                                            .hasCount(1)
-                                            .hasAttributesSatisfyingExactly(
-                                                equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                                equalTo(MESSAGING_SYSTEM, "rocketmq"),
-                                                equalTo(ERROR_TYPE, errorType),
-                                                equalTo(
-                                                    MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
-                                                equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                                equalTo(
-                                                    MESSAGING_OPERATION_TYPE, operationType))))));
+            metrics.satisfiesExactly(metric ->
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                equalTo(ERROR_TYPE, errorType),
+                                equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
+                                equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                equalTo(MESSAGING_OPERATION_TYPE, operationType)))));
   }
 }

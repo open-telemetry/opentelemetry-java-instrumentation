@@ -28,6 +28,7 @@ import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProp
  */
 public final class DbConnectionPoolMetrics {
 
+  // visible for testing
   static final AttributeKey<String> POOL_NAME = stringKey("db.client.connection.pool.name");
   static final AttributeKey<String> CONNECTION_STATE = stringKey("db.client.connection.state");
 
@@ -74,7 +75,7 @@ public final class DbConnectionPoolMetrics {
         .upDownCounterBuilder("db.client.connection.count")
         .setUnit("{connection}")
         .setDescription(
-            "The number of connections that are currently in state described by the state attribute.")
+            "The number of connections that are currently in state described by the `state` attribute.")
         .buildObserver();
   }
 

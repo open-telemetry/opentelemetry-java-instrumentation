@@ -58,6 +58,7 @@ dependencies {
   }
 
   testImplementation(project(":instrumentation:logback:logback-appender-1.0:testing"))
+  implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
   testImplementation("io.opentelemetry:opentelemetry-sdk-testing")
 }
 
@@ -84,89 +85,88 @@ tasks.named("collectReachabilityMetadata").configure {
   enabled = false
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("slf4j2ApiTest") {
-      dependencies {
-        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+testing.suites {
+  register<JvmTestSuite>("slf4j2ApiTest") {
+    dependencies {
+      implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        implementation("ch.qos.logback:logback-classic") {
-          version {
-            strictly(baseVersion("1.3.0").orLatest())
-          }
+      implementation("ch.qos.logback:logback-classic") {
+        version {
+          strictly(baseVersion("1.3.0").orLatest())
         }
-        implementation("org.slf4j:slf4j-api") {
-          version {
-            strictly(baseVersion("2.0.0").orLatest())
-          }
+      }
+      implementation("org.slf4j:slf4j-api") {
+        version {
+          strictly(baseVersion("2.0.0").orLatest())
         }
       }
     }
+  }
 
-    register<JvmTestSuite>("logstashMarkerTest") {
-      dependencies {
-        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+  register<JvmTestSuite>("logstashMarkerTest") {
+    dependencies {
+      implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        implementation("ch.qos.logback:logback-classic") {
-          version {
-            strictly(baseVersion("1.3.0").orLatest())
-          }
+      implementation("ch.qos.logback:logback-classic") {
+        version {
+          strictly(baseVersion("1.3.0").orLatest())
         }
-        implementation("org.slf4j:slf4j-api") {
-          version {
-            strictly(baseVersion("2.0.0").orLatest())
-          }
+      }
+      implementation("org.slf4j:slf4j-api") {
+        version {
+          strictly(baseVersion("2.0.0").orLatest())
         }
-        implementation("net.logstash.logback:logstash-logback-encoder") {
-          version {
-            strictly(baseVersion("3.0").orLatest())
-          }
+      }
+      implementation("net.logstash.logback:logstash-logback-encoder") {
+        version {
+          strictly(baseVersion("3.0").orLatest())
         }
       }
     }
+  }
 
-    register<JvmTestSuite>("logstashStructuredArgsTest") {
-      dependencies {
-        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+  register<JvmTestSuite>("logstashStructuredArgsTest") {
+    dependencies {
+      implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        implementation("ch.qos.logback:logback-classic") {
-          version {
-            strictly(baseVersion("1.3.0").orLatest())
-          }
+      implementation("ch.qos.logback:logback-classic") {
+        version {
+          strictly(baseVersion("1.3.0").orLatest())
         }
-        implementation("org.slf4j:slf4j-api") {
-          version {
-            strictly(baseVersion("2.0.0").orLatest())
-          }
+      }
+      implementation("org.slf4j:slf4j-api") {
+        version {
+          strictly(baseVersion("2.0.0").orLatest())
         }
-        implementation("net.logstash.logback:logstash-logback-encoder") {
-          version {
-            strictly(baseVersion("6.6").orLatest())
-          }
+      }
+      implementation("net.logstash.logback:logstash-logback-encoder") {
+        version {
+          strictly(baseVersion("6.6").orLatest())
         }
       }
     }
+  }
 
-    register<JvmTestSuite>("asyncAppenderTest") {
-      dependencies {
-        implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
+  register<JvmTestSuite>("asyncAppenderTest") {
+    dependencies {
+      implementation(project(":instrumentation:logback:logback-appender-1.0:library"))
+      implementation(project(":instrumentation:logback:logback-mdc-1.0:library"))
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
 
-        implementation("ch.qos.logback:logback-classic") {
-          version {
-            // 1.0.4 is the first version that has ch.qos.logback.classic.AsyncAppender
-            // we are using 1.0.7 because of https://jira.qos.ch/browse/LOGBACK-720
-            strictly(baseVersion("1.0.7").orLatest())
-          }
+      implementation("ch.qos.logback:logback-classic") {
+        version {
+          // 1.0.4 is the first version that has ch.qos.logback.classic.AsyncAppender
+          // we are using 1.0.7 because of https://jira.qos.ch/browse/LOGBACK-720
+          strictly(baseVersion("1.0.7").orLatest())
         }
-        if (!otelProps.testLatestDeps) {
-          implementation("org.slf4j:slf4j-api") {
-            version {
-              strictly("1.6.4")
-            }
+      }
+      if (!otelProps.testLatestDeps) {
+        implementation("org.slf4j:slf4j-api") {
+          version {
+            strictly("1.6.4")
           }
         }
       }

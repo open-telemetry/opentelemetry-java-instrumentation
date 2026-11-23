@@ -1,5 +1,6 @@
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -37,10 +38,4 @@ dependencies {
   testImplementation(project(":instrumentation:opensearch:opensearch-rest-common-1.0:testing"))
 
   latestDepTestLibrary("org.opensearch.client:opensearch-rest-client:2.+") // see opensearch-rest-3.0 module
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
 }

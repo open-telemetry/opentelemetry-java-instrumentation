@@ -6,54 +6,25 @@
 package io.opentelemetry.instrumentation.thrift.v0_13.internal;
 
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesGetter;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftRequest;
 import io.opentelemetry.instrumentation.thrift.v0_13.ThriftResponse;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class ThriftServerNetworkAttributesGetter
-    implements ServerAttributesGetter<ThriftRequest>,
-        NetworkAttributesGetter<ThriftRequest, ThriftResponse> {
+    implements NetworkAttributesGetter<ThriftRequest, ThriftResponse> {
 
   @Nullable
   @Override
-  public String getServerAddress(ThriftRequest request) {
-    if (request.getLocalAddress() instanceof InetSocketAddress) {
-      return ((InetSocketAddress) request.getLocalAddress()).getHostString();
-    }
-    return null;
-  }
-
-  @Override
-  @Nullable
-  public Integer getServerPort(ThriftRequest request) {
-    if (request.getLocalAddress() instanceof InetSocketAddress) {
-      return ((InetSocketAddress) request.getLocalAddress()).getPort();
-    }
-    return null;
-  }
-
-  @Nullable
-  @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public SocketAddress getNetworkLocalSocketAddress(
       ThriftRequest request, @Nullable ThriftResponse response) {
-    SocketAddress address = request.getLocalAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return request.getLocalAddress();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       ThriftRequest request, @Nullable ThriftResponse response) {
-    SocketAddress address = request.getRemoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return request.getRemoteAddress();
   }
 }

@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.okhttp.v3_0.internal;
 
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.Collection;
 import java.util.List;
@@ -119,17 +118,12 @@ public final class OkHttpAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       Interceptor.Chain chain, @Nullable Response response) {
     Connection connection = chain.connection();
     if (connection == null) {
       return null;
     }
-    SocketAddress socketAddress = connection.socket().getRemoteSocketAddress();
-    if (socketAddress instanceof InetSocketAddress) {
-      return (InetSocketAddress) socketAddress;
-    } else {
-      return null;
-    }
+    return connection.socket().getRemoteSocketAddress();
   }
 }

@@ -13,6 +13,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.baggage.Baggage;
 import io.opentelemetry.api.trace.Span;
+import io.opentelemetry.api.trace.SpanContext;
+import io.opentelemetry.api.trace.TraceFlags;
+import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.Tracer;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -78,15 +81,13 @@ class ContextBridgeTest {
     // When
     runnable.run();
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
-                            equalTo(stringKey("cat"), "yes"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
+                    equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test
@@ -106,13 +107,11 @@ class ContextBridgeTest {
     }
     testSpan.end();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(equalTo(stringKey("cat"), "yes"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test
@@ -140,15 +139,13 @@ class ContextBridgeTest {
     runnable.run();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
-                            equalTo(stringKey("cat"), "yes"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, runnable.getClass().getName() + ".run"),
+                    equalTo(stringKey("cat"), "yes"))));
   }
 
   @Test
@@ -178,9 +175,30 @@ class ContextBridgeTest {
     assertThat(Context.current()).isEqualTo(Context.root());
   }
 
+  @Test
+  void propagatedSpanIdentityPreserved() {
+    Span span =
+        Span.wrap(
+            SpanContext.create(
+                "00000000000000000000000000000001",
+                "0000000000000001",
+                TraceFlags.getDefault(),
+                TraceState.getDefault()));
+    Context context = Context.root().with(span);
+    assertThat(Span.fromContext(context)).isSameAs(span);
+  }
+
+  @Test
+  void spanIdentityPreserved() {
+    Tracer tracer = GlobalOpenTelemetry.getTracer("test");
+    Span span = tracer.spanBuilder("test").startSpan();
+    Context context = Context.root().with(span);
+    assertThat(Span.fromContext(context)).isSameAs(span);
+  }
+
   // TODO (trask)
   // more tests are needed here, not sure how to implement, probably need to write some test
-  // instrumentation to help test, similar to :testing-common:integration-tests
+  // instrumentation to help test, similar to :testing:testing-common:integration-tests
   //
   // * "application propagates agent's baggage"
   // * "agent uses application's span"

@@ -48,11 +48,7 @@ public class DecodeableRpcInvocationInstrumentation implements TypeInstrumentati
   public static class DecodeAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    @Nullable
     public static Timer onEnter() {
-      if (!DubboUnknownServiceHelper.isEnabled()) {
-        return null;
-      }
       return Timer.start();
     }
 

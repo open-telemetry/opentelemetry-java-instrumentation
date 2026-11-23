@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.jedis.v3_0.JedisSingletons.transactionFramingSuppression;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -53,7 +54,6 @@ class JedisInstrumentation implements TypeInstrumentation {
                         "disconnect",
                         "getConnection",
                         "isBroken",
-                        "multi",
                         "toString"))),
         getClass().getName() + "$JedisMethodAdvice");
     transformer.applyAdviceToMethod(
@@ -82,9 +82,10 @@ class JedisInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
         @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
       if (requestContext != null) {
-        requestContext.detachAndEnd();
+        requestContext.detachAndEnd(throwable);
       }
     }
   }
@@ -93,15 +94,17 @@ class JedisInstrumentation implements TypeInstrumentation {
   public static class MultiAdvice {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static void onEnter() {
+    public static boolean onEnter() {
       // The MULTI command frames a transaction that is reported as a single batch span at exec(),
       // so its own command span is suppressed.
-      JedisPipelineContext.enterTransactionFraming();
+      return transactionFramingSuppression().tryAcquire();
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit() {
-      JedisPipelineContext.exitTransactionFraming();
+    public static void onExit(@Advice.Enter boolean acquired) {
+      if (acquired) {
+        transactionFramingSuppression().release();
+      }
     }
   }
 }

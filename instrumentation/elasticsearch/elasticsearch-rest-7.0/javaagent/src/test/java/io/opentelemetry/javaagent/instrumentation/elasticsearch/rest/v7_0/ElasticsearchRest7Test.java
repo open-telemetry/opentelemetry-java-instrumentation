@@ -5,12 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.rest.v7_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetricWithResponseStatus;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
@@ -21,6 +24,7 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowableOfType;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.opentelemetry.api.trace.SpanKind;
@@ -34,6 +38,7 @@ import org.apache.http.HttpHost;
 import org.elasticsearch.client.Node;
 import org.elasticsearch.client.Request;
 import org.elasticsearch.client.Response;
+import org.elasticsearch.client.ResponseException;
 import org.elasticsearch.client.ResponseListener;
 import org.elasticsearch.client.RestClient;
 import org.junit.jupiter.api.BeforeAll;
@@ -71,11 +76,8 @@ class ElasticsearchRest7Test {
 
     client =
         RestClient.builder(httpHost)
-            .setRequestConfigCallback(
-                builder ->
-                    builder
-                        .setConnectTimeout(Integer.MAX_VALUE)
-                        .setSocketTimeout(Integer.MAX_VALUE))
+            .setRequestConfigCallback(builder ->
+                builder.setConnectTimeout(Integer.MAX_VALUE).setSocketTimeout(Integer.MAX_VALUE))
             .build();
     cleanup.deferAfterAll(client);
   }
@@ -87,38 +89,62 @@ class ElasticsearchRest7Test {
 
     assertThat(result.get("status")).isEqualTo("green");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
-                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_RESPONSE_STATUS_CODE, "200"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
+            span ->
+                span.hasName("GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
 
-    assertDurationMetric(
+    assertDurationMetricWithResponseStatus(
         testing,
         "io.opentelemetry.elasticsearch-rest-7.0",
+        "200",
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
         SERVER_PORT);
+  }
+
+  @Test
+  void recordsResponseStatusAsErrorTypeFromException() throws IOException {
+    ResponseException error =
+        catchThrowableOfType(
+            () -> client.performRequest(new Request("GET", "/missing-index")),
+            ResponseException.class);
+
+    assertThat(error.getResponse().getStatusLine().getStatusCode()).isEqualTo(404);
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_RESPONSE_STATUS_CODE, "404"),
+                        equalTo(ERROR_TYPE, "404"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort())),
+            span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -162,36 +188,34 @@ class ElasticsearchRest7Test {
             asyncRequest.getRequestResponse().getEntity().getContent(), Map.class);
     assertThat(result.get("status")).isEqualTo("green");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), testing.expectedPeerService()),
-                            equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName(httpHost.getHostName() + ":" + httpHost.getPort())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_RESPONSE_STATUS_CODE, "200"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")),
+            span ->
+                span.hasName("GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   private static class AsyncRequest {
@@ -256,17 +280,17 @@ class ElasticsearchRest7Test {
 
   private static void assertConfiguredTarget(String hostList) {
     boolean hasHostList = hostList != null;
-    testing.waitAndAssertTraces(
-        trace ->
-            assertThat(trace.getSpan(0))
-                .hasName(
-                    hostList != null ? hostList : httpHost.getHostName() + ":" + httpHost.getPort())
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                    equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(SERVER_ADDRESS, hasHostList ? hostList : httpHost.getHostName()),
-                    equalTo(SERVER_PORT, hasHostList ? null : Long.valueOf(httpHost.getPort())),
-                    equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
+    testing.waitAndAssertTraces(trace ->
+        assertThat(trace.getSpan(0))
+            .hasName(
+                hostList != null ? hostList : httpHost.getHostName() + ":" + httpHost.getPort())
+            .hasKind(SpanKind.CLIENT)
+            .hasAttributesSatisfyingExactly(
+                equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                equalTo(DB_RESPONSE_STATUS_CODE, "200"),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(SERVER_ADDRESS, hasHostList ? hostList : httpHost.getHostName()),
+                equalTo(SERVER_PORT, hasHostList ? null : Long.valueOf(httpHost.getPort())),
+                equalTo(URL_FULL, httpHost.toURI() + "/_cluster/health")));
   }
 }

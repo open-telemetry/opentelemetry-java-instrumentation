@@ -20,12 +20,8 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_CLUSTER_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
@@ -84,11 +80,10 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     testing.runWithSpan(
         "producer",
         () -> {
-          kafkaTemplate.executeInTransaction(
-              ops -> {
-                send("testSingleTopic", "10", "testSpan");
-                return 0;
-              });
+          kafkaTemplate.executeInTransaction(ops -> {
+            send("testSingleTopic", "10", "testSpan");
+            return 0;
+          });
         });
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
@@ -114,14 +109,13 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
           producer.set(trace.getSpan(1));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll testSingleTopic")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(recordLink(producer.get()))
-                        .hasAttributesSatisfyingExactly(
-                            receiveAttributes("testSingleTopic", "testSingleListener", 1))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("poll testSingleTopic")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasLinks(recordLink(producer.get()))
+                    .hasAttributesSatisfyingExactly(
+                        receiveAttributes("testSingleTopic", "testSingleListener", 1))));
     assertSingleMetrics();
   }
 
@@ -150,68 +144,61 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     consumerProperties.put(
         ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
 
-    callbackRegistrar.accept(
-        () -> {
-          Span listenerSpan = Span.current();
-          try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties)) {
-            List<TopicPartition> partitions = singletonList(new TopicPartition(nestedTopic, 0));
-            consumer.assign(partitions);
-            consumer.seekToBeginning(partitions);
-            ConsumerRecords<String, String> records;
-            long deadline = System.nanoTime() + Duration.ofSeconds(20).toNanos();
-            do {
-              records = consumer.poll(Duration.ofSeconds(1));
-            } while (records.isEmpty() && System.nanoTime() < deadline);
-            assertThat(records.count()).isEqualTo(1);
-            Iterator<?> iterator = records.iterator();
-            Object record = iterator.next();
-            assertThat(Span.current().getSpanContext().getSpanId())
-                .isNotEqualTo(listenerSpan.getSpanContext().getSpanId());
-            testing.runWithSpan("nested processing", () -> assertThat(record).isNotNull());
-            assertThat(iterator.hasNext()).isFalse();
-            assertThat(Span.current().getSpanContext().getSpanId())
-                .isEqualTo(listenerSpan.getSpanContext().getSpanId());
-          }
-        });
+    callbackRegistrar.accept(() -> {
+      Span listenerSpan = Span.current();
+      try (KafkaConsumer<String, String> consumer = new KafkaConsumer<>(consumerProperties)) {
+        List<TopicPartition> partitions = singletonList(new TopicPartition(nestedTopic, 0));
+        consumer.assign(partitions);
+        consumer.seekToBeginning(partitions);
+        ConsumerRecords<String, String> records;
+        long deadline = System.nanoTime() + Duration.ofSeconds(20).toNanos();
+        do {
+          records = consumer.poll(Duration.ofSeconds(1));
+        } while (records.isEmpty() && System.nanoTime() < deadline);
+        assertThat(records.count()).isEqualTo(1);
+        Iterator<?> iterator = records.iterator();
+        Object record = iterator.next();
+        assertThat(Span.current().getSpanContext().getSpanId())
+            .isNotEqualTo(listenerSpan.getSpanContext().getSpanId());
+        testing.runWithSpan("nested processing", () -> assertThat(record).isNotNull());
+        assertThat(iterator.hasNext()).isFalse();
+        assertThat(Span.current().getSpanContext().getSpanId())
+            .isEqualTo(listenerSpan.getSpanContext().getSpanId());
+      }
+    });
 
-    kafkaTemplate.executeInTransaction(
-        operations -> {
-          send(nestedTopic, "nested-key", "nested-value");
-          return null;
-        });
-    kafkaTemplate.executeInTransaction(
-        operations -> {
-          send(listenerTopic, "10", "nested");
-          return null;
-        });
+    kafkaTemplate.executeInTransaction(operations -> {
+      send(nestedTopic, "nested-key", "nested-value");
+      return null;
+    });
+    kafkaTemplate.executeInTransaction(operations -> {
+      send(listenerTopic, "10", "nested");
+      return null;
+    });
 
     String nestedProcessName = "process " + nestedTopic;
     String nestedReceiveName = "poll " + nestedTopic;
     await()
         .atMost(Duration.ofSeconds(30))
-        .untilAsserted(
-            () -> {
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().equals(nestedReceiveName))
-                  .hasSize(1);
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().equals(nestedProcessName))
-                  .hasSize(1);
-              assertThat(testing.spans())
-                  .filteredOn(span -> span.getName().equals("nested processing"))
-                  .singleElement()
-                  .satisfies(
-                      span ->
-                          assertThat(span.getParentSpanId())
-                              .isEqualTo(
-                                  testing.spans().stream()
-                                      .filter(
-                                          candidate ->
-                                              candidate.getName().equals(nestedProcessName))
-                                      .findFirst()
-                                      .orElseThrow(AssertionError::new)
-                                      .getSpanId()));
-            });
+        .untilAsserted(() -> {
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().equals(nestedReceiveName))
+              .hasSize(1);
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().equals(nestedProcessName))
+              .hasSize(1);
+          assertThat(testing.spans())
+              .filteredOn(span -> span.getName().equals("nested processing"))
+              .singleElement()
+              .satisfies(span ->
+                  assertThat(span.getParentSpanId())
+                      .isEqualTo(
+                          testing.spans().stream()
+                              .filter(candidate -> candidate.getName().equals(nestedProcessName))
+                              .findFirst()
+                              .orElseThrow(AssertionError::new)
+                              .getSpanId()));
+        });
 
     assertReceiveMetrics(
         testing, "io.opentelemetry.kafka-clients-0.11", nestedTopic, groupId, "0", 1, 1, null);
@@ -224,42 +211,36 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     testing.runWithSpan(
         "producer",
         () -> {
-          kafkaTemplate.executeInTransaction(
-              ops -> {
-                send("testSingleTopic", "10", "error");
-                return 0;
-              });
+          kafkaTemplate.executeInTransaction(ops -> {
+            send("testSingleTopic", "10", "error");
+            return 0;
+          });
         });
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
-    assertions.add(
-        trace -> {
-          List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-          spanAssertions.add(span -> span.hasName("producer"));
-          spanAssertions.add(
-              span ->
-                  span.hasName("send testSingleTopic")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(producerAttributes("testSingleTopic", "10")));
-          // trace structure differs in latest dep tests because CommonErrorHandler is
-          // only set for latest dep tests
-          addSingleProcessAssertions(spanAssertions, trace, 2, true, testLatestDeps());
-          addSingleProcessAssertions(
-              spanAssertions, trace, testLatestDeps() ? 5 : 4, true, testLatestDeps());
-          addSingleProcessAssertions(spanAssertions, trace, testLatestDeps() ? 8 : 6, false, false);
-          trace.hasSpansSatisfyingExactly(spanAssertions);
-          producer.set(trace.getSpan(1));
-        });
+    assertions.add(trace -> {
+      List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
+      spanAssertions.add(span -> span.hasName("producer"));
+      spanAssertions.add(span ->
+          span.hasName("send testSingleTopic")
+              .hasKind(SpanKind.PRODUCER)
+              .hasParent(trace.getSpan(0))
+              .hasAttributesSatisfyingExactly(producerAttributes("testSingleTopic", "10")));
+      // trace structure differs in latest dep tests because CommonErrorHandler is
+      // only set for latest dep tests
+      addSingleProcessAssertions(spanAssertions, trace, 2, true, testLatestDeps());
+      addSingleProcessAssertions(
+          spanAssertions, trace, testLatestDeps() ? 5 : 4, true, testLatestDeps());
+      addSingleProcessAssertions(spanAssertions, trace, testLatestDeps() ? 8 : 6, false, false);
+      trace.hasSpansSatisfyingExactly(spanAssertions);
+      producer.set(trace.getSpan(1));
+    });
     int receiveCount = testLatestDeps() ? 1 : 3;
     for (int i = 0; i < receiveCount; i++) {
-      assertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      assertReceiveSpan(
-                          span, producer.get(), "testSingleTopic", "testSingleListener")));
+      assertions.add(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              assertReceiveSpan(span, producer.get(), "testSingleTopic", "testSingleListener")));
     }
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT), assertions);
@@ -305,14 +286,13 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                             batchProcessAttributes("testBatchTopic", "testBatchListener", 2)),
                 span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("poll testBatchTopic")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
-                        .hasAttributesSatisfyingExactly(
-                            receiveAttributes("testBatchTopic", "testBatchListener", 2))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("poll testBatchTopic")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasLinks(recordLink(producer1.get()), recordLink(producer2.get()))
+                    .hasAttributesSatisfyingExactly(
+                        receiveAttributes("testBatchTopic", "testBatchListener", 2))));
     assertBatchMetrics();
   }
 
@@ -361,39 +341,34 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     testing.runWithSpan(
         "producer",
         () -> {
-          kafkaTemplate.executeInTransaction(
-              ops -> {
-                send("testBatchTopic", "10", "error");
-                return 0;
-              });
+          kafkaTemplate.executeInTransaction(ops -> {
+            send("testBatchTopic", "10", "error");
+            return 0;
+          });
         });
 
     AtomicReference<SpanData> producer = new AtomicReference<>();
 
     List<Consumer<TraceAssert>> assertions = new ArrayList<>();
-    assertions.add(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("producer"),
-              span ->
-                  span.hasName("send testBatchTopic")
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(producerAttributes("testBatchTopic", "10")));
-          producer.set(trace.getSpan(1));
-        });
+    assertions.add(trace -> {
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasName("producer"),
+          span ->
+              span.hasName("send testBatchTopic")
+                  .hasKind(SpanKind.PRODUCER)
+                  .hasParent(trace.getSpan(0))
+                  .hasAttributesSatisfyingExactly(producerAttributes("testBatchTopic", "10")));
+      producer.set(trace.getSpan(1));
+    });
     assertions.add(trace -> assertBatchProcessTrace(trace, producer.get(), true));
     assertions.add(trace -> assertBatchProcessTrace(trace, producer.get(), true));
     assertions.add(trace -> assertBatchProcessTrace(trace, producer.get(), false));
     // latest dep tests call receive once and only retry the failed process step
     int receiveCount = testLatestDeps() ? 1 : 3;
     for (int i = 0; i < receiveCount; i++) {
-      assertions.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      assertReceiveSpan(
-                          span, producer.get(), "testBatchTopic", "testBatchListener")));
+      assertions.add(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              assertReceiveSpan(span, producer.get(), "testBatchTopic", "testBatchListener")));
     }
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CONSUMER, SpanKind.CLIENT), assertions);
@@ -466,17 +441,16 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
       boolean addExceptionHandler) {
     List<AttributeAssertion> processAttributes =
         singleProcessAttributes("testSingleTopic", "testSingleListener", "10");
-    assertions.add(
-        span -> {
-          span.hasName("process testSingleTopic")
-              .hasKind(SpanKind.CONSUMER)
-              .hasParent(trace.getSpan(1))
-              .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
-              .hasAttributesSatisfyingExactly(withErrorType(processAttributes, failed));
-          if (failed) {
-            span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));
-          }
-        });
+    assertions.add(span -> {
+      span.hasName("process testSingleTopic")
+          .hasKind(SpanKind.CONSUMER)
+          .hasParent(trace.getSpan(1))
+          .hasLinks(LinkData.create(asRemote(trace.getSpan(1).getSpanContext())))
+          .hasAttributesSatisfyingExactly(withErrorType(processAttributes, failed));
+      if (failed) {
+        span.hasStatus(StatusData.error()).hasException(new IllegalArgumentException("boom"));
+      }
+    });
     assertions.add(span -> span.hasName("consumer").hasParent(trace.getSpan(processIndex)));
     if (addExceptionHandler) {
       assertions.add(
@@ -514,12 +488,12 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
   private static List<AttributeAssertion> producerAttributes(String topic, String messageKey) {
     List<AttributeAssertion> assertions = messagingAttributes(topic, "send", "send", "producer");
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative));
+    assertions.add(equalTo(stringKey("kafka.message.key"), messageKey));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     assertions.add(
         equalTo(
-            stringKey("messaging.kafka.bootstrap.servers"),
+            stringKey("kafka.bootstrap.servers"),
             EXPERIMENTAL_ATTRIBUTES ? kafka.getBootstrapServers() : null));
     return assertions;
   }
@@ -529,7 +503,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     List<AttributeAssertion> assertions = messagingAttributes(topic, "poll", "receive", "consumer");
     assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     addCommonBatchRecordAttributes(assertions);
     return assertions;
   }
@@ -540,8 +514,8 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "process", "process", "consumer");
 
     assertions.add(satisfies(MESSAGING_DESTINATION_PARTITION_ID, AbstractStringAssert::isNotEmpty));
-    assertions.add(satisfies(MESSAGING_KAFKA_OFFSET, AbstractLongAssert::isNotNegative));
-    assertions.add(equalTo(MESSAGING_KAFKA_MESSAGE_KEY, messageKey));
+    assertions.add(satisfies(longKey("kafka.offset"), AbstractLongAssert::isNotNegative));
+    assertions.add(equalTo(stringKey("kafka.message.key"), messageKey));
     assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(
         satisfies(
@@ -551,7 +525,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
                 val.isNotNegative();
               }
             }));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     return assertions;
   }
 
@@ -561,7 +535,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
         messagingAttributes(topic, "process", "process", "consumer");
     assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchSize));
-    assertions.add(satisfies(MESSAGING_KAFKA_CLUSTER_ID, AbstractStringAssert::isNotEmpty));
+    assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
     addCommonBatchRecordAttributes(assertions);
     return assertions;
   }
@@ -576,7 +550,7 @@ class SpringKafkaTest extends AbstractSpringKafkaTest {
     List<AttributeAssertion> assertions =
         new ArrayList<>(
             asList(
-                equalTo(MESSAGING_SYSTEM, "kafka"),
+                equalTo(stringKey("messaging.system.name"), "kafka"),
                 equalTo(MESSAGING_DESTINATION_NAME, topic),
                 equalTo(MESSAGING_OPERATION_NAME, operationName),
                 equalTo(MESSAGING_OPERATION_TYPE, operationType)));

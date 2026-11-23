@@ -10,7 +10,6 @@ import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
-import java.util.List;
 import org.springframework.web.reactive.function.client.ClientRequest;
 import org.springframework.web.reactive.function.client.ClientResponse;
 import org.springframework.web.reactive.function.client.ExchangeFilterFunction;
@@ -37,30 +36,18 @@ public final class SpringWebfluxClientTelemetry {
     this.propagators = propagators;
   }
 
-  /**
-   * Adds an instrumented {@link ExchangeFilterFunction} to the provided list.
-   *
-   * @param exchangeFilterFunctions existing filter functions
-   */
-  public void addFilter(List<ExchangeFilterFunction> exchangeFilterFunctions) {
-    for (ExchangeFilterFunction filterFunction : exchangeFilterFunctions) {
-      if (filterFunction instanceof WebClientTracingFilter) {
-        return;
-      }
-    }
-    exchangeFilterFunctions.add(new WebClientTracingFilter(clientInstrumenter, propagators));
+  /** Returns an instrumented {@link ExchangeFilterFunction}. */
+  public ExchangeFilterFunction createFilter() {
+    return new WebClientTracingFilter(clientInstrumenter, propagators);
   }
 
   /**
-   * Adds an instrumented {@link ExchangeFilterFunction} to the provided list. Also registers the
-   * Reactor context propagation hook for reactive pipelines.
-   *
-   * @param exchangeFilterFunctions existing filter functions
+   * Returns an instrumented {@link ExchangeFilterFunction}. Also registers the Reactor context
+   * propagation hook for reactive pipelines.
    */
-  public void addFilterAndRegisterReactorHook(
-      List<ExchangeFilterFunction> exchangeFilterFunctions) {
+  public ExchangeFilterFunction createFilterAndRegisterReactorHook() {
     registerReactorHook();
-    addFilter(exchangeFilterFunctions);
+    return createFilter();
   }
 
   private static void registerReactorHook() {

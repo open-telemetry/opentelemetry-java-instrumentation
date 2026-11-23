@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-import com.google.common.base.Joiner;
 import java.util.concurrent.atomic.AtomicBoolean;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.ByteBuddyAgent;
@@ -20,6 +19,7 @@ import net.bytebuddy.asm.Advice;
 import net.bytebuddy.dynamic.ClassFileLocator;
 import net.bytebuddy.dynamic.scaffold.MethodGraph;
 import net.bytebuddy.utility.JavaModule;
+import org.apache.commons.lang3.StringUtils;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
@@ -74,11 +74,11 @@ class MissingTypeTest {
   }
 
   @Test
-  void guavaNotAvailable() {
-    // these tests expect com.google.common.base.Joiner to be missing from runtime class path
+  void stringUtilsNotAvailable() {
+    // these tests expect StringUtils to be missing from runtime class path
     try {
-      Class.forName("com.google.common.base.Joiner");
-      fail("guava should not be available during runtime");
+      Class.forName("org.apache.commons.lang3.StringUtils");
+      fail("StringUtils should not be available during runtime");
     } catch (ClassNotFoundException ignored) {
       // ignore
     }
@@ -94,23 +94,23 @@ class MissingTypeTest {
     assertThat(hasErrors.get()).isFalse();
   }
 
-  // com.google.common.base.Joiner is missing from runtime class path
+  // StringUtils is missing from runtime class path
   static class SomeClass {
-    public Joiner joiner;
+    public StringUtils stringUtils;
 
     public static boolean isInstrumented() {
       return false;
     }
 
-    public void methodWithMissingParameterType(Joiner joiner) {}
+    public void methodWithMissingParameterType(StringUtils stringUtils) {}
 
-    public Joiner methodWithMissingReturnType() {
+    public StringUtils methodWithMissingReturnType() {
       return null;
     }
 
-    public static void staticMethodWithMissingParameterType(Joiner joiner) {}
+    public static void staticMethodWithMissingParameterType(StringUtils stringUtils) {}
 
-    public static Joiner staticMethodWithMissingReturnType() {
+    public static StringUtils staticMethodWithMissingReturnType() {
       return null;
     }
   }

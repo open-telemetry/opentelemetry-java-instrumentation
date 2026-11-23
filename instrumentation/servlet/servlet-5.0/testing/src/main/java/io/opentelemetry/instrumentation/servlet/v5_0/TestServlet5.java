@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.GlobalTraceUtil;
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import jakarta.servlet.AsyncContext;
 import jakarta.servlet.RequestDispatcher;
+import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -77,16 +78,34 @@ public class TestServlet5 {
             } else if (EXCEPTION.equals(endpoint)) {
               throw new IllegalStateException(endpoint.getBody());
             } else if (HTML_PRINT_WRITER.equals(endpoint)) {
-              resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
-              resp.setContentLength(endpoint.getBody().length());
-              resp.getWriter().print(endpoint.getBody());
+              if ("true".equals(req.getParameter("lateContentType"))) {
+                String body = "<head>late content type</head>";
+                PrintWriter writer = resp.getWriter();
+                resp.setContentLength(body.length());
+                resp.setContentType("text/html");
+                writer.write("<he");
+                writer.write("ad>late content type</head>");
+              } else {
+                resp.setContentType("text/html");
+                resp.setContentLength(endpoint.getBody().length());
+                resp.getWriter().print(endpoint.getBody());
+              }
             } else if (HTML_SERVLET_OUTPUT_STREAM.equals(endpoint)) {
-              resp.setContentType("text/html");
               resp.setStatus(endpoint.getStatus());
-              resp.setContentLength(endpoint.getBody().length());
-              byte[] body = endpoint.getBody().getBytes(UTF_8);
-              resp.getOutputStream().write(body, 0, body.length);
+              if ("true".equals(req.getParameter("lateContentType"))) {
+                String body = "<head>late content type</head>";
+                ServletOutputStream output = resp.getOutputStream();
+                resp.setContentLength(body.length());
+                resp.setContentType("text/html");
+                output.write("<he".getBytes(UTF_8));
+                output.write("ad>late content type</head>".getBytes(UTF_8));
+              } else {
+                resp.setContentType("text/html");
+                resp.setContentLength(endpoint.getBody().length());
+                byte[] body = endpoint.getBody().getBytes(UTF_8);
+                resp.getOutputStream().write(body, 0, body.length);
+              }
             }
             return null;
           });
@@ -109,84 +128,83 @@ public class TestServlet5 {
         context.setTimeout(5000);
       }
 
-      context.start(
-          () -> {
-            try {
-              controller(
-                  endpoint,
-                  () -> {
-                    resp.setContentType("text/plain");
-                    if (SUCCESS.equals(endpoint)) {
-                      resp.setStatus(endpoint.getStatus());
-                      resp.getWriter().print(endpoint.getBody());
-                      context.complete();
-                    } else if (INDEXED_CHILD.equals(endpoint)) {
-                      endpoint.collectSpanAttributes(req::getParameter);
-                      resp.setStatus(endpoint.getStatus());
-                      resp.getWriter().print(endpoint.getBody());
-                      context.complete();
-                    } else if (QUERY_PARAM.equals(endpoint)) {
-                      resp.setStatus(endpoint.getStatus());
-                      resp.getWriter().print(req.getQueryString());
-                      context.complete();
-                    } else if (REDIRECT.equals(endpoint)) {
-                      resp.sendRedirect(endpoint.getBody());
-                      context.complete();
-                    } else if (CAPTURE_HEADERS.equals(endpoint)) {
-                      resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
-                      resp.setStatus(endpoint.getStatus());
-                      resp.getWriter().print(endpoint.getBody());
-                      context.complete();
-                    } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
-                      req.setCharacterEncoding("UTF8");
-                      String value = req.getParameter("test-parameter");
-                      if (!"test value õäöü".equals(value)) {
-                        throw new IllegalStateException(
-                            "request parameter does not have expected value " + value);
-                      }
+      context.start(() -> {
+        try {
+          controller(
+              endpoint,
+              () -> {
+                resp.setContentType("text/plain");
+                if (SUCCESS.equals(endpoint)) {
+                  resp.setStatus(endpoint.getStatus());
+                  resp.getWriter().print(endpoint.getBody());
+                  context.complete();
+                } else if (INDEXED_CHILD.equals(endpoint)) {
+                  endpoint.collectSpanAttributes(req::getParameter);
+                  resp.setStatus(endpoint.getStatus());
+                  resp.getWriter().print(endpoint.getBody());
+                  context.complete();
+                } else if (QUERY_PARAM.equals(endpoint)) {
+                  resp.setStatus(endpoint.getStatus());
+                  resp.getWriter().print(req.getQueryString());
+                  context.complete();
+                } else if (REDIRECT.equals(endpoint)) {
+                  resp.sendRedirect(endpoint.getBody());
+                  context.complete();
+                } else if (CAPTURE_HEADERS.equals(endpoint)) {
+                  resp.setHeader("X-Test-Response", req.getHeader("X-Test-Request"));
+                  resp.setStatus(endpoint.getStatus());
+                  resp.getWriter().print(endpoint.getBody());
+                  context.complete();
+                } else if (CAPTURE_PARAMETERS.equals(endpoint)) {
+                  req.setCharacterEncoding("UTF8");
+                  String value = req.getParameter("test-parameter");
+                  if (!"test value õäöü".equals(value)) {
+                    throw new IllegalStateException(
+                        "request parameter does not have expected value " + value);
+                  }
 
-                      resp.setStatus(endpoint.getStatus());
-                      resp.getWriter().print(endpoint.getBody());
-                      context.complete();
-                    } else if (ERROR.equals(endpoint)) {
-                      resp.setStatus(endpoint.getStatus());
-                      resp.getWriter().print(endpoint.getBody());
-                      context.complete();
-                    } else if (EXCEPTION.equals(endpoint)) {
-                      resp.setStatus(endpoint.getStatus());
-                      PrintWriter writer = resp.getWriter();
-                      writer.print(endpoint.getBody());
-                      if (req.getServletContext().getClass().getName().contains("catalina")) {
-                        // on tomcat close the writer to ensure response is sent immediately,
-                        // otherwise there is a chance that tomcat resets the connection before the
-                        // response is sent
-                        writer.close();
-                        resp.flushBuffer();
-                      }
-                      throw new IllegalStateException(endpoint.getBody());
-                    } else if (HTML_PRINT_WRITER.equals(endpoint)) {
-                      resp.setContentType("text/html");
-                      resp.setStatus(endpoint.getStatus());
-                      resp.setContentLength(endpoint.getBody().length());
-                      resp.getWriter().print(endpoint.getBody());
-                      context.complete();
-                    } else if (HTML_SERVLET_OUTPUT_STREAM.equals(endpoint)) {
-                      resp.setContentType("text/html");
-                      resp.setStatus(endpoint.getStatus());
-                      resp.getOutputStream().print(endpoint.getBody());
-                      context.complete();
-                    }
-                    return null;
-                  });
-            } catch (Exception e) {
-              if (e instanceof RuntimeException) {
-                throw (RuntimeException) e;
-              }
-              throw new IllegalStateException(e);
-            } finally {
-              latch.countDown();
-            }
-          });
+                  resp.setStatus(endpoint.getStatus());
+                  resp.getWriter().print(endpoint.getBody());
+                  context.complete();
+                } else if (ERROR.equals(endpoint)) {
+                  resp.setStatus(endpoint.getStatus());
+                  resp.getWriter().print(endpoint.getBody());
+                  context.complete();
+                } else if (EXCEPTION.equals(endpoint)) {
+                  resp.setStatus(endpoint.getStatus());
+                  PrintWriter writer = resp.getWriter();
+                  writer.print(endpoint.getBody());
+                  if (req.getServletContext().getClass().getName().contains("catalina")) {
+                    // on tomcat close the writer to ensure response is sent immediately,
+                    // otherwise there is a chance that tomcat resets the connection before the
+                    // response is sent
+                    writer.close();
+                    resp.flushBuffer();
+                  }
+                  throw new IllegalStateException(endpoint.getBody());
+                } else if (HTML_PRINT_WRITER.equals(endpoint)) {
+                  resp.setContentType("text/html");
+                  resp.setStatus(endpoint.getStatus());
+                  resp.setContentLength(endpoint.getBody().length());
+                  resp.getWriter().print(endpoint.getBody());
+                  context.complete();
+                } else if (HTML_SERVLET_OUTPUT_STREAM.equals(endpoint)) {
+                  resp.setContentType("text/html");
+                  resp.setStatus(endpoint.getStatus());
+                  resp.getOutputStream().print(endpoint.getBody());
+                  context.complete();
+                }
+                return null;
+              });
+        } catch (Exception e) {
+          if (e instanceof RuntimeException) {
+            throw (RuntimeException) e;
+          }
+          throw new IllegalStateException(e);
+        } finally {
+          latch.countDown();
+        }
+      });
       try {
         latch.await();
       } catch (InterruptedException ignored) {
@@ -284,14 +302,13 @@ public class TestServlet5 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) {
       AsyncContext context = req.startAsync();
-      context.start(
-          () -> {
-            String target = req.getServletPath().replace("/dispatch", "");
-            if (req.getQueryString() != null) {
-              target += "?" + req.getQueryString();
-            }
-            context.dispatch(target);
-          });
+      context.start(() -> {
+        String target = req.getServletPath().replace("/dispatch", "");
+        if (req.getQueryString() != null) {
+          target += "?" + req.getQueryString();
+        }
+        context.dispatch(target);
+      });
     }
   }
 

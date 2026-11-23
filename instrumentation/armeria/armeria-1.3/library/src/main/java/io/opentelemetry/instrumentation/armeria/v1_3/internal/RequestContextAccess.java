@@ -18,24 +18,21 @@ final class RequestContextAccess {
   @Nullable private static final MethodHandle LOCAL_ADDRESS = findAccessorOrNull("localAddress");
 
   @Nullable
-  public static InetSocketAddress remoteAddress(RequestContext requestContext) {
+  public static SocketAddress remoteAddress(RequestContext requestContext) {
     return getAddress(REMOTE_ADDRESS, requestContext);
   }
 
   @Nullable
-  public static InetSocketAddress localAddress(RequestContext requestContext) {
+  public static SocketAddress localAddress(RequestContext requestContext) {
     return getAddress(LOCAL_ADDRESS, requestContext);
   }
 
   @Nullable
-  private static InetSocketAddress getAddress(
+  private static SocketAddress getAddress(
       @Nullable MethodHandle methodHandle, RequestContext requestContext) {
     if (methodHandle != null) {
       try {
-        Object address = methodHandle.invoke(requestContext);
-        if (address instanceof InetSocketAddress) {
-          return (InetSocketAddress) address;
-        }
+        return (SocketAddress) methodHandle.invoke(requestContext);
       } catch (Throwable t) {
         throw new IllegalStateException("Failed to get address", t);
       }

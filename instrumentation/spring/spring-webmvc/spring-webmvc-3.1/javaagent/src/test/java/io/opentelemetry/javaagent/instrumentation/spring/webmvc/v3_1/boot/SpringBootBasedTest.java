@@ -9,12 +9,13 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableMap;
 import io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot.AbstractSpringBootBasedTest;
 import io.opentelemetry.instrumentation.spring.webmvc.v3_1.boot.AppConfig;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import java.util.HashMap;
+import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
@@ -36,16 +37,12 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
   @Override
   protected ConfigurableApplicationContext setupServer() {
     SpringApplication app = new SpringApplication(AppConfig.class, securityConfigClass());
-    app.setDefaultProperties(
-        ImmutableMap.of(
-            "server.port",
-            port,
-            "server.context-path",
-            getContextPath(),
-            "server.servlet.contextPath",
-            getContextPath(),
-            "server.error.include-message",
-            "always"));
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("server.port", port);
+    properties.put("server.context-path", getContextPath());
+    properties.put("server.servlet.contextPath", getContextPath());
+    properties.put("server.error.include-message", "always");
+    app.setDefaultProperties(properties);
     context = app.run();
     return context;
   }
@@ -75,7 +72,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
             getClass()
                 .getClassLoader()
                 .getResource(
-                    "org/springframework/web/servlet/v3_1/OpenTelemetryHandlerMappingFilter.class"))
+                    "io/opentelemetry/javaagent/instrumentation/spring/webmvc/v3_1/OpenTelemetryHandlerMappingFilter.class"))
         .isNotNull();
   }
 }

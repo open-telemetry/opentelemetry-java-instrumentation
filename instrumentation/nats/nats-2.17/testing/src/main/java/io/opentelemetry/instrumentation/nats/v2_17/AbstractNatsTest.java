@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.nats.v2_17;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 
 import io.nats.client.Connection;
 import io.nats.client.Nats;
@@ -48,52 +48,39 @@ abstract class AbstractNatsTest {
             INSTRUMENTATION_NAME,
             "messaging.client.operation.duration",
             metrics ->
-                metrics.satisfiesExactly(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("s")
-                            .hasDescription(
-                                "Duration of messaging operation initiated by a producer or consumer client.")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasSumGreaterThan(0)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        MESSAGING_OPERATION_NAME, operationName),
-                                                    equalTo(MESSAGING_SYSTEM, "nats"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination),
-                                                    equalTo(MESSAGING_OPERATION_TYPE, "send"))
-                                                .hasBucketBoundaries(DURATION_BUCKETS)))));
+                metrics.satisfiesExactly(metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription(
+                            "Duration of messaging operation initiated by a producer or consumer client.")
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                    equalTo(stringKey("messaging.system.name"), "nats"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "send"))
+                                .hasBucketBoundaries(DURATION_BUCKETS))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             "messaging.client.sent.messages",
             metrics ->
-                metrics.satisfiesExactly(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("{message}")
-                            .hasDescription(
-                                "Number of messages producer attempted to send to the broker.")
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(
-                                                        MESSAGING_OPERATION_NAME, operationName),
-                                                    equalTo(MESSAGING_SYSTEM, "nats"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME,
-                                                        destination))))));
+                metrics.satisfiesExactly(metric ->
+                    assertThat(metric)
+                        .hasUnit("{message}")
+                        .hasDescription(
+                            "Number of messages producer attempted to send to the broker.")
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                    equalTo(stringKey("messaging.system.name"), "nats"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination)))));
   }
 
   void assertProcessMetrics(String destination, String errorType) {
@@ -103,48 +90,37 @@ abstract class AbstractNatsTest {
             INSTRUMENTATION_NAME,
             "messaging.process.duration",
             metrics ->
-                metrics.satisfiesExactly(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("s")
-                            .hasDescription("Duration of processing operation.")
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasSumGreaterThan(0)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "nats"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME, destination))
-                                                .hasBucketBoundaries(DURATION_BUCKETS)))));
+                metrics.satisfiesExactly(metric ->
+                    assertThat(metric)
+                        .hasUnit("s")
+                        .hasDescription("Duration of processing operation.")
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "nats"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination))
+                                .hasBucketBoundaries(DURATION_BUCKETS))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
             "messaging.client.consumed.messages",
             metrics ->
-                metrics.satisfiesExactly(
-                    metric ->
-                        assertThat(metric)
-                            .hasUnit("{message}")
-                            .hasDescription(
-                                "Number of messages that were delivered to the application.")
-                            .hasLongSumSatisfying(
-                                sum ->
-                                    sum.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasValue(1)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                                    equalTo(MESSAGING_SYSTEM, "nats"),
-                                                    equalTo(ERROR_TYPE, errorType),
-                                                    equalTo(
-                                                        MESSAGING_DESTINATION_NAME,
-                                                        destination))))));
+                metrics.satisfiesExactly(metric ->
+                    assertThat(metric)
+                        .hasUnit("{message}")
+                        .hasDescription(
+                            "Number of messages that were delivered to the application.")
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "nats"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination)))));
   }
 
   @BeforeAll

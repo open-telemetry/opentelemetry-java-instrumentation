@@ -54,11 +54,10 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
   @Test
   void nested() {
     Flux<String> flux =
-        Flux.defer(
-            () -> {
-              testing().runWithSpan("inner-manual", () -> {});
-              return Flux.just("Value");
-            });
+        Flux.defer(() -> {
+          testing().runWithSpan("inner-manual", () -> {});
+          return Flux.just("Value");
+        });
 
     TracedWithSpan traced = newTracedWithSpan();
     Flux<String> result = traced.flux(flux);
@@ -66,20 +65,19 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
     StepVerifier.create(result).expectNext("Value").verifyComplete();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("TracedWithSpan.flux")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".flux")),
-                    span ->
-                        span.hasName("inner-manual")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasTotalAttributeCount(0)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("TracedWithSpan.flux")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".flux")),
+                span ->
+                    span.hasName("inner-manual")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -92,35 +90,33 @@ abstract class BaseFluxWithSpanTest extends AbstractWithSpanTest<Flux<String>, F
             () -> {
               Flux<String> result =
                   traced.flux(
-                      Flux.defer(
-                          () -> {
-                            testing().runWithSpan("inner-manual", () -> {});
-                            return Flux.just("Value");
-                          }));
+                      Flux.defer(() -> {
+                        testing().runWithSpan("inner-manual", () -> {});
+                        return Flux.just("Value");
+                      }));
 
               StepVerifier.create(result).expectNext("Value").verifyComplete();
             });
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("parent")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasNoParent()
-                            .hasTotalAttributeCount(0),
-                    span ->
-                        span.hasName("TracedWithSpan.flux")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".flux")),
-                    span ->
-                        span.hasName("inner-manual")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(1))
-                            .hasTotalAttributeCount(0)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("parent")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasNoParent()
+                        .hasTotalAttributeCount(0),
+                span ->
+                    span.hasName("TracedWithSpan.flux")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(CODE_FUNCTION_NAME, traced.getClass().getName() + ".flux")),
+                span ->
+                    span.hasName("inner-manual")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasTotalAttributeCount(0)));
   }
 
   // While a UnicastProcessor is a Flux and we'd expect a simpler way to access it to provide

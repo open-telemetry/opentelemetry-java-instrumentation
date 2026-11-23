@@ -11,6 +11,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -22,8 +23,6 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -93,19 +92,8 @@ class DbClientAttributesExtractorTest {
             entry(DB_QUERY_TEXT, "SELECT * FROM potato"),
             entry(DB_QUERY_SUMMARY, "SELECT potato"),
             entry(DB_OPERATION_NAME, "SELECT"));
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(SchemaUrls.V1_44_0);
     assertThat(DbClientSpanNameExtractor.create(new TestAttributesGetter()).extract(request))
         .isEqualTo("SELECT potato");
-  }
-
-  @Test
-  void shouldProvideSchemaUrl() {
-    AttributesExtractor<Map<String, String>, Void> extractor =
-        DbClientAttributesExtractor.create(new TestAttributesGetter());
-
-    assertThat(((SchemaUrlProvider) extractor).internalGetSchemaUrl())
-        .isEqualTo(SchemaUrls.V1_44_0);
   }
 
   static class TestAttributesGetter implements DbClientAttributesGetter<Map<String, String>, Void> {
@@ -190,15 +178,126 @@ class DbClientAttributesExtractorTest {
   }
 
   @Test
-  void shouldUseExceptionClassWhenErrorTypeIsUnavailable() {
+  void shouldInheritExceptionClassFallback() {
+    TestAttributesGetter getter = new TestAttributesGetter();
     AttributesExtractor<Map<String, String>, Void> underTest =
-        DbClientAttributesExtractor.create(new TestAttributesGetter());
+        DbClientAttributesExtractor.create(getter);
     IllegalStateException error = new IllegalStateException();
+
+    assertThat(getter.getErrorType(emptyMap(), null, error))
+        .isEqualTo(IllegalStateException.class.getName());
+    assertThat(getter.getErrorType(emptyMap(), null, null)).isNull();
 
     AttributesBuilder attributes = Attributes.builder();
     underTest.onEnd(attributes, Context.root(), emptyMap(), null, error);
 
     assertThat(attributes.build())
         .containsOnly(entry(ERROR_TYPE, IllegalStateException.class.getName()));
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"42601", "custom"})
+  void shouldExtractResponseStatusIndependentlyOfErrorType(String errorType) {
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        DbClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getDbResponseStatusCode(
+                  Map<String, String> request, Void response, Throwable error) {
+                return "42601";
+              }
+
+              @Override
+              public String getErrorType(
+                  Map<String, String> request, Void response, Throwable error) {
+                return errorType;
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(attributes.build())
+        .containsOnly(entry(DB_RESPONSE_STATUS_CODE, "42601"), entry(ERROR_TYPE, errorType));
+  }
+
+  @Test
+  void shouldPreserveExceptionFallbackWithResponseStatus() {
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        DbClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getDbResponseStatusCode(
+                  Map<String, String> request, Void response, Throwable error) {
+                return "42601";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build())
+        .containsOnly(
+            entry(DB_RESPONSE_STATUS_CODE, "42601"),
+            entry(ERROR_TYPE, IllegalStateException.class.getName()));
+  }
+
+  @Test
+  void shouldNotUseFallbackErrorTypeAsResponseStatus() {
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        DbClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, String> request, Void response, Throwable error) {
+                return "_OTHER";
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(attributes.build()).containsOnly(entry(ERROR_TYPE, "_OTHER"));
+  }
+
+  @Test
+  void shouldOmitErrorTypeWithoutError() {
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(new TestAttributesGetter())
+        .onEnd(attributes, Context.root(), emptyMap(), null, null);
+
+    assertThat(attributes.build()).isEmpty();
+  }
+
+  @Test
+  void shouldUseCustomClassification() {
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, String> request, Void response, Throwable error) {
+                return "CUSTOM";
+              }
+            })
+        .onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build()).containsOnly(entry(ERROR_TYPE, "CUSTOM"));
+  }
+
+  @Test
+  void shouldRespectExplicitNullDespiteException() {
+    AttributesBuilder attributes = Attributes.builder();
+    DbClientAttributesExtractor.create(
+            new TestAttributesGetter() {
+              @Override
+              public String getErrorType(
+                  Map<String, String> request, Void response, Throwable error) {
+                return null;
+              }
+            })
+        .onEnd(attributes, Context.root(), emptyMap(), null, new IllegalStateException());
+
+    assertThat(attributes.build()).isEmpty();
   }
 }

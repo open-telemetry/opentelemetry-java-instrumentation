@@ -12,7 +12,8 @@ otelJava {
 }
 
 dependencies {
-  jmhImplementation("org.springframework.boot:spring-boot-starter-web:4.1.1")
+  jmhImplementation("org.springframework.boot:spring-boot-starter-web:4.1.2")
+  jmhImplementation("io.opentelemetry:opentelemetry-api")
 }
 
 tasks {

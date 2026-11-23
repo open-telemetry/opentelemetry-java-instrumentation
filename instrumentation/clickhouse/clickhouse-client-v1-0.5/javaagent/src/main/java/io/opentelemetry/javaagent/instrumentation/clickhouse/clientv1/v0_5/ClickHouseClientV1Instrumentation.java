@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv1.v0_5.ClickHouseClientV1Singletons.instrumenter;
@@ -18,6 +17,7 @@ import com.clickhouse.client.ClickHouseNode;
 import com.clickhouse.client.ClickHouseRequest;
 import com.clickhouse.client.ClickHouseRequestAccess;
 import com.clickhouse.client.config.ClickHouseDefaults;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -70,7 +70,7 @@ class ClickHouseClientV1Instrumentation implements TypeInstrumentation {
               server.getDatabase().orElse(ClickHouseDefaults.DATABASE.getDefaultValue().toString()),
               ClickHouseRequestAccess.getQuery(clickHouseRequest));
 
-      return ClickHouseScope.start(instrumenter(), currentContext(), request);
+      return ClickHouseScope.start(instrumenter(), Context.current(), request);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)

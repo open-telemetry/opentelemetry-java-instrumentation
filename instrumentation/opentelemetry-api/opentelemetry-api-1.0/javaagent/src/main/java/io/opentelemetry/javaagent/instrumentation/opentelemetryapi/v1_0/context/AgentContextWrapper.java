@@ -10,12 +10,11 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.baggage.BaggageBridging;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.trace.Bridging;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 final class AgentContextWrapper implements application.io.opentelemetry.context.Context {
 
-  static final List<ContextKeyBridge<?, ?>> CONTEXT_KEY_BRIDGES;
+  static final ContextKeyBridge<?, ?>[] CONTEXT_KEY_BRIDGES;
 
   static {
     List<ContextKeyBridge<?, ?>> bridges = new ArrayList<>();
@@ -40,7 +39,7 @@ final class AgentContextWrapper implements application.io.opentelemetry.context.
       // reflection error; in practice should never happen, we can ignore it
     }
     bridges.addAll(InstrumentationApiContextBridging.instrumentationApiBridges());
-    CONTEXT_KEY_BRIDGES = Collections.unmodifiableList(bridges);
+    CONTEXT_KEY_BRIDGES = bridges.toArray(new ContextKeyBridge<?, ?>[0]);
   }
 
   final Context agentContext;

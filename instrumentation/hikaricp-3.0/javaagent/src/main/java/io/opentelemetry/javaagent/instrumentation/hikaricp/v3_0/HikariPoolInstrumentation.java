@@ -5,14 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.hikaricp.v3_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.metrics.MetricsTrackerFactory;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
+import java.util.concurrent.ScheduledExecutorService;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -33,9 +37,11 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
     // configure anything
     transformer.applyAdviceToMethod(
         named("setMetricsTrackerFactory")
-            .and(takesArguments(1))
-            .and(takesArgument(0, named("com.zaxxer.hikari.metrics.MetricsTrackerFactory"))),
+            .and(takesArguments(named("com.zaxxer.hikari.metrics.MetricsTrackerFactory"))),
         getClass().getName() + "$SetMetricsTrackerFactoryAdvice");
+    transformer.applyAdviceToMethod(
+        named("initializeHouseKeepingExecutorService"),
+        getClass().getName() + "$InitializeHouseKeepingExecutorServiceAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -56,6 +62,31 @@ class HikariPoolInstrumentation implements TypeInstrumentation {
         existingMetricsTracker.close();
       }
       return HikariSingletons.createMetricsTrackerFactory(userMetricsTracker, config);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class InitializeHouseKeepingExecutorServiceAdvice {
+
+    private static ScheduledExecutorService wrap(ScheduledExecutorService executor) {
+      return (ScheduledExecutorService)
+          Proxy.newProxyInstance(
+              InitializeHouseKeepingExecutorServiceAdvice.class.getClassLoader(),
+              new Class<?>[] {ScheduledExecutorService.class},
+              (proxy, method, args) -> {
+                try (Scope ignore = Context.root().makeCurrent()) {
+                  return method.invoke(executor, args);
+                } catch (InvocationTargetException e) {
+                  throw e.getCause();
+                }
+              });
+    }
+
+    @AssignReturned.ToReturned
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static ScheduledExecutorService onExit(
+        @Advice.Return ScheduledExecutorService executorService) {
+      return wrap(executorService);
     }
   }
 }

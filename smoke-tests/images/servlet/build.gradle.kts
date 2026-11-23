@@ -121,27 +121,23 @@ val targets = mapOf(
     ImageTarget(
       listOf("7.0.109"),
       listOf("hotspot", "openj9"),
-      listOf("8"),
-      mapOf("majorVersion" to "7")
+      listOf("8")
     ),
     ImageTarget(
       listOf("8.5.98"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "8")
+      listOf("8", "11", "17", "21", "25", latestJava)
     ),
     ImageTarget(
       listOf("9.0.111"),
       listOf("hotspot", "openj9"),
-      listOf("8", "11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "9")
+      listOf("8", "11", "17", "21", "25", latestJava)
     ),
     ImageTarget(
       listOf("10.1.48"),
       listOf("hotspot", "openj9"),
       listOf("11", "17", "21", "25", latestJava),
-      mapOf("majorVersion" to "10"),
-      "servlet-5.0"
+      war = "servlet-5.0"
     ),
   ),
   "tomee" to listOf(
@@ -263,7 +259,8 @@ fun configureImage(
   jdk: String,
   warProject: String,
   args: Map<String, String>,
-  isWindows: Boolean
+  isWindows: Boolean,
+  downloadTask: TaskProvider<Exec>?
 ): String {
   val versionParts = fullVersion.split("@")
   val imageNameWithTag = versionParts[0]
@@ -297,6 +294,9 @@ fun configureImage(
     from(warTask.get().archiveFile) {
       rename { "app.war" }
     }
+    if (downloadTask != null) {
+      from(downloadTask)
+    }
   }
 
   val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
@@ -312,22 +312,22 @@ fun configureImage(
       "openjdk:$jdk"
     } else if (isWindows) {
       when (jdk) {
-        "8" -> "eclipse-temurin:8u472-b08-jdk-windowsservercore-ltsc2022@sha256:2f2dc58147a9877ecde8644961b1e3c0f26f838af038ec8b8fc04dfbea61a4d0"
-        "11" -> "eclipse-temurin:11.0.32_9-jdk-windowsservercore-ltsc2022@sha256:2700e4d42757b6afaf5716fcfd342453c67b862541f8eb510be636404742227a"
-        "17" -> "eclipse-temurin:17.0.20_8-jdk-windowsservercore-ltsc2022@sha256:8633576ebfaa3bacb67d69680476760ed53757eb0bd0f1e9a53f7eee88935785"
-        "21" -> "eclipse-temurin:21.0.12_8-jdk-windowsservercore-ltsc2022@sha256:87883996bf34a15b691000be1f87650e523d995e8be6871c0bf98c601950f65a"
-        "25" -> "eclipse-temurin:25.0.4_7-jdk-windowsservercore-ltsc2022@sha256:cde5960f305a580de558cda3102c9edb06bbfd06d50004db2aa291d2d3cf58ef"
-        "27" -> "eclipse-temurin:27_35-jdk-windowsservercore-ltsc2022@sha256:8f0d4387ea3c275a44bcbc4200e7ac3214a1b456430ad997ce683ad2883d1367"
+        "8" -> "eclipse-temurin:8u512-b09-jdk-windowsservercore-ltsc2022@sha256:865e4c79eadbdcd1bdc60093458964394d88380cf0cf5fbb16b3ae66ffa0af1f"
+        "11" -> "eclipse-temurin:11.0.33_10-jdk-windowsservercore-ltsc2022@sha256:b1bdfc9b833cf21caf54b81eceb1ab32db0e510175830213b0de8dfea028a2cc"
+        "17" -> "eclipse-temurin:17.0.21.1_2-jdk-windowsservercore-ltsc2022@sha256:7f1143cea1d298fd59df1ae151707940de9264f854e1345d2e64bdeebc0d95d6"
+        "21" -> "eclipse-temurin:21.0.13.1_2-jdk-windowsservercore-ltsc2022@sha256:84750d04a9118b3a05c47619a58c5d5b6a95ad14da58db68f613dd7d83609046"
+        "25" -> "eclipse-temurin:25.0.5.1_2-jdk-windowsservercore-ltsc2022@sha256:a0b682135928ba46d70021d37cb57ba78eba8d118e9183b994a30dc4cab559a1"
+        "27" -> "eclipse-temurin:27.0.1.0-jdk-windowsservercore-ltsc2022@sha256:843460a268212815cd1952bfec40e1b70475ce9bdac8b6fb204712a99e87f7cf"
         else -> throw GradleException("Unexpected jdk version for Windows: $jdk")
       }
     } else {
       when (jdk) {
-        "8" -> "eclipse-temurin:8u472-b08-jdk@sha256:0b793df1b9217f3d25c5f820d47e85a20b0a78b0ccd0ab6deb9051502493c855"
-        "11" -> "eclipse-temurin:11.0.32_9-jdk@sha256:51985b993d8f2461c357cd10dbac1760f228b3b80028861a18cccde764fb507a"
-        "17" -> "eclipse-temurin:17.0.20_8-jdk@sha256:bc033b57e11b773c3043babfd664e7a5ef110805548b921cbfc3e8c67a0725d6"
-        "21" -> "eclipse-temurin:21.0.12_8-jdk@sha256:92a2a4d7a928d057e7bd999c418d66c26a34eb9a0442f3ab67721c3f88110b2d"
-        "25" -> "eclipse-temurin:25.0.4_7-jdk@sha256:97014c4b396021f9ddb7d592a7dbedb0c4e4215c29e03dc01c393558aefb71c2"
-        "27" -> "eclipse-temurin:27_35-jdk@sha256:4a02e0ee713d13bb7974f4e19b7bea1746668603c3557fe09c4681784a86bb52"
+        "8" -> "eclipse-temurin:8u512-b09-jdk@sha256:238468a6b1e411e775bf264e639189a938eb0e887f16a2dea027c854c616b4f1"
+        "11" -> "eclipse-temurin:11.0.33_10-jdk@sha256:9d369f804a33762f34b24cd9d1b9722fd810c16001da58bd63d0919f19a712c3"
+        "17" -> "eclipse-temurin:17.0.21.1_2-jdk@sha256:7e63c63da8c2911d5a8c3b2f656e2d278a85224a1bd4dcbe318a6131bc617bf7"
+        "21" -> "eclipse-temurin:21.0.13.1_2-jdk@sha256:cc9c4fb30bc63de16c227ac3c69f237a10537449ed7ab29fae21c6441470f69c"
+        "25" -> "eclipse-temurin:25.0.5.1_2-jdk@sha256:ce2ef9d2d67a68de5e196d4de9d743327c44a10b57fe02ec39f572c652cacfd3"
+        "27" -> "eclipse-temurin:27.0.1.1_4-jdk@sha256:a235abaaf912abaa4e806f6977009dc999ef04f1a75c9156626780884e807ee1"
         else -> throw GradleException("Unexpected jdk version for Linux: $jdk")
       }
     }
@@ -337,12 +337,12 @@ fun configureImage(
       throw GradleException("Unexpected vm: $vm")
     } else {
       when (jdk) {
-        "8" -> "ibm-semeru-runtimes:open-8u472-b08-jdk@sha256:779c0c1133ebac0d599012c5a908e67adaa993352072eac21d7ced8d6a47f14d"
+        "8" -> "ibm-semeru-runtimes:open-8.0.512.0-jdk@sha256:bfa15dc6d8301a19686f24a5cde4ba71c680f033adcb184160eebabc74d38c21"
         "11" -> "ibm-semeru-runtimes:open-11.0.29_7-jdk@sha256:00bbefbb2cf3690546338c0e4ba4cf85ec658f40de5b292e77774b55e8267d66"
-        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:430484daf5993fabe8ce4d47fa3645e0f2cd82223e1210e1b3fb3b74f059e9cd"
+        "17" -> "ibm-semeru-runtimes:open-17-jdk@sha256:3b4e9d649476ebecf6ea287dbd0011aa022a1b92ee47d4616d0bfe6fe7b1a9e9"
         "21" -> "ibm-semeru-runtimes:open-21.0.9_10-jdk@sha256:2edabc89c49cfa2b9f0c051aced57ca6dee81c2e6b8820a1257182e779b58a48"
-        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:865dae69f86969ab690c73c62204a1f5a258c58b2e8797581874ce9029edc1e6"
-        "27" -> "ibm-semeru-runtimes:open-27.0.0.0-jdk@sha256:3f684925311686c36d77e264496625c1b8fe51ab79aa2385410c93123eaface7"
+        "25" -> "ibm-semeru-runtimes:open-25-jdk@sha256:5a0c8fdfe9ad906dcebecb53b1af0cf23f564a996d2c4893e4ffa4f69b6dfc6b"
+        "27" -> "ibm-semeru-runtimes:open-27.0.0.0-jdk@sha256:e1d0e1846ebe213d1477a5a1c2bf07213e2dfa7dacfd2d99167400210587c176"
         else -> throw GradleException("Unexpected jdk version for openj9: $jdk")
       }
     }
@@ -406,6 +406,38 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): S
       val supportsWindows = entry.windows
 
       for (version in entry.version) {
+        val downloadTask = if (server == "tomcat") {
+          // Apache archive connections intermittently time out in CI, and Docker's remote ADD
+          // offers no configurable retries. Use curl's bounded retries and share each download
+          // across JDK/VM image variants to reduce requests to the archive.
+          val platformSuffix = if (isWindows) "-windows" else ""
+          val archiveSuffix = if (isWindows) "-windows-x64.zip" else ".tar.gz"
+          val archiveName = if (isWindows) "server.zip" else "server.tgz"
+          val archiveFile = layout.buildDirectory.file("downloads/tomcat-$version$platformSuffix/$archiveName")
+          val url = "https://archive.apache.org/dist/tomcat/tomcat-${version.substringBefore('.')}/v$version/bin/apache-tomcat-$version$archiveSuffix"
+          tasks.register<Exec>("downloadTomcat-$version$platformSuffix") {
+            usesService(gradle.sharedServices.registrations["dockerBuildService"].service)
+            inputs.property("url", url)
+            outputs.file(archiveFile)
+            commandLine(
+              "curl",
+              "--fail",
+              "--location",
+              "--silent",
+              "--show-error",
+              "--retry", "5",
+              "--retry-all-errors",
+              "--retry-max-time", "600",
+              "--connect-timeout", "30",
+              "--max-time", "300",
+              "--remove-on-error",
+              "--output", archiveFile.get().asFile.absolutePath,
+              url
+            )
+          }
+        } else {
+          null
+        }
         for (vm in entry.vm) {
           if (vm == "openj9" && isWindows) {
             // ibm-semeru-runtimes doesn't publish windows images
@@ -413,7 +445,7 @@ fun createDockerTasks(parentTask: TaskProvider<out Task>, isWindows: Boolean): S
           }
           for (jdk in entry.jdk) {
             if (supportsWindows || !isWindows) {
-              resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows))
+              resultImages.add(configureImage(parentTask, server, dockerfile, version, vm, jdk, warProject, extraArgs, isWindows, downloadTask))
             }
           }
         }
