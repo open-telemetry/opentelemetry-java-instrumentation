@@ -93,7 +93,7 @@ function rand(max){
 
 function randomVet(specialties) {
     const first = randItem(firstNames);
-    const last = randItem(adj);
+    const last = randItem(surnames);
     const numSpec = rand(specialties.length);
     const available = specialties.slice();
     const spec = [...Array(numSpec).keys()].map(() => available.splice(rand(available.length), 1)[0])
