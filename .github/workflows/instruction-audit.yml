@@ -7,8 +7,6 @@ on:
         description: Allow one draft PR for a verified, publishable finding
         type: boolean
         default: false
-  push:
-    branches: [trask-java-audit-caller-pilot]
 
 permissions: {}
 
