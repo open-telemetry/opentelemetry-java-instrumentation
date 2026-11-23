@@ -79,35 +79,37 @@ public class OverheadTests {
   }
 
   void runAppOnce(TestConfig config, Agent agent) throws Exception {
-    GenericContainer<?> postgres = new PostgresContainer(NETWORK).build();
-    postgres.start();
+    try (GenericContainer<?> postgres = new PostgresContainer(NETWORK).build()) {
+      postgres.start();
 
-    GenericContainer<?> petclinic =
-        new PetClinicRestContainer(NETWORK, collector, agent, namingConventions).build();
-    long start = System.currentTimeMillis();
-    petclinic.start();
-    writeStartupTimeFile(agent, start);
+      try (GenericContainer<?> petclinic =
+          new PetClinicRestContainer(NETWORK, collector, agent, namingConventions).build()) {
+        long start = System.currentTimeMillis();
+        petclinic.start();
+        writeStartupTimeFile(agent, start);
 
-    if (config.getWarmupSeconds() > 0) {
-      doWarmupPhase(config, petclinic);
+        if (config.getWarmupSeconds() > 0) {
+          doWarmupPhase(config, petclinic);
+        }
+
+        long testStart = System.currentTimeMillis();
+        startRecording(agent, petclinic);
+
+        GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, namingConventions).build();
+        k6.start();
+
+        long runDuration = System.currentTimeMillis() - testStart;
+        runDurations.put(agent.getName(), runDuration);
+
+        // This is required to get a graceful exit of the VM before testcontainers kills it
+        // forcibly.
+        // Without it, our jfr file will be empty.
+        petclinic.execInContainer("kill", "1");
+        while (petclinic.isRunning()) {
+          MILLISECONDS.sleep(500);
+        }
+      }
     }
-
-    long testStart = System.currentTimeMillis();
-    startRecording(agent, petclinic);
-
-    GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, namingConventions).build();
-    k6.start();
-
-    long runDuration = System.currentTimeMillis() - testStart;
-    runDurations.put(agent.getName(), runDuration);
-
-    // This is required to get a graceful exit of the VM before testcontainers kills it forcibly.
-    // Without it, our jfr file will be empty.
-    petclinic.execInContainer("kill", "1");
-    while (petclinic.isRunning()) {
-      MILLISECONDS.sleep(500);
-    }
-    postgres.stop();
   }
 
   private void startRecording(Agent agent, GenericContainer<?> petclinic) throws Exception {
