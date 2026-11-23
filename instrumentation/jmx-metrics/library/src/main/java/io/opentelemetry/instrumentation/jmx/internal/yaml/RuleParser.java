@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -77,7 +78,7 @@ public class RuleParser {
 
   @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static JmxRule parseJmxRule(Map<String, Object> ruleYaml) {
-    ruleYaml = new LinkedHashMap<>(ruleYaml);
+    ruleYaml = new HashMap<>(ruleYaml);
     JmxRule jmxRule = new JmxRule();
 
     String bean = (String) ruleYaml.remove("bean");
@@ -128,7 +129,7 @@ public class RuleParser {
   }
 
   private static Metric parseMetric(Map<String, Object> metricYaml) {
-    metricYaml = new LinkedHashMap<>(metricYaml);
+    metricYaml = new HashMap<>(metricYaml);
     Metric metric = new Metric();
 
     String metricName = (String) metricYaml.remove("metric");
