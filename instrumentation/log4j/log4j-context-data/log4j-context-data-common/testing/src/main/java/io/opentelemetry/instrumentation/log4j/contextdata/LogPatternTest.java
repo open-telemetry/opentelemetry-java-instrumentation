@@ -349,6 +349,26 @@ public abstract class LogPatternTest {
         });
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "%.-40highlight{%p %m}%n",
+        "%replace{%p %m}{[0-9]}{X}%n",
+        "%-50highlight{%p %m}%n"
+      })
+  void preservesWrapperMessageAndCorrelation(String pattern) {
+    assertRenderedPattern(
+        pattern,
+        (layout, rendered) -> {
+          assertThat(rendered).contains("pattern message").endsWith(System.lineSeparator());
+          if (ENABLED) {
+            assertThat(rendered)
+                .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
+                .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
+          }
+        });
+  }
+
   private void assertRenderedPattern(String pattern, BiConsumer<PatternLayout, String> assertion) {
     assertRenderedPattern(PatternLayout.newBuilder().withPattern(pattern).build(), assertion);
   }

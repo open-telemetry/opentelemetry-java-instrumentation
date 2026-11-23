@@ -113,16 +113,15 @@ class LogPatternInjectionTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"%highlight", "%replace"})
+  @ValueSource(strings = {"%highlight", "%cyan"})
   void insertsWithinWholeLineLogbackWrappers(String wrapper) {
-    String options = wrapper.equals("%replace") ? "{'unused','replacement'}" : "";
     assertPattern(
-        wrapper + "(%d %-5p prefix: %msg%n)" + options,
-        wrapper + "(%d %-5p " + FIELDS + " prefix: %msg%n)" + options,
+        wrapper + "(%d %-5p prefix: %msg%n)",
+        wrapper + "(%d %-5p " + FIELDS + " prefix: %msg%n)",
         Framework.LOGBACK);
     assertPattern(
-        "%d " + wrapper + "(%msg)" + options + "%n",
-        "%d " + FIELDS + " " + wrapper + "(%msg)" + options + "%n",
+        "%d " + wrapper + "(%msg)%n",
+        "%d " + FIELDS + " " + wrapper + "(%msg)%n",
         Framework.LOGBACK);
   }
 
@@ -132,7 +131,6 @@ class LogPatternInjectionTest {
         "highlight",
         "cyan",
         "style",
-        "replace",
         "enc",
         "encode",
         "notEmpty",
@@ -174,6 +172,21 @@ class LogPatternInjectionTest {
         "%cyan{%d %" + converter + "{%m}" + options + "}%n",
         "%cyan{%d " + FIELDS + " %" + converter + "{%m}" + options + "}%n",
         Framework.LOG4J2);
+  }
+
+  @ParameterizedTest
+  @EnumSource(
+      value = Framework.class,
+      names = {"LOGBACK", "LOGBACK_LEGACY", "LOG4J2"})
+  void insertsOutsideTruncationAndReplacement(Framework framework) {
+    boolean log4j2 = framework == Framework.LOG4J2;
+    String truncated = log4j2 ? "%.-20highlight{%p %m}" : "%.-20(%p %m)";
+    String replacement = log4j2 ? "%replace{%p %m}{[0-9]}{X}" : "%replace(%p %m){'[0-9]','X'}";
+    assertPattern("%d " + truncated, "%d " + FIELDS + " " + truncated, framework);
+    assertPattern("%d " + replacement, "%d " + FIELDS + " " + replacement, framework);
+    String padded = log4j2 ? "%-50highlight{%p %m}" : "%-50(%p %m)";
+    String enhanced = log4j2 ? "%-50highlight{%p " + FIELDS + " %m}" : "%-50(%p " + FIELDS + " %m)";
+    assertPattern(padded, enhanced, framework);
   }
 
   @Test

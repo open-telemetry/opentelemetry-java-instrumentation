@@ -153,6 +153,12 @@ class LogPatternTest {
   }
 
   @ParameterizedTest
+  @ValueSource(strings = {"%.-20(%p %m)", "%replace(%p %m){'[0-9]','X'}%n", "%-50(%p %m)"})
+  void preservesWrapperMessageAndCorrelation(String pattern) {
+    assertRenderedPattern(pattern, pattern.endsWith("%n"));
+  }
+
+  @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void preservesExactAliasKeys(boolean withMessage) {
     String traceAlias =
@@ -207,6 +213,10 @@ class LogPatternTest {
   }
 
   private static void assertRenderedPattern(String pattern) {
+    assertRenderedPattern(pattern, true);
+  }
+
+  private static void assertRenderedPattern(String pattern, boolean endsWithNewline) {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
     Logger logger = context.getLogger("pattern-regression");
     boolean additive = logger.isAdditive();
@@ -232,7 +242,10 @@ class LogPatternTest {
             logger.info("pattern message");
             String rendered =
                 layout.doLayout(appender.list.get(0)).replaceAll("\u001B\\[[;\\d]*m", "");
-            assertThat(rendered).contains("pattern message").endsWith(System.lineSeparator());
+            assertThat(rendered).contains("pattern message");
+            if (endsWithNewline) {
+              assertThat(rendered).endsWith(System.lineSeparator());
+            }
             assertThat(rendered.split("\\R")).hasSize(1);
             if (ENABLED) {
               assertThat(rendered)

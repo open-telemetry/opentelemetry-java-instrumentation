@@ -87,13 +87,8 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
   }
 
   private static StringMap newContextData(StringMap contextData) {
-    StringMap newContextData = new SortedArrayStringMap(contextData);
-    for (Map.Entry<String, String> entry :
-        ConfiguredResourceAttributesHolder.getResourceAttributes().entrySet()) {
-      if (!newContextData.containsKey(entry.getKey())) {
-        newContextData.putValue(entry.getKey(), entry.getValue());
-      }
-    }
+    StringMap newContextData = new SortedArrayStringMap(staticContextData);
+    newContextData.putAll(contextData);
     return newContextData;
   }
 

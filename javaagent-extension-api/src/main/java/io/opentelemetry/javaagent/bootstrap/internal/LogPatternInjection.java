@@ -443,8 +443,9 @@ public final class LogPatternInjection {
         || converter.equals("yellow");
   }
 
-  private static boolean preservesLog4j2NestedText(String converter) {
-    return !converter.equals("maxLen")
+  private static boolean allowsNestedInjection(String converter) {
+    return !converter.equals("replace")
+        && !converter.equals("maxLen")
         && !converter.equals("maxLength")
         && !converter.equals("equals")
         && !converter.equals("equalsIgnoreCase");
@@ -501,7 +502,8 @@ public final class LogPatternInjection {
                 pattern.substring(end + 1, wrapperEnd - 1), framework, nestedInsertion);
         if (nested >= 0) {
           if (!nestedInsertion
-              || (framework == Framework.LOG4J2 && !preservesLog4j2NestedText(converter))) {
+              || pattern.substring(i + 1, name).indexOf('.') >= 0
+              || !allowsNestedInjection(converter)) {
             return precedingEnd;
           }
           return nested == 0 ? precedingEnd : end + 1 + nested;
