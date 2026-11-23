@@ -58,11 +58,6 @@ testing.suites {
         "com.vaadin:vaadin-spring-boot-starter:${baseVersion("14.2.0").orLatest("14.11.+")}"
       )
     }
-    executions {
-      register("ControllerTelemetry") {
-        telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-      }
-    }
   }
 
   register<JvmTestSuite>("vaadinLatestTest") {
@@ -73,11 +68,17 @@ testing.suites {
       implementation("org.testcontainers:testcontainers-selenium")
       implementation("org.seleniumhq.selenium:selenium-java:4.8.3")
     }
-    if (otelProps.testLatestDeps) {
-      executions {
-        register("ControllerTelemetry") {
-          telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
-        }
+  }
+
+  executions("vaadin14Test") {
+    register("ControllerTelemetry") {
+      telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
+    }
+  }
+  if (otelProps.testLatestDeps) {
+    executions("vaadinLatestTest") {
+      register("ControllerTelemetry") {
+        telemetryConfig("otel.instrumentation.common.controller-telemetry.enabled", "true")
       }
     }
   }

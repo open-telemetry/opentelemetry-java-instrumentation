@@ -9,8 +9,8 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.indexOfAny;
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parsePort;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.MysqlHostParser.HostList;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.HostPort;
 import java.net.URI;
@@ -107,7 +107,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     }
     if (hosts != null && hosts.size() == 1) {
       ctx.resolveConfiguredServerTarget(
-          DbServerTarget.builder(DEFAULT_PORT)
+          ServerTarget.builder(DEFAULT_PORT)
               .addEndpoint(ctx.host(), ctx.port() == null ? -1 : ctx.port())
               .build());
     }
@@ -121,7 +121,7 @@ public final class MysqlUrlParser implements JdbcUrlParser {
     if (hosts.size() < 2) {
       return;
     }
-    DbServerTargetBuilder builder = DbServerTarget.builder(DEFAULT_PORT);
+    ServerTargetBuilder builder = ServerTarget.builder(DEFAULT_PORT);
     for (HostPort host : hosts) {
       builder.addEndpoint(host.host(), host.port() == null ? -1 : host.port());
     }

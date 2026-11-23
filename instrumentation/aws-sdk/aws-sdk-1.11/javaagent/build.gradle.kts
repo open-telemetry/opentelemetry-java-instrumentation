@@ -92,13 +92,6 @@ testing.suites {
       // needed by S3
       implementation("javax.xml.bind:jaxb-api:2.3.1")
     }
-    if (!otelProps.testLatestDeps) {
-      executions {
-        register("ExperimentalAttributes") {
-          systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-        }
-      }
-    }
   }
 
   // We test SQS separately since we have special logic for it and want to make sure the presence of
@@ -109,18 +102,27 @@ testing.suites {
       implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
       implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
     }
-    executions {
-      register("ReceiveTelemetry") {
-        telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-        telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
-      }
-    }
   }
 
   register<JvmTestSuite>("testSqsNoReceiveTelemetry") {
     dependencies {
       implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
       implementation("com.amazonaws:aws-java-sdk-sqs:${baseVersion("1.11.106").orLatest()}")
+    }
+  }
+
+  if (!otelProps.testLatestDeps) {
+    executions("version1_11_0Test") {
+      register("ExperimentalAttributes") {
+        systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+      }
+    }
+  }
+
+  executions("testSqs") {
+    register("ReceiveTelemetry") {
+      telemetryConfig("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
     }
   }
 

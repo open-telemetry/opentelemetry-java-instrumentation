@@ -79,21 +79,20 @@ abstract class AbstractComplexPropagationTest {
 
     messageHandler.join();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process application.sendChannel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "application.sendChannel")),
-                span ->
-                    span.hasName("process application.receiveChannel")
-                        .hasParent(trace.getSpan(0))
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "application.receiveChannel")),
-                span -> span.hasName("handler").hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("process application.sendChannel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "application.sendChannel")),
+            span ->
+                span.hasName("process application.receiveChannel")
+                    .hasParent(trace.getSpan(0))
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "application.receiveChannel")),
+            span -> span.hasName("handler").hasParent(trace.getSpan(1))));
 
     receiveChannel.unsubscribe(messageHandler);
   }
@@ -132,17 +131,16 @@ abstract class AbstractComplexPropagationTest {
       sendChannel().subscribe(message -> externalQueue().offer(Payload.from(message)));
 
       consumerThread()
-          .execute(
-              () -> {
-                while (!Thread.interrupted()) {
-                  try {
-                    Payload payload = externalQueue().take();
-                    receiveChannel().send(payload.toMessage());
-                  } catch (InterruptedException ignored) {
-                    Thread.currentThread().interrupt();
-                  }
-                }
-              });
+          .execute(() -> {
+            while (!Thread.interrupted()) {
+              try {
+                Payload payload = externalQueue().take();
+                receiveChannel().send(payload.toMessage());
+              } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+              }
+            }
+          });
     }
   }
 

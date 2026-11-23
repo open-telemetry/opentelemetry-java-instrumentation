@@ -10,6 +10,7 @@ import java.lang.reflect.Method;
 
 final class LambdaParameters {
 
+  // only used by tests
   static <T> Object[] toArray(Method targetMethod, T input, Context context) {
     Class<?>[] parameterTypes = targetMethod.getParameterTypes();
     Object[] parameters = new Object[parameterTypes.length];

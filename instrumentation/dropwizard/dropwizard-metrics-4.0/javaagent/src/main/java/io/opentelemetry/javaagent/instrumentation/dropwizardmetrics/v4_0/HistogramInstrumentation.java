@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0;
 
-import static io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0.DropwizardSingletons.metrics;
+import static io.opentelemetry.javaagent.instrumentation.dropwizardmetrics.v4_0.DropwizardMetricsRecorder.histogramUpdate;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
@@ -34,7 +34,7 @@ class HistogramInstrumentation implements TypeInstrumentation {
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This Histogram histogram, @Advice.Argument(0) long value) {
-      metrics().histogramUpdate(histogram, value);
+      histogramUpdate(histogram, value);
     }
   }
 }

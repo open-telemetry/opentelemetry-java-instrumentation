@@ -5,6 +5,7 @@ description: >
 semantic_conventions:
   - FAAS_SERVER_SPANS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
 configurations:
   - name: otel.instrumentation.aws-lambda.flush-timeout

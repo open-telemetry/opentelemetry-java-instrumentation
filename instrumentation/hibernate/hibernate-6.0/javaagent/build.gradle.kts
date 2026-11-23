@@ -56,16 +56,45 @@ testing.suites {
       implementation(project(":instrumentation:hibernate:testing"))
       implementation("org.hibernate.orm:hibernate-core:${baseVersion("7.0.0.Final").orLatest("7.+")}")
     }
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(17)
+    }
   }
 
-  executions("hibernate6Test", "hibernate7Test") {
+  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+
+  executions("hibernate6Test") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
+
     configureDefault {
       telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
     }
   }
 
+  executions("hibernate7Test") {
+    configureEach {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
+
+    configureDefault {
+      telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
+    }
+    configureEach {
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
+      }
+    }
+  }
+
   executions("test") {
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
+    }
+
     register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
       telemetryConfig("otel.instrumentation.hibernate.experimental-span-attributes", "true")
     }
 
@@ -80,23 +109,6 @@ testing.suites {
 }
 
 tasks {
-  withType<Test>().configureEach {
-
-    if (name != "testDisabled") {
-      jvmArgs("-Dotel.instrumentation.hibernate.enabled=true")
-    }
-  }
-
-  named("compileHibernate7TestJava", JavaCompile::class).configure {
-    options.release.set(17)
-  }
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
-    named("hibernate7Test", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
     dependsOn(testing.suites)
   }

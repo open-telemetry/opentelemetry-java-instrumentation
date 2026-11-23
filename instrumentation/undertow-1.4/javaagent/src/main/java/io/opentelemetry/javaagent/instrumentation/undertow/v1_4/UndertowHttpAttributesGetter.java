@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.internal.HttpProtocolUtil;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.undertow.server.HttpServerExchange;
 import io.undertow.util.HeaderValues;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -79,15 +79,15 @@ class UndertowHttpAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    return exchange.getConnection().getPeerAddress(InetSocketAddress.class);
+    return exchange.getConnection().getPeerAddress();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public SocketAddress getNetworkLocalSocketAddress(
       HttpServerExchange exchange, @Nullable HttpServerExchange unused) {
-    return exchange.getConnection().getLocalAddress(InetSocketAddress.class);
+    return exchange.getConnection().getLocalAddress();
   }
 }

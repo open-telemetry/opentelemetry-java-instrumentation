@@ -38,13 +38,11 @@ configurations
     resolutionStrategy.force("com.google.guava:guava:19.0")
   }
 
-testing {
-  suites {
-    register<JvmTestSuite>("shadedClientTest") {
-      dependencies {
-        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.4.0").orLatest("1.+")}")
-        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
-      }
+testing.suites {
+  register<JvmTestSuite>("shadedClientTest") {
+    dependencies {
+      implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("1.4.0").orLatest("1.+")}")
+      implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
     }
   }
 }

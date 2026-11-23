@@ -595,23 +595,20 @@ public abstract class AbstractPreparedStatementParametersTest {
     assertThat(resultSet.getInt(1)).isEqualTo(3);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName(spanName)
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(
-                                    DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
-                                equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
-                                equalTo(DB_QUERY_TEXT, sanitizedQuery),
-                                equalTo(DB_QUERY_SUMMARY, spanName),
-                                equalTo(
-                                    DB_QUERY_PARAMETER.getAttributeKey("0"),
-                                    expectedParameterValue))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName(spanName)
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, system.equals("h2") ? "h2database" : system),
+                            equalTo(DB_NAMESPACE, DATABASE_NAME_LOWER),
+                            equalTo(DB_QUERY_TEXT, sanitizedQuery),
+                            equalTo(DB_QUERY_SUMMARY, spanName),
+                            equalTo(
+                                DB_QUERY_PARAMETER.getAttributeKey("0"), expectedParameterValue))));
   }
 
   private static class IdType implements Serializable {

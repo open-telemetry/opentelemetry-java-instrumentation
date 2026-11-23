@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -16,4 +18,12 @@ dependencies {
   library("org.jodd:jodd-http:4.1.1")
 
   testImplementation(project(":instrumentation-api-incubator"))
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("org.jodd:jodd-http:4.2.0")
+    }
+  }
 }

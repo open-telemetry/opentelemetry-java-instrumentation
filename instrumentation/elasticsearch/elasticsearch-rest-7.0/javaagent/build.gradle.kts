@@ -40,9 +40,3 @@ dependencies {
   testImplementation("com.fasterxml.jackson.core:jackson-databind")
   testImplementation("org.testcontainers:testcontainers-elasticsearch")
 }
-
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-}

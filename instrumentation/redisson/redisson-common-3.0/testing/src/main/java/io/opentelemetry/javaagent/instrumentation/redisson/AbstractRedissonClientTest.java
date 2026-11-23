@@ -83,6 +83,7 @@ import org.redisson.client.RedisOutOfMemoryException;
 import org.redisson.client.codec.StringCodec;
 import org.redisson.client.protocol.Decoder;
 import org.redisson.config.Config;
+import org.redisson.config.MasterSlaveServersConfig;
 import org.redisson.config.SingleServerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,16 +149,20 @@ public abstract class AbstractRedissonClientTest {
     if (connectionMinimumIdleSize != null) {
       singleServerConfig.setConnectionMinimumIdleSize(connectionMinimumIdleSize);
     }
+    disableConnectionPing(singleServerConfig);
+    return config;
+  }
+
+  private static void disableConnectionPing(Object serverConfig)
+      throws InvocationTargetException, IllegalAccessException {
     try {
-      // disable connection ping if it exists
-      singleServerConfig
+      serverConfig
           .getClass()
           .getMethod("setPingConnectionInterval", int.class)
-          .invoke(singleServerConfig, 0);
+          .invoke(serverConfig, 0);
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
-    return config;
   }
 
   private String redisAddressForHost(String serverHost) {
@@ -182,36 +187,35 @@ public abstract class AbstractRedissonClientTest {
           keyObject.set("bar");
           keyObject.get();
         });
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("SET " + address)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET")),
-                span ->
-                    span.hasName("GET " + address)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "GET foo"),
-                            equalTo(DB_OPERATION_NAME, "GET"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("SET " + address)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET")),
+            span ->
+                span.hasName("GET " + address)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "GET foo"),
+                        equalTo(DB_OPERATION_NAME, "GET"))));
   }
 
   @Test
@@ -219,23 +223,21 @@ public abstract class AbstractRedissonClientTest {
     AtomicReference<String> instrumentationName = new AtomicReference<>();
     RBucket<String> keyObject = redisson.getBucket("foo");
     keyObject.set("bar");
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("SET " + address)
-                      .hasKind(CLIENT)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(NETWORK_PEER_ADDRESS, ip),
-                          equalTo(NETWORK_PEER_PORT, port),
-                          equalTo(SERVER_ADDRESS, host),
-                          equalTo(SERVER_PORT, port),
-                          equalTo(DB_SYSTEM_NAME, REDIS),
-                          equalTo(DB_NAMESPACE, dbNamespace("0")),
-                          equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                          equalTo(DB_OPERATION_NAME, "SET")));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+      trace.hasSpansSatisfyingExactly(span ->
+          span.hasName("SET " + address)
+              .hasKind(CLIENT)
+              .hasAttributesSatisfyingExactly(
+                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                  equalTo(NETWORK_PEER_PORT, port),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_NAMESPACE, dbNamespace("0")),
+                  equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                  equalTo(DB_OPERATION_NAME, "SET")));
+    });
 
     List<AttributeKey<?>> expectedKeys =
         new ArrayList<>(
@@ -262,38 +264,31 @@ public abstract class AbstractRedissonClientTest {
         .isInstanceOf(RedisException.class);
 
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET " + address)
-                      .hasKind(CLIENT)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(NETWORK_PEER_ADDRESS, ip),
-                          equalTo(NETWORK_PEER_PORT, port),
-                          equalTo(SERVER_ADDRESS, host),
-                          equalTo(SERVER_PORT, port),
-                          equalTo(DB_SYSTEM_NAME, REDIS),
-                          equalTo(DB_NAMESPACE, dbNamespace("0")),
-                          equalTo(DB_QUERY_TEXT, "GET wrong-type"),
-                          equalTo(DB_OPERATION_NAME, "GET"),
-                          equalTo(ERROR_TYPE, "WRONGTYPE")));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+      trace.hasSpansSatisfyingExactly(span ->
+          span.hasName("GET " + address)
+              .hasKind(CLIENT)
+              .hasAttributesSatisfyingExactly(
+                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                  equalTo(NETWORK_PEER_PORT, port),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_NAMESPACE, dbNamespace("0")),
+                  equalTo(DB_QUERY_TEXT, "GET wrong-type"),
+                  equalTo(DB_OPERATION_NAME, "GET"),
+                  equalTo(ERROR_TYPE, "WRONGTYPE")));
+    });
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(ERROR_TYPE, "WRONGTYPE")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfying(attributes ->
+                        assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "WRONGTYPE"))));
   }
 
   @Test
@@ -372,17 +367,15 @@ public abstract class AbstractRedissonClientTest {
             AtomicBoolean failureCallbackCalled = new AtomicBoolean();
             AtomicReference<RFuture<?>> clientError = new AtomicReference<>();
             CompletionStage<?> failureCallback =
-                serverError.whenComplete(
-                    (result, error) -> {
-                      failureCallbackCalled.set(true);
-                      failureCallbackActive.set(true);
-                      try {
-                        clientError.set(
-                            callbackClient.getBucket("callback-client-error").getAsync());
-                      } finally {
-                        failureCallbackActive.set(false);
-                      }
-                    });
+                serverError.whenComplete((result, error) -> {
+                  failureCallbackCalled.set(true);
+                  failureCallbackActive.set(true);
+                  try {
+                    clientError.set(callbackClient.getBucket("callback-client-error").getAsync());
+                  } finally {
+                    failureCallbackActive.set(false);
+                  }
+                });
             allowEvalMapping.countDown();
 
             assertThatThrownBy(() -> failureCallback.toCompletableFuture().join())
@@ -400,65 +393,50 @@ public abstract class AbstractRedissonClientTest {
     }
 
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(1).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-              span ->
-                  span.hasName("EVAL " + address)
-                      .hasKind(CLIENT)
-                      .hasAttributesSatisfying(
-                          attributes ->
-                              assertThat(attributes.asMap())
-                                  .containsEntry(ERROR_TYPE, "Custom.Callback!")),
-              span ->
-                  span.hasName("GET " + address)
-                      .hasKind(CLIENT)
-                      .hasAttributesSatisfying(
-                          attributes ->
-                              assertThat(attributes.asMap())
-                                  .containsEntry(ERROR_TYPE, RedisException.class.getName())),
-              span ->
-                  span.hasName("SET " + address)
-                      .hasKind(CLIENT)
-                      .hasAttributesSatisfying(
-                          attributes ->
-                              assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE)));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(1).getInstrumentationScopeInfo().getName());
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+          span ->
+              span.hasName("EVAL " + address)
+                  .hasKind(CLIENT)
+                  .hasAttributesSatisfying(attributes ->
+                      assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "Custom.Callback!")),
+          span ->
+              span.hasName("GET " + address)
+                  .hasKind(CLIENT)
+                  .hasAttributesSatisfying(attributes ->
+                      assertThat(attributes.asMap())
+                          .containsEntry(ERROR_TYPE, RedisException.class.getName())),
+          span ->
+              span.hasName("SET " + address)
+                  .hasKind(CLIENT)
+                  .hasAttributesSatisfying(
+                      attributes -> assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE)));
+    });
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram
-                            .satisfies(data -> assertThat(data.getPoints()).hasSize(3))
-                            .hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfying(
-                                            attributes ->
-                                                assertThat(attributes.asMap())
-                                                    .containsEntry(ERROR_TYPE, "Custom.Callback!")),
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfying(
-                                            attributes ->
-                                                assertThat(attributes.asMap())
-                                                    .containsEntry(
-                                                        ERROR_TYPE,
-                                                        RedisException.class.getName())),
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfying(
-                                            attributes ->
-                                                assertThat(attributes.asMap())
-                                                    .doesNotContainKey(ERROR_TYPE)))));
+                .hasHistogramPointsSatisfying(
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap())
+                                    .containsEntry(ERROR_TYPE, "Custom.Callback!")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap())
+                                    .containsEntry(ERROR_TYPE, RedisException.class.getName())),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE))));
   }
 
   private static Class<?> loadCommandMapperType() throws ClassNotFoundException {
@@ -598,41 +576,34 @@ public abstract class AbstractRedissonClientTest {
     assertThatThrownBy(bucket::get).isInstanceOf(RedisException.class);
 
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("GET " + address)
-                      .hasKind(CLIENT)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(NETWORK_PEER_ADDRESS, ip),
-                          equalTo(NETWORK_PEER_PORT, port),
-                          equalTo(SERVER_ADDRESS, host),
-                          equalTo(SERVER_PORT, port),
-                          equalTo(DB_SYSTEM_NAME, REDIS),
-                          equalTo(DB_NAMESPACE, dbNamespace("0")),
-                          equalTo(DB_QUERY_TEXT, "GET " + key),
-                          equalTo(DB_OPERATION_NAME, "GET"),
-                          equalTo(ERROR_TYPE, RedisException.class.getName())));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+      trace.hasSpansSatisfyingExactly(span ->
+          span.hasName("GET " + address)
+              .hasKind(CLIENT)
+              .hasAttributesSatisfyingExactly(
+                  equalTo(NETWORK_PEER_ADDRESS, ip),
+                  equalTo(NETWORK_PEER_PORT, port),
+                  equalTo(SERVER_ADDRESS, host),
+                  equalTo(SERVER_PORT, port),
+                  equalTo(DB_SYSTEM_NAME, REDIS),
+                  equalTo(DB_NAMESPACE, dbNamespace("0")),
+                  equalTo(DB_QUERY_TEXT, "GET " + key),
+                  equalTo(DB_OPERATION_NAME, "GET"),
+                  equalTo(ERROR_TYPE, RedisException.class.getName())));
+    });
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(
-                                        attributes ->
-                                            assertThat(attributes.asMap())
-                                                .containsEntry(
-                                                    ERROR_TYPE, RedisException.class.getName())))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfying(attributes ->
+                            assertThat(attributes.asMap())
+                                .containsEntry(ERROR_TYPE, RedisException.class.getName()))));
     testing.clearData();
   }
 
@@ -655,62 +626,49 @@ public abstract class AbstractRedissonClientTest {
   private void assertScriptErrorType(
       String serverError, String expectedErrorType, Class<? extends RedisException> expectedCause) {
     String script = "return redis.error_reply('" + serverError + "')";
-    assertThatThrownBy(
-            () ->
-                redisson
-                    .getScript()
-                    .eval(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE))
-        .satisfies(
-            error -> {
-              if (expectedCause != null) {
-                assertThat(error)
-                    .satisfiesAnyOf(
-                        e -> assertThat(e).isInstanceOf(expectedCause),
-                        e -> assertThat(e).hasRootCauseInstanceOf(expectedCause));
-              }
-            });
+    assertThatThrownBy(() ->
+            redisson.getScript().eval(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE))
+        .satisfies(error -> {
+          if (expectedCause != null) {
+            assertThat(error)
+                .satisfiesAnyOf(
+                    e -> assertThat(e).isInstanceOf(expectedCause),
+                    e -> assertThat(e).hasRootCauseInstanceOf(expectedCause));
+          }
+        });
     assertErrorTypeOnSpanAndMetric(expectedErrorType);
   }
 
   private static void assertErrorTypeOnSpanAndMetric(String expectedErrorType) {
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasKind(CLIENT)
-                      .hasAttributesSatisfying(
-                          attributes -> {
-                            if (expectedErrorType == null) {
-                              assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
-                            } else {
-                              assertThat(attributes.asMap())
-                                  .containsEntry(ERROR_TYPE, expectedErrorType);
-                            }
-                          }));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+      trace.hasSpansSatisfyingExactly(span ->
+          span.hasKind(CLIENT)
+              .hasAttributesSatisfying(attributes -> {
+                if (expectedErrorType == null) {
+                  assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
+                } else {
+                  assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, expectedErrorType);
+                }
+              }));
+    });
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(
-                                        attributes -> {
-                                          if (expectedErrorType == null) {
-                                            assertThat(attributes.asMap())
-                                                .doesNotContainKey(ERROR_TYPE);
-                                          } else {
-                                            assertThat(attributes.asMap())
-                                                .containsEntry(ERROR_TYPE, expectedErrorType);
-                                          }
-                                        }))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfying(attributes -> {
+                          if (expectedErrorType == null) {
+                            assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
+                          } else {
+                            assertThat(attributes.asMap())
+                                .containsEntry(ERROR_TYPE, expectedErrorType);
+                          }
+                        })));
     testing.clearData();
   }
 
@@ -719,42 +677,32 @@ public abstract class AbstractRedissonClientTest {
     testing.waitAndAssertTraces(
         trace -> {
           instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasKind(CLIENT)
-                      .hasAttributesSatisfying(
-                          attributes ->
-                              assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "MOVED")));
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasKind(CLIENT)
+                  .hasAttributesSatisfying(attributes ->
+                      assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "MOVED")));
         },
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasAttributesSatisfying(
-                            attributes ->
-                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(CLIENT)
+                    .hasAttributesSatisfying(attributes ->
+                        assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE))));
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(
-                                        attributes ->
-                                            assertThat(attributes.asMap())
-                                                .containsEntry(ERROR_TYPE, "MOVED")),
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(
-                                        attributes ->
-                                            assertThat(attributes.asMap())
-                                                .doesNotContainKey(ERROR_TYPE)))));
+                .hasHistogramPointsSatisfying(
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "MOVED")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE))));
     testing.clearData();
   }
 
@@ -766,41 +714,38 @@ public abstract class AbstractRedissonClientTest {
       RBucket<String> keyObject = databaseOne.getBucket("foo");
       keyObject.set("bar");
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("SET " + address)
-                          .hasKind(CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_PEER_ADDRESS, ip),
-                              equalTo(NETWORK_PEER_PORT, port),
-                              equalTo(SERVER_ADDRESS, host),
-                              equalTo(SERVER_PORT, port),
-                              equalTo(DB_SYSTEM_NAME, REDIS),
-                              equalTo(DB_NAMESPACE, dbNamespace("1")),
-                              equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                              equalTo(DB_OPERATION_NAME, "SET"))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("SET " + address)
+                  .hasKind(CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                      equalTo(NETWORK_PEER_PORT, port),
+                      equalTo(SERVER_ADDRESS, host),
+                      equalTo(SERVER_PORT, port),
+                      equalTo(DB_SYSTEM_NAME, REDIS),
+                      equalTo(DB_NAMESPACE, dbNamespace("1")),
+                      equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                      equalTo(DB_OPERATION_NAME, "SET"))));
     } finally {
       databaseOne.shutdown();
     }
   }
 
   @Test
-  void configuredMasterSlaveServerTarget() {
+  void configuredMasterSlaveServerTarget()
+      throws InvocationTargetException, IllegalAccessException {
     String aliasHost = host.equals(ip) ? "localhost" : ip;
     String configuredServerAddress = host + ":" + port + "," + aliasHost + ":" + port;
 
     Config config = new Config();
-    config
-        .useMasterSlaveServers()
+    MasterSlaveServersConfig serversConfig = config.useMasterSlaveServers();
+    serversConfig
         .setMasterAddress(redisAddressForHost(host))
         .addSlaveAddress(redisAddressForHost(aliasHost));
+    disableConnectionPing(serversConfig);
     RedissonClient configuredClient = Redisson.create(config);
     try {
-      if (hasDatabaseIndex()) {
-        testing.waitForTraces(2);
-      }
       assertConfiguredTarget(
           configuredClient, "SET " + configuredServerAddress, configuredServerAddress, null);
     } finally {
@@ -809,15 +754,14 @@ public abstract class AbstractRedissonClientTest {
   }
 
   @Test
-  void configuredSingleServerTarget() {
+  void configuredSingleServerTarget() throws InvocationTargetException, IllegalAccessException {
     String configuredHost = host.equals(ip) ? "localhost" : ip;
     Config config = new Config();
-    config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
+    SingleServerConfig serverConfig =
+        config.useSingleServer().setAddress(redisAddressForHost(configuredHost));
+    disableConnectionPing(serverConfig);
     RedissonClient configuredClient = Redisson.create(config);
     try {
-      if (hasDatabaseIndex()) {
-        testing.waitForTraces(1);
-      }
       assertConfiguredTarget(
           configuredClient, "SET " + configuredHost + ":" + port, configuredHost, port);
     } finally {
@@ -833,21 +777,19 @@ public abstract class AbstractRedissonClientTest {
     testing.clearData();
     client.getBucket("configured-target").set("value");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(expectedSpanName)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, expectedServerAddress),
-                            equalTo(SERVER_PORT, expectedServerPort),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "SET configured-target ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(expectedSpanName)
+                .hasKind(CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(SERVER_ADDRESS, expectedServerAddress),
+                    equalTo(SERVER_PORT, expectedServerPort),
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_NAMESPACE, dbNamespace("0")),
+                    equalTo(DB_QUERY_TEXT, "SET configured-target ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"))));
   }
 
   @Test
@@ -858,33 +800,31 @@ public abstract class AbstractRedissonClientTest {
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("SET " + address, "GET " + address),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "GET foo"),
-                            equalTo(DB_OPERATION_NAME, "GET"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("GET " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "GET foo"),
+                        equalTo(DB_OPERATION_NAME, "GET"))));
   }
 
   @ParameterizedTest
@@ -904,22 +844,20 @@ public abstract class AbstractRedissonClientTest {
       return;
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(scenario.operationName + " " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_OPERATION_NAME, scenario.operationName),
-                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(DB_QUERY_TEXT, scenario.queryText))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(scenario.operationName + " " + address)
+                .hasKind(CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_NAMESPACE, dbNamespace("0")),
+                    equalTo(DB_OPERATION_NAME, scenario.operationName),
+                    equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                    equalTo(DB_QUERY_TEXT, scenario.queryText))));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -974,28 +912,25 @@ public abstract class AbstractRedissonClientTest {
     // Adapt different method signature:
     // `BatchResult<?> execute()` and `List<?> execute()`
     invokeExecute(batch);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("PIPELINE SET " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, (long) batchSize),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                String.join(
-                                    "; ",
-                                    nCopies(
-                                        truncatedQueryTextCommandCount,
-                                        "SET " + bucketName + " ?"))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("PIPELINE SET " + address)
+                .hasKind(CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_NAMESPACE, dbNamespace("0")),
+                    equalTo(DB_OPERATION_NAME, "PIPELINE SET"),
+                    equalTo(DB_OPERATION_BATCH_SIZE, (long) batchSize),
+                    equalTo(
+                        DB_QUERY_TEXT,
+                        String.join(
+                            "; ",
+                            nCopies(
+                                truncatedQueryTextCommandCount, "SET " + bucketName + " ?"))))));
   }
 
   @Test
@@ -1017,52 +952,51 @@ public abstract class AbstractRedissonClientTest {
           batch.getBucket("batch2").setAsync("v2");
           batch.execute();
         });
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
-                span ->
-                    span.hasName("MULTI SET " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_OPERATION_NAME, "MULTI SET"),
-                            // db.operation.batch.size is not emitted because MULTI transaction
-                            // telemetry is split across wrapper and command spans, so this span
-                            // does not represent the full logical batch.
-                            equalTo(DB_QUERY_TEXT, "MULTI; SET batch1 ?"))
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("SET " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "SET batch2 ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"))
-                        .hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("EXEC " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "EXEC"),
-                            equalTo(DB_OPERATION_NAME, "EXEC"))
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasKind(INTERNAL),
+            span ->
+                span.hasName("MULTI SET " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_OPERATION_NAME, "MULTI SET"),
+                        // db.operation.batch.size is not emitted because MULTI transaction
+                        // telemetry is split across wrapper and command spans, so this span
+                        // does not represent the full logical batch.
+                        equalTo(DB_QUERY_TEXT, "MULTI; SET batch1 ?"))
+                    .hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("SET " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "SET batch2 ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"))
+                    .hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("EXEC " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "EXEC"),
+                        equalTo(DB_OPERATION_NAME, "EXEC"))
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -1073,20 +1007,19 @@ public abstract class AbstractRedissonClientTest {
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.CLIENT),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("RPUSH " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "RPUSH list1 ?"),
-                            equalTo(DB_OPERATION_NAME, "RPUSH"))
-                        .hasNoParent()));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("RPUSH " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "RPUSH list1 ?"),
+                        equalTo(DB_OPERATION_NAME, "RPUSH"))
+                    .hasNoParent()));
   }
 
   @Test
@@ -1100,33 +1033,31 @@ public abstract class AbstractRedissonClientTest {
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("EVAL " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, String.format("EVAL %s 1 map1 ? ?", script)),
-                            equalTo(DB_OPERATION_NAME, "EVAL"))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("EVAL " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, String.format("EVAL %s 1 map1 ? ?", script)),
+                        equalTo(DB_OPERATION_NAME, "EVAL"))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("HGET " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "HGET map1 key1"),
-                            equalTo(DB_OPERATION_NAME, "HGET"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("HGET " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "HGET map1 key1"),
+                        equalTo(DB_OPERATION_NAME, "HGET"))));
   }
 
   @Test
@@ -1137,19 +1068,18 @@ public abstract class AbstractRedissonClientTest {
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SADD " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
-                            equalTo(DB_OPERATION_NAME, "SADD"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SADD " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
+                        equalTo(DB_OPERATION_NAME, "SADD"))));
   }
 
   @Test
@@ -1166,19 +1096,18 @@ public abstract class AbstractRedissonClientTest {
     testing.waitAndAssertSortedTraces(
         orderByRootSpanName("ZADD " + address),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("ZADD " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "ZADD sort_set1 ? ? ? ? ? ?"),
-                            equalTo(DB_OPERATION_NAME, "ZADD"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("ZADD " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "ZADD sort_set1 ? ? ? ? ? ?"),
+                        equalTo(DB_OPERATION_NAME, "ZADD"))));
   }
 
   private static void invokeAddAll(RScoredSortedSet<String> object, Map<String, Double> arg)
@@ -1194,19 +1123,18 @@ public abstract class AbstractRedissonClientTest {
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("INCR " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "INCR AtomicLong"),
-                            equalTo(DB_OPERATION_NAME, "INCR"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("INCR " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "INCR AtomicLong"),
+                        equalTo(DB_OPERATION_NAME, "INCR"))));
   }
 
   @Test
@@ -1220,52 +1148,46 @@ public abstract class AbstractRedissonClientTest {
     }
 
     List<Consumer<TraceAssert>> traceAsserts = new ArrayList<>();
-    traceAsserts.add(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("EVAL " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_OPERATION_NAME, "EVAL"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("EVAL")))));
-    traceAsserts.add(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("EVAL " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_OPERATION_NAME, "EVAL"),
-                            satisfies(DB_QUERY_TEXT, val -> val.startsWith("EVAL")))));
+    traceAsserts.add(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("EVAL " + address)
+                .hasKind(CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_NAMESPACE, dbNamespace("0")),
+                    equalTo(DB_OPERATION_NAME, "EVAL"),
+                    satisfies(DB_QUERY_TEXT, val -> val.startsWith("EVAL")))));
+    traceAsserts.add(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("EVAL " + address)
+                .hasKind(CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(NETWORK_PEER_ADDRESS, ip),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_NAMESPACE, dbNamespace("0")),
+                    equalTo(DB_OPERATION_NAME, "EVAL"),
+                    satisfies(DB_QUERY_TEXT, val -> val.startsWith("EVAL")))));
     if (lockHas3Traces()) {
-      traceAsserts.add(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("DEL " + address)
-                          .hasKind(CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(NETWORK_PEER_ADDRESS, ip),
-                              equalTo(NETWORK_PEER_PORT, port),
-                              equalTo(SERVER_ADDRESS, host),
-                              equalTo(SERVER_PORT, port),
-                              equalTo(DB_SYSTEM_NAME, REDIS),
-                              equalTo(DB_NAMESPACE, dbNamespace("0")),
-                              equalTo(DB_OPERATION_NAME, "DEL"),
-                              satisfies(DB_QUERY_TEXT, val -> val.startsWith("DEL")))));
+      traceAsserts.add(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("DEL " + address)
+                  .hasKind(CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(NETWORK_PEER_ADDRESS, ip),
+                      equalTo(NETWORK_PEER_PORT, port),
+                      equalTo(SERVER_ADDRESS, host),
+                      equalTo(SERVER_PORT, port),
+                      equalTo(DB_SYSTEM_NAME, REDIS),
+                      equalTo(DB_NAMESPACE, dbNamespace("0")),
+                      equalTo(DB_OPERATION_NAME, "DEL"),
+                      satisfies(DB_QUERY_TEXT, val -> val.startsWith("DEL")))));
     }
 
     testing.waitAndAssertSortedTraces(orderByRootSpanKind(SpanKind.CLIENT), traceAsserts);
