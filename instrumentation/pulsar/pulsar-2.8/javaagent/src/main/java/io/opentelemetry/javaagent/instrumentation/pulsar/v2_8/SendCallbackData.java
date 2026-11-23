@@ -73,12 +73,8 @@ public class SendCallbackData {
     return Context.current().get(KEY);
   }
 
-  public Context invocationContext() {
-    return context.with(KEY, this);
-  }
-
   public Context callbackCompletionContext() {
-    return invocationContext().with(CALLBACK_COMPLETION_KEY, true);
+    return context.with(KEY, this).with(CALLBACK_COMPLETION_KEY, true);
   }
 
   static boolean isCallbackCompletion() {
