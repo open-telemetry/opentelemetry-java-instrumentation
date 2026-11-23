@@ -1,1 +1,1 @@
-{"path": ".github/copilot-instructions.md", "text": "For a stable API, the Javadoc states removal in the next major version instead."}
+{"path": ".github/copilot-instructions.md", "text": "- Document flat properties without repeating equivalent declarative configuration.\n  Include declarative configuration only when it has different behavior, requires a distinct\n  migration, or supports configuration unavailable through flat properties."}
