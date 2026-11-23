@@ -9,6 +9,7 @@ import static java.util.Collections.singletonList;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetry;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
@@ -28,8 +29,8 @@ class ServletTestUtil {
     Experimental.setRequestParameters(
         builder, IncludeExclude.builder().setIncluded(singletonList("test-parameter")).build());
     Experimental.setTraceIdRequestAttributeEnabled(builder, true);
-    Experimental.setCaptureRequestBody(builder, true);
-    Experimental.setCaptureRequestBodyMaxSize(builder, 100);
+    Experimental.setCaptureRequestBody(
+        builder, BodyCaptureConfig.createDefault().setEnabled(true).setMaxSize(100));
     return builder.build().createFilter();
   }
 

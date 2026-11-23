@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
@@ -30,10 +31,8 @@ public final class Experimental {
   private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
 
   @Nullable
-  private static volatile BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureRequestBody;
-
-  @Nullable
-  private static volatile BiConsumer<ServletTelemetryBuilder, Integer> setCaptureRequestBodyMaxSize;
+  private static volatile BiConsumer<ServletTelemetryBuilder, BodyCaptureConfig>
+      setCaptureRequestBody;
 
   /**
    * Sets whether experimental HTTP telemetry should be emitted.
@@ -100,29 +99,15 @@ public final class Experimental {
   }
 
   /**
-   * Sets whether to capture the request body as a span attribute. Disabled by default.
+   * Sets capture request body configuration
    *
    * @param builder the telemetry builder
-   * @param captureRequestBody {@code true} to capture the request body
+   * @param captureConfig the request body capture configuration
    */
   public static void setCaptureRequestBody(
-      ServletTelemetryBuilder builder, boolean captureRequestBody) {
+      ServletTelemetryBuilder builder, BodyCaptureConfig captureConfig) {
     if (setCaptureRequestBody != null) {
-      setCaptureRequestBody.accept(builder, captureRequestBody);
-    }
-  }
-
-  /**
-   * Sets the maximum number of request body bytes to capture. This does not enable or disable
-   * capture, see {@link #setCaptureRequestBody}. A value {@code <=0} is invalid: a warning is
-   * logged and the default is used.
-   *
-   * @param builder the telemetry builder
-   * @param maxSize the maximum number of request body bytes to capture
-   */
-  public static void setCaptureRequestBodyMaxSize(ServletTelemetryBuilder builder, int maxSize) {
-    if (setCaptureRequestBodyMaxSize != null) {
-      setCaptureRequestBodyMaxSize.accept(builder, maxSize);
+      setCaptureRequestBody.accept(builder, captureConfig);
     }
   }
 
@@ -147,13 +132,8 @@ public final class Experimental {
   }
 
   public static void internalSetCaptureRequestBody(
-      BiConsumer<ServletTelemetryBuilder, Boolean> setCaptureRequestBody) {
+      BiConsumer<ServletTelemetryBuilder, BodyCaptureConfig> setCaptureRequestBody) {
     Experimental.setCaptureRequestBody = setCaptureRequestBody;
-  }
-
-  public static void internalSetCaptureRequestBodyMaxSize(
-      BiConsumer<ServletTelemetryBuilder, Integer> setCaptureRequestBodyMaxSize) {
-    Experimental.setCaptureRequestBodyMaxSize = setCaptureRequestBodyMaxSize;
   }
 
   private Experimental() {}

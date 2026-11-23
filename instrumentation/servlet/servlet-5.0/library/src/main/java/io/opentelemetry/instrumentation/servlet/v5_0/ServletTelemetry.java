@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.servlet.v5_0;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5TelemetryFilter;
@@ -20,8 +21,8 @@ public final class ServletTelemetry {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       instrumenter;
   private final boolean addTraceIdRequestAttribute;
-  private final boolean captureRequestBody;
-  private final int captureRequestBodyMaxSize;
+
+  private final BodyCaptureConfig requestBodyCaptureConfig;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static ServletTelemetry create(OpenTelemetry openTelemetry) {
@@ -39,17 +40,15 @@ public final class ServletTelemetry {
               ServletResponseContext<HttpServletResponse>>
           instrumenter,
       boolean addTraceIdRequestAttribute,
-      boolean captureRequestBody,
-      int captureRequestBodyMaxSize) {
+      BodyCaptureConfig requestBodyCaptureConfig) {
     this.instrumenter = instrumenter;
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
-    this.captureRequestBody = captureRequestBody;
-    this.captureRequestBodyMaxSize = captureRequestBodyMaxSize;
+    this.requestBodyCaptureConfig = requestBodyCaptureConfig;
   }
 
   /** Returns a {@link Filter} that instruments HTTP requests. */
   public Filter createFilter() {
     return new Servlet5TelemetryFilter(
-        instrumenter, addTraceIdRequestAttribute, captureRequestBody, captureRequestBodyMaxSize);
+        instrumenter, addTraceIdRequestAttribute, requestBodyCaptureConfig);
   }
 }

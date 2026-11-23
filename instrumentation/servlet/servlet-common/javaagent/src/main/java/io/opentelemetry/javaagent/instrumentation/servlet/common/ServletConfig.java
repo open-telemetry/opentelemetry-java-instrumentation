@@ -36,11 +36,12 @@ public class ServletConfig {
     traceIdRequestAttributeEnabled =
         config.get("trace_id_request_attribute/development").getBoolean("enabled", false);
 
-    DeclarativeConfigProperties captureRequestBody =
-        config.get("capture_request_body/development");
-    bodyCaptureConfig = createDefault()
-        .setEnabled(captureRequestBody.getBoolean("enabled", false))
-        .setMaxSize(captureRequestBody.getInt("max_size", DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE));
+    DeclarativeConfigProperties captureRequestBody = config.get("capture_request_body/development");
+    bodyCaptureConfig =
+        createDefault()
+            .setEnabled(captureRequestBody.getBoolean("enabled", false))
+            .setMaxSize(
+                captureRequestBody.getInt("max_size", DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE));
   }
 
   @Nullable

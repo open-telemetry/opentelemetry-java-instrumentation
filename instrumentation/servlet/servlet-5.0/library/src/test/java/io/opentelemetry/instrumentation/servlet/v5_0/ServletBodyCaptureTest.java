@@ -15,6 +15,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
@@ -55,16 +56,15 @@ class ServletBodyCaptureTest {
   @Test
   void capturesRequestBody_enabled() throws Exception {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setCaptureRequestBody(builder, true);
-    Experimental.setCaptureRequestBodyMaxSize(builder, 32);
+    Experimental.setCaptureRequestBody(builder, BodyCaptureConfig.createDefault().setEnabled(true));
     testCaptureRequestBody(builder, "request-body");
   }
 
   @Test
   void capturesRequestBody_disabledExplicitly() throws Exception {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setCaptureRequestBody(builder, false);
-    Experimental.setCaptureRequestBodyMaxSize(builder, 32);
+    Experimental.setCaptureRequestBody(
+        builder, BodyCaptureConfig.createDefault().setEnabled(false));
     testCaptureRequestBody(builder, null);
   }
 
@@ -72,16 +72,16 @@ class ServletBodyCaptureTest {
   @ValueSource(ints = {-1, 0})
   void capturesRequestBody_invalidMaxSizeUsesDefault(int maxSize) throws Exception {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setCaptureRequestBody(builder, true);
-    Experimental.setCaptureRequestBodyMaxSize(builder, maxSize);
+    Experimental.setCaptureRequestBody(
+        builder, BodyCaptureConfig.createDefault().setEnabled(true).setMaxSize(maxSize));
     testCaptureRequestBody(builder, "request-body");
   }
 
   @Test
   void capturesRequestBody_truncated() throws Exception {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
-    Experimental.setCaptureRequestBody(builder, true);
-    Experimental.setCaptureRequestBodyMaxSize(builder, 7);
+    Experimental.setCaptureRequestBody(
+        builder, BodyCaptureConfig.createDefault().setEnabled(true).setMaxSize(7));
     testCaptureRequestBody(builder, "request");
   }
 

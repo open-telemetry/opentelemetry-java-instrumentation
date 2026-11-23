@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import jakarta.servlet.AsyncContext;
@@ -39,8 +40,8 @@ public final class Servlet5TelemetryFilter implements Filter {
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
       instrumenter;
   private final boolean addTraceIdRequestAttribute;
-  private final boolean captureRequestBody;
-  private final int captureRequestBodyMaxSize;
+
+  private final BodyCaptureConfig requestBodyCaptureConfig;
 
   public Servlet5TelemetryFilter(
       Instrumenter<
@@ -48,12 +49,10 @@ public final class Servlet5TelemetryFilter implements Filter {
               ServletResponseContext<HttpServletResponse>>
           instrumenter,
       boolean addTraceIdRequestAttribute,
-      boolean captureRequestBody,
-      int captureRequestBodyMaxSize) {
+      BodyCaptureConfig requestBodyCaptureConfig) {
     this.instrumenter = instrumenter;
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
-    this.captureRequestBody = captureRequestBody;
-    this.captureRequestBodyMaxSize = captureRequestBodyMaxSize;
+    this.requestBodyCaptureConfig = requestBodyCaptureConfig;
   }
 
   @Override
@@ -84,10 +83,11 @@ public final class Servlet5TelemetryFilter implements Filter {
 
     Context context = instrumenter.start(parentContext, requestContext);
 
-    if (captureRequestBody && Span.fromContext(context).isRecording()) {
-      // only capture when enabled and span is being sampled
+    if (requestBodyCaptureConfig.isEnabled() && Span.fromContext(context).isRecording()) {
+      // only capture when enabled and span is being recorded
       httpRequest =
-          Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(httpRequest, captureRequestBodyMaxSize);
+          Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(
+              httpRequest, requestBodyCaptureConfig.getMaxSize());
     }
 
     if (addTraceIdRequestAttribute) {

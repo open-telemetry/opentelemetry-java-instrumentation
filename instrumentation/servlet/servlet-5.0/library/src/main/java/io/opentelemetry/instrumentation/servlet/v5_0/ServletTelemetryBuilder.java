@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.servlet.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertAttributesExtractor;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertSpanNameExtractor;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertSpanStatusExtractor;
-import static java.util.logging.Level.WARNING;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -20,6 +19,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletHttpAttributesGetter;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletInstrumenterBuilder;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
@@ -30,13 +30,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
-import java.util.logging.Logger;
 
 /** Builder for {@link ServletTelemetry}. */
 public final class ServletTelemetryBuilder {
-  private static final Logger logger = Logger.getLogger(ServletTelemetryBuilder.class.getName());
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.servlet-5.0";
-  private static final int DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE = 1024;
 
   private final HttpServerAttributesGetter<
           ServletRequestContext<HttpServletRequest>, ServletResponseContext<HttpServletResponse>>
@@ -46,8 +43,7 @@ public final class ServletTelemetryBuilder {
       builder;
   private final ServletInstrumenterBuilder<HttpServletRequest, HttpServletResponse> servletBuilder;
   private boolean addTraceIdRequestAttribute = false;
-  private boolean captureRequestBody = false;
-  private int captureRequestBodyMaxSize = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
+  private BodyCaptureConfig requestBodyCaptureConfig;
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
@@ -58,19 +54,10 @@ public final class ServletTelemetryBuilder {
         builder.servletBuilder.setRequestParameters(requestParameters));
     Experimental.internalSetCaptureUserName(
         (builder, value) -> builder.servletBuilder.setCaptureUserName(value));
+
     Experimental.internalSetCaptureRequestBody((builder, value) -> {
       builder.servletBuilder.setCaptureRequestBody(value);
-      builder.captureRequestBody = value;
-    });
-    Experimental.internalSetCaptureRequestBodyMaxSize((builder, value) -> {
-      if (value <= 0) {
-        logger.log(
-            WARNING,
-            "Invalid request body capture max size {0}, using default value {1}",
-            new Object[] {value, DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE});
-        value = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
-      }
-      builder.captureRequestBodyMaxSize = value;
+      builder.requestBodyCaptureConfig = value;
     });
   }
 
@@ -181,7 +168,6 @@ public final class ServletTelemetryBuilder {
     return new ServletTelemetry(
         servletBuilder.build(HttpSpanNameExtractor.create(httpAttributesGetter)),
         addTraceIdRequestAttribute,
-        captureRequestBody,
-        captureRequestBodyMaxSize);
+        requestBodyCaptureConfig);
   }
 }

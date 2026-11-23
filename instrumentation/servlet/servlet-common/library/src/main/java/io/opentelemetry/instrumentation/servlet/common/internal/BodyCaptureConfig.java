@@ -1,10 +1,14 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
-import com.google.errorprone.annotations.CanIgnoreReturnValue;
-
-import java.util.logging.Logger;
-
 import static java.util.logging.Level.WARNING;
+
+import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import java.util.logging.Logger;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
