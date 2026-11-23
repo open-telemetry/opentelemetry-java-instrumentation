@@ -307,6 +307,13 @@ class PekkoHttpServerParsingErrorTest {
       httpVersion = "1.0"
     )
 
+  /** A malformed origin-form target is rejected before its protocol is read, so
+    * it is what the client sent and not an authority that pekko-http rendered.
+    * Its leading `//` starts a path, which is reported with or without a query.
+    */
+  @Test def malformedPathWithLeadingDoubleSlashIsReported(): Unit =
+    assertRejectedTargetTraced("//%%", path = Some("//%%"))
+
   /** A `://` further into a target that does not start with a scheme does not
     * make it an absolute-form target, so nothing before it is reported as the
     * scheme.

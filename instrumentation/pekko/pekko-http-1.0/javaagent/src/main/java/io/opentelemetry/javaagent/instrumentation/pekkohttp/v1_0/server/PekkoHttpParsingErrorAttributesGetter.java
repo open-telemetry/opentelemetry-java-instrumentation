@@ -132,8 +132,12 @@ class PekkoHttpParsingErrorAttributesGetter
     if (target.startsWith("/")) {
       // pekko-http renders an authority-form target, userinfo included, as a single segment with a
       // leading //, for example when it cannot resolve the effective URI of an HTTP/1.0 request
-      // without a Host header
-      if (target.startsWith("//") && target.indexOf('/', 2) < 0 && target.indexOf('?') < 0) {
+      // without a Host header. It only renders a target of a request line that it parsed up to the
+      // protocol, without a protocol the target is what the client sent and // starts its path.
+      if (request.protocol() != null
+          && target.startsWith("//")
+          && target.indexOf('/', 2) < 0
+          && target.indexOf('?') < 0) {
         return null;
       }
       return target;
