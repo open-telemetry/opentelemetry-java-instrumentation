@@ -64,7 +64,7 @@ final class PetclinicStartupFixture implements AutoCloseable {
     Network network = Network.newNetwork();
     PostgreSQLContainer<?> database = null;
     try {
-      database = new PostgresContainer(network, DATABASE_IMAGE).build();
+      database = new PostgresContainer(network).build();
       database.start();
       var seed =
           database.execInContainer(
