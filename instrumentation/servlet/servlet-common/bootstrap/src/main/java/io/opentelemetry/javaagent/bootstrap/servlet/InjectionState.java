@@ -16,7 +16,7 @@ public final class InjectionState {
   private boolean contentLengthAdjusted;
   private boolean writer;
   private boolean forwardPending;
-  private int ignoredIncludeResetDepth;
+  private long resetSequence;
 
   public InjectionState(SnippetInjectingResponseWrapper wrapper) {
     this.wrapper = wrapper;
@@ -59,35 +59,27 @@ public final class InjectionState {
     return contentLength != -1;
   }
 
-  public void beginIgnoredIncludeReset() {
-    ignoredIncludeResetDepth++;
-  }
-
-  public void endIgnoredIncludeReset() {
-    ignoredIncludeResetDepth--;
-  }
-
   public void resetBuffer() {
-    if (ignoredIncludeResetDepth > 0) {
-      return;
-    }
     wrapper.resetContentLengthIfPreviouslyAdjusted();
     headTagBytesSeen = 0;
     if (forwardPending) {
       forwardPending = false;
       writer = false;
     }
+    resetSequence++;
   }
 
   public void reset() {
-    if (ignoredIncludeResetDepth > 0) {
-      return;
-    }
     headTagBytesSeen = 0;
     contentLength = -1;
     contentLengthAdjusted = false;
     writer = false;
     forwardPending = false;
+    resetSequence++;
+  }
+
+  public long getResetSequence() {
+    return resetSequence;
   }
 
   public void resetForForward() {

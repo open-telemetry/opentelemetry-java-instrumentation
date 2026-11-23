@@ -39,6 +39,9 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
       new ServerEndpoint("SNIPPET_INCLUDE_RESET", "snippetAsyncIncludeReset", 200, "");
   private static final ServerEndpoint SNIPPET_INCLUDE_RAW_RESET =
       new ServerEndpoint("SNIPPET_INCLUDE_RAW_RESET", "snippetAsyncIncludeRawReset", 200, "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_DELEGATED_RESET =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_DELEGATED_RESET", "snippetAsyncIncludeDelegatedReset", 200, "");
 
   enum TestType {
     DISPATCH_ASYNC {
@@ -218,6 +221,14 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
             context,
             "/snippetIncludeRawResetTarget",
             TestServlet3.SnippetIncludeRawResetTarget.class);
+        test.addServlet(
+            context,
+            "/snippetAsyncIncludeDelegatedReset",
+            TestServlet3.SnippetAsyncIncludeDelegatedReset.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeDelegatedResetTarget",
+            TestServlet3.SnippetIncludeDelegatedResetTarget.class);
       }
     };
 
@@ -311,6 +322,29 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
     try {
       AggregatedHttpResponse response =
           client.execute(request(SNIPPET_INCLUDE_RAW_RESET, "GET")).aggregate().join();
+      String expected = HTML_PRINT_WRITER.getBody().replace("<head>", "<head>" + snippet);
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.contentUtf8()).doesNotContain("discarded-prefix");
+      if (response.headers().contentLength() >= 0) {
+        assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+      }
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
+  void delegatedIncludeResetDiscardsBodyAndAllowsInjection() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client.execute(request(SNIPPET_INCLUDE_DELEGATED_RESET, "GET")).aggregate().join();
       String expected = HTML_PRINT_WRITER.getBody().replace("<head>", "<head>" + snippet);
 
       assertThat(response.contentUtf8()).isEqualTo(expected);

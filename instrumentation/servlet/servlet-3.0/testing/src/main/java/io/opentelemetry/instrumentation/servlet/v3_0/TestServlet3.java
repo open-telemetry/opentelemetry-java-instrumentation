@@ -225,6 +225,29 @@ public class TestServlet3 {
     }
   }
 
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeDelegatedReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<head>discarded-prefix");
+      AsyncContext context = req.startAsync();
+      req.getRequestDispatcher("/snippetIncludeDelegatedResetTarget")
+          .include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeDelegatedResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.resetBuffer();
+      resp.getWriter().write(HTML_PRINT_WRITER.getBody());
+    }
+  }
+
   @WebServlet
   public static class SnippetIncludeRawResetTarget extends HttpServlet {
     @Override

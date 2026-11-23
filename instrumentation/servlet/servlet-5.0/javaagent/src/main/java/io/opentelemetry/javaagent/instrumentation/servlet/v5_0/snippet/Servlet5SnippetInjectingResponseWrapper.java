@@ -119,46 +119,36 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void resetBuffer() {
-    boolean ignoredIncludeReset = isCurrentIncludeResponse();
-    if (ignoredIncludeReset) {
-      injectionState.beginIgnoredIncludeReset();
-    }
-    try {
-      super.resetBuffer();
-    } finally {
-      if (ignoredIncludeReset) {
-        injectionState.endIgnoredIncludeReset();
-      }
-    }
-    if (!ignoredIncludeReset) {
+    long resetSequence = injectionState.getResetSequence();
+    boolean currentIncludeResponse = isCurrentIncludeResponse(getResponse());
+    super.resetBuffer();
+    if (!currentIncludeResponse && injectionState.getResetSequence() == resetSequence) {
       injectionState.resetBuffer();
     }
   }
 
   @Override
   public void reset() {
-    boolean ignoredIncludeReset = isCurrentIncludeResponse();
-    if (ignoredIncludeReset) {
-      injectionState.beginIgnoredIncludeReset();
-    }
-    try {
-      super.reset();
-    } finally {
-      if (ignoredIncludeReset) {
-        injectionState.endIgnoredIncludeReset();
-      }
-    }
-    if (!ignoredIncludeReset) {
+    long resetSequence = injectionState.getResetSequence();
+    boolean currentIncludeResponse = isCurrentIncludeResponse(getResponse());
+    super.reset();
+    boolean reset = injectionState.getResetSequence() != resetSequence;
+    if (!currentIncludeResponse && !reset) {
       injectionState.reset();
+      reset = true;
+    }
+    if (reset) {
       snippetInjectingPrintWriter = null;
       delegatePrintWriter = null;
     }
   }
 
-  private boolean isCurrentIncludeResponse() {
+  @Override
+  public boolean isCurrentIncludeResponse(Object response) {
     return request != null
         && request.getDispatcherType() == DispatcherType.INCLUDE
-        && injectionState.getWrapper() == this;
+        && injectionState.getWrapper() == this
+        && getResponse() == response;
   }
 
   @Override
