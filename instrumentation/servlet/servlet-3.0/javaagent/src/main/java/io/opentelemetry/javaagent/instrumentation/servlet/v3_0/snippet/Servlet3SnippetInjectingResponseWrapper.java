@@ -127,16 +127,46 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void resetBuffer() {
-    super.resetBuffer();
-    injectionState.resetBuffer();
+    boolean ignoredIncludeReset = isCurrentIncludeResponse();
+    if (ignoredIncludeReset) {
+      injectionState.beginIgnoredIncludeReset();
+    }
+    try {
+      super.resetBuffer();
+    } finally {
+      if (ignoredIncludeReset) {
+        injectionState.endIgnoredIncludeReset();
+      }
+    }
+    if (!ignoredIncludeReset) {
+      injectionState.resetBuffer();
+    }
   }
 
   @Override
   public void reset() {
-    super.reset();
-    injectionState.reset();
-    snippetInjectingPrintWriter = null;
-    delegatePrintWriter = null;
+    boolean ignoredIncludeReset = isCurrentIncludeResponse();
+    if (ignoredIncludeReset) {
+      injectionState.beginIgnoredIncludeReset();
+    }
+    try {
+      super.reset();
+    } finally {
+      if (ignoredIncludeReset) {
+        injectionState.endIgnoredIncludeReset();
+      }
+    }
+    if (!ignoredIncludeReset) {
+      injectionState.reset();
+      snippetInjectingPrintWriter = null;
+      delegatePrintWriter = null;
+    }
+  }
+
+  private boolean isCurrentIncludeResponse() {
+    return request != null
+        && request.getDispatcherType() == DispatcherType.INCLUDE
+        && injectionState.getWrapper() == this;
   }
 
   @Override

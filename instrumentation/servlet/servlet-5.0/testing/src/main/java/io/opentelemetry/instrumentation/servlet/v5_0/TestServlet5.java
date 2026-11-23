@@ -36,6 +36,8 @@ import java.util.concurrent.CountDownLatch;
 public class TestServlet5 {
   private static final String CACHED_WRITER_RESPONSE_ATTRIBUTE =
       TestServlet5.class.getName() + ".cachedWriterResponse";
+  private static final String ORIGINAL_RESPONSE_ATTRIBUTE =
+      TestServlet5.class.getName() + ".originalResponse";
 
   @WebServlet
   public static class Sync extends HttpServlet {
@@ -182,6 +184,52 @@ public class TestServlet5 {
       AsyncContext context = req.startAsync();
       context.getResponse().resetBuffer();
       context.dispatch(HTML_PRINT_WRITER.getPath());
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<he");
+      AsyncContext context = req.startAsync();
+      req.getRequestDispatcher("/snippetIncludeResetTarget").include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.reset();
+      resp.resetBuffer();
+      resp.getWriter().write("ad><title>included</title></head>");
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeRawReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<head>discarded-prefix");
+      AsyncContext context = req.startAsync();
+      req.setAttribute(ORIGINAL_RESPONSE_ATTRIBUTE, context.getResponse());
+      req.getRequestDispatcher("/snippetIncludeRawResetTarget").include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeRawResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      ((HttpServletResponse) req.getAttribute(ORIGINAL_RESPONSE_ATTRIBUTE)).resetBuffer();
+      resp.getWriter().write(HTML_PRINT_WRITER.getBody());
     }
   }
 

@@ -14,12 +14,18 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.servlet.v3_0.RequestDispatcherServlet;
 import io.opentelemetry.instrumentation.servlet.v3_0.TestServlet3;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import javax.servlet.Servlet;
 import org.apache.catalina.Context;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.AfterParameterizedClassInvocation;
 import org.junit.jupiter.params.BeforeParameterizedClassInvocation;
 import org.junit.jupiter.params.Parameter;
@@ -29,6 +35,10 @@ import org.junit.jupiter.params.provider.EnumSource;
 @ParameterizedClass
 @EnumSource(BaseTomcatDispatchTest.TestType.class)
 public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test {
+  private static final ServerEndpoint SNIPPET_INCLUDE_RESET =
+      new ServerEndpoint("SNIPPET_INCLUDE_RESET", "snippetAsyncIncludeReset", 200, "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_RAW_RESET =
+      new ServerEndpoint("SNIPPET_INCLUDE_RAW_RESET", "snippetAsyncIncludeRawReset", 200, "");
 
   enum TestType {
     DISPATCH_ASYNC {
@@ -196,6 +206,18 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
             context,
             "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
             RequestDispatcherServlet.Include.class);
+        test.addServlet(
+            context, "/snippetAsyncIncludeReset", TestServlet3.SnippetAsyncIncludeReset.class);
+        test.addServlet(
+            context, "/snippetIncludeResetTarget", TestServlet3.SnippetIncludeResetTarget.class);
+        test.addServlet(
+            context,
+            "/snippetAsyncIncludeRawReset",
+            TestServlet3.SnippetAsyncIncludeRawReset.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeRawResetTarget",
+            TestServlet3.SnippetIncludeRawResetTarget.class);
       }
     };
 
@@ -255,5 +277,50 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
   @Override
   protected boolean assertParentOnRedirect() {
     return testType.assertParentOnRedirect();
+  }
+
+  @Test
+  void ignoredIncludeResetRetainsPartialMatchAndBody() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client.execute(request(SNIPPET_INCLUDE_RESET, "GET")).aggregate().join();
+      String expected = "<head>" + snippet + "<title>included</title></head>";
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      if (response.headers().contentLength() >= 0) {
+        assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+      }
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
+  void rawResponseResetDuringIncludeDiscardsBodyAndAllowsInjection() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client.execute(request(SNIPPET_INCLUDE_RAW_RESET, "GET")).aggregate().join();
+      String expected = HTML_PRINT_WRITER.getBody().replace("<head>", "<head>" + snippet);
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.contentUtf8()).doesNotContain("discarded-prefix");
+      if (response.headers().contentLength() >= 0) {
+        assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+      }
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 }
