@@ -161,46 +161,43 @@ class FiberContextStorageTest {
     try {
       Scope scope =
           openingWorker
-              .submit(
-                  () -> {
-                    Activation activation = FiberContextStorageHolder.activate(state, null);
-                    try {
-                      openingThread.set(Thread.currentThread());
-                      Scope attached = storage.attach(attachedContext);
-                      assertThat(storage.current()).isSameAs(attachedContext);
-                      return attached;
-                    } finally {
-                      FiberContextStorageHolder.deactivate(activation);
-                    }
-                  })
+              .submit(() -> {
+                Activation activation = FiberContextStorageHolder.activate(state, null);
+                try {
+                  openingThread.set(Thread.currentThread());
+                  Scope attached = storage.attach(attachedContext);
+                  assertThat(storage.current()).isSameAs(attachedContext);
+                  return attached;
+                } finally {
+                  FiberContextStorageHolder.deactivate(activation);
+                }
+              })
               .get(10, SECONDS);
 
       closingWorker
-          .submit(
-              () -> {
-                Activation activation = FiberContextStorageHolder.activate(state, null);
-                try {
-                  assertThat(Thread.currentThread()).isNotSameAs(openingThread.get());
-                  assertThat(storage.current()).isSameAs(attachedContext);
-                  scope.close();
-                  assertThat(storage.current()).isSameAs(Context.root());
-                } finally {
-                  FiberContextStorageHolder.deactivate(activation);
-                }
-              })
+          .submit(() -> {
+            Activation activation = FiberContextStorageHolder.activate(state, null);
+            try {
+              assertThat(Thread.currentThread()).isNotSameAs(openingThread.get());
+              assertThat(storage.current()).isSameAs(attachedContext);
+              scope.close();
+              assertThat(storage.current()).isSameAs(Context.root());
+            } finally {
+              FiberContextStorageHolder.deactivate(activation);
+            }
+          })
           .get(10, SECONDS);
 
       openingWorker
-          .submit(
-              () -> {
-                Activation activation = FiberContextStorageHolder.activate(state, null);
-                try {
-                  scope.close();
-                  assertThat(storage.current()).isSameAs(Context.root());
-                } finally {
-                  FiberContextStorageHolder.deactivate(activation);
-                }
-              })
+          .submit(() -> {
+            Activation activation = FiberContextStorageHolder.activate(state, null);
+            try {
+              scope.close();
+              assertThat(storage.current()).isSameAs(Context.root());
+            } finally {
+              FiberContextStorageHolder.deactivate(activation);
+            }
+          })
           .get(10, SECONDS);
 
       storage.close();
