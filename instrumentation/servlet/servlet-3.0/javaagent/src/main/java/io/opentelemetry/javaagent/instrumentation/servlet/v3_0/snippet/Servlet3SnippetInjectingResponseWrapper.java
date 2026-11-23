@@ -297,6 +297,8 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
       super.setContentLength((int) length);
     }
     if (getContentLengthHeader() == length
+        || (contentLengthResponse != null
+            && TomcatContentLength.get(contentLengthResponse) == length)
         || (injectionState.hasContentLength() && injectionState.getContentLength() == length)) {
       return true;
     }
