@@ -15,22 +15,26 @@ public class Servlet5TomcatResponseContentLengthAdvice {
 
   @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
   public static void onExit(
-      @Advice.This ServletResponse response,
-      @Advice.FieldValue("response") Object bodyResponse,
-      @Advice.Origin("#m") String methodName,
-      @Advice.AllArguments Object[] arguments) {
-    if (!isContentLengthSetter(methodName, arguments)) {
-      return;
+      @Advice.This ServletResponse response, @Advice.FieldValue("response") Object bodyResponse) {
+    record(response, bodyResponse);
+  }
+
+  public static class HeaderAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This ServletResponse response,
+        @Advice.FieldValue("response") Object bodyResponse,
+        @Advice.Argument(0) String headerName) {
+      if ("Content-Length".equalsIgnoreCase(headerName)) {
+        record(response, bodyResponse);
+      }
     }
+  }
+
+  private static void record(ServletResponse response, Object bodyResponse) {
     InjectionState state = Servlet5ResponseInjectionState.get(response);
     if (state != null) {
       TomcatContentLength.record(bodyResponse, state);
     }
-  }
-
-  private static boolean isContentLengthSetter(String methodName, Object[] arguments) {
-    return methodName.startsWith("setContentLength")
-        || (arguments[0] instanceof String
-            && "Content-Length".equalsIgnoreCase((String) arguments[0]));
   }
 }
