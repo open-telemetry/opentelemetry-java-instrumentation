@@ -40,7 +40,7 @@ public final class GarbageCollectionHandler implements RecordedEventHandler {
         : null;
   }
 
-  public GarbageCollectionHandler(Meter meter) {
+  GarbageCollectionHandler(Meter meter) {
     histogram =
         meter
             .histogramBuilder(Constants.METRIC_NAME_GC_DURATION)
