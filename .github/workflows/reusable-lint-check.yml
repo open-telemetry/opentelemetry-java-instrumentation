@@ -25,19 +25,10 @@ jobs:
           GITHUB_BASE_REF: ${{ github.base_ref }}
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
-          FLINT_NEW_FROM_REV: origin/${{ github.base_ref }}
         run: mise run lint
 
-      - name: Lint for pushes
-        if: github.event_name == 'push' && github.event.before != '0000000000000000000000000000000000000000'
+      - name: Lint for pushes and scheduled workflows
+        if: github.event_name != 'pull_request'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          FLINT_NEW_FROM_REV: ${{ github.event.before }}
-        run: mise run lint
-
-      - name: Lint all files
-        if: github.event_name != 'pull_request' && (github.event_name != 'push' || github.event.before == '0000000000000000000000000000000000000000')
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          FLINT_FULL: "true"
         run: mise run lint
