@@ -126,21 +126,18 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
                 .hasName("http.client.request.duration")
                 .hasDescription("Duration of HTTP client requests.")
                 .hasUnit("s")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasSumGreaterThan(0.0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(HTTP_REQUEST_METHOD, "GET"),
-                                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                        equalTo(SERVER_ADDRESS, "localhost"),
-                                        equalTo(SERVER_PORT, uri.getPort()),
-                                        satisfies(
-                                            NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
-                                        equalTo(URL_TEMPLATE, template)))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasSumGreaterThan(0.0)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                                equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                                equalTo(SERVER_ADDRESS, "localhost"),
+                                equalTo(SERVER_PORT, uri.getPort()),
+                                satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
+                                equalTo(URL_TEMPLATE, template)))));
   }
 
   @Test
@@ -189,10 +186,8 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         instrument(
                 WebClient.builder()
                     .uriBuilderFactory(uriBuilderFactory)
-                    .clientConnector(
-                        (method, uri, callback) ->
-                            connector.connect(
-                                method, resolveAddress("/hello/some-account"), callback)))
+                    .clientConnector((method, uri, callback) ->
+                        connector.connect(method, resolveAddress("/hello/some-account"), callback)))
             .build();
 
     client
@@ -202,29 +197,27 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         .bodyToMono(String.class)
         .block();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(
-                                HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
-                            equalTo(
-                                URL_FULL,
-                                "https://REDACTED:REDACTED@example.com/accounts/some-account"),
-                            equalTo(URL_TEMPLATE, null),
-                            equalTo(SERVER_ADDRESS, "example.com"),
-                            equalTo(SERVER_PORT, 443),
-                            satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1"))),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET")
+                    .hasKind(CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
+                        equalTo(
+                            URL_FULL,
+                            "https://REDACTED:REDACTED@example.com/accounts/some-account"),
+                        equalTo(URL_TEMPLATE, null),
+                        equalTo(SERVER_ADDRESS, "example.com"),
+                        equalTo(SERVER_PORT, 443),
+                        satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1"))),
+            span ->
+                span.hasName("test-http-server")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(0))));
   }
 
   private void assertTemplateWithUserInfo(
@@ -234,36 +227,32 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
         createWebClient()
             .mutate()
             // Older connectors cannot handle URI userinfo; route to the existing test server.
-            .clientConnector(
-                (method, uri, callback) ->
-                    connector.connect(method, resolveAddress("/hello/some-account"), callback))
+            .clientConnector((method, uri, callback) ->
+                connector.connect(method, resolveAddress("/hello/some-account"), callback))
             .build();
     client.get().uri(template, scheme, "some-account").retrieve().bodyToMono(String.class).block();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(
-                            expectedPathTemplate == null ? "GET" : "GET " + expectedPathTemplate)
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(
-                                HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
-                            equalTo(
-                                URL_FULL,
-                                "https://REDACTED:REDACTED@example.com/accounts/some-account"),
-                            equalTo(URL_TEMPLATE, expectedPathTemplate),
-                            equalTo(SERVER_ADDRESS, "example.com"),
-                            equalTo(SERVER_PORT, 443),
-                            satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1"))),
-                span ->
-                    span.hasName("test-http-server")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(expectedPathTemplate == null ? "GET" : "GET " + expectedPathTemplate)
+                    .hasKind(CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
+                        equalTo(
+                            URL_FULL,
+                            "https://REDACTED:REDACTED@example.com/accounts/some-account"),
+                        equalTo(URL_TEMPLATE, expectedPathTemplate),
+                        equalTo(SERVER_ADDRESS, "example.com"),
+                        equalTo(SERVER_PORT, 443),
+                        satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1"))),
+            span ->
+                span.hasName("test-http-server")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -353,30 +342,28 @@ public abstract class AbstractSpringWebfluxClientInstrumentationTest
     request.retrieve().bodyToMono(String.class).block();
 
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName(template == null ? "GET" : "GET " + template)
-                      .hasKind(CLIENT)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                          equalTo(
-                              HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
-                          equalTo(URL_FULL, uri.toString()),
-                          equalTo(URL_TEMPLATE, template),
-                          equalTo(SERVER_ADDRESS, "localhost"),
-                          equalTo(SERVER_PORT, uri.getPort()),
-                          satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
-                          equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
-              span ->
-                  span.hasName("test-http-server")
-                      .hasKind(SpanKind.SERVER)
-                      .hasParent(trace.getSpan(0)));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+      trace.hasSpansSatisfyingExactly(
+          span ->
+              span.hasName(template == null ? "GET" : "GET " + template)
+                  .hasKind(CLIENT)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(HTTP_REQUEST_METHOD, "GET"),
+                      equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                      equalTo(HTTP_RESPONSE_BODY_SIZE, emitExperimentalTelemetry() ? 20L : null),
+                      equalTo(URL_FULL, uri.toString()),
+                      equalTo(URL_TEMPLATE, template),
+                      equalTo(SERVER_ADDRESS, "localhost"),
+                      equalTo(SERVER_PORT, uri.getPort()),
+                      satisfies(NETWORK_PROTOCOL_VERSION, val -> val.isIn(null, "1.1")),
+                      equalTo(stringKey("server.service.name"), expectedMappedServiceName())),
+          span ->
+              span.hasName("test-http-server")
+                  .hasKind(SpanKind.SERVER)
+                  .hasParent(trace.getSpan(0)));
+    });
     return instrumentationName.get();
   }
 
