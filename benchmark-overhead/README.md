@@ -15,8 +15,8 @@ that help us to measure the performance overhead introduced by
 the agent and to measure how this overhead changes over time.
 
 The overhead tests here should be considered a "macro" benchmark. They serve to measure high-level
-overhead as perceived by the operator of a "typical" application. Tests are performed on a Java 11
-distribution from [Eclipse Temurin](https://projects.eclipse.org/projects/adoptium.temurin).
+overhead as perceived by the operator of a "typical" application. The Petclinic workload uses
+Spring Petclinic REST 4.0.2 (Spring Boot 4.1.2), Eclipse Temurin JDK 25.0.5.1 and PostgreSQL 18.7.
 
 ## Process
 
@@ -36,7 +36,7 @@ For each agent defined in a configuration, the test runner (using [testcontainer
 
 And this repeats for every agent configured in each test configuration.
 
-After all the tests are complete, the results are collected and committed back to the `/results` subdirectory as csv and summary text files.
+After all the tests are complete, the results are collected under `results/petclinic-v2/<configuration>` as CSV and summary text files. This is a separate series from the historical `results/<configuration>` files, which used a different Petclinic, JDK and database stack and are not directly comparable.
 
 ## What do we measure?
 
@@ -93,7 +93,7 @@ the relevant agent jar for an `Agent` definition.
 ## Automation
 
 The tests are run nightly via github actions. The results are collected and appended to
-a csv file, which is committed back to the repo in the `/results` subdirectory.
+a CSV file, which is published to the `gh-pages` branch in the versioned results directory.
 
 ## Setup and Usage
 
@@ -142,7 +142,7 @@ The workflow also packages the recorder JAR with the agent and fixture so a
 measurement-only rerun reuses the same built inputs.
 
 For Petclinic, build the annotation library and select the workload. The workflow also
-builds the Java 17 helper JAR against Spring MVC 5.3.3; Boot 2.4.2 discovers its
+builds the Java 17 helper JAR against Spring MVC 7.0.10; Boot 4.1.2 discovers its
 advice through the `PropertiesLauncher` classpath. The helper is benchmark-only and
 does not bundle Spring:
 
@@ -156,7 +156,7 @@ cd benchmark-overhead
 ```
 
 The benchmark task builds `petclinic-startup-helper.jar` automatically for this workload.
-Petclinic uses the pinned `petclinic-rest-base:20230601125442` image (Spring Petclinic REST 2.4.2, Liberica JDK 17.0.7) and PostgreSQL 9.6.22 image, both pinned by digest in the harness. It starts and seeds PostgreSQL before the measured launches, sets owner 1's first name to `StartupBenchmark`, uses the `postgresql,spring-data-jpa` profiles, and checks `/petclinic/api/owners/1` for that record. The benchmark-only response advice adds the uptime header only to that GET response and leaves its body unchanged. The same read-only database, annotations JAR, and helper JAR are used for every configuration; no inherited spans are added. The database and application containers are removed after the run, including on failure.
+Petclinic uses the pinned `petclinic-rest-base:20261122233729` image and PostgreSQL 18.7 image, both pinned by digest in the harness. It starts and seeds PostgreSQL before the measured launches, sets owner 1's first name to `StartupBenchmark`, uses the `postgres,spring-data-jpa` profiles, disables application SQL initialization, and checks `/petclinic/api/owners/1` for that record. The benchmark-only response advice adds uptime and JVM version headers only to that GET response and leaves its body unchanged. The same read-only database, annotations JAR, and helper JAR are used for every configuration; no inherited spans are added. The database and application containers are removed after the run, including on failure.
 
 To compare two agents, also pass
 `-PstartupBenchmarkBaselineAgentJar=/absolute/path/to/baseline-agent.jar`.
@@ -279,4 +279,10 @@ To exercise only the parser, configuration, statistics, and report tests without
 
 ```sh
 ./gradlew test --tests 'io.opentelemetry.startup.*Test'
+```
+
+To check the pinned Petclinic image, PostgreSQL, helper discovery and JFR with Docker:
+
+```sh
+./gradlew petclinicIntegrationTest
 ```

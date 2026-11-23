@@ -116,26 +116,15 @@ function randomOwner(){
    };
 }
 
-function randomPet(types, owner) {
-    const birthDate = "2020/12/31";
+function randomPet(types) {
+    const birthDate = "2020-12-31";
     const petName = ((rand(100) > 50) ? "" : `${randItem(adj)} `) + randItem(petNames);
-    const typeId = randItem(types).id;
+    const type = randItem(types);
 
     return {
      "birthDate": birthDate,
-     "id": 0, // one will be chosen for us
      "name": petName,
-     "owner": {
-       "id": owner.id,
-       "firstName": null,
-       "lastName": "",
-       "address": "",
-       "city": "",
-       "telephone": ""
-     },
-     "type": {
-       "id": typeId
-     },
+     "type": type,
      "visits": []
    }
  }

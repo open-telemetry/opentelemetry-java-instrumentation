@@ -121,7 +121,10 @@ public class OverheadTests {
       "name=petclinic",
       "filename=" + outFile
     };
-    petclinic.execInContainer(command);
+    var result = petclinic.execInContainer(command);
+    if (result.getExitCode() != 0) {
+      throw new IllegalStateException("Could not start JFR: " + result);
+    }
   }
 
   private void doWarmupPhase(TestConfig testConfig, GenericContainer<?> petclinic)
@@ -140,7 +143,10 @@ public class OverheadTests {
       "name=warmup",
       "filename=warmup.jfr"
     };
-    petclinic.execInContainer(startCommand);
+    var startResult = petclinic.execInContainer(startCommand);
+    if (startResult.getExitCode() != 0) {
+      throw new IllegalStateException("Could not start warmup JFR: " + startResult);
+    }
 
     long deadline = System.currentTimeMillis() + SECONDS.toMillis(testConfig.getWarmupSeconds());
     while (System.currentTimeMillis() < deadline) {
@@ -156,7 +162,10 @@ public class OverheadTests {
 
     System.out.println("Stopping disposable JFR warmup recording...");
     String[] stopCommand = {"jcmd", "1", "JFR.stop", "name=warmup"};
-    petclinic.execInContainer(stopCommand);
+    var stopResult = petclinic.execInContainer(stopCommand);
+    if (stopResult.getExitCode() != 0) {
+      throw new IllegalStateException("Could not stop warmup JFR: " + stopResult);
+    }
 
     System.out.println("Warmup complete.");
   }
