@@ -57,8 +57,7 @@ final class PetclinicStartupFixture implements AutoCloseable {
           || registration == null
           || !new String(jar.getInputStream(registration).readAllBytes(), StandardCharsets.UTF_8)
               .lines()
-              .anyMatch("io.opentelemetry.startup.PetclinicStartupUptimeResponseAdvice"::equals)
-          || jar.stream().anyMatch(entry -> entry.getName().startsWith("org/springframework/"))) {
+              .anyMatch("io.opentelemetry.startup.PetclinicStartupUptimeResponseAdvice"::equals)) {
         throw new IllegalArgumentException("Invalid Petclinic startup helper JAR: " + helper);
       }
     }

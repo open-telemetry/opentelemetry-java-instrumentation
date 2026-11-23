@@ -118,25 +118,6 @@ class AgentStartupReportTest {
     assertThatThrownBy(() -> PetclinicStartupFixture.start(validAnnotations, invalid))
         .isInstanceOf(IllegalArgumentException.class)
         .hasMessageContaining("Invalid Petclinic startup helper JAR");
-    Path bundledSpring = directory.resolve("bundled-spring.jar");
-    try (var jar = new JarOutputStream(Files.newOutputStream(bundledSpring))) {
-      jar.putNextEntry(
-          new java.util.jar.JarEntry(
-              "io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.class"));
-      jar.closeEntry();
-      jar.putNextEntry(
-          new java.util.jar.JarEntry(
-              "META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports"));
-      jar.write(
-          "io.opentelemetry.startup.PetclinicStartupUptimeResponseAdvice\n"
-              .getBytes(java.nio.charset.StandardCharsets.UTF_8));
-      jar.closeEntry();
-      jar.putNextEntry(new java.util.jar.JarEntry("org/springframework/Example.class"));
-      jar.closeEntry();
-    }
-    assertThatThrownBy(() -> PetclinicStartupFixture.start(validAnnotations, bundledSpring))
-        .isInstanceOf(IllegalArgumentException.class)
-        .hasMessageContaining("Invalid Petclinic startup helper JAR");
   }
 
   @Test

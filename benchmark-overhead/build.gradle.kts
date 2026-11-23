@@ -49,7 +49,6 @@ tasks {
     useJUnitPlatform()
     exclude("**/AotStartupBenchmark.class")
     exclude("**/AgentStartupBenchmark.class")
-    exclude("**/PetclinicIntegrationTest.class")
   }
 }
 
@@ -75,17 +74,6 @@ val petclinicStartupHelperJar = tasks.register<Jar>("petclinicStartupHelperJar")
     include("META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports")
   }
   archiveFileName.set("petclinic-startup-helper.jar")
-}
-
-tasks.register<Test>("petclinicIntegrationTest") {
-  description = "Checks the pinned Petclinic image, PostgreSQL, startup helper and JFR."
-  group = "verification"
-  dependsOn(tasks.testClasses, petclinicStartupHelperJar)
-  testClassesDirs = sourceSets.test.get().output.classesDirs
-  classpath = sourceSets.test.get().runtimeClasspath
-  useJUnitPlatform()
-  include("**/PetclinicIntegrationTest.class")
-  systemProperty("petclinic.helper.jar", petclinicStartupHelperJar.get().archiveFile.get().asFile.absolutePath)
 }
 
 tasks.register<Test>("agentStartupBenchmark") {

@@ -280,9 +280,3 @@ To exercise only the parser, configuration, statistics, and report tests without
 ```sh
 ./gradlew test --tests 'io.opentelemetry.startup.*Test'
 ```
-
-To check the pinned Petclinic image, PostgreSQL, helper discovery and JFR with Docker:
-
-```sh
-./gradlew petclinicIntegrationTest
-```
