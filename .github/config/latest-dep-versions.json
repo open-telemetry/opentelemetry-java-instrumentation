@@ -407,6 +407,8 @@
     "org.apache.wicket:wicket#9.+": "9.25.0",
     "org.asynchttpclient:async-http-client#+": "3.0.14",
     "org.eclipse.jetty.ee10:jetty-ee10-servlet#+": "12.1.15",
+    "org.eclipse.jetty.ee9:jetty-ee9-servlet#+": "12.1.15",
+    "org.eclipse.jetty.ee9:jetty-ee9-servlet#12.+": "12.1.15",
     "org.eclipse.jetty:jetty-client#+": "12.1.15",
     "org.eclipse.jetty:jetty-client#9.+": "9.4.58.v20250814",
     "org.eclipse.jetty:jetty-http-spi#+": "12.1.15",

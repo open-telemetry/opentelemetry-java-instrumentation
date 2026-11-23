@@ -287,7 +287,8 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     // startAsync() can expose the raw response, bypassing this wrapper's setters.
     // Do not bypass application wrappers or rely on Tomcat's incomplete header view.
     String responseClassName = response.getClass().getName();
-    if (responseClassName.equals("org.eclipse.jetty.server.Response")
+    if (responseClassName.equals("org.eclipse.jetty.ee9.nested.Response")
+        || responseClassName.equals("org.eclipse.jetty.server.Response")
         || responseClassName.equals("org.eclipse.jetty.ee10.servlet.ServletApiResponse")) {
       long length = getContentLengthHeader();
       if (length != Long.MIN_VALUE) {
@@ -336,7 +337,9 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     while (response instanceof ServletResponseWrapper) {
       response = ((ServletResponseWrapper) response).getResponse();
     }
-    return response.getClass().getName().equals("org.eclipse.jetty.server.Response");
+    String responseClassName = response.getClass().getName();
+    return responseClassName.equals("org.eclipse.jetty.ee9.nested.Response")
+        || responseClassName.equals("org.eclipse.jetty.server.Response");
   }
 
   @Override
