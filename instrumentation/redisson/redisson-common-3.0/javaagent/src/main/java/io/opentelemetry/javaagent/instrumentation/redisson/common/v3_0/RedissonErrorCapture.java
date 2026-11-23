@@ -93,6 +93,15 @@ public final class RedissonErrorCapture {
     return SERVER_ERROR.get((RedisException) error);
   }
 
+  @Nullable
+  static String getErrorType(@Nullable Throwable error) {
+    String serverErrorType = getServerErrorType(error);
+    if (serverErrorType != null) {
+      return serverErrorType;
+    }
+    return error != null ? error.getClass().getName() : null;
+  }
+
   public static void clearServerError(@Nullable Throwable error) {
     if (error instanceof RedisException) {
       SERVER_ERROR.set((RedisException) error, null);

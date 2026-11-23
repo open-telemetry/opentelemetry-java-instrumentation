@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
@@ -24,10 +25,20 @@ public class EndOperationListener<T> implements BiConsumer<T, Throwable> {
 
   @Override
   public void accept(@Nullable T unused, @Nullable Throwable error) {
+    end(instrumenter, context, request, error);
+  }
+
+  static <REQUEST> void end(
+      Instrumenter<REQUEST, Void> instrumenter,
+      Context context,
+      REQUEST request,
+      @Nullable Throwable error) {
     try {
       instrumenter.end(context, request, null, error);
     } finally {
-      RedissonErrorCapture.clearServerError(error);
+      if (error != null) {
+        RedissonErrorCapture.clearServerError(ErrorCauseExtractor.getDefault().extract(error));
+      }
     }
   }
 }

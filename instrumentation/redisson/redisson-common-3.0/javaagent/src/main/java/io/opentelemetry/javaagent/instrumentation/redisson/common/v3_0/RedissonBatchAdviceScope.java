@@ -98,10 +98,11 @@ public class RedissonBatchAdviceScope {
   public void end(@Nullable CompletionStage<?> result, @Nullable Throwable throwable) {
     scope.close();
     if (throwable != null || result == null) {
-      instrumenter.end(context, request, null, throwable);
+      EndOperationListener.end(instrumenter, context, request, throwable);
       return;
     }
     futureMarker.mark(result);
-    result.whenComplete((unused, error) -> instrumenter.end(context, request, null, error));
+    result.whenComplete(
+        (unused, error) -> EndOperationListener.end(instrumenter, context, request, error));
   }
 }

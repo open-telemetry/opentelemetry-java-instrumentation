@@ -1150,6 +1150,7 @@ public abstract class AbstractRedissonClientTest {
   void atomicBatchFailure() throws ReflectiveOperationException {
     assumeStableAtomicBatchSupport();
     redisson.getBucket("wrongtype").set("value");
+    testing.waitForTraces(1);
     testing.clearData();
 
     RBatch batch = createBatchWithOptions(redisson, batchOptions("REDIS_WRITE_ATOMIC"));
@@ -1160,23 +1161,46 @@ public abstract class AbstractRedissonClientTest {
     assertThat(error).isNotNull();
     redisson.getBucket("after-failure").set("value");
 
+    AtomicReference<String> instrumentationName = new AtomicReference<>();
     testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("MULTI")
-                    .hasKind(CLIENT)
-                    .hasStatus(StatusData.error())
-                    .hasException(error)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, REDIS),
-                        equalTo(DB_OPERATION_NAME, "MULTI"),
-                        equalTo(DB_OPERATION_BATCH_SIZE, 2L),
-                        equalTo(ERROR_TYPE, error.getClass().getName()),
-                        equalTo(DB_QUERY_TEXT, "HGET wrongtype field; SET after ?"),
-                        equalTo(DB_NAMESPACE, dbNamespace("0")))),
+        trace -> {
+          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("MULTI")
+                  .hasKind(CLIENT)
+                  .hasStatus(StatusData.error())
+                  .hasException(error)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(DB_SYSTEM_NAME, REDIS),
+                      equalTo(DB_OPERATION_NAME, "MULTI"),
+                      equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                      equalTo(ERROR_TYPE, "WRONGTYPE"),
+                      equalTo(DB_QUERY_TEXT, "HGET wrongtype field; SET after ?"),
+                      equalTo(DB_NAMESPACE, dbNamespace("0"))));
+        },
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("SET " + address).hasKind(CLIENT).hasNoParent()));
+    testing.waitAndAssertMetrics(
+        instrumentationName.get(),
+        metric ->
+            metric
+                .hasName("db.client.operation.duration")
+                .hasHistogramPointsSatisfying(
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap())
+                                    .containsEntry(DB_OPERATION_NAME, "MULTI")
+                                    .containsEntry(ERROR_TYPE, "WRONGTYPE")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap())
+                                    .containsEntry(DB_OPERATION_NAME, "SET")
+                                    .doesNotContainKey(ERROR_TYPE))));
   }
 
   private static void assumeStableAtomicBatchSupport() {

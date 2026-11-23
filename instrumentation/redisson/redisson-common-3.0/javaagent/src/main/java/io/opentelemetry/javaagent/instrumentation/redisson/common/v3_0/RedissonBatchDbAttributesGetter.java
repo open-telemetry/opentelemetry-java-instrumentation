@@ -44,6 +44,13 @@ final class RedissonBatchDbAttributesGetter
 
   @Nullable
   @Override
+  public String getErrorType(
+      RedissonBatchRequest request, @Nullable Void response, @Nullable Throwable error) {
+    return RedissonErrorCapture.getErrorType(error);
+  }
+
+  @Nullable
+  @Override
   public String getServerAddress(RedissonBatchRequest request) {
     return null;
   }
