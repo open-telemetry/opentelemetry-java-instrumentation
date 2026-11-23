@@ -4,8 +4,9 @@ applyTo: "**/*.java,**/*.kt,**/*.scala,**/*.groovy"
 
 # Instrumentation state and synchronization
 
-Apply these rules when instrumentation stores per-object or temporary thread state, or synchronizes
-shared state. Virtual-field requirements apply to javaagent instrumentation, not library-only code.
+Apply these rules when instrumentation stores per-object or temporary thread state, synchronizes
+shared state, or registers observable metric callbacks. Virtual-field requirements apply to
+javaagent instrumentation, not library-only code.
 
 ## Choose storage by ownership
 
@@ -92,6 +93,37 @@ Field-backed storage can collect a carrier/value cycle, but fallback storage mus
 Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
 supported concurrent updates need an invariant before choosing synchronization or ownership.
 Do not choose a cache solely for `computeIfAbsent`.
+
+## Observable metric callbacks
+
+The SDK bundled with the javaagent holds the callback strongly until it is unregistered.
+
+**Registration ownership.** Identify who owns the registration and when it ends. Verify that
+every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
+the returned handle and remove any long-lived registry entries for that registration.
+Clearing a reference to the handle without closing it does not unregister the callback.
+
+After `close()`, the SDK handle still holds the callback. If the callback or the state it captures
+should be collectible while the owner is still alive, clear the field that stores the closed handle.
+
+A callback can strongly hold state that should live as long as the registration. For example,
+the HikariCP callback may capture `PoolStats`, which references the pool. When HikariCP shuts down
+the pool, the tracker must close the callback handle and clear the field that held it. If a
+shutdown path misses that cleanup, fix the hook rather than weakening the reference.
+
+**Collection without explicit shutdown.** If an object or class loader should be collectible
+while the registration is live, trace every strong reference to it from the SDK or other
+long-lived state. Check what the callback and its measurement functions capture, the class loaders
+that define the callback and its helpers, and any registry entries.
+
+A weak reference to the measured object is different from a weak reference to the callback.
+If you hold the callback itself weakly, give it an owner that keeps it alive while it should
+still report. Decide whether to skip recording or unregister when the target disappears.
+
+For example, `Gauge.builder(name, queue, Queue::size)` in Micrometer observes the queue weakly
+by default. The queue can be collected while the gauge stays registered, so the bridge skips
+recording once the queue is gone. Capturing the queue in the measurement function would keep
+it alive and defeat the weak reference.
 
 ## Temporary thread state
 
