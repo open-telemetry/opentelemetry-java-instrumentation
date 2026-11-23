@@ -64,21 +64,6 @@ final class HandlerRegistry {
     for (EventType eventType : FlightRecorder.getFlightRecorder().getEventTypes()) {
       availableEventNames.add(eventType.getName());
     }
-    return getHandlers(
-        meter,
-        metricNamePredicate,
-        requireCompleteJmxReplacement,
-        emitExperimentalJmxMetrics,
-        availableEventNames);
-  }
-
-  // visible for testing
-  static List<RecordedEventHandler> getHandlers(
-      Meter meter,
-      Predicate<String> metricNamePredicate,
-      boolean requireCompleteJmxReplacement,
-      boolean emitExperimentalJmxMetrics,
-      Set<String> availableEventNames) {
     List<String> garbageCollectorNames = new ArrayList<>();
     for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
       garbageCollectorNames.add(bean.getName());
