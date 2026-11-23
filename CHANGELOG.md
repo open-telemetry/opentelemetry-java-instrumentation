@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Redisson atomic batches now emit one logical span instead of separate MULTI, command, and EXEC
+  spans. Atomic batch spans and their operation-duration metrics no longer include server or network-peer attributes.
 - Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
   `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.

@@ -33,5 +33,21 @@ public class RedissonInstrumenterFactory {
     return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
   }
 
+  public static Instrumenter<RedissonBatchRequest, Void> createBatchInstrumenter(
+      String instrumentationName) {
+    RedissonBatchDbAttributesGetter dbAttributesGetter = new RedissonBatchDbAttributesGetter();
+
+    InstrumenterBuilder<RedissonBatchRequest, Void> builder =
+        Instrumenter.<RedissonBatchRequest, Void>builder(
+                GlobalOpenTelemetry.get(),
+                instrumentationName,
+                RedisSpanNameExtractor.create(dbAttributesGetter))
+            .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
+            .addOperationMetrics(DbClientMetrics.get());
+    setDbClientExceptionEventExtractor(builder);
+    return builder.buildInstrumenter(SpanKindExtractor.alwaysClient());
+  }
+
   private RedissonInstrumenterFactory() {}
 }

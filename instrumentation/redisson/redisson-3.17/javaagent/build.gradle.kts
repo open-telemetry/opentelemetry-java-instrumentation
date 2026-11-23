@@ -47,6 +47,12 @@ testing.suites {
     }
   }
 
+  unitTests("redisson47unitTests") {
+    dependencies {
+      implementation("org.redisson:redisson:4.7.0")
+    }
+  }
+
   register<JvmTestSuite>("redisson344Test") {
     sources {
       java {
@@ -70,8 +76,10 @@ testing.suites {
       filter {
         includeTestsMatching("*RedissonClientTest.configuredMasterSlaveServerTarget")
         includeTestsMatching("*RedissonClientTest.configuredSingleServerTarget")
+        includeTestsMatching("*RedissonClientTest.configuredDatabaseIndexOnAtomicBatch")
       }
     }
+    register("ServerTarget") {}
   }
 
   executions("redisson344Test") {

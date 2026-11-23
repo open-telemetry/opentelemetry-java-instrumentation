@@ -182,20 +182,37 @@ class ConfigServerTargetTest {
   }
 
   @Test
+  void configuredDatabaseIndex() {
+    Config config = new Config();
+    config.useSingleServer().setDatabase(1);
+
+    assertThat(ConfigServerTargetUtil317.databaseIndex(config)).isEqualTo(1);
+  }
+
+  @Test
   void serviceManagerCarriesTheConfiguration() {
     Config config = new Config();
-    config.useSentinelServers().setMasterName("mymaster").addSentinelAddress("redis://s1:26379");
+    config
+        .useSentinelServers()
+        .setMasterName("mymaster")
+        .addSentinelAddress("redis://s1:26379")
+        .setDatabase(2);
 
     RedisServerTarget target =
         ConfigServerTargetUtil317.ofServiceManager(new ServiceManager(config));
 
     assertThat(target.getAddress()).isEqualTo("s1:26379/mymaster");
     assertThat(target.getPort()).isNull();
+    assertThat(ConfigServerTargetUtil317.databaseIndexOfServiceManager(new ServiceManager(config)))
+        .isEqualTo(2);
   }
 
   @Test
   void nullOrWrongTypeServiceManagerHasNoTarget() {
     assertThat(ConfigServerTargetUtil317.ofServiceManager(null)).isNull();
     assertThat(ConfigServerTargetUtil317.ofServiceManager("not a service manager")).isNull();
+    assertThat(ConfigServerTargetUtil317.databaseIndexOfServiceManager(null)).isNull();
+    assertThat(ConfigServerTargetUtil317.databaseIndexOfServiceManager("not a service manager"))
+        .isNull();
   }
 }
