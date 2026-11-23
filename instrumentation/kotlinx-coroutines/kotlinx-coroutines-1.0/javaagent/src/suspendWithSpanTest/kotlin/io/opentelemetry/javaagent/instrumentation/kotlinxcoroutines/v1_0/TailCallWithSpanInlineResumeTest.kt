@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0
 import io.opentelemetry.api.trace.Span
 import io.opentelemetry.api.trace.SpanContext
 import io.opentelemetry.context.Context
+import io.opentelemetry.context.ContextKey
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
@@ -48,6 +49,8 @@ class TailCallWithSpanInlineResumeTest {
     @JvmStatic
     @RegisterExtension
     val testing = AgentInstrumentationExtension.create()
+
+    private val CALLBACK_KEY = ContextKey.named<String>("callback")
   }
 
   private val tracer = testing.openTelemetry.getTracer("test")
@@ -285,6 +288,63 @@ class TailCallWithSpanInlineResumeTest {
   private suspend fun unannotatedNonCancellableRaw(callback: Executor): Int = withContext(NonCancellable) {
     suspendCoroutineUninterceptedOrReturn { continuation ->
       callback.execute { continuation.resume(7) }
+      COROUTINE_SUSPENDED
+    }
+  }
+
+  // A callback that opens its own scope around a raw resume through withContext(NonCancellable)
+  // puts that scope between the runtime's scopes and the caller's; the caller still sees its own
+  // context and both threads are left clean, as without the annotation.
+  @Test
+  fun `callback opening its own scope around a raw resume through withContext NonCancellable`() {
+    val outer = tracer.spanBuilder("outer").startSpan()
+    try {
+      val expected = statesAfterScopedCallback(outer) { unannotatedScopedCallbackRaw(it) }
+      assertThat(expected).containsExactly(outer.spanContext, SpanContext.getInvalid(), SpanContext.getInvalid())
+      assertThat(statesAfterScopedCallback(outer) { annotatedScopedCallbackRaw(it) }).isEqualTo(expected)
+    } finally {
+      outer.end()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("outer").hasNoParent() },
+          { it.hasName("scoped-callback").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  // The span current in the caller after the call, then on the caller's thread and on the callback
+  // thread once everything completed.
+  private fun statesAfterScopedCallback(outer: Span, call: suspend (Executor) -> Int): List<SpanContext> {
+    val callerExecutor = Executors.newSingleThreadExecutor()
+    val callbackExecutor = Executors.newSingleThreadExecutor()
+    try {
+      val afterCall = runBlocking(callerExecutor.asCoroutineDispatcher() + Context.root().asContextElement()) {
+        withContext(CoroutineName("caller") + outer.storeInContext(Context.root()).asContextElement()) {
+          call(callbackExecutor)
+          Span.current().spanContext
+        }
+      }
+      val callerThread = callerExecutor.submit<SpanContext> { Span.current().spanContext }.get(10, TimeUnit.SECONDS)
+      val callbackThread = callbackExecutor.submit<SpanContext> { Span.current().spanContext }.get(10, TimeUnit.SECONDS)
+      return listOf(afterCall, callerThread, callbackThread)
+    } finally {
+      callerExecutor.shutdown()
+      callbackExecutor.shutdown()
+    }
+  }
+
+  @WithSpan("scoped-callback")
+  private suspend fun annotatedScopedCallbackRaw(callback: Executor): Int = unannotatedScopedCallbackRaw(callback)
+
+  private suspend fun unannotatedScopedCallbackRaw(callback: Executor): Int = withContext(NonCancellable) {
+    suspendCoroutineUninterceptedOrReturn { continuation ->
+      callback.execute {
+        Context.current().with(CALLBACK_KEY, "callback").makeCurrent().use { continuation.resume(7) }
+      }
       COROUTINE_SUSPENDED
     }
   }
