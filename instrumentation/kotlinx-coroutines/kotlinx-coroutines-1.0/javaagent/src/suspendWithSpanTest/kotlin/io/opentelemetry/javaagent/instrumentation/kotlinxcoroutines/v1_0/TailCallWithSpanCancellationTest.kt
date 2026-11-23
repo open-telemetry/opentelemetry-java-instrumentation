@@ -318,7 +318,7 @@ class TailCallWithSpanCancellationTest {
     started.countDown()
     callbackExecutor.execute {
       release.await(10, TimeUnit.SECONDS)
-      channel.trySend(42)
+      runBlocking { channel.send(42) }
     }
     return channel.receive()
   }
