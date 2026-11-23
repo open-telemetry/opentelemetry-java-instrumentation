@@ -427,33 +427,31 @@ class InjectionStateLifetimeTest {
           .when(response)
           .setContentLength(anyInt());
       when(response.getOutputStream())
-        .thenAnswer(
-            invocation -> {
-              if (assertNoStreamStateBeforeOutputAcquisition) {
-                  assertThat(INJECTION_STATE.get(stream)).isNull();
-                }
-                if (failOutputStreamAcquisition) {
-                  failOutputStreamAcquisition = false;
-                  throw new IOException("stream acquisition failed");
-                }
-                if (output == Output.WRITER) {
-                  throw new IllegalStateException("Writer already acquired");
-                }
-                output = Output.STREAM;
-                return stream;
-              });
+          .thenAnswer(invocation -> {
+            if (assertNoStreamStateBeforeOutputAcquisition) {
+              assertThat(INJECTION_STATE.get(stream)).isNull();
+            }
+            if (failOutputStreamAcquisition) {
+              failOutputStreamAcquisition = false;
+              throw new IOException("stream acquisition failed");
+            }
+            if (output == Output.WRITER) {
+              throw new IllegalStateException("Writer already acquired");
+            }
+            output = Output.STREAM;
+            return stream;
+          });
       when(response.getWriter())
-          .thenAnswer(
-              invocation -> {
-                if (output == Output.STREAM) {
-                  throw new IllegalStateException("Stream already acquired");
-                }
-                output = Output.WRITER;
-                if (writer == null) {
-                  writer = new PrintWriter(new OutputStreamWriter(stream, encoding));
-                }
-                return writer;
-              });
+          .thenAnswer(invocation -> {
+            if (output == Output.STREAM) {
+              throw new IllegalStateException("Stream already acquired");
+            }
+            output = Output.WRITER;
+            if (writer == null) {
+              writer = new PrintWriter(new OutputStreamWriter(stream, encoding));
+            }
+            return writer;
+          });
       doAnswer(
               invocation -> {
                 bytes.reset();
