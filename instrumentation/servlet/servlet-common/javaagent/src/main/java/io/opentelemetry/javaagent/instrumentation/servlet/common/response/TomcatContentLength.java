@@ -36,10 +36,21 @@ public final class TomcatContentLength {
                         coyoteResponseClass,
                         "getContentLengthLong",
                         MethodType.methodType(long.class));
-            return new ContentLengthAccessor(getCoyoteResponse, getContentLength);
+            MethodHandle setContentLength =
+                MethodHandles.publicLookup()
+                    .findVirtual(
+                        responseClass,
+                        "setContentLengthLong",
+                        MethodType.methodType(void.class, long.class));
+            MethodHandle isCommitted =
+                MethodHandles.publicLookup()
+                    .findVirtual(
+                        responseClass, "isCommitted", MethodType.methodType(boolean.class));
+            return new ContentLengthAccessor(
+                getCoyoteResponse, getContentLength, setContentLength, isCommitted);
           } catch (ClassNotFoundException | NoSuchMethodException | IllegalAccessException e) {
             logger.log(FINE, "Failed to access Tomcat's effective Content-Length", e);
-            return new ContentLengthAccessor(null, null);
+            return new ContentLengthAccessor(null, null, null, null);
           }
         }
       };
@@ -49,6 +60,7 @@ public final class TomcatContentLength {
     if (contentLength == Long.MIN_VALUE) {
       return;
     }
+    state.setContentLengthResponse(response);
     if (contentLength < 0) {
       if (state.hasContentLength()) {
         state.setContentLength(-1);
@@ -58,14 +70,29 @@ public final class TomcatContentLength {
     }
   }
 
+  public static boolean set(Object response, long contentLength) {
+    return CONTENT_LENGTH_ACCESSORS.get(response.getClass()).set(response, contentLength);
+  }
+
+  public static boolean isTomcatIncludeResponse(Object response) {
+    return response.getClass().getName().equals("org.apache.catalina.core.ApplicationHttpResponse");
+  }
+
   private static class ContentLengthAccessor {
     @Nullable private final MethodHandle getCoyoteResponse;
     @Nullable private final MethodHandle getContentLength;
+    @Nullable private final MethodHandle setContentLength;
+    @Nullable private final MethodHandle isCommitted;
 
     ContentLengthAccessor(
-        @Nullable MethodHandle getCoyoteResponse, @Nullable MethodHandle getContentLength) {
+        @Nullable MethodHandle getCoyoteResponse,
+        @Nullable MethodHandle getContentLength,
+        @Nullable MethodHandle setContentLength,
+        @Nullable MethodHandle isCommitted) {
       this.getCoyoteResponse = getCoyoteResponse;
       this.getContentLength = getContentLength;
+      this.setContentLength = setContentLength;
+      this.isCommitted = isCommitted;
     }
 
     long get(Object response) {
@@ -78,6 +105,22 @@ public final class TomcatContentLength {
       } catch (Throwable t) {
         logger.log(FINE, "Failed to read Tomcat's effective Content-Length", t);
         return Long.MIN_VALUE;
+      }
+    }
+
+    boolean set(Object response, long contentLength) {
+      if (setContentLength == null || isCommitted == null) {
+        return false;
+      }
+      try {
+        if ((boolean) isCommitted.invoke(response)) {
+          return false;
+        }
+        setContentLength.invoke(response, contentLength);
+        return get(response) == contentLength;
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to update Tomcat's effective Content-Length", t);
+        return false;
       }
     }
   }

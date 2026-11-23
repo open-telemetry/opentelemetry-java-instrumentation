@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.Se
 
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.response.TomcatContentLength;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
 import io.opentelemetry.javaagent.instrumentation.servlet.v5_0.Servlet5ResponseInjectionState;
 import jakarta.servlet.DispatcherType;
@@ -246,6 +247,11 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   }
 
   private boolean setContentLengthAndVerify(long length) {
+    Object contentLengthResponse = injectionState.getContentLengthResponse();
+    if (contentLengthResponse != null
+        && TomcatContentLength.isTomcatIncludeResponse(super.getResponse())) {
+      return TomcatContentLength.set(contentLengthResponse, length);
+    }
     if (length <= Integer.MAX_VALUE && length >= 0) {
       super.setContentLength((int) length);
     } else {

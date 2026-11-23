@@ -37,6 +37,12 @@ import org.junit.jupiter.params.provider.ValueSource;
 @ParameterizedClass
 @EnumSource(BaseTomcatDispatchTest.TestType.class)
 public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test {
+  private static final ServerEndpoint SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH", "snippetIncludeSplitHeadFixedLength", 200, "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_FIXED_LENGTH_RESET =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_FIXED_LENGTH_RESET", "snippetIncludeFixedLengthReset", 200, "");
   private static final ServerEndpoint SNIPPET_HEADER_FORWARD =
       new ServerEndpoint("SNIPPET_HEADER_FORWARD", "snippetHeaderForward", 200, "");
   private static final ServerEndpoint SNIPPET_HEADER_ASYNC_DISPATCH =
@@ -221,6 +227,18 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
             context,
             "/snippetIncludeSplitHeadTarget",
             TestServlet5.SnippetIncludeSplitHeadTarget.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeSplitHeadFixedLength",
+            TestServlet5.SnippetIncludeSplitHeadFixedLength.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeFixedLengthReset",
+            TestServlet5.SnippetIncludeFixedLengthReset.class);
+        test.addServlet(
+            context,
+            "/snippetRegularIncludeFixedLengthResetTarget",
+            TestServlet5.SnippetRegularIncludeFixedLengthResetTarget.class);
       }
     };
 
@@ -320,15 +338,64 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
   }
 
   @Test
+  void fixedLengthSplitHeadRegularIncludeAdjustsWireLength() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client
+              .execute(request(SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH, "GET"))
+              .aggregate()
+              .join();
+      String expected = "<head>" + snippet + "<title>included</title></head>";
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
+  void fixedLengthResetBufferInRegularIncludeRestoresWireLength() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client.execute(request(SNIPPET_INCLUDE_FIXED_LENGTH_RESET, "GET")).aggregate().join();
+
+      assertThat(response.contentUtf8()).isEqualTo(TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY);
+      assertThat(response.contentUtf8()).doesNotContain(snippet);
+      assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
   void applicationHeadersReachForwardAndAsyncDispatchTargets() {
     assumeTrue(testType == TestType.FORWARD || testType == TestType.DISPATCH_ASYNC);
     assumeTrue(isAgentTest());
 
     ServerEndpoint endpoint =
         testType == TestType.FORWARD ? SNIPPET_HEADER_FORWARD : SNIPPET_HEADER_ASYNC_DISPATCH;
-    AggregatedHttpResponse response = client.execute(request(endpoint, "GET")).aggregate().join();
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response = client.execute(request(endpoint, "GET")).aggregate().join();
 
-    assertThat(response.contentUtf8()).isEqualTo("header dispatch target");
-    assertThat(response.headers().get("X-Dispatch-Header")).isEqualTo("accepted");
+      assertThat(response.contentUtf8())
+          .isEqualTo("<head>" + snippet + "header dispatch target</head>");
+      assertThat(response.headers().get("X-Dispatch-Header")).isEqualTo("accepted");
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 }

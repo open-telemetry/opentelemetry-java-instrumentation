@@ -332,6 +332,18 @@ public class TestServlet3 {
   }
 
   @WebServlet
+  public static class SnippetIncludeSplitHeadFixedLength extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength("<head><title>included</title></head>".length());
+      resp.getWriter().write("<he");
+      req.getRequestDispatcher("/snippetIncludeSplitHeadTarget").include(req, resp);
+    }
+  }
+
+  @WebServlet
   public static class SnippetIncludeSplitHeadTarget extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
@@ -339,6 +351,27 @@ public class TestServlet3 {
       resp.setHeader("org.eclipse.jetty.server.include.X-Included", "accepted");
       resp.setHeader("Content-Length", "1");
       resp.getWriter().write("ad><title>included</title></head>");
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeFixedLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.getWriter().write("<head>");
+      req.getRequestDispatcher("/snippetRegularIncludeFixedLengthResetTarget").include(req, resp);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetRegularIncludeFixedLengthResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.resetBuffer();
+      resp.getWriter().write(SNIPPET_RESET_REPLACEMENT_BODY);
     }
   }
 
@@ -382,7 +415,8 @@ public class TestServlet3 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       resp.setHeader("X-Dispatch-Header", "accepted");
-      resp.getWriter().write("header dispatch target");
+      resp.setContentType("text/html");
+      resp.getWriter().write("<head>header dispatch target</head>");
     }
   }
 

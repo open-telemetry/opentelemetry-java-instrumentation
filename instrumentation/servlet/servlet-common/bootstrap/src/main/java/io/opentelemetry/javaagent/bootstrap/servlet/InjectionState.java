@@ -5,6 +5,9 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
+import java.lang.ref.WeakReference;
+import javax.annotation.Nullable;
+
 // Shared by response wrappers for one response body, including async redispatch.
 // The stream's virtual field can outlive the request when the container recycles the stream.
 public final class InjectionState {
@@ -12,6 +15,7 @@ public final class InjectionState {
   private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
   private SnippetInjectingResponseWrapper wrapper;
   private SnippetInjectingResponseWrapper contentLengthWrapper;
+  @Nullable private WeakReference<Object> contentLengthResponse;
   private int headTagBytesSeen = 0;
   private long contentLength = -1;
   private boolean contentLengthAdjusted;
@@ -30,6 +34,15 @@ public final class InjectionState {
 
   public void setContentLengthWrapper(SnippetInjectingResponseWrapper wrapper) {
     contentLengthWrapper = wrapper;
+  }
+
+  public void setContentLengthResponse(Object response) {
+    contentLengthResponse = new WeakReference<>(response);
+  }
+
+  @Nullable
+  public Object getContentLengthResponse() {
+    return contentLengthResponse == null ? null : contentLengthResponse.get();
   }
 
   public void useWriter() {

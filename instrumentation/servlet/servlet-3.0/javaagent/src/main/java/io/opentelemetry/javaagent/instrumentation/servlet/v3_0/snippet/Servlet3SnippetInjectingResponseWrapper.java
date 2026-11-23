@@ -10,6 +10,7 @@ import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.response.TomcatContentLength;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3ResponseInjectionState;
 import java.io.IOException;
@@ -277,6 +278,11 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   }
 
   private boolean setContentLengthAndVerify(long length) {
+    Object contentLengthResponse = injectionState.getContentLengthResponse();
+    if (contentLengthResponse != null
+        && TomcatContentLength.isTomcatIncludeResponse(super.getResponse())) {
+      return TomcatContentLength.set(contentLengthResponse, length);
+    }
     if (length > Integer.MAX_VALUE || length < 0) {
       if (setContentLengthLongHandler == null) {
         return false;
