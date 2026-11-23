@@ -26,10 +26,14 @@ import org.apache.tomcat.util.descriptor.web.ErrorPage;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class Tomcat9DispatchTest extends BaseTomcatDispatchTest {
   private static final ServerEndpoint SNIPPET_ERROR_PAGE =
       new ServerEndpoint("SNIPPET_ERROR_PAGE", "snippetErrorPageInitial", 500, "");
+  private static final String SAME_LENGTH_RESET_BODY = "replacement response without a head";
+  private static final String SAME_LENGTH_RESET_SNIPPET = "<!-- snippet -->";
   private static final String ABANDONED_BODY = "<head>abandoned response</head>";
   private static final String ERROR_BODY = "<head>replacement error page body</head>";
 
@@ -42,6 +46,7 @@ class Tomcat9DispatchTest extends BaseTomcatDispatchTest {
     super.setupServlets(context);
     addServlet(context, SNIPPET_ERROR_PAGE.getPath(), SnippetErrorPageInitial.class);
     addServlet(context, "/snippetErrorPage", SnippetErrorPage.class);
+    addServlet(context, "/snippetSameLengthReset", SnippetSameLengthReset.class);
 
     ErrorPage errorPage = new ErrorPage();
     errorPage.setErrorCode(500);
@@ -84,6 +89,41 @@ class Tomcat9DispatchTest extends BaseTomcatDispatchTest {
     }
   }
 
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "setContentLength",
+        "setContentLengthLong",
+        "setHeader",
+        "addHeader",
+        "setIntHeader",
+        "addIntHeader"
+      })
+  void acceptedSameLengthDeclarationRetainsReplacementBody(String setter) {
+    assumeTrue(isAgentTest());
+
+    ExperimentalSnippetHolder.setSnippet(SAME_LENGTH_RESET_SNIPPET);
+    try {
+      ServerEndpoint endpoint =
+          new ServerEndpoint(
+              "SNIPPET_SAME_LENGTH_RESET", "snippetSameLengthReset?setter=" + setter, 200, "");
+      AtomicReference<String> contentLength = new AtomicReference<>();
+      AggregatedHttpResponse response =
+          client
+              .execute(request(endpoint, "GET"))
+              .peekHeaders(headers -> contentLength.set(headers.get("content-length")))
+              .aggregate()
+              .join();
+
+      int bodyLength = SAME_LENGTH_RESET_BODY.getBytes(UTF_8).length;
+      assertThat(response.contentUtf8()).isEqualTo(SAME_LENGTH_RESET_BODY);
+      assertThat(response.contentUtf8()).doesNotContain(SAME_LENGTH_RESET_SNIPPET);
+      assertThat(contentLength.get()).isEqualTo(Integer.toString(bodyLength));
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
   public static class SnippetErrorPageInitial extends HttpServlet {
     @Override
     protected void service(HttpServletRequest request, HttpServletResponse response)
@@ -104,6 +144,43 @@ class Tomcat9DispatchTest extends BaseTomcatDispatchTest {
         throws IOException {
       response.setContentType("text/html");
       response.getWriter().write(ERROR_BODY);
+    }
+  }
+
+  public static class SnippetSameLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest request, HttpServletResponse response)
+        throws IOException {
+      byte[] replacementBody = SAME_LENGTH_RESET_BODY.getBytes(UTF_8);
+      byte[] snippet = SAME_LENGTH_RESET_SNIPPET.getBytes(UTF_8);
+      response.setContentType("text/html");
+      response.setContentLength(replacementBody.length - snippet.length);
+      response.getOutputStream().write("<head>".getBytes(UTF_8));
+      setContentLength(response, request.getParameter("setter"), replacementBody.length);
+      response.resetBuffer();
+      response.getOutputStream().write(replacementBody);
+    }
+
+    private static void setContentLength(HttpServletResponse response, String setter, int length) {
+      switch (setter) {
+        case "setContentLengthLong":
+          response.setContentLengthLong(length);
+          break;
+        case "setHeader":
+          response.setHeader("Content-Length", Integer.toString(length));
+          break;
+        case "addHeader":
+          response.addHeader("Content-Length", Integer.toString(length));
+          break;
+        case "setIntHeader":
+          response.setIntHeader("Content-Length", length);
+          break;
+        case "addIntHeader":
+          response.addIntHeader("Content-Length", length);
+          break;
+        default:
+          response.setContentLength(length);
+      }
     }
   }
 }

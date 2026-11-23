@@ -104,6 +104,27 @@ public final class TomcatContentLength {
     }
   }
 
+  public static void recordAccepted(Object response, InjectionState state, long declaredLength) {
+    long contentLength =
+        CONTENT_LENGTH_ACCESSORS.get(response.getClass()).getAccepted(response, declaredLength);
+    if (contentLength != Long.MIN_VALUE) {
+      state.setContentLengthResponse(response);
+      state.setContentLength(contentLength);
+    }
+  }
+
+  public static void recordAccepted(
+      Object response, InjectionState state, @Nullable String declaredLength) {
+    if (declaredLength == null) {
+      return;
+    }
+    try {
+      recordAccepted(response, state, Long.parseLong(declaredLength));
+    } catch (NumberFormatException ignored) {
+      // Tomcat does not accept a non-numeric Content-Length declaration.
+    }
+  }
+
   public static long get(Object response) {
     return CONTENT_LENGTH_ACCESSORS.get(response.getClass()).get(response);
   }
@@ -147,6 +168,23 @@ public final class TomcatContentLength {
         logger.log(FINE, "Failed to read Tomcat's effective Content-Length", t);
         return Long.MIN_VALUE;
       }
+    }
+
+    long getAccepted(Object response, long declaredLength) {
+      if (isCommitted == null) {
+        return Long.MIN_VALUE;
+      }
+      try {
+        if ((boolean) isCommitted.invoke(response)) {
+          return Long.MIN_VALUE;
+        }
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to check whether Tomcat's response is committed", t);
+        return Long.MIN_VALUE;
+      }
+      long contentLength = get(response);
+      long effectiveDeclaredLength = declaredLength < 0 ? -1 : declaredLength;
+      return contentLength == effectiveDeclaredLength ? contentLength : Long.MIN_VALUE;
     }
 
     boolean set(Object response, long contentLength) {

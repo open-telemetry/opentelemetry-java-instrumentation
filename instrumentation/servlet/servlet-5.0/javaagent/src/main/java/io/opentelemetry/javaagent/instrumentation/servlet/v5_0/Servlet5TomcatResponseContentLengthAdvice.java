@@ -8,33 +8,71 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.TomcatContentLength;
 import jakarta.servlet.ServletResponse;
+import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 
 @SuppressWarnings("unused")
 public class Servlet5TomcatResponseContentLengthAdvice {
-
-  @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-  public static void onExit(
-      @Advice.This ServletResponse response, @Advice.FieldValue("response") Object bodyResponse) {
-    record(response, bodyResponse);
-  }
 
   public static class HeaderAdvice {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This ServletResponse response,
         @Advice.FieldValue("response") Object bodyResponse,
-        @Advice.Argument(0) String headerName) {
+        @Advice.Argument(0) String headerName,
+        @Advice.Argument(1) @Nullable String headerValue) {
       if ("Content-Length".equalsIgnoreCase(headerName)) {
-        record(response, bodyResponse);
+        recordAccepted(response, bodyResponse, headerValue);
       }
     }
   }
 
-  private static void record(ServletResponse response, Object bodyResponse) {
+  public static class IntHeaderAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This ServletResponse response,
+        @Advice.FieldValue("response") Object bodyResponse,
+        @Advice.Argument(0) String headerName,
+        @Advice.Argument(1) int headerValue) {
+      if ("Content-Length".equalsIgnoreCase(headerName)) {
+        recordAccepted(response, bodyResponse, headerValue);
+      }
+    }
+  }
+
+  public static class IntContentLengthAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This ServletResponse response,
+        @Advice.FieldValue("response") Object bodyResponse,
+        @Advice.Argument(0) int contentLength) {
+      recordAccepted(response, bodyResponse, contentLength);
+    }
+  }
+
+  public static class LongContentLengthAdvice {
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This ServletResponse response,
+        @Advice.FieldValue("response") Object bodyResponse,
+        @Advice.Argument(0) long contentLength) {
+      recordAccepted(response, bodyResponse, contentLength);
+    }
+  }
+
+  private static void recordAccepted(
+      ServletResponse response, Object bodyResponse, long declaredLength) {
     InjectionState state = Servlet5ResponseInjectionState.get(response);
     if (state != null) {
-      TomcatContentLength.record(bodyResponse, state);
+      TomcatContentLength.recordAccepted(bodyResponse, state, declaredLength);
+    }
+  }
+
+  private static void recordAccepted(
+      ServletResponse response, Object bodyResponse, @Nullable String declaredLength) {
+    InjectionState state = Servlet5ResponseInjectionState.get(response);
+    if (state != null) {
+      TomcatContentLength.recordAccepted(bodyResponse, state, declaredLength);
     }
   }
 }

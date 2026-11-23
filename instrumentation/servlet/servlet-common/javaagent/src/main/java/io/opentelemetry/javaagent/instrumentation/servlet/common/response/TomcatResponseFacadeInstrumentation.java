@@ -44,16 +44,18 @@ public class TomcatResponseFacadeInstrumentation implements TypeInstrumentation 
     transformer.applyAdviceToMethod(
         namedOneOf("setHeader", "addHeader")
             .and(takesArguments(String.class, String.class))
-            .or(
-                namedOneOf("setIntHeader", "addIntHeader")
-                    .and(takesArguments(String.class, int.class)))
             .and(isPublic()),
         adviceClassName + "$HeaderAdvice");
     transformer.applyAdviceToMethod(
-        named("setContentLength")
-            .and(takesArguments(int.class))
-            .or(named("setContentLengthLong").and(takesArguments(long.class)))
+        namedOneOf("setIntHeader", "addIntHeader")
+            .and(takesArguments(String.class, int.class))
             .and(isPublic()),
-        adviceClassName);
+        adviceClassName + "$IntHeaderAdvice");
+    transformer.applyAdviceToMethod(
+        named("setContentLength").and(takesArguments(int.class)).and(isPublic()),
+        adviceClassName + "$IntContentLengthAdvice");
+    transformer.applyAdviceToMethod(
+        named("setContentLengthLong").and(takesArguments(long.class)).and(isPublic()),
+        adviceClassName + "$LongContentLengthAdvice");
   }
 }
