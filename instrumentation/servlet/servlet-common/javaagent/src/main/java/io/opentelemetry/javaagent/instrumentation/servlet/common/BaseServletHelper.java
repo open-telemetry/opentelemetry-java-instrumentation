@@ -206,10 +206,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   public int captureRequestBodyMaxSize() {
-    return servletConfig.getCaptureRequestBodyMaxSize();
+    return servletConfig.getRequestBodyCaptureConfig().getMaxSize();
   }
 
   public boolean captureRequestBodyEnabled() {
-    return servletConfig.getCaptureRequestBodyEnabled();
+    return servletConfig.getRequestBodyCaptureConfig().isEnabled();
   }
 }

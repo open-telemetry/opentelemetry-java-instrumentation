@@ -61,7 +61,7 @@ public class AgentServletInstrumenterBuilder<REQUEST, RESPONSE> {
             .setRequestParameters(servletConfig.getRequestParameters())
             .setCaptureExperimentalAttributes(servletConfig.getCaptureExperimentalAttributes())
             .setCaptureUserName(AgentCommonConfig.get().getUserConfig().isNameEnabled())
-            .setCaptureRequestBody(servletConfig.getCaptureRequestBodyEnabled());
+            .setCaptureRequestBody(servletConfig.getRequestBodyCaptureConfig());
     for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
         contextCustomizers) {
       builder.addContextCustomizer(contextCustomizer);

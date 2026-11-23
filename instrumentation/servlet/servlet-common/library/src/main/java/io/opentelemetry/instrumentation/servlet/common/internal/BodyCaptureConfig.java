@@ -59,6 +59,4 @@ public class BodyCaptureConfig {
     this.maxSize = maxSize;
     return this;
   }
-
-  // TODO: add support for media types
 }
