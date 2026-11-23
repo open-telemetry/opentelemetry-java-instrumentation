@@ -34,8 +34,10 @@ import net.bytebuddy.matcher.ElementMatcher;
  * and DUPS_OK_ACKNOWLEDGE: there a failed conversion must leave the message to be delivered again,
  * and once {@code receive()} has returned it is already acknowledged.
  *
- * <p>Durable and shared subscription names are not recorded for the simplified API: {@link
- * JmsSubscriptionNames} keys on {@code MessageConsumer}, and a {@code JMSConsumer} is not one.
+ * <p>Durable and shared subscription names are recorded without referring to any JMS 2.0 type:
+ * providers create a {@code JMSConsumer} through the classic {@code Session} methods that {@code
+ * JmsSessionInstrumentation} already instruments, and delegate its receive methods to the resulting
+ * {@code MessageConsumer}, whose advice attaches the name to the received message.
  */
 class JmsConsumerInstrumentation implements TypeInstrumentation {
 
@@ -95,7 +97,8 @@ class JmsConsumerInstrumentation implements TypeInstrumentation {
       }
 
       MessageWithDestination request =
-          MessageWithDestination.create(JakartaMessageAdapter.create(message), null, null);
+          MessageWithDestination.create(
+              JakartaMessageAdapter.create(message), null, JmsSubscriptionNames.get(message));
 
       createReceiveSpan(consumerReceiveInstrumenter(), request, timer, null);
     }

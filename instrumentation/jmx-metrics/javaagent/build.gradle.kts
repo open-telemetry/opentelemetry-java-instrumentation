@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -9,24 +11,15 @@ dependencies {
   compileOnly("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":javaagent-extension-api"))
-        implementation(project(":instrumentation:jmx-metrics:library"))
-        implementation(project(":declarative-config-bridge"))
-        implementation(project(":testing-common"))
-        implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-        implementation("io.opentelemetry:opentelemetry-sdk-testing")
-      }
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":javaagent-extension-api"))
+      implementation(project(":instrumentation:jmx-metrics:library"))
+      implementation(project(":declarative-config-bridge"))
+      implementation(project(":testing:testing-common"))
+      implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
     }
-  }
-}
-
-tasks {
-  check {
-    dependsOn(testing.suites)
   }
 }

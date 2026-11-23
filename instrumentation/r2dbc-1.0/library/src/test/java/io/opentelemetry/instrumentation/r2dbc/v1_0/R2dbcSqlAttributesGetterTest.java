@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcSqlAttributesGetter;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
@@ -18,6 +16,9 @@ import io.r2dbc.proxy.core.QueryInfo;
 import io.r2dbc.proxy.test.MockConnectionInfo;
 import io.r2dbc.proxy.test.MockQueryExecutionInfo;
 import io.r2dbc.spi.ConnectionFactoryOptions;
+import io.r2dbc.spi.R2dbcBadGrammarException;
+import io.r2dbc.spi.R2dbcException;
+import io.r2dbc.spi.R2dbcTimeoutException;
 import java.util.Collection;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -29,6 +30,66 @@ import org.junit.jupiter.params.provider.ValueSource;
 class R2dbcSqlAttributesGetterTest {
 
   private final R2dbcSqlAttributesGetter getter = new R2dbcSqlAttributesGetter();
+
+  @ParameterizedTest
+  @MethodSource("responseStatuses")
+  void responseStatus(
+      String dbSystemName, Throwable error, String expectedErrorType, String expectedStatus) {
+    DbExecution request = request(dbSystemName);
+
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo(expectedStatus);
+    assertThat(getter.getErrorType(request, null, error)).isEqualTo(expectedErrorType);
+  }
+
+  private static Stream<Arguments> responseStatuses() {
+    return Stream.of(
+        argumentSet(
+            "SQLSTATE takes precedence for PostgreSQL",
+            "postgresql",
+            new R2dbcBadGrammarException("test", "42601", 42),
+            "42601",
+            "42601"),
+        argumentSet(
+            "vendor code takes precedence for MySQL",
+            "mysql",
+            new R2dbcBadGrammarException("test", "42000", 1064),
+            "1064",
+            "1064"),
+        argumentSet(
+            "ordinary SPI exception exposes SQLSTATE",
+            "postgresql",
+            new R2dbcException("test", "08006", 0) {},
+            "08006",
+            "08006"),
+        argumentSet(
+            "no SQLSTATE",
+            "postgresql",
+            new R2dbcBadGrammarException("test"),
+            R2dbcBadGrammarException.class.getName(),
+            null),
+        argumentSet(
+            "non-database failure",
+            "postgresql",
+            new IllegalStateException("test"),
+            IllegalStateException.class.getName(),
+            null),
+        argumentSet(
+            "success SQLSTATE",
+            "postgresql",
+            new R2dbcBadGrammarException("test", "00000", 42),
+            R2dbcBadGrammarException.class.getName(),
+            "00000"));
+  }
+
+  @Test
+  void prefersR2dbcTimeoutExceptionOverDatabaseCodes() {
+    DbExecution request = request("mysql");
+    R2dbcTimeoutException error = new TestR2dbcTimeoutException();
+
+    assertThat(getter.getErrorType(request, null, error))
+        .isEqualTo(TestR2dbcTimeoutException.class.getName());
+    assertThat(getter.getDbResponseStatusCode(request, null, error)).isEqualTo("1064");
+  }
 
   @Test
   void rawQueryTextsForSingleQuery() {
@@ -70,27 +131,32 @@ class R2dbcSqlAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("dialects")
-  void sqlDialect(String connectionFactoryUrl, SqlDialect expectedDialect) {
+  void sqlDialect(String connectionFactoryUrl, String expectedQueryText) {
+    String query = "SELECT * FROM \"customers\"";
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
-            .queryInfo(new QueryInfo("SELECT * FROM \"customers\""))
+            .queryInfo(new QueryInfo(query))
             .connectionInfo(MockConnectionInfo.builder().build())
             .build();
     DbExecution dbExecution =
         new DbExecution(queryExecutionInfo, ConnectionFactoryOptions.parse(connectionFactoryUrl));
 
-    assertThat(getter.getSqlDialect(dbExecution)).isEqualTo(expectedDialect);
+    assertThat(
+            SqlQueryAnalyzer.create(true)
+                .analyze(query, getter.getSqlDialect(dbExecution))
+                .getQueryText())
+        .isEqualTo(expectedQueryText);
   }
 
   private static Stream<Arguments> dialects() {
     return Stream.of(
-        argumentSet("PostgreSQL", "r2dbc:postgresql://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("Oracle", "r2dbc:oracle://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("DB2", "r2dbc:db2://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("ClickHouse", "r2dbc:clickhouse://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("MySQL", "r2dbc:mysql://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS),
-        argumentSet("SQL Server", "r2dbc:mssql://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS),
-        argumentSet("unknown", "r2dbc:unknown://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS));
+        argumentSet("PostgreSQL", "r2dbc:postgresql://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("Oracle", "r2dbc:oracle://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("DB2", "r2dbc:db2://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("ClickHouse", "r2dbc:clickhouse://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("MySQL", "r2dbc:mysql://localhost/db", "SELECT * FROM ?"),
+        argumentSet("SQL Server", "r2dbc:mssql://localhost/db", "SELECT * FROM ?"),
+        argumentSet("unknown", "r2dbc:unknown://localhost/db", "SELECT * FROM ?"));
   }
 
   @Test
@@ -236,5 +302,20 @@ class R2dbcSqlAttributesGetterTest {
         .queryInfo(new QueryInfo("SELECT 1"))
         .connectionInfo(MockConnectionInfo.builder().build())
         .build();
+  }
+
+  private static DbExecution request(String dbSystemName) {
+    return new DbExecution(
+        queryExecutionInfo(),
+        ConnectionFactoryOptions.parse("r2dbc:" + dbSystemName + "://localhost/db"));
+  }
+
+  private static final class TestR2dbcTimeoutException extends R2dbcTimeoutException {
+
+    private static final long serialVersionUID = 1L;
+
+    TestR2dbcTimeoutException() {
+      super("test", "SELECT 1", 1064, "HYT00");
+    }
   }
 }

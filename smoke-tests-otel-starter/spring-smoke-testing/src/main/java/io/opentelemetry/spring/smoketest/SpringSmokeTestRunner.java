@@ -7,14 +7,13 @@ package io.opentelemetry.spring.smoketest;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.testing.InstrumentationTestRunner;
+import io.opentelemetry.instrumentation.testing.internal.DeltaPreferredInMemoryMetricExporter;
 import io.opentelemetry.instrumentation.testing.provider.TestLogRecordExporterComponentProvider;
 import io.opentelemetry.instrumentation.testing.provider.TestMetricExporterComponentProvider;
 import io.opentelemetry.instrumentation.testing.provider.TestSpanExporterComponentProvider;
 import io.opentelemetry.sdk.logs.data.LogRecordData;
-import io.opentelemetry.sdk.metrics.data.AggregationTemporality;
 import io.opentelemetry.sdk.metrics.data.MetricData;
 import io.opentelemetry.sdk.testing.exporter.InMemoryLogRecordExporter;
-import io.opentelemetry.sdk.testing.exporter.InMemoryMetricExporter;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.util.List;
@@ -26,7 +25,7 @@ import java.util.List;
 public class SpringSmokeTestRunner extends InstrumentationTestRunner {
 
   static InMemorySpanExporter testSpanExporter;
-  static InMemoryMetricExporter testMetricExporter;
+  static DeltaPreferredInMemoryMetricExporter testMetricExporter;
   static InMemoryLogRecordExporter testLogRecordExporter;
 
   static OpenTelemetry openTelemetry;
@@ -37,7 +36,7 @@ public class SpringSmokeTestRunner extends InstrumentationTestRunner {
 
   static void resetExporters() {
     testSpanExporter = InMemorySpanExporter.create();
-    testMetricExporter = InMemoryMetricExporter.create(AggregationTemporality.DELTA);
+    testMetricExporter = DeltaPreferredInMemoryMetricExporter.create();
     testLogRecordExporter = InMemoryLogRecordExporter.create();
 
     // for declarative config

@@ -3,6 +3,14 @@ name: Agent startup benchmark
 on:
   workflow_dispatch:
     inputs:
+      workload:
+        description: Startup workload
+        required: true
+        default: smoke
+        type: choice
+        options:
+          - smoke
+          - petclinic
       baseline-ref:
         description: Optional revision reachable from upstream main to compare against the selected agent
         required: false
@@ -25,21 +33,21 @@ jobs:
         with:
           persist-credentials: false
 
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
           java-version-file: .java-version
 
-      - uses: gradle/actions/setup-gradle@3f5f9adaf7d9fecd50b5935e54106014257a94e6 # v6.4.0
+      - uses: gradle/actions/setup-gradle@8da46b539cd8fe6ab27ca75128919a18d757604c # v6.4.1
         with:
           cache-read-only: true
 
       - name: Build agent from selected revision
-        run: ./gradlew :javaagent:shadowJar :smoke-tests:images:spring-boot:classes -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
+        run: ./gradlew :javaagent:shadowJar :instrumentation-annotations:jar :smoke-tests:images:spring-boot:classes -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
 
       - name: Format and validate standalone benchmark
         working-directory: benchmark-overhead
-        run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar
+        run: ./gradlew spotlessApply test --tests 'io.opentelemetry.startup.*Test' startupRecorderJar petclinicStartupHelperJar
 
       - name: Check out upstream main history for baseline validation
         if: inputs.baseline-ref != ''
@@ -78,8 +86,10 @@ jobs:
           cp smoke-tests/images/spring-boot/build/classes/java/main/io/opentelemetry/smoketest/springboot/controller/WebController.class \
             "$RUNNER_TEMP/startup-benchmark/fixture/"
           cp benchmark-overhead/build/libs/startup-recorder.jar "$RUNNER_TEMP/startup-benchmark/"
+          cp benchmark-overhead/build/libs/petclinic-startup-helper.jar "$RUNNER_TEMP/startup-benchmark/"
+          cp instrumentation-annotations/build/libs/opentelemetry-instrumentation-annotations-*.jar "$RUNNER_TEMP/startup-benchmark/annotations.jar"
           git rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/revision.txt"
-          (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar > sha256.txt)
+          (cd "$RUNNER_TEMP/startup-benchmark" && sha256sum opentelemetry-javaagent.jar startup-recorder.jar petclinic-startup-helper.jar annotations.jar fixture/WebController.class > sha256.txt)
           if [ -n "$BASELINE_REF" ]; then
             cp baseline/javaagent/build/libs/opentelemetry-javaagent.jar "$RUNNER_TEMP/startup-benchmark/baseline-agent.jar"
             git -C baseline rev-parse HEAD > "$RUNNER_TEMP/startup-benchmark/baseline-revision.txt"
@@ -100,7 +110,7 @@ jobs:
     needs: build
     permissions: {}
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
-    timeout-minutes: 45
+    timeout-minutes: ${{ inputs.workload == 'petclinic' && 90 || 45 }}
     steps:
       - name: Isolate this attempt under runner temporary storage
         working-directory: ${{ runner.temp }}
@@ -116,7 +126,7 @@ jobs:
       - name: Unpack standalone benchmark
         run: tar -xzf "$AGENTS/harness.tar.gz" -C "$AGENTS"
 
-      - uses: actions/setup-java@b843ebf9b913146b38da2eaa7aeddf76074ae1ad # v6.1.0
+      - uses: actions/setup-java@d1374f8ac74474200d16ef8ecee22c7ae7a51880 # v6.3.0
         with:
           distribution: temurin
           java-version-file: ${{ env.AGENTS }}/.java-version
@@ -130,6 +140,7 @@ jobs:
           TMPDIR: ${{ runner.temp }}
           TMP: ${{ runner.temp }}
           TEMP: ${{ runner.temp }}
+          WORKLOAD: ${{ inputs.workload }}
         run: |
           mkdir -p build/reports/agent-startup
           uname -a > build/reports/agent-startup/host.txt
@@ -146,6 +157,9 @@ jobs:
             "-PstartupBenchmarkAgentJar=$AGENTS/opentelemetry-javaagent.jar" \
             "-PstartupBenchmarkRecorderJar=$AGENTS/startup-recorder.jar" \
             "-PstartupBenchmarkFixtureClass=$AGENTS/fixture/WebController.class" \
+            "-PstartupBenchmarkWorkload=$WORKLOAD" \
+            "-PstartupBenchmarkAnnotationsJar=$AGENTS/annotations.jar" \
+            "-PstartupBenchmarkPetclinicHelperJar=$AGENTS/petclinic-startup-helper.jar" \
             "-PstartupBenchmarkRevision=$source_revision" \
             "${baseline_arguments[@]}"
 

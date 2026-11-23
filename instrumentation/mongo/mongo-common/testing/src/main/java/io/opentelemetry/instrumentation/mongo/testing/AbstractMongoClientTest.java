@@ -14,6 +14,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
@@ -156,35 +157,31 @@ public abstract class AbstractMongoClientTest<T> {
     assertWriteResult(collectionName, "insert", "121");
   }
 
-  private void assertWriteResult(String collectionName, String operation, String errorType) {
+  private void assertWriteResult(String collectionName, String operation, String errorCode) {
     AtomicReference<String> scopeName = new AtomicReference<>();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      scopeName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-                      span.hasName(operation + " " + collectionName)
-                          .hasKind(CLIENT)
-                          .hasNoParent()
-                          .hasStatus(errorType == null ? StatusData.unset() : StatusData.error())
-                          .hasEventsSatisfyingExactly()
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, MONGODB),
-                              equalTo(DB_NAMESPACE, "test_db"),
-                              equalTo(DB_COLLECTION_NAME, collectionName),
-                              equalTo(DB_OPERATION_NAME, operation),
-                              satisfies(DB_QUERY_TEXT, val -> val.isNotNull()),
-                              equalTo(SERVER_ADDRESS, host),
-                              equalTo(SERVER_PORT, port),
-                              equalTo(
-                                  NETWORK_PEER_ADDRESS,
-                                  supportsNetworkPeer() ? networkPeerAddress : null),
-                              equalTo(
-                                  NETWORK_PEER_PORT,
-                                  supportsNetworkPeer() ? Long.valueOf(port) : null),
-                              equalTo(ERROR_TYPE, errorType));
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              scopeName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+              span.hasName(operation + " " + collectionName)
+                  .hasKind(CLIENT)
+                  .hasNoParent()
+                  .hasStatus(errorCode == null ? StatusData.unset() : StatusData.error())
+                  .hasEventsSatisfyingExactly()
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(DB_SYSTEM_NAME, MONGODB),
+                      equalTo(DB_NAMESPACE, "test_db"),
+                      equalTo(DB_COLLECTION_NAME, collectionName),
+                      equalTo(DB_OPERATION_NAME, operation),
+                      satisfies(DB_QUERY_TEXT, val -> val.isNotNull()),
+                      equalTo(SERVER_ADDRESS, host),
+                      equalTo(SERVER_PORT, port),
+                      equalTo(
+                          NETWORK_PEER_ADDRESS, supportsNetworkPeer() ? networkPeerAddress : null),
+                      equalTo(NETWORK_PEER_PORT, supportsNetworkPeer() ? Long.valueOf(port) : null),
+                      equalTo(ERROR_TYPE, errorCode),
+                      equalTo(DB_RESPONSE_STATUS_CODE, errorCode));
+            }));
     List<AttributeKey<?>> expectedMetricKeys =
         new ArrayList<>(
             asList(
@@ -198,7 +195,8 @@ public abstract class AbstractMongoClientTest<T> {
       expectedMetricKeys.add(NETWORK_PEER_ADDRESS);
       expectedMetricKeys.add(NETWORK_PEER_PORT);
     }
-    if (errorType != null) {
+    if (errorCode != null) {
+      expectedMetricKeys.add(DB_RESPONSE_STATUS_CODE);
       expectedMetricKeys.add(ERROR_TYPE);
     }
     assertDurationMetric(
@@ -226,34 +224,33 @@ public abstract class AbstractMongoClientTest<T> {
 
     testing().runWithSpan("parent", () -> createCollection(dbName, collectionName));
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "create",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\"}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    mongoSpan(
+                        span,
+                        "create",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -265,34 +262,33 @@ public abstract class AbstractMongoClientTest<T> {
     testing().runWithSpan("parent", () -> createCollectionNoDescription(dbName, collectionName));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "create",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\"}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    mongoSpan(
+                        span,
+                        "create",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -305,34 +301,33 @@ public abstract class AbstractMongoClientTest<T> {
         .runWithSpan("parent", () -> createCollectionCallingBuildTwice(dbName, collectionName));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "create",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\"}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    mongoSpan(
+                        span,
+                        "create",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -348,34 +343,33 @@ public abstract class AbstractMongoClientTest<T> {
     AtomicReference<String> scopeName = new AtomicReference<>();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span -> {
-                      scopeName.set(trace.getSpan(1).getInstrumentationScopeInfo().getName());
-                      mongoSpan(
-                          span,
-                          "count",
-                          collectionName,
-                          dbName,
-                          trace.getSpan(0),
-                          asList(
-                              "{\"count\":\"" + collectionName + "\",\"query\":{}}",
-                              "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
-                              "{\"count\":\""
-                                  + collectionName
-                                  + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                              "{\"count\":\""
-                                  + collectionName
-                                  + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                              "{\"count\":\""
-                                  + collectionName
-                                  + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                              "{\"count\":\""
-                                  + collectionName
-                                  + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"));
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span -> {
+                  scopeName.set(trace.getSpan(1).getInstrumentationScopeInfo().getName());
+                  mongoSpan(
+                      span,
+                      "count",
+                      collectionName,
+                      dbName,
+                      trace.getSpan(0),
+                      asList(
+                          "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                          "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                          "{\"count\":\""
+                              + collectionName
+                              + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                          "{\"count\":\""
+                              + collectionName
+                              + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                          "{\"count\":\""
+                              + collectionName
+                              + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                          "{\"count\":\""
+                              + collectionName
+                              + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"));
+                }));
 
     List<AttributeKey<?>> expectedMetricKeys =
         new ArrayList<>(
@@ -402,49 +396,48 @@ public abstract class AbstractMongoClientTest<T> {
     assertThat(count).isEqualTo(1);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "insert",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"insert\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}",
-                                "{\"insert\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}",
-                                "{\"insert\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "count",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
-                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    mongoSpan(
+                        span,
+                        "insert",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"insert\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}",
+                            "{\"insert\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"$db\":\"?\",\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}",
+                            "{\"insert\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"documents\":[{\"_id\":\"?\",\"password\":\"?\"}]}")),
+                span ->
+                    mongoSpan(
+                        span,
+                        "count",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                            "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -459,49 +452,48 @@ public abstract class AbstractMongoClientTest<T> {
     assertThat(modifiedCount).isEqualTo(1);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "update",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"update\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}",
-                                "{\"update\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}",
-                                "{\"update\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}")),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "count",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
-                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    mongoSpan(
+                        span,
+                        "update",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"update\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}",
+                            "{\"update\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"$db\":\"?\",\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}",
+                            "{\"update\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"updates\":[{\"q\":{\"password\":\"?\"},\"u\":{\"$set\":{\"password\":\"?\"}}}]}")),
+                span ->
+                    mongoSpan(
+                        span,
+                        "count",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                            "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -516,49 +508,48 @@ public abstract class AbstractMongoClientTest<T> {
     assertThat(deletedCount).isEqualTo(1);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "delete",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"delete\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}",
-                                "{\"delete\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}",
-                                "{\"delete\":\""
-                                    + collectionName
-                                    + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "count",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"count\":\"" + collectionName + "\",\"query\":{}}",
-                                "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"count\":\""
-                                    + collectionName
-                                    + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    mongoSpan(
+                        span,
+                        "delete",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"delete\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}",
+                            "{\"delete\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"$db\":\"?\",\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}",
+                            "{\"delete\":\""
+                                + collectionName
+                                + "\",\"ordered\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"deletes\":[{\"q\":{\"password\":\"?\"},\"limit\":\"?\"}]}")),
+                span ->
+                    mongoSpan(
+                        span,
+                        "count",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"count\":\"" + collectionName + "\",\"query\":{}}",
+                            "{\"count\":\"" + collectionName + "\",\"query\":{},\"$db\":\"?\"}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"query\":{},\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"count\":\""
+                                + collectionName
+                                + "\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -571,46 +562,45 @@ public abstract class AbstractMongoClientTest<T> {
     testing().runWithSpan("parent", () -> getMore(collection));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "find",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"find\":\""
-                                    + collectionName
-                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\"}",
-                                "{\"find\":\""
-                                    + collectionName
-                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\"}",
-                                "{\"find\":\""
-                                    + collectionName
-                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"find\":\""
-                                    + collectionName
-                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"find\":\""
-                                    + collectionName
-                                    + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "getMore",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\"}",
-                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\"}",
-                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    mongoSpan(
+                        span,
+                        "find",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"find\":\""
+                                + collectionName
+                                + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\"}",
+                            "{\"find\":\""
+                                + collectionName
+                                + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\"}",
+                            "{\"find\":\""
+                                + collectionName
+                                + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"find\":\""
+                                + collectionName
+                                + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"find\":\""
+                                + collectionName
+                                + "\",\"filter\":{\"_id\":{\"$gte\":\"?\"}},\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}")),
+                span ->
+                    mongoSpan(
+                        span,
+                        "getMore",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\"}",
+                            "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\"}",
+                            "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"getMore\":\"?\",\"collection\":\"?\",\"batchSize\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   @Test
@@ -632,34 +622,33 @@ public abstract class AbstractMongoClientTest<T> {
             "parent", () -> createCollectionWithAlreadyBuiltClientOptions(dbName, collectionName));
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        mongoSpan(
-                            span,
-                            "create",
-                            collectionName,
-                            dbName,
-                            trace.getSpan(0),
-                            asList(
-                                "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\"}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
-                                "{\"create\":\""
-                                    + collectionName
-                                    + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    mongoSpan(
+                        span,
+                        "create",
+                        collectionName,
+                        dbName,
+                        trace.getSpan(0),
+                        asList(
+                            "{\"create\":\"" + collectionName + "\",\"capped\":\"?\"}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\"}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"autoIndexId\":\"?\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"},\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\",\"$readPreference\":{\"mode\":\"?\"}}",
+                            "{\"create\":\""
+                                + collectionName
+                                + "\",\"capped\":\"?\",\"$db\":\"?\",\"lsid\":{\"id\":\"?\"}}"))));
   }
 
   protected String createCollectionName() {

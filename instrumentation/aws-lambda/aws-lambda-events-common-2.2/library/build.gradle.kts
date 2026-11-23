@@ -32,49 +32,33 @@ dependencies {
   implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator")
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        }
-      }
+testing.suites {
+  register<JvmTestSuite>("version310Test") {
+    dependencies {
+      implementation(project())
+      implementation(
+        "com.amazonaws:aws-lambda-java-events:${baseVersion("3.10.0").orLatest()}"
+      )
     }
 
-    register<JvmTestSuite>("version310Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/version310Test/java"))
-        }
-      }
+    project.configurations.named(sources.implementationConfigurationName) {
+      extendsFrom(configurations["testImplementation"])
+    }
+    project.configurations.named(sources.runtimeOnlyConfigurationName) {
+      extendsFrom(configurations["testRuntimeOnly"])
+    }
+  }
 
-      dependencies {
-        implementation(project())
-        implementation(
-          "com.amazonaws:aws-lambda-java-events:${baseVersion("3.10.0").orLatest()}"
-        )
-      }
-      executions {
-        configureEach {
-          // required on jdk17
-          jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-          jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
-          jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-        }
-      }
+  executions("test", "version310Test") {
+    configureEach {
+      // required on jdk17
+      jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
+      jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
+      jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
     }
   }
 }
 
-configurations {
-  named("version310TestImplementation") {
-    extendsFrom(configurations["testImplementation"])
-  }
-  named("version310TestRuntimeOnly") {
-    extendsFrom(configurations["testRuntimeOnly"])
-  }
+tasks.check {
+  dependsOn(testing.suites)
 }

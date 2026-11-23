@@ -9,7 +9,7 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MessagingRocketmqMessageTypeIncubatingValues;
+import io.opentelemetry.semconv.incubating.RocketmqIncubatingAttributes.RocketmqMessageTypeIncubatingValues;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -44,17 +44,16 @@ class RocketMqProducerAttributeExtractor
     attributes.put(ROCKETMQ_MESSAGE_KEYS, new ArrayList<>(message.getKeys()));
     switch (message.getMessageType()) {
       case FIFO:
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, MessagingRocketmqMessageTypeIncubatingValues.FIFO);
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.FIFO);
         break;
       case DELAY:
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, MessagingRocketmqMessageTypeIncubatingValues.DELAY);
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.DELAY);
         break;
       case TRANSACTION:
-        attributes.put(
-            ROCKETMQ_MESSAGE_TYPE, MessagingRocketmqMessageTypeIncubatingValues.TRANSACTION);
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.TRANSACTION);
         break;
       default:
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, MessagingRocketmqMessageTypeIncubatingValues.NORMAL);
+        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.NORMAL);
     }
   }
 

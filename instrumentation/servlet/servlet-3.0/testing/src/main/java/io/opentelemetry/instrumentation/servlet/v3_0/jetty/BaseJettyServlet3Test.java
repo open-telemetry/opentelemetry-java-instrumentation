@@ -70,20 +70,19 @@ public class BaseJettyServlet3Test extends AbstractJettyServlet3Test {
     assertThat(response.contentUtf8()).isEqualTo(SUCCESS.getBody());
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(isAgentTest() ? "GET " + getContextPath() + "/success" : "GET")
-                            .hasKind(SpanKind.SERVER)
-                            .hasNoParent(),
-                    span ->
-                        span.hasName("startAsync")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("controller")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName(isAgentTest() ? "GET " + getContextPath() + "/success" : "GET")
+                        .hasKind(SpanKind.SERVER)
+                        .hasNoParent(),
+                span ->
+                    span.hasName("startAsync")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("controller")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 }

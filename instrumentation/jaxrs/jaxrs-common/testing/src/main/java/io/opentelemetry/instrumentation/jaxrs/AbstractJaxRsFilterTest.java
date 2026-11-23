@@ -132,34 +132,33 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
     String method = runsOnServer() ? "POST" : "GET";
     String expectedServerSpanName = serverRoute == null ? method : method + " " + serverRoute;
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              Consumer<SpanDataAssert> serverSpan =
-                  span -> {
-                    span.hasName(expectedServerSpanName).hasKind(SpanKind.SERVER);
-                    if (runsOnServer() && abortNormal) {
-                      span.hasStatus(StatusData.unset());
-                    }
-                  };
-              if (CONTROLLER_TELEMETRY_ENABLED) {
-                trace.hasSpansSatisfyingExactly(
-                    serverSpan,
-                    span -> {
-                      span.hasName(controllerName).hasParent(trace.getSpan(0));
-                      span.hasAttributesSatisfyingExactly(
-                          satisfies(
-                              CODE_FUNCTION_NAME,
-                              val ->
-                                  val.contains(
-                                          abortPrematch
-                                              ? ".JaxRsFilterTest$PrematchRequestFilter"
-                                              : ".Resource$Test")
-                                      .endsWith(abortPrematch ? ".filter" : ".hello")));
-                    });
-              } else {
-                trace.hasSpansSatisfyingExactly(serverSpan);
-              }
-            });
+        .waitAndAssertTraces(trace -> {
+          Consumer<SpanDataAssert> serverSpan =
+              span -> {
+                span.hasName(expectedServerSpanName).hasKind(SpanKind.SERVER);
+                if (runsOnServer() && abortNormal) {
+                  span.hasStatus(StatusData.unset());
+                }
+              };
+          if (CONTROLLER_TELEMETRY_ENABLED) {
+            trace.hasSpansSatisfyingExactly(
+                serverSpan,
+                span -> {
+                  span.hasName(controllerName).hasParent(trace.getSpan(0));
+                  span.hasAttributesSatisfyingExactly(
+                      satisfies(
+                          CODE_FUNCTION_NAME,
+                          val ->
+                              val.contains(
+                                      abortPrematch
+                                          ? ".JaxRsFilterTest$PrematchRequestFilter"
+                                          : ".Resource$Test")
+                                  .endsWith(abortPrematch ? ".filter" : ".hello")));
+                });
+          } else {
+            trace.hasSpansSatisfyingExactly(serverSpan);
+          }
+        });
   }
 
   @Test
@@ -173,32 +172,31 @@ public abstract class AbstractJaxRsFilterTest<SERVER> extends AbstractHttpServer
     String method = runsOnServer() ? "POST" : "GET";
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              Consumer<SpanDataAssert> serverSpan =
-                  span -> {
-                    span.hasName(method + " /test3/nested").hasKind(SpanKind.SERVER).hasNoParent();
-                    if (!runsOnServer()) {
-                      span.hasAttributesSatisfyingExactly(
-                          equalTo(HTTP_REQUEST_METHOD, method),
-                          equalTo(HTTP_ROUTE, "/test3/nested"),
-                          equalTo(ERROR_TYPE, HttpConstants._OTHER));
-                    }
-                  };
-              if (CONTROLLER_TELEMETRY_ENABLED) {
-                trace.hasSpansSatisfyingExactly(
-                    serverSpan,
-                    span ->
-                        span.hasName("Test3.nested")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttributesSatisfyingExactly(
-                                satisfies(
-                                    CODE_FUNCTION_NAME,
-                                    val -> val.contains(".Resource$Test").endsWith(".nested"))));
-              } else {
-                trace.hasSpansSatisfyingExactly(serverSpan);
-              }
-            });
+        .waitAndAssertTraces(trace -> {
+          Consumer<SpanDataAssert> serverSpan =
+              span -> {
+                span.hasName(method + " /test3/nested").hasKind(SpanKind.SERVER).hasNoParent();
+                if (!runsOnServer()) {
+                  span.hasAttributesSatisfyingExactly(
+                      equalTo(HTTP_REQUEST_METHOD, method),
+                      equalTo(HTTP_ROUTE, "/test3/nested"),
+                      equalTo(ERROR_TYPE, HttpConstants._OTHER));
+                }
+              };
+          if (CONTROLLER_TELEMETRY_ENABLED) {
+            trace.hasSpansSatisfyingExactly(
+                serverSpan,
+                span ->
+                    span.hasName("Test3.nested")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttributesSatisfyingExactly(
+                            satisfies(
+                                CODE_FUNCTION_NAME,
+                                val -> val.contains(".Resource$Test").endsWith(".nested"))));
+          } else {
+            trace.hasSpansSatisfyingExactly(serverSpan);
+          }
+        });
   }
 }

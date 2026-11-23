@@ -194,6 +194,7 @@ public SpringWebMvcInstrumentationModule() {
     - RPC_SERVER_SPANS
     - RPC_SERVER_METRICS
     - MESSAGING_SPANS
+    - MESSAGING_METRICS
     - DATABASE_CLIENT_SPANS
     - DATABASE_CLIENT_METRICS
     - DATABASE_POOL_METRICS
@@ -277,7 +278,7 @@ definitions:
       declarative_name: java.common.http.known_methods
       description: ...
       type: list
-      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE
   metrics:
     http.client.request.duration-1a2b3c4d:   # <metric name>-<short content hash>
       name: http.client.request.duration
@@ -393,7 +394,7 @@ additional_telemetry:                             # Manually document telemetry 
 ### Shared configuration definitions
 
 Many instrumentations expose the same configuration options (for example `http.known-methods` or
-`common.peer-service-mapping`). Instead of hand-copying an identical block into every `metadata.yaml`,
+`common.server-service-mapping`). Instead of hand-copying an identical block into every `metadata.yaml`,
 these are defined once in
 [`src/main/resources/shared-config-definitions.yaml`](src/main/resources/shared-config-definitions.yaml)
 under a stable id, and each module references them:
@@ -401,7 +402,7 @@ under a stable id, and each module references them:
 ```yaml
 configurations:
   - ref: http.known-methods
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping
 ```
 
 At metadata-parse time (`SharedConfigurationRegistry`) each `ref` is expanded into the full

@@ -42,7 +42,6 @@ class CpuTest {
                 .hasName("jvm.cpu.recent_utilization")
                 .hasDescription("Recent CPU utilization for the process as reported by the JVM.")
                 .hasUnit("1")
-                .hasDoubleGaugeSatisfying(
-                    gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.05))));
+                .hasDoubleGaugePointsSatisfying(point -> point.hasValue(0.05)));
   }
 }

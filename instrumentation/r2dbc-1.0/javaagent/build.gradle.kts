@@ -2,6 +2,7 @@ plugins {
   id("otel.javaagent-instrumentation")
   id("otel.java-conventions")
   id("otel.nullaway-conventions")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -32,21 +33,4 @@ dependencies {
 
   testImplementation(project(":instrumentation:r2dbc-1.0:testing"))
   testInstrumentation(project(":instrumentation:reactor:reactor-3.1:javaagent"))
-}
-
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv)
-  }
 }

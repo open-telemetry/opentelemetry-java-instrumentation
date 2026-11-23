@@ -77,24 +77,21 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
                   span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
             },
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .extracting(link -> link.getSpanContext().getSpanId())
-                                        .containsExactlyInAnyOrder(
-                                            "1111111111111111", createSpan.get().getSpanId()))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .extracting(link -> link.getSpanContext().getSpanId())
+                                .containsExactlyInAnyOrder(
+                                    "1111111111111111", createSpan.get().getSpanId()))));
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
     assertThat(response.messages())
-        .extracting(
-            message -> {
-              MessageAttributeValue value = message.messageAttributes().get("traceparent");
-              return value == null ? null : value.stringValue();
-            })
+        .extracting(message -> {
+          MessageAttributeValue value = message.messageAttributes().get("traceparent");
+          return value == null ? null : value.stringValue();
+        })
         .contains(CUSTOM_TRACEPARENT);
   }
 
@@ -143,41 +140,36 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
                       span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
               trace -> {
                 sendSpan.set(trace.getSpan(0));
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo("1111111111111111"))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .singleElement()
+                                .satisfies(link ->
+                                    assertThat(link.getSpanContext().getSpanId())
+                                        .isEqualTo("1111111111111111"))));
               });
 
       ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
       assertThat(response.messages())
           .filteredOn(message -> "e1".equals(message.body()))
           .singleElement()
-          .satisfies(
-              message ->
-                  assertThat(message.messageAttributes().get("traceparent").stringValue())
-                      .isEqualTo(CUSTOM_TRACEPARENT));
+          .satisfies(message ->
+              assertThat(message.messageAttributes().get("traceparent").stringValue())
+                  .isEqualTo(CUSTOM_TRACEPARENT));
       assertThat(response.messages())
           .filteredOn(message -> "e2".equals(message.body()))
           .singleElement()
-          .satisfies(
-              message ->
-                  assertThat(message.messageAttributes().get("traceparent").stringValue())
-                      .isEqualTo(
-                          "00-"
-                              + sendSpan.get().getTraceId()
-                              + "-"
-                              + sendSpan.get().getSpanId()
-                              + "-"
-                              + sendSpan.get().getSpanContext().getTraceFlags().asHex()));
+          .satisfies(message ->
+              assertThat(message.messageAttributes().get("traceparent").stringValue())
+                  .isEqualTo(
+                      "00-"
+                          + sendSpan.get().getTraceId()
+                          + "-"
+                          + sendSpan.get().getSpanId()
+                          + "-"
+                          + sendSpan.get().getSpanContext().getTraceFlags().asHex()));
     }
   }
 
@@ -235,37 +227,33 @@ class Aws2SqsW3cPropagatorAndXrayPropagatorTest extends Aws2SqsTracingTest {
                   span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
             },
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .extracting(link -> link.getSpanContext().getSpanId())
-                                        .containsExactlyInAnyOrder(
-                                            createSpans.get(0).getSpanId(),
-                                            createSpans.get(1).getSpanId()))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .extracting(link -> link.getSpanContext().getSpanId())
+                                .containsExactlyInAnyOrder(
+                                    createSpans.get(0).getSpanId(),
+                                    createSpans.get(1).getSpanId()))));
 
     ReceiveMessageResponse response = client.receiveMessage(receiveMessageBatchRequest);
     assertThat(response.messages())
         .filteredOn(message -> "baggage-only".equals(message.body()))
         .singleElement()
-        .satisfies(
-            message -> {
-              assertThat(message.messageAttributes().get("baggage").stringValue())
-                  .isEqualTo("user=alice");
-              assertThat(message.messageAttributes()).containsKey("traceparent");
-              assertThat(message.attributesAsStrings()).containsKey("AWSTraceHeader");
-            });
+        .satisfies(message -> {
+          assertThat(message.messageAttributes().get("baggage").stringValue())
+              .isEqualTo("user=alice");
+          assertThat(message.messageAttributes()).containsKey("traceparent");
+          assertThat(message.attributesAsStrings()).containsKey("AWSTraceHeader");
+        });
     assertThat(response.messages())
         .filteredOn(message -> "invalid-traceparent".equals(message.body()))
         .singleElement()
-        .satisfies(
-            message -> {
-              assertThat(message.messageAttributes().get("traceparent").stringValue())
-                  .isEqualTo(INVALID_TRACEPARENT);
-              assertThat(message.attributesAsStrings()).containsKey("AWSTraceHeader");
-            });
+        .satisfies(message -> {
+          assertThat(message.messageAttributes().get("traceparent").stringValue())
+              .isEqualTo(INVALID_TRACEPARENT);
+          assertThat(message.attributesAsStrings()).containsKey("AWSTraceHeader");
+        });
   }
 }

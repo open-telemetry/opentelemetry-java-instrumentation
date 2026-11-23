@@ -12,10 +12,10 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TRANSPORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 
@@ -39,7 +39,8 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class RpcServerMetricsTest {
 
   private static final double[] DURATION_BUCKETS = {
-    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1, 0.5, 1, 5, 10, 50, 100
+    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1, 2.5, 5, 10,
+    30, 60
   };
   private static final double[] CUSTOM_BUCKETS = {0.1, 0.2, 0.3};
 
@@ -107,57 +108,45 @@ class RpcServerMetricsTest {
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.server.call.duration")
-                    .hasUnit("s")
-                    .hasDescription(
-                        "Measures the duration of an incoming Remote Procedure Call (RPC).")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(0.15)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                RPC_METHOD, "myservice.EchoService/exampleMethod"),
-                                            equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                            equalTo(ERROR_TYPE, "INTERNAL"),
-                                            equalTo(stringKey("rpc.status_code"), "INTERNAL"),
-                                            equalTo(SERVER_ADDRESS, "example.com"),
-                                            equalTo(SERVER_PORT, 8080))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00")))));
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName("rpc.server.call.duration")
+                .hasUnit("s")
+                .hasDescription("Measures the duration of an incoming Remote Procedure Call (RPC).")
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSum(0.15)
+                        .hasBucketBoundaries(DURATION_BUCKETS)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_METHOD, "myservice.EchoService/exampleMethod"),
+                            equalTo(RPC_SYSTEM_NAME, "grpc"),
+                            equalTo(ERROR_TYPE, "INTERNAL"),
+                            equalTo(stringKey("rpc.status_code"), "INTERNAL"),
+                            equalTo(SERVER_ADDRESS, "example.com"),
+                            equalTo(SERVER_PORT, 8080))
+                        .hasExemplarsSatisfying(exemplar ->
+                            exemplar
+                                .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                .hasSpanId("090a0b0c0d0e0f00"))));
 
     listener.onEnd(context2, responseAttributes2, nanos(300));
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.server.call.duration")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(0.15)
-                                        .hasBucketBoundaries(DURATION_BUCKETS)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(
-                                                RPC_METHOD, "myservice.EchoService/exampleMethod"),
-                                            equalTo(RPC_SYSTEM_NAME, "grpc"),
-                                            equalTo(SERVER_PORT, 8080)))));
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName("rpc.server.call.duration")
+                .hasUnit("s")
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSum(0.15)
+                        .hasBucketBoundaries(DURATION_BUCKETS)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(RPC_METHOD, "myservice.EchoService/exampleMethod"),
+                            equalTo(RPC_SYSTEM_NAME, "grpc"),
+                            equalTo(SERVER_PORT, 8080))));
   }
 
   @Test
@@ -184,20 +173,42 @@ class RpcServerMetricsTest {
 
     assertThat(metricReader.collectAllMetrics())
         .singleElement()
-        .satisfies(
-            metric ->
-                assertThat(metric)
-                    .hasName("rpc.server.call.duration")
-                    .hasUnit("s")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasSum(0.15)
-                                        .hasBucketBoundaries(CUSTOM_BUCKETS)
-                                        .hasAttributes(Attributes.empty()))));
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName("rpc.server.call.duration")
+                .hasUnit("s")
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSum(0.15)
+                        .hasBucketBoundaries(CUSTOM_BUCKETS)
+                        .hasAttributes(Attributes.empty())));
+  }
+
+  @Test
+  void usesCustomBucketAdvice() {
+    InMemoryMetricReader metricReader = InMemoryMetricReader.createDelta();
+    SdkMeterProvider meterProvider =
+        SdkMeterProvider.builder().registerMetricReader(metricReader).build();
+    cleanup.deferCleanup(meterProvider);
+
+    OperationListener listener =
+        RpcServerMetrics.get(asList(0.1, 0.2, 0.3)).create(meterProvider.get("test"));
+    Context context = listener.onStart(Context.root(), Attributes.empty(), nanos(100));
+    listener.onEnd(context, Attributes.empty(), nanos(250));
+
+    assertThat(metricReader.collectAllMetrics())
+        .singleElement()
+        .satisfies(metric ->
+            assertThat(metric)
+                .hasName("rpc.server.call.duration")
+                .hasUnit("s")
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasSum(0.15)
+                        .hasBucketBoundaries(CUSTOM_BUCKETS)
+                        .hasAttributes(Attributes.empty())));
   }
 
   private static long nanos(int millis) {

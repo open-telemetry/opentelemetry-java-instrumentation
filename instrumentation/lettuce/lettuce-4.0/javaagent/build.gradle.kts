@@ -1,5 +1,10 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -19,55 +24,24 @@ dependencies {
   latestDepTestLibrary("biz.paluch.redis:lettuce:4.+") // see lettuce-5.0 module
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.lettuce.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.lettuce.experimental-span-attributes=true")
-  }
-
-  val testConnectionTelemetryEnabled = register<Test>("testConnectionTelemetryEnabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true")
-    systemProperty("metadataConfig", "otel.instrumentation.lettuce.connection-telemetry.enabled=true")
-  }
-
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv-stability.preview=service.peer")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=service.peer")
-  }
-
-  val testConnectionTelemetryEnabledPreviewSemconv =
-    register<Test>("testConnectionTelemetryEnabledPreviewSemconv") {
-      testClassesDirs = sourceSets.test.get().output.classesDirs
-      classpath = sourceSets.test.get().runtimeClasspath
-      jvmArgs(
-        "-Dotel.instrumentation.lettuce.connection-telemetry.enabled=true",
-        "-Dotel.semconv-stability.preview=service.peer"
-      )
-      systemProperty(
-        "metadataConfig",
-        "otel.instrumentation.lettuce.connection-telemetry.enabled=true,otel.semconv-stability.preview=service.peer"
-      )
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":javaagent-extension-api"))
+      implementation("biz.paluch.redis:lettuce:4.0.Final")
+      implementation("io.netty:netty-transport-native-epoll:4.0.56.Final")
     }
+  }
 
-  check {
-    dependsOn(
-      testConnectionTelemetryEnabled,
-      testConnectionTelemetryEnabledPreviewSemconv,
-      testPreviewSemconv,
-      testExperimental
-    )
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.lettuce.experimental-span-attributes", "true")
+    }
+    register("ConnectionTelemetryEnabled") {
+      telemetryConfig("otel.instrumentation.lettuce.connection-telemetry.enabled", "true")
+    }
   }
 }

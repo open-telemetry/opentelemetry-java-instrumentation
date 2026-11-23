@@ -12,8 +12,8 @@ import static io.opentelemetry.instrumentation.testing.util.InstrumentationScope
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM_NAME;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static java.util.Collections.singletonList;
 
 import com.alipay.sofa.rpc.common.RemotingConstants;
@@ -154,65 +154,55 @@ class SofaRpcTest extends AbstractSofaRpcTest {
     Throwable expectedException = actualException;
     String expectedStatusCode = statusCode;
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName(rpcMethod)
-                            .hasKind(side == Side.CLIENT ? SpanKind.CLIENT : SpanKind.SERVER)
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                            .hasStatus(
-                                expectedErrorType == null ? StatusData.unset() : StatusData.error())
-                            .hasException(emitExceptionAsSpanEvents() ? expectedException : null)
-                            .hasAttributesSatisfyingExactly(
-                                equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                equalTo(RPC_METHOD, rpcMethod),
-                                equalTo(ERROR_TYPE, expectedErrorType),
-                                equalTo(stringKey("rpc.status_code"), expectedStatusCode))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName(rpcMethod)
+                    .hasKind(side == Side.CLIENT ? SpanKind.CLIENT : SpanKind.SERVER)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasStatus(expectedErrorType == null ? StatusData.unset() : StatusData.error())
+                    .hasException(emitExceptionAsSpanEvents() ? expectedException : null)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                        equalTo(RPC_METHOD, rpcMethod),
+                        equalTo(ERROR_TYPE, expectedErrorType),
+                        equalTo(stringKey("rpc.status_code"), expectedStatusCode))));
 
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.sofa-rpc-5.4",
             side == Side.CLIENT ? "rpc.client.call.duration" : "rpc.server.call.duration",
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasName(
-                                side == Side.CLIENT
-                                    ? "rpc.client.call.duration"
-                                    : "rpc.server.call.duration")
-                            .hasUnit("s")
-                            .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_44_0))
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point
-                                                .hasBucketBoundaries(
-                                                    0.0001, 0.0005, 0.001, 0.005, 0.01, 0.05, 0.1,
-                                                    0.5, 1.0, 5.0, 10.0, 50.0, 100.0)
-                                                .hasAttributesSatisfyingExactly(
-                                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
-                                                    equalTo(RPC_METHOD, rpcMethod),
-                                                    equalTo(ERROR_TYPE, expectedErrorType),
-                                                    equalTo(
-                                                        stringKey("rpc.status_code"),
-                                                        expectedStatusCode))))));
+                metrics.anySatisfy(metric ->
+                    assertThat(metric)
+                        .hasName(
+                            side == Side.CLIENT
+                                ? "rpc.client.call.duration"
+                                : "rpc.server.call.duration")
+                        .hasUnit("s")
+                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasBucketBoundaries(
+                                    0.0001, 0.00025, 0.0005, 0.001, 0.0025, 0.005, 0.01, 0.025,
+                                    0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0, 30.0, 60.0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(RPC_SYSTEM_NAME, "sofarpc"),
+                                    equalTo(RPC_METHOD, rpcMethod),
+                                    equalTo(ERROR_TYPE, expectedErrorType),
+                                    equalTo(stringKey("rpc.status_code"), expectedStatusCode)))));
     if (emitExceptionAsLogs()) {
       if (expectedException == null) {
         testing().waitAndAssertLogRecords();
       } else {
         testing()
-            .waitAndAssertLogRecords(
-                logRecord ->
-                    logRecord
-                        .hasSeverity(side == Side.CLIENT ? Severity.WARN : Severity.ERROR)
-                        .hasEventName(
-                            side == Side.CLIENT
-                                ? "rpc.client.call.exception"
-                                : "rpc.server.call.exception")
-                        .hasException(expectedException));
+            .waitAndAssertLogRecords(logRecord ->
+                logRecord
+                    .hasSeverity(side == Side.CLIENT ? Severity.WARN : Severity.ERROR)
+                    .hasEventName(
+                        side == Side.CLIENT
+                            ? "rpc.client.call.exception"
+                            : "rpc.server.call.exception")
+                    .hasException(expectedException));
       }
     }
   }

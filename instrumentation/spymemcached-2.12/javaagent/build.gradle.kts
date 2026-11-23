@@ -1,5 +1,10 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -20,32 +25,24 @@ dependencies {
   testImplementation("com.google.guava:guava:33.7.2-jre")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation("net.spy:spymemcached:2.12.0")
-      }
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("net.spy:spymemcached:2.12.0")
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+
+    register("Experimental") {
+      telemetryConfig("otel.instrumentation.spymemcached.experimental-span-attributes", "true")
     }
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.instrumentation.spymemcached.experimental-span-attributes=true")
-    systemProperty("metadataConfig", "otel.instrumentation.spymemcached.experimental-span-attributes=true")
-  }
-
-  check {
-    dependsOn(testing.suites, testExperimental)
-  }
+tasks.check {
+  dependsOn(testing.suites)
 }

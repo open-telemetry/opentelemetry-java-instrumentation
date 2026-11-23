@@ -67,12 +67,11 @@ class WebClientBeanPostProcessorTest {
     AtomicLong count = new AtomicLong(0);
     webClient
         .mutate()
-        .filters(
-            filters ->
-                count.set(
-                    filters.stream()
-                        .filter(WebClientBeanPostProcessorTest::isOtelExchangeFilter)
-                        .count()));
+        .filters(filters ->
+            count.set(
+                filters.stream()
+                    .filter(WebClientBeanPostProcessorTest::isOtelExchangeFilter)
+                    .count()));
     assertThat(count.get()).isEqualTo(1);
   }
 

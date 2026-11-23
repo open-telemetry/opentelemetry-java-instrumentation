@@ -26,7 +26,7 @@ public final class AwsLambdaFunctionInstrumenterFactory {
                 openTelemetry,
                 "io.opentelemetry.aws-lambda-core-1.0",
                 AwsLambdaFunctionInstrumenterFactory::spanName)
-            .setSchemaUrl(SchemaUrls.V1_44_0)
+            .setSchemaUrl(SchemaUrls.V1_45_0)
             .addAttributesExtractor(new AwsLambdaFunctionAttributesExtractor());
     setFaasInvocationExceptionEventExtractor(builder);
 

@@ -73,22 +73,22 @@ class PreparedStatementInstrumentation implements TypeInstrumentation {
                 "setRowId",
                 "setNString",
                 "setObject")
-            .and(takesArgument(0, int.class))
             .and(takesArguments(2))
+            .and(takesArgument(0, int.class))
             .and(isPublic()),
         getClass().getName() + "$SetParameter2Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("setDate", "setTime", "setTimestamp")
+            .and(takesArguments(3))
             .and(takesArgument(0, int.class))
             .and(takesArgument(2, Calendar.class))
-            .and(takesArguments(3))
             .and(isPublic()),
         getClass().getName() + "$SetTimeParameter3Advice");
     transformer.applyAdviceToMethod(
         namedOneOf("setObject")
+            .and(takesArguments(3))
             .and(takesArgument(0, int.class))
             .and(takesArgument(2, int.class))
-            .and(takesArguments(3))
             .and(isPublic()),
         getClass().getName() + "$SetParameter3Advice");
     transformer.applyAdviceToMethod(

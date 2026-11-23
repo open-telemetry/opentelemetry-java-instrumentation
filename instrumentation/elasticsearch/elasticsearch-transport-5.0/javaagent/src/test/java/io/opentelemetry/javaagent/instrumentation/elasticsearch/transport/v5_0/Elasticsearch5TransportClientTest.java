@@ -57,6 +57,7 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
             .put("path.home", esWorkingDir.getPath())
             .put("transport.type", "netty3")
             .put("http.type", "netty3")
+            .put("transport.tcp.port", "0")
             .put(CLUSTER_NAME_SETTING.getKey(), clusterName)
             .build();
     testNode =
@@ -217,14 +218,12 @@ class Elasticsearch5TransportClientTest extends AbstractElasticsearchTransportCl
     }
     String stableSpanName =
         "cluster:monitor/health " + serverAddress + (serverPort == null ? "" : ":" + serverPort);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(stableSpanName)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            clusterHealthAttributes(serverAddress, serverPort))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(stableSpanName)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    clusterHealthAttributes(serverAddress, serverPort))));
   }
 
   private String configuredAddressListWithMixedPorts() {

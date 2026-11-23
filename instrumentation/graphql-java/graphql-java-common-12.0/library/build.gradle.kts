@@ -14,17 +14,13 @@ if (otelProps.testLatestDeps) {
   }
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("ExceptionSignalLogs") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-        }
-        register("ExceptionSignalLogsDup") {
-          jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
-        }
-      }
+testing.suites {
+  executions("test") {
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+    }
+    register("ExceptionSignalLogsDup") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs/dup")
     }
   }
 }

@@ -4,6 +4,15 @@
 
 ### ⚠️ Breaking changes
 
+- Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
+  `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
+- Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
+- OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
+  memory metrics use `system.memory.state="available"` instead of `"free"`.
+- Apache HttpClient 4.3 library instrumentation no longer automatically emits
+  `network.peer.address` or `network.peer.port` inferred from the route target.
+  Use `server.address` and `server.port` for logical destination grouping.
+- Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
 - Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
   `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
 - Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
@@ -34,6 +43,8 @@
   error.getClass().getName()` for exception-class fallback.
 - Require R2DBC SPI 1.0 or later.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
+- `DbClientAttributesGetter.getErrorType()` now returns the final `error.type`; returning `null`
+  omits it even with an exception.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
@@ -230,11 +241,6 @@
   `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
   `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
-- Service-peer semantic conventions now require `otel.semconv-stability.preview=service.peer`
-  (or `service.peer/dup` for dual emission). The `service.peer` and `service.peer/dup`
-  values in `otel.semconv-stability.opt-in` no longer select them.
-  For declarative configuration, move these values from `general.stability_opt_in_list` to
-  `java.common.semconv_stability.preview`.
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes
@@ -359,6 +365,18 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
+  resource, or baggage values.
+- Logback library appenders and the Spring Boot starter capture only application-owned MDC values,
+  excluding OpenTelemetry-added trace and baggage values.
+- Testing exporters now use delta-preferred metric temporality by default; up-down counters are
+  cumulative.
+- Remove the deprecated `ServicePeerAttributesExtractor`,
+  `HttpClientServicePeerAttributesExtractor`, `ServicePeerResolver`, and
+  `expectedPeerService()` APIs; use `ServerServiceAttributesExtractor`,
+  `HttpClientServerServiceAttributesExtractor`, and `ServiceMappingResolver` instead. Replace
+  `expectedPeerService()` with `TestServerServiceMapping.expectedMappedServiceName()` in
+  service-mapping tests.
 - Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
   `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
   `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.
@@ -497,9 +515,15 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `NetworkAttributesGetter.getNetworkLocalInetSocketAddress()` and
+  `getNetworkPeerInetSocketAddress()` in favor of `getNetworkLocalSocketAddress()` and
+  `getNetworkPeerSocketAddress()`.
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.
+- Deprecate `SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS` in favor of `SqlDialect.UNKNOWN`, and
+  `SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS` in favor of `SqlDialect.forDbSystemName(String)`
+  or `SqlDialect.builder()`.
 
 ## Version 2.32.0 (2026-10-03)
 

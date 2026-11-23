@@ -2,6 +2,7 @@ import java.time.Duration
 
 plugins {
   id("otel.java-conventions")
+  id("otel.testcontainers-testing")
 }
 
 description = "smoke-tests"
@@ -144,5 +145,12 @@ tasks {
     description = "Runs app-server cases outside the limited matrix."
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
+  }
+
+  if (System.getProperty("os.name").lowercase().contains("windows")) {
+    named<Test>("testAdditionalVariants") {
+      // Concurrent container startup and cleanup can hang in Windows Host Network Service.
+      mustRunAfter(named("testLimitedMatrix"))
+    }
   }
 }

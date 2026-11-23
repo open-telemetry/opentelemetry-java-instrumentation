@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -27,14 +29,8 @@ dependencies {
   latestDepTestLibrary("org.springframework.boot:spring-boot:2.+") // documented limitation
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-      }
-    }
-  }
+testing.suites {
+  unitTests()
 }
 
 otelJava {
@@ -45,10 +41,6 @@ otelJava {
 tasks {
   withType<Test>().configureEach {
     jvmArgs("-Djava.rmi.server.hostname=127.0.0.1")
-  }
-
-  check {
-    dependsOn(testing.suites)
   }
 }
 

@@ -16,7 +16,7 @@ import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.EndOperat
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.PromiseWrapper;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonRequest;
 import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonServerTargets;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -50,8 +50,7 @@ class RedisConnectionInstrumentation implements TypeInstrumentation {
 
       @Nullable
       public static AdviceScope start(RedisConnection connection, Object arg) {
-        InetSocketAddress remoteAddress =
-            (InetSocketAddress) connection.getChannel().remoteAddress();
+        SocketAddress remoteAddress = connection.getChannel().remoteAddress();
         // the redisson 3.0 client API does not expose the database index
         RedissonRequest request =
             RedissonRequest.create(remoteAddress, arg, null, RedissonServerTargets.get(connection));

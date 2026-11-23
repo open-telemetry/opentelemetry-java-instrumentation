@@ -49,25 +49,17 @@ dependencies {
   testInstrumentation(project(":instrumentation:azure-core:azure-core-1.36:javaagent"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-}
-
-testing {
-  suites {
-    // using a test suite to ensure that classes from library-instrumentation-shaded that were
-    // extracted to the output directory are not available during tests
-    register<JvmTestSuite>("testAzure") {
-      dependencies {
-        if (otelProps.testLatestDeps) {
-          implementation("com.azure:azure-core:latest.release")
-          implementation("com.azure:azure-core-test:latest.release")
-        } else {
-          implementation("com.azure:azure-core:1.53.0")
-          implementation("com.azure:azure-core-test:1.26.2")
-        }
+testing.suites {
+  // using a test suite to ensure that classes from library-instrumentation-shaded that were
+  // extracted to the output directory are not available during tests
+  register<JvmTestSuite>("testAzure") {
+    dependencies {
+      if (otelProps.testLatestDeps) {
+        implementation("com.azure:azure-core:latest.release")
+        implementation("com.azure:azure-core-test:latest.release")
+      } else {
+        implementation("com.azure:azure-core:1.53.0")
+        implementation("com.azure:azure-core-test:1.26.2")
       }
     }
   }

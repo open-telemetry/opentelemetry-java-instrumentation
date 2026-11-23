@@ -163,7 +163,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
     properties.put("component.java.jmx.discovery.delay", "42");
     properties.put("otel.jmx.discovery.delay", "30s");
     properties.put(
-        "otel.instrumentation.common.peer-service-mapping", "1.2.3.4=InstrumentationService");
+        "otel.instrumentation.common.server-service-mapping", "1.2.3.4=InstrumentationService");
 
     DeclarativeConfigProperties config =
         ConfigPropertiesBackedDeclarativeConfigProperties.createComponentProperties(
@@ -187,7 +187,7 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
             config
                 .getStructured("java")
                 .getStructured("common")
-                .getStructuredList("service_peer_mapping"))
+                .getStructuredList("server_service_mapping"))
         .isNull();
   }
 
@@ -304,26 +304,26 @@ class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
   }
 
   @Test
-  void testJavaCommonServicePeerMapping() {
+  void testJavaCommonServerServiceMapping() {
     DeclarativeConfigProperties config =
-        createConfig("otel.instrumentation.common.peer-service-mapping", "1.2.3.4=FooService");
+        createConfig("otel.instrumentation.common.server-service-mapping", "1.2.3.4=FooService");
 
     List<DeclarativeConfigProperties> mappings =
         config
             .getStructured("java")
             .getStructured("common")
-            .getStructuredList("service_peer_mapping");
+            .getStructuredList("server_service_mapping");
     assertThat(mappings).isNotNull().hasSize(1);
-    assertThat(mappings.get(0).getString("peer")).isEqualTo("1.2.3.4");
+    assertThat(mappings.get(0).getString("target")).isEqualTo("1.2.3.4");
     assertThat(mappings.get(0).getString("service_name")).isEqualTo("FooService");
     // service_namespace is not supported in flat config
     assertThat(mappings.get(0).getString("service_namespace")).isNull();
-    assertThat(mappings.get(0).isString("peer")).isTrue();
+    assertThat(mappings.get(0).isString("target")).isTrue();
     assertThat(mappings.get(0).isString("service_namespace")).isFalse();
-    assertThat(mappings.get(0).isBoolean("peer")).isFalse();
-    assertThat(mappings.get(0).isInt("peer")).isFalse();
-    assertThat(mappings.get(0).isLong("peer")).isFalse();
-    assertThat(mappings.get(0).isDouble("peer")).isFalse();
+    assertThat(mappings.get(0).isBoolean("target")).isFalse();
+    assertThat(mappings.get(0).isInt("target")).isFalse();
+    assertThat(mappings.get(0).isLong("target")).isFalse();
+    assertThat(mappings.get(0).isDouble("target")).isFalse();
   }
 
   @Test

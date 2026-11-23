@@ -81,6 +81,7 @@ public final class ContainerResource {
       this(() -> System.getProperty("os.name"));
     }
 
+    // visible for testing
     Filesystem(Supplier<String> osNameSupplier) {
       this.osNameSupplier = osNameSupplier;
     }

@@ -42,6 +42,7 @@ public abstract class AbstractElasticsearch6TransportClientTest
             .put("path.home", esWorkingDir.getPath())
             .put(CLUSTER_NAME_SETTING.getKey(), CLUSTER_NAME)
             .put("discovery.type", "single-node")
+            .put("transport.tcp.port", "0")
             .build();
     testNode = getNodeFactory().newNode(settings);
     cleanup.deferAfterAll(testNode);

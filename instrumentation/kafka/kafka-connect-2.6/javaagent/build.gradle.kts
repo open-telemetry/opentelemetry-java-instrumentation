@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -20,24 +22,14 @@ dependencies {
   library("org.apache.kafka:connect-api:2.6.0")
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
-        implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
-        implementation(project(":javaagent-bootstrap"))
-        implementation(project(":javaagent-extension-api"))
-        implementation("org.apache.kafka:connect-api:2.6.0")
-      }
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap"))
+      implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
+      implementation(project(":javaagent-bootstrap"))
+      implementation(project(":javaagent-extension-api"))
+      implementation("org.apache.kafka:connect-api:2.6.0")
     }
-  }
-}
-
-tasks {
-
-  check {
-    dependsOn(testing.suites)
   }
 }

@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -22,8 +25,12 @@ dependencies {
   testInstrumentation(project(":instrumentation:clickhouse:clickhouse-client-v2-0.8:javaagent"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
+testing {
+  suites {
+    unitTests {
+      dependencies {
+        implementation("com.clickhouse:clickhouse-client:0.5.0")
+      }
+    }
   }
 }

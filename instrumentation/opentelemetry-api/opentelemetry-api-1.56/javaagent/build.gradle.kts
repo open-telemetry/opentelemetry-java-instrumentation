@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -25,30 +27,25 @@ configurations.configureEach {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("incubatorTest") {
-      dependencies {
-        implementation("io.opentelemetry:opentelemetry-api-incubator:1.67.0-alpha")
-      }
+testing.suites {
+  register<JvmTestSuite>("incubatorTest") {
+    dependencies {
+      implementation("io.opentelemetry:opentelemetry-api-incubator:1.67.0-alpha")
+    }
+  }
 
-      targets {
-        all {
-          testTask.configure {
-            jvmArgs("-Dotel.config.file=$projectDir/src/incubatorTest/resources/declarative-config.yaml")
-          }
-        }
-      }
+  executions("test") {
+    configureDefault {
+      jvmArgs("-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml")
+    }
+  }
+  executions("incubatorTest") {
+    configureEach {
+      jvmArgs("-Dotel.config.file=$projectDir/src/incubatorTest/resources/declarative-config.yaml")
     }
   }
 }
 
-tasks {
-  check {
-    dependsOn(testing.suites)
-  }
-
-  test {
-    jvmArgs("-Dotel.config.file=$projectDir/src/test/resources/declarative-config.yaml")
-  }
+tasks.check {
+  dependsOn(testing.suites)
 }

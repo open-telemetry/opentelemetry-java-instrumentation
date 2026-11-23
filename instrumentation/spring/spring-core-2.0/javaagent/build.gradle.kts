@@ -20,13 +20,11 @@ dependencies {
 
 // 3.0 introduces submit() methods
 // 4.0 introduces submitListenable() methods
-testing {
-  suites {
-    register<JvmTestSuite>("version4Test") {
-      dependencies {
-        implementation(sourceSets.test.get().output)
-        implementation("org.springframework:spring-core:${baseVersion("4.0.0.RELEASE").orLatest()}")
-      }
+testing.suites {
+  register<JvmTestSuite>("version4Test") {
+    dependencies {
+      implementation(sourceSets.test.get().output)
+      implementation("org.springframework:spring-core:${baseVersion("4.0.0.RELEASE").orLatest()}")
     }
   }
 }

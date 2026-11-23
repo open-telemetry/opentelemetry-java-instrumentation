@@ -188,21 +188,19 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   private static Attributes convertExtendedAttributes(
       application.io.opentelemetry.api.incubator.common.ExtendedAttributes applicationAttributes) {
     AttributesBuilder agentAttributes = Attributes.builder();
-    applicationAttributes.forEach(
-        (key, value) -> {
-          AttributeKey agentKey = convertExtendedAttributeKey(key);
-          if (agentKey != null) {
-            if (key.getType() == EXTENDED_ATTRIBUTES) {
-              agentAttributes.put(
-                  agentKey,
-                  convertExtendedAttributesValue(
-                      (application.io.opentelemetry.api.incubator.common.ExtendedAttributes)
-                          value));
-            } else {
-              agentAttributes.put(agentKey, value);
-            }
-          }
-        });
+    applicationAttributes.forEach((key, value) -> {
+      AttributeKey agentKey = convertExtendedAttributeKey(key);
+      if (agentKey != null) {
+        if (key.getType() == EXTENDED_ATTRIBUTES) {
+          agentAttributes.put(
+              agentKey,
+              convertExtendedAttributesValue(
+                  (application.io.opentelemetry.api.incubator.common.ExtendedAttributes) value));
+        } else {
+          agentAttributes.put(agentKey, value);
+        }
+      }
+    });
     return agentAttributes.build();
   }
 
@@ -240,13 +238,12 @@ public class ApplicationLogRecordBuilder150Incubator extends ApplicationLogRecor
   private static Value<?> convertExtendedAttributesValue(
       application.io.opentelemetry.api.incubator.common.ExtendedAttributes applicationAttributes) {
     List<KeyValue> values = new ArrayList<>();
-    applicationAttributes.forEach(
-        (key, value) -> {
-          Value<?> agentValue = convertExtendedAttributeValue(key, value);
-          if (agentValue != null) {
-            values.add(KeyValue.of(key.getKey(), agentValue));
-          }
-        });
+    applicationAttributes.forEach((key, value) -> {
+      Value<?> agentValue = convertExtendedAttributeValue(key, value);
+      if (agentValue != null) {
+        values.add(KeyValue.of(key.getKey(), agentValue));
+      }
+    });
     return Value.of(values.toArray(new KeyValue[0]));
   }
 

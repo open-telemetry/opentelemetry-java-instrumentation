@@ -14,7 +14,7 @@ import org.junit.jupiter.api.condition.EnabledIfSystemProperty
 import org.junit.jupiter.api.extension.RegisterExtension
 
 @EnabledIfSystemProperty(
-  named = "otel.instrumentation.http.server.emit-experimental-telemetry",
+  named = "test.emitExperimentalHttpServerTelemetry",
   matches = "true"
 )
 class ServerMetricsTest : AbstractKtorServerMetricsTest() {

@@ -64,6 +64,26 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
                         "redis.clients.jedis.ProtocolCommand")))
             .and(takesArgument(1, is(byte[][].class))),
         getClass().getName() + "$SendCommandWithArgsAdvice");
+
+    transformer.applyAdviceToMethod(
+        namedOneOf(
+                "getOne",
+                "getBulkReply",
+                "getStatusCodeReply",
+                "getIntegerReply",
+                "getBinaryBulkReply",
+                "getBinaryMultiBulkReply",
+                "getRawObjectMultiBulkReply",
+                "getIntegerMultiBulkReply")
+            .and(takesArguments(0)),
+        getClass().getName() + "$ConnectionReplyAdvice");
+    transformer.applyAdviceToMethod(
+        named("getAll").and(takesArguments(1)), getClass().getName() + "$ConnectionReplyAdvice");
+    transformer.applyAdviceToMethod(
+        named("getAll").and(takesArguments(0)), getClass().getName() + "$PipelineReplyAdvice");
+    transformer.applyAdviceToMethod(
+        named("getObjectMultiBulkReply").and(takesArguments(0)),
+        getClass().getName() + "$TransactionReplyAdvice");
   }
 
   @SuppressWarnings("unused")
@@ -71,6 +91,52 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Connection connection) {
       JedisSingletons.captureConnectionTarget(connection);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ConnectionReplyAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter(@Advice.This Connection connection) {
+      return JedisRequestContext.attachForConnectionReply(connection);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class PipelineReplyAdvice {
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(@Advice.This Connection connection) {
+      JedisRequestContext.completePipelineReplies(connection);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class TransactionReplyAdvice {
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static JedisRequestContext<JedisRequest> onEnter(@Advice.This Connection connection) {
+      return JedisRequestContext.attachForConnectionReply(connection);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.This Connection connection,
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable JedisRequestContext<JedisRequest> requestContext) {
+      JedisRequestContext.completeTransactionReplies(connection);
+      if (requestContext != null) {
+        requestContext.detachAndEnd(throwable);
+      }
     }
   }
 
@@ -95,6 +161,11 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
 
     @Nullable
     public static AdviceScope start(JedisRequest request) {
+      if (JedisPipelineContext.capture(request)) {
+        // Keep the request until method exit so its post-send peer snapshot is available to the
+        // batch span created at sync()/exec().
+        return new AdviceScope(null, null, request, null);
+      }
       if (JedisPipelineContext.inTransactionFraming()) {
         // MULTI/EXEC/DISCARD frame a batched transaction; they are represented by the MULTI batch
         // span rather than getting their own spans. Keep the request until method exit so a
@@ -102,11 +173,6 @@ class JedisConnectionInstrumentation implements TypeInstrumentation {
         return new AdviceScope(null, null, request, null);
       }
       Context parentContext = Context.current();
-      if (JedisPipelineContext.capture(request)) {
-        // Keep the request until method exit so its post-send peer snapshot is available to the
-        // batch span created at sync()/exec().
-        return new AdviceScope(null, null, request, null);
-      }
       JedisClusterCommandContext clusterCommandContext = currentCommandContext().get();
       if (clusterCommandContext != null) {
         if (clusterCommandContext.isAcquiringConnection()) {

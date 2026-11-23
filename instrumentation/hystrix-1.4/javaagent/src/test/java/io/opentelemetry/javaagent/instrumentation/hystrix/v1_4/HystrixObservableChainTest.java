@@ -75,43 +75,38 @@ class HystrixObservableChainTest {
                     .toObservable()
                     .subscribeOn(Schedulers.io())
                     .map(String::toUpperCase)
-                    .flatMap(
-                        str ->
-                            new AnotherTestCommand(setter("OtherGroup"), str)
-                                .toObservable()
-                                .subscribeOn(Schedulers.trampoline()))
+                    .flatMap(str ->
+                        new AnotherTestCommand(setter("OtherGroup"), str)
+                            .toObservable()
+                            .subscribeOn(Schedulers.trampoline()))
                     .toBlocking()
                     .first());
 
     assertThat(result).isEqualTo("HELLO!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("OtherGroup.AnotherTestCommand.execute")
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                stringKey("hystrix.command"), experimental("AnotherTestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("OtherGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("anotherTracedMethod")
-                        .hasParent(trace.getSpan(3))
-                        .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("tracedMethod").hasParent(trace.getSpan(1)).hasTotalAttributeCount(0),
+            span ->
+                span.hasName("OtherGroup.AnotherTestCommand.execute")
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("AnotherTestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("OtherGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("anotherTracedMethod")
+                    .hasParent(trace.getSpan(3))
+                    .hasTotalAttributeCount(0)));
   }
 
   private static HystrixObservableCommand.Setter setter(String key) {

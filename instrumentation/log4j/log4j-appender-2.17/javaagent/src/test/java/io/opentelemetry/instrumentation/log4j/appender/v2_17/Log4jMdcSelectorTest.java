@@ -42,14 +42,13 @@ class Log4jMdcSelectorTest {
       ThreadContext.clearMap();
     }
 
-    testing.waitAndAssertLogRecords(
-        logRecord -> {
-          logRecord.hasEventName("MyEventName");
-          Attributes attributes = logRecord.actual().getAttributes();
-          assertThat(attributes.get(OTEL_EVENT_NAME)).isNull();
-          assertThat(capturedContextDataAttributes(attributes))
-              .containsExactlyInAnyOrderEntriesOf(expectedContextDataAttributes());
-        });
+    testing.waitAndAssertLogRecords(logRecord -> {
+      logRecord.hasEventName("MyEventName");
+      Attributes attributes = logRecord.actual().getAttributes();
+      assertThat(attributes.get(OTEL_EVENT_NAME)).isNull();
+      assertThat(capturedContextDataAttributes(attributes))
+          .containsExactlyInAnyOrderEntriesOf(expectedContextDataAttributes());
+    });
   }
 
   private static Map<String, String> contextDataEntries() {
@@ -66,13 +65,12 @@ class Log4jMdcSelectorTest {
 
   private static Map<String, String> capturedContextDataAttributes(Attributes attributes) {
     Map<String, String> captured = new HashMap<>();
-    CONTEXT_DATA_ENTRIES.forEach(
-        (key, value) -> {
-          String attributeValue = attributes.get(stringKey(key));
-          if (attributeValue != null) {
-            captured.put(key, attributeValue);
-          }
-        });
+    CONTEXT_DATA_ENTRIES.forEach((key, value) -> {
+      String attributeValue = attributes.get(stringKey(key));
+      if (attributeValue != null) {
+        captured.put(key, attributeValue);
+      }
+    });
     return captured;
   }
 

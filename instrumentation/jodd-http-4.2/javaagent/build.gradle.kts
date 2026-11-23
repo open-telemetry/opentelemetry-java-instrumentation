@@ -1,5 +1,4 @@
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -21,14 +20,10 @@ dependencies {
   testImplementation(project(":instrumentation-api-incubator"))
 }
 
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        register("PreviewSemconv") {
-          telemetryConfig("otel.semconv-stability.preview", "service.peer")
-        }
-      }
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("org.jodd:jodd-http:4.2.0")
     }
   }
 }

@@ -1,0 +1,70 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.lambdaworks.redis.RedisCommandExecutionException;
+import com.lambdaworks.redis.RedisCommandTimeoutException;
+import com.lambdaworks.redis.codec.Utf8StringCodec;
+import com.lambdaworks.redis.output.StatusOutput;
+import com.lambdaworks.redis.protocol.Command;
+import com.lambdaworks.redis.protocol.CommandType;
+import com.lambdaworks.redis.protocol.RedisCommand;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
+import org.junit.jupiter.api.Test;
+
+class LettuceDbAttributesGetterTest {
+
+  private final LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
+
+  @Test
+  void responseStatusUsesOnlyServerErrorPrefixes() {
+    LettuceBatchAttributesGetter batchGetter = new LettuceBatchAttributesGetter();
+    Throwable serverError = new RedisCommandExecutionException("WRONGTYPE detail");
+    Throwable clientError = new RedisCommandTimeoutException("WRONGTYPE client timeout");
+    Throwable blankError = new RedisCommandExecutionException(" ");
+
+    assertThat(getter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(batchGetter.getDbResponseStatusCode(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(getter.getErrorType(null, null, serverError)).isEqualTo("WRONGTYPE");
+    assertThat(batchGetter.getErrorType(null, null, serverError)).isEqualTo("WRONGTYPE");
+    for (Throwable error : new Throwable[] {null, clientError, blankError}) {
+      assertThat(getter.getDbResponseStatusCode(null, null, error)).isNull();
+      assertThat(batchGetter.getDbResponseStatusCode(null, null, error)).isNull();
+    }
+    assertThat(getter.getErrorType(null, null, clientError))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(batchGetter.getErrorType(null, null, clientError))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(getter.getErrorType(null, null, blankError))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
+    assertThat(batchGetter.getErrorType(null, null, blankError))
+        .isEqualTo(RedisCommandExecutionException.class.getName());
+  }
+
+  @Test
+  void commandUsesConfiguredTarget() {
+    RedisCommand<String, String, String> command = command();
+    LettuceServerTargets.capture(command, RedisServerTarget.ofEndpoint("configured-node:6379"));
+
+    assertThat(getter.getServerAddress(command)).isEqualTo("configured-node");
+    assertThat(getter.getServerPort(command)).isEqualTo(null);
+  }
+
+  @Test
+  void commandWithoutConfiguredTargetOmitsServerAttributes() {
+    RedisCommand<String, String, String> command = command();
+
+    assertThat(getter.getServerAddress(command)).isEqualTo(null);
+    assertThat(getter.getServerPort(command)).isEqualTo(null);
+  }
+
+  private static RedisCommand<String, String, String> command() {
+    Utf8StringCodec codec = new Utf8StringCodec();
+    return new Command<>(CommandType.GET, new StatusOutput<>(codec));
+  }
+}

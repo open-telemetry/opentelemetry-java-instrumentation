@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.awslambdaevents.v3_11;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awslambdaevents.v2_2.AwsLambdaSqsMetricsAssertions.assertMetrics;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
@@ -27,6 +28,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.internal.WrappedLambda;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Constructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -75,33 +77,32 @@ class AwsLambdaSqsEventWrapperTest {
             testing.getOpenTelemetrySdk(), WrappedLambda.fromConfiguration());
     wrapper.handleRequest(event, context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333")),
-                span ->
-                    span.hasName("process otel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "otel"),
-                            equalTo(MESSAGING_OPERATION_NAME, "process"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("my_function")
+                    .hasKind(SpanKind.SERVER)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CLOUD_RESOURCE_ID,
+                            AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                                ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                                : null),
+                        equalTo(
+                            CLOUD_ACCOUNT_ID,
+                            AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                        equalTo(stringKey("faas.invocation.id"), "1-22-333")),
+            span ->
+                span.hasName("process otel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "otel"),
+                        equalTo(MESSAGING_OPERATION_NAME, "process"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, Long.valueOf(1)))));
     assertMetrics(testing, TracingSqsEventHandler.INSTRUMENTATION_NAME, "otel", 1, 1, null);
   }
 

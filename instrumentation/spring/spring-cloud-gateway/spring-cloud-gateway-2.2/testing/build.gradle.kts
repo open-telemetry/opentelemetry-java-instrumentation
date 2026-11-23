@@ -25,8 +25,6 @@ tasks.test {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
 
   jvmArgs("-Dotel.instrumentation.common.controller-telemetry.enabled=true")
-
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
 }
 
 if (otelProps.testLatestDeps) {

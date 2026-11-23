@@ -78,12 +78,11 @@ class CouchbaseErrorsTest {
   void upsertOutcome(boolean oversized) {
     byte[] content = new byte[oversized ? 21 * 1024 * 1024 : 1];
     if (oversized) {
-      assertThatThrownBy(
-              () ->
-                  collection.upsert(
-                      "upsert-id",
-                      content,
-                      UpsertOptions.upsertOptions().transcoder(RawBinaryTranscoder.INSTANCE)))
+      assertThatThrownBy(() ->
+              collection.upsert(
+                  "upsert-id",
+                  content,
+                  UpsertOptions.upsertOptions().transcoder(RawBinaryTranscoder.INSTANCE)))
           .isInstanceOf(ValueTooLargeException.class);
     } else {
       collection.upsert(
@@ -119,18 +118,16 @@ class CouchbaseErrorsTest {
     }
     span.end();
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                operation ->
-                    operation
-                        .hasName("upsert")
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasStatus(errorThenOk ? StatusData.ok() : StatusData.unset())
-                        .hasException(error)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "couchbase"), equalTo(ERROR_TYPE, null))));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
+        trace.hasSpansSatisfyingExactly(operation ->
+            operation
+                .hasName("upsert")
+                .hasKind(CLIENT)
+                .hasNoParent()
+                .hasStatus(errorThenOk ? StatusData.ok() : StatusData.unset())
+                .hasException(error)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "couchbase"), equalTo(ERROR_TYPE, null))));
   }
 
   private static void assertUpsertSpan(SpanDataAssert span, boolean oversized) {

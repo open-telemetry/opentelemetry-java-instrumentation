@@ -90,46 +90,44 @@ class ShenYuRouteTest {
   void testUpdateRouter() {
     HttpClient httpClient = HttpClient.create();
     httpClient.get().uri("http://localhost:" + port + "/a/b/c").response().block();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
-                span ->
-                    span.hasName("GET /a/b/c")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_ROUTE, "/a/b/c"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(URL_PATH, "/a/b/c"),
-                            equalTo(URL_SCHEME, "http"),
-                            satisfies(CLIENT_ADDRESS, AbstractStringAssert::isNotBlank),
-                            satisfies(NETWORK_PEER_ADDRESS, AbstractStringAssert::isNotBlank),
-                            satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isPositive),
-                            satisfies(NETWORK_PROTOCOL_VERSION, AbstractStringAssert::isNotBlank),
-                            satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
-                            satisfies(SERVER_PORT, AbstractLongAssert::isPositive),
-                            satisfies(USER_AGENT_ORIGINAL, AbstractStringAssert::isNotBlank),
-                            equalTo(stringKey("apache-shenyu.meta.id"), "123"),
-                            equalTo(booleanKey("apache-shenyu.meta.enabled"), true),
-                            equalTo(stringKey("apache-shenyu.meta.method-name"), "hello"),
-                            equalTo(stringKey("apache-shenyu.meta.param-types"), "string"),
-                            equalTo(stringKey("apache-shenyu.meta.path"), "/a/b/c"),
-                            equalTo(stringKey("apache-shenyu.meta.rpc-ext"), "test-ext"),
-                            equalTo(stringKey("apache-shenyu.meta.rpc-type"), "http"),
-                            equalTo(stringKey("apache-shenyu.meta.service-name"), "shenyu-service"),
-                            equalTo(stringKey("apache-shenyu.meta.app-name"), "test-shenyu"),
-                            equalTo(stringKey("apache-shenyu.meta.context-path"), "/"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
+            span ->
+                span.hasName("GET /a/b/c")
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_ROUTE, "/a/b/c"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(URL_PATH, "/a/b/c"),
+                        equalTo(URL_SCHEME, "http"),
+                        satisfies(CLIENT_ADDRESS, AbstractStringAssert::isNotBlank),
+                        satisfies(NETWORK_PEER_ADDRESS, AbstractStringAssert::isNotBlank),
+                        satisfies(NETWORK_PEER_PORT, AbstractLongAssert::isPositive),
+                        satisfies(NETWORK_PROTOCOL_VERSION, AbstractStringAssert::isNotBlank),
+                        satisfies(SERVER_ADDRESS, AbstractStringAssert::isNotBlank),
+                        satisfies(SERVER_PORT, AbstractLongAssert::isPositive),
+                        satisfies(USER_AGENT_ORIGINAL, AbstractStringAssert::isNotBlank),
+                        equalTo(stringKey("apache-shenyu.meta.id"), "123"),
+                        equalTo(booleanKey("apache-shenyu.meta.enabled"), true),
+                        equalTo(stringKey("apache-shenyu.meta.method-name"), "hello"),
+                        equalTo(stringKey("apache-shenyu.meta.param-types"), "string"),
+                        equalTo(stringKey("apache-shenyu.meta.path"), "/a/b/c"),
+                        equalTo(stringKey("apache-shenyu.meta.rpc-ext"), "test-ext"),
+                        equalTo(stringKey("apache-shenyu.meta.rpc-type"), "http"),
+                        equalTo(stringKey("apache-shenyu.meta.service-name"), "shenyu-service"),
+                        equalTo(stringKey("apache-shenyu.meta.app-name"), "test-shenyu"),
+                        equalTo(stringKey("apache-shenyu.meta.context-path"), "/"))));
   }
 
   @Test
   void testUnmatchedRouter() {
     HttpClient httpClient = HttpClient.create();
     httpClient.get().uri("http://localhost:" + port + "/a/b/c/d").response().block();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
-                span -> span.hasName("GET").hasKind(SpanKind.SERVER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("GET").hasKind(SpanKind.CLIENT),
+            span -> span.hasName("GET").hasKind(SpanKind.SERVER)));
   }
 }

@@ -46,6 +46,7 @@ import io.opentelemetry.javaagent.tooling.ignore.IgnoreAllow;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredClassLoadersMatcher;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesBuilderImpl;
 import io.opentelemetry.javaagent.tooling.ignore.IgnoredTypesMatcher;
+import io.opentelemetry.javaagent.tooling.internal.AgentCircularityLock;
 import io.opentelemetry.javaagent.tooling.muzzle.AgentTooling;
 import io.opentelemetry.javaagent.tooling.util.Trie;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -251,7 +252,7 @@ public class AgentInstaller {
     // system property
     String originalNexusDisabled = System.setProperty("net.bytebuddy.nexus.disabled", "true");
     try {
-      return new AgentBuilder.Default(byteBuddy);
+      return new AgentBuilder.Default(byteBuddy).with(AgentCircularityLock.INSTANCE);
     } finally {
       // restore the original value for the nexus disabled property
       if (originalNexusDisabled != null) {
@@ -319,21 +320,19 @@ public class AgentInstaller {
     Trie<Boolean> ignoredTasksTrie = builder.buildIgnoredTasksTrie();
     InstrumentedTaskClasses.setIgnoredTaskClassesPredicate(ignoredTasksTrie::contains);
     Trie<IgnoreAllow> ignoredClassLoadersTrie = builder.buildIgnoredClassLoadersTrie();
-    DefineClassHandler.setIgnoredClassLoadersPredicate(
-        classLoader -> {
-          if (classLoader == null) {
-            return false;
-          }
-          IgnoreAllow ignored = ignoredClassLoadersTrie.getOrNull(classLoader.getClass().getName());
-          return ignored == IgnoreAllow.IGNORE;
-        });
+    DefineClassHandler.setIgnoredClassLoadersPredicate(classLoader -> {
+      if (classLoader == null) {
+        return false;
+      }
+      IgnoreAllow ignored = ignoredClassLoadersTrie.getOrNull(classLoader.getClass().getName());
+      return ignored == IgnoreAllow.IGNORE;
+    });
 
     return agentBuilder
         .ignore(any(), new IgnoredClassLoadersMatcher(ignoredClassLoadersTrie))
         .or(new IgnoredTypesMatcher(builder.buildIgnoredTypesTrie()))
-        .or(
-            (typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
-                HelperInjector.isInjectedClass(classLoader, typeDescription.getName()));
+        .or((typeDescription, classLoader, module, classBeingRedefined, protectionDomain) ->
+            HelperInjector.isInjectedClass(classLoader, typeDescription.getName()));
   }
 
   private static void addHttpServerResponseCustomizers(ClassLoader extensionClassLoader) {
@@ -365,12 +364,11 @@ public class AgentInstaller {
     List<SqlCommenterCustomizer> customizers =
         load(SqlCommenterCustomizer.class, extensionClassLoader);
 
-    SqlCommenterCustomizerHolder.setCustomizer(
-        builder -> {
-          for (SqlCommenterCustomizer modifier : customizers) {
-            modifier.customize(builder);
-          }
-        });
+    SqlCommenterCustomizerHolder.setCustomizer(builder -> {
+      for (SqlCommenterCustomizer modifier : customizers) {
+        modifier.customize(builder);
+      }
+    });
   }
 
   private static void runAfterAgentListeners(
