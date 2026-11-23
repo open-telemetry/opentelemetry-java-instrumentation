@@ -262,12 +262,11 @@ class VirtualFieldStoreTest {
     MessageId messageId = mock(MessageId.class);
     IllegalStateException failure = new IllegalStateException("application failure");
     CompletableFuture<Context> continuation =
-        future.handle(
-            (result, error) -> {
-              assertThat(result).isSameAs(fail ? null : messageId);
-              assertThat(error).isSameAs(fail ? failure : null);
-              return Context.current();
-            });
+        future.handle((result, error) -> {
+          assertThat(result).isSameAs(fail ? null : messageId);
+          assertThat(error).isSameAs(fail ? failure : null);
+          return Context.current();
+        });
 
     assertThat(future).isNotDone();
     Context previous = Context.current();

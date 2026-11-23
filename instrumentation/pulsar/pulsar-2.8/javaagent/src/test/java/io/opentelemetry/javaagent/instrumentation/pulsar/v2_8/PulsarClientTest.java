@@ -104,24 +104,23 @@ class PulsarClientTest extends AbstractPulsarClientTest {
       assertThat(acknowledgingLastSend.await(10, SECONDS)).isTrue();
       assertThat(lastSend).isNotDone();
       CompletableFuture<Void> joined =
-          flush.thenRun(
-              () -> {
-                try {
-                  assertThat(lastSend.get(5, SECONDS)).isNotNull();
-                  assertThat(firstSend.get(5, SECONDS)).isNotNull();
-                } catch (InterruptedException e) {
-                  Thread.currentThread().interrupt();
-                  throw new AssertionError(e);
-                } catch (Exception e) {
-                  throw new AssertionError(e);
-                }
-                assertThat(Context.current().get(key)).isEqualTo("caller");
-                assertThat(
-                        testing.spans().stream()
-                            .filter(span -> span.getKind() == SpanKind.PRODUCER)
-                            .count())
-                    .isEqualTo(2);
-              });
+          flush.thenRun(() -> {
+            try {
+              assertThat(lastSend.get(5, SECONDS)).isNotNull();
+              assertThat(firstSend.get(5, SECONDS)).isNotNull();
+            } catch (InterruptedException e) {
+              Thread.currentThread().interrupt();
+              throw new AssertionError(e);
+            } catch (Exception e) {
+              throw new AssertionError(e);
+            }
+            assertThat(Context.current().get(key)).isEqualTo("caller");
+            assertThat(
+                    testing.spans().stream()
+                        .filter(span -> span.getKind() == SpanKind.PRODUCER)
+                        .count())
+                .isEqualTo(2);
+          });
       completeLastSend.countDown();
       joined.get(15, SECONDS);
     } finally {

@@ -166,20 +166,19 @@ public class SendCallbackData {
       return sendFuture;
     }
     CompletableFuture<MessageId> result = new CompletableFuture<>();
-    future.whenComplete(
-        (messageId, error) -> {
-          try {
-            end(error);
-          } finally {
-            try (Scope ignored = parent.makeCurrent()) {
-              if (error == null) {
-                result.complete(messageId);
-              } else {
-                result.completeExceptionally(error);
-              }
-            }
+    future.whenComplete((messageId, error) -> {
+      try {
+        end(error);
+      } finally {
+        try (Scope ignored = parent.makeCurrent()) {
+          if (error == null) {
+            result.complete(messageId);
+          } else {
+            result.completeExceptionally(error);
           }
-        });
+        }
+      }
+    });
     return result;
   }
 

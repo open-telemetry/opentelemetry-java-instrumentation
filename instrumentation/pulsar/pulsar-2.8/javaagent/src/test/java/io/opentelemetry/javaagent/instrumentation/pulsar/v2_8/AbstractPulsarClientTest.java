@@ -206,19 +206,18 @@ abstract class AbstractPulsarClientTest {
         continuations.add(
             producer
                 .sendAsync("message")
-                .handle(
-                    (id, error) -> {
-                      assertThat(Context.current().get(key)).isEqualTo("caller");
-                      assertThat(Span.current().getSpanContext())
-                          .isEqualTo(Span.fromContext(caller).getSpanContext());
-                      assertThat(error).isInstanceOf(PulsarClientException.class);
-                      assertThat(
-                              testing.spans().stream()
-                                  .filter(span -> span.getKind() == SpanKind.PRODUCER)
-                                  .count())
-                          .isEqualTo(completedSends);
-                      return null;
-                    }));
+                .handle((id, error) -> {
+                  assertThat(Context.current().get(key)).isEqualTo("caller");
+                  assertThat(Span.current().getSpanContext())
+                      .isEqualTo(Span.fromContext(caller).getSpanContext());
+                  assertThat(error).isInstanceOf(PulsarClientException.class);
+                  assertThat(
+                          testing.spans().stream()
+                              .filter(span -> span.getKind() == SpanKind.PRODUCER)
+                              .count())
+                      .isEqualTo(completedSends);
+                  return null;
+                }));
       }
     }
     // Drive the real linked callback on a thread with an unrelated current context.
@@ -300,10 +299,9 @@ abstract class AbstractPulsarClientTest {
       assertThatThrownBy(future::join).hasCauseInstanceOf(PulsarClientException.class);
       assertThat(testing.spans()).hasSize(1);
     }
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER).hasNoParent()));
   }
 
   @ParameterizedTest
@@ -357,20 +355,18 @@ abstract class AbstractPulsarClientTest {
     assertThat(message.get().getProperty("baggage"))
         .isEqualTo("pulsar-test=" + (failure ? "failure" : "success"));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("direct-send-" + (failure ? "failure" : "success") + "-parent"),
-                span -> {
-                  span.hasName("send " + topic)
-                      .hasKind(SpanKind.PRODUCER)
-                      .hasParent(trace.getSpan(0))
-                      .hasStatus(failure ? StatusData.error() : StatusData.unset());
-                  if (failure) {
-                    span.hasAttribute(ERROR_TYPE, callbackError.get().getClass().getName());
-                  }
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("direct-send-" + (failure ? "failure" : "success") + "-parent"),
+            span -> {
+              span.hasName("send " + topic)
+                  .hasKind(SpanKind.PRODUCER)
+                  .hasParent(trace.getSpan(0))
+                  .hasStatus(failure ? StatusData.error() : StatusData.unset());
+              if (failure) {
+                span.hasAttribute(ERROR_TYPE, callbackError.get().getClass().getName());
+              }
+            }));
     assertThat(Span.fromContext(parent.get()).getSpanContext().isValid()).isTrue();
   }
 
@@ -570,14 +566,13 @@ abstract class AbstractPulsarClientTest {
     String finalHeader = replace ? "replacement" : "mutated";
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("send " + finalTopic)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasSpanId(producerTraceparent.get().substring(36, 52))
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            sendAttributes(finalTopic, messageId.toString(), true, finalHeader))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("send " + finalTopic)
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasSpanId(producerTraceparent.get().substring(36, 52))
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        sendAttributes(finalTopic, messageId.toString(), true, finalHeader))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasKind(CLIENT).hasName("receive " + topic).hasNoParent()));
@@ -675,22 +670,20 @@ abstract class AbstractPulsarClientTest {
               String producerSpanId = producerSpanIds.get(i);
               assertThat(future.isDone()).isFalse();
               continuations.add(
-                  future.handle(
-                      (id, error) -> {
-                        assertThat(Context.current().get(key)).isEqualTo("caller");
-                        assertThat(Span.current().getSpanContext())
-                            .isEqualTo(Span.fromContext(caller.get()).getSpanContext());
-                        assertThat(error != null).isEqualTo(failure);
-                        assertThat(Baggage.current().getEntryValue("pulsar-test"))
-                            .isEqualTo("caller");
-                        assertThat(
-                                testing.spans().stream()
-                                    .filter(span -> span.getKind() == SpanKind.PRODUCER)
-                                    .map(span -> span.getSpanContext().getSpanId()))
-                            .contains(producerSpanId);
-                        testing.runWithSpan("continuation", () -> {});
-                        return null;
-                      }));
+                  future.handle((id, error) -> {
+                    assertThat(Context.current().get(key)).isEqualTo("caller");
+                    assertThat(Span.current().getSpanContext())
+                        .isEqualTo(Span.fromContext(caller.get()).getSpanContext());
+                    assertThat(error != null).isEqualTo(failure);
+                    assertThat(Baggage.current().getEntryValue("pulsar-test")).isEqualTo("caller");
+                    assertThat(
+                            testing.spans().stream()
+                                .filter(span -> span.getKind() == SpanKind.PRODUCER)
+                                .map(span -> span.getSpanContext().getSpanId()))
+                        .contains(producerSpanId);
+                    testing.runWithSpan("continuation", () -> {});
+                    return null;
+                  }));
             }
           }
         };
@@ -716,22 +709,21 @@ abstract class AbstractPulsarClientTest {
     assertThat(acknowledgementValues).containsOnly("caller");
     assertThat(acknowledgementBaggage).containsOnly("caller");
     if (withParent) {
-      testing.waitAndAssertTraces(
-          trace -> {
-            if (batching) {
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span -> span.hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
-                  span -> span.hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
-                  span -> span.hasName("continuation").hasParent(trace.getSpan(0)),
-                  span -> span.hasName("continuation").hasParent(trace.getSpan(0)));
-            } else {
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span -> span.hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
-                  span -> span.hasName("continuation").hasParent(trace.getSpan(0)));
-            }
-          });
+      testing.waitAndAssertTraces(trace -> {
+        if (batching) {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"),
+              span -> span.hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
+              span -> span.hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
+              span -> span.hasName("continuation").hasParent(trace.getSpan(0)),
+              span -> span.hasName("continuation").hasParent(trace.getSpan(0)));
+        } else {
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"),
+              span -> span.hasKind(SpanKind.PRODUCER).hasParent(trace.getSpan(0)),
+              span -> span.hasName("continuation").hasParent(trace.getSpan(0)));
+        }
+      });
     } else if (batching) {
       testing.waitAndAssertTraces(
           trace ->
@@ -1036,12 +1028,11 @@ abstract class AbstractPulsarClientTest {
     assertThat(Baggage.fromContext(sendReturnContext.get()).getEntryValue("pulsar-test"))
         .isEqualTo("caller");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
-                span -> span.hasName("crypto-caller"),
-                span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER),
-                span -> span.hasName("send " + nestedTopic).hasKind(SpanKind.PRODUCER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactlyInAnyOrder(
+            span -> span.hasName("crypto-caller"),
+            span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER),
+            span -> span.hasName("send " + nestedTopic).hasKind(SpanKind.PRODUCER)));
     assertThat(
             testing.spans().stream()
                 .filter(span -> span.getKind() == SpanKind.PRODUCER)
@@ -1101,11 +1092,10 @@ abstract class AbstractPulsarClientTest {
     assertThat(Span.fromContext(sendReturnContext.get()).getSpanContext()).isEqualTo(callerSpan);
     assertThat(sendReturnContext.get().get(key)).isEqualTo("caller");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("crypto-failure-caller"),
-                span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("crypto-failure-caller"),
+            span -> span.hasName("send " + topic).hasKind(SpanKind.PRODUCER)));
   }
 
   @Test
@@ -1207,12 +1197,11 @@ abstract class AbstractPulsarClientTest {
     assertThat(interceptorBaggage.get()).isEqualTo("caller");
     assertThat(nestedInterceptorBaggage.get()).isEqualTo("caller");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("send " + topic).hasParent(trace.getSpan(0)),
-                span -> span.hasName("send " + nestedTopic).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("send " + topic).hasParent(trace.getSpan(0)),
+            span -> span.hasName("send " + nestedTopic).hasParent(trace.getSpan(0))));
   }
 
   @ParameterizedTest
@@ -1234,49 +1223,48 @@ abstract class AbstractPulsarClientTest {
             .newProducer(Schema.STRING)
             .topic(topic)
             .batchingMaxPublishDelay(1, HOURS)
-            .batcherBuilder(
-                () -> {
-                  BatchMessageContainer delegate = BatcherBuilder.DEFAULT.build();
-                  return (BatchMessageContainer)
-                      Proxy.newProxyInstance(
-                          BatchMessageContainerBase.class.getClassLoader(),
-                          new Class<?>[] {BatchMessageContainerBase.class},
-                          (proxy, method, arguments) -> {
-                            if (method.getName().equals("haveEnoughSpace")
-                                || method.getName().equals("add")) {
-                              hookContexts.add(Context.current());
-                            }
-                            if (method.getName().equals("add")) {
-                              Context hookContext = Context.current();
-                              testing.runWithSpan(
-                                  "batcher",
-                                  () -> {
-                                    Context nestedContext =
-                                        Baggage.builder()
-                                            .put("pulsar-test", "nested")
-                                            .build()
-                                            .storeInContext(Context.current().with(key, "nested"));
-                                    nestedCaller.set(nestedContext);
-                                    try (Scope ignored = nestedContext.makeCurrent()) {
-                                      if (directSend) {
-                                        sendDirect(
-                                            producer2,
-                                            "nested",
-                                            callbackContext,
-                                            callbackError,
-                                            directSendCompleted,
-                                            outgoingMessage);
-                                      } else {
-                                        nestedFuture.set(producer2.sendAsync("nested"));
-                                      }
-                                      assertCurrentContext(nestedContext, key);
-                                    }
-                                  });
-                              assertCurrentContext(hookContext, key);
-                            }
-                            return method.invoke(delegate, arguments);
-                          });
-                })
+            .batcherBuilder(() -> {
+              BatchMessageContainer delegate = BatcherBuilder.DEFAULT.build();
+              return (BatchMessageContainer)
+                  Proxy.newProxyInstance(
+                      BatchMessageContainerBase.class.getClassLoader(),
+                      new Class<?>[] {BatchMessageContainerBase.class},
+                      (proxy, method, arguments) -> {
+                        if (method.getName().equals("haveEnoughSpace")
+                            || method.getName().equals("add")) {
+                          hookContexts.add(Context.current());
+                        }
+                        if (method.getName().equals("add")) {
+                          Context hookContext = Context.current();
+                          testing.runWithSpan(
+                              "batcher",
+                              () -> {
+                                Context nestedContext =
+                                    Baggage.builder()
+                                        .put("pulsar-test", "nested")
+                                        .build()
+                                        .storeInContext(Context.current().with(key, "nested"));
+                                nestedCaller.set(nestedContext);
+                                try (Scope ignored = nestedContext.makeCurrent()) {
+                                  if (directSend) {
+                                    sendDirect(
+                                        producer2,
+                                        "nested",
+                                        callbackContext,
+                                        callbackError,
+                                        directSendCompleted,
+                                        outgoingMessage);
+                                  } else {
+                                    nestedFuture.set(producer2.sendAsync("nested"));
+                                  }
+                                  assertCurrentContext(nestedContext, key);
+                                }
+                              });
+                          assertCurrentContext(hookContext, key);
+                        }
+                        return method.invoke(delegate, arguments);
+                      });
+            })
             .create();
     AtomicReference<Context> caller = new AtomicReference<>();
     Context context =
@@ -1329,26 +1317,24 @@ abstract class AbstractPulsarClientTest {
     } else {
       nestedFuture.get().get(1, MINUTES);
     }
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("send " + topic).hasParent(trace.getSpan(0)),
-                span -> span.hasName("batcher").hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("send " + nestedTopic)
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(2))
-                        .satisfies(
-                            spanData -> {
-                              if (directSend) {
-                                assertThat(
-                                        Span.fromContext(callbackContext.get())
-                                            .getSpanContext()
-                                            .getSpanId())
-                                    .isEqualTo(spanData.getSpanId());
-                              }
-                            })));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("send " + topic).hasParent(trace.getSpan(0)),
+            span -> span.hasName("batcher").hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("send " + nestedTopic)
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(2))
+                    .satisfies(spanData -> {
+                      if (directSend) {
+                        assertThat(
+                                Span.fromContext(callbackContext.get())
+                                    .getSpanContext()
+                                    .getSpanId())
+                            .isEqualTo(spanData.getSpanId());
+                      }
+                    })));
   }
 
   private static void assertCurrentContext(Context expected, ContextKey<String> key) {
