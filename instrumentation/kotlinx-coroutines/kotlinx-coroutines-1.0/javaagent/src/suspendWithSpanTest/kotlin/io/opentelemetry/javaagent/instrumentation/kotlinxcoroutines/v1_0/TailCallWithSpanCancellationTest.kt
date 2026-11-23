@@ -7,13 +7,18 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0
 
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import io.opentelemetry.sdk.testing.assertj.TraceAssert
 import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.CoroutineDispatcher
+import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.asCoroutineDispatcher
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
@@ -23,6 +28,7 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicBoolean
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.intercepted
@@ -208,6 +214,208 @@ class TailCallWithSpanCancellationTest {
     started.complete(Unit)
     release.await(10, TimeUnit.SECONDS)
     42
+  }
+
+  // Under a withContext that keeps the dispatcher, the caller is dispatched again after the callee
+  // completes. Cancelled while that last dispatch is queued, it fails or continues as it would
+  // without the annotation, depending on how the callee resumed it.
+  @Test
+  fun `caller under withContext cancelled before running after withContext from another dispatcher`() {
+    val expected = continuesWhenCancelledBeforeRunning { started, release -> unannotatedIoReturn(started, release) }
+    assertThat(expected).isFalse()
+    assertThat(continuesWhenCancelledBeforeRunning { started, release -> annotatedIoReturn(started, release) })
+      .isEqualTo(expected)
+
+    assertTwoTraces("io-return")
+  }
+
+  @Test
+  fun `caller under withContext on an immediate dispatcher cancelled before running after withContext from another dispatcher`() {
+    val expected = continuesWhenCancelledBeforeRunning(immediate = true) { started, release -> unannotatedIoReturn(started, release) }
+    assertThat(expected).isFalse()
+    assertThat(continuesWhenCancelledBeforeRunning(immediate = true) { started, release -> annotatedIoReturn(started, release) })
+      .isEqualTo(expected)
+
+    assertTwoTraces("io-return")
+  }
+
+  @Test
+  fun `caller under withContext cancelled before running after nested tail calls returning from another dispatcher`() {
+    val expected = continuesWhenCancelledBeforeRunning { started, release -> unannotatedOuterIoReturn(started, release) }
+    assertThat(expected).isFalse()
+    assertThat(continuesWhenCancelledBeforeRunning { started, release -> annotatedOuterIoReturn(started, release) })
+      .isEqualTo(expected)
+
+    // the scenario runs twice with the annotation: once to count dispatches, once cancelling
+    val nested: (TraceAssert) -> Unit = { trace ->
+      trace.hasSpansSatisfyingExactly(
+        { it.hasName("outer-io-return").hasNoParent() },
+        { it.hasName("io-return").hasParent(trace.getSpan(0)) },
+      )
+    }
+    testing.waitAndAssertTraces(nested, nested)
+  }
+
+  @WithSpan("outer-io-return")
+  private suspend fun annotatedOuterIoReturn(started: CountDownLatch, release: CountDownLatch): Int = annotatedIoReturn(started, release)
+
+  private suspend fun unannotatedOuterIoReturn(started: CountDownLatch, release: CountDownLatch): Int = unannotatedIoReturn(started, release)
+
+  @WithSpan("io-return")
+  private suspend fun annotatedIoReturn(started: CountDownLatch, release: CountDownLatch): Int = unannotatedIoReturn(started, release)
+
+  private suspend fun unannotatedIoReturn(started: CountDownLatch, release: CountDownLatch): Int = withContext(Dispatchers.IO) {
+    started.countDown()
+    release.await(10, TimeUnit.SECONDS)
+    42
+  }
+
+  @Test
+  fun `caller under withContext cancelled before running after suspendCancellableCoroutine`() {
+    val expected = continuesWhenCancelledBeforeRunning { started, release -> unannotatedCancellableCallback(started, release) }
+    assertThat(expected).isFalse()
+    assertThat(continuesWhenCancelledBeforeRunning { started, release -> annotatedCancellableCallback(started, release) })
+      .isEqualTo(expected)
+
+    assertTwoTraces("cancellable-callback")
+  }
+
+  @WithSpan("cancellable-callback")
+  private suspend fun annotatedCancellableCallback(started: CountDownLatch, release: CountDownLatch): Int = unannotatedCancellableCallback(started, release)
+
+  private suspend fun unannotatedCancellableCallback(started: CountDownLatch, release: CountDownLatch): Int = suspendCancellableCoroutine { continuation ->
+    started.countDown()
+    callbackExecutor.execute {
+      release.await(10, TimeUnit.SECONDS)
+      continuation.resume(42)
+    }
+  }
+
+  // An element received from a channel is either delivered to the caller or passed to the
+  // channel's undelivered element handler, never lost.
+  @Test
+  fun `caller under withContext cancelled before running after receive delivers or hands back the element`() {
+    assertThat(deliveredOrHandedBack { started, release, channel -> unannotatedReceive(started, release, channel) }).isTrue()
+    assertThat(deliveredOrHandedBack { started, release, channel -> annotatedReceive(started, release, channel) }).isTrue()
+
+    assertTwoTraces("receive")
+  }
+
+  private fun deliveredOrHandedBack(call: suspend (CountDownLatch, CountDownLatch, Channel<Int>) -> Int): Boolean {
+    var undelivered = AtomicInteger(-1)
+    var channel = Channel<Int>(1) { undelivered.set(it) }
+    val dispatches = runCancellingAt(Int.MAX_VALUE, false) { started, release -> call(started, release, channel) }.second
+    undelivered = AtomicInteger(-1)
+    channel = Channel(1) { undelivered.set(it) }
+    val continued = runCancellingAt(dispatches, false) { started, release -> call(started, release, channel) }.first
+    return continued || undelivered.get() == 42
+  }
+
+  @WithSpan("receive")
+  private suspend fun annotatedReceive(started: CountDownLatch, release: CountDownLatch, channel: Channel<Int>): Int = unannotatedReceive(started, release, channel)
+
+  private suspend fun unannotatedReceive(started: CountDownLatch, release: CountDownLatch, channel: Channel<Int>): Int {
+    started.countDown()
+    callbackExecutor.execute {
+      release.await(10, TimeUnit.SECONDS)
+      channel.trySend(42)
+    }
+    return channel.receive()
+  }
+
+  @Test
+  fun `caller under withContext cancelled before running after an atomic resumption`() {
+    val expected = continuesWhenCancelledBeforeRunning { started, release -> unannotatedAtomicCallback(started, release) }
+    assertThat(expected).isTrue()
+    assertThat(continuesWhenCancelledBeforeRunning { started, release -> annotatedAtomicCallback(started, release) })
+      .isEqualTo(expected)
+
+    assertTwoTraces("atomic-callback")
+  }
+
+  @WithSpan("atomic-callback")
+  private suspend fun annotatedAtomicCallback(started: CountDownLatch, release: CountDownLatch): Int = unannotatedAtomicCallback(started, release)
+
+  private suspend fun unannotatedAtomicCallback(started: CountDownLatch, release: CountDownLatch): Int = suspendCoroutineUninterceptedOrReturn { continuation ->
+    val intercepted = continuation.intercepted()
+    started.countDown()
+    callbackExecutor.execute {
+      release.await(10, TimeUnit.SECONDS)
+      intercepted.resume(42)
+    }
+    COROUTINE_SUSPENDED
+  }
+
+  // the scenario runs twice with the annotation: once to count dispatches, once cancelling
+  private fun assertTwoTraces(spanName: String) {
+    testing.waitAndAssertTraces(
+      { trace -> trace.hasSpansSatisfyingExactly({ it.hasName(spanName).hasNoParent() }) },
+      { trace -> trace.hasSpansSatisfyingExactly({ it.hasName(spanName).hasNoParent() }) },
+    )
+  }
+
+  // Counts the caller's dispatches once the callee is released, then runs the scenario again and
+  // cancels the caller just before the last of them, the one that runs the caller.
+  private fun continuesWhenCancelledBeforeRunning(immediate: Boolean = false, call: suspend (CountDownLatch, CountDownLatch) -> Int): Boolean {
+    val dispatches = runCancellingAt(Int.MAX_VALUE, immediate, call).second
+    return runCancellingAt(dispatches, immediate, call).first
+  }
+
+  private fun runCancellingAt(cancelAt: Int, immediate: Boolean, call: suspend (CountDownLatch, CountDownLatch) -> Int): Pair<Boolean, Int> {
+    val callerThread = arrayOfNulls<Thread>(1)
+    val callerExecutor = Executors.newSingleThreadExecutor { runnable -> Thread(runnable).also { callerThread[0] = it } }
+    val caller = arrayOfNulls<Job>(1)
+    val dispatcher = CancellingDispatcher(callerExecutor.asCoroutineDispatcher(), cancelAt, { caller[0]!!.cancel() }) {
+      // like Dispatchers.Main.immediate, runs inline when already on its thread
+      !immediate || Thread.currentThread() !== callerThread[0]
+    }
+    val continued = AtomicBoolean()
+    try {
+      runBlocking {
+        val started = CountDownLatch(1)
+        val release = CountDownLatch(1)
+        caller[0] = launch(dispatcher) {
+          withContext(CoroutineName("caller")) {
+            call(started, release)
+            continued.set(true)
+          }
+        }
+        assertThat(started.await(10, TimeUnit.SECONDS)).isTrue()
+        // wait until the caller has suspended
+        callerExecutor.submit {}.get(10, TimeUnit.SECONDS)
+        dispatcher.watch()
+        release.countDown()
+        caller[0]!!.join()
+      }
+    } finally {
+      callerExecutor.shutdown()
+    }
+    return continued.get() to dispatcher.dispatches.get()
+  }
+
+  // Counts dispatches after watch() is called and cancels just before the given one.
+  private class CancellingDispatcher(
+    private val delegate: CoroutineDispatcher,
+    private val cancelAt: Int,
+    private val cancel: () -> Unit,
+    private val dispatchNeeded: () -> Boolean,
+  ) : CoroutineDispatcher() {
+    val dispatches = AtomicInteger()
+
+    @Volatile private var watching = false
+
+    fun watch() {
+      watching = true
+    }
+
+    override fun isDispatchNeeded(context: CoroutineContext): Boolean = dispatchNeeded()
+
+    override fun dispatch(context: CoroutineContext, block: Runnable) {
+      if (watching && dispatches.incrementAndGet() == cancelAt) {
+        cancel()
+      }
+      delegate.dispatch(context, block)
+    }
   }
 
   // Signals the first dispatch after watch() is called.

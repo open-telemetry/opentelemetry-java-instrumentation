@@ -11,23 +11,26 @@ import io.opentelemetry.context.Context
 import io.opentelemetry.extension.kotlin.asContextElement
 import io.opentelemetry.instrumentation.annotations.WithSpan
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.CoroutineName
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.NonCancellable
 import kotlinx.coroutines.asCoroutineDispatcher
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.concurrent.CompletableFuture
 import java.util.concurrent.Executor
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
+import java.util.concurrent.TimeoutException
+import kotlin.coroutines.AbstractCoroutineContextElement
 import kotlin.coroutines.Continuation
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.EmptyCoroutineContext
@@ -180,10 +183,9 @@ class TailCallWithSpanInlineResumeTest {
     }
   }
 
-  // A coroutine launched with the callee's context inherits the marker that tells the runtime
-  // restored the callee's context, so the caller is dispatched instead.
+  // A coroutine launched with the callee's context inherits the runtime marker; resuming the raw
+  // continuation from it still runs the caller before resume returns.
   @Test
-  @Disabled("A coroutine launched with the callee's context that resumes the raw continuation has the caller dispatched instead of run before resume returns")
   fun `caller resumed without interception by a coroutine launched with the callee's context runs before resume returns`() {
     val expected = callerRanBeforeChildResumeReturned { unannotatedChildResume(it) }
     assertThat(expected).isTrue()
@@ -224,6 +226,131 @@ class TailCallWithSpanInlineResumeTest {
       CoroutineScope(context).launch {
         continuation.resume(7)
         afterResume()
+      }
+      COROUTINE_SUSPENDED
+    }
+  }
+
+  // A callback on the caller's thread that waits for the caller after resuming the raw
+  // continuation through a callee ending in withContext(NonCancellable) gets the caller's
+  // acknowledgement before it times out, as without the annotation.
+  @Test
+  fun `callback waiting for the caller after a raw resume through withContext NonCancellable`() {
+    val expected = ackedInTime { unannotatedNonCancellableRaw(it) }
+    assertThat(expected).isTrue()
+    assertThat(ackedInTime { annotatedNonCancellableRaw(it) }).isEqualTo(expected)
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("non-cancellable-raw").hasNoParent() },
+        )
+      },
+    )
+  }
+
+  private fun ackedInTime(call: suspend (Executor) -> Int): Boolean {
+    val executor = Executors.newSingleThreadExecutor()
+    try {
+      val ack = CompletableFuture<Unit>()
+      val ackedInTime = CompletableFuture<Boolean>()
+      val callback = Executor { command ->
+        executor.execute {
+          command.run()
+          ackedInTime.complete(
+            try {
+              ack.get(1, TimeUnit.SECONDS)
+              true
+            } catch (e: TimeoutException) {
+              false
+            },
+          )
+        }
+      }
+      runBlocking(executor.asCoroutineDispatcher() + Context.root().asContextElement()) {
+        withContext(CoroutineName("caller")) {
+          call(callback)
+          ack.complete(Unit)
+        }
+      }
+      return ackedInTime.get(10, TimeUnit.SECONDS)
+    } finally {
+      executor.shutdown()
+    }
+  }
+
+  @WithSpan("non-cancellable-raw")
+  private suspend fun annotatedNonCancellableRaw(callback: Executor): Int = unannotatedNonCancellableRaw(callback)
+
+  private suspend fun unannotatedNonCancellableRaw(callback: Executor): Int = withContext(NonCancellable) {
+    suspendCoroutineUninterceptedOrReturn { continuation ->
+      callback.execute { continuation.resume(7) }
+      COROUTINE_SUSPENDED
+    }
+  }
+
+  // A coroutine launched on another dispatcher with the callee's context runs the caller inline on
+  // its own thread when it resumes the raw continuation; both threads are left clean and the caller
+  // sees its own context.
+  @Test
+  fun `caller resumed by a coroutine on another dispatcher leaves both threads clean`() {
+    val outer = tracer.spanBuilder("outer").startSpan()
+    try {
+      val expected = statesAfterChildOnOtherDispatcher(outer) { unannotatedChildOnIo() }
+      assertThat(expected).containsExactly(outer.spanContext, SpanContext.getInvalid(), SpanContext.getInvalid())
+      assertThat(statesAfterChildOnOtherDispatcher(outer) { annotatedChildOnIo() }).isEqualTo(expected)
+    } finally {
+      outer.end()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("outer").hasNoParent() },
+          { it.hasName("child-on-io").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  // The span current in the caller after the call, then on the caller's thread and on the thread
+  // that ran the caller, once everything completed.
+  private fun statesAfterChildOnOtherDispatcher(outer: Span, call: suspend () -> Int): List<SpanContext> {
+    val callerExecutor = Executors.newSingleThreadExecutor()
+    val childExecutor = Executors.newSingleThreadExecutor()
+    val childDispatcher = childExecutor.asCoroutineDispatcher()
+    try {
+      val afterCall = runBlocking(callerExecutor.asCoroutineDispatcher() + Context.root().asContextElement()) {
+        withContext(CoroutineName("caller") + outer.storeInContext(Context.root()).asContextElement()) {
+          withContext(ChildDispatcher(childDispatcher)) {
+            call()
+          }
+          Span.current().spanContext
+        }
+      }
+      val callerThread = callerExecutor.submit<SpanContext> { Span.current().spanContext }.get(10, TimeUnit.SECONDS)
+      val childThread = childExecutor.submit<SpanContext> { Span.current().spanContext }.get(10, TimeUnit.SECONDS)
+      return listOf(afterCall, callerThread, childThread)
+    } finally {
+      callerExecutor.shutdown()
+      childExecutor.shutdown()
+    }
+  }
+
+  // Carries the dispatcher the child is launched on, without changing the caller's dispatcher.
+  private class ChildDispatcher(val dispatcher: CoroutineDispatcher) : AbstractCoroutineContextElement(Key) {
+    companion object Key : CoroutineContext.Key<ChildDispatcher>
+  }
+
+  @WithSpan("child-on-io")
+  private suspend fun annotatedChildOnIo(): Int = unannotatedChildOnIo()
+
+  private suspend fun unannotatedChildOnIo(): Int {
+    val context = coroutineContext
+    return suspendCoroutineUninterceptedOrReturn { continuation ->
+      CoroutineScope(context + context[ChildDispatcher]!!.dispatcher).launch {
+        delay(10)
+        continuation.resume(7)
       }
       COROUTINE_SUSPENDED
     }
