@@ -21,26 +21,32 @@ public final class TomcatContentLength {
       new ClassValue<ContentLengthAccessor>() {
         @Override
         protected ContentLengthAccessor computeValue(Class<?> responseClass) {
+          Class<?> tomcatResponseClass = findTomcatResponseClass(responseClass);
+          if (tomcatResponseClass == null) {
+            return new ContentLengthAccessor(null, null, null, null, null);
+          }
+
           Class<?> coyoteResponseClass = null;
           try {
             coyoteResponseClass =
-                Class.forName("org.apache.coyote.Response", false, responseClass.getClassLoader());
+                Class.forName(
+                    "org.apache.coyote.Response", false, tomcatResponseClass.getClassLoader());
           } catch (ClassNotFoundException e) {
             logger.log(FINE, "Failed to access Tomcat's effective Content-Length", e);
           }
           MethodHandle getCoyoteResponse =
               coyoteResponseClass == null
                   ? null
-                  : findVirtual(responseClass, "getCoyoteResponse", coyoteResponseClass);
+                  : findVirtual(tomcatResponseClass, "getCoyoteResponse", coyoteResponseClass);
           MethodHandle getContentLength =
               coyoteResponseClass == null
                   ? null
                   : findVirtual(coyoteResponseClass, "getContentLengthLong", long.class);
           MethodHandle setContentLengthLong =
-              findVirtual(responseClass, "setContentLengthLong", void.class, long.class);
+              findVirtual(tomcatResponseClass, "setContentLengthLong", void.class, long.class);
           MethodHandle setContentLength =
-              findVirtual(responseClass, "setContentLength", void.class, int.class);
-          MethodHandle isCommitted = findVirtual(responseClass, "isCommitted", boolean.class);
+              findVirtual(tomcatResponseClass, "setContentLength", void.class, int.class);
+          MethodHandle isCommitted = findVirtual(tomcatResponseClass, "isCommitted", boolean.class);
           return new ContentLengthAccessor(
               getCoyoteResponse,
               getContentLength,
@@ -49,6 +55,16 @@ public final class TomcatContentLength {
               isCommitted);
         }
       };
+
+  @Nullable
+  private static Class<?> findTomcatResponseClass(Class<?> responseClass) {
+    for (Class<?> type = responseClass; type != null; type = type.getSuperclass()) {
+      if (type.getName().equals("org.apache.catalina.connector.Response")) {
+        return type;
+      }
+    }
+    return null;
+  }
 
   @Nullable
   private static MethodHandle findVirtual(
