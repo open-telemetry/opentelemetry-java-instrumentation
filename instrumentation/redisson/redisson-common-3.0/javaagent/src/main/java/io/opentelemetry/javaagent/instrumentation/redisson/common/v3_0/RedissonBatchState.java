@@ -107,12 +107,8 @@ class RedissonBatchState {
       }
     }
 
-    String queryText = null;
-    try {
-      queryText = sanitize(command, codec, parameters);
-    } finally {
-      commitQueryText(index, capturedCommand, queryText);
-    }
+    String queryText = sanitize(command, codec, parameters);
+    commitQueryText(index, capturedCommand, queryText);
   }
 
   private synchronized void commitQueryText(
