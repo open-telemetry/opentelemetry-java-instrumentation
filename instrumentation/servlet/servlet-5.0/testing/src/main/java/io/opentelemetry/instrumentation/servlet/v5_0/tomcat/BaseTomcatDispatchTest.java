@@ -30,17 +30,17 @@ import org.junit.jupiter.params.AfterParameterizedClassInvocation;
 import org.junit.jupiter.params.BeforeParameterizedClassInvocation;
 import org.junit.jupiter.params.Parameter;
 import org.junit.jupiter.params.ParameterizedClass;
+import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 @ParameterizedClass
 @EnumSource(BaseTomcatDispatchTest.TestType.class)
 public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test {
-  private static final ServerEndpoint SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH =
-      new ServerEndpoint(
-          "SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH",
-          "snippetAsyncIncludeSplitHeadFixedLength",
-          200,
-          "");
+  private static final ServerEndpoint SNIPPET_HEADER_FORWARD =
+      new ServerEndpoint("SNIPPET_HEADER_FORWARD", "snippetHeaderForward", 200, "");
+  private static final ServerEndpoint SNIPPET_HEADER_ASYNC_DISPATCH =
+      new ServerEndpoint("SNIPPET_HEADER_ASYNC_DISPATCH", "snippetHeaderAsyncDispatch", 200, "");
 
   enum TestType {
     DISPATCH_ASYNC {
@@ -208,10 +208,15 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
             context,
             "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
             RequestDispatcherServlet.Include.class);
-        test.addServlet(
-            context,
-            "/snippetAsyncIncludeSplitHeadFixedLength",
-            TestServlet5.SnippetAsyncIncludeSplitHeadFixedLength.class);
+        for (String setter :
+            new String[] {
+              "setContentLength", "setHeader", "addHeader", "setIntHeader", "addIntHeader"
+            }) {
+          test.addServlet(
+              context,
+              "/snippetAsyncIncludeSplitHeadFixedLength/" + setter,
+              TestServlet5.SnippetAsyncIncludeSplitHeadFixedLength.class);
+        }
         test.addServlet(
             context,
             "/snippetIncludeSplitHeadTarget",
@@ -265,6 +270,11 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
     super.setupServlets(context);
 
     testType.setupServlets(this, context);
+    addServlet(context, "/snippetHeaderForward", TestServlet5.SnippetHeaderForward.class);
+    addServlet(
+        context, "/snippetHeaderAsyncDispatch", TestServlet5.SnippetHeaderAsyncDispatch.class);
+    addServlet(
+        context, "/snippetHeaderDispatchTarget", TestServlet5.SnippetHeaderDispatchTarget.class);
   }
 
   @Override
@@ -277,8 +287,10 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
     return testType.assertParentOnRedirect();
   }
 
-  @Test
-  void fixedLengthSplitHeadIncludeAdjustsWireLength() {
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"setContentLength", "setHeader", "addHeader", "setIntHeader", "addIntHeader"})
+  void fixedLengthSplitHeadIncludeAdjustsWireLength(String setter) {
     assumeTrue(testType == TestType.INCLUDE);
     assumeTrue(isAgentTest());
 
@@ -287,7 +299,14 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
     try {
       AggregatedHttpResponse response =
           client
-              .execute(request(SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH, "GET"))
+              .execute(
+                  request(
+                      new ServerEndpoint(
+                          "SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH",
+                          "snippetAsyncIncludeSplitHeadFixedLength/" + setter,
+                          200,
+                          ""),
+                      "GET"))
               .aggregate()
               .join();
       String expected = "<head>" + snippet + "<title>included</title></head>";
@@ -298,5 +317,18 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
     } finally {
       ExperimentalSnippetHolder.setSnippet("");
     }
+  }
+
+  @Test
+  void applicationHeadersReachForwardAndAsyncDispatchTargets() {
+    assumeTrue(testType == TestType.FORWARD || testType == TestType.DISPATCH_ASYNC);
+    assumeTrue(isAgentTest());
+
+    ServerEndpoint endpoint =
+        testType == TestType.FORWARD ? SNIPPET_HEADER_FORWARD : SNIPPET_HEADER_ASYNC_DISPATCH;
+    AggregatedHttpResponse response = client.execute(request(endpoint, "GET")).aggregate().join();
+
+    assertThat(response.contentUtf8()).isEqualTo("header dispatch target");
+    assertThat(response.headers().get("X-Dispatch-Header")).isEqualTo("accepted");
   }
 }

@@ -43,6 +43,25 @@ public class TestServlet3 {
 
   private TestServlet3() {}
 
+  private static void setContentLength(HttpServletResponse response, String setter, int length) {
+    switch (setter) {
+      case "setHeader":
+        response.setHeader("Content-Length", String.valueOf(length));
+        break;
+      case "addHeader":
+        response.addHeader("Content-Length", String.valueOf(length));
+        break;
+      case "setIntHeader":
+        response.setIntHeader("Content-Length", length);
+        break;
+      case "addIntHeader":
+        response.addIntHeader("Content-Length", length);
+        break;
+      default:
+        response.setContentLength(length);
+    }
+  }
+
   @WebServlet
   public static class Sync extends HttpServlet {
     @Override
@@ -302,7 +321,8 @@ public class TestServlet3 {
         throws ServletException, IOException {
       String body = "<head><title>included</title></head>";
       resp.setContentType("text/html");
-      resp.setContentLength(body.length());
+      String setter = req.getServletPath().substring(req.getServletPath().lastIndexOf('/') + 1);
+      setContentLength(resp, setter, body.length());
       resp.getWriter().write("<he");
       AsyncContext context = req.startAsync();
       req.getRequestDispatcher("/snippetIncludeSplitHeadTarget")
@@ -315,7 +335,54 @@ public class TestServlet3 {
   public static class SnippetIncludeSplitHeadTarget extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setHeader("X-Included", "ignored");
+      resp.setHeader("org.eclipse.jetty.server.include.X-Included", "accepted");
+      resp.setHeader("Content-Length", "1");
       resp.getWriter().write("ad><title>included</title></head>");
+    }
+  }
+
+  @WebServlet
+  public static class SnippetContentLengthRemoval extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length() / 2);
+      resp.getWriter().write("<head>");
+      String setter = req.getServletPath().substring(req.getServletPath().lastIndexOf('/') + 1);
+      if ("setHeader".equals(setter)) {
+        resp.setHeader("Content-Length", null);
+      } else {
+        resp.setContentLength(-1);
+      }
+      resp.resetBuffer();
+      resp.getWriter().write(SNIPPET_RESET_REPLACEMENT_BODY);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetHeaderForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      req.getRequestDispatcher("/snippetHeaderDispatchTarget").forward(req, resp);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetHeaderAsyncDispatch extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      req.startAsync().dispatch("/snippetHeaderDispatchTarget");
+    }
+  }
+
+  @WebServlet
+  public static class SnippetHeaderDispatchTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setHeader("X-Dispatch-Header", "accepted");
+      resp.getWriter().write("header dispatch target");
     }
   }
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.ServletOutputStreamInjectionState.initializeInjectionStateIfNeeded;
-import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
@@ -21,7 +20,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 /**
@@ -36,9 +34,6 @@ import javax.annotation.Nullable;
  */
 public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponseWrapper
     implements SnippetInjectingResponseWrapper {
-
-  private static final Logger logger =
-      Logger.getLogger(Servlet5SnippetInjectingResponseWrapper.class.getName());
 
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
 
@@ -146,77 +141,50 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void setHeader(String name, String value) {
-    if (isIncludeRequest()) {
-      return;
-    }
+    long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.setHeader(name, value);
-    handleHeader(name, value);
+    reconcileContentLengthHeader(name, previousLength);
   }
 
   @Override
   public void addHeader(String name, String value) {
-    if (isIncludeRequest()) {
-      return;
-    }
+    long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.addHeader(name, value);
-    handleHeader(name, value);
+    reconcileContentLengthHeader(name, previousLength);
   }
 
-  private void handleHeader(String name, String value) {
-    if ("Content-Length".equalsIgnoreCase(name) && !isIncludeRequest() && isContentLength(value)) {
-      try {
-        long length = Long.parseLong(value);
-        if (length == getContentLengthHeader()) {
-          recordContentLength(length);
-        }
-      } catch (NumberFormatException e) {
-        logger.log(FINE, "Failed to parse the Content-Length header", e);
-      }
+  private void reconcileContentLengthHeader(String name, long previousLength) {
+    if (isContentLengthHeader(name)) {
+      reconcileContentLength(previousLength);
     }
   }
 
   @Override
   public void setIntHeader(String name, int value) {
-    if (isIncludeRequest()) {
-      return;
-    }
+    long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.setIntHeader(name, value);
-    if ("Content-Length".equalsIgnoreCase(name) && getContentLengthHeader() == value) {
-      recordContentLength(value);
-    }
+    reconcileContentLengthHeader(name, previousLength);
   }
 
   @Override
   public void addIntHeader(String name, int value) {
-    if (isIncludeRequest()) {
-      return;
-    }
+    long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.addIntHeader(name, value);
-    if ("Content-Length".equalsIgnoreCase(name) && getContentLengthHeader() == value) {
-      recordContentLength(value);
-    }
+    reconcileContentLengthHeader(name, previousLength);
   }
 
   @Override
   public void setContentLength(int len) {
-    if (isIncludeRequest()) {
-      return;
-    }
+    long previousLength = getContentLengthHeader();
     super.setContentLength(len);
-    if (getContentLengthHeader() == len || isTomcatResponse()) {
-      recordContentLength(len);
-    }
+    reconcileContentLength(previousLength);
   }
 
   @Override
   public void setContentLengthLong(long length) {
-    if (isIncludeRequest()) {
-      return;
-    }
+    long previousLength = getContentLengthHeader();
     super.setContentLengthLong(length);
-    if (getContentLengthHeader() == length || isTomcatResponse()) {
-      recordContentLength(length);
-    }
+    reconcileContentLength(previousLength);
   }
 
   @Override
@@ -283,14 +251,25 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     } else {
       super.setContentLengthLong(length);
     }
-    if (getContentLengthHeader() == length || (isTomcatResponse() && !isIncludeRequest())) {
+    if (getContentLengthHeader() == length
+        || (injectionState.hasContentLength() && injectionState.getContentLength() == length)) {
       return true;
     }
     if (isJettyIncludeResponse()) {
       super.setHeader("org.eclipse.jetty.server.include.Content-Length", String.valueOf(length));
-      return getContentLengthHeader() == length;
+      return getContentLengthHeader() == length
+          || (injectionState.hasContentLength() && injectionState.getContentLength() == length);
     }
     return false;
+  }
+
+  private void reconcileContentLength(long previousLength) {
+    long contentLength = getContentLengthHeader();
+    if (contentLength != Long.MIN_VALUE) {
+      recordContentLength(contentLength);
+    } else if (previousLength != Long.MIN_VALUE) {
+      injectionState.setContentLength(-1);
+    }
   }
 
   private void recordContentLength(long length) {
@@ -311,19 +290,14 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     }
   }
 
-  private static boolean isContentLength(String value) {
-    try {
-      Long.parseLong(value);
-      return true;
-    } catch (NumberFormatException ignored) {
-      return false;
-    }
+  private static boolean isContentLengthHeader(String name) {
+    return "Content-Length".equalsIgnoreCase(name)
+        || "org.eclipse.jetty.server.include.Content-Length".equalsIgnoreCase(name);
   }
 
   @Override
   public boolean isIncludeRequest() {
-    return (request != null && request.getDispatcherType() == DispatcherType.INCLUDE)
-        || isTomcatIncludeResponse();
+    return request != null && request.getDispatcherType() == DispatcherType.INCLUDE;
   }
 
   private boolean isJettyIncludeResponse() {
@@ -337,30 +311,6 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
       response = ((ServletResponseWrapper) response).getResponse();
     }
     return response.getClass().getName().equals("org.eclipse.jetty.server.Response");
-  }
-
-  private boolean isTomcatResponse() {
-    ServletResponse response = super.getResponse();
-    while (response instanceof ServletResponseWrapper) {
-      response = ((ServletResponseWrapper) response).getResponse();
-    }
-    String className = response.getClass().getName();
-    return className.equals("org.apache.catalina.connector.ResponseFacade")
-        || className.equals("org.apache.catalina.connector.Response");
-  }
-
-  private boolean isTomcatIncludeResponse() {
-    ServletResponse response = super.getResponse();
-    while (response instanceof ServletResponseWrapper) {
-      if (response
-          .getClass()
-          .getName()
-          .equals("org.apache.catalina.core.ApplicationHttpResponse")) {
-        return true;
-      }
-      response = ((ServletResponseWrapper) response).getResponse();
-    }
-    return false;
   }
 
   @Override

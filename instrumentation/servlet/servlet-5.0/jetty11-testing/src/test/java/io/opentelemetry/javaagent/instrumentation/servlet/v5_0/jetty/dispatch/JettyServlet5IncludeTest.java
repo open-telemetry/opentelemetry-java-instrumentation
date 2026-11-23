@@ -32,6 +32,24 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
   private static final ServerEndpoint SNIPPET_INCLUDE_FIXED_LENGTH_RESET =
       new ServerEndpoint(
           "SNIPPET_INCLUDE_FIXED_LENGTH_RESET", "snippetAsyncIncludeFixedLengthReset", 200, "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH",
+          "snippetAsyncIncludeSplitHeadFixedLength/setContentLength",
+          200,
+          "");
+  private static final ServerEndpoint SNIPPET_CONTENT_LENGTH_REMOVAL_HEADER =
+      new ServerEndpoint(
+          "SNIPPET_CONTENT_LENGTH_REMOVAL_HEADER",
+          "snippetContentLengthRemoval/setHeader",
+          200,
+          "");
+  private static final ServerEndpoint SNIPPET_CONTENT_LENGTH_REMOVAL_NUMERIC =
+      new ServerEndpoint(
+          "SNIPPET_CONTENT_LENGTH_REMOVAL_NUMERIC",
+          "snippetContentLengthRemoval/setContentLength",
+          200,
+          "");
 
   @Override
   public Class<? extends Servlet> servlet() {
@@ -84,6 +102,22 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
         context,
         "/snippetIncludeFixedLengthResetTarget",
         TestServlet5.SnippetIncludeFixedLengthResetTarget.class);
+    addServlet(
+        context,
+        "/snippetAsyncIncludeSplitHeadFixedLength/setContentLength",
+        TestServlet5.SnippetAsyncIncludeSplitHeadFixedLength.class);
+    addServlet(
+        context,
+        "/snippetIncludeSplitHeadTarget",
+        TestServlet5.SnippetIncludeSplitHeadTarget.class);
+    addServlet(
+        context,
+        "/snippetContentLengthRemoval/setHeader",
+        TestServlet5.SnippetContentLengthRemoval.class);
+    addServlet(
+        context,
+        "/snippetContentLengthRemoval/setContentLength",
+        TestServlet5.SnippetContentLengthRemoval.class);
   }
 
   @Test
@@ -119,6 +153,50 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
       assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
     } finally {
       ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
+  void fixedLengthSplitHeadIncludeUsesJettyPrefixedHeaders() {
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client
+              .execute(request(SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH, "GET"))
+              .aggregate()
+              .join();
+      String expected = "<head>" + snippet + "<title>included</title></head>";
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.headers().get("X-Included")).isEqualTo("accepted");
+      assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
+  void acceptedContentLengthRemovalDoesNotRestoreStaleLength() {
+    for (ServerEndpoint endpoint :
+        new ServerEndpoint[] {
+          SNIPPET_CONTENT_LENGTH_REMOVAL_HEADER, SNIPPET_CONTENT_LENGTH_REMOVAL_NUMERIC
+        }) {
+      String snippet = "<!-- snippet -->";
+      ExperimentalSnippetHolder.setSnippet(snippet);
+      try {
+        AggregatedHttpResponse response =
+            client.execute(request(endpoint, "GET")).aggregate().join();
+
+        assertThat(response.contentUtf8()).isEqualTo(TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY);
+        assertThat(response.contentUtf8()).doesNotContain(snippet);
+        if (response.headers().contentLength() >= 0) {
+          assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+        }
+      } finally {
+        ExperimentalSnippetHolder.setSnippet("");
+      }
     }
   }
 }

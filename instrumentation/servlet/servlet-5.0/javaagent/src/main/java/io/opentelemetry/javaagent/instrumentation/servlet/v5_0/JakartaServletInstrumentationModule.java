@@ -14,6 +14,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncCont
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.response.TomcatResponseFacadeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.RequestDispatcherForwardInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletOutputStreamInstrumentation;
@@ -51,7 +52,9 @@ public class JakartaServletInstrumentationModule extends InstrumentationModule {
         new RequestDispatcherForwardInstrumentation(
             BASE_PACKAGE, adviceClassName(".Servlet5RequestDispatcherForwardAdvice")),
         new HttpServletResponseInstrumentation(
-            BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")));
+            BASE_PACKAGE, adviceClassName(".response.ResponseSendAdvice")),
+        new TomcatResponseFacadeInstrumentation(
+            adviceClassName(".Servlet5TomcatResponseContentLengthAdvice")));
   }
 
   private static String adviceClassName(String suffix) {
