@@ -89,10 +89,12 @@ class TailCallWithSpanDispatcherTest {
     val callerThread = Thread.currentThread()
     val gate = CountDownLatch(1)
     runBlocking {
+      val callerContext = Context.current()
       // Runs only once the caller has suspended, so the callback resumes it from another thread.
       launch { gate.countDown() }
       assertThat(annotatedCancellableCallback(gate)).isEqualTo(42)
       assertThat(Thread.currentThread()).isSameAs(callerThread)
+      assertThat(Context.current()).isSameAs(callerContext)
     }
 
     testing.waitAndAssertTraces(
@@ -106,6 +108,8 @@ class TailCallWithSpanDispatcherTest {
 
   @WithSpan("cancellable-callback")
   private suspend fun annotatedCancellableCallback(gate: CountDownLatch): Int = suspendCancellableCoroutine { continuation ->
+    assertThat(Span.fromContext(continuation.context.getOpenTelemetryContext()).spanContext)
+      .isEqualTo(Span.current().spanContext)
     callbackExecutor.execute {
       gate.await(10, TimeUnit.SECONDS)
       continuation.resume(42)
@@ -234,8 +238,6 @@ class TailCallWithSpanDispatcherTest {
 
   private suspend fun unannotatedIoValue(value: Int): Int = withContext(Dispatchers.IO) { value * 2 }
 
-  // The frame intercepts when it is created, before it is known whether the callee suspends; the
-  // interceptor must still see one release for each interception.
   @Test
   fun `every intercepted continuation is released`() {
     val interceptor = CountingInterceptor()
@@ -315,7 +317,10 @@ class TailCallWithSpanDispatcherTest {
   @WithSpan("immediate")
   private suspend fun annotatedImmediate(): Int = unannotatedImmediate()
 
-  private suspend fun unannotatedImmediate(): Int = suspendCoroutineUninterceptedOrReturn { 1 }
+  private suspend fun unannotatedImmediate(): Int = suspendCoroutineUninterceptedOrReturn { continuation ->
+    continuation.intercepted()
+    1
+  }
 
   @WithSpan("suspending")
   private suspend fun annotatedSuspending(): Int = unannotatedSuspending()
