@@ -31,7 +31,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
-  private boolean captureRequestBody;
+  private BodyCaptureConfig requestBodyCaptureConfig;
 
   private boolean propagateOperationListenersToOnEnd;
   private boolean captureExperimentalAttributes;
@@ -104,8 +104,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
 
   @CanIgnoreReturnValue
   public ServletInstrumenterBuilder<REQUEST, RESPONSE> setCaptureRequestBody(
-      boolean captureRequestBody) {
-    this.captureRequestBody = captureRequestBody;
+      BodyCaptureConfig bodyCaptureConfig) {
+    this.requestBodyCaptureConfig = bodyCaptureConfig;
     return this;
   }
 
@@ -126,7 +126,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
         builder.addContextCustomizer(contextCustomizer);
       }
 
-      if (captureRequestBody) {
+      if (requestBodyCaptureConfig.isEnabled()) {
         builder.addAttributesExtractor(new ServletRequestBodyExtractor<>(accessor));
       }
 
