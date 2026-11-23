@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import io.opentelemetry.testing.internal.armeria.common.SplitHttpResponse;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.junit.jupiter.api.Test;
@@ -48,6 +49,12 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
       new ServerEndpoint(
           "SNIPPET_CONTENT_LENGTH_REMOVAL_NUMERIC",
           "snippetContentLengthRemoval/setContentLength",
+          200,
+          "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_CONTENT_LENGTH_SETTER =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_CONTENT_LENGTH_SETTER",
+          "snippetAsyncIncludeContentLengthSetter",
           200,
           "");
 
@@ -118,6 +125,14 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
         context,
         "/snippetContentLengthRemoval/setContentLength",
         TestServlet5.SnippetContentLengthRemoval.class);
+    addServlet(
+        context,
+        "/snippetAsyncIncludeContentLengthSetter",
+        TestServlet5.SnippetAsyncIncludeContentLengthSetter.class);
+    addServlet(
+        context,
+        "/snippetIncludeContentLengthSetterTarget",
+        TestServlet5.SnippetIncludeContentLengthSetterTarget.class);
   }
 
   @Test
@@ -198,5 +213,48 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
         ExperimentalSnippetHolder.setSnippet("");
       }
     }
+  }
+
+  @Test
+  void includeLengthSettersOnlyPreserveAcceptedDeclarations() {
+    for (String setter : new String[] {"setHeader", "addHeader", "setIntHeader", "addIntHeader"}) {
+      String snippet = "<!-- snippet -->";
+      ExperimentalSnippetHolder.setSnippet(snippet);
+      try {
+        int declaredLength =
+            TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY.length() + snippet.length();
+        ServerEndpoint endpoint =
+            new ServerEndpoint(
+                "SNIPPET_INCLUDE_CONTENT_LENGTH_SETTER",
+                SNIPPET_INCLUDE_CONTENT_LENGTH_SETTER.rawPath()
+                    + "?setter="
+                    + setter
+                    + "&length="
+                    + declaredLength,
+                200,
+                "");
+        SplitHttpResponse splitResponse = client.execute(request(endpoint, "GET")).split();
+        int expectedLength = TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY.length();
+        if ("setHeader".equals(setter)) {
+          expectedLength += snippet.length();
+        }
+        AggregatedHttpResponse response = splitResponse.unsplit().aggregate().join();
+        assertThat(splitResponse.headers().join().status().code())
+            .as(response.contentUtf8())
+            .isEqualTo(200);
+        assertThat(splitResponse.headers().join().contentLength()).isEqualTo(expectedLength);
+        assertThat(response.contentUtf8()).isEqualTo(replacementBody(expectedLength));
+      } finally {
+        ExperimentalSnippetHolder.setSnippet("");
+      }
+    }
+  }
+
+  private static String replacementBody(int length) {
+    StringBuilder body = new StringBuilder(TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY);
+    while (body.length() < length) {
+      body.append('x');
+    }
+    return body.toString();
   }
 }

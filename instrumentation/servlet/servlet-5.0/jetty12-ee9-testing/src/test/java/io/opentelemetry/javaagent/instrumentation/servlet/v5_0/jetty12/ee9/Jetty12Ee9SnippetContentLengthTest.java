@@ -16,6 +16,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import io.opentelemetry.testing.internal.armeria.common.SplitHttpResponse;
 import jakarta.servlet.Servlet;
 import java.net.InetSocketAddress;
 import org.eclipse.jetty.ee9.servlet.ServletContextHandler;
@@ -31,6 +32,8 @@ class Jetty12Ee9SnippetContentLengthTest
   private static final ServerEndpoint SNIPPET_ASYNC_LENGTH_CLEAR =
       new ServerEndpoint(
           "SNIPPET_ASYNC_LENGTH_CLEAR", "snippetAsyncContentLength?length=clear", 200, "", false);
+  private static final ServerEndpoint SNIPPET_ASYNC_SAME_LENGTH_RESET =
+      new ServerEndpoint("SNIPPET_ASYNC_SAME_LENGTH_RESET", "snippetAsyncSameLengthReset", 200, "");
   private static final ServerEndpoint SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH =
       new ServerEndpoint(
           "SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH",
@@ -90,6 +93,9 @@ class Jetty12Ee9SnippetContentLengthTest
         context,
         "/snippetAsyncIncludeSplitHeadFixedLength",
         TestServlet5.SnippetAsyncIncludeSplitHeadFixedLength.class);
+    addServlet(context, "/snippetSameLengthReset", TestServlet5.SnippetSameLengthReset.class);
+    addServlet(
+        context, "/snippetAsyncSameLengthReset", TestServlet5.SnippetAsyncSameLengthReset.class);
     addServlet(
         context,
         "/snippetIncludeSplitHeadTarget",
@@ -126,6 +132,45 @@ class Jetty12Ee9SnippetContentLengthTest
     }
   }
 
+  @Test
+  void wrappedSameLengthContentLengthDeclarationPreservesReplacementLength() {
+    String snippet = "<!-- snippet -->";
+    String replacementBody = TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY;
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      ServerEndpoint endpoint =
+          new ServerEndpoint(
+              "SNIPPET_SAME_LENGTH_RESET",
+              "snippetSameLengthReset?contentLength="
+                  + (replacementBody.length() - snippet.length()),
+              200,
+              "");
+      SplitHttpResponse splitResponse = client.execute(request(endpoint, "GET")).split();
+      assertThat(splitResponse.headers().join().contentLength())
+          .isEqualTo(replacementBody.length());
+      assertThat(splitResponse.unsplit().aggregate().join().contentUtf8())
+          .isEqualTo(replacementBody);
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
+  void asyncRawSameLengthContentLengthDeclarationPreservesReplacementLength() {
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      SplitHttpResponse splitResponse =
+          client.execute(request(SNIPPET_ASYNC_SAME_LENGTH_RESET, "GET")).split();
+      int expectedLength = TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY.length() + snippet.length();
+      assertThat(splitResponse.headers().join().contentLength()).isEqualTo(expectedLength);
+      assertThat(splitResponse.unsplit().aggregate().join().contentUtf8())
+          .isEqualTo(replacementBody(expectedLength));
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
   private void assertAsyncContentLength(ServerEndpoint endpoint, boolean cleared) {
     String snippet = "<!-- snippet -->";
     ExperimentalSnippetHolder.setSnippet(snippet);
@@ -152,5 +197,13 @@ class Jetty12Ee9SnippetContentLengthTest
     } finally {
       ExperimentalSnippetHolder.setSnippet("");
     }
+  }
+
+  private static String replacementBody(int length) {
+    StringBuilder body = new StringBuilder(TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY);
+    while (body.length() < length) {
+      body.append('x');
+    }
+    return body.toString();
   }
 }

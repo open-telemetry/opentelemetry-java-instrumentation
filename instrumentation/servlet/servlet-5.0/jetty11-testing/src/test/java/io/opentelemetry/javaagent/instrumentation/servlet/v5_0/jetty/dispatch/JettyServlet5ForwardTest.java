@@ -44,6 +44,8 @@ class JettyServlet5ForwardTest extends JettyDispatchTest {
   private static final ServerEndpoint SNIPPET_ASYNC_LENGTH_CLEAR =
       new ServerEndpoint(
           "SNIPPET_ASYNC_LENGTH_CLEAR", "snippetAsyncContentLength?length=clear", 200, "", false);
+  private static final ServerEndpoint SNIPPET_ASYNC_SAME_LENGTH_RESET =
+      new ServerEndpoint("SNIPPET_ASYNC_SAME_LENGTH_RESET", "snippetAsyncSameLengthReset", 200, "");
   private static final ServerEndpoint SNIPPET_REJECTED_FORWARD =
       new ServerEndpoint("SNIPPET_REJECTED_FORWARD", "snippetRejectedForward", 200, "");
   private static final ServerEndpoint SNIPPET_WRITER_ACQUISITION_FAILURE =
@@ -87,6 +89,8 @@ class JettyServlet5ForwardTest extends JettyDispatchTest {
     addServlet(context, "/snippetCachedWriterTarget", TestServlet5.SnippetCachedWriterTarget.class);
     addServlet(context, "/snippetAsyncReset", TestServlet5.SnippetAsyncReset.class);
     addServlet(context, "/snippetSameLengthReset", TestServlet5.SnippetSameLengthReset.class);
+    addServlet(
+        context, "/snippetAsyncSameLengthReset", TestServlet5.SnippetAsyncSameLengthReset.class);
     addServlet(context, "/snippetAsyncContentLength", TestServlet5.SnippetAsyncContentLength.class);
     addServlet(
         context,
@@ -169,6 +173,22 @@ class JettyServlet5ForwardTest extends JettyDispatchTest {
   }
 
   @Test
+  void asyncRawSameLengthContentLengthDeclarationPreservesReplacementLength() {
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      SplitHttpResponse splitResponse =
+          client.execute(request(SNIPPET_ASYNC_SAME_LENGTH_RESET, "GET")).split();
+      int expectedLength = TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY.length() + snippet.length();
+      assertThat(splitResponse.headers().join().contentLength()).isEqualTo(expectedLength);
+      assertThat(splitResponse.unsplit().aggregate().join().contentUtf8())
+          .isEqualTo(replacementBody(expectedLength));
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
   void rejectedCommittedForwardRetainsInjectedMarker() {
     String snippet = "<!-- snippet -->";
     ExperimentalSnippetHolder.setSnippet(snippet);
@@ -207,5 +227,13 @@ class JettyServlet5ForwardTest extends JettyDispatchTest {
     } finally {
       ExperimentalSnippetHolder.setSnippet("");
     }
+  }
+
+  private static String replacementBody(int length) {
+    StringBuilder body = new StringBuilder(TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY);
+    while (body.length() < length) {
+      body.append('x');
+    }
+    return body.toString();
   }
 }

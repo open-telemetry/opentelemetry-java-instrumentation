@@ -158,20 +158,29 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   public void setHeader(String name, String value) {
     long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.setHeader(name, value);
-    reconcileContentLengthHeader(name, previousLength, parseContentLength(name, value));
+    reconcileContentLengthHeader(
+        name,
+        previousLength,
+        parseContentLength(name, value),
+        JettyContentLength.Setter.SET_HEADER);
   }
 
   @Override
   public void addHeader(String name, String value) {
     long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.addHeader(name, value);
-    reconcileContentLengthHeader(name, previousLength, parseContentLength(name, value));
+    reconcileContentLengthHeader(
+        name,
+        previousLength,
+        parseContentLength(name, value),
+        JettyContentLength.Setter.ADD_HEADER);
   }
 
-  private void reconcileContentLengthHeader(String name, long previousLength, long declaredLength) {
+  private void reconcileContentLengthHeader(
+      String name, long previousLength, long declaredLength, JettyContentLength.Setter setter) {
     if (isContentLengthHeader(name)) {
       reconcileContentLength(
-          previousLength, declaredLength, isJettyIncludeContentLengthHeader(name));
+          previousLength, declaredLength, setter, isJettyIncludeContentLengthHeader(name));
     }
   }
 
@@ -179,21 +188,23 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   public void setIntHeader(String name, int value) {
     long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.setIntHeader(name, value);
-    reconcileContentLengthHeader(name, previousLength, value);
+    reconcileContentLengthHeader(
+        name, previousLength, value, JettyContentLength.Setter.SET_INT_HEADER);
   }
 
   @Override
   public void addIntHeader(String name, int value) {
     long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.addIntHeader(name, value);
-    reconcileContentLengthHeader(name, previousLength, value);
+    reconcileContentLengthHeader(
+        name, previousLength, value, JettyContentLength.Setter.ADD_INT_HEADER);
   }
 
   @Override
   public void setContentLength(int len) {
     long previousLength = getContentLengthHeader();
     super.setContentLength(len);
-    reconcileContentLength(previousLength, len, false);
+    reconcileContentLength(previousLength, len, JettyContentLength.Setter.CONTENT_LENGTH, false);
   }
 
   @Nullable
@@ -218,7 +229,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     } else {
       setContentLengthLongHandler.invokeWithArguments(this, length);
     }
-    reconcileContentLength(previousLength, length, false);
+    reconcileContentLength(previousLength, length, JettyContentLength.Setter.CONTENT_LENGTH, false);
   }
 
   @Override
@@ -319,7 +330,10 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   }
 
   private void reconcileContentLength(
-      long previousLength, long declaredLength, boolean includePrefixedHeader) {
+      long previousLength,
+      long declaredLength,
+      JettyContentLength.Setter setter,
+      boolean includePrefixedHeader) {
     long contentLength = getContentLengthHeader();
     if (contentLength != Long.MIN_VALUE) {
       if (contentLength > 0
@@ -327,7 +341,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
           && injectionState.isContentLengthAdjusted()
           && injectionState.getContentLength() == contentLength
           && JettyContentLength.isContentLengthUpdateAllowed(
-              super.getResponse(), includePrefixedHeader)) {
+              super.getResponse(), setter, includePrefixedHeader)) {
         injectionState.setContentLength(contentLength);
       } else {
         recordContentLength(contentLength);

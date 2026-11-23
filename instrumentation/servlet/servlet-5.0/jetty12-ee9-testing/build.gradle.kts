@@ -10,7 +10,7 @@ dependencies {
   testImplementation(project(":instrumentation:servlet:servlet-5.0:testing"))
 
   library("org.eclipse.jetty.ee9:jetty-ee9-servlet:12.0.6")
-  latestDepTestLibrary("org.eclipse.jetty.ee9:jetty-ee9-servlet:12.+")
+  latestDepTestLibrary("org.eclipse.jetty.ee9:jetty-ee9-servlet:12.+") // see test suite below
 }
 
 otelJava {

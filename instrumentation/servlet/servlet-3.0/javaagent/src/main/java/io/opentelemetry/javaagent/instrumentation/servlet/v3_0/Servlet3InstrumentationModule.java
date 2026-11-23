@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncCont
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.response.JettyContentLengthInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.TomcatResponseFacadeInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.RequestDispatcherForwardInstrumentation;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
@@ -56,6 +57,7 @@ public class Servlet3InstrumentationModule extends InstrumentationModule {
             adviceClassName(".Servlet3OutputStreamWriteIntAdvice")),
         new ServletResponseResetInstrumentation(
             BASE_PACKAGE, adviceClassName(".Servlet3ResponseResetAdvice")),
+        new JettyContentLengthInstrumentation(adviceClassName(".Servlet3JettyContentLengthAdvice")),
         new RequestDispatcherForwardInstrumentation(
             BASE_PACKAGE, adviceClassName(".Servlet3RequestDispatcherForwardAdvice")),
         new HttpServletResponseInstrumentation(

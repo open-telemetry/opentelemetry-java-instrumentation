@@ -38,8 +38,20 @@ public class TestServlet5 {
       TestServlet5.class.getName() + ".cachedWriterResponse";
   private static final String ORIGINAL_RESPONSE_ATTRIBUTE =
       TestServlet5.class.getName() + ".originalResponse";
+  private static final String CONTENT_LENGTH_SETTER_ATTRIBUTE =
+      TestServlet5.class.getName() + ".contentLengthSetter";
+  private static final String CONTENT_LENGTH_VALUE_ATTRIBUTE =
+      TestServlet5.class.getName() + ".contentLengthValue";
   public static final String SNIPPET_RESET_REPLACEMENT_BODY =
       "replacement response body without any head tag";
+
+  private static String replacementBody(int length) {
+    StringBuilder body = new StringBuilder(SNIPPET_RESET_REPLACEMENT_BODY);
+    while (body.length() < length) {
+      body.append('x');
+    }
+    return body.toString();
+  }
 
   private static void setContentLength(HttpServletResponse response, String setter, int length) {
     switch (setter) {
@@ -219,6 +231,68 @@ public class TestServlet5 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
       resp.getOutputStream().write("ad>async response</head>".getBytes(UTF_8));
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncSameLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.getWriter().write("<head>");
+      AsyncContext context = req.startAsync();
+      HttpServletResponse rawResponse = (HttpServletResponse) context.getResponse();
+      int contentLength = Integer.parseInt(rawResponse.getHeader("Content-Length"));
+      rawResponse.setContentLength(contentLength);
+      rawResponse.resetBuffer();
+      rawResponse
+          .getWriter()
+          .write(replacementBody(Integer.parseInt(rawResponse.getHeader("Content-Length"))));
+      context.complete();
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeContentLengthSetter extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.getWriter().write("<head>");
+      req.setAttribute(CONTENT_LENGTH_SETTER_ATTRIBUTE, req.getParameter("setter"));
+      req.setAttribute(CONTENT_LENGTH_VALUE_ATTRIBUTE, req.getParameter("length"));
+      req.getRequestDispatcher("/snippetIncludeContentLengthSetterTarget").include(req, resp);
+      resp.resetBuffer();
+      int contentLength =
+          "setHeader".equals(req.getParameter("setter"))
+              ? Integer.parseInt(req.getParameter("length"))
+              : SNIPPET_RESET_REPLACEMENT_BODY.length();
+      resp.getWriter().write(replacementBody(contentLength));
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeContentLengthSetterTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      String setter = (String) req.getAttribute(CONTENT_LENGTH_SETTER_ATTRIBUTE);
+      String name = "org.eclipse.jetty.server.include.Content-Length";
+      String value = (String) req.getAttribute(CONTENT_LENGTH_VALUE_ATTRIBUTE);
+      switch (setter) {
+        case "setHeader":
+          resp.setHeader(name, value);
+          break;
+        case "addHeader":
+          resp.addHeader(name, value);
+          break;
+        case "setIntHeader":
+          resp.setIntHeader(name, Integer.parseInt(value));
+          break;
+        default:
+          resp.addIntHeader(name, Integer.parseInt(value));
+      }
     }
   }
 
