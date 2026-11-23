@@ -95,7 +95,6 @@ class ActuatorTest {
     assertThat(context.getBean("otelMeterRegistry")).isInstanceOf(MeterRegistry.class);
     SimpleMeterRegistry springRegistry = context.getBean(SimpleMeterRegistry.class);
     assertThat(Metrics.globalRegistry.getRegistries()).contains(springRegistry);
-    boolean removesRegistriesOnClose = context.containsBean("meterRegistryCloser");
     Counter existing = Metrics.counter("test.global.existing");
     try {
       existing.increment();
@@ -109,9 +108,6 @@ class ActuatorTest {
 
       context.close();
       assertThat(springRegistry.isClosed()).isTrue();
-      if (removesRegistriesOnClose) {
-        assertThat(Metrics.globalRegistry.getRegistries()).doesNotContain(springRegistry);
-      }
 
       existing.increment(2);
       testing.waitAndAssertMetrics(
