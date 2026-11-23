@@ -136,7 +136,8 @@ public abstract class AbstractRedissonAsyncClientTest {
     }
     try {
       // disable connection ping if it exists
-      Method method = singleServerConfig.getClass().getMethod("setPingConnectionInterval", int.class);
+      Method method =
+          singleServerConfig.getClass().getMethod("setPingConnectionInterval", int.class);
       method.setAccessible(true);
       method.invoke(singleServerConfig, 0);
     } catch (NoSuchMethodException ignored) {
