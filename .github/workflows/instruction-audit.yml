@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: write
       copilot-requests: write
-    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@4413f35ba7a260e316a056a722b89d850f998db4
+    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@662cc5ddeff3d0727913184d1d4be0c950c57e8c
     with:
       publish: ${{ inputs.publish }}
       otelbot_client_id: ${{ vars.OTELBOT_CLIENT_ID }}
