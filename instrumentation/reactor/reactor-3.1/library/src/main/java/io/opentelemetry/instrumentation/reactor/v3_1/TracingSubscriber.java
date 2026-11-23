@@ -78,10 +78,9 @@ public class TracingSubscriber<T> implements CoreSubscriber<T>, Scannable {
         storedContext == null
             && !explicitFallback
             && ContextPropagationOperator.isSubscriptionContextCaptureDisabled(ctx);
-    this.traceContext =
-        storedContext != null
-            ? storedContext
-            : captureDisabled ? io.opentelemetry.context.Context.root() : contextToPropagate;
+    io.opentelemetry.context.Context fallbackContext =
+        captureDisabled ? io.opentelemetry.context.Context.root() : contextToPropagate;
+    this.traceContext = storedContext != null ? storedContext : fallbackContext;
     this.hasContextToPropagate =
         storedContext != null
             || explicitFallback
