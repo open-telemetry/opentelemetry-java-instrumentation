@@ -19,7 +19,7 @@ class SpringBeanRouterTest extends AbstractSpringServerTest {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    options.setHasResponseCustomizer((endpoint) -> true);
+    options.setHasResponseCustomizer(endpoint -> true);
   }
 
   @Override

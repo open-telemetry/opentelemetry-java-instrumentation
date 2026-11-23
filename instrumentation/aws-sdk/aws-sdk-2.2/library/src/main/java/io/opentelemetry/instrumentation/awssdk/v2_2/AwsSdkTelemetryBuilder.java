@@ -107,7 +107,7 @@ public final class AwsSdkTelemetryBuilder {
    *
    * <p>This option is off by default. If enabled, the HTTP error code and the error message will be
    * captured and associated with the span. This provides detailed insights into errors on a
-   * per-request basis.
+   * per-request basis. The error message is the first 32 KB of the response body, decoded as UTF-8.
    */
   @CanIgnoreReturnValue
   public AwsSdkTelemetryBuilder setRecordIndividualHttpError(boolean recordIndividualHttpError) {

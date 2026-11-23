@@ -52,3 +52,7 @@ testing.suites {
     }
   }
 }
+
+tasks.check {
+  dependsOn(testing.suites)
+}

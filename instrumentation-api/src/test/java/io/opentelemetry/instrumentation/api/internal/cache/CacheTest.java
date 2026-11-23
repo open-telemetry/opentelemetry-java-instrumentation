@@ -117,22 +117,21 @@ class CacheTest {
       CountDownLatch started = new CountDownLatch(1);
       CountDownLatch completed = new CountDownLatch(1);
       Thread t1 =
-          new Thread(
-              () ->
-                  cache1.computeIfAbsent(
-                      "test",
-                      unused -> {
-                        started.countDown();
-                        try {
-                          if (!wait.await(20, SECONDS)) {
-                            throw new IllegalStateException("wait timed out");
-                          }
-                          return "value";
-                        } catch (InterruptedException e) {
-                          Thread.currentThread().interrupt();
-                          throw new IllegalStateException(e);
-                        }
-                      }));
+          new Thread(() ->
+              cache1.computeIfAbsent(
+                  "test",
+                  unused -> {
+                    started.countDown();
+                    try {
+                      if (!wait.await(20, SECONDS)) {
+                        throw new IllegalStateException("wait timed out");
+                      }
+                      return "value";
+                    } catch (InterruptedException e) {
+                      Thread.currentThread().interrupt();
+                      throw new IllegalStateException(e);
+                    }
+                  }));
       cleanup.deferCleanup(t1::interrupt);
       t1.start();
 
@@ -140,35 +139,34 @@ class CacheTest {
         throw new IllegalStateException("wait timed out");
       }
       Thread t2 =
-          new Thread(
-              () ->
-                  cache2.computeIfAbsent(
-                      "key",
-                      unused -> {
-                        // first clean keys so they could ge GCd
-                        for (State s : state) {
-                          s.key = null;
-                        }
-                        // trigger GC and wait for the key to be cleared
-                        for (State s : state) {
-                          try {
-                            GcUtils.awaitGc(s.keyRef, Duration.ofSeconds(10));
-                          } catch (InterruptedException e) {
-                            Thread.currentThread().interrupt();
-                            throw new IllegalStateException(e);
-                          } catch (TimeoutException e) {
-                            throw new IllegalStateException(e);
-                          }
-                        }
-                        // now trigger inline eviction of the cleared keys in cache1
-                        // note that currently inline eviction is disabled when inside
-                        // computeIfAbsent call to
-                        // trigger the deadlock modify AbstractWeakConcurrentMap.expungeStaleEntries
-                        // method
-                        cache2.get("test");
-                        completed.countDown();
-                        return "value";
-                      }));
+          new Thread(() ->
+              cache2.computeIfAbsent(
+                  "key",
+                  unused -> {
+                    // first clean keys so they could ge GCd
+                    for (State s : state) {
+                      s.key = null;
+                    }
+                    // trigger GC and wait for the key to be cleared
+                    for (State s : state) {
+                      try {
+                        GcUtils.awaitGc(s.keyRef, Duration.ofSeconds(10));
+                      } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        throw new IllegalStateException(e);
+                      } catch (TimeoutException e) {
+                        throw new IllegalStateException(e);
+                      }
+                    }
+                    // now trigger inline eviction of the cleared keys in cache1
+                    // note that currently inline eviction is disabled when inside
+                    // computeIfAbsent call to
+                    // trigger the deadlock modify AbstractWeakConcurrentMap.expungeStaleEntries
+                    // method
+                    cache2.get("test");
+                    completed.countDown();
+                    return "value";
+                  }));
       cleanup.deferCleanup(t2::interrupt);
       t2.start();
       // this wait will time out when t2 is blocked by t1

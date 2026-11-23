@@ -121,30 +121,27 @@ class RedissonBatchOptionsTest {
   }
 
   private void assertBatch(boolean atomic) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(atomic ? "MULTI SET" : "PIPELINE SET " + host + ":" + port)
-                        .hasKind(CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "redis"),
-                            equalTo(DB_OPERATION_NAME, atomic ? "MULTI SET" : "PIPELINE SET"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, 2),
-                            equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
-                            equalTo(SERVER_ADDRESS, atomic ? null : host),
-                            equalTo(SERVER_PORT, atomic ? null : port),
-                            equalTo(NETWORK_PEER_ADDRESS, atomic ? null : ip),
-                            equalTo(NETWORK_PEER_PORT, atomic ? null : port))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(atomic ? "MULTI SET" : "PIPELINE SET " + host + ":" + port)
+                .hasKind(CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "redis"),
+                    equalTo(DB_OPERATION_NAME, atomic ? "MULTI SET" : "PIPELINE SET"),
+                    equalTo(DB_OPERATION_BATCH_SIZE, 2),
+                    equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                    equalTo(SERVER_ADDRESS, atomic ? null : host),
+                    equalTo(SERVER_PORT, atomic ? null : port),
+                    equalTo(NETWORK_PEER_ADDRESS, atomic ? null : ip),
+                    equalTo(NETWORK_PEER_PORT, atomic ? null : port))));
   }
 
   private void deferShutdown(Runnable shutdown) {
-    cleanup.deferCleanup(
-        () -> {
-          shutdown.run();
-          // Wait for the batch trace and the single connection's QUIT trace before the next test.
-          testing.waitForTraces(2);
-        });
+    cleanup.deferCleanup(() -> {
+      shutdown.run();
+      // Wait for the batch trace and the single connection's QUIT trace before the next test.
+      testing.waitForTraces(2);
+    });
   }
 }

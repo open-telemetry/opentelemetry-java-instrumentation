@@ -68,16 +68,15 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
           assertThat(request.send().getStatus()).isEqualTo(200);
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("caller").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("request-callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("caller").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+            span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1)),
+            span ->
+                span.hasName("request-callback")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -141,14 +140,13 @@ public abstract class AbstractJettyClient9Test extends AbstractHttpClientTest<Re
     JettyClientListener jcl = new JettyClientListener();
     request.onRequestFailure(jcl);
     request.onResponseFailure(jcl);
-    request.send(
-        result -> {
-          if (jcl.failure != null) {
-            httpClientResult.complete(jcl.failure);
-            return;
-          }
-          httpClientResult.complete(result.getResponse().getStatus());
-        });
+    request.send(result -> {
+      if (jcl.failure != null) {
+        httpClientResult.complete(jcl.failure);
+        return;
+      }
+      httpClientResult.complete(result.getResponse().getStatus());
+    });
   }
 
   private static class JettyClientListener

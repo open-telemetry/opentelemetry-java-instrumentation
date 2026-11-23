@@ -73,12 +73,11 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("send testSdkSqs")
-                              .hasKind(SpanKind.PRODUCER)
-                              .hasNoParent()
-                              .hasTotalRecordedLinks(0)));
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName("send testSdkSqs")
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasNoParent()
+                          .hasTotalRecordedLinks(0)));
     }
   }
 

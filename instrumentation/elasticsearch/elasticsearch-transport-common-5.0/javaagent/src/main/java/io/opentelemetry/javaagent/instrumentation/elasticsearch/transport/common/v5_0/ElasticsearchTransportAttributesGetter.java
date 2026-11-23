@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.transport.common.v5_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import javax.annotation.Nullable;
 import org.elasticsearch.ElasticsearchException;
@@ -45,27 +45,26 @@ public class ElasticsearchTransportAttributesGetter
       @Nullable ActionResponse response,
       @Nullable Throwable error) {
     if (!(error instanceof ElasticsearchException)) {
-      return null;
+      return error == null ? null : error.getClass().getName();
     }
     // Elasticsearch wraps the failure that actually occurred, such as IndexNotFoundException, in a
     // generic wrapper such as RemoteTransportException. unwrapCause() peels off the classes that
     // Elasticsearch itself marks as wrappers, leaving the exception that identifies the failure.
     Throwable cause = ((ElasticsearchException) error).unwrapCause();
-    // Returning null lets DbClientAttributesExtractor fall back to the exception class name.
-    return cause != error ? cause.getClass().getName() : null;
+    return cause.getClass().getName();
   }
 
   @Override
   @Nullable
   public String getServerAddress(ElasticTransportRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
 
   @Override
   @Nullable
   public Integer getServerPort(ElasticTransportRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
   }
 }

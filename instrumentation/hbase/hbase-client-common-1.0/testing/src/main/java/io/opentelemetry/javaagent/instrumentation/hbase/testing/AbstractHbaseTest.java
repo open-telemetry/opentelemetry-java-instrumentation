@@ -172,17 +172,16 @@ public abstract class AbstractHbaseTest {
 
   private static GenericContainer<?> createHbaseContainer(String hostname) {
     return new GenericContainer<>(DockerImageName.parse("harisekhon/hbase:2.0"))
-        .withCreateContainerCmdModifier(
-            cmd ->
-                cmd.getHostConfig()
-                    .withPortBindings(
-                        new PortBinding(Ports.Binding.bindPort(2181), new ExposedPort(2181)),
-                        new PortBinding(Ports.Binding.bindPort(16000), new ExposedPort(16000)),
-                        new PortBinding(Ports.Binding.bindPort(16010), new ExposedPort(16010)),
-                        new PortBinding(Ports.Binding.bindPort(16020), new ExposedPort(16020)),
-                        new PortBinding(Ports.Binding.bindPort(16030), new ExposedPort(16030)),
-                        new PortBinding(Ports.Binding.bindPort(16201), new ExposedPort(16201)),
-                        new PortBinding(Ports.Binding.bindPort(16301), new ExposedPort(16301))))
+        .withCreateContainerCmdModifier(cmd ->
+            cmd.getHostConfig()
+                .withPortBindings(
+                    new PortBinding(Ports.Binding.bindPort(2181), new ExposedPort(2181)),
+                    new PortBinding(Ports.Binding.bindPort(16000), new ExposedPort(16000)),
+                    new PortBinding(Ports.Binding.bindPort(16010), new ExposedPort(16010)),
+                    new PortBinding(Ports.Binding.bindPort(16020), new ExposedPort(16020)),
+                    new PortBinding(Ports.Binding.bindPort(16030), new ExposedPort(16030)),
+                    new PortBinding(Ports.Binding.bindPort(16201), new ExposedPort(16201)),
+                    new PortBinding(Ports.Binding.bindPort(16301), new ExposedPort(16301))))
         .withExposedPorts(2181, 16000, 16010, 16020, 16030, 16201, 16301)
         .withStartupTimeout(Duration.ofMinutes(2))
         .withCreateContainerCmdModifier(cmd -> cmd.withHostName(hostname))
@@ -332,52 +331,45 @@ public abstract class AbstractHbaseTest {
 
     String timeoutSpanExceptionType = getTimeoutSpanExceptionType().getName();
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      span.hasName(GET + " " + TABLE_NAME.getQualifierAsString())
-                          .hasKind(SpanKind.CLIENT)
-                          .hasStatus(StatusData.error())
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, DB_SYSTEM_VALUE),
-                              equalTo(DB_OPERATION_NAME, GET),
-                              equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()),
-                              equalTo(DB_COLLECTION_NAME, TABLE_NAME.getQualifierAsString()),
-                              equalTo(SERVER_ADDRESS, serverTarget),
-                              equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
-                              equalTo(
-                                  NETWORK_PEER_PORT,
-                                  networkPeerAddress == null
-                                      ? null
-                                      : Long.valueOf(REGION_SERVER_PORT)),
-                              equalTo(ERROR_TYPE, timeoutSpanExceptionType));
-                      if (emitExceptionAsSpanEvents()) {
-                        span.hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
-                                        satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE, AbstractAssert::isNotNull)));
-                      } else {
-                        span.hasEventsSatisfyingExactly();
-                      }
-                    }));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              span.hasName(GET + " " + TABLE_NAME.getQualifierAsString())
+                  .hasKind(SpanKind.CLIENT)
+                  .hasStatus(StatusData.error())
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(DB_SYSTEM_NAME, DB_SYSTEM_VALUE),
+                      equalTo(DB_OPERATION_NAME, GET),
+                      equalTo(DB_NAMESPACE, TABLE_NAME.getNamespaceAsString()),
+                      equalTo(DB_COLLECTION_NAME, TABLE_NAME.getQualifierAsString()),
+                      equalTo(SERVER_ADDRESS, serverTarget),
+                      equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                      equalTo(
+                          NETWORK_PEER_PORT,
+                          networkPeerAddress == null ? null : Long.valueOf(REGION_SERVER_PORT)),
+                      equalTo(ERROR_TYPE, timeoutSpanExceptionType));
+              if (emitExceptionAsSpanEvents()) {
+                span.hasEventsSatisfyingExactly(event ->
+                    event
+                        .hasName("exception")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
+                            satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
+                            satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull)));
+              } else {
+                span.hasEventsSatisfyingExactly();
+              }
+            }));
 
     if (emitExceptionAsLogs()) {
       testing()
-          .waitAndAssertLogRecords(
-              logRecord ->
-                  logRecord
-                      .hasSeverity(Severity.WARN)
-                      .hasEventName("db.client.operation.exception")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
-                          satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
-                          satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull)));
+          .waitAndAssertLogRecords(logRecord ->
+              logRecord
+                  .hasSeverity(Severity.WARN)
+                  .hasEventName("db.client.operation.exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(EXCEPTION_TYPE, timeoutSpanExceptionType),
+                      satisfies(EXCEPTION_MESSAGE, AbstractAssert::isNotNull),
+                      satisfies(EXCEPTION_STACKTRACE, AbstractAssert::isNotNull)));
     }
   }
 
@@ -607,20 +599,15 @@ public abstract class AbstractHbaseTest {
       table.get(new Get(Bytes.toBytes(ROW_1)));
     }
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.satisfies(
-                            spanData -> {
-                              assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
-                                  .isEqualTo(networkPeerAddress);
-                              assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
-                                  .isEqualTo(
-                                      networkPeerAddress == null
-                                          ? null
-                                          : Long.valueOf(REGION_SERVER_PORT));
-                            })));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.satisfies(spanData -> {
+                  assertThat(spanData.getAttributes().get(NETWORK_PEER_ADDRESS))
+                      .isEqualTo(networkPeerAddress);
+                  assertThat(spanData.getAttributes().get(NETWORK_PEER_PORT))
+                      .isEqualTo(
+                          networkPeerAddress == null ? null : Long.valueOf(REGION_SERVER_PORT));
+                })));
     if (reportsNetworkPeerAddress()) {
       assertDurationMetric(
           testing(),
@@ -673,21 +660,20 @@ public abstract class AbstractHbaseTest {
       spanName = operation + " " + expectedServerTarget;
     }
     return trace ->
-        trace.hasSpansSatisfyingExactly(
-            span ->
-                span.hasName(spanName)
-                    .hasKind(SpanKind.CLIENT)
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, DB_SYSTEM_VALUE),
-                        equalTo(DB_OPERATION_NAME, operation),
-                        equalTo(DB_NAMESPACE, dbNamespace(table, hasTable)),
-                        equalTo(DB_COLLECTION_NAME, dbCollectionName(table, hasTable)),
-                        equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
-                        equalTo(SERVER_ADDRESS, expectedServerTarget),
-                        equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
-                        equalTo(
-                            NETWORK_PEER_PORT,
-                            networkPeerAddress == null ? null : Long.valueOf(port))));
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(spanName)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, DB_SYSTEM_VALUE),
+                    equalTo(DB_OPERATION_NAME, operation),
+                    equalTo(DB_NAMESPACE, dbNamespace(table, hasTable)),
+                    equalTo(DB_COLLECTION_NAME, dbCollectionName(table, hasTable)),
+                    equalTo(DB_OPERATION_BATCH_SIZE, batchSize),
+                    equalTo(SERVER_ADDRESS, expectedServerTarget),
+                    equalTo(NETWORK_PEER_ADDRESS, networkPeerAddress),
+                    equalTo(
+                        NETWORK_PEER_PORT,
+                        networkPeerAddress == null ? null : Long.valueOf(port))));
   }
 
   protected boolean reportsNetworkPeerAddress() {

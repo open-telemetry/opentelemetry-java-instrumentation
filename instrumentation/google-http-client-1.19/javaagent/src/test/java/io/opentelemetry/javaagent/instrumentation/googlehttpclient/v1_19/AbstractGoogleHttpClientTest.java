@@ -72,11 +72,10 @@ abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpR
     // GenericData::putAll method converts all known http headers to List<String>
     // and lowercase all other headers
     ClassInfo ci = request.getHeaders().getClassInfo();
-    headers.forEach(
-        (name, value) ->
-            request
-                .getHeaders()
-                .put(name, ci.getFieldInfo(name) != null ? value : value.toLowerCase(Locale.ROOT)));
+    headers.forEach((name, value) ->
+        request
+            .getHeaders()
+            .put(name, ci.getFieldInfo(name) != null ? value : value.toLowerCase(Locale.ROOT)));
 
     request.setThrowExceptionOnExecuteError(false);
     return request;
@@ -116,14 +115,13 @@ abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpR
                 equalTo(ERROR_TYPE, "500"),
                 equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(attributes),
-                span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasKind(SpanKind.CLIENT)
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(attributes),
+            span -> span.hasKind(SpanKind.SERVER).hasParent(trace.getSpan(0))));
   }
 
   @Override
@@ -140,12 +138,11 @@ abstract class AbstractGoogleHttpClientTest extends AbstractHttpClientTest<HttpR
     // can only use supported method
     optionsBuilder.disableTestNonStandardHttpMethod();
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NETWORK_PROTOCOL_VERSION);
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(uri -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      return attributes;
+    });
   }
 }

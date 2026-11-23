@@ -63,14 +63,13 @@ class SpringConfigPropertiesTest {
             "otel.exporter.otlp.enabled=true",
             "otel.exporter.otlp.timeout=1s",
             "otel.exporter.otlp.compression=gzip")
-        .run(
-            context -> {
-              ConfigProperties config = getConfig(context);
-              assertThat(config.getString("otel.exporter.otlp.compression")).isEqualTo("gzip");
-              assertThat(config.getBoolean("otel.exporter.otlp.enabled")).isTrue();
-              assertThat(config.getDuration("otel.exporter.otlp.timeout"))
-                  .isEqualByComparingTo(Duration.ofSeconds(1));
-            });
+        .run(context -> {
+          ConfigProperties config = getConfig(context);
+          assertThat(config.getString("otel.exporter.otlp.compression")).isEqualTo("gzip");
+          assertThat(config.getBoolean("otel.exporter.otlp.enabled")).isTrue();
+          assertThat(config.getDuration("otel.exporter.otlp.timeout"))
+              .isEqualByComparingTo(Duration.ofSeconds(1));
+        });
   }
 
   @ParameterizedTest
@@ -79,10 +78,9 @@ class SpringConfigPropertiesTest {
   void mapFlatHeaders(String key) {
     this.contextRunner
         .withSystemProperties(key + "=a=1,b=2")
-        .run(
-            context ->
-                assertThat(getConfig(context).getMap(key))
-                    .containsExactly(entry("a", "1"), entry("b", "2")));
+        .run(context ->
+            assertThat(getConfig(context).getMap(key))
+                .containsExactly(entry("a", "1"), entry("b", "2")));
   }
 
   @ParameterizedTest
@@ -92,10 +90,9 @@ class SpringConfigPropertiesTest {
     this.contextRunner
         .withSystemProperties(key + "=a=1,b=2")
         .withBean(OpenTelemetry.class, OpenTelemetry::noop)
-        .run(
-            context -> {
-              // don't crash if OpenTelemetry bean is provided
-            });
+        .run(context -> {
+          // don't crash if OpenTelemetry bean is provided
+        });
   }
 
   @ParameterizedTest
@@ -104,10 +101,9 @@ class SpringConfigPropertiesTest {
   void mapObjectHeaders(String key) {
     this.contextRunner
         .withPropertyValues(key + ".a=1", key + ".b=2")
-        .run(
-            context ->
-                assertThat(getConfig(context).getMap(key))
-                    .containsExactly(entry("a", "1"), entry("b", "2")));
+        .run(context ->
+            assertThat(getConfig(context).getMap(key))
+                .containsExactly(entry("a", "1"), entry("b", "2")));
   }
 
   static Stream<Arguments> listProperties() {
@@ -132,10 +128,9 @@ class SpringConfigPropertiesTest {
     new ApplicationContextRunner()
         .withConfiguration(AutoConfigurations.of(OpenTelemetryAutoConfiguration.class))
         .withInitializer(new ConfigDataApplicationContextInitializer())
-        .run(
-            context ->
-                assertThat(getConfig(context).getList(key))
-                    .containsExactlyInAnyOrderElementsOf(expected));
+        .run(context ->
+            assertThat(getConfig(context).getList(key))
+                .containsExactlyInAnyOrderElementsOf(expected));
   }
 
   @Test
@@ -146,23 +141,22 @@ class SpringConfigPropertiesTest {
             "otel.resource.attributes.environment=dev",
             "otel.resource.attributes.xyz=foo",
             "otel.resource.attributes.service.instance.id=id-example")
-        .run(
-            context -> {
-              Map<String, String> fallback = new HashMap<>();
-              fallback.put("fallback", "fallbackVal");
-              fallback.put("otel.resource.attributes", "foo=fallback");
+        .run(context -> {
+          Map<String, String> fallback = new HashMap<>();
+          fallback.put("fallback", "fallbackVal");
+          fallback.put("otel.resource.attributes", "foo=fallback");
 
-              SpringConfigProperties config = getConfig(context, fallback);
+          SpringConfigProperties config = getConfig(context, fallback);
 
-              assertThat(config.getMap("otel.resource.attributes"))
-                  .contains(
-                      entry("environment", "dev"),
-                      entry("xyz", "foo"),
-                      entry("service.instance.id", "id-example"),
-                      entry("foo", "fallback"));
+          assertThat(config.getMap("otel.resource.attributes"))
+              .contains(
+                  entry("environment", "dev"),
+                  entry("xyz", "foo"),
+                  entry("service.instance.id", "id-example"),
+                  entry("foo", "fallback"));
 
-              assertThat(config.getString("fallback")).isEqualTo("fallbackVal");
-            });
+          assertThat(config.getString("fallback")).isEqualTo("fallbackVal");
+        });
   }
 
   static Stream<Arguments> propertyCachingTestCases() {
@@ -219,25 +213,24 @@ class SpringConfigPropertiesTest {
 
     this.contextRunner
         .withPropertyValues(property)
-        .run(
-            context -> {
-              Environment realEnvironment = context.getBean("environment", Environment.class);
-              Environment spyEnvironment = spy(realEnvironment);
+        .run(context -> {
+          Environment realEnvironment = context.getBean("environment", Environment.class);
+          Environment spyEnvironment = spy(realEnvironment);
 
-              SpringConfigProperties config =
-                  new SpringConfigProperties(
-                      spyEnvironment,
-                      context.getBean(OtlpExporterProperties.class),
-                      context.getBean(OtelResourceProperties.class),
-                      context.getBean(OtelSpringProperties.class),
-                      DefaultConfigProperties.createFromMap(emptyMap()));
+          SpringConfigProperties config =
+              new SpringConfigProperties(
+                  spyEnvironment,
+                  context.getBean(OtlpExporterProperties.class),
+                  context.getBean(OtelResourceProperties.class),
+                  context.getBean(OtelSpringProperties.class),
+                  DefaultConfigProperties.createFromMap(emptyMap()));
 
-              for (int i = 0; i < 100; i++) {
-                assertion.accept(config);
-              }
+          for (int i = 0; i < 100; i++) {
+            assertion.accept(config);
+          }
 
-              verify(spyEnvironment, times(1)).getProperty(eq(propertyName), eq(typeClass));
-            });
+          verify(spyEnvironment, times(1)).getProperty(eq(propertyName), eq(typeClass));
+        });
   }
 
   @Test
@@ -246,33 +239,32 @@ class SpringConfigPropertiesTest {
     this.contextRunner
         .withSystemProperties(
             "otel.instrumentation.common.server-service-mapping=host1=serviceA,host2=serviceB")
-        .run(
-            context -> {
-              Environment realEnvironment = context.getBean("environment", Environment.class);
-              Environment spyEnvironment = spy(realEnvironment);
+        .run(context -> {
+          Environment realEnvironment = context.getBean("environment", Environment.class);
+          Environment spyEnvironment = spy(realEnvironment);
 
-              SpringConfigProperties config =
-                  new SpringConfigProperties(
-                      spyEnvironment,
-                      context.getBean(OtlpExporterProperties.class),
-                      context.getBean(OtelResourceProperties.class),
-                      context.getBean(OtelSpringProperties.class),
-                      DefaultConfigProperties.createFromMap(emptyMap()));
+          SpringConfigProperties config =
+              new SpringConfigProperties(
+                  spyEnvironment,
+                  context.getBean(OtlpExporterProperties.class),
+                  context.getBean(OtelResourceProperties.class),
+                  context.getBean(OtelSpringProperties.class),
+                  DefaultConfigProperties.createFromMap(emptyMap()));
 
-              for (int i = 0; i < 100; i++) {
-                Map<String, String> mapping =
-                    config.getMap("otel.instrumentation.common.server-service-mapping");
-                assertThat(mapping)
-                    .containsEntry("host1", "serviceA")
-                    .containsEntry("host2", "serviceB");
-              }
+          for (int i = 0; i < 100; i++) {
+            Map<String, String> mapping =
+                config.getMap("otel.instrumentation.common.server-service-mapping");
+            assertThat(mapping)
+                .containsEntry("host1", "serviceA")
+                .containsEntry("host2", "serviceB");
+          }
 
-              // Map properties call getProperty(name) which delegates to getProperty(name,
-              // String.class)
-              verify(spyEnvironment, times(1))
-                  .getProperty(
-                      eq("otel.instrumentation.common.server-service-mapping"), eq(String.class));
-            });
+          // Map properties call getProperty(name) which delegates to getProperty(name,
+          // String.class)
+          verify(spyEnvironment, times(1))
+              .getProperty(
+                  eq("otel.instrumentation.common.server-service-mapping"), eq(String.class));
+        });
   }
 
   private static ConfigProperties getConfig(AssertableApplicationContext context) {

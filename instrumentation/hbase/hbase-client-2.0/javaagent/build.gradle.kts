@@ -36,13 +36,20 @@ dependencies {
   latestDepTestLibrary("org.apache.hbase:hbase-client:2.4.+") // native on-by-default instrumentation after this version
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("shadedClientTest") {
-      dependencies {
-        implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
-        implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+testing.suites {
+  register<JvmTestSuite>("shadedClientTest") {
+    dependencies {
+      implementation("org.apache.hbase:hbase-shaded-client:${baseVersion("2.0.0").orLatest("2.4.+")}")
+      implementation(project(":instrumentation:hbase:hbase-client-common-1.0:testing"))
+    }
+  }
+
+  executions("test") {
+    register("ExceptionSignalLogs") {
+      filter {
+        includeTestsMatching("*HbaseClient20Test.testGetTimeout")
       }
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }
@@ -67,17 +74,6 @@ tasks {
   if (otelProps.denyUnsafe) {
     withType<Test>().configureEach {
       enabled = false
-    }
-  }
-}
-
-testing.suites {
-  executions("test") {
-    register("ExceptionSignalLogs") {
-      filter {
-        includeTestsMatching("*HbaseClient20Test.testGetTimeout")
-      }
-      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
     }
   }
 }

@@ -101,6 +101,7 @@ class SpringAiRequest {
     return value != null || defaultOptions == null ? value : defaultOptions.getTopP();
   }
 
+  // visible for testing
   static String providerName(String className) {
     String lowerClassName = className.toLowerCase(Locale.ROOT);
     if (lowerClassName.contains(".azure.openai.")

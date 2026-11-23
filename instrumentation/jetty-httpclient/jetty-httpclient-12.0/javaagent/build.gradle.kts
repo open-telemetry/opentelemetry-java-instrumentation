@@ -24,3 +24,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:jetty-httpclient:jetty-httpclient-12.0:testing"))
 }
+
+tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
+}

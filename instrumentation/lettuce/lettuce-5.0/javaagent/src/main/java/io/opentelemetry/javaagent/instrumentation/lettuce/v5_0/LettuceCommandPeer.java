@@ -9,36 +9,14 @@ import io.lettuce.core.protocol.AsyncCommand;
 import io.lettuce.core.protocol.DecoratedCommand;
 import io.lettuce.core.protocol.RedisCommand;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.Nullable;
 
 public final class LettuceCommandPeer {
-  @Nullable private static final Class<?> DOMAIN_SOCKET_ADDRESS_CLASS;
-  @Nullable private static final Method DOMAIN_SOCKET_ADDRESS_PATH_METHOD;
-
   private static final VirtualField<RedisCommand<?, ?, ?>, LettuceCommandPeer> COMMAND_PEER =
       VirtualField.find(RedisCommand.class, LettuceCommandPeer.class);
-
-  static {
-    Class<?> domainSocketAddressClass = null;
-    Method domainSocketAddressPathMethod = null;
-    try {
-      domainSocketAddressClass =
-          Class.forName(
-              "io.netty.channel.unix.DomainSocketAddress",
-              false,
-              LettuceCommandPeer.class.getClassLoader());
-      domainSocketAddressPathMethod = domainSocketAddressClass.getMethod("path");
-    } catch (ReflectiveOperationException | SecurityException | LinkageError ignored) {
-      // DomainSocketAddress is optional.
-    }
-    DOMAIN_SOCKET_ADDRESS_CLASS = domainSocketAddressClass;
-    DOMAIN_SOCKET_ADDRESS_PATH_METHOD = domainSocketAddressPathMethod;
-  }
 
   private final AtomicBoolean spanStarted = new AtomicBoolean();
   @Nullable private volatile SocketAddress address;
@@ -108,36 +86,6 @@ public final class LettuceCommandPeer {
               : null;
     }
     return null;
-  }
-
-  @Nullable
-  static String getNetworkPeerAddress(@Nullable SocketAddress peerAddress) {
-    if (peerAddress instanceof InetSocketAddress) {
-      InetSocketAddress inetPeerAddress = (InetSocketAddress) peerAddress;
-      return inetPeerAddress.isUnresolved() ? null : inetPeerAddress.getAddress().getHostAddress();
-    }
-    if (peerAddress != null && peerAddress.getClass() == DOMAIN_SOCKET_ADDRESS_CLASS) {
-      if (DOMAIN_SOCKET_ADDRESS_PATH_METHOD == null) {
-        return null;
-      }
-      try {
-        return (String) DOMAIN_SOCKET_ADDRESS_PATH_METHOD.invoke(peerAddress);
-      } catch (ReflectiveOperationException
-          | IllegalArgumentException
-          | ClassCastException ignored) {
-        return null;
-      }
-    }
-    return null;
-  }
-
-  @Nullable
-  static Integer getNetworkPeerPort(@Nullable SocketAddress peerAddress) {
-    if (!(peerAddress instanceof InetSocketAddress)) {
-      return null;
-    }
-    InetSocketAddress inetPeerAddress = (InetSocketAddress) peerAddress;
-    return inetPeerAddress.isUnresolved() ? null : inetPeerAddress.getPort();
   }
 
   private LettuceCommandPeer() {}

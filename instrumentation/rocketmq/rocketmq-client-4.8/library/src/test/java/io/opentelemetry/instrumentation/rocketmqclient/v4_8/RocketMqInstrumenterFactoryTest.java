@@ -60,20 +60,18 @@ class RocketMqInstrumenterFactoryTest {
     Context context = instrumenter.start(parentContext, request);
     instrumenter.end(context, request, null, null);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("send topic")
-                        .hasKind(PRODUCER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(
-                                stringKey("rocketmq.message.tag"),
-                                captureExperimentalSpanAttributes ? "tag" : null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("send topic")
+                .hasKind(PRODUCER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "topic"),
+                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                    equalTo(
+                        stringKey("rocketmq.message.tag"),
+                        captureExperimentalSpanAttributes ? "tag" : null))));
   }
 
   @Test
@@ -95,13 +93,11 @@ class RocketMqInstrumenterFactoryTest {
             instrumenter.start(Context.root(), singletonList(message), "consumer-group", null));
     instrumenter.end(consumerContext, response);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process topic")
-                        .hasKind(CONSUMER)
-                        .hasStatus(StatusData.error())
-                        .hasAttribute(ERROR_TYPE, ConsumeReturnType.TIME_OUT.name())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("process topic")
+                .hasKind(CONSUMER)
+                .hasStatus(StatusData.error())
+                .hasAttribute(ERROR_TYPE, ConsumeReturnType.TIME_OUT.name())));
   }
 }

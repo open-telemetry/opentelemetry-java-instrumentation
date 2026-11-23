@@ -206,6 +206,7 @@ final class JarAnalyzer implements ClassFileTransformer {
    * Process the {@code archiveUrl}, extracting metadata from it and emitting an event with the
    * content.
    */
+  // visible for testing
   static void processUrl(Logger logger, URL archiveUrl) {
     JarDetails jarDetails;
     try {

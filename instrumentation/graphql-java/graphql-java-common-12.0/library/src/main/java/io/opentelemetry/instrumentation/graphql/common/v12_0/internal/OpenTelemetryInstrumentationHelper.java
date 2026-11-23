@@ -111,16 +111,15 @@ public class OpenTelemetryInstrumentationHelper {
     Context context = instrumenter.start(parentContext, state);
     state.setContext(context);
 
-    return SimpleInstrumentationContext.whenCompleted(
-        (result, throwable) -> {
-          if (result != null) {
-            for (GraphQLError error : result.getErrors()) {
-              errorRecorder.record(context, error);
-            }
-          }
+    return SimpleInstrumentationContext.whenCompleted((result, throwable) -> {
+      if (result != null) {
+        for (GraphQLError error : result.getErrors()) {
+          errorRecorder.record(context, error);
+        }
+      }
 
-          instrumenter.end(context, state, result, throwable);
-        });
+      instrumenter.end(context, state, result, throwable);
+    });
   }
 
   public InstrumentationContext<ExecutionResult> beginExecuteOperation(

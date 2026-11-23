@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -78,7 +78,7 @@ public abstract class RedissonRequest {
    * uniformly exposed across supported Redisson versions.
    */
   public static RedissonRequest create(
-      @Nullable InetSocketAddress address,
+      @Nullable SocketAddress address,
       Object command,
       @Nullable Long databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
@@ -86,7 +86,7 @@ public abstract class RedissonRequest {
   }
 
   @Nullable
-  public abstract InetSocketAddress getAddress();
+  public abstract SocketAddress getAddress();
 
   public abstract Object getCommand();
 

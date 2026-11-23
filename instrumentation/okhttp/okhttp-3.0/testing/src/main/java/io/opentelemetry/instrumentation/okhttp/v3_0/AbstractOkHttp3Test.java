@@ -143,17 +143,14 @@ public abstract class AbstractOkHttp3Test extends AbstractHttpClientTest<Request
 
     assertThat(result.get()).isEqualTo(200);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-              span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-              span ->
-                  span.hasName("test-http-server")
-                      .hasKind(SpanKind.SERVER)
-                      .hasParent(trace.getSpan(1)),
-              span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+          span -> span.hasName("GET").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
+          span ->
+              span.hasName("test-http-server").hasKind(SpanKind.SERVER).hasParent(trace.getSpan(1)),
+          span -> span.hasName("child").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)));
+    });
   }
 
   private static class TestInterceptor implements Interceptor {

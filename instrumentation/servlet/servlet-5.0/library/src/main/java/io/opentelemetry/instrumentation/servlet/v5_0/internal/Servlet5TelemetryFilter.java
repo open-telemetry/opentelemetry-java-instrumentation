@@ -229,15 +229,14 @@ public final class Servlet5TelemetryFilter implements Filter {
     @Override
     public void start(Runnable runnable) {
       Context context = Context.current();
-      delegate.start(
-          () -> {
-            try (Scope ignored = context.makeCurrent()) {
-              runnable.run();
-            } catch (Throwable t) {
-              otelRequest.asyncException = t;
-              throw t;
-            }
-          });
+      delegate.start(() -> {
+        try (Scope ignored = context.makeCurrent()) {
+          runnable.run();
+        } catch (Throwable t) {
+          otelRequest.asyncException = t;
+          throw t;
+        }
+      });
     }
 
     @Override

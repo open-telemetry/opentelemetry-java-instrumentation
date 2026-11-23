@@ -52,18 +52,17 @@ class RedissonInstrumenterFactoryTest {
 
       assertThat(exporter.getFinishedSpanItems())
           .singleElement()
-          .satisfies(
-              span ->
-                  assertThat(span)
-                      .hasName("MULTI SET")
-                      .hasKind(SpanKind.CLIENT)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(DB_SYSTEM_NAME, "redis"),
-                          equalTo(DB_NAMESPACE, String.valueOf(databaseIndex)),
-                          equalTo(DB_OPERATION_NAME, "MULTI SET"),
-                          equalTo(DB_OPERATION_BATCH_SIZE, 2L),
-                          equalTo(DB_QUERY_TEXT, "SET first ?; SET second ?")));
+          .satisfies(span ->
+              assertThat(span)
+                  .hasName("MULTI SET")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(DB_SYSTEM_NAME, "redis"),
+                      equalTo(DB_NAMESPACE, String.valueOf(databaseIndex)),
+                      equalTo(DB_OPERATION_NAME, "MULTI SET"),
+                      equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                      equalTo(DB_QUERY_TEXT, "SET first ?; SET second ?")));
       assertThat(exporter.getFinishedSpanItems())
           .extracting(span -> span.getInstrumentationScopeInfo().getSchemaUrl())
           .containsExactly(DbSchemaUrls.SCHEMA_URL);

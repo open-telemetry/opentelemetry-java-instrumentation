@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0;
 
 import com.google.auto.value.AutoValue;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.TableName;
 
@@ -14,7 +14,7 @@ import org.apache.hadoop.hbase.TableName;
 public abstract class HbaseRequest {
 
   // Retries create a new Call/request, and each Call is sent through one connection.
-  @Nullable private volatile InetSocketAddress networkPeer;
+  @Nullable private volatile SocketAddress networkPeer;
 
   public static HbaseRequest create(
       @Nullable String operation,
@@ -24,7 +24,7 @@ public abstract class HbaseRequest {
     return new AutoValue_HbaseRequest(operation, tableName, serverTarget, operationBatchSize);
   }
 
-  public void setNetworkPeer(InetSocketAddress networkPeer) {
+  public void setNetworkPeer(SocketAddress networkPeer) {
     this.networkPeer = networkPeer;
   }
 
@@ -38,7 +38,7 @@ public abstract class HbaseRequest {
   public abstract String getServerTarget();
 
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress() {
+  public SocketAddress getNetworkPeerSocketAddress() {
     return networkPeer;
   }
 

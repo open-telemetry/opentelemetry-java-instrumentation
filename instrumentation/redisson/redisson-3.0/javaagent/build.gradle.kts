@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -31,6 +32,12 @@ dependencies {
 
 testing {
   suites {
+    unitTests {
+      dependencies {
+        implementation("org.redisson:redisson:${baseVersion("3.0.0").orLatest("3.16.+")}")
+      }
+    }
+
     // 3.6.5 is the last version where atomic mode is the seventh executeAsync argument.
     register<JvmTestSuite>("redisson365Test") {
       sources {
@@ -85,7 +92,7 @@ testing {
       }
     }
 
-    executions("test") {
+    executions("test", "unitTests") {
       configureEach {
         systemProperty("testLatestDeps", otelProps.testLatestDeps)
       }

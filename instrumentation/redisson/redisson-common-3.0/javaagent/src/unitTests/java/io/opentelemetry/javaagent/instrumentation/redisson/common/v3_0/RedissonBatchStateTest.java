@@ -110,30 +110,22 @@ class RedissonBatchStateTest {
     CountDownLatch decodingStarted = new CountDownLatch(1);
     CountDownLatch releaseDecoder = new CountDownLatch(1);
     when(codec.getValueDecoder().decode(any(), any()))
-        .thenAnswer(
-            invocation -> {
-              decodingStarted.countDown();
-              assertThat(releaseDecoder.await(10, SECONDS)).isTrue();
-              return "value";
-            });
+        .thenAnswer(invocation -> {
+          decodingStarted.countDown();
+          assertThat(releaseDecoder.await(10, SECONDS)).isTrue();
+          return "value";
+        });
 
     ExecutorService executor = Executors.newFixedThreadPool(2);
     Future<?> decoding =
-        executor.submit(
-            () ->
-                state.add(
-                    new Object(),
-                    new Object(),
-                    0,
-                    command,
-                    codec,
-                    new Object[] {mock(ByteBuf.class)}));
+        executor.submit(() ->
+            state.add(
+                new Object(), new Object(), 0, command, codec, new Object[] {mock(ByteBuf.class)}));
     try {
       assertThat(decodingStarted.await(10, SECONDS)).isTrue();
       Future<?> concurrentEnqueue =
-          executor.submit(
-              () ->
-                  state.add(new Object(), new Object(), 1, command, codec, new Object[] {"value"}));
+          executor.submit(() ->
+              state.add(new Object(), new Object(), 1, command, codec, new Object[] {"value"}));
       concurrentEnqueue.get(10, SECONDS);
     } finally {
       releaseDecoder.countDown();
@@ -154,24 +146,17 @@ class RedissonBatchStateTest {
     CountDownLatch decodingStarted = new CountDownLatch(1);
     CountDownLatch releaseDecoder = new CountDownLatch(1);
     when(codec.getValueDecoder().decode(any(), any()))
-        .thenAnswer(
-            invocation -> {
-              decodingStarted.countDown();
-              assertThat(releaseDecoder.await(10, SECONDS)).isTrue();
-              return "value";
-            });
+        .thenAnswer(invocation -> {
+          decodingStarted.countDown();
+          assertThat(releaseDecoder.await(10, SECONDS)).isTrue();
+          return "value";
+        });
 
     ExecutorService executor = Executors.newSingleThreadExecutor();
     Future<?> decoding =
-        executor.submit(
-            () ->
-                state.add(
-                    new Object(),
-                    new Object(),
-                    0,
-                    command,
-                    codec,
-                    new Object[] {mock(ByteBuf.class)}));
+        executor.submit(() ->
+            state.add(
+                new Object(), new Object(), 0, command, codec, new Object[] {mock(ByteBuf.class)}));
     try {
       assertThat(decodingStarted.await(10, SECONDS)).isTrue();
       state.add(new Object(), new Object(), 1, command, codec, new Object[] {"later"});

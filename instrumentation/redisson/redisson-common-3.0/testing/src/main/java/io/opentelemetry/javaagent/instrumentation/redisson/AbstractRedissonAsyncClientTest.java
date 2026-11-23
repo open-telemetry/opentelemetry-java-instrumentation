@@ -172,19 +172,18 @@ public abstract class AbstractRedissonAsyncClientTest {
     testing.waitAndAssertSortedTraces(
         orderByRootSpanKind(SpanKind.INTERNAL, SpanKind.CLIENT),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"))));
   }
 
   @Test
@@ -200,30 +199,22 @@ public abstract class AbstractRedissonAsyncClientTest {
         .hasCauseInstanceOf(RedisException.class);
 
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasKind(CLIENT)
-                      .hasAttributesSatisfying(
-                          attributes ->
-                              assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "CUSTOM")));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+      trace.hasSpansSatisfyingExactly(span ->
+          span.hasKind(CLIENT)
+              .hasAttributesSatisfying(attributes ->
+                  assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "CUSTOM")));
+    });
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributesSatisfying(
-                                    attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(ERROR_TYPE, "CUSTOM")))));
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfying(attributes ->
+                        assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, "CUSTOM"))));
   }
 
   @Test
@@ -233,13 +224,8 @@ public abstract class AbstractRedissonAsyncClientTest {
                 .execInContainer("redis-cli", "lpush", "async-wrong-type", "value")
                 .getExitCode())
         .isZero();
-    assertThatThrownBy(
-            () ->
-                redisson
-                    .<String>getBucket("async-wrong-type")
-                    .getAsync()
-                    .toCompletableFuture()
-                    .join())
+    assertThatThrownBy(() ->
+            redisson.<String>getBucket("async-wrong-type").getAsync().toCompletableFuture().join())
         .hasRootCauseInstanceOf(RedisException.class);
     assertErrorTypeOnSpanAndMetric("WRONGTYPE");
 
@@ -303,74 +289,63 @@ public abstract class AbstractRedissonAsyncClientTest {
             "parent",
             () -> {
               RFuture<Boolean> future = set.addAsync("s1");
-              return future.thenApply(
-                  res -> {
-                    assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {});
-                    return res;
-                  });
+              return future.thenApply(res -> {
+                assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                testing.runWithSpan("callback", () -> {});
+                return res;
+              });
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("SADD " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
-                            equalTo(DB_OPERATION_NAME, "SADD"))
-                        .hasParent(trace.getSpan(0)),
-                span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("SADD " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_QUERY_TEXT, "SADD set1 ?"),
+                        equalTo(DB_OPERATION_NAME, "SADD"))
+                    .hasParent(trace.getSpan(0)),
+            span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   private static void assertErrorTypeOnSpanAndMetric(String expectedErrorType) {
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace -> {
-          instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasKind(CLIENT)
-                      .hasAttributesSatisfying(
-                          attributes -> {
-                            if (expectedErrorType == null) {
-                              assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
-                            } else {
-                              assertThat(attributes.asMap())
-                                  .containsEntry(ERROR_TYPE, expectedErrorType);
-                            }
-                          }));
-        });
+    testing.waitAndAssertTraces(trace -> {
+      instrumentationName.set(trace.getSpan(0).getInstrumentationScopeInfo().getName());
+      trace.hasSpansSatisfyingExactly(span ->
+          span.hasKind(CLIENT)
+              .hasAttributesSatisfying(attributes -> {
+                if (expectedErrorType == null) {
+                  assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
+                } else {
+                  assertThat(attributes.asMap()).containsEntry(ERROR_TYPE, expectedErrorType);
+                }
+              }));
+    });
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(
-                                        attributes -> {
-                                          if (expectedErrorType == null) {
-                                            assertThat(attributes.asMap())
-                                                .doesNotContainKey(ERROR_TYPE);
-                                          } else {
-                                            assertThat(attributes.asMap())
-                                                .containsEntry(ERROR_TYPE, expectedErrorType);
-                                          }
-                                        }))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfying(attributes -> {
+                          if (expectedErrorType == null) {
+                            assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE);
+                          } else {
+                            assertThat(attributes.asMap())
+                                .containsEntry(ERROR_TYPE, expectedErrorType);
+                          }
+                        })));
     testing.clearData();
   }
 
@@ -389,10 +364,9 @@ public abstract class AbstractRedissonAsyncClientTest {
                     .toCompletableFuture());
     await()
         .atMost(Duration.ofSeconds(5))
-        .untilAsserted(
-            () ->
-                assertThat(redisServer.execInContainer("redis-cli", "client", "list").getStdout())
-                    .contains("cmd=blpop"));
+        .untilAsserted(() ->
+            assertThat(redisServer.execInContainer("redis-cli", "client", "list").getStdout())
+                .contains("cmd=blpop"));
 
     CompletableFuture<Object> cancelled =
         testing.runWithSpan(
@@ -465,11 +439,10 @@ public abstract class AbstractRedissonAsyncClientTest {
               batch.getBucket("batch2").setAsync("v2");
               RFuture<?> batchResultFuture = batch.executeAsync();
 
-              return batchResultFuture.whenComplete(
-                  (res, throwable) -> {
-                    assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    testing.runWithSpan("callback", () -> {});
-                  });
+              return batchResultFuture.whenComplete((res, throwable) -> {
+                assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                testing.runWithSpan("callback", () -> {});
+              });
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
@@ -492,19 +465,18 @@ public abstract class AbstractRedissonAsyncClientTest {
                             equalTo(DB_NAMESPACE, dbNamespace("0"))),
                 span -> span.hasName("callback").hasKind(INTERNAL).hasParent(trace.getSpan(0))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + address)
-                        .hasKind(CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_OPERATION_NAME, "GET"),
-                            equalTo(DB_QUERY_TEXT, "GET after-batch"))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("GET " + address)
+                    .hasKind(CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(DB_QUERY_TEXT, "GET after-batch"))));
   }
 
   // A callback attached to a queued atomic-batch command must inherit the parent trace context but
@@ -519,13 +491,12 @@ public abstract class AbstractRedissonAsyncClientTest {
           Arrays.stream(
                   Class.forName("org.redisson.client.protocol.CommandData")
                       .getDeclaredConstructors())
-              .anyMatch(
-                  constructor ->
-                      constructor.getParameterCount() > 0
-                          && constructor
-                              .getParameterTypes()[0]
-                              .getName()
-                              .equals("org.redisson.misc.RPromise"));
+              .anyMatch(constructor ->
+                  constructor.getParameterCount() > 0
+                      && constructor
+                          .getParameterTypes()[0]
+                          .getName()
+                          .equals("org.redisson.misc.RPromise"));
     } catch (ClassNotFoundException ignored) {
       Assumptions.abort();
       return;
@@ -548,52 +519,48 @@ public abstract class AbstractRedissonAsyncClientTest {
             "parent",
             () -> {
               RFuture<Void> commandFuture = batch.getBucket("batch1").setAsync("v1");
-              commandFuture.whenComplete(
-                  (unused, commandError) -> {
-                    RFuture<String> getFuture =
-                        redisson.<String>getBucket("callback-get").getAsync();
-                    getFuture.whenComplete(
-                        (value, getError) -> {
-                          if (getError != null) {
-                            callbackResult.completeExceptionally(getError);
-                          } else {
-                            callbackResult.complete(value);
-                          }
-                        });
-                  });
+              commandFuture.whenComplete((unused, commandError) -> {
+                RFuture<String> getFuture = redisson.<String>getBucket("callback-get").getAsync();
+                getFuture.whenComplete((value, getError) -> {
+                  if (getError != null) {
+                    callbackResult.completeExceptionally(getError);
+                  } else {
+                    callbackResult.complete(value);
+                  }
+                });
+              });
               batch.getBucket("batch2").setAsync("v2");
               batch.executeAsync();
               return callbackResult;
             });
     assertThat(result.toCompletableFuture()).succeedsWithin(TIMEOUT);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("MULTI SET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_OPERATION_NAME, "MULTI SET"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, 2L),
-                            equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
-                            equalTo(DB_NAMESPACE, dbNamespace("0"))),
-                span ->
-                    span.hasName("GET " + address)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_NAMESPACE, dbNamespace("0")),
-                            equalTo(DB_OPERATION_NAME, "GET"),
-                            equalTo(DB_QUERY_TEXT, "GET callback-get"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("MULTI SET")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_OPERATION_NAME, "MULTI SET"),
+                        equalTo(DB_OPERATION_BATCH_SIZE, 2L),
+                        equalTo(DB_QUERY_TEXT, "SET batch1 ?; SET batch2 ?"),
+                        equalTo(DB_NAMESPACE, dbNamespace("0"))),
+            span ->
+                span.hasName("GET " + address)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_NAMESPACE, dbNamespace("0")),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(DB_QUERY_TEXT, "GET callback-get"))));
   }
 
   protected boolean useRedisProtocol() {

@@ -1,41 +1,38 @@
-# Understanding the javaagent instrumentation testing components
+# Javaagent instrumentation testing
 
-Javaagent instrumentation tests are run using a fully shaded `-javaagent` in order to perform
-the same bytecode instrumentation as when the agent is run against a normal app.
+Javaagent instrumentation tests use a fully shaded `-javaagent` to exercise the same bytecode
+instrumentation as when the agent runs against a normal application.
 
-There are a few key components that make this possible, described below.
+## Testing components
 
-## gradle/instrumentation.gradle
+- `:testing:javaagent-test-exporters` contains in-memory exporters and helpers loaded by the agent.
+- `:testing:javaagent-for-testing` is the testing agent distribution that embeds those exporters.
+- `:testing:testing-common` provides shared test APIs and handles the agent class-loader boundary
+  for captured telemetry.
+- `:testing:testing-common:with-shaded-dependencies` is a dependency wrapper for IDEs and
+  Gradle substitution. `:testing:shaded-dependencies` produces the relocated third-party dependency
+  bundle consumed by that wrapper and the testing support.
 
-- shades the instrumentation
-- adds jvm args to the test configuration
-  - -javaagent:[agent for testing]
-  - -Dotel.javaagent.experimental.initializer.jar=[shaded instrumentation jar]
-
-The `otel.javaagent.experimental.initializer.jar` property is used to load the shaded instrumentation jar into the
-`AgentClassLoader`, so that the javaagent jar doesn't need to be re-built each time.
-
-## :testing:agent-exporter
-
-This contains the span and metric exporters that are used.
-
-These are in-memory exporters, so that the tests can verify the spans and metrics being exported.
 Metric exporters use delta-preferred aggregation temporality by default.
 
-These exporters and the in-memory data live in the `AgentClassLoader`, so tests must access them
-using reflection. To simplify this, they store the in-memory data using the OTLP protobuf objects,
-so that they can be serialized into byte arrays inside the `AgentClassLoader`, then passed back
-to the tests and deserialized inside their class loader where they can be verified. The
-`:testing-common` module (described below) hides this complexity from instrumentation test authors.
+The exporters and their captured telemetry live in the `AgentClassLoader`. They store telemetry as
+OTLP protobuf messages, which can be serialized into byte arrays and passed across the class-loader
+boundary. `:testing:testing-common` accesses the exporters using reflection and deserializes the
+messages in the test class loader, hiding this complexity from test authors.
 
-## :agent-for-testing
+## Running javaagent tests
 
-This is a custom distro of the javaagent that embeds the `:testing:agent-exporter`.
+The repository's `otel.javaagent-testing` convention plugin shades the instrumentation and
+configures the test JVM arguments:
 
-## :testing-common
+```text
+-javaagent:<javaagent-for-testing.jar>
+-Dotel.javaagent.experimental.initializer.jar=<shaded-instrumentation.jar>
+```
 
-This module provides methods to help verify the span and metric data produced by the
-instrumentation, hiding the complexity of accessing the in-memory exporters that live in the
-`AgentClassLoader`.
-The library and Spring starter test exporters also use delta-preferred aggregation temporality by
-default.
+The initializer JAR contains the instrumentation and its dependencies, shaded with the same package
+relocations as the agent. Loading it into the `AgentClassLoader` lets tests run instrumentation
+changes without rebuilding the testing-agent distribution.
+
+See the [javaagent testing convention plugin](../../conventions/src/main/kotlin/io.opentelemetry.instrumentation.javaagent-testing.gradle.kts)
+for the shading and JVM argument wiring.

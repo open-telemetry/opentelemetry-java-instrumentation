@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -52,45 +54,50 @@ dependencies {
   testInstrumentation(project(":instrumentation:pekko:pekko-actor-1.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("latestDepTest") {
-      dependencies {
-        implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
+
+testing.suites {
+  register<JvmTestSuite>("latestDepTest") {
+    dependencies {
+      implementation("com.typesafe.play:play-ahc-ws-standalone_2.13:latest.release")
+    }
+  }
+
+  register<JvmTestSuite>("play3Test") {
+    if (testJavaVersion.isJava8) {
+      tasks.named(sources.compileJavaTaskName) {
+        enabled = false
       }
     }
 
-    register<JvmTestSuite>("play3Test") {
-      dependencies {
-        val version = baseVersion("3.0.0").orLatest()
-        implementation("org.playframework:play-ahc-ws-standalone_3:$version")
+    dependencies {
+      val version = baseVersion("3.0.0").orLatest()
+      implementation("org.playframework:play-ahc-ws-standalone_3:$version")
+    }
+  }
+
+  executions("test") {
+    configureEach {
+      if (otelProps.testLatestDeps) {
+        enabled = false
+      }
+    }
+  }
+  executions("latestDepTest") {
+    configureEach {
+      enabled = otelProps.testLatestDeps
+    }
+  }
+  executions("play3Test") {
+    configureEach {
+      if (testJavaVersion.isJava8) {
+        enabled = false
       }
     }
   }
 }
 
 tasks {
-  if (otelProps.testLatestDeps) {
-    // disable regular test running and compiling tasks when latest dep test task is run
-    named("test") {
-      enabled = false
-    }
-  }
-
-  named("latestDepTest") {
-    enabled = otelProps.testLatestDeps
-  }
-
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (testJavaVersion.isJava8) {
-    named("play3Test") {
-      enabled = false
-    }
-    named("compilePlay3TestJava") {
-      enabled = false
-    }
-  }
-
   check {
     dependsOn(testing.suites)
   }

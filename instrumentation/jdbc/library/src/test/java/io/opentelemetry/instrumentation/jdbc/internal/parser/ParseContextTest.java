@@ -7,7 +7,7 @@ package io.opentelemetry.instrumentation.jdbc.internal.parser;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import org.junit.jupiter.api.Test;
 
@@ -31,7 +31,7 @@ class ParseContextTest {
     context.host("[2001:db8::1]");
 
     assertThat(context.toDbInfo().getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("2001:db8::1", null));
+        .isEqualTo(ServerTarget.create("2001:db8::1", null));
   }
 
   @Test
@@ -42,7 +42,7 @@ class ParseContextTest {
     context.host("pg.host");
 
     assertThat(context.toDbInfo().getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", null));
+        .isEqualTo(ServerTarget.create("pg.host", null));
   }
 
   @Test
@@ -53,7 +53,7 @@ class ParseContextTest {
     context.host("pg.host");
 
     assertThat(context.toDbInfo().getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("pg.host", 5433));
+        .isEqualTo(ServerTarget.create("pg.host", 5433));
   }
 
   @Test
@@ -63,7 +63,7 @@ class ParseContextTest {
     context.host("db.host");
 
     assertThat(context.toDbInfo().getConfiguredServerTarget())
-        .isEqualTo(DbServerTarget.create("db.host", 5432));
+        .isEqualTo(ServerTarget.create("db.host", 5432));
   }
 
   @Test
@@ -76,13 +76,13 @@ class ParseContextTest {
 
     DbInfo info = context.toDbInfo();
 
-    assertThat(info.getConfiguredServerTarget()).isEqualTo(DbServerTarget.create("pg.host", 5433));
+    assertThat(info.getConfiguredServerTarget()).isEqualTo(ServerTarget.create("pg.host", 5433));
   }
 
   @Test
   void resolvedGroupIsNotOverwrittenBySingleEndpoint() {
     ParseContext context = ParseContext.of("postgresql", null);
-    DbServerTarget target = DbServerTarget.create("h1:5432,h2:5433", null);
+    ServerTarget target = ServerTarget.create("h1:5432,h2:5433", null);
     context.disableSingleServerFallback();
     context.resolveConfiguredServerTarget(target);
     context.host("h1");
@@ -94,7 +94,7 @@ class ParseContextTest {
   @Test
   void disablingFallbackPreservesResolvedTarget() {
     ParseContext context = ParseContext.of("postgresql", null);
-    DbServerTarget target = DbServerTarget.create("h1:5432,h2:5433", null);
+    ServerTarget target = ServerTarget.create("h1:5432,h2:5433", null);
     context.resolveConfiguredServerTarget(target);
     context.disableSingleServerFallback();
 
@@ -116,7 +116,7 @@ class ParseContextTest {
     ParseContext context = ParseContext.of("postgresql", null);
     context.host("h1");
     context.port(5432);
-    context.resolveConfiguredServerTarget(DbServerTarget.create("h1:5432,h2:5433", null));
+    context.resolveConfiguredServerTarget(ServerTarget.create("h1:5432,h2:5433", null));
     context.resolveConfiguredServerTarget(null);
 
     assertThat(context.toDbInfo().getConfiguredServerTarget()).isNull();

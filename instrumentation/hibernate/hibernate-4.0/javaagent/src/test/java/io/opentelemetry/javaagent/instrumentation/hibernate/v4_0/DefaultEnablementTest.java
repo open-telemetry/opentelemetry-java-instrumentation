@@ -27,12 +27,11 @@ class DefaultEnablementTest extends AbstractHibernateTest {
         });
 
     if (INSTRUMENTATION_ENABLED) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span -> span.hasName("Session.get " + Value.class.getName()),
-                  span -> span.hasName("select Value")));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"),
+              span -> span.hasName("Session.get " + Value.class.getName()),
+              span -> span.hasName("select Value")));
     } else {
       testing.waitAndAssertTraces(
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));

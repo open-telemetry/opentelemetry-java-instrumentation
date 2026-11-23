@@ -11,8 +11,8 @@ import static io.opentelemetry.semconv.DbAttributes.DbSystemNameValues.POSTGRESQ
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.IBM_DB2;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.ORACLE_DB;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.vertx.sqlclient.SqlConnectOptions;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -20,20 +20,19 @@ import javax.annotation.Nullable;
 public final class VertxServerTarget {
 
   @Nullable
-  public static DbServerTarget from(
-      @Nullable SqlConnectOptions connectOptions, String dbSystemName) {
+  public static ServerTarget from(@Nullable SqlConnectOptions connectOptions, String dbSystemName) {
     if (connectOptions == null) {
       return null;
     }
     String host = connectOptions.getHost();
     if (host != null && host.startsWith("/")) {
-      return DbServerTarget.unixSocket(host);
+      return ServerTarget.unixSocket(host);
     }
-    return addEndpoint(DbServerTarget.builder(defaultPort(dbSystemName)), connectOptions).build();
+    return addEndpoint(ServerTarget.builder(defaultPort(dbSystemName)), connectOptions).build();
   }
 
   @Nullable
-  public static DbServerTarget from(
+  public static ServerTarget from(
       @Nullable List<? extends SqlConnectOptions> connectOptions, String dbSystemName) {
     if (connectOptions == null || connectOptions.isEmpty()) {
       return null;
@@ -42,7 +41,7 @@ public final class VertxServerTarget {
       return from(connectOptions.get(0), dbSystemName);
     }
 
-    DbServerTargetBuilder builder = DbServerTarget.builder(defaultPort(dbSystemName));
+    ServerTargetBuilder builder = ServerTarget.builder(defaultPort(dbSystemName));
     for (SqlConnectOptions options : connectOptions) {
       String host = options != null ? options.getHost() : null;
       if (host != null && host.startsWith("/")) {
@@ -53,8 +52,8 @@ public final class VertxServerTarget {
     return builder.build();
   }
 
-  private static DbServerTargetBuilder addEndpoint(
-      DbServerTargetBuilder builder, @Nullable SqlConnectOptions connectOptions) {
+  private static ServerTargetBuilder addEndpoint(
+      ServerTargetBuilder builder, @Nullable SqlConnectOptions connectOptions) {
     if (connectOptions == null) {
       return builder.addEndpoint(null, -1);
     }

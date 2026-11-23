@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcSocketAddressUtil;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.ParsedTarget;
 import java.net.SocketAddress;
@@ -22,6 +24,7 @@ public final class GrpcRequest {
   @Nullable private final String serverAddress;
   @Nullable private final Integer serverPort;
   @Nullable private volatile SocketAddress peerSocketAddress;
+  @Nullable private volatile SocketAddress localSocketAddress;
 
   @Nullable private volatile Long requestSize;
   @Nullable private volatile Long responseSize;
@@ -42,9 +45,9 @@ public final class GrpcRequest {
     ParsedTarget effective =
         parsedTarget != null ? parsedTarget : GrpcTargetParser.parseAuthority(authority);
     if (effective == null) {
-      return new GrpcRequest(method, null, null, null, null);
+      return new GrpcRequest(method, null, null, null, null, null);
     }
-    return new GrpcRequest(method, null, null, effective.getAddress(), effective.getPort());
+    return new GrpcRequest(method, null, null, null, effective.getAddress(), effective.getPort());
   }
 
   /**
@@ -53,18 +56,21 @@ public final class GrpcRequest {
    * @param method the gRPC method descriptor
    * @param metadata the request metadata
    * @param peerSocketAddress the peer socket address
+   * @param localSocketAddress the local socket address
    * @param authority the request authority
    */
   static GrpcRequest createServerRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
       @Nullable SocketAddress peerSocketAddress,
+      @Nullable SocketAddress localSocketAddress,
       @Nullable String authority) {
     ParsedTarget parsed = GrpcTargetParser.parseAuthority(authority);
     return new GrpcRequest(
         method,
         metadata,
         peerSocketAddress,
+        localSocketAddress,
         parsed != null ? parsed.getAddress() : null,
         parsed != null ? parsed.getPort() : null);
   }
@@ -73,13 +79,15 @@ public final class GrpcRequest {
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
       @Nullable SocketAddress peerSocketAddress,
+      @Nullable SocketAddress localSocketAddress,
       @Nullable String serverAddress,
       @Nullable Integer serverPort) {
     this.method = method;
     this.fullMethodName = method.getFullMethodName();
     this.originalFullMethodName = null;
     this.metadata = metadata;
-    this.peerSocketAddress = peerSocketAddress;
+    this.peerSocketAddress = GrpcSocketAddressUtil.normalize(peerSocketAddress);
+    this.localSocketAddress = GrpcSocketAddressUtil.normalize(localSocketAddress);
     this.serverAddress = serverAddress;
     this.serverPort = serverPort;
   }
@@ -142,11 +150,37 @@ public final class GrpcRequest {
 
   @Nullable
   public SocketAddress getPeerSocketAddress() {
+    return originalAddress(peerSocketAddress);
+  }
+
+  @Nullable
+  SocketAddress getNormalizedPeerSocketAddress() {
     return peerSocketAddress;
   }
 
   void setPeerSocketAddress(@Nullable SocketAddress peerSocketAddress) {
-    this.peerSocketAddress = peerSocketAddress;
+    this.peerSocketAddress = GrpcSocketAddressUtil.normalize(peerSocketAddress);
+  }
+
+  @Nullable
+  public SocketAddress getLocalSocketAddress() {
+    return originalAddress(localSocketAddress);
+  }
+
+  @Nullable
+  SocketAddress getNormalizedLocalSocketAddress() {
+    return localSocketAddress;
+  }
+
+  void setLocalSocketAddress(@Nullable SocketAddress localSocketAddress) {
+    this.localSocketAddress = GrpcSocketAddressUtil.normalize(localSocketAddress);
+  }
+
+  @Nullable
+  private static SocketAddress originalAddress(@Nullable SocketAddress address) {
+    return address instanceof UnixSocketAddress
+        ? ((UnixSocketAddress) address).getOriginalAddress()
+        : address;
   }
 
   @Nullable

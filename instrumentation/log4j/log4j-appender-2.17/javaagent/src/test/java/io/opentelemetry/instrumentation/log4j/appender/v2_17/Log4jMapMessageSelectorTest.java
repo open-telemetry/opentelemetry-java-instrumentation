@@ -37,12 +37,11 @@ class Log4jMapMessageSelectorTest {
     MAP_MESSAGE_ENTRIES.forEach(message::put);
     logger.info(message);
 
-    testing.waitAndAssertLogRecords(
-        logRecord -> {
-          Attributes attributes = logRecord.actual().getAttributes();
-          assertThat(capturedMapMessageAttributes(attributes))
-              .containsExactlyInAnyOrderEntriesOf(expectedMapMessageAttributes());
-        });
+    testing.waitAndAssertLogRecords(logRecord -> {
+      Attributes attributes = logRecord.actual().getAttributes();
+      assertThat(capturedMapMessageAttributes(attributes))
+          .containsExactlyInAnyOrderEntriesOf(expectedMapMessageAttributes());
+    });
   }
 
   private static Map<String, String> mapMessageEntries() {
@@ -57,13 +56,12 @@ class Log4jMapMessageSelectorTest {
 
   private static Map<String, String> capturedMapMessageAttributes(Attributes attributes) {
     Map<String, String> captured = new HashMap<>();
-    MAP_MESSAGE_ENTRIES.forEach(
-        (key, value) -> {
-          String attributeValue = attributes.get(mapMessageKey(key));
-          if (attributeValue != null) {
-            captured.put(key, attributeValue);
-          }
-        });
+    MAP_MESSAGE_ENTRIES.forEach((key, value) -> {
+      String attributeValue = attributes.get(mapMessageKey(key));
+      if (attributeValue != null) {
+        captured.put(key, attributeValue);
+      }
+    });
     return captured;
   }
 

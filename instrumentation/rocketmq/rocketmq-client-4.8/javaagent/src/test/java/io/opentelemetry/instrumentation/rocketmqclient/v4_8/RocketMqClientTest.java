@@ -153,12 +153,11 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
     }
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactlyInAnyOrder(
-                    span -> span.hasName("parent").hasKind(CLIENT),
-                    span -> span.hasName("create " + topic).hasKind(PRODUCER),
-                    span -> span.hasName("create " + topic).hasKind(PRODUCER)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span -> span.hasName("parent").hasKind(CLIENT),
+                span -> span.hasName("create " + topic).hasKind(PRODUCER),
+                span -> span.hasName("create " + topic).hasKind(PRODUCER)));
   }
 
   @SuppressWarnings("deprecation")
@@ -202,21 +201,19 @@ class RocketMqClientTest extends AbstractRocketMqClientTest {
     }
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(span -> span.hasName("parent"));
-              if (hasBatchCreateSpans()) {
-                assertions.add(span -> span.hasName("create " + topic).hasKind(PRODUCER));
-                assertions.add(span -> span.hasName("create " + topic).hasKind(PRODUCER));
-              }
-              assertions.add(
-                  span ->
-                      span.hasName("send " + topic)
-                          .hasKind(hasBatchCreateSpans() ? CLIENT : PRODUCER)
-                          .hasStatus(StatusData.error()));
-              trace.hasSpansSatisfyingExactlyInAnyOrder(assertions);
-            });
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(span -> span.hasName("parent"));
+          if (hasBatchCreateSpans()) {
+            assertions.add(span -> span.hasName("create " + topic).hasKind(PRODUCER));
+            assertions.add(span -> span.hasName("create " + topic).hasKind(PRODUCER));
+          }
+          assertions.add(span ->
+              span.hasName("send " + topic)
+                  .hasKind(hasBatchCreateSpans() ? CLIENT : PRODUCER)
+                  .hasStatus(StatusData.error()));
+          trace.hasSpansSatisfyingExactlyInAnyOrder(assertions);
+        });
   }
 
   private static Collection<Message> failingBatch() {

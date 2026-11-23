@@ -6,6 +6,8 @@
 
 - Redisson atomic batches now emit one logical span instead of separate MULTI, command, and EXEC
   spans. Atomic batch spans and their operation-duration metrics no longer include server or network-peer attributes.
+- Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
+  `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
 - OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
   memory metrics use `system.memory.state="available"` instead of `"free"`.
@@ -43,6 +45,8 @@
   error.getClass().getName()` for exception-class fallback.
 - Require R2DBC SPI 1.0 or later.
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
+- `DbClientAttributesGetter.getErrorType()` now returns the final `error.type`; returning `null`
+  omits it even with an exception.
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
@@ -363,6 +367,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
+  resource, or baggage values.
+- Logback library appenders and the Spring Boot starter capture only application-owned MDC values,
+  excluding OpenTelemetry-added trace and baggage values.
 - Testing exporters now use delta-preferred metric temporality by default; up-down counters are
   cumulative.
 - Remove the deprecated `ServicePeerAttributesExtractor`,
@@ -500,6 +508,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `NetworkAttributesGetter.getNetworkLocalInetSocketAddress()` and
+  `getNetworkPeerInetSocketAddress()` in favor of `getNetworkLocalSocketAddress()` and
+  `getNetworkPeerSocketAddress()`.
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.

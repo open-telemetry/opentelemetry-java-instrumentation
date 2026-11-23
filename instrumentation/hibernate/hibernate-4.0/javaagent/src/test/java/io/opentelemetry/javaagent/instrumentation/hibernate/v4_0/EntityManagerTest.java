@@ -85,93 +85,86 @@ class EntityManagerTest extends AbstractHibernateTest {
           entityManager.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (parameter.flushOnCommit) {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("Session." + action + " " + Value.class.getName())
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                HIBERNATE_SESSION_ID,
-                                experimental(
-                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))),
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasParent(trace.getSpan(2))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "h2database"),
-                            equalTo(DB_NAMESPACE, "db1"),
-                            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
-                            satisfies(
-                                DB_QUERY_SUMMARY,
-                                val -> {
-                                  val.isInstanceOf(String.class);
-                                }),
-                            satisfies(
-                                DB_OPERATION_NAME,
-                                val -> {
-                                  val.isNull();
-                                })));
+    testing.waitAndAssertTraces(trace -> {
+      if (parameter.flushOnCommit) {
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("Session." + action + " " + Value.class.getName())
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            HIBERNATE_SESSION_ID,
+                            experimental(
+                                trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))),
+            span ->
+                span.hasKind(CLIENT)
+                    .hasParent(trace.getSpan(2))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "h2database"),
+                        equalTo(DB_NAMESPACE, "db1"),
+                        satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            DB_QUERY_SUMMARY,
+                            val -> {
+                              val.isInstanceOf(String.class);
+                            }),
+                        satisfies(
+                            DB_OPERATION_NAME,
+                            val -> {
+                              val.isNull();
+                            })));
 
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("Session." + action + " " + Value.class.getName())
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "h2database"),
-                            equalTo(DB_NAMESPACE, "db1"),
-                            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
-                            satisfies(
-                                DB_QUERY_SUMMARY,
-                                val -> {
-                                  val.isInstanceOf(String.class);
-                                }),
-                            satisfies(
-                                DB_OPERATION_NAME,
-                                val -> {
-                                  val.isNull();
-                                })),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                HIBERNATE_SESSION_ID,
-                                experimental(
-                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))));
-          }
-        });
+      } else {
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("Session." + action + " " + Value.class.getName())
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "h2database"),
+                        equalTo(DB_NAMESPACE, "db1"),
+                        satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            DB_QUERY_SUMMARY,
+                            val -> {
+                              val.isInstanceOf(String.class);
+                            }),
+                        satisfies(
+                            DB_OPERATION_NAME,
+                            val -> {
+                              val.isNull();
+                            })),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            HIBERNATE_SESSION_ID,
+                            experimental(
+                                trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))));
+      }
+    });
   }
 
   private static Stream<Arguments> provideArgumentsHibernateActionParameters() {
@@ -216,63 +209,59 @@ class EntityManagerTest extends AbstractHibernateTest {
           entityManager.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("Session.persist " + Value.class.getName())
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0)),
-                // persist test has an extra query for getting id of inserted element
-                span ->
-                    span.hasName("select Value")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "h2database"),
-                            equalTo(DB_NAMESPACE, "db1"),
-                            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
-                            satisfies(
-                                DB_QUERY_SUMMARY,
-                                val -> {
-                                  val.isInstanceOf(String.class);
-                                }),
-                            satisfies(
-                                DB_OPERATION_NAME,
-                                val -> {
-                                  val.isNull();
-                                })),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                HIBERNATE_SESSION_ID,
-                                experimental(
-                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))),
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasParent(trace.getSpan(3))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "h2database"),
-                            equalTo(DB_NAMESPACE, "db1"),
-                            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
-                            satisfies(
-                                DB_QUERY_SUMMARY,
-                                val -> {
-                                  val.isInstanceOf(String.class);
-                                }),
-                            satisfies(
-                                DB_OPERATION_NAME,
-                                val -> {
-                                  val.isNull();
-                                }))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("Session.persist " + Value.class.getName())
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0)),
+            // persist test has an extra query for getting id of inserted element
+            span ->
+                span.hasName("select Value")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "h2database"),
+                        equalTo(DB_NAMESPACE, "db1"),
+                        satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            DB_QUERY_SUMMARY,
+                            val -> {
+                              val.isInstanceOf(String.class);
+                            }),
+                        satisfies(
+                            DB_OPERATION_NAME,
+                            val -> {
+                              val.isNull();
+                            })),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            HIBERNATE_SESSION_ID,
+                            experimental(
+                                trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)))),
+            span ->
+                span.hasKind(CLIENT)
+                    .hasParent(trace.getSpan(3))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "h2database"),
+                        equalTo(DB_NAMESPACE, "db1"),
+                        satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            DB_QUERY_SUMMARY,
+                            val -> {
+                              val.isInstanceOf(String.class);
+                            }),
+                        satisfies(
+                            DB_OPERATION_NAME,
+                            val -> {
+                              val.isNull();
+                            }))));
   }
 
   @SuppressWarnings("deprecation") // TODO DB_CONNECTION_STRING deprecation
@@ -290,49 +279,45 @@ class EntityManagerTest extends AbstractHibernateTest {
           entityManager.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0),
-                span ->
-                    span.hasName(parameter.sessionSpanName)
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName(parameter.clientSpanName)
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "h2database"),
-                            equalTo(DB_NAMESPACE, "db1"),
-                            satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
-                            satisfies(
-                                DB_QUERY_SUMMARY,
-                                val -> {
-                                  val.isInstanceOf(String.class);
-                                }),
-                            satisfies(
-                                DB_OPERATION_NAME,
-                                val -> {
-                                  val.isNull();
-                                })),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                HIBERNATE_SESSION_ID,
-                                experimental(
-                                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent").hasKind(INTERNAL).hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName(parameter.sessionSpanName)
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName(parameter.clientSpanName)
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "h2database"),
+                        equalTo(DB_NAMESPACE, "db1"),
+                        satisfies(DB_QUERY_TEXT, val -> val.isInstanceOf(String.class)),
+                        satisfies(
+                            DB_QUERY_SUMMARY,
+                            val -> {
+                              val.isInstanceOf(String.class);
+                            }),
+                        satisfies(
+                            DB_OPERATION_NAME,
+                            val -> {
+                              val.isNull();
+                            })),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            HIBERNATE_SESSION_ID,
+                            experimental(
+                                trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))))));
   }
 
   @Test
@@ -343,19 +328,16 @@ class EntityManagerTest extends AbstractHibernateTest {
     assertThatThrownBy(query::getSingleResult).isInstanceOf(NoResultException.class);
     entityManager.close();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("select Value")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.unset())
-                        .hasEvents(emptyList()),
-                span ->
-                    span.hasName("select Value")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("select Value")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.unset())
+                    .hasEvents(emptyList()),
+            span ->
+                span.hasName("select Value").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0))));
   }
 
   private static Stream<Arguments> provideArgumentsAttachesState() {

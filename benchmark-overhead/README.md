@@ -117,9 +117,9 @@ Please help us make this happen.
 ## Ordinary agent startup benchmark
 
 The opt-in `agentStartupBenchmark` task compares ordinary `-javaagent` launches
-of the small Spring smoke application with a no-agent control. Supply an optional
+of the small Spring smoke application (the default) or Petclinic REST with a no-agent control. Supply an optional
 baseline agent JAR to compare agent-added overhead before and after a change.
-It reuses the pinned JDK 25 smoke image from the AOT benchmark, without AOT or
+The smoke workload reuses the pinned JDK 25 image from the AOT benchmark, without AOT or
 bootstrap-classpath preloading. Instrumentation and the SDK remain active when
 an agent is present; all exporters are `none`.
 
@@ -141,6 +141,23 @@ cd benchmark-overhead
 The workflow also packages the recorder JAR with the agent and fixture so a
 measurement-only rerun reuses the same built inputs.
 
+For Petclinic, build the annotation library and select the workload. The workflow also
+builds the Java 17 helper JAR against Spring MVC 5.3.3; Boot 2.4.2 discovers its
+advice through the `PropertiesLauncher` classpath. The helper is benchmark-only and
+does not bundle Spring:
+
+```sh
+./gradlew :javaagent:shadowJar :instrumentation-annotations:jar -PremoveJarVersionNumbers=true
+cd benchmark-overhead
+./gradlew agentStartupBenchmark \
+  -PstartupBenchmarkWorkload=petclinic \
+  -PstartupBenchmarkAgentJar=/absolute/path/to/opentelemetry-javaagent.jar \
+  -PstartupBenchmarkAnnotationsJar=/absolute/path/to/opentelemetry-instrumentation-annotations-VERSION.jar
+```
+
+The benchmark task builds `petclinic-startup-helper.jar` automatically for this workload.
+Petclinic uses the pinned `petclinic-rest-base:20230601125442` image (Spring Petclinic REST 2.4.2, Liberica JDK 17.0.7) and PostgreSQL 9.6.22 image, both pinned by digest in the harness. It starts and seeds PostgreSQL before the measured launches, sets owner 1's first name to `StartupBenchmark`, uses the `postgresql,spring-data-jpa` profiles, and checks `/petclinic/api/owners/1` for that record. The benchmark-only response advice adds the uptime header only to that GET response and leaves its body unchanged. The same read-only database, annotations JAR, and helper JAR are used for every configuration; no inherited spans are added. The database and application containers are removed after the run, including on failure.
+
 To compare two agents, also pass
 `-PstartupBenchmarkBaselineAgentJar=/absolute/path/to/baseline-agent.jar`.
 Record their revisions with `-PstartupBenchmarkRevision` and
@@ -152,13 +169,17 @@ configuration. Configurations run serially, rotating their order each round.
 Set `-PstartupBenchmarkWarmups=0 -PstartupBenchmarkSamples=1` for a short
 functional run, not a performance conclusion.
 
-The sole metric is JVM uptime sampled by the `/greeting` handler while producing
-the first successful HTTP 200 response with body `Hi!`. The application reports
-its own JVM-relative uptime, sampled immediately before returning the response;
-this includes JVM startup and `premain()` but excludes container setup and
-host-side request timing. Uptime is reported with millisecond resolution.
-Readiness polling waits for that response; failed starts abort the benchmark and
-retain diagnostics, and measured starts are not retried or filtered as outliers.
+For both workloads, the metric is **JVM uptime sampled inside the application while
+producing the first successful readiness response**: `/greeting` with body `Hi!`
+for smoke, or the PostgreSQL-validated seeded owner from
+`GET /petclinic/api/owners/1` for Petclinic. The Petclinic-only response advice runs
+after the controller returns and before Spring writes the response body. The common
+metric includes JVM startup, agent `premain()`, and application/request work before
+sampling; it excludes container setup, database provisioning, and return network
+transit. Probe polling cadence can affect when the successful request reaches the
+application. The uptime header has millisecond resolution. Failed starts abort the
+benchmark and retain diagnostics; measured starts are not retried or filtered as
+outliers.
 
 Agent-added startup overhead is the agent's median minus the no-agent median.
 When a baseline agent is supplied, the report also shows the absolute reduction
@@ -179,8 +200,11 @@ or throughput measurements.
 Manually dispatch `agent-startup-benchmark.yml` on the branch or tag to measure.
 For example, run `gh workflow run agent-startup-benchmark.yml --ref my-startup-change`.
 Pass `-f baseline-ref=<revision-on-main>` to also build and measure a baseline
-agent in the same run. The workflow rejects baseline revisions that are not
-reachable from upstream `main` before executing their build.
+agent in the same run. Pass `-f workload=petclinic` to select Petclinic; the
+default is `smoke`. The measurement job allows 90 minutes for Petclinic and
+45 minutes for smoke, including the optional baseline and JFR capture.
+The workflow rejects baseline revisions that are not reachable from upstream
+`main` before executing their build.
 The selected revision must contain the workflow and benchmark.
 Dispatch requires
 repository write access; only run trusted code, since it executes on a shared host.

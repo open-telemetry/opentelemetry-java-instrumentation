@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.clickhouse.client.common.v0_5
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
@@ -63,17 +63,16 @@ public class ClickHouseScope {
 
   public void endOnCompletion(CompletableFuture<?> future, Runnable beforeEnd) {
     scope.close();
-    future.whenComplete(
-        (result, throwable) -> {
-          try {
-            beforeEnd.run();
-          } finally {
-            instrumenter.end(context, clickHouseDbRequest, null, throwable);
-          }
-        });
+    future.whenComplete((result, throwable) -> {
+      try {
+        beforeEnd.run();
+      } finally {
+        instrumenter.end(context, clickHouseDbRequest, null, throwable);
+      }
+    });
   }
 
-  public void setPeer(@Nullable DbServerTarget peer) {
+  public void setPeer(@Nullable ServerTarget peer) {
     clickHouseDbRequest.setPeer(peer);
   }
 

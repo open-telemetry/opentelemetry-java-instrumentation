@@ -70,11 +70,9 @@ public class PetClinicRestContainer {
             .dependsOn(collector)
             .withCommand(buildCommandline(agentJar));
 
-    agentJar.ifPresent(
-        agentPath ->
-            container.withCopyFileToContainer(
-                MountableFile.forHostPath(agentPath),
-                "/app/" + agentPath.getFileName().toString()));
+    agentJar.ifPresent(agentPath ->
+        container.withCopyFileToContainer(
+            MountableFile.forHostPath(agentPath), "/app/" + agentPath.getFileName().toString()));
     return container;
   }
 
