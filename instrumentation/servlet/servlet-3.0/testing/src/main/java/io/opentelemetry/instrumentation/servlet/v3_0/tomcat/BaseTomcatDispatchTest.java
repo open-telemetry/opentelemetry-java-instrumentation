@@ -39,6 +39,12 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
       new ServerEndpoint("SNIPPET_INCLUDE_RESET", "snippetIncludeReset", 200, "");
   private static final ServerEndpoint SNIPPET_INCLUDE_RAW_RESET =
       new ServerEndpoint("SNIPPET_INCLUDE_RAW_RESET", "snippetAsyncIncludeRawReset", 200, "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH",
+          "snippetAsyncIncludeSplitHeadFixedLength",
+          200,
+          "");
   private static final ServerEndpoint SNIPPET_INCLUDE_DELEGATED_RESET =
       new ServerEndpoint(
           "SNIPPET_INCLUDE_DELEGATED_RESET", "snippetAsyncIncludeDelegatedReset", 200, "");
@@ -224,6 +230,14 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
             TestServlet3.SnippetIncludeRawResetTarget.class);
         test.addServlet(
             context,
+            "/snippetAsyncIncludeSplitHeadFixedLength",
+            TestServlet3.SnippetAsyncIncludeSplitHeadFixedLength.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeSplitHeadTarget",
+            TestServlet3.SnippetIncludeSplitHeadTarget.class);
+        test.addServlet(
+            context,
             "/snippetAsyncIncludeFixedLengthReset",
             TestServlet3.SnippetAsyncIncludeFixedLengthReset.class);
         test.addServlet(
@@ -339,6 +353,29 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
       if (response.headers().contentLength() >= 0) {
         assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
       }
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
+  void fixedLengthSplitHeadIncludeAdjustsWireLength() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client
+              .execute(request(SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH, "GET"))
+              .aggregate()
+              .join();
+      String expected = "<head>" + snippet + "<title>included</title></head>";
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
     } finally {
       ExperimentalSnippetHolder.setSnippet("");
     }

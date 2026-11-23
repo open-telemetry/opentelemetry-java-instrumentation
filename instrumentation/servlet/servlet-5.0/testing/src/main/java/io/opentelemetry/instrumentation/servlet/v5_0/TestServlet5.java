@@ -38,6 +38,8 @@ public class TestServlet5 {
       TestServlet5.class.getName() + ".cachedWriterResponse";
   private static final String ORIGINAL_RESPONSE_ATTRIBUTE =
       TestServlet5.class.getName() + ".originalResponse";
+  public static final String SNIPPET_RESET_REPLACEMENT_BODY =
+      "replacement response body without any head tag";
 
   @WebServlet
   public static class Sync extends HttpServlet {
@@ -229,15 +231,13 @@ public class TestServlet5 {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp)
         throws ServletException, IOException {
-      String body = HTML_PRINT_WRITER.getBody();
       resp.setContentType("text/html");
-      resp.setContentLength(body.length());
-      resp.getWriter().write(body);
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.getWriter().write("<head>discarded-prefix");
       AsyncContext context = req.startAsync();
       req.setAttribute(ORIGINAL_RESPONSE_ATTRIBUTE, context.getResponse());
       req.getRequestDispatcher("/snippetIncludeFixedLengthResetTarget")
           .include(req, context.getResponse());
-      resp.getWriter().write("ad>" + body.substring("<head>".length()));
       context.complete();
     }
   }
@@ -246,9 +246,32 @@ public class TestServlet5 {
   public static class SnippetIncludeFixedLengthResetTarget extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-      resp.setContentLength(1);
       ((HttpServletResponse) req.getAttribute(ORIGINAL_RESPONSE_ATTRIBUTE)).resetBuffer();
+      resp.getWriter().write(SNIPPET_RESET_REPLACEMENT_BODY);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeSplitHeadFixedLength extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      String body = "<head><title>included</title></head>";
+      resp.setContentType("text/html");
+      resp.setContentLength(body.length());
       resp.getWriter().write("<he");
+      AsyncContext context = req.startAsync();
+      req.getRequestDispatcher("/snippetIncludeSplitHeadTarget")
+          .include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeSplitHeadTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.getWriter().write("ad><title>included</title></head>");
     }
   }
 

@@ -25,6 +25,11 @@ class SnippetInjectingPrintWriterTest {
     SnippetInjectingResponseWrapper response =
         new SnippetInjectingResponseWrapper() {
           @Override
+          public boolean isIncludeRequest() {
+            return false;
+          }
+
+          @Override
           public boolean isContentTypeTextHtml() {
             return true;
           }

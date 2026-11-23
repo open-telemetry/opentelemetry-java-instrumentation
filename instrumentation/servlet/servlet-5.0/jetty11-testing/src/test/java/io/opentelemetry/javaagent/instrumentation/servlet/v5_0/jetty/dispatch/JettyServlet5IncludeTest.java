@@ -107,17 +107,15 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
   }
 
   @Test
-  void fixedLengthRawResetDuringIncludeKeepsBodyLengthAccurate() {
+  void fixedLengthRawResetDuringIncludeRestoresDeclaredLength() {
     String snippet = "<!-- snippet -->";
     ExperimentalSnippetHolder.setSnippet(snippet);
     try {
       AggregatedHttpResponse response =
           client.execute(request(SNIPPET_INCLUDE_FIXED_LENGTH_RESET, "GET")).aggregate().join();
-      String body = HTML_PRINT_WRITER.getBody();
-      String expected = body.replace("<head>", "<head>" + snippet);
 
-      assertThat(response.contentUtf8()).isEqualTo(expected);
-      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.contentUtf8()).isEqualTo(TestServlet5.SNIPPET_RESET_REPLACEMENT_BODY);
+      assertThat(response.contentUtf8()).doesNotContain(snippet);
       assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
     } finally {
       ExperimentalSnippetHolder.setSnippet("");

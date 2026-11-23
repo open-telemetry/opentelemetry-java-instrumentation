@@ -318,6 +318,43 @@ class InjectionStateLifetimeTest {
     }
   }
 
+  @ParameterizedTest
+  @ValueSource(strings = {"header", "addHeader", "intHeader", "addIntHeader", "length", "long"})
+  @SuppressWarnings("DirectInvocationOnMock")
+  void repeatedSetterReconcilesContentLengthAfterRawReset(String setter) throws IOException {
+    Fixture fixture = new Fixture();
+    Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
+    InjectionState state = wrapper.getInjectionState();
+
+    fixture.response.reset();
+    fixture.response.setContentLength(HTML.length());
+    Fixture.setContentLength(wrapper, setter, HTML.length());
+
+    assertThat(state.hasContentLength()).isTrue();
+    assertThat(state.getContentLength()).isEqualTo(HTML.length());
+    assertThat(state.isContentLengthAdjusted()).isFalse();
+  }
+
+  @Test
+  void repeatedSetterPreservesAppliedContentLengthAdjustment() throws IOException {
+    for (Output selectedOutput : Output.values()) {
+      for (String selectedSetter :
+          new String[] {"header", "addHeader", "intHeader", "addIntHeader", "length", "long"}) {
+        Fixture fixture = new Fixture();
+        Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
+        wrapper.setContentType("text/html");
+        wrapper.setContentLength(HTML.length());
+        fixture.write(wrapper, selectedOutput, HTML);
+        InjectionState state = wrapper.getInjectionState();
+
+        Fixture.setContentLength(wrapper, selectedSetter, INJECTED.length());
+
+        assertThat(state.isContentLengthAdjusted()).isTrue();
+        assertThat(state.getContentLength()).isEqualTo(INJECTED.length());
+      }
+    }
+  }
+
   @Test
   void failedWriterAcquisitionDoesNotDisableStreamInjection() throws IOException {
     Fixture fixture = new Fixture();

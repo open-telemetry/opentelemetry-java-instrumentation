@@ -14,12 +14,18 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 import io.opentelemetry.instrumentation.servlet.v5_0.RequestDispatcherServlet;
 import io.opentelemetry.instrumentation.servlet.v5_0.TestServlet5;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import jakarta.servlet.Servlet;
 import org.apache.catalina.Context;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.AfterParameterizedClassInvocation;
 import org.junit.jupiter.params.BeforeParameterizedClassInvocation;
 import org.junit.jupiter.params.Parameter;
@@ -29,6 +35,12 @@ import org.junit.jupiter.params.provider.EnumSource;
 @ParameterizedClass
 @EnumSource(BaseTomcatDispatchTest.TestType.class)
 public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test {
+  private static final ServerEndpoint SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH",
+          "snippetAsyncIncludeSplitHeadFixedLength",
+          200,
+          "");
 
   enum TestType {
     DISPATCH_ASYNC {
@@ -196,6 +208,14 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
             context,
             "/dispatch" + HTML_SERVLET_OUTPUT_STREAM.getPath(),
             RequestDispatcherServlet.Include.class);
+        test.addServlet(
+            context,
+            "/snippetAsyncIncludeSplitHeadFixedLength",
+            TestServlet5.SnippetAsyncIncludeSplitHeadFixedLength.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeSplitHeadTarget",
+            TestServlet5.SnippetIncludeSplitHeadTarget.class);
       }
     };
 
@@ -255,5 +275,28 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet5Test 
   @Override
   protected boolean assertParentOnRedirect() {
     return testType.assertParentOnRedirect();
+  }
+
+  @Test
+  void fixedLengthSplitHeadIncludeAdjustsWireLength() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client
+              .execute(request(SNIPPET_INCLUDE_SPLIT_HEAD_FIXED_LENGTH, "GET"))
+              .aggregate()
+              .join();
+      String expected = "<head>" + snippet + "<title>included</title></head>";
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 }
