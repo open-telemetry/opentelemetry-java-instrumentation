@@ -17,15 +17,13 @@ import javax.annotation.Nullable;
 public final class TomcatContentLength {
   private static final Logger logger = Logger.getLogger(TomcatContentLength.class.getName());
 
-  private static final ClassValue<ContentLengthAccessor> CONTENT_LENGTH_ACCESSORS =
+  private static final ContentLengthAccessor NO_ACCESSOR =
+      new ContentLengthAccessor(null, null, null, null, null);
+
+  private static final ClassValue<ContentLengthAccessor> ACCESSORS_BY_CATALINA_RESPONSE =
       new ClassValue<ContentLengthAccessor>() {
         @Override
-        protected ContentLengthAccessor computeValue(Class<?> responseClass) {
-          Class<?> tomcatResponseClass = findTomcatResponseClass(responseClass);
-          if (tomcatResponseClass == null) {
-            return new ContentLengthAccessor(null, null, null, null, null);
-          }
-
+        protected ContentLengthAccessor computeValue(Class<?> tomcatResponseClass) {
           Class<?> coyoteResponseClass = null;
           try {
             coyoteResponseClass =
@@ -45,7 +43,9 @@ public final class TomcatContentLength {
           MethodHandle setContentLengthLong =
               findVirtual(tomcatResponseClass, "setContentLengthLong", void.class, long.class);
           MethodHandle setContentLength =
-              findVirtual(tomcatResponseClass, "setContentLength", void.class, int.class);
+              setContentLengthLong == null
+                  ? findVirtual(tomcatResponseClass, "setContentLength", void.class, int.class)
+                  : null;
           MethodHandle isCommitted = findVirtual(tomcatResponseClass, "isCommitted", boolean.class);
           return new ContentLengthAccessor(
               getCoyoteResponse,
@@ -53,6 +53,17 @@ public final class TomcatContentLength {
               setContentLengthLong,
               setContentLength,
               isCommitted);
+        }
+      };
+
+  private static final ClassValue<ContentLengthAccessor> CONTENT_LENGTH_ACCESSORS =
+      new ClassValue<ContentLengthAccessor>() {
+        @Override
+        protected ContentLengthAccessor computeValue(Class<?> responseClass) {
+          Class<?> tomcatResponseClass = findTomcatResponseClass(responseClass);
+          return tomcatResponseClass == null
+              ? NO_ACCESSOR
+              : ACCESSORS_BY_CATALINA_RESPONSE.get(tomcatResponseClass);
         }
       };
 
