@@ -9,7 +9,6 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
-import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
@@ -29,7 +28,6 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.junit.jupiter.api.Test;
@@ -58,6 +56,7 @@ class JmxTelemetryTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> builder.addRules((Path) null))
         .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> builder.addRule(null)).isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -91,7 +90,7 @@ class JmxTelemetryTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
-  void rulesFromMapsCanBeReused(boolean immutable) {
+  void ruleFromMapCanBeReused(boolean immutable) {
     Map<String, Object> metricDefinition = new HashMap<>();
     metricDefinition.put("metric", "custom.map.thread.count");
     metricDefinition.put("type", "gauge");
@@ -104,10 +103,10 @@ class JmxTelemetryTest {
         "mapping",
         singletonMap(
             "ThreadCount", immutable ? unmodifiableMap(metricDefinition) : metricDefinition));
-    List<Map<String, Object>> rules = singletonList(immutable ? unmodifiableMap(rule) : rule);
+    Map<String, Object> input = immutable ? unmodifiableMap(rule) : rule;
 
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry()).addRules(rules);
-    JmxTelemetryBuilder anotherBuilder = JmxTelemetry.builder(OpenTelemetry.noop()).addRules(rules);
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry()).addRule(input);
+    JmxTelemetryBuilder anotherBuilder = JmxTelemetry.builder(OpenTelemetry.noop()).addRule(input);
     assertThat(anotherBuilder.getRegisteredMetrics()).containsExactly("custom.map.thread.count");
     cleanup.deferCleanup(builder.build().start());
 

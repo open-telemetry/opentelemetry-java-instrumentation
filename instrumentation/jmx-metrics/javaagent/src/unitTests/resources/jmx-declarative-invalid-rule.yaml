@@ -1,0 +1,23 @@
+file_format: "1.2"
+instrumentation/development:
+  java:
+    jmx:
+      rules:
+        - bean: java.lang:type=Threading
+          mapping:
+            ThreadCount:
+              metric: custom.test.first
+              type: gauge
+              unit: "{thread}"
+        - bean: java.lang:type=Threading
+          mapping:
+            PeakThreadCount:
+              metric: custom.test.second
+              type: gauge
+              unit: "{thread}"
+        - bean: java.lang:type=Threading
+          mapping:
+            TotalStartedThreadCount:
+              metric: custom.test.invalid
+              type: invalid
+              unit: "{thread}"

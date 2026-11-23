@@ -575,13 +575,12 @@ class RuleParserTest {
 
   @Test
   @SuppressWarnings("unchecked") // for casting yaml parsed objects
-  void createMetricDefsFromMaps() {
+  void createMetricDefFromMap() {
     Map<String, Object> data =
         (Map<String, Object>) new Load(LoadSettings.builder().build()).loadFromString(CONF4);
     List<Map<String, Object>> rules = (List<Map<String, Object>>) data.get("rules");
 
-    assertThat(parser.createMetricDefs(rules))
-        .singleElement()
+    assertThat(parser.createMetricDef(rules.get(0)))
         .satisfies(
             def -> {
               assertThat(def.getBeanGroup().getNamePatterns())

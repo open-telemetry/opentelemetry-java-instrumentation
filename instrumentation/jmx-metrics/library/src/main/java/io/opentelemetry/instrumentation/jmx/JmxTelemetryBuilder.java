@@ -118,28 +118,26 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Adds JMX rules from a list of maps. Each map uses the same syntax as an individual rule in a
-   * YAML configuration file. All metrics are included unless filtered out by the {@link
-   * #setMetrics(IncludeExclude)} method.
+   * Adds a JMX rule from a map using the same syntax as an individual rule in a YAML configuration
+   * file. All metrics are included unless filtered out by the {@link #setMetrics(IncludeExclude)}
+   * method.
    *
-   * <p>The supplied list and maps are not modified.
+   * <p>The supplied map and its nested maps are not modified.
    *
-   * @param rules rule definitions to add
+   * @param rule rule definition to add
    * @return builder instance
-   * @throws IllegalArgumentException when rules is {@literal null} or can't be parsed
+   * @throws IllegalArgumentException when the rule is {@literal null} or can't be parsed
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addRules(List<Map<String, Object>> rules) {
-    if (rules == null) {
-      throw new IllegalArgumentException("missing JMX rules");
+  public JmxTelemetryBuilder addRule(Map<String, Object> rule) {
+    if (rule == null) {
+      throw new IllegalArgumentException("missing JMX rule");
     }
-    List<MetricDef> metricDefs = RuleParser.get().createMetricDefs(rules);
+    MetricDef metricDef = RuleParser.get().createMetricDef(rule);
+    userMetricDefs.add(metricDef);
+    registeredMetrics.addAll(metricDef.getMetricNames());
+    registeredHandlers.addAll(metricDef.getHandlerNames());
 
-    for (MetricDef metricDef : metricDefs) {
-      userMetricDefs.add(metricDef);
-      registeredMetrics.addAll(metricDef.getMetricNames());
-      registeredHandlers.addAll(metricDef.getHandlerNames());
-    }
     return this;
   }
 

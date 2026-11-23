@@ -216,6 +216,29 @@ class JmxMetricInsightInstallerTest {
   }
 
   @Test
+  void invalidInlineRulePreservesEarlierRules() throws IOException {
+    DeclarativeConfigProperties config;
+    try (InputStream input = getClass().getResourceAsStream("/jmx-declarative-invalid-rule.yaml")) {
+      config =
+          DeclarativeConfiguration.toConfigProperties(DeclarativeConfiguration.parse(input))
+              .get("instrumentation/development")
+              .get("java")
+              .get("jmx");
+    }
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxMetricInsightInstaller.configure(builder, config);
+    cleanup.deferCleanup(builder.build().start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric -> metric.hasName("custom.test.first"),
+        metric -> metric.hasName("custom.test.second"));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "custom.test.invalid", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
   void invalidInlineJmxRulesDoNotPreventNonInlineMetrics(@TempDir Path directory)
       throws IOException {
     Path rules = directory.resolve("custom-jmx.yaml");

@@ -186,7 +186,13 @@ public class RuleParser {
    */
   public List<MetricDef> parseMetricDefs(InputStream is) {
     try {
-      return createMetricDefs(loadConfig(is));
+      JmxConfig config = loadConfig(is);
+      logger.log(FINE, "Found {0} metric rules", config.getRules().size());
+      List<MetricDef> metricDefs = new ArrayList<>();
+      for (JmxRule rule : config.getRules()) {
+        metricDefs.add(rule.buildMetricDef());
+      }
+      return metricDefs;
     } catch (Exception e) {
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
@@ -197,32 +203,22 @@ public class RuleParser {
   }
 
   /**
-   * Creates metric rules from a list of maps using the YAML rule syntax.
+   * Creates a metric definition from a map using the YAML rule syntax.
    *
-   * @param rules JMX rule definitions
-   * @return parsed collection of MetricDef
-   * @throws IllegalArgumentException when unable to parse YAML
+   * @param rule JMX rule definition
+   * @return parsed metric definition
+   * @throws IllegalArgumentException when unable to parse the rule
    */
-  public List<MetricDef> createMetricDefs(List<Map<String, Object>> rules) {
+  public MetricDef createMetricDef(Map<String, Object> rule) {
     try {
-      List<JmxRule> jmxRules = rules.stream().map(RuleParser::parseJmxRule).collect(toList());
-      return createMetricDefs(new JmxConfig(jmxRules));
+      JmxRule jmxRule = RuleParser.parseJmxRule(rule);
+      return jmxRule.buildMetricDef();
     } catch (Exception e) {
       // It is essential that the parser exception is made visible to the user.
       // It contains contextual information about any syntax issues found by the parser.
-      String msg =
-          String.format("Failed to parse YAML rules : %s %s", rootCause(e), e.getMessage());
+      String msg = String.format("Failed to parse YAML rule : %s %s", rootCause(e), e.getMessage());
       throw new IllegalArgumentException(msg, e);
     }
-  }
-
-  private static List<MetricDef> createMetricDefs(JmxConfig config) throws Exception {
-    logger.log(FINE, "Found {0} metric rules", config.getRules().size());
-    List<MetricDef> metricDefs = new ArrayList<>();
-    for (JmxRule rule : config.getRules()) {
-      metricDefs.add(rule.buildMetricDef());
-    }
-    return metricDefs;
   }
 
   /**
