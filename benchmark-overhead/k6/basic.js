@@ -20,7 +20,6 @@ export default function() {
     const newVet = names.randomVet(specialties);
     const response = http.post(`${baseUri}/vets`, JSON.stringify(newVet),
             { headers: { 'Content-Type': 'application/json' } });
-    // we don't guard against dupes, so this could fail on occasion
     check(response, { "create vet status 201": (r) => r.status === 201 });
 
     // make sure we can fetch that vet back out

@@ -95,7 +95,8 @@ function randomVet(specialties) {
     const first = randItem(firstNames);
     const last = randItem(adj);
     const numSpec = rand(specialties.length);
-    const spec = [...Array(numSpec).keys()].map(n => randItem(specialties))
+    const available = specialties.slice();
+    const spec = [...Array(numSpec).keys()].map(() => available.splice(rand(available.length), 1)[0])
     return {
         firstName: first,
         lastName: last,
