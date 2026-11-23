@@ -5,18 +5,15 @@
 
 package io.opentelemetry.instrumentation.cassandra.v4_4;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-
 import com.datastax.oss.driver.api.core.CqlIdentifier;
 import com.datastax.oss.driver.api.core.cql.ExecutionInfo;
 import com.datastax.oss.driver.api.core.metadata.EndPoint;
 import com.datastax.oss.driver.api.core.metadata.Node;
 import com.datastax.oss.driver.internal.core.metadata.DefaultEndPoint;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.cassandra.v4_4.internal.CassandraNetworkPeer;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Collection;
 import javax.annotation.Nullable;
 
@@ -28,13 +25,6 @@ final class CassandraSqlAttributesGetter
   @Override
   public String getDbSystemName(CassandraRequest request) {
     return CASSANDRA;
-  }
-
-  @Override
-  public SqlDialect getSqlDialect(CassandraRequest request) {
-    // "A string constant is an arbitrary sequence of characters enclosed by single-quote(')."
-    // https://cassandra.apache.org/doc/stable/cassandra/developing/cql/definitions.html#constants
-    return DOUBLE_QUOTES_ARE_IDENTIFIERS;
   }
 
   @Override
@@ -57,25 +47,25 @@ final class CassandraSqlAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(CassandraRequest request) {
-    DbServerTarget serverTarget = request.getServerTarget();
+    ServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(CassandraRequest request) {
-    DbServerTarget serverTarget = request.getServerTarget();
+    ServerTarget serverTarget = request.getServerTarget();
     return serverTarget == null ? null : serverTarget.getPort();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       CassandraRequest request, @Nullable ExecutionInfo executionInfo) {
     if (executionInfo == null) {
       return null;
     }
-    InetSocketAddress peer = CassandraNetworkPeer.getExecutionInfoPeer(executionInfo);
+    SocketAddress peer = CassandraNetworkPeer.getExecutionInfoPeer(executionInfo);
     if (peer != null) {
       return peer;
     }
@@ -86,11 +76,7 @@ final class CassandraSqlAttributesGetter
     EndPoint endPoint = coordinator.getEndPoint();
     if (endPoint instanceof DefaultEndPoint) {
       // resolve() returns an existing InetSocketAddress, it does not do a dns resolve,
-      InetSocketAddress coordinatorAddress = (InetSocketAddress) endPoint.resolve();
-      if (coordinatorAddress.isUnresolved()) {
-        return null;
-      }
-      return coordinatorAddress;
+      return endPoint.resolve();
     }
     return null;
   }

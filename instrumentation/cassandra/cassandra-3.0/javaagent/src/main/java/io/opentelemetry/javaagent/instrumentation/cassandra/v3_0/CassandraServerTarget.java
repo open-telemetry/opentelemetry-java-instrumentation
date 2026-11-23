@@ -6,8 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.cassandra.v3_0;
 
 import com.datastax.driver.core.Cluster;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.reflect.Array;
 import java.net.InetAddress;
@@ -22,8 +22,8 @@ public class CassandraServerTarget {
 
   private static final VirtualField<Cluster.Builder, ContactPoints> BUILDER_CONTACT_POINTS =
       VirtualField.find(Cluster.Builder.class, ContactPoints.class);
-  private static final VirtualField<Cluster, DbServerTarget> CLUSTER_TARGET =
-      VirtualField.find(Cluster.class, DbServerTarget.class);
+  private static final VirtualField<Cluster, ServerTarget> CLUSTER_TARGET =
+      VirtualField.find(Cluster.class, ServerTarget.class);
 
   public static void capture(Cluster.Builder builder, Object[] arguments) {
     getOrCreateContactPoints(builder).add(arguments);
@@ -43,31 +43,32 @@ public class CassandraServerTarget {
   }
 
   public static void store(Cluster.Builder builder, Cluster cluster, int configuredPort) {
-    DbServerTarget target = create(BUILDER_CONTACT_POINTS.get(builder), configuredPort);
+    ServerTarget target = create(BUILDER_CONTACT_POINTS.get(builder), configuredPort);
     if (target != null) {
       CLUSTER_TARGET.set(cluster, target);
     }
   }
 
   @Nullable
-  static DbServerTarget get(Cluster cluster) {
+  static ServerTarget get(Cluster cluster) {
     return CLUSTER_TARGET.get(cluster);
   }
 
+  // visible for testing
   @Nullable
-  static DbServerTarget create(Object contactPoints, int configuredPort) {
+  static ServerTarget create(Object contactPoints, int configuredPort) {
     ContactPoints captured = new ContactPoints();
     captured.add(contactPoints);
     return create(captured, configuredPort);
   }
 
   @Nullable
-  private static DbServerTarget create(@Nullable ContactPoints contactPoints, int configuredPort) {
+  private static ServerTarget create(@Nullable ContactPoints contactPoints, int configuredPort) {
     if (contactPoints == null || !contactPoints.valid) {
       return null;
     }
 
-    DbServerTargetBuilder targetBuilder = DbServerTarget.builder(DEFAULT_PORT);
+    ServerTargetBuilder targetBuilder = ServerTarget.builder(DEFAULT_PORT);
     for (ContactPoint point : contactPoints.points) {
       targetBuilder.addEndpoint(point.host, point.port == null ? configuredPort : point.port);
     }

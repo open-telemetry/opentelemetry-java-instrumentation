@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -25,11 +28,9 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
-      implementation(project(":instrumentation-api-incubator"))
       implementation("redis.clients:jedis:4.0.0")
     }
   }
@@ -46,20 +47,19 @@ testing.suites {
       implementation("org.testcontainers:testcontainers")
     }
   }
+  executions("test", "jedis51Test") {
+    configureEach {
+      // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
+      jvmArgs("-Djava.net.preferIPv4Stack=true")
+      systemProperty("testLatestDeps", otelProps.testLatestDeps && !name.startsWith("jedis51"))
+      systemProperty(
+        "testJedis51OrLater",
+        otelProps.testLatestDeps || name.startsWith("jedis51"),
+      )
+    }
+  }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
-    jvmArgs("-Djava.net.preferIPv4Stack=true")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps && !name.startsWith("jedis51"))
-    systemProperty(
-      "testJedis51OrLater",
-      otelProps.testLatestDeps || name.startsWith("jedis51"),
-    )
-  }
-
-  check {
-    dependsOn(testing.suites)
-  }
+tasks.check {
+  dependsOn(testing.suites)
 }

@@ -10,7 +10,7 @@ import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.joining;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -171,14 +171,14 @@ final class ElasticsearchDbAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(ElasticsearchRestRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
 
   @Override
   @Nullable
   public Integer getServerPort(ElasticsearchRestRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
   }
 }

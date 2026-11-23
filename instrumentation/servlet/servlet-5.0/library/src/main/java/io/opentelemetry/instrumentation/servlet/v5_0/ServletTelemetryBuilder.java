@@ -54,28 +54,25 @@ public final class ServletTelemetryBuilder {
         (builder, emit) -> builder.builder.setEmitExperimentalHttpServerTelemetry(emit));
     Experimental.internalSetAddTraceIdRequestAttribute(
         (builder, value) -> builder.addTraceIdRequestAttribute = value);
-    Experimental.internalSetRequestParameters(
-        (builder, requestParameters) ->
-            builder.servletBuilder.setRequestParameters(requestParameters));
+    Experimental.internalSetRequestParameters((builder, requestParameters) ->
+        builder.servletBuilder.setRequestParameters(requestParameters));
     Experimental.internalSetCaptureUserName(
         (builder, value) -> builder.servletBuilder.setCaptureUserName(value));
-    Experimental.internalSetCaptureRequestBody(
-        (builder, value) -> {
-          builder.servletBuilder.setCaptureRequestBody(value);
-          builder.captureRequestBody = value;
-        });
-    Experimental.internalSetCaptureRequestBodyMaxSize(
-        (builder, value) -> {
-          if (value <= 0) {
-            logger.log(
-                WARNING,
-                "Invalid request body capture max size {0}, using default value {1}",
-                new Object[] {value, DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE});
-            builder.captureRequestBodyMaxSize = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
-            return;
-          }
-          builder.captureRequestBodyMaxSize = value;
-        });
+    Experimental.internalSetCaptureRequestBody((builder, value) -> {
+      builder.servletBuilder.setCaptureRequestBody(value);
+      builder.captureRequestBody = value;
+    });
+    Experimental.internalSetCaptureRequestBodyMaxSize((builder, value) -> {
+      if (value <= 0) {
+        logger.log(
+            WARNING,
+            "Invalid request body capture max size {0}, using default value {1}",
+            new Object[] {value, DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE});
+        builder.captureRequestBodyMaxSize = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
+        return;
+      }
+      builder.captureRequestBodyMaxSize = value;
+    });
   }
 
   ServletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -153,8 +150,9 @@ public final class ServletTelemetryBuilder {
    * Configures recognized HTTP request methods.
    *
    * <p>By default, recognizes methods from <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
-   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a>, PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a> and QUERY from <a
+   * href="https://www.rfc-editor.org/rfc/rfc10008.html">RFC10008</a>.
    *
    * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *

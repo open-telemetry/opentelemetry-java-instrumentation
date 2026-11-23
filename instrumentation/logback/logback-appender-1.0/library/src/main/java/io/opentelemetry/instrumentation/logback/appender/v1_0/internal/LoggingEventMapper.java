@@ -241,7 +241,7 @@ public final class LoggingEventMapper {
       builder.setEventName(otelEventName);
     }
 
-    if (mdcAttributes == null) {
+    if (mdcAttributes == null || mdcProperties.isEmpty()) {
       return;
     }
     for (Map.Entry<String, String> entry : mdcProperties.entrySet()) {

@@ -235,11 +235,11 @@ class MongoDbAttributesGetterTest {
 
     assertThat(libraryGetter.getNetworkPeerAddress(event, null)).isNull();
     assertThat(libraryGetter.getNetworkPeerPort(event, null)).isNull();
-    assertThat(libraryGetter.getNetworkPeerInetSocketAddress(event, null)).isNull();
+    assertThat(libraryGetter.getNetworkPeerSocketAddress(event, null)).isNull();
     assertThat(agentGetter.getNetworkPeerAddress(event, null))
         .isEqualTo(InetAddress.getLoopbackAddress().getHostAddress());
     assertThat(agentGetter.getNetworkPeerPort(event, null)).isEqualTo(27018);
-    assertThat(agentGetter.getNetworkPeerInetSocketAddress(event, null)).isSameAs(socketAddress);
+    assertThat(agentGetter.getNetworkPeerSocketAddress(event, null)).isSameAs(socketAddress);
   }
 
   @Test
@@ -271,19 +271,22 @@ class MongoDbAttributesGetterTest {
 
     assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
-    assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(commandStartedEvent(), null))
+        .isSameAs(socketAddress);
   }
 
   @Test
   void jnrUnixNetworkPeerHasNoPort() {
     String socketPath = Paths.get("/tmp/mongodb-27017.sock").toString();
-    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(new UnixSocketAddress(socketPath));
+    SocketAddress socketAddress = new UnixSocketAddress(socketPath);
+    MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(socketAddress);
     MongoDbAttributesGetter getter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
     assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
-    assertThat(getter.getNetworkPeerInetSocketAddress(commandStartedEvent(), null)).isNull();
+    assertThat(getter.getNetworkPeerSocketAddress(commandStartedEvent(), null))
+        .isSameAs(socketAddress);
   }
 
   private static Stream<Arguments> errorTypes() {

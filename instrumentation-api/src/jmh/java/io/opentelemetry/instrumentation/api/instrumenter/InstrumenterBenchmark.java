@@ -116,8 +116,7 @@ public class InstrumenterBenchmark {
     }
 
     @Override
-    public InetSocketAddress getNetworkPeerInetSocketAddress(
-        Object request, @Nullable Void response) {
+    public InetSocketAddress getNetworkPeerSocketAddress(Object request, @Nullable Void response) {
       return PEER_ADDRESS;
     }
   }

@@ -48,167 +48,144 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
   @SuppressWarnings("CheckedExceptionNotThrown")
   @Override
   protected RatpackServer setupServer() throws Exception {
-    return RatpackServer.start(
-        ratpackServerSpec -> {
-          ratpackServerSpec.serverConfig(
-              serverConfigBuilder -> {
-                serverConfigBuilder.port(port);
-                serverConfigBuilder.address(InetAddress.getByName("localhost"));
-              });
-          ratpackServerSpec.handlers(
-              handlerChain -> {
-                handlerChain.register(
-                    registrySpec ->
-                        registrySpec.add(ServerErrorHandler.class, new TestErrorHandler()));
-                handlerChain.prefix(
-                    SUCCESS.rawPath(),
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(
-                                    SUCCESS,
-                                    endpoint ->
-                                        controller(
-                                            endpoint,
-                                            () ->
-                                                context
-                                                    .getResponse()
-                                                    .status(endpoint.getStatus())
-                                                    .send(endpoint.getBody())))));
+    return RatpackServer.start(ratpackServerSpec -> {
+      ratpackServerSpec.serverConfig(serverConfigBuilder -> {
+        serverConfigBuilder.port(port);
+        serverConfigBuilder.address(InetAddress.getByName("localhost"));
+      });
+      ratpackServerSpec.handlers(handlerChain -> {
+        handlerChain.register(
+            registrySpec -> registrySpec.add(ServerErrorHandler.class, new TestErrorHandler()));
+        handlerChain.prefix(
+            SUCCESS.rawPath(),
+            chain ->
+                chain.all(context ->
+                    process(
+                        SUCCESS,
+                        endpoint ->
+                            controller(
+                                endpoint,
+                                () ->
+                                    context
+                                        .getResponse()
+                                        .status(endpoint.getStatus())
+                                        .send(endpoint.getBody())))));
 
-                handlerChain.prefix(
-                    INDEXED_CHILD.rawPath(),
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(
-                                    INDEXED_CHILD,
-                                    endpoint ->
-                                        controller(
-                                            endpoint,
-                                            () -> {
-                                              endpoint.collectSpanAttributes(
-                                                  name ->
-                                                      context
-                                                          .getRequest()
-                                                          .getQueryParams()
-                                                          .get(name));
-                                              context
-                                                  .getResponse()
-                                                  .status(endpoint.getStatus())
-                                                  .send(endpoint.getBody());
-                                            }))));
+        handlerChain.prefix(
+            INDEXED_CHILD.rawPath(),
+            chain ->
+                chain.all(context ->
+                    process(
+                        INDEXED_CHILD,
+                        endpoint ->
+                            controller(
+                                endpoint,
+                                () -> {
+                                  endpoint.collectSpanAttributes(
+                                      name -> context.getRequest().getQueryParams().get(name));
+                                  context
+                                      .getResponse()
+                                      .status(endpoint.getStatus())
+                                      .send(endpoint.getBody());
+                                }))));
 
-                handlerChain.prefix(
-                    QUERY_PARAM.rawPath(),
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(
-                                    QUERY_PARAM,
-                                    endpoint ->
-                                        controller(
-                                            endpoint,
-                                            () ->
-                                                context
-                                                    .getResponse()
-                                                    .status(endpoint.getStatus())
-                                                    .send(context.getRequest().getQuery())))));
+        handlerChain.prefix(
+            QUERY_PARAM.rawPath(),
+            chain ->
+                chain.all(context ->
+                    process(
+                        QUERY_PARAM,
+                        endpoint ->
+                            controller(
+                                endpoint,
+                                () ->
+                                    context
+                                        .getResponse()
+                                        .status(endpoint.getStatus())
+                                        .send(context.getRequest().getQuery())))));
 
-                handlerChain.prefix(
-                    REDIRECT.rawPath(),
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(
-                                    REDIRECT,
-                                    endpoint ->
-                                        controller(
-                                            endpoint,
-                                            () -> context.redirect(endpoint.getBody())))));
+        handlerChain.prefix(
+            REDIRECT.rawPath(),
+            chain ->
+                chain.all(context ->
+                    process(
+                        REDIRECT,
+                        endpoint ->
+                            controller(endpoint, () -> context.redirect(endpoint.getBody())))));
 
-                handlerChain.prefix(
-                    ERROR.rawPath(),
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(
-                                    ERROR,
-                                    endpoint ->
-                                        controller(
-                                            endpoint,
-                                            () ->
-                                                context
-                                                    .getResponse()
-                                                    .status(endpoint.getStatus())
-                                                    .send(endpoint.getBody())))));
+        handlerChain.prefix(
+            ERROR.rawPath(),
+            chain ->
+                chain.all(context ->
+                    process(
+                        ERROR,
+                        endpoint ->
+                            controller(
+                                endpoint,
+                                () ->
+                                    context
+                                        .getResponse()
+                                        .status(endpoint.getStatus())
+                                        .send(endpoint.getBody())))));
 
-                handlerChain.prefix(
-                    EXCEPTION.rawPath(),
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(
-                                    EXCEPTION,
-                                    endpoint ->
-                                        controller(
-                                            endpoint,
-                                            () -> {
-                                              throw new IllegalStateException(endpoint.getBody());
-                                            }))));
+        handlerChain.prefix(
+            EXCEPTION.rawPath(),
+            chain ->
+                chain.all(context ->
+                    process(
+                        EXCEPTION,
+                        endpoint ->
+                            controller(
+                                endpoint,
+                                () -> {
+                                  throw new IllegalStateException(endpoint.getBody());
+                                }))));
 
-                handlerChain.prefix(
-                    "path/:id/param",
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(
-                                    PATH_PARAM,
-                                    endpoint ->
-                                        controller(
-                                            endpoint,
-                                            () ->
-                                                context
-                                                    .getResponse()
-                                                    .status(endpoint.getStatus())
-                                                    .send(context.getPathTokens().get("id"))))));
+        handlerChain.prefix(
+            "path/:id/param",
+            chain ->
+                chain.all(context ->
+                    process(
+                        PATH_PARAM,
+                        endpoint ->
+                            controller(
+                                endpoint,
+                                () ->
+                                    context
+                                        .getResponse()
+                                        .status(endpoint.getStatus())
+                                        .send(context.getPathTokens().get("id"))))));
 
-                handlerChain.prefix(
-                    CAPTURE_HEADERS.rawPath(),
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(
-                                    CAPTURE_HEADERS,
-                                    endpoint ->
-                                        controller(
-                                            endpoint,
-                                            () -> {
-                                              context.getResponse().status(endpoint.getStatus());
-                                              context
-                                                  .getResponse()
-                                                  .getHeaders()
-                                                  .set(
-                                                      "X-Test-Response",
-                                                      context
-                                                          .getRequest()
-                                                          .getHeaders()
-                                                          .get("X-Test-Request"));
-                                              context.getResponse().send(endpoint.getBody());
-                                            }))));
+        handlerChain.prefix(
+            CAPTURE_HEADERS.rawPath(),
+            chain ->
+                chain.all(context ->
+                    process(
+                        CAPTURE_HEADERS,
+                        endpoint ->
+                            controller(
+                                endpoint,
+                                () -> {
+                                  context.getResponse().status(endpoint.getStatus());
+                                  context
+                                      .getResponse()
+                                      .getHeaders()
+                                      .set(
+                                          "X-Test-Response",
+                                          context.getRequest().getHeaders().get("X-Test-Request"));
+                                  context.getResponse().send(endpoint.getBody());
+                                }))));
 
-                handlerChain.prefix(
-                    POST_STREAM.rawPath(),
-                    chain ->
-                        chain.all(
-                            context ->
-                                process(POST_STREAM, endpoint -> handlePostStream(context))));
+        handlerChain.prefix(
+            POST_STREAM.rawPath(),
+            chain ->
+                chain.all(context -> process(POST_STREAM, endpoint -> handlePostStream(context))));
 
-                registerHandlers(handlerChain);
-              });
+        registerHandlers(handlerChain);
+      });
 
-          configure(ratpackServerSpec);
-        });
+      configure(ratpackServerSpec);
+    });
   }
 
   protected void registerHandlers(Chain chain) throws Exception {}
@@ -292,16 +269,15 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     // server spans are ended inside the controller spans
     options.setVerifyServerSpanEndTime(false);
 
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (endpoint.getStatus() == 404) {
-            return "/";
-          } else if (endpoint == PATH_PARAM) {
-            return "/path/:id/param";
-          } else {
-            return endpoint.getPath();
-          }
-        });
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (endpoint.getStatus() == 404) {
+        return "/";
+      } else if (endpoint == PATH_PARAM) {
+        return "/path/:id/param";
+      } else {
+        return endpoint.getPath();
+      }
+    });
   }
 
   @Override
@@ -345,39 +321,33 @@ public abstract class AbstractRatpackHttpServerTest extends AbstractHttpServerTe
     int reactiveCallbackParent = hasHandlerSpan ? 2 : 0;
 
     testing()
-        .waitAndAssertTraces(
-            trace -> {
-              List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-              assertions.add(
-                  span -> span.hasName("POST /post-stream").hasKind(SpanKind.SERVER).hasNoParent());
-              if (hasHandlerSpan) {
-                assertions.add(
-                    span ->
-                        span.hasName("/post-stream")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(0)));
-              }
-              assertions.add(
-                  span ->
-                      span.hasName("controller")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(hasHandlerSpan ? 1 : 0)));
-              assertions.add(
-                  span ->
-                      span.hasName("onNext")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(reactiveCallbackParent)));
-              assertions.add(
-                  span ->
-                      span.hasName("onNext")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(reactiveCallbackParent)));
-              assertions.add(
-                  span ->
-                      span.hasName("onComplete")
-                          .hasKind(SpanKind.INTERNAL)
-                          .hasParent(trace.getSpan(reactiveCallbackParent)));
-              trace.hasSpansSatisfyingExactly(assertions);
-            });
+        .waitAndAssertTraces(trace -> {
+          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+          assertions.add(
+              span -> span.hasName("POST /post-stream").hasKind(SpanKind.SERVER).hasNoParent());
+          if (hasHandlerSpan) {
+            assertions.add(span ->
+                span.hasName("/post-stream")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0)));
+          }
+          assertions.add(span ->
+              span.hasName("controller")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(hasHandlerSpan ? 1 : 0)));
+          assertions.add(span ->
+              span.hasName("onNext")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(reactiveCallbackParent)));
+          assertions.add(span ->
+              span.hasName("onNext")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(reactiveCallbackParent)));
+          assertions.add(span ->
+              span.hasName("onComplete")
+                  .hasKind(SpanKind.INTERNAL)
+                  .hasParent(trace.getSpan(reactiveCallbackParent)));
+          trace.hasSpansSatisfyingExactly(assertions);
+        });
   }
 }

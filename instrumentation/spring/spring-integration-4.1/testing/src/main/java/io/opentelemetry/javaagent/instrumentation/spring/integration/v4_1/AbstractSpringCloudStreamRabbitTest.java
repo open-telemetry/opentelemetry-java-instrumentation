@@ -28,19 +28,16 @@ abstract class AbstractSpringCloudStreamRabbitTest {
   void shouldPropagateContextThroughRabbitMq() {
     rabbit.getBean("producer", Runnable.class).run();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
-                span ->
-                    span.hasName("process testConsumer.input")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "testConsumer.input")),
-                span ->
-                    span.hasName("consumer")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("producer").hasKind(SpanKind.INTERNAL),
+            span ->
+                span.hasName("process testConsumer.input")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "testConsumer.input")),
+            span ->
+                span.hasName("consumer").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(1))));
   }
 }

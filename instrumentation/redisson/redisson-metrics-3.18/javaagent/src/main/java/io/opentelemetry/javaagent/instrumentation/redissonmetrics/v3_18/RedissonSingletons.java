@@ -13,6 +13,7 @@ import org.redisson.misc.AsyncSemaphore;
 
 public class RedissonSingletons {
 
+  // visible for testing
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-metrics-3.18";
 
   @SuppressWarnings("TooManyParameters")

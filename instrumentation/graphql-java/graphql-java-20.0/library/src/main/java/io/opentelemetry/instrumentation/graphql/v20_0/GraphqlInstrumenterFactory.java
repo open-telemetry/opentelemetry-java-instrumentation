@@ -42,16 +42,14 @@ final class GraphqlInstrumenterFactory {
             INSTRUMENTATION_NAME,
             environment -> environment.getExecutionStepInfo().getField().getName())
         .addAttributesExtractor(new GraphqlDataFetcherAttributesExtractor())
-        .setSpanStatusExtractor(
-            (spanStatusBuilder, dataFetchingEnvironment, result, error) -> {
-              if (result instanceof DataFetcherResult
-                  && ((DataFetcherResult<?>) result).hasErrors()) {
-                spanStatusBuilder.setStatus(StatusCode.ERROR);
-              } else {
-                SpanStatusExtractor.getDefault()
-                    .extract(spanStatusBuilder, dataFetchingEnvironment, result, error);
-              }
-            })
+        .setSpanStatusExtractor((spanStatusBuilder, dataFetchingEnvironment, result, error) -> {
+          if (result instanceof DataFetcherResult && ((DataFetcherResult<?>) result).hasErrors()) {
+            spanStatusBuilder.setStatus(StatusCode.ERROR);
+          } else {
+            SpanStatusExtractor.getDefault()
+                .extract(spanStatusBuilder, dataFetchingEnvironment, result, error);
+          }
+        })
         .setEnabled(enabled)
         .buildInstrumenter();
   }

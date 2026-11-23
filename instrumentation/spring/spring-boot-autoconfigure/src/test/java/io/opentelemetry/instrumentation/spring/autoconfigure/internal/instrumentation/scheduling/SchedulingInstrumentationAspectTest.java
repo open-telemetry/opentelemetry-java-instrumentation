@@ -61,15 +61,12 @@ class SchedulingInstrumentationAspectTest {
     schedulingTester.testScheduled();
 
     // then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(unproxiedTesterSimpleClassName + ".testScheduled")
-                        .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testScheduled"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(unproxiedTesterSimpleClassName + ".testScheduled")
+                .hasKind(INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testScheduled"))));
   }
 
   @Test
@@ -79,16 +76,13 @@ class SchedulingInstrumentationAspectTest {
     schedulingTester.testMultiScheduled();
 
     // then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(unproxiedTesterSimpleClassName + ".testMultiScheduled")
-                        .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                unproxiedTesterClassName + ".testMultiScheduled"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(unproxiedTesterSimpleClassName + ".testMultiScheduled")
+                .hasKind(INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testMultiScheduled"))));
   }
 
   @Test
@@ -98,15 +92,12 @@ class SchedulingInstrumentationAspectTest {
     schedulingTester.testSchedules();
 
     // then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(unproxiedTesterSimpleClassName + ".testSchedules")
-                        .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testSchedules"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(unproxiedTesterSimpleClassName + ".testSchedules")
+                .hasKind(INTERNAL)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testSchedules"))));
   }
 
   @Test
@@ -117,17 +108,15 @@ class SchedulingInstrumentationAspectTest {
     schedulingTester.testNestedSpan();
 
     // then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(unproxiedTesterSimpleClassName + ".testNestedSpan")
-                        .hasKind(INTERNAL)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testNestedSpan")),
-                nestedSpan ->
-                    nestedSpan.hasParent(trace.getSpan(0)).hasKind(INTERNAL).hasName("test")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName(unproxiedTesterSimpleClassName + ".testNestedSpan")
+                    .hasKind(INTERNAL)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, unproxiedTesterClassName + ".testNestedSpan")),
+            nestedSpan ->
+                nestedSpan.hasParent(trace.getSpan(0)).hasKind(INTERNAL).hasName("test")));
   }
 
   @Test
@@ -137,17 +126,15 @@ class SchedulingInstrumentationAspectTest {
     assertThatThrownBy(() -> schedulingTester.testScheduledWithException())
         .isInstanceOf(Exception.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(unproxiedTesterSimpleClassName + ".testScheduledWithException")
-                        .hasKind(INTERNAL)
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                unproxiedTesterClassName + ".testScheduledWithException"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(unproxiedTesterSimpleClassName + ".testScheduledWithException")
+                .hasKind(INTERNAL)
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        unproxiedTesterClassName + ".testScheduledWithException"))));
   }
 
   static class InstrumentationSchedulingTester {

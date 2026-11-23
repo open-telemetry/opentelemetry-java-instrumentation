@@ -14,6 +14,7 @@ final class LettuceResponse {
   private final boolean failed;
   @Nullable private final String errorCode;
 
+  // visible for testing
   static LettuceResponse fromErrorMessage(@Nullable String errorMessage) {
     return new LettuceResponse(errorMessage != null, RedisErrorPrefix.extract(errorMessage));
   }

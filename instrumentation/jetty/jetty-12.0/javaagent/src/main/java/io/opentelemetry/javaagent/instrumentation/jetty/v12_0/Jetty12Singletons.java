@@ -24,12 +24,11 @@ class Jetty12Singletons {
             new Jetty12HttpAttributesGetter(),
             new Jetty12TextMapGetter(),
             builder -> {
-              builder.addContextCustomizer(
-                  (context, request, attributes) ->
-                      new AppServerBridge.Builder()
-                          .captureServletAttributes()
-                          .recordException()
-                          .init(context));
+              builder.addContextCustomizer((context, request, attributes) ->
+                  new AppServerBridge.Builder()
+                      .captureServletAttributes()
+                      .recordException()
+                      .init(context));
               if (ServletConfig.get().getCaptureRequestBodyEnabled()) {
                 // with jetty 12, the request body can be read after the servlet service has
                 // returned.

@@ -42,44 +42,41 @@ public class AgentTestingCustomizer implements AutoConfigurationCustomizerProvid
 
   @Override
   public void customize(AutoConfigurationCustomizer autoConfigurationCustomizer) {
-    autoConfigurationCustomizer.addTracerProviderCustomizer(
-        (tracerProvider, config) -> {
-          SdkTracerProviderUtil.addTracerConfiguratorCondition(
-              tracerProvider, nameEquals("disabled-tracer"), TracerConfig.disabled());
+    autoConfigurationCustomizer.addTracerProviderCustomizer((tracerProvider, config) -> {
+      SdkTracerProviderUtil.addTracerConfiguratorCondition(
+          tracerProvider, nameEquals("disabled-tracer"), TracerConfig.disabled());
 
-          // span processor is responsible for exporting spans, not adding it disables exporting of
-          // the spans
-          if (config.getBoolean("testing.exporter.enabled", true)) {
-            return tracerProvider.addSpanProcessor(spanProcessor);
-          }
-          return tracerProvider;
-        });
+      // span processor is responsible for exporting spans, not adding it disables exporting of
+      // the spans
+      if (config.getBoolean("testing.exporter.enabled", true)) {
+        return tracerProvider.addSpanProcessor(spanProcessor);
+      }
+      return tracerProvider;
+    });
 
-    autoConfigurationCustomizer.addMeterProviderCustomizer(
-        (meterProvider, config) -> {
-          SdkMeterProviderUtil.addMeterConfiguratorCondition(
-              meterProvider, nameEquals("disabled-meter"), MeterConfig.disabled());
+    autoConfigurationCustomizer.addMeterProviderCustomizer((meterProvider, config) -> {
+      SdkMeterProviderUtil.addMeterConfiguratorCondition(
+          meterProvider, nameEquals("disabled-meter"), MeterConfig.disabled());
 
-          // metric reader is responsible for exporting metrics, not adding it disables exporting of
-          // the metrics
-          if (config.getBoolean("testing.exporter.enabled", true)) {
-            return meterProvider.registerMetricReader(metricReader);
-          }
-          return meterProvider;
-        });
+      // metric reader is responsible for exporting metrics, not adding it disables exporting of
+      // the metrics
+      if (config.getBoolean("testing.exporter.enabled", true)) {
+        return meterProvider.registerMetricReader(metricReader);
+      }
+      return meterProvider;
+    });
 
-    autoConfigurationCustomizer.addLoggerProviderCustomizer(
-        (logProvider, config) -> {
-          SdkLoggerProviderUtil.addLoggerConfiguratorCondition(
-              logProvider, nameEquals("disabled-logger"), LoggerConfig.disabled());
+    autoConfigurationCustomizer.addLoggerProviderCustomizer((logProvider, config) -> {
+      SdkLoggerProviderUtil.addLoggerConfiguratorCondition(
+          logProvider, nameEquals("disabled-logger"), LoggerConfig.disabled());
 
-          // log record processor is responsible for exporting logs, not adding it disables
-          // exporting of the logs
-          if (config.getBoolean("testing.exporter.enabled", true)) {
-            return logProvider.addLogRecordProcessor(
-                SimpleLogRecordProcessor.create(AgentTestingExporterFactory.logExporter));
-          }
-          return logProvider;
-        });
+      // log record processor is responsible for exporting logs, not adding it disables
+      // exporting of the logs
+      if (config.getBoolean("testing.exporter.enabled", true)) {
+        return logProvider.addLogRecordProcessor(
+            SimpleLogRecordProcessor.create(AgentTestingExporterFactory.logExporter));
+      }
+      return logProvider;
+    });
   }
 }

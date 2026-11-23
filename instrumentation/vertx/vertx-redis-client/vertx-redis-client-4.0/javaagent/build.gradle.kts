@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -35,11 +37,15 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
-      implementation(project(":instrumentation-api-incubator"))
       implementation("io.vertx:vertx-redis-client:4.4.4")
+    }
+  }
+
+  unitTests("redis445UnitTests") {
+    dependencies {
+      implementation("io.vertx:vertx-redis-client:4.4.5")
     }
   }
 

@@ -39,13 +39,12 @@ class BatchRecordListener {
         callback.run();
       }
     }
-    records.forEach(
-        record -> {
-          if (record.value().equals("error") && failureCount < 2) {
-            failureCount++;
-            throw new IllegalArgumentException("boom");
-          }
-        });
+    records.forEach(record -> {
+      if (record.value().equals("error") && failureCount < 2) {
+        failureCount++;
+        throw new IllegalArgumentException("boom");
+      }
+    });
   }
 
   static void reset(int expectedMessages) {

@@ -69,23 +69,21 @@ abstract class AbstractServlet3MappingTest<SERVER, CONTEXT>
 
     assertThat(response.status().code()).isEqualTo(success ? 200 : 404);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-          assertions.add(
-              span ->
-                  span.hasName("GET " + getContextPath() + route)
-                      .hasKind(SpanKind.SERVER)
-                      .hasStatus(
-                          !success && response.status().code() >= 500
-                              ? StatusData.error()
-                              : StatusData.unset()));
-          if (!success) {
-            assertions.add(span -> {});
-          }
+    testing.waitAndAssertTraces(trace -> {
+      List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+      assertions.add(span ->
+          span.hasName("GET " + getContextPath() + route)
+              .hasKind(SpanKind.SERVER)
+              .hasStatus(
+                  !success && response.status().code() >= 500
+                      ? StatusData.error()
+                      : StatusData.unset()));
+      if (!success) {
+        assertions.add(span -> {});
+      }
 
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
+      trace.hasSpansSatisfyingExactly(assertions);
+    });
   }
 
   public static class TestServlet extends HttpServlet {

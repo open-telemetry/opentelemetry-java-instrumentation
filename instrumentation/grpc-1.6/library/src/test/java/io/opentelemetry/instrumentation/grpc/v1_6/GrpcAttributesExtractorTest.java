@@ -43,7 +43,7 @@ class GrpcAttributesExtractorTest {
         Metadata.Key.of("included-bin", Metadata.BINARY_BYTE_MARSHALLER),
         "binary-value".getBytes(UTF_8));
     GrpcRequest request =
-        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null, null);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(asList(includedPattern, "missing-key"))
@@ -66,7 +66,7 @@ class GrpcAttributesExtractorTest {
     Metadata metadata = new Metadata();
     metadata.put(Metadata.Key.of("some-key", Metadata.ASCII_STRING_MARSHALLER), "some-value");
     GrpcRequest request =
-        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
     createExtractor(null).onEnd(attributes, Context.root(), request, null, null);
@@ -79,7 +79,7 @@ class GrpcAttributesExtractorTest {
     Metadata metadata = new Metadata();
     metadata.put(Metadata.Key.of("some-key", Metadata.ASCII_STRING_MARSHALLER), "some-value");
     GrpcRequest request =
-        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null, null);
     AttributesBuilder attributes = Attributes.builder();
 
     createExtractor(IncludeExclude.builder().build())
@@ -99,7 +99,7 @@ class GrpcAttributesExtractorTest {
     Metadata metadata = spy(delegate);
     when(metadata.keys()).thenReturn(new HashSet<>(asList("Included-Key", "Excluded-Key")));
     GrpcRequest request =
-        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null, null);
     IncludeExclude selector =
         IncludeExclude.builder()
             .setIncluded(singletonList("*-key"))
@@ -122,7 +122,7 @@ class GrpcAttributesExtractorTest {
     Metadata metadata = mock(Metadata.class);
     when(metadata.keys()).thenReturn(singleton(key));
     GrpcRequest request =
-        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null);
+        GrpcRequest.createServerRequest(mock(MethodDescriptor.class), metadata, null, null, null);
     AttributesBuilder attributes = Attributes.builder();
     IncludeExclude selector = IncludeExclude.builder().setIncluded(singleton("*")).build();
 

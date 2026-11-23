@@ -9,8 +9,8 @@ import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerEndpoint.canonicalEndpoint;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseServerEndpoint.parsePort;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import org.apache.hadoop.conf.Configuration;
@@ -48,8 +48,8 @@ final class HbaseMasterTarget {
     }
 
     // MasterRegistry is a discovery service, so its endpoint ports remain inline in server.address.
-    DbServerTargetBuilder builder =
-        DbServerTarget.builder(defaultPort).setSorted(true).setPortAlwaysInline(true);
+    ServerTargetBuilder builder =
+        ServerTarget.builder(defaultPort).setSorted(true).setPortAlwaysInline(true);
     for (String configuredMaster : ENDPOINT_SEPARATOR.split(configuredMasters, -1)) {
       String endpoint = canonicalEndpoint(configuredMaster, defaultPort);
       if (endpoint == null) {
@@ -62,7 +62,7 @@ final class HbaseMasterTarget {
       }
       builder.addEndpoint(endpoint.substring(0, portSeparator), port);
     }
-    DbServerTarget target = builder.build();
+    ServerTarget target = builder.build();
     return target == null ? null : target.getAddress();
   }
 

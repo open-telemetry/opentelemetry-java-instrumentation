@@ -121,7 +121,7 @@ definitions:
       description: Configures the instrumentation to recognize an alternative set
         of HTTP request methods. All other methods will be treated as `_OTHER`.
       type: list
-      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE
     http.server.capture-request-headers:
       name: otel.instrumentation.http.server.capture-request-headers
       declarative_name: general.http.server.request_captured_headers
@@ -3268,6 +3268,29 @@ definitions:
         type: STRING
       - name: kafka.cluster.id
         type: STRING
+    kafka.consumer.partition_revoked_latency_avg-bcaba41d:
+      name: kafka.consumer.partition_revoked_latency_avg
+      description: The average time taken for a partition-revoked rebalance listener
+        callback
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: kafka.cluster.id
+        type: STRING
+    kafka.consumer.partition_revoked_latency_max-1628f894:
+      name: kafka.consumer.partition_revoked_latency_max
+      description: The max time taken for a partition-revoked rebalance listener callback
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: kafka.cluster.id
+        type: STRING
     kafka.consumer.poll_idle_ratio_avg-67d771aa:
       name: kafka.consumer.poll_idle_ratio_avg
       description: The average fraction of time the consumer's poll() is idle as opposed
@@ -4967,6 +4990,26 @@ definitions:
         type: STRING
       - name: messaging.system.name
         type: STRING
+    messaging.client.operation.duration-17a258bf:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
     messaging.client.operation.duration-215161fc:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -5021,24 +5064,6 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-b7b278fe:
-      name: messaging.client.operation.duration
-      description: Duration of messaging operation initiated by a producer or consumer
-        client.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: messaging.consumer.group.name
-        type: STRING
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.system.name
-        type: STRING
     messaging.client.operation.duration-c10d75e0:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -7821,6 +7846,8 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: error.type
+        type: STRING
       - name: http.request.method
         type: STRING
       - name: http.response.status_code
@@ -8035,6 +8062,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
@@ -12139,168 +12168,6 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_sync_time_ns_total-efd9677a
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.committed_time_ns_total-16877cb3
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_response_time_max-15ed35ff
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_time_ns_total-8ee82127
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_wait_time_ns_total-b75233cc
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2c8cdab4
-    - kafka.consumer.records_lag_avg-364be561
-    - kafka.consumer.records_lag_max-6f65fad6
-    - kafka.consumer.records_lead-1991cb14
-    - kafka.consumer.records_lead_avg-868a21eb
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_latency_avg-b493f642
-    - kafka.consumer.request_latency_max-88210cdf
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-bf475425
-    - kafka.consumer.time_between_poll_max-ff33c9d0
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_ns_total-78ba3e8a
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-7e6afd9e
-    - kafka.producer.compression_rate_avg-2297fa34
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.flush_time_ns_total-47bd28c0
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_time_ns_total-6893583a
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_wait_time_ns_total-d429fb29
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.metadata_wait_time_ns_total-f5e7d211
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.txn_abort_time_ns_total-e78813d3
-    - kafka.producer.txn_begin_time_ns_total-c5840e3b
-    - kafka.producer.txn_commit_time_ns_total-20044d9f
-    - kafka.producer.txn_init_time_ns_total-2e7b36eb
-    - kafka.producer.txn_prepare_time_ns_total-af2ea89b
-    - kafka.producer.txn_send_offsets_time_ns_total-4e40f91a
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-3a29924c
     - messaging.client.sent.messages-4c9e4d57
@@ -12354,168 +12221,6 @@ libraries:
         type: STRING
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_sync_time_ns_total-efd9677a
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.committed_time_ns_total-16877cb3
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_response_time_max-15ed35ff
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_time_ns_total-8ee82127
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_wait_time_ns_total-b75233cc
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2c8cdab4
-    - kafka.consumer.records_lag_avg-364be561
-    - kafka.consumer.records_lag_max-6f65fad6
-    - kafka.consumer.records_lead-1991cb14
-    - kafka.consumer.records_lead_avg-868a21eb
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_latency_avg-b493f642
-    - kafka.consumer.request_latency_max-88210cdf
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-bf475425
-    - kafka.consumer.time_between_poll_max-ff33c9d0
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_ns_total-78ba3e8a
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-7e6afd9e
-    - kafka.producer.compression_rate_avg-2297fa34
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.flush_time_ns_total-47bd28c0
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_time_ns_total-6893583a
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_wait_time_ns_total-d429fb29
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.metadata_wait_time_ns_total-f5e7d211
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.txn_abort_time_ns_total-e78813d3
-    - kafka.producer.txn_begin_time_ns_total-c5840e3b
-    - kafka.producer.txn_commit_time_ns_total-20044d9f
-    - kafka.producer.txn_init_time_ns_total-2e7b36eb
-    - kafka.producer.txn_prepare_time_ns_total-af2ea89b
-    - kafka.producer.txn_send_offsets_time_ns_total-4e40f91a
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-0ab6c2ce
     - messaging.client.sent.messages-4c9e4d57
@@ -12589,168 +12294,6 @@ libraries:
         type: STRING
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_sync_time_ns_total-efd9677a
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.committed_time_ns_total-16877cb3
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_response_time_max-15ed35ff
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_time_ns_total-8ee82127
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_wait_time_ns_total-b75233cc
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2c8cdab4
-    - kafka.consumer.records_lag_avg-364be561
-    - kafka.consumer.records_lag_max-6f65fad6
-    - kafka.consumer.records_lead-1991cb14
-    - kafka.consumer.records_lead_avg-868a21eb
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_latency_avg-b493f642
-    - kafka.consumer.request_latency_max-88210cdf
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-bf475425
-    - kafka.consumer.time_between_poll_max-ff33c9d0
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_ns_total-78ba3e8a
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-7e6afd9e
-    - kafka.producer.compression_rate_avg-2297fa34
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.flush_time_ns_total-47bd28c0
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_time_ns_total-6893583a
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_wait_time_ns_total-d429fb29
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.metadata_wait_time_ns_total-f5e7d211
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.txn_abort_time_ns_total-e78813d3
-    - kafka.producer.txn_begin_time_ns_total-c5840e3b
-    - kafka.producer.txn_commit_time_ns_total-20044d9f
-    - kafka.producer.txn_init_time_ns_total-2e7b36eb
-    - kafka.producer.txn_prepare_time_ns_total-af2ea89b
-    - kafka.producer.txn_send_offsets_time_ns_total-4e40f91a
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-0ab6c2ce
     - messaging.client.sent.messages-4c9e4d57
@@ -12826,6 +12369,193 @@ libraries:
         type: STRING
       - name: messaging.system.name
         type: STRING
+  - when: otel.instrumentation.kafka-clients-metrics.enabled=true
+    metric_refs:
+    - kafka.consumer.assigned_partitions-5f2d0714
+    - kafka.consumer.bytes_consumed_rate-677c9140
+    - kafka.consumer.bytes_consumed_total-12947b8d
+    - kafka.consumer.commit_latency_avg-010ecf40
+    - kafka.consumer.commit_latency_max-fc6a2be6
+    - kafka.consumer.commit_rate-0c3aae4b
+    - kafka.consumer.commit_sync_time_ns_total-efd9677a
+    - kafka.consumer.commit_total-d8205321
+    - kafka.consumer.committed_time_ns_total-16877cb3
+    - kafka.consumer.connection_close_rate-a9c91eeb
+    - kafka.consumer.connection_close_total-a7897234
+    - kafka.consumer.connection_count-b68f044c
+    - kafka.consumer.connection_creation_rate-ad21bcd0
+    - kafka.consumer.connection_creation_total-c0a7bf78
+    - kafka.consumer.failed_authentication_rate-b6bd2d7a
+    - kafka.consumer.failed_authentication_total-c7d24404
+    - kafka.consumer.failed_reauthentication_rate-ed22def6
+    - kafka.consumer.failed_reauthentication_total-c735df10
+    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
+    - kafka.consumer.failed_rebalance_total-c79a209f
+    - kafka.consumer.fetch_latency_avg-c32ee3a8
+    - kafka.consumer.fetch_latency_max-d9c78b75
+    - kafka.consumer.fetch_rate-b9250308
+    - kafka.consumer.fetch_size_avg-f52d877e
+    - kafka.consumer.fetch_size_max-5abcc685
+    - kafka.consumer.fetch_throttle_time_avg-11f87396
+    - kafka.consumer.fetch_throttle_time_max-a716c191
+    - kafka.consumer.fetch_total-9d09818d
+    - kafka.consumer.heartbeat_rate-8cb2af4e
+    - kafka.consumer.heartbeat_response_time_max-15ed35ff
+    - kafka.consumer.heartbeat_total-ffc8a49f
+    - kafka.consumer.incoming_byte_rate-aa366cac
+    - kafka.consumer.incoming_byte_total-40c552cf
+    - kafka.consumer.io_ratio-02ca9691
+    - kafka.consumer.io_time_ns_avg-6ae8ce45
+    - kafka.consumer.io_time_ns_total-8ee82127
+    - kafka.consumer.io_wait_ratio-da8005ed
+    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
+    - kafka.consumer.io_wait_time_ns_total-b75233cc
+    - kafka.consumer.join_rate-b5bf5c90
+    - kafka.consumer.join_time_avg-18db16c8
+    - kafka.consumer.join_time_max-cda17a1e
+    - kafka.consumer.join_total-37eca8e8
+    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
+    - kafka.consumer.last_poll_seconds_ago-407652c3
+    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
+    - kafka.consumer.network_io_rate-3735fe1b
+    - kafka.consumer.network_io_total-81bdf250
+    - kafka.consumer.outgoing_byte_rate-d7c41c4f
+    - kafka.consumer.outgoing_byte_total-605ebd43
+    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
+    - kafka.consumer.partition_assigned_latency_max-3c854413
+    - kafka.consumer.poll_idle_ratio_avg-67d771aa
+    - kafka.consumer.rebalance_latency_avg-c86d0e89
+    - kafka.consumer.rebalance_latency_max-4525c300
+    - kafka.consumer.rebalance_latency_total-55d2b07f
+    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
+    - kafka.consumer.rebalance_total-500afe22
+    - kafka.consumer.records_consumed_rate-d9b9d3d8
+    - kafka.consumer.records_consumed_total-22bc6ebc
+    - kafka.consumer.records_lag-2c8cdab4
+    - kafka.consumer.records_lag_avg-364be561
+    - kafka.consumer.records_lag_max-6f65fad6
+    - kafka.consumer.records_lead-1991cb14
+    - kafka.consumer.records_lead_avg-868a21eb
+    - kafka.consumer.records_lead_min-4e65ea74
+    - kafka.consumer.records_per_request_avg-f0d9f606
+    - kafka.consumer.request_latency_avg-b493f642
+    - kafka.consumer.request_latency_max-88210cdf
+    - kafka.consumer.request_rate-fd916ad7
+    - kafka.consumer.request_size_avg-0ffeb751
+    - kafka.consumer.request_size_max-f09b423b
+    - kafka.consumer.request_total-9732164f
+    - kafka.consumer.response_rate-495ac992
+    - kafka.consumer.response_total-bf9c900b
+    - kafka.consumer.select_rate-45db861b
+    - kafka.consumer.select_total-ab48483e
+    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
+    - kafka.consumer.successful_authentication_rate-2cb3879c
+    - kafka.consumer.successful_authentication_total-f9d49eea
+    - kafka.consumer.successful_reauthentication_rate-ce402806
+    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
+    - kafka.consumer.sync_rate-7e5afa4f
+    - kafka.consumer.sync_time_avg-11c52f55
+    - kafka.consumer.sync_time_max-60a6556a
+    - kafka.consumer.sync_total-0a15fb45
+    - kafka.consumer.time_between_poll_avg-bf475425
+    - kafka.consumer.time_between_poll_max-ff33c9d0
+    - kafka.producer.batch_size_avg-ca4755da
+    - kafka.producer.batch_size_max-7547e8de
+    - kafka.producer.batch_split_rate-bf8c23ec
+    - kafka.producer.batch_split_total-c71d8309
+    - kafka.producer.buffer_available_bytes-22d2cdf9
+    - kafka.producer.buffer_exhausted_rate-1d3fa684
+    - kafka.producer.buffer_exhausted_total-0d4824da
+    - kafka.producer.buffer_total_bytes-11fe6040
+    - kafka.producer.bufferpool_wait_ratio-9471500a
+    - kafka.producer.bufferpool_wait_time_ns_total-78ba3e8a
+    - kafka.producer.byte_rate-53fd5932
+    - kafka.producer.byte_total-5a12fda2
+    - kafka.producer.compression_rate-7e6afd9e
+    - kafka.producer.compression_rate_avg-2297fa34
+    - kafka.producer.connection_close_rate-c9c42487
+    - kafka.producer.connection_close_total-a0c23236
+    - kafka.producer.connection_count-0304143e
+    - kafka.producer.connection_creation_rate-d519c944
+    - kafka.producer.connection_creation_total-a48782e0
+    - kafka.producer.failed_authentication_rate-cfe9f736
+    - kafka.producer.failed_authentication_total-777d77e5
+    - kafka.producer.failed_reauthentication_rate-2a955487
+    - kafka.producer.failed_reauthentication_total-fe1a293a
+    - kafka.producer.flush_time_ns_total-47bd28c0
+    - kafka.producer.incoming_byte_rate-6b69f184
+    - kafka.producer.incoming_byte_total-bbf8921a
+    - kafka.producer.io_ratio-47f14080
+    - kafka.producer.io_time_ns_avg-5a47799e
+    - kafka.producer.io_time_ns_total-6893583a
+    - kafka.producer.io_wait_ratio-8b1262cb
+    - kafka.producer.io_wait_time_ns_avg-a7b4985b
+    - kafka.producer.io_wait_time_ns_total-d429fb29
+    - kafka.producer.metadata_age-ae019935
+    - kafka.producer.metadata_wait_time_ns_total-f5e7d211
+    - kafka.producer.network_io_rate-3b16cccb
+    - kafka.producer.network_io_total-59350ce8
+    - kafka.producer.outgoing_byte_rate-46144d24
+    - kafka.producer.outgoing_byte_total-20322fc5
+    - kafka.producer.produce_throttle_time_avg-977e45b3
+    - kafka.producer.produce_throttle_time_max-ccb20481
+    - kafka.producer.record_error_rate-d0772386
+    - kafka.producer.record_error_total-869fbc1b
+    - kafka.producer.record_queue_time_avg-05ee7c0f
+    - kafka.producer.record_queue_time_max-6544411e
+    - kafka.producer.record_retry_rate-a6668272
+    - kafka.producer.record_retry_total-41e21b5f
+    - kafka.producer.record_send_rate-550b2414
+    - kafka.producer.record_send_total-a145b861
+    - kafka.producer.record_size_avg-ccd5c8bf
+    - kafka.producer.record_size_max-5deb746f
+    - kafka.producer.records_per_request_avg-1fc965cd
+    - kafka.producer.request_latency_avg-0096430b
+    - kafka.producer.request_latency_max-efff28b0
+    - kafka.producer.request_rate-919077dd
+    - kafka.producer.request_size_avg-7648b6ea
+    - kafka.producer.request_size_max-e206b952
+    - kafka.producer.request_total-ec94813a
+    - kafka.producer.requests_in_flight-bfabefab
+    - kafka.producer.response_rate-fd0c5f38
+    - kafka.producer.response_total-bf9bb3a2
+    - kafka.producer.select_rate-a41644d4
+    - kafka.producer.select_total-48a9e108
+    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
+    - kafka.producer.successful_authentication_rate-f5f7041c
+    - kafka.producer.successful_authentication_total-b9c5f13a
+    - kafka.producer.successful_reauthentication_rate-7d372fac
+    - kafka.producer.successful_reauthentication_total-5ac1e446
+    - kafka.producer.txn_abort_time_ns_total-e78813d3
+    - kafka.producer.txn_begin_time_ns_total-c5840e3b
+    - kafka.producer.txn_commit_time_ns_total-20044d9f
+    - kafka.producer.txn_init_time_ns_total-2e7b36eb
+    - kafka.producer.txn_prepare_time_ns_total-af2ea89b
+    - kafka.producer.txn_send_offsets_time_ns_total-4e40f91a
+    - kafka.producer.waiting_threads-804fb397
+    - messaging.client.operation.duration-3a29924c
+    - messaging.client.sent.messages-4c9e4d57
+    spans:
+    - span_kind: PRODUCER
+      attributes:
+      - name: kafka.cluster.id
+        type: STRING
+      - name: kafka.message.key
+        type: STRING
+      - name: kafka.offset
+        type: LONG
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
 - name: kafka-clients-2.6
   display_name: Apache Kafka Client
   description: This standalone instrumentation enables messaging spans for Kafka producers
@@ -12840,7 +12570,7 @@ libraries:
     schema_url: https://opentelemetry.io/schemas/1.45.0
   has_standalone_library: true
   telemetry:
-  - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)
+  - when: KafkaTelemetry.metricConfigProperties()
     metric_refs:
     - kafka.consumer.assigned_partitions-5f2d0714
     - kafka.consumer.bytes_consumed_rate-677c9140
@@ -12869,6 +12599,7 @@ libraries:
     - kafka.consumer.fetch_throttle_time_max-a716c191
     - kafka.consumer.fetch_total-9d09818d
     - kafka.consumer.heartbeat_rate-8cb2af4e
+    - kafka.consumer.heartbeat_response_time_max-15ed35ff
     - kafka.consumer.heartbeat_total-ffc8a49f
     - kafka.consumer.incoming_byte_rate-aa366cac
     - kafka.consumer.incoming_byte_total-40c552cf
@@ -12891,6 +12622,8 @@ libraries:
     - kafka.consumer.outgoing_byte_total-605ebd43
     - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
     - kafka.consumer.partition_assigned_latency_max-3c854413
+    - kafka.consumer.partition_revoked_latency_avg-bcaba41d
+    - kafka.consumer.partition_revoked_latency_max-1628f894
     - kafka.consumer.poll_idle_ratio_avg-67d771aa
     - kafka.consumer.rebalance_latency_avg-c86d0e89
     - kafka.consumer.rebalance_latency_max-4525c300
@@ -12991,6 +12724,8 @@ libraries:
     - kafka.producer.successful_reauthentication_rate-7d372fac
     - kafka.producer.successful_reauthentication_total-5ac1e446
     - kafka.producer.waiting_threads-804fb397
+  - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)
+    metric_refs:
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-0ab6c2ce
     - messaging.client.sent.messages-4c9e4d57
@@ -13058,155 +12793,6 @@ libraries:
         type: STRING
   - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true),KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_waittime_total-a453d0e2
-    - kafka.consumer.iotime_total-931ad8b4
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2eb7971a
-    - kafka.consumer.records_lag_avg-e945faee
-    - kafka.consumer.records_lag_max-15894c41
-    - kafka.consumer.records_lead-e96d4e05
-    - kafka.consumer.records_lead_avg-d109ff97
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-7c1f448a
-    - kafka.consumer.time_between_poll_max-9ddc422a
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_total-93c44b13
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-eeff64aa
-    - kafka.producer.compression_rate_avg-90e64bea
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_waittime_total-822a6d69
-    - kafka.producer.iotime_total-ef51b14d
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-0ab6c2ce
     - messaging.client.sent.messages-4c9e4d57
@@ -13292,155 +12878,6 @@ libraries:
     - messaging.receive.exception-da0a5a7e
   - when: default
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_waittime_total-a453d0e2
-    - kafka.consumer.iotime_total-931ad8b4
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2eb7971a
-    - kafka.consumer.records_lag_avg-e945faee
-    - kafka.consumer.records_lag_max-15894c41
-    - kafka.consumer.records_lead-e96d4e05
-    - kafka.consumer.records_lead_avg-d109ff97
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-7c1f448a
-    - kafka.consumer.time_between_poll_max-9ddc422a
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_total-93c44b13
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-eeff64aa
-    - kafka.producer.compression_rate_avg-90e64bea
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_waittime_total-822a6d69
-    - kafka.producer.iotime_total-ef51b14d
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-3a29924c
     - messaging.client.sent.messages-4c9e4d57
@@ -17138,8 +16575,8 @@ libraries:
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
     metric_refs:
     - messaging.client.consumed.messages-40b17dc4
-    - messaging.client.operation.duration-b7b278fe
-    - messaging.client.sent.messages-95b151d6
+    - messaging.client.operation.duration-17a258bf
+    - messaging.client.sent.messages-41bf563f
     - messaging.process.duration-3cf05733
     spans:
     - span_kind: CLIENT
@@ -17192,6 +16629,8 @@ libraries:
         type: STRING
     - span_kind: PRODUCER
       attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.message.id

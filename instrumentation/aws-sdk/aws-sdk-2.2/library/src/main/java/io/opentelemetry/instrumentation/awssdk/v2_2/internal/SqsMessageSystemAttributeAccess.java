@@ -41,6 +41,7 @@ class SqsMessageSystemAttributeAccess {
     accessors = localAccessors;
   }
 
+  // only used by tests
   static boolean isAvailable() {
     return accessors != null;
   }
