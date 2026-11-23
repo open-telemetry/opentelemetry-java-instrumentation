@@ -6,7 +6,8 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
 import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.EXPERIMENTAL;
-import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.*;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;

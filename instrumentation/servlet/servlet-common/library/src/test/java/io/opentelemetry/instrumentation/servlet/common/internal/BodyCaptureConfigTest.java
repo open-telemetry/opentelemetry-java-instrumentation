@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import org.junit.jupiter.api.Test;
@@ -15,28 +17,28 @@ class BodyCaptureConfigTest {
 
   @Test
   void defaults() {
-    BodyCaptureConfig config = BodyCaptureConfig.createDefault();
+    BodyCaptureConfig config = createDefault();
     assertThat(config.isEnabled()).isFalse();
-    assertThat(config.getMaxSize()).isEqualTo(1024);
+    assertThat(config.getMaxSize()).isEqualTo(DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE);
   }
 
   @Test
   void enable() {
-    BodyCaptureConfig config = BodyCaptureConfig.createDefault().setEnabled(true);
+    BodyCaptureConfig config = createDefault().setEnabled(true);
     assertThat(config.isEnabled()).isTrue();
     assertThat(config.getMaxSize()).isEqualTo(1024);
   }
 
   @Test
   void maxSize() {
-    BodyCaptureConfig config = BodyCaptureConfig.createDefault().setMaxSize(2048);
+    BodyCaptureConfig config = createDefault().setMaxSize(2048);
     assertThat(config.getMaxSize()).isEqualTo(2048);
   }
 
   @ParameterizedTest
   @ValueSource(ints = {0, -1, -100})
   void maxSize_invalid(int value) {
-    BodyCaptureConfig config = BodyCaptureConfig.createDefault().setMaxSize(value);
-    assertThat(config.getMaxSize()).isEqualTo(1024);
+    BodyCaptureConfig config = createDefault().setMaxSize(value);
+    assertThat(config.getMaxSize()).isEqualTo(DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE);
   }
 }
