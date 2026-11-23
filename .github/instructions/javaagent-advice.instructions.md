@@ -99,7 +99,8 @@ this is a coding assumption, not a guarantee about arbitrary `ContextStorage` im
 ## AdviceScope state
 
 A dedicated `AdviceScope` may own acquisition and closure through `start()` and `end()`.
-Use those names for new ordinary factories/completion methods rather than one-off `create()` names.
+Use those names for ordinary scope factories and completion methods rather than one-off
+`create()` names.
 There are two justified shapes.
 
 ### Nullable state for conditional instrumentation
