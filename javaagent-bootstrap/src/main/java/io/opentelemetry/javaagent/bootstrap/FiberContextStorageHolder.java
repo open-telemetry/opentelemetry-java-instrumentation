@@ -9,6 +9,8 @@ import javax.annotation.Nullable;
 
 public final class FiberContextStorageHolder {
 
+  // Storing null clears the activation but keeps the entry for reuse on the next fiber resume.
+  // ScopedThreadValue.restore(null) would remove the entry.
   @SuppressWarnings("ThreadLocalUsage")
   private static final ThreadLocal<Activation> CURRENT = new ThreadLocal<>();
 
@@ -39,7 +41,6 @@ public final class FiberContextStorageHolder {
     if (CURRENT.get() != activation) {
       throw new IllegalStateException("Fiber context activations must be closed in reverse order");
     }
-    // Storing null clears the activation while keeping the thread-local entry for reuse.
     CURRENT.set(activation.previousGlobalActivation);
     return activation.previousFiberActivation;
   }
