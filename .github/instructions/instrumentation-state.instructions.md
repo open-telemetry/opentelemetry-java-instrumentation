@@ -96,37 +96,25 @@ Do not choose a cache solely for `computeIfAbsent`.
 
 ## Observable metric callbacks
 
-The SDK bundled with the javaagent holds the callback strongly. Separately, it saves the
-registering thread's context class loader (TCCL) and uses it to run the callback. Registering
-with a null TCCL does not weaken what the callback holds. Weak references in the callback do
-not remove the SDK's saved TCCL.
+The SDK bundled with the javaagent holds the callback strongly until it is unregistered.
 
 **Registration ownership.** Identify who owns the registration and when it ends. Verify that
 every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
 the returned handle and remove any long-lived registry entries for that registration.
 Clearing a reference to the handle without closing it does not unregister the callback.
 
-After `close()`, the SDK handle still holds the callback and the saved TCCL. If either
-should be collectible while the owner is still alive, clear the field that stores the
-closed handle, for example by setting it to `null`.
+After `close()`, the SDK handle still holds the callback. If the callback or the state it captures
+should be collectible while the owner is still alive, clear the field that stores the closed handle.
 
 A callback can strongly hold state that should live as long as the registration. For example,
 the HikariCP callback may capture `PoolStats`, which references the pool. When HikariCP shuts down
 the pool, the tracker must close the callback handle and clear the field that held it. If a
 shutdown path misses that cleanup, fix the hook rather than weakening the reference.
 
-**Saved TCCL.** The SDK strongly saves the registering thread's TCCL and uses it to run the
-callback. Verify that both registration and callback execution work with a null TCCL, including
-lazy initialization and supported providers or overrides. Configure builders and obtain factories
-before changing the TCCL. Save its current value, set it to `null` only around registration, and
-restore the saved value in a `finally` block, even if registration fails. If null is not
-supported, register with the usual TCCL. If you hold the loader weakly, make sure the SDK does not
-also save it strongly and define what the callback does when the loader is gone.
-
 **Collection without explicit shutdown.** If an object or class loader should be collectible
 while the registration is live, trace every strong reference to it from the SDK or other
-long-lived state. Check what the callback and its measurement functions capture, the loaders
-that define the callback and its helpers, registry entries, and the saved TCCL.
+long-lived state. Check what the callback and its measurement functions capture, the class loaders
+that define the callback and its helpers, and any registry entries.
 
 A weak reference to the measured object is different from a weak reference to the callback.
 If you hold the callback itself weakly, give it an owner that keeps it alive while it should
