@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.r2dbc.v1_0;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.DbExecution;
 import io.opentelemetry.instrumentation.r2dbc.v1_0.internal.R2dbcSqlAttributesGetter;
 import io.r2dbc.proxy.core.QueryExecutionInfo;
@@ -133,27 +131,32 @@ class R2dbcSqlAttributesGetterTest {
 
   @ParameterizedTest
   @MethodSource("dialects")
-  void sqlDialect(String connectionFactoryUrl, SqlDialect expectedDialect) {
+  void sqlDialect(String connectionFactoryUrl, String expectedQueryText) {
+    String query = "SELECT * FROM \"customers\"";
     QueryExecutionInfo queryExecutionInfo =
         MockQueryExecutionInfo.builder()
-            .queryInfo(new QueryInfo("SELECT * FROM \"customers\""))
+            .queryInfo(new QueryInfo(query))
             .connectionInfo(MockConnectionInfo.builder().build())
             .build();
     DbExecution dbExecution =
         new DbExecution(queryExecutionInfo, ConnectionFactoryOptions.parse(connectionFactoryUrl));
 
-    assertThat(getter.getSqlDialect(dbExecution)).isEqualTo(expectedDialect);
+    assertThat(
+            SqlQueryAnalyzer.create(true)
+                .analyze(query, getter.getSqlDialect(dbExecution))
+                .getQueryText())
+        .isEqualTo(expectedQueryText);
   }
 
   private static Stream<Arguments> dialects() {
     return Stream.of(
-        argumentSet("PostgreSQL", "r2dbc:postgresql://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("Oracle", "r2dbc:oracle://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("DB2", "r2dbc:db2://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("ClickHouse", "r2dbc:clickhouse://localhost/db", DOUBLE_QUOTES_ARE_IDENTIFIERS),
-        argumentSet("MySQL", "r2dbc:mysql://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS),
-        argumentSet("SQL Server", "r2dbc:mssql://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS),
-        argumentSet("unknown", "r2dbc:unknown://localhost/db", DOUBLE_QUOTES_ARE_STRING_LITERALS));
+        argumentSet("PostgreSQL", "r2dbc:postgresql://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("Oracle", "r2dbc:oracle://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("DB2", "r2dbc:db2://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("ClickHouse", "r2dbc:clickhouse://localhost/db", "SELECT * FROM \"customers\""),
+        argumentSet("MySQL", "r2dbc:mysql://localhost/db", "SELECT * FROM ?"),
+        argumentSet("SQL Server", "r2dbc:mssql://localhost/db", "SELECT * FROM ?"),
+        argumentSet("unknown", "r2dbc:unknown://localhost/db", "SELECT * FROM ?"));
   }
 
   @Test

@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.jedis.v2_0;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.trace.StatusCode;
@@ -315,12 +316,10 @@ class Jedis23ReplyIsolationTest {
         "db.client.operation.duration",
         metrics ->
             metrics.anySatisfy(metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .singleElement()
-                    .satisfies(point -> {
-                      assertThat(point.getAttributes().get(DB_OPERATION_NAME)).isEqualTo("SET");
-                      assertThat(point.getAttributes().get(ERROR_TYPE)).isNull();
-                    })));
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point.hasAttributesSatisfying(
+                            equalTo(DB_OPERATION_NAME, "SET"), equalTo(ERROR_TYPE, null)))));
   }
 
   private static class ReplyPipeline extends Pipeline {

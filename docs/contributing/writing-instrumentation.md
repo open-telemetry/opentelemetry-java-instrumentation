@@ -469,7 +469,10 @@ Ideally javaagent instrumentation is just a thin wrapper over library instrument
 is no need to write unit tests that directly access the javaagent instrumentation classes.
 
 If you still want to write a unit test against javaagent instrumentation, use the `unitTests`
-helper in the `javaagent` module. It registers a JVM test suite with the current project as a
+helper in a project applying `otel.javaagent-testing` (also applied by
+`otel.javaagent-instrumentation`). The helper requires the Javaagent testing plugin; ordinary
+Java and library projects should put their tests in `src/test` instead.
+It registers a JVM test suite with the current project as a
 dependency and includes it in `check`. Its test task and execution variants run without the
 javaagent and keep the instrumentation classes on the test classpath:
 
@@ -485,6 +488,7 @@ Place Java tests under `src/unitTests/java` and resources under `src/unitTests/r
 Pass a configuration block to `unitTests` to add suite-local dependencies. The conventions
 already provide the common test libraries, instrumentation API, and incubating API.
 
-For a separate unit-test source set or dependency graph, register a `JvmTestSuite` with a name
-ending in `unitTests`, case-insensitively. Its test task and execution variants also run without the
-javaagent. Wire that suite into `check` explicitly.
+For a separate unit-test source set or dependency graph, use a second named suite such as
+`unitTests("protostellarUnitTests") { ... }`. Its name must end in `unitTests`, case-insensitively,
+and its sources go under `src/protostellarUnitTests`. Use an execution variant instead when the
+same compiled tests and dependencies only need different flags or filters.

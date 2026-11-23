@@ -1,5 +1,11 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+}
+
+testing.suites {
+  unitTests()
 }
 
 muzzle {
