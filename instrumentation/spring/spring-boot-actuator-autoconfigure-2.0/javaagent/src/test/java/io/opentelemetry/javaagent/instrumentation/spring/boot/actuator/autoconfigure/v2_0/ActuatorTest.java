@@ -24,6 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 class ActuatorTest {
 
@@ -85,9 +88,14 @@ class ActuatorTest {
 
   @Test
   void closingContextDoesNotCloseGlobalRegistry() {
-    ConfigurableApplicationContext context = new SpringApplication(SpringApp.class).run();
+    SpringApplication app = new SpringApplication(SpringApp.class, TestRegistryConfiguration.class);
+    app.setAdditionalProfiles("shutdown-test");
+    ConfigurableApplicationContext context = app.run();
     cleanup.deferCleanup(context);
     assertThat(context.getBean("otelMeterRegistry")).isInstanceOf(MeterRegistry.class);
+    SimpleMeterRegistry springRegistry = context.getBean(SimpleMeterRegistry.class);
+    assertThat(Metrics.globalRegistry.getRegistries()).contains(springRegistry);
+    boolean removesRegistriesOnClose = context.containsBean("meterRegistryCloser");
     Counter existing = Metrics.counter("test.global.existing");
     try {
       existing.increment();
@@ -100,6 +108,10 @@ class ActuatorTest {
                       sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
 
       context.close();
+      assertThat(springRegistry.isClosed()).isTrue();
+      if (removesRegistriesOnClose) {
+        assertThat(Metrics.globalRegistry.getRegistries()).doesNotContain(springRegistry);
+      }
 
       existing.increment(2);
       testing.waitAndAssertMetrics(
@@ -125,6 +137,16 @@ class ActuatorTest {
       }
     } finally {
       Metrics.globalRegistry.remove(existing);
+      Metrics.removeRegistry(springRegistry);
+    }
+  }
+
+  @Configuration
+  @Profile("shutdown-test")
+  static class TestRegistryConfiguration {
+    @Bean
+    SimpleMeterRegistry testMeterRegistry() {
+      return new SimpleMeterRegistry();
     }
   }
 
