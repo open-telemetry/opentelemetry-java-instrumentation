@@ -94,47 +94,38 @@ class ActuatorTest {
     cleanup.deferCleanup(context);
     assertThat(context.getBean("otelMeterRegistry")).isInstanceOf(MeterRegistry.class);
     SimpleMeterRegistry springRegistry = context.getBean(SimpleMeterRegistry.class);
+    cleanup.deferCleanup(() -> Metrics.removeRegistry(springRegistry));
     assertThat(Metrics.globalRegistry.getRegistries()).contains(springRegistry);
     Counter existing = Metrics.counter("test.global.existing");
-    try {
-      existing.increment();
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.micrometer-1.5",
-          metric ->
-              metric
-                  .hasName("test.global.existing")
-                  .hasDoubleSumSatisfying(
-                      sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
+    cleanup.deferCleanup(() -> Metrics.globalRegistry.remove(existing));
+    existing.increment();
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.micrometer-1.5",
+        metric ->
+            metric
+                .hasName("test.global.existing")
+                .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
 
-      context.close();
-      assertThat(springRegistry.isClosed()).isTrue();
+    context.close();
+    assertThat(springRegistry.isClosed()).isTrue();
 
-      existing.increment(2);
-      testing.waitAndAssertMetrics(
-          "io.opentelemetry.micrometer-1.5",
-          metric ->
-              metric
-                  .hasName("test.global.existing")
-                  .hasDoubleSumSatisfying(
-                      sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+    existing.increment(2);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.micrometer-1.5",
+        metric ->
+            metric
+                .hasName("test.global.existing")
+                .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
 
-      Counter added = Metrics.counter("test.global.new");
-      try {
-        added.increment(4);
-        testing.waitAndAssertMetrics(
-            "io.opentelemetry.micrometer-1.5",
-            metric ->
-                metric
-                    .hasName("test.global.new")
-                    .hasDoubleSumSatisfying(
-                        sum -> sum.hasPointsSatisfying(point -> point.hasValue(4))));
-      } finally {
-        Metrics.globalRegistry.remove(added);
-      }
-    } finally {
-      Metrics.globalRegistry.remove(existing);
-      Metrics.removeRegistry(springRegistry);
-    }
+    Counter added = Metrics.counter("test.global.new");
+    cleanup.deferCleanup(() -> Metrics.globalRegistry.remove(added));
+    added.increment(4);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.micrometer-1.5",
+        metric ->
+            metric
+                .hasName("test.global.new")
+                .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(4))));
   }
 
   @Configuration
