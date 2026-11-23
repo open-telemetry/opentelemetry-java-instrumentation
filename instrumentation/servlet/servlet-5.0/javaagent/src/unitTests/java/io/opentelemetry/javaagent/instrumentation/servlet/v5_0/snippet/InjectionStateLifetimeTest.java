@@ -390,11 +390,10 @@ class InjectionStateLifetimeTest {
 
     Fixture() throws IOException {
       when(request.getAttribute(anyString()))
-          .thenAnswer(
-              invocation -> {
-                requestAttributeGets++;
-                return attributes.get(invocation.getArgument(0));
-              });
+          .thenAnswer(invocation -> {
+            requestAttributeGets++;
+            return attributes.get(invocation.getArgument(0));
+          });
       doAnswer(
               invocation -> {
                 String name = invocation.getArgument(0);
@@ -437,9 +436,9 @@ class InjectionStateLifetimeTest {
           .when(response)
           .setContentLength(anyInt());
       when(response.getOutputStream())
-          .thenAnswer(
-              invocation -> {
-                if (assertNoStreamStateBeforeOutputAcquisition) {
+        .thenAnswer(
+            invocation -> {
+              if (assertNoStreamStateBeforeOutputAcquisition) {
                   assertThat(INJECTION_STATE.get(stream)).isNull();
                 }
                 if (failOutputStreamAcquisition) {
