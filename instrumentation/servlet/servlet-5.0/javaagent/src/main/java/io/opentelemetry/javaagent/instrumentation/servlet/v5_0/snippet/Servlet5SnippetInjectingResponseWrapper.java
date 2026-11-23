@@ -143,24 +143,30 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void setHeader(String name, String value) {
-    long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
+    boolean contentLengthHeader = isContentLengthHeader(name);
+    long previousLength = contentLengthHeader ? getContentLengthHeader() : Long.MIN_VALUE;
     super.setHeader(name, value);
-    reconcileContentLengthHeader(
-        name,
-        previousLength,
-        parseContentLength(name, value),
-        JettyContentLength.Setter.SET_HEADER);
+    if (contentLengthHeader) {
+      reconcileContentLengthHeader(
+          name,
+          previousLength,
+          parseContentLength(name, value),
+          JettyContentLength.Setter.SET_HEADER);
+    }
   }
 
   @Override
   public void addHeader(String name, String value) {
-    long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
+    boolean contentLengthHeader = isContentLengthHeader(name);
+    long previousLength = contentLengthHeader ? getContentLengthHeader() : Long.MIN_VALUE;
     super.addHeader(name, value);
-    reconcileContentLengthHeader(
-        name,
-        previousLength,
-        parseContentLength(name, value),
-        JettyContentLength.Setter.ADD_HEADER);
+    if (contentLengthHeader) {
+      reconcileContentLengthHeader(
+          name,
+          previousLength,
+          parseContentLength(name, value),
+          JettyContentLength.Setter.ADD_HEADER);
+    }
   }
 
   private void reconcileContentLengthHeader(

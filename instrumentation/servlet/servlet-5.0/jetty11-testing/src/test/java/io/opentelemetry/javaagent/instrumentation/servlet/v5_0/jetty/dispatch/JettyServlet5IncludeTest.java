@@ -239,9 +239,7 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
           expectedLength += snippet.length();
         }
         AggregatedHttpResponse response = splitResponse.unsplit().aggregate().join();
-        assertThat(splitResponse.headers().join().status().code())
-            .as(response.contentUtf8())
-            .isEqualTo(200);
+        assertThat(splitResponse.headers().join().status().code()).isEqualTo(200);
         assertThat(splitResponse.headers().join().contentLength()).isEqualTo(expectedLength);
         assertThat(response.contentUtf8()).isEqualTo(replacementBody(expectedLength));
       } finally {

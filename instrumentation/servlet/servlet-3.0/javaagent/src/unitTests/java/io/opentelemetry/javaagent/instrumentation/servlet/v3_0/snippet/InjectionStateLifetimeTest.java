@@ -16,6 +16,7 @@ import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -352,6 +353,22 @@ class InjectionStateLifetimeTest {
         assertThat(state.getContentLength()).isEqualTo(INJECTED.length());
       }
     }
+  }
+
+  @Test
+  void nullHeaderNamesAreDelegatedWithoutChangingContentLength() throws IOException {
+    Fixture fixture = new Fixture();
+    Servlet3SnippetInjectingResponseWrapper wrapper = fixture.wrap();
+    wrapper.setContentLength(HTML.length());
+    InjectionState state = wrapper.getInjectionState();
+
+    wrapper.setHeader(null, "value");
+    wrapper.addHeader(null, "value");
+
+    assertThat(fixture.contentLength).isEqualTo(HTML.length());
+    assertThat(state.getContentLength()).isEqualTo(HTML.length());
+    verify(fixture.response).setHeader(null, "value");
+    verify(fixture.response).addHeader(null, "value");
   }
 
   @Test
