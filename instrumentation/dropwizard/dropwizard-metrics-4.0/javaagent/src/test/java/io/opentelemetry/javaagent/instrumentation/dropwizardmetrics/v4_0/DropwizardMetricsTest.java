@@ -144,10 +144,6 @@ class DropwizardMetricsTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void sameGaugeNameInSeparateRegistriesKeepsOtherRegistrationWhenRemoved(boolean removeFirst) {
-    verifySeparateRegistryGaugeRemoval(removeFirst);
-  }
-
-  private static void verifySeparateRegistryGaugeRemoval(boolean removeFirst) {
     MetricRegistry firstRegistry = new MetricRegistry();
     MetricRegistry secondRegistry = new MetricRegistry();
     AtomicLong firstValue = new AtomicLong(41);
