@@ -62,20 +62,6 @@ Matching is case-sensitive. `?` matches one character and `*` matches zero or mo
 Excluded patterns take precedence over included patterns. If included is not configured, all
 non-excluded metrics are collected. With neither property configured, all metrics are collected.
 
-The equivalent declarative configuration is:
-
-```yaml
-instrumentation/development:
-  java:
-    jmx:
-      metrics:
-        included:
-          - jvm.memory.*
-          - jvm.thread.coun?
-        excluded:
-          - jvm.memory.limit
-```
-
 ## Configuration Files
 
 To provide your own metric definitions, create one or more YAML configuration files, and specify their location using the `otel.jmx.config` property. Absolute or relative pathnames can be specified. For example
