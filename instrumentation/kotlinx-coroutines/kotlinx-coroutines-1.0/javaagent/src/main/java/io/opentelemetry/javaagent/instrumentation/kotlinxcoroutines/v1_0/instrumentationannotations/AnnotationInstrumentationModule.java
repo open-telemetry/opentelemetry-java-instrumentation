@@ -41,9 +41,11 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed(
-        // added in 1.4.3; older versions restore thread context elements out of order
-        // (Kotlin/kotlinx.coroutines#2195), which the tail call frame relies on
-        "kotlinx.coroutines.UndispatchedMarker",
+        // added in 1.6.1, where an undispatched withContext keeps the thread context it restores per
+        // thread (Kotlin/kotlinx.coroutines#3155); with older versions a concurrent resume can skip
+        // that restore (Kotlin/kotlinx.coroutines#2930), and with it the scopes the runtime marker
+        // closes
+        "kotlinx.coroutines.internal.ResizableAtomicArray",
         // artifact presence gate
         // added in opentelemetry-instrumentation-annotations 1.16.0
         "application.io.opentelemetry.instrumentation.annotations.WithSpan");
