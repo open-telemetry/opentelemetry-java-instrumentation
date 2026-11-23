@@ -1,4 +1,4 @@
-import names from "./names.js";
+import names from "../k6/names.js";
 
 const originalRandom = Math.random;
 try {

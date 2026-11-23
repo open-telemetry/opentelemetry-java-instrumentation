@@ -108,6 +108,9 @@ cd benchmark-overhead
 
 ```
 
+To check the k6 name generator without starting Petclinic or PostgreSQL, run
+`k6 run --iterations 1 k6-tests/names-test.js` from `benchmark-overhead` with k6 installed.
+
 ## Visualization
 
 None yet. Help wanted! Our goal is to have the results and a rich UI running in the
