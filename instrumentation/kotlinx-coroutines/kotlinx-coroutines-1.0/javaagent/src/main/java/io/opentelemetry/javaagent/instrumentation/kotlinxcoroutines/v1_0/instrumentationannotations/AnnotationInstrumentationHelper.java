@@ -13,17 +13,13 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import java.lang.reflect.Field;
 import javax.annotation.Nullable;
 import kotlin.ResultKt;
 import kotlin.coroutines.Continuation;
-import kotlin.coroutines.ContinuationInterceptor;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.intrinsics.IntrinsicsKt;
 import kotlin.coroutines.jvm.internal.ContinuationImpl;
 import kotlin.coroutines.jvm.internal.CoroutineStackFrame;
-import kotlinx.coroutines.CoroutineDispatcher;
-import kotlinx.coroutines.Dispatchers;
 import kotlinx.coroutines.ThreadContextElement;
 import org.jetbrains.annotations.NotNull;
 
@@ -217,6 +213,7 @@ public class AnnotationInstrumentationHelper {
     ContextContinuation(
         Continuation<T> delegate, Context spanContext, Context parentContext, Object request) {
       this.delegate = delegate;
+      // the marker must be added last, so that the runtime restores it before the span's scope
       this.coroutineContext =
           delegate
               .getContext()
@@ -252,69 +249,23 @@ public class AnnotationInstrumentationHelper {
       Throwable error = KotlinResultUtilKt.exceptionOrNull(result);
       instrumenter().end(spanContext, (MethodRequest) request, null, error);
 
-      // When the runtime resumed the callee with its context, resuming the caller here switches the
-      // thread context in the middle of that task. Under an undispatched withContext the runtime
-      // may restore the task's context later, out of order with the switch, so let the caller's
-      // dispatcher resume it with its own context instead. Other interceptors do not apply the
-      // caller's context, and a callback that resumed the callee itself expects the caller to run
-      // before it returns, as without the annotation, so both resume it below.
-      CoroutineContext callerContext = delegate.getContext();
-      ContinuationInterceptor interceptor = callerContext.get(ContinuationInterceptor.Key);
-      if (runtimeContextMarker.isApplied()
-          && interceptor instanceof CoroutineDispatcher
-          && UndispatchedMarker.mayBeIn(callerContext)) {
-        Continuation<T> intercepted = IntrinsicsKt.intercepted(delegate);
-        if (intercepted != delegate) {
-          if (!dispatchedAnyway((CoroutineDispatcher) interceptor, result)) {
-            intercepted.resumeWith(result);
-          }
-          return;
-        }
-      }
-
+      // When the runtime runs this with the callee's context applied, it may restore that context,
+      // including the span's scope, before this method returns, when the caller completes an
+      // undispatched withContext. The runtime restores thread context elements in reverse order
+      // (Kotlin/kotlinx.coroutines#2195) and the marker is added last, so the marker closes the
+      // caller's scope right before the span's scope and the scopes stay in order.
       Scope scope = delegateContextElement.updateThreadContext(delegate.getContext());
+      RuntimeContextMarkerApplication application =
+          RuntimeContextMarkerKt.currentRuntimeContextMarkerApplication();
+      if (application != null) {
+        application.defer(scope);
+      }
       try {
         delegate.resumeWith(result);
       } finally {
-        delegateContextElement.restoreThreadContext(delegate.getContext(), scope);
-      }
-    }
-
-    // A dispatcher that needs no dispatch would resume the caller inline, still inside this task,
-    // where the same out of order restore happens, so make it dispatch anyway. A dispatcher that
-    // can not dispatch, such as Unconfined, which queues the resumption until this task completes,
-    // resumes the caller as it otherwise would.
-    private boolean dispatchedAnyway(CoroutineDispatcher dispatcher, Object result) {
-      if (dispatcher == Dispatchers.getUnconfined()
-          || dispatcher.isDispatchNeeded(delegate.getContext())) {
-        return false;
-      }
-      AlwaysDispatch alwaysDispatch = new AlwaysDispatch(dispatcher);
-      alwaysDispatch.interceptContinuation(delegate).resumeWith(result);
-      return !alwaysDispatch.rejected;
-    }
-  }
-
-  private static final class AlwaysDispatch extends CoroutineDispatcher {
-    private final CoroutineDispatcher dispatcher;
-    private boolean rejected;
-
-    AlwaysDispatch(CoroutineDispatcher dispatcher) {
-      this.dispatcher = dispatcher;
-    }
-
-    @Override
-    public boolean isDispatchNeeded(@NotNull CoroutineContext context) {
-      return true;
-    }
-
-    @Override
-    public void dispatch(@NotNull CoroutineContext context, @NotNull Runnable block) {
-      try {
-        dispatcher.dispatch(context, block);
-      } catch (RuntimeException e) {
-        // a dispatcher that only runs unconfined, such as UnconfinedTestDispatcher
-        rejected = true;
+        if (application == null || application.undefer(scope)) {
+          delegateContextElement.restoreThreadContext(delegate.getContext(), scope);
+        }
       }
     }
   }
@@ -342,35 +293,6 @@ public class AnnotationInstrumentationHelper {
       ResultKt.throwOnFailure(result);
       return result;
     }
-  }
-
-  private static final class UndispatchedMarker {
-    // kotlinx-coroutines marks the context of every undispatched withContext with this element
-    @Nullable private static final CoroutineContext.Key<?> KEY = findKey();
-
-    static boolean mayBeIn(CoroutineContext context) {
-      return KEY == null || context.get(KEY) != null;
-    }
-
-    @Nullable
-    private static CoroutineContext.Key<?> findKey() {
-      try {
-        Class<?> marker =
-            Class.forName(
-                "kotlinx.coroutines.UndispatchedMarker",
-                false,
-                ThreadContextElement.class.getClassLoader());
-        // the class is not public
-        Field field = marker.getField("INSTANCE");
-        field.setAccessible(true);
-        Object instance = field.get(null);
-        return instance instanceof CoroutineContext.Key ? (CoroutineContext.Key<?>) instance : null;
-      } catch (ReflectiveOperationException | RuntimeException e) {
-        return null;
-      }
-    }
-
-    private UndispatchedMarker() {}
   }
 
   public static void init() {}
