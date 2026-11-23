@@ -46,14 +46,10 @@ public abstract class AbstractGaugeTest {
                     .hasName("testGauge")
                     .hasDescription("This is a test gauge")
                     .hasUnit("items")
-                    .hasDoubleGaugeSatisfying(
-                        doubleGauge ->
-                            doubleGauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(42)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugePointsSatisfying(point ->
+                        point
+                            .hasValue(42)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(gauge);
@@ -98,14 +94,10 @@ public abstract class AbstractGaugeTest {
                     .hasName("testGauge")
                     .hasDescription("This is a test gauge")
                     .hasUnit("items")
-                    .hasDoubleGaugeSatisfying(
-                        doubleGauge ->
-                            doubleGauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(42)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleGaugePointsSatisfying(point ->
+                        point
+                            .hasValue(42)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(gauge);
@@ -139,19 +131,15 @@ public abstract class AbstractGaugeTest {
                     .hasName("testGaugeWithTags")
                     .hasDescription("First description wins")
                     .hasUnit("items")
-                    .hasDoubleGaugeSatisfying(
-                        gauge ->
-                            gauge.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasValue(12)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "1")),
-                                point ->
-                                    point
-                                        .hasValue(42)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(stringKey("tag"), "2")))));
+                    .hasDoubleGaugePointsSatisfying(
+                        point ->
+                            point
+                                .hasValue(12)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "1")),
+                        point ->
+                            point
+                                .hasValue(42)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "2"))));
   }
 
   @Test
@@ -169,8 +157,7 @@ public abstract class AbstractGaugeTest {
             metric ->
                 metric
                     .hasName("testWeakRefGauge")
-                    .hasDoubleGaugeSatisfying(
-                        gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
+                    .hasDoubleGaugePointsSatisfying(point -> point.hasValue(42)));
 
     // when
     WeakReference<AtomicLong> numWeakRef = new WeakReference<>(num);

@@ -153,17 +153,15 @@ class VertxSqlClientServerListTest {
   }
 
   private static void assertServerListTarget(String serverAddress, String statement) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, statement),
-                            equalTo(DB_QUERY_SUMMARY, "select"),
-                            equalTo(SERVER_ADDRESS, serverAddress))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                    equalTo(DB_NAMESPACE, DB),
+                    equalTo(DB_QUERY_TEXT, statement),
+                    equalTo(DB_QUERY_SUMMARY, "select"),
+                    equalTo(SERVER_ADDRESS, serverAddress))));
   }
 
   @Test
@@ -173,19 +171,17 @@ class VertxSqlClientServerListTest {
 
     select(pool);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, "select ?"),
-                            equalTo(DB_QUERY_SUMMARY, "select"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                    equalTo(DB_NAMESPACE, DB),
+                    equalTo(DB_QUERY_TEXT, "select ?"),
+                    equalTo(DB_QUERY_SUMMARY, "select"),
+                    equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port))));
   }
 
   @Test
@@ -218,29 +214,26 @@ class VertxSqlClientServerListTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, "select ?"),
-                            equalTo(DB_QUERY_SUMMARY, "select"),
-                            equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(DB_QUERY_TEXT, "select ?"),
+                        equalTo(DB_QUERY_SUMMARY, "select"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, DB),
-                            equalTo(DB_QUERY_TEXT, "select ?"),
-                            equalTo(DB_QUERY_SUMMARY, "select"),
-                            equalTo(
-                                SERVER_ADDRESS,
-                                host + ":" + port + "," + host + ":" + (port + 1)))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, DB),
+                        equalTo(DB_QUERY_TEXT, "select ?"),
+                        equalTo(DB_QUERY_SUMMARY, "select"),
+                        equalTo(
+                            SERVER_ADDRESS, host + ":" + port + "," + host + ":" + (port + 1)))));
   }
 
   private static void select(SqlClient client)
@@ -250,21 +243,17 @@ class VertxSqlClientServerListTest {
 
   private static void executePreparedStatement(Pool pool, String query, Tuple tuple)
       throws InterruptedException, ExecutionException, TimeoutException {
-    pool.withConnection(
-            connection ->
-                connection
-                    .prepare(query)
-                    .compose(
-                        statement ->
-                            statement
-                                .query()
-                                .execute(tuple)
-                                .compose(
-                                    rows -> statement.close().map(rows),
-                                    error ->
-                                        statement
-                                            .close()
-                                            .compose(ignored -> Future.failedFuture(error)))))
+    pool.withConnection(connection ->
+            connection
+                .prepare(query)
+                .compose(statement ->
+                    statement
+                        .query()
+                        .execute(tuple)
+                        .compose(
+                            rows -> statement.close().map(rows),
+                            error ->
+                                statement.close().compose(ignored -> Future.failedFuture(error)))))
         .toCompletionStage()
         .toCompletableFuture()
         .get(30, SECONDS);

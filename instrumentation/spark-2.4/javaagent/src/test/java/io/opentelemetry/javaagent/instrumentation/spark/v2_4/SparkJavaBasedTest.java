@@ -59,25 +59,23 @@ class SparkJavaBasedTest {
 
     assertThat(port).isNotEqualTo(0);
     assertThat(content).isEqualTo("Hello asdf1234");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /param/:param")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(URL_PATH, "/param/asdf1234"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
-                            equalTo(HTTP_ROUTE, "/param/:param"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(CLIENT_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /param/:param")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(URL_PATH, "/param/asdf1234"),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                    satisfies(USER_AGENT_ORIGINAL, val -> val.isInstanceOf(String.class)),
+                    equalTo(HTTP_ROUTE, "/param/:param"),
+                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(CLIENT_ADDRESS, "127.0.0.1"),
+                    equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                    satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }
 }

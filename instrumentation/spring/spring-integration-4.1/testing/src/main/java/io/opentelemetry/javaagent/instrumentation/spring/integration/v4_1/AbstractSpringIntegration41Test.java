@@ -79,18 +79,17 @@ abstract class AbstractSpringIntegration41Test {
     assertThat(Context.current()).isSameAs(before);
 
     String destination = "application." + channelName;
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> {
-                  span.hasName("process " + destination)
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(0))
-                      .hasAttributesSatisfyingExactly(messagingAttributes("process", destination));
-                  assertPropagation(captured.join(), trace.getSpan(1));
-                },
-                span -> span.hasName("handler").hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> {
+              span.hasName("process " + destination)
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasParent(trace.getSpan(0))
+                  .hasAttributesSatisfyingExactly(messagingAttributes("process", destination));
+              assertPropagation(captured.join(), trace.getSpan(1));
+            },
+            span -> span.hasName("handler").hasParent(trace.getSpan(1))));
     assertProcessMetrics(testing, destination, false);
   }
 
@@ -99,26 +98,23 @@ abstract class AbstractSpringIntegration41Test {
     DirectChannel outer = applicationContext.getBean("directChannel", DirectChannel.class);
     DirectChannel inner = applicationContext.getBean("nestedChannel", DirectChannel.class);
     inner.subscribe(message -> testing.runWithSpan("innerHandler", () -> {}));
-    outer.subscribe(
-        message -> {
-          Context before = Context.current();
-          inner.send(message);
-          assertThat(Span.current().getSpanContext())
-              .isEqualTo(Span.fromContext(before).getSpanContext());
-          testing.runWithSpan("outerHandler", () -> {});
-        });
+    outer.subscribe(message -> {
+      Context before = Context.current();
+      inner.send(message);
+      assertThat(Span.current().getSpanContext())
+          .isEqualTo(Span.fromContext(before).getSpanContext());
+      testing.runWithSpan("outerHandler", () -> {});
+    });
 
     Context before = Context.current();
     outer.send(MessageBuilder.withPayload("test").build());
     assertThat(Context.current()).isSameAs(before);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process application.directChannel").hasKind(SpanKind.CONSUMER),
-                span -> span.hasName("innerHandler").hasParent(trace.getSpan(0)),
-                span -> span.hasName("outerHandler").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("process application.directChannel").hasKind(SpanKind.CONSUMER),
+            span -> span.hasName("innerHandler").hasParent(trace.getSpan(0)),
+            span -> span.hasName("outerHandler").hasParent(trace.getSpan(0))));
     assertProcessMetrics(testing, "application.directChannel", false);
   }
 
@@ -126,10 +122,9 @@ abstract class AbstractSpringIntegration41Test {
   void shouldCleanUpAfterFailedSend() {
     DirectChannel channel = applicationContext.getBean("directChannel", DirectChannel.class);
     IllegalStateException handlerFailure = new IllegalStateException("failed handler");
-    channel.subscribe(
-        message -> {
-          throw handlerFailure;
-        });
+    channel.subscribe(message -> {
+      throw handlerFailure;
+    });
 
     Context before = Context.current();
     assertThatThrownBy(() -> channel.send(MessageBuilder.withPayload("test").build()))
@@ -140,12 +135,11 @@ abstract class AbstractSpringIntegration41Test {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process application.directChannel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasException(handlerFailure)),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("process application.directChannel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasNoParent()
+                    .hasException(handlerFailure)),
         trace ->
             trace.hasSpansSatisfyingExactly(span -> span.hasName("afterFailure").hasNoParent()));
     assertProcessMetrics(testing, "application.directChannel", true);
@@ -169,16 +163,15 @@ abstract class AbstractSpringIntegration41Test {
     // Integration 4.1 has no ExecutorChannelInterceptor callbacks: the consumer ends at send,
     // before the queued handler runs. Its context is still propagated in the message headers.
     AtomicReference<SpanData> consumer = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> {
-                  span.hasName("process deferredChannel")
-                      .hasKind(SpanKind.CONSUMER)
-                      .hasParent(trace.getSpan(0));
-                  consumer.set(trace.getSpan(1));
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> {
+              span.hasName("process deferredChannel")
+                  .hasKind(SpanKind.CONSUMER)
+                  .hasParent(trace.getSpan(0));
+              consumer.set(trace.getSpan(1));
+            }));
     assertThat(captured.get()).isNull();
     Runnable task = tasks.poll(10, SECONDS);
     assertThat(task).isNotNull();
@@ -198,11 +191,10 @@ abstract class AbstractSpringIntegration41Test {
       // The 4.1 global processor only discovers Integration ChannelInterceptorAware beans.
       channel.addInterceptor(interceptor());
       CompletableFuture<Message<?>> captured = new CompletableFuture<>();
-      channel.subscribe(
-          message -> {
-            testing.runWithSpan("handler", () -> {});
-            captured.complete(message);
-          });
+      channel.subscribe(message -> {
+        testing.runWithSpan("handler", () -> {});
+        captured.complete(message);
+      });
 
       Context before = Context.current();
       testing.runWithSpan("parent", () -> channel.send(MessageBuilder.withPayload("test").build()));
@@ -212,19 +204,18 @@ abstract class AbstractSpringIntegration41Test {
       assertThat(executor.submit(() -> Span.current().getSpanContext().isValid()).get(10, SECONDS))
           .isFalse();
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span -> {
-                    span.hasName("process frameworkExecutorChannel")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            messagingAttributes("process", "frameworkExecutorChannel"));
-                    assertPropagation(message, trace.getSpan(1));
-                  },
-                  span -> span.hasName("handler").hasParent(trace.getSpan(1))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"),
+              span -> {
+                span.hasName("process frameworkExecutorChannel")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        messagingAttributes("process", "frameworkExecutorChannel"));
+                assertPropagation(message, trace.getSpan(1));
+              },
+              span -> span.hasName("handler").hasParent(trace.getSpan(1))));
       assertProcessMetrics(testing, "frameworkExecutorChannel", false);
     } finally {
       executor.shutdownNow();

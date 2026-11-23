@@ -115,13 +115,12 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setHasResponseSpan(
         endpoint -> endpoint == REDIRECT || endpoint == ERROR || endpoint == NOT_FOUND);
 
-    options.setExpectedHttpRoute(
-        (ServerEndpoint endpoint, String method) -> {
-          if (method.equals(HttpConstants._OTHER)) {
-            return getContextPath() + endpoint.getPath();
-          }
-          return super.expectedHttpRoute(endpoint, method);
-        });
+    options.setExpectedHttpRoute((ServerEndpoint endpoint, String method) -> {
+      if (method.equals(HttpConstants._OTHER)) {
+        return getContextPath() + endpoint.getPath();
+      }
+      return super.expectedHttpRoute(endpoint, method);
+    });
   }
 
   @Override

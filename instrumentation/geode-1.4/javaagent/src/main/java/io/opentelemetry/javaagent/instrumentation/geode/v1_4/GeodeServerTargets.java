@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
@@ -18,8 +18,8 @@ class GeodeServerTargets {
 
   private static final VirtualField<PoolFactory, GeodeServerTargetBuilder> CONFIGURED_TARGETS =
       VirtualField.find(PoolFactory.class, GeodeServerTargetBuilder.class);
-  private static final VirtualField<Pool, DbServerTarget> POOL_TARGETS =
-      VirtualField.find(Pool.class, DbServerTarget.class);
+  private static final VirtualField<Pool, ServerTarget> POOL_TARGETS =
+      VirtualField.find(Pool.class, ServerTarget.class);
 
   static void addServer(PoolFactory poolFactory, @Nullable String host, int port) {
     builder(poolFactory).addServer(host, port);
@@ -52,7 +52,7 @@ class GeodeServerTargets {
   static void capture(PoolFactory poolFactory, @Nullable Pool pool) {
     if (pool != null) {
       // Each pool keeps the configuration snapshot from the moment it was created.
-      DbServerTarget target = builder(poolFactory).build();
+      ServerTarget target = builder(poolFactory).build();
       if (target != null) {
         POOL_TARGETS.set(pool, target);
       }
@@ -60,7 +60,7 @@ class GeodeServerTargets {
   }
 
   @Nullable
-  static DbServerTarget get(Region<?, ?> region) {
+  static ServerTarget get(Region<?, ?> region) {
     Pool pool = PoolManager.find(region);
     return pool == null ? null : POOL_TARGETS.get(pool);
   }

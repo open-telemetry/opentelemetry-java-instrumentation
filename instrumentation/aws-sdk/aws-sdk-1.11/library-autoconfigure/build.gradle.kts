@@ -22,31 +22,22 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-sqs:1.11.106")
 }
 
-tasks {
-  test {
-    filter {
-      excludeTestsMatching("SqsSuppressReceiveSpansTest")
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+      systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-  }
-}
-
-testing {
-  suites {
-    named<JvmTestSuite>("test") {
-      executions {
-        configureEach {
-          systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-          systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
-          systemProperty("testLatestDeps", otelProps.testLatestDeps)
-        }
-        register("ReceiveSpansDisabled") {
-          filter {
-            includeTestsMatching("SqsSuppressReceiveSpansTest")
-          }
-          include("**/SqsSuppressReceiveSpansTest.*")
-        }
+    configureDefault {
+      filter.excludeTestsMatching("SqsSuppressReceiveSpansTest")
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
+    }
+    register("ReceiveSpansDisabled") {
+      filter {
+        includeTestsMatching("SqsSuppressReceiveSpansTest")
       }
+      include("**/SqsSuppressReceiveSpansTest.*")
     }
   }
 }

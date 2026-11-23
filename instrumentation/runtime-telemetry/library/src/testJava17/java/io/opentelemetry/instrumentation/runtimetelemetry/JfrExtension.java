@@ -98,19 +98,18 @@ class JfrExtension implements BeforeEachCallback, AfterEachCallback {
   @SafeVarargs
   protected final void waitAndAssertMetrics(Consumer<MetricAssert>... assertions) {
     await()
-        .untilAsserted(
-            () -> {
-              Collection<MetricData> metrics = metricReader.collectAllMetrics();
+        .untilAsserted(() -> {
+          Collection<MetricData> metrics = metricReader.collectAllMetrics();
 
-              assertThat(metrics).isNotEmpty();
+          assertThat(metrics).isNotEmpty();
 
-              for (Consumer<MetricAssert> assertion : assertions) {
-                assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
-              }
-              if (Boolean.getBoolean("collectMetadata")) {
-                collectEmittedMetrics(metrics.stream().toList());
-              }
-            });
+          for (Consumer<MetricAssert> assertion : assertions) {
+            assertThat(metrics).anySatisfy(metric -> assertion.accept(assertThat(metric)));
+          }
+          if (Boolean.getBoolean("collectMetadata")) {
+            collectEmittedMetrics(metrics.stream().toList());
+          }
+        });
   }
 
   private void collectEmittedMetrics(List<MetricData> metrics) {

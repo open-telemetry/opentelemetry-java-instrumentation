@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import javax.annotation.Nullable;
 import org.apache.hadoop.hbase.TableName;
 
@@ -52,9 +52,8 @@ final class HbaseAttributesGetter implements DbClientAttributesGetter<HbaseReque
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
-      HbaseRequest request, @Nullable Void unused) {
-    return request.getNetworkPeerInetSocketAddress();
+  public SocketAddress getNetworkPeerSocketAddress(HbaseRequest request, @Nullable Void unused) {
+    return request.getNetworkPeerSocketAddress();
   }
 
   @Nullable

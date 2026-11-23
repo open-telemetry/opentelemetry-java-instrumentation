@@ -38,14 +38,13 @@ public abstract class AbstractControllerSpringWebFluxServerTest
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
       if (emitExceptionAsSpanEvents()) {
-        span.hasEventsSatisfyingExactly(
-            event ->
-                event
-                    .hasName("exception")
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
-                        equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
-                        satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+        span.hasEventsSatisfyingExactly(event ->
+            event
+                .hasName("exception")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+                    equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
+                    satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       } else {
         span.hasEventsSatisfyingExactly();
       }
@@ -53,32 +52,29 @@ public abstract class AbstractControllerSpringWebFluxServerTest
       span.hasStatus(StatusData.error());
       if (emitExceptionAsSpanEvents()) {
         if (testLatestDeps()) {
-          span.hasEventsSatisfyingExactly(
-              event ->
-                  event
-                      .hasName("exception")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              EXCEPTION_TYPE,
-                              "org.springframework.web.reactive.resource.NoResourceFoundException"),
-                          equalTo(
-                              EXCEPTION_MESSAGE, "404 NOT_FOUND \"No static resource notFound.\""),
-                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+          span.hasEventsSatisfyingExactly(event ->
+              event
+                  .hasName("exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          EXCEPTION_TYPE,
+                          "org.springframework.web.reactive.resource.NoResourceFoundException"),
+                      equalTo(EXCEPTION_MESSAGE, "404 NOT_FOUND \"No static resource notFound.\""),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
         } else {
-          span.hasEventsSatisfyingExactly(
-              event ->
-                  event
-                      .hasName("exception")
-                      .hasAttributesSatisfyingExactly(
-                          satisfies(
-                              EXCEPTION_TYPE,
-                              val ->
-                                  val.isIn(
-                                      "org.springframework.web.server.ResponseStatusException",
-                                      // Changed in spring 7+
-                                      "org.springframework.web.reactive.resource.NoResourceFoundException")),
-                          satisfies(EXCEPTION_MESSAGE, val -> val.contains("404")),
-                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+          span.hasEventsSatisfyingExactly(event ->
+              event
+                  .hasName("exception")
+                  .hasAttributesSatisfyingExactly(
+                      satisfies(
+                          EXCEPTION_TYPE,
+                          val ->
+                              val.isIn(
+                                  "org.springframework.web.server.ResponseStatusException",
+                                  // Changed in spring 7+
+                                  "org.springframework.web.reactive.resource.NoResourceFoundException")),
+                      satisfies(EXCEPTION_MESSAGE, val -> val.contains("404")),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
         }
       } else {
         span.hasEventsSatisfyingExactly();

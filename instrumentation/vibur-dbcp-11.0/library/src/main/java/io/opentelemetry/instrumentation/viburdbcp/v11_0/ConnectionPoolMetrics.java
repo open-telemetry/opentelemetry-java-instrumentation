@@ -39,7 +39,7 @@ final class ConnectionPoolMetrics {
       Attributes databaseAttributes) {
     dataSourceMetrics.computeIfAbsent(
         dataSource,
-        (unused) -> createMeters(openTelemetry, dataSource, poolName, databaseAttributes));
+        unused -> createMeters(openTelemetry, dataSource, poolName, databaseAttributes));
   }
 
   private static BatchCallback createMeters(

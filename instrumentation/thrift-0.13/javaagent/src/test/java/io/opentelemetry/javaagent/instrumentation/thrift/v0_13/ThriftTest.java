@@ -88,13 +88,12 @@ class ThriftTest extends AbstractThriftTest {
 
     assertThat(client.say("Hello", "World")).isEqualTo("Say Hello World");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "say", port).hasNoParent(),
-                span ->
-                    assertServerSpan(span, handler.getClass().getName(), "say", port, null)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> assertClientSpan(span, "say", port).hasNoParent(),
+            span ->
+                assertServerSpan(span, handler.getClass().getName(), "say", port, null)
+                    .hasParent(trace.getSpan(0))));
     assertMetrics(port, handler.getClass().getName());
   }
 
@@ -126,13 +125,12 @@ class ThriftTest extends AbstractThriftTest {
         });
     assertThat(result.get(15, SECONDS)).isEqualTo("Say Hello World");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "say", port).hasNoParent(),
-                span ->
-                    assertServerSpan(span, handler.getClass().getName(), "say", port, null)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> assertClientSpan(span, "say", port).hasNoParent(),
+            span ->
+                assertServerSpan(span, handler.getClass().getName(), "say", port, null)
+                    .hasParent(trace.getSpan(0))));
     assertMetrics(port, handler.getClass().getName());
   }
 

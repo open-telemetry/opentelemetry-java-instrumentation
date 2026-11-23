@@ -12,8 +12,9 @@ import javax.annotation.Nullable;
 final class LettuceResponse {
 
   private final boolean failed;
-  @Nullable private final String redisErrorType;
+  @Nullable private final String errorCode;
 
+  // visible for testing
   static LettuceResponse fromErrorMessage(@Nullable String errorMessage) {
     return new LettuceResponse(errorMessage != null, RedisErrorPrefix.extract(errorMessage));
   }
@@ -26,9 +27,9 @@ final class LettuceResponse {
     return new LettuceResponse(true, null);
   }
 
-  private LettuceResponse(boolean failed, @Nullable String redisErrorType) {
+  private LettuceResponse(boolean failed, @Nullable String errorCode) {
     this.failed = failed;
-    this.redisErrorType = redisErrorType;
+    this.errorCode = errorCode;
   }
 
   boolean isFailed() {
@@ -36,7 +37,7 @@ final class LettuceResponse {
   }
 
   @Nullable
-  String getRedisErrorType() {
-    return redisErrorType;
+  String getErrorCode() {
+    return errorCode;
   }
 }

@@ -94,42 +94,41 @@ class ProcedureCallTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("call TEST_PROC")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, HSQLDB),
-                            equalTo(DB_NAMESPACE, "test"),
-                            equalTo(DB_QUERY_TEXT, "{call TEST_PROC()}"),
-                            equalTo(DB_QUERY_SUMMARY, "call TEST_PROC"),
-                            equalTo(DB_STORED_PROCEDURE_NAME, "TEST_PROC")),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val ->
-                                    assertThat(val)
-                                        .isEqualTo(
-                                            trace
-                                                .getSpan(1)
-                                                .getAttributes()
-                                                .get(HIBERNATE_SESSION_ID))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("call TEST_PROC")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, HSQLDB),
+                        equalTo(DB_NAMESPACE, "test"),
+                        equalTo(DB_QUERY_TEXT, "{call TEST_PROC()}"),
+                        equalTo(DB_QUERY_SUMMARY, "call TEST_PROC"),
+                        equalTo(DB_STORED_PROCEDURE_NAME, "TEST_PROC")),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val ->
+                                assertThat(val)
+                                    .isEqualTo(
+                                        trace
+                                            .getSpan(1)
+                                            .getAttributes()
+                                            .get(HIBERNATE_SESSION_ID))))));
   }
 
   @Test
@@ -153,46 +152,41 @@ class ProcedureCallTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("ProcedureCall.getOutputs TEST_PROC")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(
-                                            EXCEPTION_TYPE,
-                                            "org.hibernate.exception.AuthException"),
-                                        satisfies(
-                                            EXCEPTION_MESSAGE,
-                                            val ->
-                                                val.startsWithIgnoringCase(
-                                                    "could not prepare statement")),
-                                        satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val -> assertThat(val).isInstanceOf(String.class))),
-                span ->
-                    span.hasName("Transaction.commit")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            experimentalSatisfies(
-                                HIBERNATE_SESSION_ID,
-                                val ->
-                                    assertThat(val)
-                                        .isEqualTo(
-                                            trace
-                                                .getSpan(1)
-                                                .getAttributes()
-                                                .get(HIBERNATE_SESSION_ID))))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("ProcedureCall.getOutputs TEST_PROC")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasEventsSatisfyingExactly(event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, "org.hibernate.exception.AuthException"),
+                                satisfies(
+                                    EXCEPTION_MESSAGE,
+                                    val ->
+                                        val.startsWithIgnoringCase("could not prepare statement")),
+                                satisfies(EXCEPTION_STACKTRACE, val -> val.isNotNull())))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val -> assertThat(val).isInstanceOf(String.class))),
+            span ->
+                span.hasName("Transaction.commit")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        experimentalSatisfies(
+                            HIBERNATE_SESSION_ID,
+                            val ->
+                                assertThat(val)
+                                    .isEqualTo(
+                                        trace
+                                            .getSpan(1)
+                                            .getAttributes()
+                                            .get(HIBERNATE_SESSION_ID))))));
   }
 }

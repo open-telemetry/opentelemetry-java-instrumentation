@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import java.lang.reflect.Method;
 import java.net.InetSocketAddress;
 import java.util.List;
@@ -62,7 +62,7 @@ public final class CouchbaseConnectionStrings {
       };
 
   @Nullable
-  public static DbServerTarget target(@Nullable Object connectionString) {
+  public static ServerTarget target(@Nullable Object connectionString) {
     if (connectionString == null) {
       return null;
     }
@@ -72,8 +72,8 @@ public final class CouchbaseConnectionStrings {
       if (seeds == null) {
         return null;
       }
-      DbServerTargetBuilder builder =
-          DbServerTarget.builder(defaultPort(scheme(type, connectionString))).setSorted(true);
+      ServerTargetBuilder builder =
+          ServerTarget.builder(defaultPort(scheme(type, connectionString))).setSorted(true);
       for (Object seed : seeds) {
         addSeed(builder, seed);
       }
@@ -125,7 +125,7 @@ public final class CouchbaseConnectionStrings {
     return value == null ? null : value.toString();
   }
 
-  private static void addSeed(DbServerTargetBuilder builder, @Nullable Object seed)
+  private static void addSeed(ServerTargetBuilder builder, @Nullable Object seed)
       throws ReflectiveOperationException {
     if (seed == null) {
       builder.addEndpoint(null, -1);

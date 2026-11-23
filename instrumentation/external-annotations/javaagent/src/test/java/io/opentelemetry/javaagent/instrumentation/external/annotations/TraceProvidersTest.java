@@ -27,29 +27,27 @@ class TraceProvidersTest {
   void testShouldSupportProvider(TraceProvider provider) {
     provider.test();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SayTracedHello." + provider.testMethodName())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                SayTracedHello.class.getName() + "." + provider.testMethodName()),
-                            equalTo(stringKey("providerAttr"), provider.name()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SayTracedHello." + provider.testMethodName())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CODE_FUNCTION_NAME,
+                        SayTracedHello.class.getName() + "." + provider.testMethodName()),
+                    equalTo(stringKey("providerAttr"), provider.name()))));
   }
 
   @SuppressWarnings("ImmutableEnumChecker")
   private enum TraceProvider {
-    AppOptics((sayTracedHello) -> sayTracedHello.appoptics()),
-    Datadog((sayTracedHello) -> sayTracedHello.datadog()),
-    Dropwizard((sayTracedHello) -> sayTracedHello.dropwizard()),
-    KamonOld((sayTracedHello) -> sayTracedHello.kamonold()),
-    KamonNew((sayTracedHello) -> sayTracedHello.kamonnew()),
-    NewRelic((sayTracedHello) -> sayTracedHello.newrelic()),
-    SignalFx((sayTracedHello) -> sayTracedHello.signalfx()),
-    Sleuth((sayTracedHello) -> sayTracedHello.sleuth()),
-    Tracelytics((sayTracedHello) -> sayTracedHello.tracelytics());
+    AppOptics(sayTracedHello -> sayTracedHello.appoptics()),
+    Datadog(sayTracedHello -> sayTracedHello.datadog()),
+    Dropwizard(sayTracedHello -> sayTracedHello.dropwizard()),
+    KamonOld(sayTracedHello -> sayTracedHello.kamonold()),
+    KamonNew(sayTracedHello -> sayTracedHello.kamonnew()),
+    NewRelic(sayTracedHello -> sayTracedHello.newrelic()),
+    SignalFx(sayTracedHello -> sayTracedHello.signalfx()),
+    Sleuth(sayTracedHello -> sayTracedHello.sleuth()),
+    Tracelytics(sayTracedHello -> sayTracedHello.tracelytics());
 
     private final Consumer<SayTracedHello> test;
 

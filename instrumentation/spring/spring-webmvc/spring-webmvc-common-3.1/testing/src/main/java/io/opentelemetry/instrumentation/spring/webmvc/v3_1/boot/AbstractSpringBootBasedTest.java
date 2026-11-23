@@ -110,15 +110,14 @@ public abstract class AbstractSpringBootBasedTest
     assertThat(response.status().code()).isEqualTo(401); // not secured
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> assertServerSpan(span, "GET", AUTH_ERROR, AUTH_ERROR.getStatus()),
-                    span ->
-                        span.satisfies(
-                                spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
-                            .hasKind(SpanKind.INTERNAL),
-                    span -> errorPageSpanAssertions(null, null)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertServerSpan(span, "GET", AUTH_ERROR, AUTH_ERROR.getStatus()),
+                span ->
+                    span.satisfies(
+                            spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
+                        .hasKind(SpanKind.INTERNAL),
+                span -> errorPageSpanAssertions(null, null)));
   }
 
   @ParameterizedTest
@@ -140,15 +139,13 @@ public abstract class AbstractSpringBootBasedTest
     assertThat(authProvider.latestAuthentications.get(0).getPassword()).isEqualTo(testPassword);
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> assertServerSpan(span, "POST", LOGIN, LOGIN.getStatus()),
-                    span ->
-                        span.satisfies(
-                                spanData ->
-                                    assertThat(spanData.getName()).endsWith(".sendRedirect"))
-                            .hasKind(SpanKind.INTERNAL)));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertServerSpan(span, "POST", LOGIN, LOGIN.getStatus()),
+                span ->
+                    span.satisfies(
+                            spanData -> assertThat(spanData.getName()).endsWith(".sendRedirect"))
+                        .hasKind(SpanKind.INTERNAL)));
   }
 
   @Test
@@ -162,38 +159,33 @@ public abstract class AbstractSpringBootBasedTest
     assertThat(response.contentUtf8()).isEqualTo(DEFERRED_RESULT.getBody());
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        assertServerSpan(span, "GET", DEFERRED_RESULT, DEFERRED_RESULT.getStatus())
-                            .hasNoParent(),
-                    span ->
-                        assertHandlerSpan(span, "GET", DEFERRED_RESULT).hasParent(trace.getSpan(0)),
-                    span ->
-                        span.hasName("async-call-child")
-                            .hasKind(SpanKind.INTERNAL)
-                            .hasParent(trace.getSpan(1))
-                            .hasTotalAttributeCount(0),
-                    // Handler method runs once for the initial request and again for the async
-                    // redispatch when DeferredResult completes, so we expect two spans with the
-                    // same name. The second handler span is parented to the async child span.
-                    span ->
-                        assertHandlerSpan(span, "GET", DEFERRED_RESULT)
-                            .hasParent(trace.getSpan(2))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    assertServerSpan(span, "GET", DEFERRED_RESULT, DEFERRED_RESULT.getStatus())
+                        .hasNoParent(),
+                span -> assertHandlerSpan(span, "GET", DEFERRED_RESULT).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("async-call-child")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(1))
+                        .hasTotalAttributeCount(0),
+                // Handler method runs once for the initial request and again for the async
+                // redispatch when DeferredResult completes, so we expect two spans with the
+                // same name. The second handler span is parented to the async child span.
+                span ->
+                    assertHandlerSpan(span, "GET", DEFERRED_RESULT).hasParent(trace.getSpan(2))));
   }
 
   @Override
   protected List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
     List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-    spanAssertions.add(
-        span ->
-            span.hasName("BasicErrorController.error")
-                .hasKind(SpanKind.INTERNAL)
-                .hasAttributesSatisfyingExactly(
-                    satisfies(
-                        CODE_FUNCTION_NAME, val -> val.endsWith(".BasicErrorController.error"))));
+    spanAssertions.add(span ->
+        span.hasName("BasicErrorController.error")
+            .hasKind(SpanKind.INTERNAL)
+            .hasAttributesSatisfyingExactly(
+                satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".BasicErrorController.error"))));
     return spanAssertions;
   }
 
@@ -241,14 +233,13 @@ public abstract class AbstractSpringBootBasedTest
             equalTo(CODE_FUNCTION_NAME, codeNamespace + "." + codeFunction));
     if (endpoint == EXCEPTION) {
       span.hasStatus(StatusData.error());
-      span.hasEventsSatisfyingExactly(
-          event ->
-              event
-                  .hasName("exception")
-                  .hasAttributesSatisfyingExactly(
-                      equalTo(EXCEPTION_TYPE, "java.lang.RuntimeException"),
-                      equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
-                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+      span.hasEventsSatisfyingExactly(event ->
+          event
+              .hasName("exception")
+              .hasAttributesSatisfyingExactly(
+                  equalTo(EXCEPTION_TYPE, "java.lang.RuntimeException"),
+                  equalTo(EXCEPTION_MESSAGE, EXCEPTION.getBody()),
+                  satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
     }
     return span;
   }

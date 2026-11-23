@@ -13,4 +13,7 @@ dependencies {
   implementation("org.snakeyaml:snakeyaml-engine")
 
   testImplementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure-spi")
+  testImplementation("io.opentelemetry:opentelemetry-api-incubator")
+  testImplementation("io.opentelemetry.semconv:opentelemetry-semconv")
+  testRuntimeOnly(project(path = ":smoke-tests:images:spring-boot", configuration = "springBootJar"))
 }

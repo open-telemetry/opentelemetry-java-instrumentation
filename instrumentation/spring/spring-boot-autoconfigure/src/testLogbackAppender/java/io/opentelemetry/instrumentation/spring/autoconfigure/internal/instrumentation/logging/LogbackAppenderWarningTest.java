@@ -96,14 +96,13 @@ class LogbackAppenderWarningTest {
   private void assertWarning(OpenTelemetryAppender appender) {
     assertThat(warnings)
         .singleElement()
-        .satisfies(
-            warning -> {
-              assertThat(warning.getOrigin()).isSameAs(appender);
-              assertThat(warning.getMessage())
-                  .contains(
-                      "OpenTelemetryAppender 'OTEL' is downstream of AsyncAppender 'ASYNC'",
-                      "Attach OpenTelemetryAppender directly",
-                      "SDK batch export");
-            });
+        .satisfies(warning -> {
+          assertThat(warning.getOrigin()).isSameAs(appender);
+          assertThat(warning.getMessage())
+              .contains(
+                  "OpenTelemetryAppender 'OTEL' is downstream of AsyncAppender 'ASYNC'",
+                  "Attach OpenTelemetryAppender directly",
+                  "SDK batch export");
+        });
   }
 }
