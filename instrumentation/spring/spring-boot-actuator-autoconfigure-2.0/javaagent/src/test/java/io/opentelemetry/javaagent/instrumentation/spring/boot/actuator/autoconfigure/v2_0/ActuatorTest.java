@@ -85,6 +85,9 @@ class ActuatorTest {
 
   @Test
   void closingContextDoesNotCloseGlobalRegistry() {
+    ConfigurableApplicationContext context = new SpringApplication(SpringApp.class).run();
+    cleanup.deferCleanup(context);
+    assertThat(context.getBean("otelMeterRegistry")).isInstanceOf(MeterRegistry.class);
     Counter existing = Metrics.counter("test.global.existing");
     try {
       existing.increment();
@@ -96,9 +99,7 @@ class ActuatorTest {
                   .hasDoubleSumSatisfying(
                       sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
 
-      try (ConfigurableApplicationContext context = new SpringApplication(SpringApp.class).run()) {
-        assertThat(context.getBean("otelMeterRegistry")).isInstanceOf(MeterRegistry.class);
-      }
+      context.close();
 
       existing.increment(2);
       testing.waitAndAssertMetrics(
