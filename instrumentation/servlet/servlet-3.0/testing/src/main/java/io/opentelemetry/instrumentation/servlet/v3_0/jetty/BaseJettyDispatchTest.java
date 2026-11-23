@@ -25,6 +25,8 @@ import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions
 import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
+import io.opentelemetry.testing.internal.armeria.common.ResponseHeaders;
+import io.opentelemetry.testing.internal.armeria.common.SplitHttpResponse;
 import javax.servlet.Servlet;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.ServletContextHandler;
@@ -197,6 +199,8 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
         test.addServlet(
             context, "/snippetCachedWriterTarget", TestServlet3.SnippetCachedWriterTarget.class);
         test.addServlet(context, "/snippetAsyncReset", TestServlet3.SnippetAsyncReset.class);
+        test.addServlet(
+            context, "/snippetSameLengthReset", TestServlet3.SnippetSameLengthReset.class);
         test.addServlet(
             context, "/snippetAsyncContentLength", TestServlet3.SnippetAsyncContentLength.class);
         test.addServlet(
@@ -416,6 +420,35 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
     assumeTrue(testType == TestType.FORWARD);
     assumeTrue(isAgentTest());
     assertReplacementBody(SNIPPET_ASYNC_RESET);
+  }
+
+  @Test
+  void sameLengthContentLengthDeclarationPreservesReplacementLength() {
+    assumeTrue(testType == TestType.FORWARD);
+    assumeTrue(testLatestDeps());
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    String replacementBody = TestServlet3.SNIPPET_RESET_REPLACEMENT_BODY;
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      ServerEndpoint endpoint =
+          new ServerEndpoint(
+              "SNIPPET_SAME_LENGTH_RESET",
+              "snippetSameLengthReset?contentLength="
+                  + (replacementBody.length() - snippet.length()),
+              200,
+              "");
+      SplitHttpResponse splitResponse = client.execute(request(endpoint, "GET")).split();
+
+      ResponseHeaders headers = splitResponse.headers().join();
+      assertThat(headers.contentLength()).isEqualTo(replacementBody.length());
+
+      AggregatedHttpResponse response = splitResponse.unsplit().aggregate().join();
+      assertThat(response.contentUtf8()).isEqualTo(replacementBody);
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 
   @Test

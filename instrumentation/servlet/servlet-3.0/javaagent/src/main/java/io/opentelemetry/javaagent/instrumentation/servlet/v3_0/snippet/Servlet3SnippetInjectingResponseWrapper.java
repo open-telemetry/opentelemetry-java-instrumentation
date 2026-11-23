@@ -10,6 +10,7 @@ import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
+import io.opentelemetry.javaagent.instrumentation.servlet.common.response.JettyContentLength;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.response.TomcatContentLength;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
 import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3ResponseInjectionState;
@@ -157,19 +158,20 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   public void setHeader(String name, String value) {
     long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.setHeader(name, value);
-    reconcileContentLengthHeader(name, previousLength);
+    reconcileContentLengthHeader(name, previousLength, parseContentLength(name, value));
   }
 
   @Override
   public void addHeader(String name, String value) {
     long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.addHeader(name, value);
-    reconcileContentLengthHeader(name, previousLength);
+    reconcileContentLengthHeader(name, previousLength, parseContentLength(name, value));
   }
 
-  private void reconcileContentLengthHeader(String name, long previousLength) {
+  private void reconcileContentLengthHeader(String name, long previousLength, long declaredLength) {
     if (isContentLengthHeader(name)) {
-      reconcileContentLength(previousLength);
+      reconcileContentLength(
+          previousLength, declaredLength, isJettyIncludeContentLengthHeader(name));
     }
   }
 
@@ -177,21 +179,21 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   public void setIntHeader(String name, int value) {
     long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.setIntHeader(name, value);
-    reconcileContentLengthHeader(name, previousLength);
+    reconcileContentLengthHeader(name, previousLength, value);
   }
 
   @Override
   public void addIntHeader(String name, int value) {
     long previousLength = isContentLengthHeader(name) ? getContentLengthHeader() : Long.MIN_VALUE;
     super.addIntHeader(name, value);
-    reconcileContentLengthHeader(name, previousLength);
+    reconcileContentLengthHeader(name, previousLength, value);
   }
 
   @Override
   public void setContentLength(int len) {
     long previousLength = getContentLengthHeader();
     super.setContentLength(len);
-    reconcileContentLength(previousLength);
+    reconcileContentLength(previousLength, len, false);
   }
 
   @Nullable
@@ -216,7 +218,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     } else {
       setContentLengthLongHandler.invokeWithArguments(this, length);
     }
-    reconcileContentLength(previousLength);
+    reconcileContentLength(previousLength, length, false);
   }
 
   @Override
@@ -316,10 +318,20 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     return false;
   }
 
-  private void reconcileContentLength(long previousLength) {
+  private void reconcileContentLength(
+      long previousLength, long declaredLength, boolean includePrefixedHeader) {
     long contentLength = getContentLengthHeader();
     if (contentLength != Long.MIN_VALUE) {
-      recordContentLength(contentLength);
+      if (contentLength > 0
+          && contentLength == declaredLength
+          && injectionState.isContentLengthAdjusted()
+          && injectionState.getContentLength() == contentLength
+          && JettyContentLength.isContentLengthUpdateAllowed(
+              super.getResponse(), includePrefixedHeader)) {
+        injectionState.setContentLength(contentLength);
+      } else {
+        recordContentLength(contentLength);
+      }
     } else if (previousLength != Long.MIN_VALUE) {
       injectionState.setContentLength(-1);
     }
@@ -360,6 +372,28 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   private static boolean isContentLengthHeader(String name) {
     return "Content-Length".equalsIgnoreCase(name)
         || "org.eclipse.jetty.server.include.Content-Length".equalsIgnoreCase(name);
+  }
+
+  private static long parseContentLength(String name, String value) {
+    String contentLengthHeader = "Content-Length";
+    String includePrefix = "org.eclipse.jetty.server.include.";
+    if (name.startsWith(includePrefix)) {
+      name = name.substring(includePrefix.length());
+    }
+    if (!contentLengthHeader.equalsIgnoreCase(name) || value == null) {
+      return Long.MIN_VALUE;
+    }
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException ignored) {
+      return Long.MIN_VALUE;
+    }
+  }
+
+  private static boolean isJettyIncludeContentLengthHeader(String name) {
+    return name.startsWith("org.eclipse.jetty.server.include.")
+        && "Content-Length"
+            .equalsIgnoreCase(name.substring("org.eclipse.jetty.server.include.".length()));
   }
 
   @Override

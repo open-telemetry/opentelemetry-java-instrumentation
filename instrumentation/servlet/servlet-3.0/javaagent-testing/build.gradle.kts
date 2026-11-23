@@ -28,6 +28,7 @@ dependencies {
 testing.suites {
   executions("test") {
     configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
       // required on jdk17
       jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
       jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")

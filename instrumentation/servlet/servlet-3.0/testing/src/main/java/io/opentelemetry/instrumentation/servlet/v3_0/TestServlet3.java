@@ -332,6 +332,19 @@ public class TestServlet3 {
   }
 
   @WebServlet
+  public static class SnippetSameLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(Integer.parseInt(req.getParameter("contentLength")));
+      resp.getWriter().write("<head>");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.resetBuffer();
+      resp.getWriter().write(SNIPPET_RESET_REPLACEMENT_BODY);
+    }
+  }
+
+  @WebServlet
   public static class SnippetIncludeFixedLengthResetTarget extends HttpServlet {
     @Override
     protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
