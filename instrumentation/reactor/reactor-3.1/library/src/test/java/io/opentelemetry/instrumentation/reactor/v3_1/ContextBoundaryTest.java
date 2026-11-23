@@ -52,19 +52,14 @@ class ContextBoundaryTest {
 
   private static Stream<Arguments> boundaries() {
     return Stream.of(false, true)
-        .flatMap(
-            mono ->
-                Stream.of(false, true)
-                    .flatMap(
-                        hooks ->
-                            Stream.of(Context.root(), APPLICATION)
-                                .flatMap(
-                                    application ->
-                                        Stream.of(Context.root(), OPERATION)
-                                            .map(
-                                                operation ->
-                                                    Arguments.of(
-                                                        mono, hooks, operation, application)))));
+        .flatMap(mono ->
+            Stream.of(false, true)
+                .flatMap(hooks ->
+                    Stream.of(Context.root(), APPLICATION)
+                        .flatMap(application ->
+                            Stream.of(Context.root(), OPERATION)
+                                .map(operation ->
+                                    Arguments.of(mono, hooks, operation, application)))));
   }
 
   private static Stream<Arguments> representativeBoundaries() {
@@ -77,13 +72,11 @@ class ContextBoundaryTest {
 
   private static Stream<Arguments> directSubscriberBoundaries() {
     return Stream.of(false, true)
-        .flatMap(
-            mono ->
-                Stream.of(false, true)
-                    .flatMap(
-                        rootApplication ->
-                            Stream.of(false, true)
-                                .map(wrapped -> Arguments.of(mono, rootApplication, wrapped))));
+        .flatMap(mono ->
+            Stream.of(false, true)
+                .flatMap(rootApplication ->
+                    Stream.of(false, true)
+                        .map(wrapped -> Arguments.of(mono, rootApplication, wrapped))));
   }
 
   private static Stream<Arguments> nestedPublisherBoundaries() {
@@ -93,14 +86,12 @@ class ContextBoundaryTest {
 
   private static Stream<Arguments> terminalCallbacks() {
     return representativeBoundaries()
-        .flatMap(
-            boundary ->
-                Stream.of(false, true)
-                    .map(
-                        error -> {
-                          Object[] args = boundary.get();
-                          return Arguments.of(args[0], args[1], args[2], args[3], error);
-                        }));
+        .flatMap(boundary ->
+            Stream.of(false, true)
+                .map(error -> {
+                  Object[] args = boundary.get();
+                  return Arguments.of(args[0], args[1], args[2], args[3], error);
+                }));
   }
 
   @ParameterizedTest
@@ -128,16 +119,15 @@ class ContextBoundaryTest {
     ExecutorService executor = Executors.newSingleThreadExecutor();
     try {
       executor
-          .submit(
-              () -> {
-                try (Scope ignored = UNRELATED.makeCurrent()) {
-                  probe.actual.onNext("value");
-                  assertThat(Context.current()).isSameAs(UNRELATED);
-                  probe.actual.onComplete();
-                  assertThat(Context.current()).isSameAs(UNRELATED);
-                }
-                assertThat(Context.current()).isSameAs(Context.root());
-              })
+          .submit(() -> {
+            try (Scope ignored = UNRELATED.makeCurrent()) {
+              probe.actual.onNext("value");
+              assertThat(Context.current()).isSameAs(UNRELATED);
+              probe.actual.onComplete();
+              assertThat(Context.current()).isSameAs(UNRELATED);
+            }
+            assertThat(Context.current()).isSameAs(Context.root());
+          })
           .get(10, SECONDS);
     } finally {
       executor.shutdownNow();
@@ -157,38 +147,34 @@ class ContextBoundaryTest {
       if (mono) {
         ContextPropagationOperator.runWithContext(Mono.just("value"), OPERATION, APPLICATION)
             .map(value -> value)
-            .doOnNext(
-                value -> {
-                  withStoredContext(
-                          Mono.just(value)
-                              .map(
-                                  innerValue -> {
-                                    assertThat(Context.current()).isSameAs(inner);
-                                    return innerValue;
-                                  }),
-                          inner)
-                      .block();
-                  assertThat(Context.current()).isSameAs(APPLICATION);
-                  observed.set(Context.current());
-                })
+            .doOnNext(value -> {
+              withStoredContext(
+                      Mono.just(value)
+                          .map(innerValue -> {
+                            assertThat(Context.current()).isSameAs(inner);
+                            return innerValue;
+                          }),
+                      inner)
+                  .block();
+              assertThat(Context.current()).isSameAs(APPLICATION);
+              observed.set(Context.current());
+            })
             .block();
       } else {
         ContextPropagationOperator.runWithContext(Flux.just("value"), OPERATION, APPLICATION)
             .map(value -> value)
-            .doOnNext(
-                value -> {
-                  withStoredContext(
-                          Mono.just(value)
-                              .map(
-                                  innerValue -> {
-                                    assertThat(Context.current()).isSameAs(inner);
-                                    return innerValue;
-                                  }),
-                          inner)
-                      .block();
-                  assertThat(Context.current()).isSameAs(APPLICATION);
-                  observed.set(Context.current());
-                })
+            .doOnNext(value -> {
+              withStoredContext(
+                      Mono.just(value)
+                          .map(innerValue -> {
+                            assertThat(Context.current()).isSameAs(inner);
+                            return innerValue;
+                          }),
+                      inner)
+                  .block();
+              assertThat(Context.current()).isSameAs(APPLICATION);
+              observed.set(Context.current());
+            })
             .collectList()
             .block();
       }
@@ -429,11 +415,10 @@ class ContextBoundaryTest {
     }
     AtomicInteger subscriptions = new AtomicInteger();
     Mono<String> monoSource =
-        Mono.fromCallable(
-            () -> {
-              assertThat(Context.current()).isSameAs(operation);
-              return "subscription-" + subscriptions.incrementAndGet();
-            });
+        Mono.fromCallable(() -> {
+          assertThat(Context.current()).isSameAs(operation);
+          return "subscription-" + subscriptions.incrementAndGet();
+        });
     RecordingSubscriber first = new RecordingSubscriber(application);
     RecordingSubscriber second = new RecordingSubscriber(application);
     try (Scope ignored = UNRELATED.makeCurrent()) {
@@ -541,14 +526,13 @@ class ContextBoundaryTest {
             .isNull();
         assertThat(
                 ContextPropagationOperator.runWithContext(
-                        Mono.fromCallable(
-                            () -> {
-                              assertThat(Context.current()).isSameAs(operation);
-                              if (attempts.getAndIncrement() == 0) {
-                                throw new IllegalStateException("retry");
-                              }
-                              return "retried";
-                            }),
+                        Mono.fromCallable(() -> {
+                          assertThat(Context.current()).isSameAs(operation);
+                          if (attempts.getAndIncrement() == 0) {
+                            throw new IllegalStateException("retry");
+                          }
+                          return "retried";
+                        }),
                         operation,
                         application)
                     .doOnError(error -> assertThat(Context.current()).isSameAs(application))
@@ -571,13 +555,12 @@ class ContextBoundaryTest {
             .isEmpty();
         assertThat(
                 ContextPropagationOperator.runWithContext(
-                        Flux.defer(
-                            () -> {
-                              assertThat(Context.current()).isSameAs(operation);
-                              return attempts.getAndIncrement() == 0
-                                  ? Flux.error(new IllegalStateException("retry"))
-                                  : Flux.just("retried");
-                            }),
+                        Flux.defer(() -> {
+                          assertThat(Context.current()).isSameAs(operation);
+                          return attempts.getAndIncrement() == 0
+                              ? Flux.error(new IllegalStateException("retry"))
+                              : Flux.just("retried");
+                        }),
                         operation,
                         application)
                     .doOnError(error -> assertThat(Context.current()).isSameAs(application))

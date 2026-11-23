@@ -60,11 +60,10 @@ public abstract class AbstractContextBoundaryTest {
     try (Scope ignored = Context.root().makeCurrent()) {
       Flux.from(runWithContext(source(mono, "value"), OPERATION, application))
           .map(value -> value)
-          .doOnNext(
-              value -> {
-                assertContext(Context.current(), application);
-                observed.set(Context.current());
-              })
+          .doOnNext(value -> {
+            assertContext(Context.current(), application);
+            observed.set(Context.current());
+          })
           .collectList()
           .block();
       assertContext(Context.current(), Context.root());
@@ -101,11 +100,10 @@ public abstract class AbstractContextBoundaryTest {
       try (Scope ignored = subscription.makeCurrent()) {
         boundary
             .map(value -> value)
-            .doOnNext(
-                value -> {
-                  observed.set(Context.current());
-                  assertContext(Context.current(), subscription);
-                })
+            .doOnNext(value -> {
+              observed.set(Context.current());
+              assertContext(Context.current(), subscription);
+            })
             .collectList()
             .block();
         assertContext(Context.current(), subscription);
@@ -131,11 +129,10 @@ public abstract class AbstractContextBoundaryTest {
         Flux.from(runWithContext(source(mono, "value"), OPERATION, application))
             .publishOn(scheduler)
             .map(value -> value)
-            .doOnNext(
-                value -> {
-                  assertContext(Context.current(), UNRELATED);
-                  observed.set(Context.current());
-                })
+            .doOnNext(value -> {
+              assertContext(Context.current(), UNRELATED);
+              observed.set(Context.current());
+            })
             .collectList()
             .block();
         assertContext(Context.current(), UNRELATED);
@@ -173,11 +170,10 @@ public abstract class AbstractContextBoundaryTest {
     AtomicReference<Context> independentSignal = new AtomicReference<>();
     try (Scope ignored = independentSubscription.makeCurrent()) {
       Mono.<String>create(sink::set)
-          .map(
-              value -> {
-                independentSignal.set(Context.current());
-                return value;
-              })
+          .map(value -> {
+            independentSignal.set(Context.current());
+            return value;
+          })
           .subscribe();
     }
 
@@ -190,12 +186,11 @@ public abstract class AbstractContextBoundaryTest {
       }
       try (Scope ignored = Context.root().makeCurrent()) {
         boundary
-            .doOnNext(
-                value -> {
-                  assertContext(Context.current(), APPLICATION);
-                  sink.get().success("independent");
-                  assertContext(Context.current(), APPLICATION);
-                })
+            .doOnNext(value -> {
+              assertContext(Context.current(), APPLICATION);
+              sink.get().success("independent");
+              assertContext(Context.current(), APPLICATION);
+            })
             .collectList()
             .block();
         assertContext(Context.current(), Context.root());
@@ -229,29 +224,26 @@ public abstract class AbstractContextBoundaryTest {
     try {
       try (Scope ignored = INNER.makeCurrent()) {
         Mono.<String>create(sink::set)
-            .map(
-                value -> {
-                  independentContext.set(Context.current());
-                  return value;
-                })
+            .map(value -> {
+              independentContext.set(Context.current());
+              return value;
+            })
             .subscribe();
       }
       try (Scope ignored = UNRELATED.makeCurrent()) {
         Flux.from(runWithContext(Flux.just("value"), OPERATION, application))
             .publishOn(scheduler)
-            .doOnNext(
-                value -> {
-                  callbackContext.set(Context.current());
-                  callbackThread.set(Thread.currentThread());
-                  sink.get().success("independent");
-                  contextAfterIndependentSignal.set(Context.current());
-                  scheduler.schedule(
-                      () -> {
-                        reusedWorkerThread.set(Thread.currentThread());
-                        workerReused.countDown();
-                      });
-                  callbackFinished.countDown();
-                })
+            .doOnNext(value -> {
+              callbackContext.set(Context.current());
+              callbackThread.set(Thread.currentThread());
+              sink.get().success("independent");
+              contextAfterIndependentSignal.set(Context.current());
+              scheduler.schedule(() -> {
+                reusedWorkerThread.set(Thread.currentThread());
+                workerReused.countDown();
+              });
+              callbackFinished.countDown();
+            })
             .subscribe(noDemandSubscriber(subscription::set));
         assertContext(Context.current(), UNRELATED);
       }
@@ -293,23 +285,21 @@ public abstract class AbstractContextBoundaryTest {
       try (Scope ignored = UNRELATED.makeCurrent()) {
         Flux.from(runWithContext(Flux.just("boundary"), boundaryOperation, boundaryApplication))
             .publishOn(scheduler)
-            .doOnNext(
-                value -> {
-                  boundaryCallbackContext.set(Context.current());
-                  boundaryCallbackFinished.countDown();
-                })
+            .doOnNext(value -> {
+              boundaryCallbackContext.set(Context.current());
+              boundaryCallbackFinished.countDown();
+            })
             .subscribe(noDemandSubscriber(subscription::set));
       }
       scheduler.schedule(initialDrainFinished::countDown);
       assertThat(initialDrainFinished.await(10, SECONDS)).isTrue();
       try (Scope ignored = UNRELATED.makeCurrent()) {
         Flux.from(runWithContext(Mono.just("outer"), OPERATION, outerApplication))
-            .doOnNext(
-                value -> {
-                  assertContext(Context.current(), UNRELATED);
-                  subscription.get().request(1);
-                  outerCallbackContext.set(Context.current());
-                })
+            .doOnNext(value -> {
+              assertContext(Context.current(), UNRELATED);
+              subscription.get().request(1);
+              outerCallbackContext.set(Context.current());
+            })
             .blockLast();
         assertContext(Context.current(), UNRELATED);
       }
@@ -339,20 +329,18 @@ public abstract class AbstractContextBoundaryTest {
     AtomicReference<Context> callbackContext = new AtomicReference<>();
     AtomicReference<Throwable> callbackError = new AtomicReference<>();
     try {
-      scheduler.schedule(
-          () -> {
-            workerStarted.countDown();
-            await(releaseWorker);
-          });
+      scheduler.schedule(() -> {
+        workerStarted.countDown();
+        await(releaseWorker);
+      });
       assertThat(workerStarted.await(10, SECONDS)).isTrue();
       try (Scope ignored = subscriptionContext.makeCurrent()) {
         Flux.from(runWithContext(Flux.just("value"), OPERATION, application))
             .publishOn(scheduler)
-            .doOnNext(
-                value -> {
-                  callbackContext.set(Context.current());
-                  callbackFinished.countDown();
-                })
+            .doOnNext(value -> {
+              callbackContext.set(Context.current());
+              callbackFinished.countDown();
+            })
             .subscribe(
                 new CoreSubscriber<String>() {
                   @Override
@@ -414,24 +402,22 @@ public abstract class AbstractContextBoundaryTest {
     try {
       try (Scope ignored = subscriptionContext.makeCurrent()) {
         Flux.just(0, 1)
-            .flatMap(
-                index ->
-                    Flux.from(
-                        runWithContext(
-                            Mono.<String>create(
-                                sink -> (index == 0 ? firstSink : secondSink).set(sink)),
-                            OPERATION,
-                            index == 0 ? APPLICATION : secondApplication)))
+            .flatMap(index ->
+                Flux.from(
+                    runWithContext(
+                        Mono.<String>create(
+                            sink -> (index == 0 ? firstSink : secondSink).set(sink)),
+                        OPERATION,
+                        index == 0 ? APPLICATION : secondApplication)))
             .publishOn(scheduler)
-            .doOnNext(
-                value -> {
-                  if (value.equals("first")) {
-                    firstCallbackContext.set(Context.current());
-                  } else {
-                    secondCallbackContext.set(Context.current());
-                  }
-                  callbacksFinished.countDown();
-                })
+            .doOnNext(value -> {
+              if (value.equals("first")) {
+                firstCallbackContext.set(Context.current());
+              } else {
+                secondCallbackContext.set(Context.current());
+              }
+              callbacksFinished.countDown();
+            })
             .subscribe(noDemandSubscriber(subscription::set));
         assertContext(Context.current(), subscriptionContext);
       }
@@ -465,22 +451,19 @@ public abstract class AbstractContextBoundaryTest {
     AtomicReference<Context> secondCallbackContext = new AtomicReference<>();
     try (Scope ignored = Context.root().makeCurrent()) {
       Flux.just(0, 1)
-          .flatMap(
-              index ->
-                  Flux.from(
-                      runWithContext(
-                          Mono.<String>create(
-                              sink -> (index == 0 ? firstSink : secondSink).set(sink)),
-                          OPERATION,
-                          index == 0 ? APPLICATION : INNER)))
-          .doOnNext(
-              value -> {
-                if (value.equals("first")) {
-                  firstCallbackContext.set(Context.current());
-                } else {
-                  secondCallbackContext.set(Context.current());
-                }
-              })
+          .flatMap(index ->
+              Flux.from(
+                  runWithContext(
+                      Mono.<String>create(sink -> (index == 0 ? firstSink : secondSink).set(sink)),
+                      OPERATION,
+                      index == 0 ? APPLICATION : INNER)))
+          .doOnNext(value -> {
+            if (value.equals("first")) {
+              firstCallbackContext.set(Context.current());
+            } else {
+              secondCallbackContext.set(Context.current());
+            }
+          })
           .subscribe();
 
       assertThat(firstSink.get()).isNotNull();

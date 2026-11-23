@@ -408,23 +408,20 @@ class ChatModelTest {
 
     try (Scope ignored = parent.makeCurrent()) {
       chatModel.stream(prompt())
-          .doOnSubscribe(
-              subscription -> {
-                callbackContexts.add(Span.current().getSpanContext());
-                independent.call(prompt());
-              })
+          .doOnSubscribe(subscription -> {
+            callbackContexts.add(Span.current().getSpanContext());
+            independent.call(prompt());
+          })
           .blockLast();
     }
 
     assertThat(callbackContexts).containsExactly(Span.fromContext(parent).getSpanContext());
     if (hasParent) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasNoParent(),
-                  span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0)),
-                  span ->
-                      span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasNoParent(),
+              span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0)),
+              span -> span.hasName("chat " + MODEL).hasKind(CLIENT).hasParent(trace.getSpan(0))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

@@ -41,11 +41,10 @@ class SpringWebfluxClientContextTest {
   void emptyExchangePreservesExistingSpanLifecycle() {
     List<SpanContext> exchanges = new ArrayList<>();
     WebClient client =
-        client(
-            request -> {
-              exchanges.add(Span.current().getSpanContext());
-              return Mono.empty();
-            });
+        client(request -> {
+          exchanges.add(Span.current().getSpanContext());
+          return Mono.empty();
+        });
 
     ClientResponse response =
         testing.runWithSpan(
@@ -81,26 +80,23 @@ class SpringWebfluxClientContextTest {
     when(response.statusCode()).thenReturn(HttpStatus.OK);
     WebClient independent = client(request -> Mono.just(response));
     WebClient client =
-        client(
-            request -> {
-              exchanges.add(Span.current().getSpanContext());
-              return Mono.defer(
-                  () -> {
-                    exchanges.add(Span.current().getSpanContext());
-                    return fails ? Mono.error(failure) : Mono.just(response);
-                  });
-            });
+        client(request -> {
+          exchanges.add(Span.current().getSpanContext());
+          return Mono.defer(() -> {
+            exchanges.add(Span.current().getSpanContext());
+            return fails ? Mono.error(failure) : Mono.just(response);
+          });
+        });
 
     try (Scope ignored = parent.makeCurrent()) {
       client
           .get()
           .uri("http://localhost/outer")
           .exchange()
-          .doOnSubscribe(
-              subscription -> {
-                callbacks.add(Span.current().getSpanContext());
-                independent.get().uri("http://localhost/independent").exchange().block();
-              })
+          .doOnSubscribe(subscription -> {
+            callbacks.add(Span.current().getSpanContext());
+            independent.get().uri("http://localhost/independent").exchange().block();
+          })
           .doOnNext(value -> callbacks.add(Span.current().getSpanContext()))
           .doOnError(error -> callbacks.add(Span.current().getSpanContext()))
           .doOnSuccess(value -> callbacks.add(Span.current().getSpanContext()))
@@ -126,13 +122,12 @@ class SpringWebfluxClientContextTest {
     List<SpanContext> cancellations = new ArrayList<>();
     List<SpanContext> callbacks = new ArrayList<>();
     WebClient client =
-        client(
-            request -> {
-              exchanges.add(Span.current().getSpanContext());
-              return Mono.<ClientResponse>never()
-                  .doOnRequest(n -> requests.add(Span.current().getSpanContext()))
-                  .doOnCancel(() -> cancellations.add(Span.current().getSpanContext()));
-            });
+        client(request -> {
+          exchanges.add(Span.current().getSpanContext());
+          return Mono.<ClientResponse>never()
+              .doOnRequest(n -> requests.add(Span.current().getSpanContext()))
+              .doOnCancel(() -> cancellations.add(Span.current().getSpanContext()));
+        });
     BaseSubscriber<ClientResponse> subscriber =
         new BaseSubscriber<ClientResponse>() {
           @Override
@@ -155,28 +150,25 @@ class SpringWebfluxClientContextTest {
     assertThat(requests).containsExactly(exchanges.get(0));
     assertThat(cancellations).containsExactly(exchanges.get(0));
     if (hasParent) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasNoParent(),
-                  span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasNoParent(),
+              span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0))));
     } else {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("GET").hasKind(CLIENT).hasNoParent()));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("GET").hasKind(CLIENT).hasNoParent()));
     }
     assertThat(Span.current().getSpanContext().isValid()).isFalse();
   }
 
   private static void assertIndependentTraces(boolean hasParent) {
     if (hasParent) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent").hasNoParent(),
-                  span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
-                  span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent").hasNoParent(),
+              span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0)),
+              span -> span.hasName("GET").hasKind(CLIENT).hasParent(trace.getSpan(0))));
     } else {
       testing.waitAndAssertTraces(
           trace ->

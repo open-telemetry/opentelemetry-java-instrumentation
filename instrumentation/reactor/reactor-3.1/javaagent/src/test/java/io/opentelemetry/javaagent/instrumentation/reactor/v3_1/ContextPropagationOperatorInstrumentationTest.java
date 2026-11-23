@@ -129,13 +129,12 @@ class ContextPropagationOperatorInstrumentationTest {
             AtomicReference<MonoSink<String>> sink = new AtomicReference<>();
             Mono<String> source =
                 Mono.<String>create(sink::set)
-                    .flatMap(
-                        value -> {
-                          assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                          assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("signal");
-                          agentState.assertPresent(false);
-                          return new ExtensionAnnotationsTracedWithSpan().mono(Mono.just(value));
-                        });
+                    .flatMap(value -> {
+                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                      assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("signal");
+                      agentState.assertPresent(false);
+                      return new ExtensionAnnotationsTracedWithSpan().mono(Mono.just(value));
+                    });
             Runnable emit =
                 () -> {
                   try (Scope root = Context.root().makeCurrent()) {
@@ -261,19 +260,17 @@ class ContextPropagationOperatorInstrumentationTest {
         ContextPropagationOperator.runWithContext(
                 Mono.just("value"), operationContext, applicationContext)
             .map(value -> value)
-            .doOnNext(
-                value -> {
-                  writeContext(
-                          Mono.just(value)
-                              .map(
-                                  innerValue -> {
-                                    assertThat(Context.current().get(APPLICATION_KEY)).isNull();
-                                    return innerValue;
-                                  }),
-                          innerReactorContext)
-                      .block();
-                  assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
-                })
+            .doOnNext(value -> {
+              writeContext(
+                      Mono.just(value)
+                          .map(innerValue -> {
+                            assertThat(Context.current().get(APPLICATION_KEY)).isNull();
+                            return innerValue;
+                          }),
+                      innerReactorContext)
+                  .block();
+              assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("subscription");
+            })
             .block();
       }
     } finally {
@@ -293,13 +290,12 @@ class ContextPropagationOperatorInstrumentationTest {
               Scope agentScope = agentState.makeCurrent()) {
             Context applicationContext = Context.current();
             Mono<String> source =
-                Mono.defer(
-                    () -> {
-                      assertThat(Span.current().getSpanContext().isValid()).isFalse();
-                      assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("operation");
-                      agentState.assertPresent(false);
-                      return new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("value"));
-                    });
+                Mono.defer(() -> {
+                  assertThat(Span.current().getSpanContext().isValid()).isFalse();
+                  assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("operation");
+                  agentState.assertPresent(false);
+                  return new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("value"));
+                });
             Context operationContext = Context.root().with(APPLICATION_KEY, "operation");
             if (flux) {
               StepVerifier.create(
@@ -340,13 +336,12 @@ class ContextPropagationOperatorInstrumentationTest {
             try (Scope ignored = Context.current().with(APPLICATION_KEY, "ambient").makeCurrent();
                 Scope agentScope = agentState.makeCurrent()) {
               Mono<String> source =
-                  Mono.defer(
-                      () -> {
-                        assertThat(Span.current().getSpanContext())
-                            .isEqualTo(operation.getSpanContext());
-                        agentState.assertPresent(false);
-                        return new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("value"));
-                      });
+                  Mono.defer(() -> {
+                    assertThat(Span.current().getSpanContext())
+                        .isEqualTo(operation.getSpanContext());
+                    agentState.assertPresent(false);
+                    return new ExtensionAnnotationsTracedWithSpan().mono(Mono.just("value"));
+                  });
               Context operationContext = Context.root().with(operation);
               if (flux) {
                 StepVerifier.create(
@@ -418,11 +413,10 @@ class ContextPropagationOperatorInstrumentationTest {
     try (Scope ignored = capturedContext.makeCurrent()) {
       subscriber = new TracingSubscriber<String>(actual, reactor.util.context.Context.empty()) {};
       Mono<String> source =
-          Mono.fromCallable(
-              () -> {
-                assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("operation");
-                return "value";
-              });
+          Mono.fromCallable(() -> {
+            assertThat(Context.current().get(APPLICATION_KEY)).isEqualTo("operation");
+            return "value";
+          });
       if (flux) {
         ContextPropagationOperator.runWithContext(
                 Flux.from(source), operationContext, applicationContext)
