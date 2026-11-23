@@ -141,8 +141,7 @@ class MicrometerCallbackGcCloseTest {
         if (loaded != null) {
           return loaded;
         }
-        if (name.equals(GaugeRegistrar.class.getName())
-            || name.startsWith(GaugeRegistrar.class.getName() + "$")) {
+        if (name.equals(GaugeRegistrar.class.getName())) {
           try {
             Class<?> type = findClass(name);
             if (resolve) {

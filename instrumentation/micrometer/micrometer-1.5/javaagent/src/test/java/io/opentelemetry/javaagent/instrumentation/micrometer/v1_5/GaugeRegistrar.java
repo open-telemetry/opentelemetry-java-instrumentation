@@ -11,19 +11,10 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public final class GaugeRegistrar {
 
-  private static final GaugeValue VALUE = new GaugeValue();
+  private static final AtomicLong VALUE = new AtomicLong(42);
 
   public static void register(String metricName) {
-    Gauge.builder(metricName, VALUE, GaugeValue::value).register(Metrics.globalRegistry);
-  }
-
-  private static final class GaugeValue {
-
-    private final AtomicLong value = new AtomicLong(42);
-
-    private double value() {
-      return value.get();
-    }
+    Gauge.builder(metricName, VALUE, AtomicLong::doubleValue).register(Metrics.globalRegistry);
   }
 
   private GaugeRegistrar() {}
