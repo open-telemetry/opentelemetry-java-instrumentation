@@ -469,8 +469,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
                 .hasName("http.server.request.duration")
                 .hasDescription("Duration of HTTP server requests.")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
+                .hasHistogramPointsSatisfying(point -> point.hasSumGreaterThan(0.0)));
   }
 
   /**
