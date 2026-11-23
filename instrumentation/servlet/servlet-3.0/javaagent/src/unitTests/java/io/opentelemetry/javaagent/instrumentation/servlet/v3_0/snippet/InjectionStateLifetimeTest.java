@@ -218,11 +218,10 @@ class InjectionStateLifetimeTest {
 
     Fixture() throws IOException {
       when(request.getAttribute(anyString()))
-          .thenAnswer(
-              invocation -> {
-                requestAttributeGets++;
-                return attributes.get(invocation.getArgument(0));
-              });
+          .thenAnswer(invocation -> {
+            requestAttributeGets++;
+            return attributes.get(invocation.getArgument(0));
+          });
       doAnswer(
               invocation -> {
                 String name = invocation.getArgument(0);
@@ -258,17 +257,16 @@ class InjectionStateLifetimeTest {
           .when(response)
           .setContentLength(anyInt());
       when(response.getOutputStream())
-          .thenAnswer(
-              invocation -> {
-                if (assertNoStateBeforeOutputAcquisition) {
-                  assertThat(streamStateAttributeUpdates).isZero();
-                }
-                if (failOutputStreamAcquisition) {
-                  failOutputStreamAcquisition = false;
-                  throw new IOException("stream acquisition failed");
-                }
-                return stream;
-              });
+          .thenAnswer(invocation -> {
+            if (assertNoStateBeforeOutputAcquisition) {
+              assertThat(streamStateAttributeUpdates).isZero();
+            }
+            if (failOutputStreamAcquisition) {
+              failOutputStreamAcquisition = false;
+              throw new IOException("stream acquisition failed");
+            }
+            return stream;
+          });
       when(response.getWriter())
           .thenAnswer(invocation -> new PrintWriter(new OutputStreamWriter(stream, UTF_8)));
     }
