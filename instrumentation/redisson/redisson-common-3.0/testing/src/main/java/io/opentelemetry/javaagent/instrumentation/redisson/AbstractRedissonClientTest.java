@@ -38,6 +38,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -156,10 +157,9 @@ public abstract class AbstractRedissonClientTest {
   private static void disableConnectionPing(Object serverConfig)
       throws InvocationTargetException, IllegalAccessException {
     try {
-      serverConfig
-          .getClass()
-          .getMethod("setPingConnectionInterval", int.class)
-          .invoke(serverConfig, 0);
+      Method method = serverConfig.getClass().getMethod("setPingConnectionInterval", int.class);
+      method.setAccessible(true);
+      method.invoke(serverConfig, 0);
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
