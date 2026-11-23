@@ -224,6 +224,34 @@ public class TestServlet5 {
     }
   }
 
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeFixedLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      String body = HTML_PRINT_WRITER.getBody();
+      resp.setContentType("text/html");
+      resp.setContentLength(body.length());
+      resp.getWriter().write(body);
+      AsyncContext context = req.startAsync();
+      req.setAttribute(ORIGINAL_RESPONSE_ATTRIBUTE, context.getResponse());
+      req.getRequestDispatcher("/snippetIncludeFixedLengthResetTarget")
+          .include(req, context.getResponse());
+      resp.getWriter().write("ad>" + body.substring("<head>".length()));
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeFixedLengthResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentLength(1);
+      ((HttpServletResponse) req.getAttribute(ORIGINAL_RESPONSE_ATTRIBUTE)).resetBuffer();
+      resp.getWriter().write("<he");
+    }
+  }
+
   @WebServlet
   public static class SnippetIncludeRawResetTarget extends HttpServlet {
     @Override

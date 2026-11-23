@@ -35,7 +35,9 @@ class SnippetInjectingPrintWriterTest {
           }
 
           @Override
-          public void updateContentLengthIfPreviouslySet() {}
+          public boolean updateContentLengthIfPreviouslySet() {
+            return true;
+          }
 
           @Override
           public void resetContentLengthIfPreviouslyAdjusted() {}

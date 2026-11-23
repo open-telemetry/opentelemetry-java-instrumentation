@@ -11,6 +11,7 @@ public final class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
   private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
   private SnippetInjectingResponseWrapper wrapper;
+  private SnippetInjectingResponseWrapper contentLengthWrapper;
   private int headTagBytesSeen = 0;
   private long contentLength = -1;
   private boolean contentLengthAdjusted;
@@ -20,10 +21,15 @@ public final class InjectionState {
 
   public InjectionState(SnippetInjectingResponseWrapper wrapper) {
     this.wrapper = wrapper;
+    contentLengthWrapper = wrapper;
   }
 
   public void setWrapper(SnippetInjectingResponseWrapper wrapper) {
     this.wrapper = wrapper;
+  }
+
+  public void setContentLengthWrapper(SnippetInjectingResponseWrapper wrapper) {
+    contentLengthWrapper = wrapper;
   }
 
   public void useWriter() {
@@ -60,7 +66,7 @@ public final class InjectionState {
   }
 
   public void resetBuffer() {
-    wrapper.resetContentLengthIfPreviouslyAdjusted();
+    contentLengthWrapper.resetContentLengthIfPreviouslyAdjusted();
     headTagBytesSeen = 0;
     if (forwardPending) {
       forwardPending = false;
@@ -173,5 +179,9 @@ public final class InjectionState {
 
   public SnippetInjectingResponseWrapper getWrapper() {
     return wrapper;
+  }
+
+  public SnippetInjectingResponseWrapper getContentLengthWrapper() {
+    return contentLengthWrapper;
   }
 }

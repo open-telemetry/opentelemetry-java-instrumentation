@@ -36,7 +36,7 @@ import org.junit.jupiter.params.provider.EnumSource;
 @EnumSource(BaseTomcatDispatchTest.TestType.class)
 public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test {
   private static final ServerEndpoint SNIPPET_INCLUDE_RESET =
-      new ServerEndpoint("SNIPPET_INCLUDE_RESET", "snippetAsyncIncludeReset", 200, "");
+      new ServerEndpoint("SNIPPET_INCLUDE_RESET", "snippetIncludeReset", 200, "");
   private static final ServerEndpoint SNIPPET_INCLUDE_RAW_RESET =
       new ServerEndpoint("SNIPPET_INCLUDE_RAW_RESET", "snippetAsyncIncludeRawReset", 200, "");
   private static final ServerEndpoint SNIPPET_INCLUDE_DELEGATED_RESET =
@@ -211,6 +211,7 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
             RequestDispatcherServlet.Include.class);
         test.addServlet(
             context, "/snippetAsyncIncludeReset", TestServlet3.SnippetAsyncIncludeReset.class);
+        test.addServlet(context, "/snippetIncludeReset", TestServlet3.SnippetIncludeReset.class);
         test.addServlet(
             context, "/snippetIncludeResetTarget", TestServlet3.SnippetIncludeResetTarget.class);
         test.addServlet(
@@ -221,6 +222,14 @@ public abstract class BaseTomcatDispatchTest extends AbstractTomcatServlet3Test 
             context,
             "/snippetIncludeRawResetTarget",
             TestServlet3.SnippetIncludeRawResetTarget.class);
+        test.addServlet(
+            context,
+            "/snippetAsyncIncludeFixedLengthReset",
+            TestServlet3.SnippetAsyncIncludeFixedLengthReset.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeFixedLengthResetTarget",
+            TestServlet3.SnippetIncludeFixedLengthResetTarget.class);
         test.addServlet(
             context,
             "/snippetAsyncIncludeDelegatedReset",

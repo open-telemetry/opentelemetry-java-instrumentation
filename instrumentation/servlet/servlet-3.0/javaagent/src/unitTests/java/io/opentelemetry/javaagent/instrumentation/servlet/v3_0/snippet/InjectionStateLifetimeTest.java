@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateReference;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.OutputStreamSnippetInjectionHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.v3_0.Servlet3ResponseResetAdvice;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
@@ -288,6 +289,34 @@ class InjectionStateLifetimeTest {
     assertThat(fixture.contentLength).isEqualTo(INJECTED.length());
   }
 
+  @ParameterizedTest
+  @EnumSource(Output.class)
+  void ignoredIncludeLengthSettersPreserveAdjustmentUntilReset(Output output) throws Throwable {
+    for (String setter :
+        new String[] {"header", "addHeader", "intHeader", "addIntHeader", "length", "long"}) {
+      Fixture fixture = new Fixture();
+      Servlet3SnippetInjectingResponseWrapper wrapper = fixture.wrap();
+      wrapper.setContentType("text/html");
+      wrapper.setContentLength(HTML.length());
+      fixture.write(wrapper, output, HTML);
+      InjectionState state = wrapper.getInjectionState();
+      assertThat(state.isContentLengthAdjusted()).isTrue();
+
+      fixture.dispatcherType = DispatcherType.INCLUDE;
+      Fixture.setContentLength(wrapper, setter, 1);
+      assertThat(state.isContentLengthAdjusted()).isTrue();
+      assertThat(fixture.contentLength).isEqualTo(INJECTED.length());
+
+      fixture.dispatcherType = DispatcherType.REQUEST;
+      wrapper.resetBuffer();
+      assertThat(state.isContentLengthAdjusted()).isFalse();
+      assertThat(fixture.contentLength).isEqualTo(HTML.length());
+      fixture.write(wrapper, output, HTML);
+      assertThat(fixture.content()).isEqualTo(INJECTED);
+      assertThat(fixture.contentLength).isEqualTo(INJECTED.length());
+    }
+  }
+
   @Test
   void failedWriterAcquisitionDoesNotDisableStreamInjection() throws IOException {
     Fixture fixture = new Fixture();
@@ -352,6 +381,7 @@ class InjectionStateLifetimeTest {
     int requestAttributeGets;
     boolean failOutputStreamAcquisition;
     boolean assertNoStreamStateBeforeOutputAcquisition;
+    DispatcherType dispatcherType = DispatcherType.REQUEST;
     final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     final OutputStreamSnippetInjectionHelper helper =
         new OutputStreamSnippetInjectionHelper(() -> SNIPPET);
@@ -374,7 +404,7 @@ class InjectionStateLifetimeTest {
           }
         };
     String contentType;
-    int contentLength = -1;
+    long contentLength = -1;
     Output output;
     PrintWriter writer;
     String encoding = UTF_8.name();
@@ -385,6 +415,7 @@ class InjectionStateLifetimeTest {
             requestAttributeGets++;
             return attributes.get(invocation.getArgument(0));
           });
+      when(request.getDispatcherType()).thenAnswer(invocation -> dispatcherType);
       doAnswer(
               invocation -> {
                 String name = invocation.getArgument(0);
@@ -404,6 +435,8 @@ class InjectionStateLifetimeTest {
           .when(request)
           .removeAttribute(anyString());
       when(response.getContentType()).thenAnswer(invocation -> contentType);
+      when(response.getHeader("Content-Length"))
+          .thenAnswer(invocation -> contentLength == -1 ? null : String.valueOf(contentLength));
       when(response.getCharacterEncoding()).thenAnswer(invocation -> encoding);
       doAnswer(
               invocation -> {
@@ -421,11 +454,49 @@ class InjectionStateLifetimeTest {
           .setContentType(anyString());
       doAnswer(
               invocation -> {
-                contentLength = invocation.getArgument(0);
+                if (dispatcherType != DispatcherType.INCLUDE) {
+                  contentLength = ((Integer) invocation.getArgument(0)).longValue();
+                }
                 return null;
               })
           .when(response)
           .setContentLength(anyInt());
+      doAnswer(
+              invocation -> {
+                if (dispatcherType != DispatcherType.INCLUDE) {
+                  contentLength = Long.parseLong(invocation.getArgument(1));
+                }
+                return null;
+              })
+          .when(response)
+          .setHeader(anyString(), anyString());
+      doAnswer(
+              invocation -> {
+                if (dispatcherType != DispatcherType.INCLUDE) {
+                  contentLength = Long.parseLong(invocation.getArgument(1));
+                }
+                return null;
+              })
+          .when(response)
+          .addHeader(anyString(), anyString());
+      doAnswer(
+              invocation -> {
+                if (dispatcherType != DispatcherType.INCLUDE) {
+                  contentLength = ((Integer) invocation.getArgument(1)).longValue();
+                }
+                return null;
+              })
+          .when(response)
+          .setIntHeader(anyString(), anyInt());
+      doAnswer(
+              invocation -> {
+                if (dispatcherType != DispatcherType.INCLUDE) {
+                  contentLength = ((Integer) invocation.getArgument(1)).longValue();
+                }
+                return null;
+              })
+          .when(response)
+          .addIntHeader(anyString(), anyInt());
       when(response.getOutputStream())
           .thenAnswer(invocation -> {
             if (assertNoStreamStateBeforeOutputAcquisition) {
@@ -455,6 +526,7 @@ class InjectionStateLifetimeTest {
       doAnswer(
               invocation -> {
                 bytes.reset();
+                Servlet3ResponseResetAdvice.onExit(response, "resetBuffer", null);
                 return null;
               })
           .when(response)
@@ -467,6 +539,7 @@ class InjectionStateLifetimeTest {
                 output = null;
                 writer = null;
                 encoding = UTF_8.name();
+                Servlet3ResponseResetAdvice.onExit(response, "reset", null);
                 return null;
               })
           .when(response)
@@ -495,6 +568,33 @@ class InjectionStateLifetimeTest {
       } else {
         wrapper.getWriter().write(text);
         wrapper.getWriter().flush();
+      }
+    }
+
+    static void setContentLength(
+        Servlet3SnippetInjectingResponseWrapper wrapper, String setter, int value)
+        throws Throwable {
+      switch (setter) {
+        case "header":
+          wrapper.setHeader("Content-Length", String.valueOf(value));
+          break;
+        case "addHeader":
+          wrapper.addHeader("Content-Length", String.valueOf(value));
+          break;
+        case "intHeader":
+          wrapper.setIntHeader("Content-Length", value);
+          break;
+        case "addIntHeader":
+          wrapper.addIntHeader("Content-Length", value);
+          break;
+        case "length":
+          wrapper.setContentLength(value);
+          break;
+        case "long":
+          wrapper.setContentLengthLong(value);
+          break;
+        default:
+          throw new IllegalArgumentException(setter);
       }
     }
 

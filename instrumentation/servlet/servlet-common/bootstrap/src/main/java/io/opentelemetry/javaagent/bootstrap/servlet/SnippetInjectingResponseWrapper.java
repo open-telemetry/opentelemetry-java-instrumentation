@@ -11,11 +11,7 @@ public interface SnippetInjectingResponseWrapper {
 
   boolean isCurrentRequest();
 
-  default boolean isCurrentIncludeResponse(Object response) {
-    return false;
-  }
-
-  void updateContentLengthIfPreviouslySet();
+  boolean updateContentLengthIfPreviouslySet();
 
   void resetContentLengthIfPreviouslyAdjusted();
 

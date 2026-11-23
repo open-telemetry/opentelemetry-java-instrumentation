@@ -14,14 +14,25 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.instrumentation.servlet.v5_0.RequestDispatcherServlet;
 import io.opentelemetry.instrumentation.servlet.v5_0.TestServlet5;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
+import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import jakarta.servlet.Servlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
+import org.junit.jupiter.api.Test;
 
 class JettyServlet5IncludeTest extends JettyDispatchTest {
+  private static final ServerEndpoint SNIPPET_INCLUDE_RAW_RESET =
+      new ServerEndpoint("SNIPPET_INCLUDE_RAW_RESET", "snippetAsyncIncludeRawReset", 200, "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_FIXED_LENGTH_RESET =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_FIXED_LENGTH_RESET", "snippetAsyncIncludeFixedLengthReset", 200, "");
+
   @Override
   public Class<? extends Servlet> servlet() {
     return TestServlet5.Sync.class; // dispatch to sync servlet
@@ -61,5 +72,55 @@ class JettyServlet5IncludeTest extends JettyDispatchTest {
         RequestDispatcherServlet.Include.class);
     addServlet(
         context, "/dispatch" + INDEXED_CHILD.getPath(), RequestDispatcherServlet.Include.class);
+    addServlet(
+        context, "/snippetAsyncIncludeRawReset", TestServlet5.SnippetAsyncIncludeRawReset.class);
+    addServlet(
+        context, "/snippetIncludeRawResetTarget", TestServlet5.SnippetIncludeRawResetTarget.class);
+    addServlet(
+        context,
+        "/snippetAsyncIncludeFixedLengthReset",
+        TestServlet5.SnippetAsyncIncludeFixedLengthReset.class);
+    addServlet(
+        context,
+        "/snippetIncludeFixedLengthResetTarget",
+        TestServlet5.SnippetIncludeFixedLengthResetTarget.class);
+  }
+
+  @Test
+  void rawResponseResetDuringIncludeDiscardsBodyAndAllowsInjection() {
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client.execute(request(SNIPPET_INCLUDE_RAW_RESET, "GET")).aggregate().join();
+      String expected = HTML_PRINT_WRITER.getBody().replace("<head>", "<head>" + snippet);
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.contentUtf8()).doesNotContain("discarded-prefix");
+      if (response.headers().contentLength() >= 0) {
+        assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+      }
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
+  }
+
+  @Test
+  void fixedLengthRawResetDuringIncludeKeepsBodyLengthAccurate() {
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client.execute(request(SNIPPET_INCLUDE_FIXED_LENGTH_RESET, "GET")).aggregate().join();
+      String body = HTML_PRINT_WRITER.getBody();
+      String expected = body.replace("<head>", "<head>" + snippet);
+
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 }

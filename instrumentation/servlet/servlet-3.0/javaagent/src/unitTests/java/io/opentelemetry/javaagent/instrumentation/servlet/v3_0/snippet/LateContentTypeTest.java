@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
@@ -235,6 +236,7 @@ class LateContentTypeTest {
         };
     String contentType;
     String contentTypeHeader;
+    String contentLengthHeader;
     ServletOutputStream stream;
     PrintWriter writer;
 
@@ -243,6 +245,7 @@ class LateContentTypeTest {
       when(response.getCharacterEncoding()).thenReturn(UTF_8.name());
       when(response.getContentType()).thenAnswer(invocation -> contentType);
       when(response.getHeader("content-type")).thenAnswer(invocation -> contentTypeHeader);
+      when(response.getHeader("Content-Length")).thenAnswer(invocation -> contentLengthHeader);
       doAnswer(
               invocation -> {
                 contentType = invocation.getArgument(0);
@@ -257,6 +260,47 @@ class LateContentTypeTest {
               })
           .when(response)
           .setHeader(eq("Content-Type"), anyString());
+      doAnswer(
+              invocation -> {
+                contentLengthHeader = invocation.getArgument(1);
+                return null;
+              })
+          .when(response)
+          .setHeader(eq("Content-Length"), anyString());
+      doAnswer(
+              invocation -> {
+                contentLengthHeader = String.valueOf((Integer) invocation.getArgument(0));
+                return null;
+              })
+          .when(response)
+          .setContentLength(anyInt());
+      doAnswer(
+              invocation -> {
+                contentLengthHeader = String.valueOf((Integer) invocation.getArgument(1));
+                return null;
+              })
+          .when(response)
+          .setIntHeader(eq("Content-Length"), anyInt());
+      doAnswer(
+              invocation -> {
+                contentLengthHeader =
+                    String.valueOf(
+                        contentLengthHeader == null
+                            ? invocation.getArgument(1)
+                            : contentLengthHeader);
+                return null;
+              })
+          .when(response)
+          .addHeader(eq("Content-Length"), anyString());
+      doAnswer(
+              invocation -> {
+                if (contentLengthHeader == null) {
+                  contentLengthHeader = String.valueOf((Integer) invocation.getArgument(1));
+                }
+                return null;
+              })
+          .when(response)
+          .addIntHeader(eq("Content-Length"), anyInt());
       when(response.getOutputStream()).thenReturn(rawStream);
       when(response.getWriter()).thenReturn(new PrintWriter(chars));
       acquire();

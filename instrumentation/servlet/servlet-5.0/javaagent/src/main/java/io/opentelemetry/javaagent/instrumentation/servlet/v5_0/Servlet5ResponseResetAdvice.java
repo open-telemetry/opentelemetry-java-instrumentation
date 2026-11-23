@@ -25,9 +25,6 @@ public class Servlet5ResponseResetAdvice {
     if (state == null) {
       return;
     }
-    if (state.getWrapper().isCurrentIncludeResponse(response)) {
-      return;
-    }
     if ("resetBuffer".equals(methodName)) {
       state.resetBuffer();
     } else {

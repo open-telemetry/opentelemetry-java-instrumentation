@@ -70,7 +70,9 @@ public class SnippetInjectingPrintWriter extends PrintWriter {
     if (state.getWrapper().isNotSafeToInject()) {
       return;
     }
-    state.getWrapper().updateContentLengthIfPreviouslySet();
+    if (!state.getContentLengthWrapper().updateContentLengthIfPreviouslySet()) {
+      return;
+    }
     super.write(snippet);
   }
 }

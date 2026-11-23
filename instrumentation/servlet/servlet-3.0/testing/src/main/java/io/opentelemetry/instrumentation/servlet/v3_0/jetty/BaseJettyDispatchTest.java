@@ -15,6 +15,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.QUERY_PARAM;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.REDIRECT;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.SUCCESS;
+import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -51,6 +52,11 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
   private static final ServerEndpoint SNIPPET_WRITER_ACQUISITION_FAILURE =
       new ServerEndpoint(
           "SNIPPET_WRITER_ACQUISITION_FAILURE", "snippetWriterAcquisitionFailure", 200, "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_RAW_RESET =
+      new ServerEndpoint("SNIPPET_INCLUDE_RAW_RESET", "snippetAsyncIncludeRawReset", 200, "");
+  private static final ServerEndpoint SNIPPET_INCLUDE_FIXED_LENGTH_RESET =
+      new ServerEndpoint(
+          "SNIPPET_INCLUDE_FIXED_LENGTH_RESET", "snippetAsyncIncludeFixedLengthReset", 200, "");
 
   enum TestType {
     DISPATCH_ASYNC {
@@ -232,6 +238,22 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
             RequestDispatcherServlet.Include.class);
         test.addServlet(
             context, "/dispatch" + INDEXED_CHILD.getPath(), RequestDispatcherServlet.Include.class);
+        test.addServlet(
+            context,
+            "/snippetAsyncIncludeRawReset",
+            TestServlet3.SnippetAsyncIncludeRawReset.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeRawResetTarget",
+            TestServlet3.SnippetIncludeRawResetTarget.class);
+        test.addServlet(
+            context,
+            "/snippetAsyncIncludeFixedLengthReset",
+            TestServlet3.SnippetAsyncIncludeFixedLengthReset.class);
+        test.addServlet(
+            context,
+            "/snippetIncludeFixedLengthResetTarget",
+            TestServlet3.SnippetIncludeFixedLengthResetTarget.class);
       }
     };
 
@@ -354,6 +376,37 @@ public abstract class BaseJettyDispatchTest extends AbstractJettyServlet3Test {
     assumeTrue(testType == TestType.FORWARD);
     assumeTrue(isAgentTest());
     assertReplacementBody(SNIPPET_WRITER_ACQUISITION_FAILURE);
+  }
+
+  @Test
+  void rawResponseResetDuringIncludeDiscardsBodyAndAllowsInjection() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(testLatestDeps());
+    assumeTrue(isAgentTest());
+    assertReplacementBody(SNIPPET_INCLUDE_RAW_RESET);
+  }
+
+  @Test
+  void fixedLengthRawResetDuringIncludeKeepsBodyLengthAccurate() {
+    assumeTrue(testType == TestType.INCLUDE);
+    assumeTrue(testLatestDeps());
+    assumeTrue(isAgentTest());
+
+    String snippet = "<!-- snippet -->";
+    ExperimentalSnippetHolder.setSnippet(snippet);
+    try {
+      AggregatedHttpResponse response =
+          client.execute(request(SNIPPET_INCLUDE_FIXED_LENGTH_RESET, "GET")).aggregate().join();
+      String body = HTML_PRINT_WRITER.getBody();
+      String expected = body.replace("<head>", "<head>" + snippet);
+
+      assertThat(response.status().code()).isEqualTo(200);
+      assertThat(response.contentUtf8()).isEqualTo(expected);
+      assertThat(response.contentUtf8()).containsOnlyOnce(snippet);
+      assertThat(response.headers().contentLength()).isEqualTo(response.content().length());
+    } finally {
+      ExperimentalSnippetHolder.setSnippet("");
+    }
   }
 
   private void assertReplacementBody(ServerEndpoint source) {

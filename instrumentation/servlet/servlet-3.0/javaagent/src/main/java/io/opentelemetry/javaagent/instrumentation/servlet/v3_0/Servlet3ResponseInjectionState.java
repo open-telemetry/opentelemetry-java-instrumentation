@@ -19,7 +19,6 @@ public class Servlet3ResponseInjectionState {
   public static void set(ServletResponse response, InjectionState state) {
     InjectionStateReference reference = new InjectionStateReference(state);
     while (response instanceof ServletResponseWrapper) {
-      INJECTION_STATE.set(response, reference);
       response = ((ServletResponseWrapper) response).getResponse();
     }
     INJECTION_STATE.set(response, reference);

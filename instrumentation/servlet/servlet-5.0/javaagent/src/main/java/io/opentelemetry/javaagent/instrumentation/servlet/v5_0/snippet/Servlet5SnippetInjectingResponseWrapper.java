@@ -75,6 +75,9 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
             == unwrapResponse(response)) {
       injectionState = (InjectionState) previous;
       injectionState.setWrapper(this);
+      if (request.getDispatcherType() != DispatcherType.INCLUDE) {
+        injectionState.setContentLengthWrapper(this);
+      }
     } else {
       // Request attributes survive async dispatch and are cleared when the container recycles it.
       injectionState = new InjectionState(this);
@@ -118,37 +121,14 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   }
 
   @Override
-  public void resetBuffer() {
-    long resetSequence = injectionState.getResetSequence();
-    boolean currentIncludeResponse = isCurrentIncludeResponse(getResponse());
-    super.resetBuffer();
-    if (!currentIncludeResponse && injectionState.getResetSequence() == resetSequence) {
-      injectionState.resetBuffer();
-    }
-  }
-
-  @Override
   public void reset() {
     long resetSequence = injectionState.getResetSequence();
-    boolean currentIncludeResponse = isCurrentIncludeResponse(getResponse());
     super.reset();
     boolean reset = injectionState.getResetSequence() != resetSequence;
-    if (!currentIncludeResponse && !reset) {
-      injectionState.reset();
-      reset = true;
-    }
     if (reset) {
       snippetInjectingPrintWriter = null;
       delegatePrintWriter = null;
     }
-  }
-
-  @Override
-  public boolean isCurrentIncludeResponse(Object response) {
-    return request != null
-        && request.getDispatcherType() == DispatcherType.INCLUDE
-        && injectionState.getWrapper() == this
-        && getResponse() == response;
   }
 
   @Override
@@ -166,20 +146,25 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void setHeader(String name, String value) {
-    handleHeader(name, value);
+    long previousLength = getContentLengthBeforeSetter(name);
     super.setHeader(name, value);
+    handleHeader(name, value, previousLength);
   }
 
   @Override
   public void addHeader(String name, String value) {
-    handleHeader(name, value);
+    long previousLength = getContentLengthBeforeSetter(name);
     super.addHeader(name, value);
+    handleHeader(name, value, previousLength);
   }
 
-  private void handleHeader(String name, String value) {
-    if ("Content-Length".equalsIgnoreCase(name)) {
+  private void handleHeader(String name, String value, long previousLength) {
+    if ("Content-Length".equalsIgnoreCase(name) && !isIncludeRequest() && isContentLength(value)) {
       try {
-        injectionState.setContentLength(Long.parseLong(value));
+        long length = Long.parseLong(value);
+        if (length == getContentLengthHeader() && length != previousLength) {
+          injectionState.setContentLength(length);
+        }
       } catch (NumberFormatException e) {
         logger.log(FINE, "Failed to parse the Content-Length header", e);
       }
@@ -188,30 +173,44 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
 
   @Override
   public void setIntHeader(String name, int value) {
-    if ("Content-Length".equalsIgnoreCase(name)) {
+    long previousLength = getContentLengthBeforeSetter(name);
+    super.setIntHeader(name, value);
+    if ("Content-Length".equalsIgnoreCase(name)
+        && !isIncludeRequest()
+        && getContentLengthHeader() == value
+        && previousLength != value) {
       injectionState.setContentLength(value);
     }
-    super.setIntHeader(name, value);
   }
 
   @Override
   public void addIntHeader(String name, int value) {
-    if ("Content-Length".equalsIgnoreCase(name)) {
+    long previousLength = getContentLengthBeforeSetter(name);
+    super.addIntHeader(name, value);
+    if ("Content-Length".equalsIgnoreCase(name)
+        && !isIncludeRequest()
+        && getContentLengthHeader() == value
+        && previousLength != value) {
       injectionState.setContentLength(value);
     }
-    super.addIntHeader(name, value);
   }
 
   @Override
   public void setContentLength(int len) {
-    injectionState.setContentLength(len);
+    long previousLength = getContentLengthHeader();
     super.setContentLength(len);
+    if (!isIncludeRequest() && getContentLengthHeader() == len && previousLength != len) {
+      injectionState.setContentLength(len);
+    }
   }
 
   @Override
   public void setContentLengthLong(long length) {
-    injectionState.setContentLength(length);
+    long previousLength = getContentLengthHeader();
     super.setContentLengthLong(length);
+    if (!isIncludeRequest() && getContentLengthHeader() == length && previousLength != length) {
+      injectionState.setContentLength(length);
+    }
   }
 
   @Override
@@ -249,18 +248,65 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   }
 
   @Override
-  public void updateContentLengthIfPreviouslySet() {
-    if (injectionState.hasContentLength()) {
-      setContentLength((int) injectionState.getContentLength() + snippetLength);
-      injectionState.markContentLengthAdjusted();
+  public boolean updateContentLengthIfPreviouslySet() {
+    if (!injectionState.hasContentLength() || injectionState.isContentLengthAdjusted()) {
+      return true;
     }
+    long length = injectionState.getContentLength() + snippetLength;
+    if (length < injectionState.getContentLength() || !setContentLengthAndVerify(length)) {
+      return false;
+    }
+    injectionState.setContentLength(length);
+    injectionState.markContentLengthAdjusted();
+    return true;
   }
 
   @Override
   public void resetContentLengthIfPreviouslyAdjusted() {
     if (injectionState.isContentLengthAdjusted()) {
-      setContentLength((int) injectionState.getContentLength() - snippetLength);
+      long length = injectionState.getContentLength() - snippetLength;
+      if (setContentLengthAndVerify(length)) {
+        injectionState.setContentLength(length);
+      }
     }
+  }
+
+  private boolean setContentLengthAndVerify(long length) {
+    if (length <= Integer.MAX_VALUE && length >= 0) {
+      super.setContentLength((int) length);
+    } else {
+      super.setContentLengthLong(length);
+    }
+    return getContentLengthHeader() == length;
+  }
+
+  private long getContentLengthHeader() {
+    String value = super.getHeader("Content-Length");
+    if (value == null) {
+      return Long.MIN_VALUE;
+    }
+    try {
+      return Long.parseLong(value);
+    } catch (NumberFormatException ignored) {
+      return Long.MIN_VALUE;
+    }
+  }
+
+  private long getContentLengthBeforeSetter(String name) {
+    return "Content-Length".equalsIgnoreCase(name) ? getContentLengthHeader() : Long.MIN_VALUE;
+  }
+
+  private static boolean isContentLength(String value) {
+    try {
+      Long.parseLong(value);
+      return true;
+    } catch (NumberFormatException ignored) {
+      return false;
+    }
+  }
+
+  private boolean isIncludeRequest() {
+    return request != null && request.getDispatcherType() == DispatcherType.INCLUDE;
   }
 
   @Override
