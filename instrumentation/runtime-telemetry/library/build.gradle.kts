@@ -54,6 +54,13 @@ tasks.named("nativeTest") {
   setDependsOn(listOf("nativeRuntimeTelemetryTest"))
 }
 
+tasks.named<Test>(testNativeImage.name) {
+  // The suite targets Java 17, so it cannot run on the older test JVMs.
+  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+    enabled = false
+  }
+}
+
 tasks.named("nativeTestCompile") {
   enabled = false
 }
