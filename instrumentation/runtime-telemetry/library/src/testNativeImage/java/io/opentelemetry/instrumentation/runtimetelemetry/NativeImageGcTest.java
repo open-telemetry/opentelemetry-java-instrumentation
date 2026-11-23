@@ -44,13 +44,12 @@ class NativeImageGcTest {
       try (RuntimeTelemetry telemetry = builder.build()) {
         await()
             .atMost(Duration.ofSeconds(30))
-            .untilAsserted(
-                () -> {
-                  System.gc();
-                  assertThat(reader.collectAllMetrics())
-                      .singleElement()
-                      .satisfies(NativeImageGcTest::assertGcDuration);
-                });
+            .untilAsserted(() -> {
+              System.gc();
+              assertThat(reader.collectAllMetrics())
+                  .singleElement()
+                  .satisfies(NativeImageGcTest::assertGcDuration);
+            });
       } catch (ConditionTimeoutException e) {
         List<String> gcEventTypes =
             FlightRecorder.getFlightRecorder().getEventTypes().stream()
@@ -70,10 +69,9 @@ class NativeImageGcTest {
     assertThat(metric.getType()).isEqualTo(MetricDataType.HISTOGRAM);
     assertThat(metric.getHistogramData().getPoints())
         .singleElement()
-        .satisfies(
-            point -> {
-              assertThat(point.getCount()).isPositive();
-              assertThat(point.getAttributes()).isEqualTo(Attributes.of(JVM_GC_NAME, "serial"));
-            });
+        .satisfies(point -> {
+          assertThat(point.getCount()).isPositive();
+          assertThat(point.getAttributes()).isEqualTo(Attributes.of(JVM_GC_NAME, "serial"));
+        });
   }
 }
