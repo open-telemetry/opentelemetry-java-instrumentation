@@ -298,8 +298,8 @@ class TailCallWithSpanCallerFrameTest {
     1
   }
 
-  // Before kotlinx-coroutines 1.6.1, a caller that finished the inner withContext on another
-  // thread cleared the state the callee's thread restores once it unwinds.
+  // A caller that finishes the inner withContext on another thread before the callee's thread
+  // unwinds leaves both threads clean.
   @Test
   fun `inner withContext leaves both threads clean when the caller resumes on another thread`() {
     val inner = tracer.spanBuilder("inner").startSpan()
