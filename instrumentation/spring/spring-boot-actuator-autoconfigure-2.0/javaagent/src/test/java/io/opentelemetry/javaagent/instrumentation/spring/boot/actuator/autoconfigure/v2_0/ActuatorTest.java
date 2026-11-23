@@ -104,7 +104,8 @@ class ActuatorTest {
         metric ->
             metric
                 .hasName("test.global.existing")
-                .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
+                .hasDoubleSumSatisfying(
+                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
 
     context.close();
     assertThat(springRegistry.isClosed()).isTrue();
@@ -115,7 +116,8 @@ class ActuatorTest {
         metric ->
             metric
                 .hasName("test.global.existing")
-                .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+                .hasDoubleSumSatisfying(
+                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
 
     Counter added = Metrics.counter("test.global.new");
     cleanup.deferCleanup(() -> Metrics.globalRegistry.remove(added));
@@ -125,7 +127,8 @@ class ActuatorTest {
         metric ->
             metric
                 .hasName("test.global.new")
-                .hasDoubleSumSatisfying(sum -> sum.hasPointsSatisfying(point -> point.hasValue(4))));
+                .hasDoubleSumSatisfying(
+                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(4))));
   }
 
   @Configuration

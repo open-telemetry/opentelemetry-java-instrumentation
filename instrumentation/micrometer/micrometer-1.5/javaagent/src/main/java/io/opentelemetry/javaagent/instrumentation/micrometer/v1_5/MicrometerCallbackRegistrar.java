@@ -28,6 +28,24 @@ final class MicrometerCallbackRegistrar implements ObservableCallbackRegistrar {
 
   @Override
   public <T, H extends AutoCloseable> Registration<H> register(
+      Consumer<T> callback,
+      Class<?> ownerClass,
+      Class<?> functionClass,
+      Function<Consumer<T>, H> buildWithCallback) {
+    ClassLoader ownerLoader = ownerClass.getClassLoader();
+    // Keep callbacks for child applications on their own loader, not on shared Micrometer.
+    ClassLoader loader = functionClass.getClassLoader();
+    while (loader != null && loader != ownerLoader) {
+      loader = loader.getParent();
+      if (loader == ownerLoader) {
+        return register(callback, functionClass, buildWithCallback);
+      }
+    }
+    return register(callback, ownerClass, buildWithCallback);
+  }
+
+  @Override
+  public <T, H extends AutoCloseable> Registration<H> register(
       Consumer<T> callback, Class<?> ownerClass, Function<Consumer<T>, H> buildWithCallback) {
     callbacks.get(ownerClass).add(callback);
 

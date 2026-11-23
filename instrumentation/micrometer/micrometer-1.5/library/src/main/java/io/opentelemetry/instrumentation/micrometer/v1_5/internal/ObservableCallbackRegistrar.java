@@ -17,6 +17,14 @@ public interface ObservableCallbackRegistrar {
   <T, H extends AutoCloseable> Registration<H> register(
       Consumer<T> callback, Class<?> ownerClass, Function<Consumer<T>, H> buildWithCallback);
 
+  default <T, H extends AutoCloseable> Registration<H> register(
+      Consumer<T> callback,
+      Class<?> ownerClass,
+      Class<?> functionClass,
+      Function<Consumer<T>, H> buildWithCallback) {
+    return register(callback, ownerClass, buildWithCallback);
+  }
+
   static ObservableCallbackRegistrar direct() {
     return Direct.INSTANCE;
   }

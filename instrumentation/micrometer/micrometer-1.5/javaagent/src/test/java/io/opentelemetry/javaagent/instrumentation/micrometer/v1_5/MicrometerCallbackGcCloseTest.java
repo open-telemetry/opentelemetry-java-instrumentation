@@ -21,22 +21,15 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 
 class MicrometerCallbackGcCloseTest {
 
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.micrometer-1.5";
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   @Test
   void callbackDoesNotRetainDelegatedMicrometerClassLoaders() throws Exception {
     String metricName = "test.micrometer.gc.close";
-    String instrumentationName = "io.opentelemetry.micrometer-1.5";
-    URL micrometerJar = Metrics.class.getProtectionDomain().getCodeSource().getLocation();
-    URL testClasses = GaugeRegistrar.class.getProtectionDomain().getCodeSource().getLocation();
-    LoaderReferences loaderReferences =
-        registerGaugeAndAssert(
-            metricName,
-            instrumentationName,
-            micrometerJar,
-            testClasses,
-            getClass().getClassLoader());
+    LoaderReferences loaderReferences = registerGaugeInDisposableMicrometer(metricName);
 
     GcUtils.awaitGc(loaderReferences.pluginLoader, Duration.ofSeconds(10));
     GcUtils.awaitGc(loaderReferences.micrometerLoader, Duration.ofSeconds(10));
@@ -44,20 +37,44 @@ class MicrometerCallbackGcCloseTest {
     assertThat(loaderReferences.micrometerLoader.get()).isNull();
 
     testing.clearData();
-    testing.waitAndAssertMetrics(instrumentationName, metricName, AbstractIterableAssert::isEmpty);
+    testing.waitAndAssertMetrics(INSTRUMENTATION_NAME, metricName, AbstractIterableAssert::isEmpty);
   }
 
-  private static LoaderReferences registerGaugeAndAssert(
-      String metricName,
-      String instrumentationName,
-      URL micrometerJar,
-      URL testClasses,
-      ClassLoader parent)
+  @Test
+  void callbackDoesNotRetainPluginWhenMicrometerStaysLoaded() throws Exception {
+    String metricName = "test.micrometer.shared.gc.close";
+    try (URLClassLoader micrometerLoader = newMicrometerClassLoader()) {
+      WeakReference<ClassLoader> pluginLoader =
+          registerGaugeAndAssert(metricName, micrometerLoader, false);
+
+      GcUtils.awaitGc(pluginLoader, Duration.ofSeconds(10));
+
+      testing.clearData();
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME, metricName, AbstractIterableAssert::isEmpty);
+    }
+  }
+
+  private static LoaderReferences registerGaugeInDisposableMicrometer(String metricName)
       throws Exception {
-    try (URLClassLoader micrometerLoader =
-            new ChildFirstMicrometerClassLoader(new URL[] {micrometerJar}, parent);
-        URLClassLoader pluginLoader =
-            new ChildFirstGaugeClassLoader(new URL[] {testClasses}, micrometerLoader)) {
+    try (URLClassLoader micrometerLoader = newMicrometerClassLoader()) {
+      return new LoaderReferences(
+          new WeakReference<>(micrometerLoader),
+          registerGaugeAndAssert(metricName, micrometerLoader, true));
+    }
+  }
+
+  private static URLClassLoader newMicrometerClassLoader() {
+    URL micrometerJar = Metrics.class.getProtectionDomain().getCodeSource().getLocation();
+    return new ChildFirstMicrometerClassLoader(
+        new URL[] {micrometerJar}, MicrometerCallbackGcCloseTest.class.getClassLoader());
+  }
+
+  private static WeakReference<ClassLoader> registerGaugeAndAssert(
+      String metricName, ClassLoader micrometerLoader, boolean useGlobalRegistry) throws Exception {
+    URL testClasses = GaugeRegistrar.class.getProtectionDomain().getCodeSource().getLocation();
+    try (URLClassLoader pluginLoader =
+        new ChildFirstGaugeClassLoader(new URL[] {testClasses}, micrometerLoader)) {
       Class<?> registrar = pluginLoader.loadClass(GaugeRegistrar.class.getName());
       assertThat(registrar.getClassLoader()).isSameAs(pluginLoader);
       assertThat(
@@ -69,21 +86,22 @@ class MicrometerCallbackGcCloseTest {
       ClassLoader originalContextClassLoader = thread.getContextClassLoader();
       try {
         thread.setContextClassLoader(null);
-        registrar.getMethod("register", String.class).invoke(null, metricName);
+        registrar
+            .getMethod("register", String.class, boolean.class)
+            .invoke(null, metricName, useGlobalRegistry);
       } finally {
         thread.setContextClassLoader(originalContextClassLoader);
       }
 
       testing.waitAndAssertMetrics(
-          instrumentationName,
+          INSTRUMENTATION_NAME,
           metric ->
               metric
                   .hasName(metricName)
                   .hasDoubleGaugeSatisfying(
                       gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
 
-      return new LoaderReferences(
-          new WeakReference<>(micrometerLoader), new WeakReference<>(pluginLoader));
+      return new WeakReference<>(pluginLoader);
     }
   }
 

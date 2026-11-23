@@ -47,7 +47,8 @@ final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
     DoubleMeasurementRecorder<T> callback =
         new DoubleMeasurementRecorder<>(obj, countFunction, tagsAsAttributes(id, namingConvention));
     observableCount =
-        callbackRegistrar.register(callback, id.getClass(), builder::buildWithCallback);
+        callbackRegistrar.register(
+            callback, id.getClass(), countFunction.getClass(), builder::buildWithCallback);
   }
 
   @Override
