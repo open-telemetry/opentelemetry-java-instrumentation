@@ -1,0 +1,26 @@
+name: Instruction audit
+
+on:
+  workflow_dispatch:
+    inputs:
+      publish:
+        description: Allow one draft PR for a verified, publishable finding
+        type: boolean
+        default: false
+  push:
+    branches: [trask-java-audit-caller-pilot]
+
+permissions: {}
+
+jobs:
+  audit:
+    if: github.event_name == 'workflow_dispatch'
+    permissions:
+      contents: write
+      copilot-requests: write
+    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@86b00ddb46d2063afb8f6ac958ad8ea0f7faab76
+    with:
+      publish: ${{ inputs.publish }}
+      otelbot_client_id: ${{ vars.OTELBOT_CLIENT_ID }}
+    secrets:
+      otelbot_private_key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
