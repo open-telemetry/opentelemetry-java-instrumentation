@@ -271,6 +271,10 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   @Override
   public void resetContentLengthIfPreviouslyAdjusted() {
     reconcileRawJettyContentLength();
+    Object contentLengthResponse = injectionState.getContentLengthResponse();
+    if (contentLengthResponse != null) {
+      TomcatContentLength.record(contentLengthResponse, injectionState);
+    }
     if (injectionState.isContentLengthAdjusted()) {
       long length = injectionState.getContentLength() - snippetLength;
       if (setContentLengthAndVerify(length)) {
