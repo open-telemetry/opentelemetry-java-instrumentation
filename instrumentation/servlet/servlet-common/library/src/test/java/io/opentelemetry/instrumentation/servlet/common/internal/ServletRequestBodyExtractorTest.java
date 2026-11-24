@@ -5,8 +5,10 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
 import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getAndNormalizeMediaTypeFromContentTypeHeader;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getCharsetFromContentTypeHeader;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getRequestBodyValue;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
@@ -22,6 +24,7 @@ import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
 import java.util.Map;
+import javax.annotation.Nullable;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -30,6 +33,8 @@ import org.junit.jupiter.params.provider.CsvSource;
 class ServletRequestBodyExtractorTest {
 
   private static final byte[] ISO_8859_1_BODY = "café".getBytes(ISO_8859_1);
+  // default enabled config
+  private static final BodyCaptureConfig CONFIG = createDefault().setEnabled(true);
 
   private final Object request = new Object();
   private final Map<String, Object> requestAttributes = new HashMap<>();
@@ -59,7 +64,7 @@ class ServletRequestBodyExtractorTest {
 
   @Test
   void noBodyAttribute() {
-    assertThat(extractRequestBody(accessor, request)).isNull();
+    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
     assertThat(requestAttributes).isEmpty();
   }
 
@@ -67,7 +72,7 @@ class ServletRequestBodyExtractorTest {
   void notABuffer() {
     requestAttributes.put(REQUEST_BODY_ATTRIBUTE, "body");
 
-    assertThat(extractRequestBody(accessor, request)).isNull();
+    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
 
     // attributes that are not a buffer are not ours to remove
     assertThat(requestAttributes).containsEntry(REQUEST_BODY_ATTRIBUTE, "body");
@@ -78,37 +83,39 @@ class ServletRequestBodyExtractorTest {
     ByteBuffer buffer = ByteBuffer.allocate(10);
     requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
 
-    assertThat(extractRequestBody(accessor, request)).isNull();
+    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
 
     assertThat(requestAttributes).doesNotContainKey(REQUEST_BODY_ATTRIBUTE);
   }
 
   @Test
   void bodyExtractedOnce() {
+
     ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
     requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
 
-    assertThat(extractRequestBody(accessor, request)).isEqualTo("abc");
-    assertThat(extractRequestBody(accessor, request)).isNull();
+    assertThat(extractRequestBody(accessor, request, CONFIG)).isEqualTo("abc");
+    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
   }
 
   @Test
   void validUtf8Body() {
     ByteBuffer buffer = bufferOf("request-body".getBytes(UTF_8));
 
-    String body = getRequestBodyValue(buffer, null);
+    String body = getRequestBodyValue(buffer, null, CONFIG);
     assertThat(body).isEqualTo("request-body");
   }
 
   @Test
-  void nonUtf8WithoutContentTypeCapturedAsUtf8() {
-    assertThat(getCharsetFromContentTypeHeader(null)).isEqualTo(UTF_8);
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null)).isEqualTo("caf");
+  void withoutContentTypeNoCapture() {
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null, CONFIG)).isNull();
   }
 
   @Test
   void nonUtf8WithContentTypeWithEncoding() {
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), "text/plain; charset=ISO-8859-1"))
+    assertThat(
+            getRequestBodyValue(
+                bufferOf(ISO_8859_1_BODY), "text/plain; charset=ISO-8859-1", CONFIG))
         .isEqualTo("café");
   }
 
@@ -133,7 +140,9 @@ class ServletRequestBodyExtractorTest {
   @Test
   void unknownCharsetAssumedUtf8() {
     assertThat(getCharsetFromContentTypeHeader("text/plain; charset=unknown")).isEqualTo(UTF_8);
-    assertThat(getRequestBodyValue(bufferOf("café".getBytes(UTF_8)), "text/plain; charset=unknown"))
+    assertThat(
+            getRequestBodyValue(
+                bufferOf("café".getBytes(UTF_8)), "text/plain; charset=unknown", CONFIG))
         .isEqualTo("café");
   }
 
@@ -141,7 +150,31 @@ class ServletRequestBodyExtractorTest {
   void truncatedUtf8() {
     ByteBuffer buffer = ByteBuffer.allocate(6);
     buffer.put("café".getBytes(UTF_8)).put((byte) 0xC3); // truncated UTF-8 sequence
-    assertThat(getRequestBodyValue(buffer, null)).isEqualTo("café");
+    assertThat(getRequestBodyValue(buffer, null, CONFIG)).isEqualTo("café");
+  }
+
+  @ParameterizedTest
+  @CsvSource(
+      delimiterString = "|",
+      nullValues = {"null"},
+      value = {
+        // should be normalized to lower case for comparison
+        "APPLICATION/JSON|application/json",
+        // empty or invalid should be ignored
+        "|null",
+        " ;|null",
+        " ; charset=UTF-8|null",
+        // with or without charset and other parameters
+        "text/plain|text/plain",
+        "text/plain;|text/plain",
+        "text/plain ;|text/plain",
+        "text/plain; charset=ISO-8859-1|text/plain",
+        // multipart should be ignored
+        "multipart/form-data; boundary=AaB03x|null",
+      })
+  void mediaType(String contentType, @Nullable String expectedMediaType) {
+    assertThat(getAndNormalizeMediaTypeFromContentTypeHeader(contentType))
+        .isEqualTo(expectedMediaType);
   }
 
   private static ByteBuffer bufferOf(byte[] bytes) {

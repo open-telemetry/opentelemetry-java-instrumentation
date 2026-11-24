@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.javaagent.bootstrap.internal.JavaagentHttpServerInstrumenters;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.ServletConfig;
@@ -29,10 +30,13 @@ class Jetty12Singletons {
                       .captureServletAttributes()
                       .recordException()
                       .init(context));
-              if (ServletConfig.get().getRequestBodyCaptureConfig().isEnabled()) {
+              BodyCaptureConfig requestBodyCaptureConfig =
+                  ServletConfig.get().getRequestBodyCaptureConfig();
+              if (requestBodyCaptureConfig.isEnabled()) {
                 // with jetty 12, the request body can be read after the servlet service has
                 // returned.
-                builder.addAttributesExtractor(new Jetty12RequestBodyExtractor());
+                builder.addAttributesExtractor(
+                    new Jetty12RequestBodyExtractor(requestBodyCaptureConfig));
               }
             });
   }

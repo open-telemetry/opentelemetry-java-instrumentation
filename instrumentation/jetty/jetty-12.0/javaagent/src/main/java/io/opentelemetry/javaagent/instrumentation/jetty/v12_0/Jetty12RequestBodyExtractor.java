@@ -12,6 +12,7 @@ import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
@@ -24,6 +25,12 @@ import org.eclipse.jetty.server.Response;
  * can't be added when the servlet exits.
  */
 class Jetty12RequestBodyExtractor implements AttributesExtractor<Request, Response> {
+
+  private final BodyCaptureConfig config;
+
+  public Jetty12RequestBodyExtractor(BodyCaptureConfig config) {
+    this.config = config;
+  }
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request request) {}
@@ -42,7 +49,7 @@ class Jetty12RequestBodyExtractor implements AttributesExtractor<Request, Respon
     request.setAttribute(REQUEST_BODY_ATTRIBUTE, null);
 
     String contentType = request.getHeaders().get(CONTENT_TYPE);
-    String body = ServletRequestBodyExtractor.getRequestBodyValue(buffer, contentType);
+    String body = ServletRequestBodyExtractor.getRequestBodyValue(buffer, contentType, config);
     if (body != null) {
       attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }

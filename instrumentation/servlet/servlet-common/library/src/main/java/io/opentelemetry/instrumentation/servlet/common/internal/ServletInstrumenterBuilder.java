@@ -129,7 +129,8 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       }
 
       if (requestBodyCaptureConfig.isEnabled()) {
-        builder.addAttributesExtractor(new ServletRequestBodyExtractor<>(accessor));
+        builder.addAttributesExtractor(
+            new ServletRequestBodyExtractor<>(accessor, requestBodyCaptureConfig));
       }
 
       if (propagateOperationListenersToOnEnd) {

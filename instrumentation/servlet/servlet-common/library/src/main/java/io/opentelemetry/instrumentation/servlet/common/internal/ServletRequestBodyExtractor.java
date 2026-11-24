@@ -17,6 +17,7 @@ import java.nio.charset.CharacterCodingException;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import javax.annotation.Nullable;
@@ -38,9 +39,12 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       Pattern.compile("charset\\s*=\\s*\"?([^\\s\";]+)", Pattern.CASE_INSENSITIVE);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
+  private final BodyCaptureConfig config;
 
-  public ServletRequestBodyExtractor(ServletAccessor<REQUEST, RESPONSE> accessor) {
+  public ServletRequestBodyExtractor(
+      ServletAccessor<REQUEST, RESPONSE> accessor, BodyCaptureConfig config) {
     this.accessor = accessor;
+    this.config = config;
   }
 
   @Override
@@ -57,7 +61,11 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       @Nullable ServletResponseContext<RESPONSE> responseServletResponseContext,
       @Nullable Throwable error) {
 
-    String body = extractRequestBody(accessor, requestServletRequestContext.request());
+    if (!config.isEnabled()) {
+      return;
+    }
+
+    String body = extractRequestBody(accessor, requestServletRequestContext.request(), config);
     if (body != null) {
       attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }
@@ -74,7 +82,7 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
    */
   @Nullable
   public static <REQUEST, RESPONSE> String extractRequestBody(
-      ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
+      ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request, BodyCaptureConfig config) {
     Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE);
     if (!(bodyAttribute instanceof ByteBuffer)) {
       return null;
@@ -84,21 +92,29 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     accessor.setRequestAttribute(request, REQUEST_BODY_ATTRIBUTE, null);
 
     String contentType = accessor.getRequestHeader(request, "Content-Type");
-    return getRequestBodyValue((ByteBuffer) bodyAttribute, contentType);
+    return getRequestBodyValue((ByteBuffer) bodyAttribute, contentType, config);
   }
 
   /**
    * Extracts request body value
    *
    * @param buffer request body buffer
-   * @param contentType value of the Content-Type header, which may contain a charset parameter, or
-   *     {@code null} if the header is missing
-   * @return extracted body value as string
+   * @param contentType value of the Content-Type header, which may contain a charset parameter
+   * @param config request body capture configuration
+   * @return extracted body value as string, or {@code null} if the body is empty, or the content
+   *     type is not supported, unknown, missing or excluded by configuration.
    */
   @Nullable
-  public static String getRequestBodyValue(ByteBuffer buffer, @Nullable String contentType) {
-    if (buffer.position() == 0) {
-      // empty buffer
+  public static String getRequestBodyValue(
+      ByteBuffer buffer, @Nullable String contentType, BodyCaptureConfig config) {
+    if (buffer.position() == 0 || contentType == null) {
+      // empty buffer or no content type header provided
+      return null;
+    }
+
+    String mediaType = getAndNormalizeMediaTypeFromContentTypeHeader(contentType);
+    if (null == mediaType) {
+      // don't attempt to decode body
       return null;
     }
 
@@ -116,12 +132,30 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     }
   }
 
+  // package-protected for testing
+  @Nullable
+  static String getAndNormalizeMediaTypeFromContentTypeHeader(String contentType) {
+    if (contentType == null || contentType.isEmpty()) {
+      return null;
+    }
+    contentType = contentType.toLowerCase(Locale.ROOT);
+    if (contentType.startsWith("multipart/")) {
+      // multipart is not supported
+      return null;
+    }
+
+    int semicolonIndex = contentType.indexOf(';');
+    String mediaType = contentType;
+    if (semicolonIndex != -1) {
+      mediaType = contentType.substring(0, semicolonIndex);
+    }
+    mediaType = mediaType.trim();
+    return mediaType.isEmpty() ? null : mediaType;
+  }
+
   /** Returns the charset from the content type, or UTF-8 when it is missing or unknown. */
   // package-protected for testing
-  static Charset getCharsetFromContentTypeHeader(@Nullable String contentType) {
-    if (contentType == null) {
-      return UTF_8;
-    }
+  static Charset getCharsetFromContentTypeHeader(String contentType) {
     // TODO: we should be able to optimize this
     // - cache (bounded) for charset resolution from content type header
     // - parser charset without regex

@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAdditionalAttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
@@ -140,11 +141,12 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void captureRequestBody(Span serverSpan, REQUEST request) {
-    if (!servletConfig.getRequestBodyCaptureConfig().isEnabled()) {
+    BodyCaptureConfig requestBodyCaptureConfig = servletConfig.getRequestBodyCaptureConfig();
+    if (!requestBodyCaptureConfig.isEnabled()) {
       return;
     }
 
-    String body = extractRequestBody(accessor, request);
+    String body = extractRequestBody(accessor, request, requestBodyCaptureConfig);
     if (body != null) {
       serverSpan.setAttribute(SPAN_BODY_ATTRIBUTE, body);
     }
