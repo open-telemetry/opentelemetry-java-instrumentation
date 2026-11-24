@@ -219,6 +219,9 @@ Every JMX-sourced `jvm.gc.duration` point also includes `jvm.gc.cause`, omitted 
 
 On Java 17+, JFR-sourced `jvm.gc.duration` points include `jvm.gc.name` but not `jvm.gc.cause`. They also include `jvm.gc.action` unless they come from the generic `jdk.GarbageCollection` event. GraalVM Native Image's serial collector emits this event without identifying the collection as young or full.
 
+To collect `jvm.gc.duration` with GraalVM Native Image's Serial GC, build the image with
+`--enable-monitoring=jfr` and include `jvm.gc.duration` in the JFR metric selector.
+
 - CMS Garbage Collector
   - `jvm.memory.used`: {jvm.memory.pool.name=Compressed Class Space,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Par Eden Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Tenured Gen,jvm.memory.type=heap}, {jvm.memory.pool.name=Par Survivor Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Code Cache,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Metaspace,jvm.memory.type=non_heap}
   - `jvm.memory.committed`: {jvm.memory.pool.name=Compressed Class Space,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Par Eden Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Tenured Gen,jvm.memory.type=heap}, {jvm.memory.pool.name=Par Survivor Space,jvm.memory.type=heap}, {jvm.memory.pool.name=Code Cache,jvm.memory.type=non_heap}, {jvm.memory.pool.name=Metaspace,jvm.memory.type=non_heap}
