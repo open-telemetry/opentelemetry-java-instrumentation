@@ -23,8 +23,7 @@ class BodyCaptureConfigTest {
     assertThat(config.getMediaTypes().getIncluded())
         .containsExactlyInAnyOrder(
             "text/*", "*/json", "*+json", "*/xml", "*+xml", "*/yaml", "*+yaml");
-    assertThat(config.getMediaTypes().getExcluded())
-        .containsExactlyInAnyOrder("multipart/*", "application/x-www-form-urlencoded");
+    assertThat(config.getMediaTypes().getExcluded()).isEmpty();
   }
 
   @Test

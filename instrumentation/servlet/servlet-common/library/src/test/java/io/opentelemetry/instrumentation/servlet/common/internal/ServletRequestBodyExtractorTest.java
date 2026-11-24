@@ -32,6 +32,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class ServletRequestBodyExtractorTest {
 
@@ -220,6 +221,32 @@ class ServletRequestBodyExtractorTest {
 
     // media type filtering is only applied on request start
     assertThat(shouldMarkRequestForBodyCapture(CONFIG, requestContentType, null)).isFalse();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {"multipart/form-data; boundary=xxx", "MULTIPART/MIXED", "multipart/x-foo"})
+  void multipartNeverCaptured(String contentType) {
+    BodyCaptureConfig config =
+        BodyCaptureConfig.createDefault()
+            .setEnabled(true)
+            .setMediaTypes(IncludeExclude.builder().setIncluded("*/*", "multipart/*").build());
+
+    assertThat(shouldMarkRequestForBodyCapture(config, contentType, null)).isFalse();
+    // other media types are still captured with the same configuration
+    assertThat(shouldMarkRequestForBodyCapture(config, "application/octet-stream", null)).isTrue();
+  }
+
+  @Test
+  void formUrlEncodedNotCapturedByDefaultButCanBeEnabled() {
+    String contentType = "application/x-www-form-urlencoded";
+    assertThat(shouldMarkRequestForBodyCapture(CONFIG, contentType, null)).isFalse();
+
+    BodyCaptureConfig config =
+        BodyCaptureConfig.createDefault()
+            .setEnabled(true)
+            .setMediaTypes(IncludeExclude.builder().setIncluded(contentType).build());
+    assertThat(shouldMarkRequestForBodyCapture(config, contentType, null)).isTrue();
   }
 
   @Test

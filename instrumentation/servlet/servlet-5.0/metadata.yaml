@@ -78,9 +78,11 @@ configurations:
       request body capture is enabled. The media type is the part of the `Content-Type` header
       before the first `;`, and matching is case-insensitive. `?` matches one character and `*`
       matches zero or more characters. Excluded patterns take precedence over included patterns.
-      Requests without a valid `Content-Type` header are not captured. The defaults of the included
-      and excluded lists apply only when neither list is configured: configuring one of them
-      replaces both, and the other list is then empty.
+      Requests without a valid `Content-Type` header are not captured. The default applies only
+      when neither this list nor the excluded list is configured. Configuring only the excluded
+      list captures every media type except the excluded ones, which may include binary content.
+      Request bodies with a `multipart/*` media type are never captured, whatever the
+      configuration. Form data (`application/x-www-form-urlencoded`) is not captured by default.
     type: list
     default: "text/*,*/json,*+json,*/xml,*+xml,*/yaml,*+yaml"
     examples:
@@ -90,13 +92,11 @@ configurations:
     description: >
       A comma-separated list of patterns for the media types of the request bodies to never
       capture, even if they match an included pattern. Matching rules are the same as for
-      `otel.instrumentation.servlet.experimental.capture-request-body.media-types.included`. The
-      default applies only when neither list is configured: configuring only the included list
-      leaves no excluded pattern.
+      `otel.instrumentation.servlet.experimental.capture-request-body.media-types.included`.
     type: list
-    default: "multipart/*,application/x-www-form-urlencoded"
+    default: ""
     examples:
-      - "multipart/*,application/octet-stream"
+      - "text/csv,application/octet-stream"
   - name: otel.experimental.javascript-snippet
     declarative_name: java.servlet.javascript_snippet/development
     description: Experimental setting to inject a JavaScript snippet into HTML responses after the opening `<head>` tag.

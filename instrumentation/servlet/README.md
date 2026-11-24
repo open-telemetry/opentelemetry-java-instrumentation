@@ -16,12 +16,12 @@ When Servlet instrumentation observes a request principal, javaagent capture of 
 | `otel.instrumentation.servlet.experimental.capture-request-body.enabled`              | Boolean | `false`                                                            | Enable capturing the request body, as read by the application, in the `http.request.body.content` span attribute. The request body may contain sensitive information.                                                                                                                                                   |
 | `otel.instrumentation.servlet.experimental.capture-request-body.max-size`             | Int     | `1024`                                                             | Maximum number of request body bytes to capture. A value `<= 0` is invalid and the default is used.                                                                                                                                                                                                                     |
 | `otel.instrumentation.servlet.experimental.capture-request-body.media-types.included` | List    | `text/*`, `*/json`, `*+json`, `*/xml`, `*+xml`, `*/yaml`, `*+yaml` | Case-insensitive patterns for the media types of the request bodies to capture. The media type is the part of the `Content-Type` header before the first `;`. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns.                              |
-| `otel.instrumentation.servlet.experimental.capture-request-body.media-types.excluded` | List    | `multipart/*`, `application/x-www-form-urlencoded`                 | Case-insensitive patterns for the media types of the request bodies to never capture, even if they match an included pattern.                                                                                                                                                                                           |
+| `otel.instrumentation.servlet.experimental.capture-request-body.media-types.excluded` | List    | Empty                                                              | Case-insensitive patterns for the media types of the request bodies to never capture, even if they match an included pattern. Requests with a `multipart/*` media type are never captured.                                                                                                                              |
 
 An absent or empty request parameter selector captures nothing. An exclude-only selector captures every available request parameter except those matching an excluded pattern, which may expose sensitive information. To capture all parameters explicitly, configure `otel.instrumentation.servlet.experimental.request-parameters.included=*`.
 Captured parameter names retain their original casing in `servlet.request.parameter.<name>` attribute keys. For example, `userId` produces `servlet.request.parameter.userId`.
 
-The request body is captured only when `capture-request-body.enabled` is `true`, the span is recording and the request `Content-Type` matches the media type patterns. A request without a valid `Content-Type` header is not captured. The default media type patterns apply only when neither `media-types.included` nor `media-types.excluded` is configured: configuring one of them replaces both defaults, and the other list is then empty.
+The request body is captured only when `capture-request-body.enabled` is `true`, the span is recording and the request `Content-Type` matches the media type patterns. A request without a valid `Content-Type` header is not captured. The default `media-types.included` patterns apply only when neither `media-types.included` nor `media-types.excluded` is configured. Configuring only `media-types.excluded` captures every media type except the excluded ones, which may include binary content. Request bodies with a `multipart/*` media type are never captured, whatever the configuration. Form data (`application/x-www-form-urlencoded`) is not captured by default.
 
 The equivalent declarative configuration is:
 
@@ -39,7 +39,7 @@ instrumentation/development:
         max_size: 1024
         media_types:
           included: ["text/*", "*/json", "*+json", "*/xml", "*+xml", "*/yaml", "*+yaml"]
-          excluded: ["multipart/*", "application/x-www-form-urlencoded"]
+          excluded: ["text/csv"]
 ```
 
 ### A word about version

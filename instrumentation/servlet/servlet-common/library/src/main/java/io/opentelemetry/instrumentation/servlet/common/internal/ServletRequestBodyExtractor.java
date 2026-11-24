@@ -113,6 +113,10 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       // don't attempt to decode body without media type
       return false;
     }
+    if (mediaType.startsWith("multipart/")) {
+      // multipart bodies can contain binary data: never captured, whatever the configuration
+      return false;
+    }
     return config.getMediaTypes().matches(mediaType);
   }
 
