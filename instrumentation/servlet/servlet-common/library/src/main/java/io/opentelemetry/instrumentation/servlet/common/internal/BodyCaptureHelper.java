@@ -42,6 +42,12 @@ public abstract class BodyCaptureHelper<REQUEST, INPUT> {
       return inputStream;
     }
 
+    // prevent capturing the body when content-disposition indicates a binary body
+    String contentDisposition = accessor.getRequestHeader(request, "Content-Disposition");
+    if (contentDisposition != null && !"identity".equalsIgnoreCase(contentDisposition)) {
+      return inputStream;
+    }
+
     if (accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE) != null) {
       // The first stream obtained for this request is the one that is captured: later streams are
       // not captured, so that a body read more than once is never recorded twice or overwritten.

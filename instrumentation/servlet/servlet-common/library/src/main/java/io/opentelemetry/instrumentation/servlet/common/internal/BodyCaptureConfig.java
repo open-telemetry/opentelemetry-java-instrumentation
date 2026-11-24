@@ -33,7 +33,7 @@ public class BodyCaptureConfig {
   private static final IncludeExclude DEFAULT_MEDIA_TYPES =
       IncludeExclude.builder()
           .setIncluded("text/*", "*/json", "*+json", "*/xml", "+xml", "*/yaml", "*+yaml")
-          .setExcluded("multipart/*")
+          .setExcluded("multipart/*", "application/x-www-form-urlencoded")
           .build();
 
   private boolean enabled;

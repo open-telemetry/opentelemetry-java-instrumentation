@@ -21,8 +21,10 @@ class BodyCaptureConfigTest {
     assertThat(config.isEnabled()).isFalse();
     assertThat(config.getMaxSize()).isEqualTo(1024);
     assertThat(config.getMediaTypes().getIncluded())
-        .containsExactly("text/*", "*/json", "*+json", "*/xml", "+xml", "*/yaml", "*+yaml");
-    assertThat(config.getMediaTypes().getExcluded()).containsExactly("multipart/*");
+        .containsExactlyInAnyOrder(
+            "text/*", "*/json", "*+json", "*/xml", "+xml", "*/yaml", "*+yaml");
+    assertThat(config.getMediaTypes().getExcluded())
+        .containsExactlyInAnyOrder("multipart/*", "application/x-www-form-urlencoded");
   }
 
   @Test

@@ -87,11 +87,10 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     if (!(bodyAttribute instanceof ByteBuffer)) {
       return null;
     }
+    String contentType = accessor.getRequestHeader(request, "Content-Type");
 
     // remove request attribute so the buffer is no longer accessible for writing
     accessor.setRequestAttribute(request, REQUEST_BODY_ATTRIBUTE, null);
-
-    String contentType = accessor.getRequestHeader(request, "Content-Type");
     return getRequestBodyValue((ByteBuffer) bodyAttribute, contentType, config);
   }
 
