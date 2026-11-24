@@ -14,6 +14,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.Internal;
 import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
@@ -37,6 +38,10 @@ import java.util.logging.Logger;
 public final class JmxTelemetryBuilder {
 
   private static final Logger logger = Logger.getLogger(JmxTelemetryBuilder.class.getName());
+
+  static {
+    Internal.internalSetAddRule(JmxTelemetryBuilder::addRule);
+  }
 
   private final OpenTelemetry openTelemetry;
   private final List<MetricDef> userMetricDefs = new ArrayList<>();
@@ -117,19 +122,7 @@ public final class JmxTelemetryBuilder {
     }
   }
 
-  /**
-   * Adds a JMX rule from a map using the same syntax as an individual rule in a YAML configuration
-   * file. All metrics are included unless filtered out by the {@link #setMetrics(IncludeExclude)}
-   * method.
-   *
-   * <p>The supplied map and its nested maps are not modified.
-   *
-   * @param rule rule definition to add
-   * @return builder instance
-   * @throws IllegalArgumentException when the rule is {@literal null} or can't be parsed
-   */
-  @CanIgnoreReturnValue
-  public JmxTelemetryBuilder addRule(Map<String, Object> rule) {
+  private void addRule(Map<String, Object> rule) {
     if (rule == null) {
       throw new IllegalArgumentException("missing JMX rule");
     }
@@ -137,8 +130,6 @@ public final class JmxTelemetryBuilder {
     userMetricDefs.add(metricDef);
     registeredMetrics.addAll(metricDef.getMetricNames());
     registeredHandlers.addAll(metricDef.getHandlerNames());
-
-    return this;
   }
 
   /**

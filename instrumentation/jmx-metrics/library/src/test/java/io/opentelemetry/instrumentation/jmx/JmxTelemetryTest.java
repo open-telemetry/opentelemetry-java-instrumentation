@@ -16,6 +16,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.jmx.internal.Internal;
 import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -56,7 +57,8 @@ class JmxTelemetryTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> builder.addRules((Path) null))
         .isInstanceOf(IllegalArgumentException.class);
-    assertThatThrownBy(() -> builder.addRule(null)).isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> Internal.addRule(builder, null))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -105,8 +107,10 @@ class JmxTelemetryTest {
             "ThreadCount", immutable ? unmodifiableMap(metricDefinition) : metricDefinition));
     Map<String, Object> input = immutable ? unmodifiableMap(rule) : rule;
 
-    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry()).addRule(input);
-    JmxTelemetryBuilder anotherBuilder = JmxTelemetry.builder(OpenTelemetry.noop()).addRule(input);
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxTelemetryBuilder anotherBuilder = JmxTelemetry.builder(OpenTelemetry.noop());
+    Internal.addRule(builder, input);
+    Internal.addRule(anotherBuilder, input);
     assertThat(anotherBuilder.getRegisteredMetrics()).containsExactly("custom.map.thread.count");
     cleanup.deferCleanup(builder.build().start());
 
