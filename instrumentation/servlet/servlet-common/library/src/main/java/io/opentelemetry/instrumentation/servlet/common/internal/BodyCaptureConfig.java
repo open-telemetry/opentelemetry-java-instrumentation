@@ -6,8 +6,12 @@
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
 import static java.util.logging.Level.WARNING;
+import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import java.util.List;
+import java.util.Locale;
 import java.util.logging.Logger;
 
 /**
@@ -23,10 +27,16 @@ public class BodyCaptureConfig {
 
   private boolean enabled;
   private int maxSize;
+  private IncludeExclude mediaTypes;
 
   private BodyCaptureConfig() {
     this.enabled = false;
     this.maxSize = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
+    this.mediaTypes =
+        IncludeExclude.builder()
+            .setIncluded("text/*", "*/json", "*+json", "*/xml", "+xml", "*/yaml", "*+yaml")
+            .setExcluded("multipart/*")
+            .build();
   }
 
   /**
@@ -86,5 +96,35 @@ public class BodyCaptureConfig {
     }
     this.maxSize = maxSize;
     return this;
+  }
+
+  /**
+   * Sets the media types to capture.
+   *
+   * @param mediaTypes the media types to capture, values will be normalized to lower case for
+   *     case-insensitive comparison
+   * @return this
+   */
+  @CanIgnoreReturnValue
+  public BodyCaptureConfig setMediaTypes(IncludeExclude mediaTypes) {
+    this.mediaTypes =
+        IncludeExclude.builder()
+            .setIncluded(normalizeMediaTypePatterns(mediaTypes.getIncluded()))
+            .setExcluded(normalizeMediaTypePatterns(mediaTypes.getExcluded()))
+            .build();
+    return this;
+  }
+
+  private static List<String> normalizeMediaTypePatterns(List<String> patterns) {
+    return patterns.stream().map(s -> s.toLowerCase(Locale.ROOT)).collect(toList());
+  }
+
+  /**
+   * Returns the media types to capture.
+   *
+   * @return the media types to capture
+   */
+  public IncludeExclude getMediaTypes() {
+    return mediaTypes;
   }
 }

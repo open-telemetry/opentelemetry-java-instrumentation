@@ -21,6 +21,7 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import java.nio.ByteBuffer;
 import java.nio.charset.Charset;
 import java.util.HashMap;
@@ -63,7 +64,8 @@ class ServletRequestBodyExtractorTest {
         .when(accessor)
         .setRequestAttribute(any(), anyString(), any());
 
-    when(accessor.getRequestHeader(any(), eq("Content-Type"))).thenAnswer(invocation -> requestContentType);
+    when(accessor.getRequestHeader(any(), eq("Content-Type")))
+        .thenAnswer(invocation -> requestContentType);
   }
 
   @Test
@@ -106,7 +108,8 @@ class ServletRequestBodyExtractorTest {
   @Test
   void withoutContentTypeNoCapture() {
     assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null, CONFIG)).isNull();
-    assertThat(getRequestBodyValue(bufferOf("request-body".getBytes(UTF_8)), null, CONFIG)).isNull();
+    assertThat(getRequestBodyValue(bufferOf("request-body".getBytes(UTF_8)), null, CONFIG))
+        .isNull();
   }
 
   @Test
@@ -168,9 +171,32 @@ class ServletRequestBodyExtractorTest {
         "text/plain ;|text/plain",
         "text/plain; charset=ISO-8859-1|text/plain"
       })
-  void mediaType(String contentType, @Nullable String expectedMediaType) {
+  void mediaTypeNormalization(String contentType, @Nullable String expectedMediaType) {
     assertThat(getAndNormalizeMediaTypeFromContentTypeHeader(contentType))
         .isEqualTo(expectedMediaType);
+  }
+
+  @Test
+  void mediaTypeNotAllowed() {
+    ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
+    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
+    requestContentType = "application/octet-stream";
+
+    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
+  }
+
+  @Test
+  void mediaTypeNotAllowedByConfiguration() {
+    ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
+    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
+    requestContentType = "application/json";
+
+    BodyCaptureConfig config =
+        createDefault()
+            .setEnabled(true)
+            .setMediaTypes(IncludeExclude.builder().setIncluded("text/*").build());
+
+    assertThat(extractRequestBody(accessor, request, config)).isNull();
   }
 
   private static ByteBuffer bufferOf(byte[] bytes) {

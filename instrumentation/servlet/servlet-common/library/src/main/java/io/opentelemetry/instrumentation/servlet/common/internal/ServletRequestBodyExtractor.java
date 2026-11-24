@@ -114,7 +114,12 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
 
     String mediaType = getAndNormalizeMediaTypeFromContentTypeHeader(contentType);
     if (null == mediaType) {
-      // don't attempt to decode body
+      // don't attempt to decode body without media type
+      return null;
+    }
+
+    if (!config.getMediaTypes().matches(mediaType)) {
+      // media type is not allowed by configuration
       return null;
     }
 
