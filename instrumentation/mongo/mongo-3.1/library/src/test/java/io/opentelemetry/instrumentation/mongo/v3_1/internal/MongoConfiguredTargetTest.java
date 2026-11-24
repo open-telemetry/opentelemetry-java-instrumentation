@@ -5,7 +5,9 @@
 
 package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
+import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -30,9 +32,14 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
+import org.bson.BsonString;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class MongoConfiguredTargetTest {
 
@@ -40,6 +47,54 @@ class MongoConfiguredTargetTest {
 
   private final MongoDbAttributesGetter getter =
       new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
+
+  @RegisterExtension
+  private static final LibraryInstrumentationExtension testing =
+      LibraryInstrumentationExtension.create();
+
+  @Test
+  void defaultListenerOmitsQueryText() {
+    runFind(MongoTelemetry.create(testing.getOpenTelemetry()));
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CLIENT)
+                .satisfies(data -> assertThat(data.getAttributes().get(DB_QUERY_TEXT)).isNull())));
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void optedInListenerHonorsQuerySanitization(boolean sanitize) {
+    runFind(
+        MongoTelemetry.builder(testing.getOpenTelemetry())
+            .setCaptureQueryText(true)
+            .setQuerySanitizationEnabled(sanitize)
+            .build());
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CLIENT)
+                .satisfies(data -> {
+                  String text = data.getAttributes().get(DB_QUERY_TEXT);
+                  assertThat(text).isNotNull();
+                  assertThat(
+                          BsonDocument.parse(text)
+                              .getDocument("filter")
+                              .getString("item")
+                              .getValue())
+                      .isEqualTo(sanitize ? "?" : "example-value");
+                })));
+  }
+
+  private static void runFind(MongoTelemetry telemetry) {
+    CommandStartedEvent event = commandStartedEvent(new ClusterId(), "test_db", "find");
+    event.getCommand().put("filter", new BsonDocument("item", new BsonString("example-value")));
+    CommandListener listener = telemetry.createCommandListener();
+    listener.commandStarted(event);
+    listener.commandSucceeded(
+        new CommandSucceededEvent(
+            event.getRequestId(), event.getConnectionDescription(), "find", new BsonDocument(), 1));
+  }
 
   @Test
   void configuredSeedGroupIsReportedAsOneLogicalServer() {

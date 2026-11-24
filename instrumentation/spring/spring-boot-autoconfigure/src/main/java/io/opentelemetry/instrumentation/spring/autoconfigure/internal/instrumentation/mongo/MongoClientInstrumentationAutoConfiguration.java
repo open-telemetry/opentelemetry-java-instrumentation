@@ -32,6 +32,7 @@ public class MongoClientInstrumentationAutoConfiguration {
     return builder ->
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
+                .setCaptureQueryText(DbConfig.isQueryTextCaptureEnabled(openTelemetry, "mongo"))
                 .setQuerySanitizationEnabled(
                     DbConfig.isQuerySanitizationEnabled(openTelemetry, "mongo"))
                 .build()

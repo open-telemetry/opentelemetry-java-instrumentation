@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -22,4 +25,13 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:mongo:mongo-3.1:javaagent"))
   testInstrumentation(project(":instrumentation:mongo:mongo-4.0:javaagent"))
+}
+
+testing.suites {
+  executions("test") {
+    register("QueryText") {
+      filter.includeTestsMatching("*MongoAsyncClientTest")
+      telemetryConfig("otel.instrumentation.mongo.capture-query-text", "true")
+    }
+  }
 }

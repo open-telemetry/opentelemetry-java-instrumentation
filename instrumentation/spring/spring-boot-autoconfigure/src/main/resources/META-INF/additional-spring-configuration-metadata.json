@@ -410,6 +410,12 @@
       "defaultValue": true
     },
     {
+      "name": "otel.instrumentation.mongo.capture-query-text",
+      "type": "java.lang.Boolean",
+      "description": "Capture MongoDB query text in the db.query.text span attribute.",
+      "defaultValue": false
+    },
+    {
       "name": "otel.instrumentation.mongo.query-sanitization.enabled",
       "type": "java.lang.Boolean",
       "description": "Enables the DB query sanitization.",

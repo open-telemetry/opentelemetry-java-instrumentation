@@ -20,6 +20,7 @@ public class MongoInstrumentationSingletons {
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-async-3.3",
+          DbConfig.isQueryTextCaptureEnabled(GlobalOpenTelemetry.get(), "mongo"),
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"));
 
   private static final CommandListener tracingListener = new TracingCommandListener(instrumenter);

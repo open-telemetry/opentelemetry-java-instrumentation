@@ -7,11 +7,9 @@ package io.opentelemetry.instrumentation.mongo.testing;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
@@ -19,7 +17,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
@@ -257,12 +254,6 @@ public abstract class AbstractMongoConfiguredTargetTest {
                     .hasAttributesSatisfyingExactly(
                         equalTo(SERVER_ADDRESS, configuredAddress),
                         equalTo(SERVER_PORT, configuredPort),
-                        satisfies(
-                            DB_QUERY_TEXT,
-                            val ->
-                                val.satisfies(v ->
-                                    assertThat(v.replaceAll(" ", ""))
-                                        .isEqualTo("{\"find\":\"" + COLLECTION_NAME + "\"}"))),
                         equalTo(DB_SYSTEM_NAME, MONGODB),
                         equalTo(DB_NAMESPACE, DATABASE_NAME),
                         equalTo(DB_OPERATION_NAME, "find"),

@@ -36,11 +36,16 @@ public final class MongoTelemetry {
   MongoTelemetry(
       OpenTelemetry openTelemetry,
       String instrumentationName,
+      boolean captureQueryText,
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
     this.instrumenter =
         MongoInstrumenterFactory.createInstrumenter(
-            openTelemetry, instrumentationName, querySanitizationEnabled, maxNormalizedQueryLength);
+            openTelemetry,
+            instrumentationName,
+            captureQueryText,
+            querySanitizationEnabled,
+            maxNormalizedQueryLength);
   }
 
   /**

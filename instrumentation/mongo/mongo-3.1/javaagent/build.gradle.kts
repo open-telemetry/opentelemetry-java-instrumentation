@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
@@ -60,6 +62,13 @@ testing.suites {
       implementation("org.mongodb:mongo-java-driver:${baseVersion("3.7.0").orLatest("3.+")}")
       implementation(project(":instrumentation:mongo:mongo-3.1:testing"))
       implementation("com.github.jnr:jnr-unixsocket:0.18")
+    }
+  }
+
+  executions("version37Test") {
+    register("QueryText") {
+      filter.includeTestsMatching("*MongoClientTest")
+      telemetryConfig("otel.instrumentation.mongo.capture-query-text", "true")
     }
   }
 }

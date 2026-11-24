@@ -20,6 +20,7 @@ public class Mongo37Singletons {
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-3.1",
+          DbConfig.isQueryTextCaptureEnabled(GlobalOpenTelemetry.get(), "mongo"),
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"),
           MongoConnectionPeer::resolve);
 

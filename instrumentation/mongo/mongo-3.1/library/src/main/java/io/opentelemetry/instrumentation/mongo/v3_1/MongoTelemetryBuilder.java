@@ -16,6 +16,7 @@ public final class MongoTelemetryBuilder {
   private final OpenTelemetry openTelemetry;
   private final String instrumentationName;
 
+  private boolean captureQueryText;
   private boolean querySanitizationEnabled = true;
   private int maxNormalizedQueryLength = DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
 
@@ -25,9 +26,20 @@ public final class MongoTelemetryBuilder {
   }
 
   /**
+   * Sets whether to include the {@code db.query.text} attribute on MongoDB client spans. Disabled
+   * by default.
+   */
+  @CanIgnoreReturnValue
+  public MongoTelemetryBuilder setCaptureQueryText(boolean captureQueryText) {
+    this.captureQueryText = captureQueryText;
+    return this;
+  }
+
+  /**
    * Sets whether the {@code db.query.text} attribute on the spans emitted by the constructed {@link
    * MongoTelemetry} should be sanitized. If set to {@code true}, all parameters that can
-   * potentially contain sensitive information will be masked. Enabled by default.
+   * potentially contain sensitive information will be masked. Enabled by default when query text
+   * capture is enabled.
    */
   @CanIgnoreReturnValue
   public MongoTelemetryBuilder setQuerySanitizationEnabled(boolean querySanitizationEnabled) {
@@ -50,6 +62,10 @@ public final class MongoTelemetryBuilder {
    */
   public MongoTelemetry build() {
     return new MongoTelemetry(
-        openTelemetry, instrumentationName, querySanitizationEnabled, maxNormalizedQueryLength);
+        openTelemetry,
+        instrumentationName,
+        captureQueryText,
+        querySanitizationEnabled,
+        maxNormalizedQueryLength);
   }
 }

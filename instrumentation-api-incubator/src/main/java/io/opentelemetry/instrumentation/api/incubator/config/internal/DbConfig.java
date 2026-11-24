@@ -14,6 +14,12 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class DbConfig {
+  public static boolean isQueryTextCaptureEnabled(
+      OpenTelemetry openTelemetry, String instrumentationName) {
+    return DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, instrumentationName)
+        .getBoolean("capture_query_text", false);
+  }
+
   public static boolean isCommonQuerySanitizationEnabled(OpenTelemetry openTelemetry) {
     return isCommonQuerySanitizationEnabled(openTelemetry, true);
   }

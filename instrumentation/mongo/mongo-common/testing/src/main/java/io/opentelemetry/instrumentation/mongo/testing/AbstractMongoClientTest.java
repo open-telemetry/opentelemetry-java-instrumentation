@@ -86,6 +86,10 @@ public abstract class AbstractMongoClientTest<T> {
 
   protected abstract InstrumentationExtension testing();
 
+  protected static boolean capturesQueryText() {
+    return Boolean.getBoolean("otel.instrumentation.mongo.capture-query-text");
+  }
+
   protected boolean supportsNetworkPeer() {
     return false;
   }
@@ -173,7 +177,9 @@ public abstract class AbstractMongoClientTest<T> {
                       equalTo(DB_NAMESPACE, "test_db"),
                       equalTo(DB_COLLECTION_NAME, collectionName),
                       equalTo(DB_OPERATION_NAME, operation),
-                      satisfies(DB_QUERY_TEXT, val -> val.isNotNull()),
+                      capturesQueryText()
+                          ? satisfies(DB_QUERY_TEXT, val -> val.isNotNull())
+                          : equalTo(DB_QUERY_TEXT, null),
                       equalTo(SERVER_ADDRESS, host),
                       equalTo(SERVER_PORT, port),
                       equalTo(
@@ -676,9 +682,11 @@ public abstract class AbstractMongoClientTest<T> {
         equalTo(SERVER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, supportsNetworkPeer() ? networkPeerAddress : null),
         equalTo(NETWORK_PEER_PORT, supportsNetworkPeer() ? Long.valueOf(port) : null),
-        satisfies(
-            DB_QUERY_TEXT,
-            val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))),
+        capturesQueryText()
+            ? satisfies(
+                DB_QUERY_TEXT,
+                val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", ""))))
+            : equalTo(DB_QUERY_TEXT, null),
         equalTo(DB_SYSTEM_NAME, MONGODB),
         equalTo(DB_NAMESPACE, dbName),
         equalTo(DB_OPERATION_NAME, operation),

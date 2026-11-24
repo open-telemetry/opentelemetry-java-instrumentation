@@ -21,7 +21,9 @@ class MongoClientTest extends AbstractMongo31ClientTest {
   @Override
   protected void configureMongoClientOptions(MongoClientOptions.Builder options) {
     options.addCommandListener(
-        MongoTelemetry.create(testing().getOpenTelemetry())
+        MongoTelemetry.builder(testing().getOpenTelemetry())
+            .setCaptureQueryText(capturesQueryText())
+            .build()
             .createCommandListener(singletonList(new ServerAddress(host, port))));
   }
 
