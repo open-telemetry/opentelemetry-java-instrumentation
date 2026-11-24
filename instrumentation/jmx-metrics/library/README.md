@@ -58,21 +58,14 @@ JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
 jmxTelemetry.start();
 ```
 
-### Filter defaults
+### Filters
 
-By default, the library loads no bundled JMX rules and applies no metric-name filter to custom
-rules you add with `addRules(...)`. Leaving a filter unset and passing it an empty selector have
-the same effect.
-
-| Filter | Default | How to configure it |
-| --- | --- | --- |
-| `setInternalMetricsSystemFilter` | Loads no bundled rules. | Include system names such as `tomcat`, or use `setIncluded("*")` to select all systems. |
-| `setInternalMetricsUnstableMetricsFilter` | Enables no unstable bundled metrics. | Include metric names or patterns such as `kafka.*`, or use `setIncluded("*")` to enable all unstable metrics for the selected systems. |
-| `setMetrics` | Applies no metric-name restrictions. | Include or exclude metrics by name. This filter applies to both bundled and custom rules. |
-
-The unstable-metrics filter never applies to custom rules, even when a custom metric has the same
-name as an unstable bundled metric.
+| Filter | Description |
+| --- | --- |
+| `setInternalMetricsSystemFilter` | Systems whose bundled rules are loaded, such as `tomcat`. No bundled rules are loaded unless included or excluded patterns are configured. `*` selects all systems. |
+| `setInternalMetricsUnstableMetricsFilter` | Unstable bundled metrics to enable for the selected systems, such as `kafka.*`. No unstable bundled metrics are enabled unless included or excluded patterns are configured. `*` selects all unstable bundled metrics. This filter never applies to custom rules, even when a custom metric has the same name as an unstable bundled metric. |
+| `setMetrics` | Metrics to collect from both bundled and custom rules. All metrics are collected unless included or excluded patterns are configured. |
 
 Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
-Excluded patterns take precedence over included patterns. If you supply only exclusions, everything
-not excluded matches.
+Excluded patterns take precedence over included patterns. If only excluded patterns are configured,
+everything else is selected. An empty selector behaves the same as an unset filter.

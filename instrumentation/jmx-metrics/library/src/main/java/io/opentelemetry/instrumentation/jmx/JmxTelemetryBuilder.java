@@ -121,9 +121,9 @@ public final class JmxTelemetryBuilder {
    * Configures which JMX metrics are collected.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
-   * of characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns collects every metric that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector collects every metric.
+   * of characters, including none. Excluded patterns take precedence over included patterns. All
+   * metrics are collected unless included or excluded patterns are configured. If only excluded
+   * patterns are configured, every other metric is collected.
    *
    * @param metrics metric names to include and exclude
    * @return builder instance
@@ -137,8 +137,10 @@ public final class JmxTelemetryBuilder {
   /**
    * Configure which systems should have their internal metrics automatically registered.
    *
-   * <p>An absent or empty selector registers no systems. With only excluded patterns, every system
-   * not excluded is selected. Use an included pattern of {@code "*"} to select all systems.
+   * <p>No systems are registered unless included or excluded patterns are configured; an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an unset one. Include
+   * {@code "*"} to select all systems. If only excluded patterns are configured, every other system
+   * is selected.
    *
    * @param systemFilter system filter
    * @return this
@@ -154,9 +156,10 @@ public final class JmxTelemetryBuilder {
    * Configure which unstable internal metrics should be enabled, unless enabled they are
    * filtered-out.
    *
-   * <p>An absent or empty selector enables no unstable internal metrics. With only excluded
-   * patterns, every unstable internal metric not excluded is selected. Use an included pattern of
-   * {@code "*"} to select all unstable internal metrics.
+   * <p>No unstable internal metrics are enabled unless included or excluded patterns are
+   * configured; an {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an
+   * unset one. Include {@code "*"} to select all unstable internal metrics. If only excluded
+   * patterns are configured, every other unstable internal metric is selected.
    *
    * @param metricsFilter metric filter
    * @return this
