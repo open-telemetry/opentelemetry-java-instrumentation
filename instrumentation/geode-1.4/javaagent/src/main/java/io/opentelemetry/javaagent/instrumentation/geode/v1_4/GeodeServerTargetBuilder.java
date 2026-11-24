@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.geode.v1_4;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import javax.annotation.Nullable;
 
 class GeodeServerTargetBuilder {
@@ -14,8 +14,8 @@ class GeodeServerTargetBuilder {
   private static final int DEFAULT_SERVER_PORT = 40404;
   private static final int DEFAULT_LOCATOR_PORT = 10334;
 
-  private DbServerTargetBuilder servers = newServerBuilder();
-  private DbServerTargetBuilder locators = newLocatorBuilder();
+  private ServerTargetBuilder servers = newServerBuilder();
+  private ServerTargetBuilder locators = newLocatorBuilder();
   @Nullable private String serverGroup;
   private boolean serverConfigured;
   private boolean locatorConfigured;
@@ -43,7 +43,7 @@ class GeodeServerTargetBuilder {
   }
 
   @Nullable
-  synchronized DbServerTarget build() {
+  synchronized ServerTarget build() {
     if (serverConfigured) {
       return servers.build();
     }
@@ -53,11 +53,11 @@ class GeodeServerTargetBuilder {
     return null;
   }
 
-  private static DbServerTargetBuilder newServerBuilder() {
-    return DbServerTarget.builder(DEFAULT_SERVER_PORT).setSorted(true);
+  private static ServerTargetBuilder newServerBuilder() {
+    return ServerTarget.builder(DEFAULT_SERVER_PORT).setSorted(true);
   }
 
-  private static DbServerTargetBuilder newLocatorBuilder() {
-    return DbServerTarget.builder(DEFAULT_LOCATOR_PORT).setSorted(true).setPortAlwaysInline(true);
+  private static ServerTargetBuilder newLocatorBuilder() {
+    return ServerTarget.builder(DEFAULT_LOCATOR_PORT).setSorted(true).setPortAlwaysInline(true);
   }
 }

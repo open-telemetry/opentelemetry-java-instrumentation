@@ -151,16 +151,13 @@ public class DbConnectionPoolMetricsAssertions {
         .hasUnit("{connection}")
         .hasDescription(
             "The number of connections that are currently in state described by the `state` attribute.")
-        .hasLongSumSatisfying(
-            sum ->
-                sum.isNotMonotonic()
-                    .hasPointsSatisfying(
-                        point ->
-                            verifyPointAttributes(
-                                point, equalTo(DB_CLIENT_CONNECTION_STATE, "idle")),
-                        point ->
-                            verifyPointAttributes(
-                                point, equalTo(DB_CLIENT_CONNECTION_STATE, "used"))));
+        .hasLongSumSatisfying(sum ->
+            sum.isNotMonotonic()
+                .hasPointsSatisfying(
+                    point ->
+                        verifyPointAttributes(point, equalTo(DB_CLIENT_CONNECTION_STATE, "idle")),
+                    point ->
+                        verifyPointAttributes(point, equalTo(DB_CLIENT_CONNECTION_STATE, "used"))));
   }
 
   private void verifyMaxConnections() {
@@ -267,8 +264,7 @@ public class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit("s")
         .hasDescription("The time it took to create a new connection.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+        .hasHistogramPointsSatisfying(this::verifyPointAttributes);
   }
 
   private void verifyWaitTime() {
@@ -282,8 +278,7 @@ public class DbConnectionPoolMetricsAssertions {
     assertThat(metric)
         .hasUnit("s")
         .hasDescription("The time it took to obtain an open connection from the pool.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+        .hasHistogramPointsSatisfying(this::verifyPointAttributes);
   }
 
   private void verifyUseTime() {
@@ -297,7 +292,6 @@ public class DbConnectionPoolMetricsAssertions {
     return assertThat(metric)
         .hasUnit("s")
         .hasDescription("The time between borrowing a connection and returning it to the pool.")
-        .hasHistogramSatisfying(
-            histogram -> histogram.hasPointsSatisfying(this::verifyPointAttributes));
+        .hasHistogramPointsSatisfying(this::verifyPointAttributes);
   }
 }

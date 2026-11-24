@@ -76,12 +76,11 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
     cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasResource(RESOURCE)
-                .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
-                .hasBody("log message 1"));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasResource(RESOURCE)
+            .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
+            .hasBody("log message 1"));
   }
 
   @Test
@@ -105,18 +104,17 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
     cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasResource(RESOURCE)
-                .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
-                .hasAttributesSatisfyingExactly(
-                    addLocationAttributes(
-                        "twoLogsStringMapMessage",
-                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                        equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(mapMessageKey("key1"), "val1"),
-                        equalTo(mapMessageKey("key2"), "val2"))));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasResource(RESOURCE)
+            .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
+            .hasAttributesSatisfyingExactly(
+                addLocationAttributes(
+                    "twoLogsStringMapMessage",
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(mapMessageKey("key1"), "val1"),
+                    equalTo(mapMessageKey("key2"), "val2"))));
   }
 
   @Test
@@ -139,19 +137,18 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
     OpenTelemetryAppender.install(testing.getOpenTelemetry());
     cleanup.deferCleanup(OpenTelemetryAppender::resetForTest);
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasResource(RESOURCE)
-                .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
-                .hasBody("a message")
-                .hasAttributesSatisfyingExactly(
-                    addLocationAttributes(
-                        "twoLogsStructuredDataMessage",
-                        equalTo(THREAD_NAME, Thread.currentThread().getName()),
-                        equalTo(THREAD_ID, Thread.currentThread().getId()),
-                        equalTo(mapMessageKey("key1"), "val1"),
-                        equalTo(mapMessageKey("key2"), "val2"))));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasResource(RESOURCE)
+            .hasInstrumentationScope(INSTRUMENTATION_SCOPE_INFO)
+            .hasBody("a message")
+            .hasAttributesSatisfyingExactly(
+                addLocationAttributes(
+                    "twoLogsStructuredDataMessage",
+                    equalTo(THREAD_NAME, Thread.currentThread().getName()),
+                    equalTo(THREAD_ID, Thread.currentThread().getId()),
+                    equalTo(mapMessageKey("key1"), "val1"),
+                    equalTo(mapMessageKey("key2"), "val2"))));
   }
 
   @ParameterizedTest
@@ -193,16 +190,15 @@ class LogReplayOpenTelemetryAppenderTest extends AbstractOpenTelemetryAppenderTe
       appender.setOpenTelemetry(testing.getOpenTelemetry());
     }
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord
-                .hasEventName("MapEvent")
-                .hasBody(format.isEmpty() ? "map body" : format)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(stringKey("number"), "42"),
-                    equalTo(stringKey("message"), format.isEmpty() ? null : "map body"),
-                    equalTo(stringKey("log.body.template"), format),
-                    equalTo(stringArrayKey("log.body.parameters"), singletonList("parameter"))));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord
+            .hasEventName("MapEvent")
+            .hasBody(format.isEmpty() ? "map body" : format)
+            .hasAttributesSatisfyingExactly(
+                equalTo(stringKey("number"), "42"),
+                equalTo(stringKey("message"), format.isEmpty() ? null : "map body"),
+                equalTo(stringKey("log.body.template"), format),
+                equalTo(stringArrayKey("log.body.parameters"), singletonList("parameter"))));
     assertThat(message.formattingCalls).isEqualTo(1);
   }
 

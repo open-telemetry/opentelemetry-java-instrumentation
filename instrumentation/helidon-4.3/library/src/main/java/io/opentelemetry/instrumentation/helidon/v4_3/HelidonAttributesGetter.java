@@ -13,7 +13,7 @@ import io.helidon.http.Headers;
 import io.helidon.webserver.http.ServerRequest;
 import io.helidon.webserver.http.ServerResponse;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -92,17 +92,15 @@ class HelidonAttributesGetter implements HttpServerAttributesGetter<ServerReques
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       ServerRequest req, @Nullable ServerResponse res) {
-    var address = req.remotePeer().address();
-    return address instanceof InetSocketAddress s ? s : null;
+    return req.remotePeer().address();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public SocketAddress getNetworkLocalSocketAddress(
       ServerRequest req, @Nullable ServerResponse res) {
-    var address = req.localPeer().address();
-    return address instanceof InetSocketAddress s ? s : null;
+    return req.localPeer().address();
   }
 }

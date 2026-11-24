@@ -115,33 +115,31 @@ class JaxRs2AnnotationsInstrumentationTest {
     String className = getClassName(action.getClass());
     testing.runWithHttpServerSpan(action::call);
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          if (CONTROLLER_TELEMETRY_ENABLED) {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + path)
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_ROUTE, path),
-                            equalTo(ERROR_TYPE, OTHER)),
-                span ->
-                    span.hasName(className + ".call")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call")));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER)));
-          }
-        });
+    testing.waitAndAssertTraces(trace -> {
+      if (CONTROLLER_TELEMETRY_ENABLED) {
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET " + path)
+                    .hasKind(SpanKind.SERVER)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_ROUTE, path),
+                        equalTo(ERROR_TYPE, OTHER)),
+            span ->
+                span.hasName(className + ".call")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call")));
+      } else {
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER)));
+      }
+    });
   }
 
   @Test
@@ -153,15 +151,13 @@ class JaxRs2AnnotationsInstrumentationTest {
         };
     testing.runWithHttpServerSpan(action::call);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
   }
 
   @Test
@@ -182,41 +178,38 @@ class JaxRs2AnnotationsInstrumentationTest {
   void covariantMethodWithDifferentParametersIsNotMatched() {
     CovariantInterfaceResourceImpl action = new CovariantInterfaceResourceImpl();
     testing.runWithHttpServerSpan((ThrowingRunnable<RuntimeException>) () -> action.call(1L));
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.SERVER)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET")
+                .hasKind(SpanKind.SERVER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_REQUEST_METHOD, "GET"), equalTo(ERROR_TYPE, OTHER))));
   }
 
   private static void assertCovariantRoute(String route, Class<?> resourceClass) {
-    testing.waitAndAssertTraces(
-        trace -> {
-          Consumer<SpanDataAssert> serverSpan =
-              span ->
-                  span.hasName(CONTROLLER_TELEMETRY_ENABLED ? "GET " + route : "GET")
-                      .hasKind(SpanKind.SERVER)
-                      .hasNoParent()
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(HTTP_ROUTE, CONTROLLER_TELEMETRY_ENABLED ? route : null),
-                          equalTo(ERROR_TYPE, OTHER));
-          if (CONTROLLER_TELEMETRY_ENABLED) {
-            trace.hasSpansSatisfyingExactly(
-                serverSpan,
-                span ->
-                    span.hasName(getClassName(resourceClass) + ".call")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CODE_FUNCTION_NAME, resourceClass.getName() + ".call")));
-          } else {
-            trace.hasSpansSatisfyingExactly(serverSpan);
-          }
-        });
+    testing.waitAndAssertTraces(trace -> {
+      Consumer<SpanDataAssert> serverSpan =
+          span ->
+              span.hasName(CONTROLLER_TELEMETRY_ENABLED ? "GET " + route : "GET")
+                  .hasKind(SpanKind.SERVER)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(HTTP_REQUEST_METHOD, "GET"),
+                      equalTo(HTTP_ROUTE, CONTROLLER_TELEMETRY_ENABLED ? route : null),
+                      equalTo(ERROR_TYPE, OTHER));
+      if (CONTROLLER_TELEMETRY_ENABLED) {
+        trace.hasSpansSatisfyingExactly(
+            serverSpan,
+            span ->
+                span.hasName(getClassName(resourceClass) + ".call")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CODE_FUNCTION_NAME, resourceClass.getName() + ".call")));
+      } else {
+        trace.hasSpansSatisfyingExactly(serverSpan);
+      }
+    });
   }
 
   @Path("/interface")

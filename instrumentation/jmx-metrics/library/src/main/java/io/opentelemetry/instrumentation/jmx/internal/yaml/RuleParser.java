@@ -53,6 +53,7 @@ public class RuleParser {
 
   private RuleParser() {}
 
+  // visible for testing
   @SuppressWarnings("unchecked") // for casting yaml parsed objects
   public JmxConfig loadConfig(InputStream is) {
     LoadSettings settings = LoadSettings.builder().build();
@@ -116,14 +117,13 @@ public class RuleParser {
   private static Map<String, Metric> parseMappings(@Nullable Map<String, Object> mappingYaml) {
     Map<String, Metric> mappings = new LinkedHashMap<>();
     if (mappingYaml != null) {
-      mappingYaml.forEach(
-          (name, metricYaml) -> {
-            Metric m = null;
-            if (metricYaml != null) {
-              m = parseMetric((Map<String, Object>) metricYaml);
-            }
-            mappings.put(name, m);
-          });
+      mappingYaml.forEach((name, metricYaml) -> {
+        Metric m = null;
+        if (metricYaml != null) {
+          m = parseMetric((Map<String, Object>) metricYaml);
+        }
+        mappings.put(name, m);
+      });
     }
     return mappings;
   }

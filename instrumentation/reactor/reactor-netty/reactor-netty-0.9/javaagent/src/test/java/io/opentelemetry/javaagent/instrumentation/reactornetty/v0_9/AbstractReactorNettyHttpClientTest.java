@@ -66,11 +66,10 @@ abstract class AbstractReactorNettyHttpClientTest
   public int sendRequest(
       HttpClient.ResponseReceiver<?> request, String method, URI uri, Map<String, String> headers) {
     return request
-        .responseSingle(
-            (resp, content) -> {
-              // Make sure to consume content since that's when we close the span.
-              return content.map(unused -> resp);
-            })
+        .responseSingle((resp, content) -> {
+          // Make sure to consume content since that's when we close the span.
+          return content.map(unused -> resp);
+        })
         .block()
         .status()
         .code();
@@ -84,11 +83,10 @@ abstract class AbstractReactorNettyHttpClientTest
       Map<String, String> headers,
       HttpClientResult httpClientResult) {
     request
-        .responseSingle(
-            (resp, content) -> {
-              // Make sure to consume content since that's when we close the span.
-              return content.map(unused -> resp);
-            })
+        .responseSingle((resp, content) -> {
+          // Make sure to consume content since that's when we close the span.
+          return content.map(unused -> resp);
+        })
         .subscribe(
             response -> httpClientResult.complete(response.status().code()),
             httpClientResult::complete);
@@ -99,44 +97,39 @@ abstract class AbstractReactorNettyHttpClientTest
     optionsBuilder.disableTestRedirects();
     optionsBuilder.spanEndsAfterBody();
 
-    optionsBuilder.setExpectedClientSpanNameMapper(
-        (uri, method) -> {
-          switch (uri.toString()) {
-            case UNUSABLE_PORT_URI: // unopened port
-            case "https://192.0.2.1/": // non routable address
-              return "CONNECT";
-            default:
-              return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(
-                  uri, method);
-          }
-        });
+    optionsBuilder.setExpectedClientSpanNameMapper((uri, method) -> {
+      switch (uri.toString()) {
+        case UNUSABLE_PORT_URI: // unopened port
+        case "https://192.0.2.1/": // non routable address
+          return "CONNECT";
+        default:
+          return HttpClientTestOptions.DEFAULT_EXPECTED_CLIENT_SPAN_NAME_MAPPER.apply(uri, method);
+      }
+    });
 
-    optionsBuilder.setClientSpanErrorMapper(
-        (uri, exception) -> {
-          if (exception.getClass().getName().endsWith("ReactiveException")) {
-            // unopened port or non routable address
-            if (UNUSABLE_PORT_URI.equals(uri.toString())
-                || "https://192.0.2.1/".equals(uri.toString())) {
-              exception = exception.getCause();
-            }
-          }
-          return exception;
-        });
+    optionsBuilder.setClientSpanErrorMapper((uri, exception) -> {
+      if (exception.getClass().getName().endsWith("ReactiveException")) {
+        // unopened port or non routable address
+        if (UNUSABLE_PORT_URI.equals(uri.toString())
+            || "https://192.0.2.1/".equals(uri.toString())) {
+          exception = exception.getCause();
+        }
+      }
+      return exception;
+    });
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          // unopened port or non routable address
-          if (UNUSABLE_PORT_URI.equals(uri.toString())
-              || "https://192.0.2.1/".equals(uri.toString())) {
-            return emptySet();
-          }
+    optionsBuilder.setHttpAttributes(uri -> {
+      // unopened port or non routable address
+      if (UNUSABLE_PORT_URI.equals(uri.toString()) || "https://192.0.2.1/".equals(uri.toString())) {
+        return emptySet();
+      }
 
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(SERVER_ADDRESS);
-          attributes.remove(SERVER_PORT);
-          return attributes;
-        });
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(SERVER_ADDRESS);
+      attributes.remove(SERVER_PORT);
+      return attributes;
+    });
   }
 
   @Test
@@ -152,11 +145,10 @@ abstract class AbstractReactorNettyHttpClientTest
             .doOnRequest((rq, con) -> onRequestSpan.set(Span.current()))
             .doAfterRequest((rq, con) -> afterRequestSpan.set(Span.current()))
             .doOnResponse((rs, con) -> onResponseSpan.set(Span.current()))
-            .doAfterResponse(
-                (rs, con) -> {
-                  afterResponseSpan.set(Span.current());
-                  latch.countDown();
-                });
+            .doAfterResponse((rs, con) -> {
+              afterResponseSpan.set(Span.current());
+              latch.countDown();
+            });
 
     testing.runWithSpan(
         "parent",
@@ -165,30 +157,28 @@ abstract class AbstractReactorNettyHttpClientTest
                 .baseUrl(resolveAddress("").toString())
                 .get()
                 .uri("/success")
-                .responseSingle(
-                    (resp, content) -> {
-                      // Make sure to consume content since that's when we close the span.
-                      return content.map(unused -> resp);
-                    })
+                .responseSingle((resp, content) -> {
+                  // Make sure to consume content since that's when we close the span.
+                  return content.map(unused -> resp);
+                })
                 .block());
 
     assertThat(latch.await(10, SECONDS)).isTrue();
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          SpanData parentSpan = trace.getSpan(0);
-          SpanData nettyClientSpan = trace.getSpan(1);
+    testing.waitAndAssertTraces(trace -> {
+      SpanData parentSpan = trace.getSpan(0);
+      SpanData nettyClientSpan = trace.getSpan(1);
 
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
-              span -> span.hasName("GET").hasKind(CLIENT).hasParent(parentSpan),
-              span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
+          span -> span.hasName("GET").hasKind(CLIENT).hasParent(parentSpan),
+          span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
 
-          assertSameSpan(parentSpan, onRequestSpan);
-          assertSameSpan(nettyClientSpan, afterRequestSpan);
-          assertSameSpan(nettyClientSpan, onResponseSpan);
-          assertSameSpan(parentSpan, afterResponseSpan);
-        });
+      assertSameSpan(parentSpan, onRequestSpan);
+      assertSameSpan(nettyClientSpan, afterRequestSpan);
+      assertSameSpan(nettyClientSpan, onResponseSpan);
+      assertSameSpan(parentSpan, afterResponseSpan);
+    });
   }
 
   @ParameterizedTest
@@ -204,41 +194,38 @@ abstract class AbstractReactorNettyHttpClientTest
                 .doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () ->
-                        httpClient
-                            .get()
-                            .uri(UNUSABLE_PORT_URI)
-                            .responseSingle(
-                                (resp, content) -> {
-                                  // Make sure to consume content since that's when we close the
-                                  // span.
-                                  return content.map(unused -> resp);
-                                })
-                            .block()));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "parent",
+                () ->
+                    httpClient
+                        .get()
+                        .uri(UNUSABLE_PORT_URI)
+                        .responseSingle((resp, content) -> {
+                          // Make sure to consume content since that's when we close the
+                          // span.
+                          return content.map(unused -> resp);
+                        })
+                        .block()));
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          SpanData parentSpan = trace.getSpan(0);
+    testing.waitAndAssertTraces(trace -> {
+      SpanData parentSpan = trace.getSpan(0);
 
-          trace.hasSpansSatisfyingExactly(
-              span ->
-                  span.hasName("parent")
-                      .hasKind(INTERNAL)
-                      .hasNoParent()
-                      .hasStatus(StatusData.error())
-                      .hasException(thrown),
-              span ->
-                  span.hasKind(CLIENT)
-                      .hasParent(parentSpan)
-                      .hasStatus(StatusData.error())
-                      .hasException(thrown.getCause()));
+      trace.hasSpansSatisfyingExactly(
+          span ->
+              span.hasName("parent")
+                  .hasKind(INTERNAL)
+                  .hasNoParent()
+                  .hasStatus(StatusData.error())
+                  .hasException(thrown),
+          span ->
+              span.hasKind(CLIENT)
+                  .hasParent(parentSpan)
+                  .hasStatus(StatusData.error())
+                  .hasException(thrown.getCause()));
 
-          assertSameSpan(parentSpan, onRequestErrorSpan);
-        });
+      assertSameSpan(parentSpan, onRequestErrorSpan);
+    });
   }
 
   private static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {

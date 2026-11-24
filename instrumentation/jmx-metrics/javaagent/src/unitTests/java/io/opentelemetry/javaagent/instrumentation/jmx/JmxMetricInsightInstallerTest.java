@@ -124,9 +124,8 @@ class JmxMetricInsightInstallerTest {
         metric ->
             metric
                 .hasName("tomcat.test.unstable")
-                .satisfies(
-                    data ->
-                        assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
+                .satisfies(data ->
+                    assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
   }
 
   @Test
@@ -170,12 +169,8 @@ class JmxMetricInsightInstallerTest {
         metric ->
             metric
                 .hasName("tomcat.test.unstable")
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributes(
-                                    Attributes.of(stringKey("test.source"), "custom")))));
+                .hasLongGaugePointsSatisfying(point ->
+                    point.hasAttributes(Attributes.of(stringKey("test.source"), "custom"))));
   }
 
   @Test

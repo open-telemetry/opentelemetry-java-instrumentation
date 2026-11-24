@@ -79,22 +79,21 @@ class SessionTest extends AbstractHibernateTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session." + parameter.methodName + " " + parameter.resource),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
-                span -> assertClientSpan(span, trace.getSpan(2))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Session." + parameter.methodName + " " + parameter.resource),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Transaction.commit",
+                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
+            span -> assertClientSpan(span, trace.getSpan(2))));
   }
 
   @ParameterizedTest
@@ -110,23 +109,22 @@ class SessionTest extends AbstractHibernateTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session." + parameter.methodName + " " + parameter.resource),
-                span -> assertClientSpan(span, trace.getSpan(1), "select"),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
-                span -> assertClientSpan(span, trace.getSpan(3))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Session." + parameter.methodName + " " + parameter.resource),
+            span -> assertClientSpan(span, trace.getSpan(1), "select"),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Transaction.commit",
+                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
+            span -> assertClientSpan(span, trace.getSpan(3))));
   }
 
   @Test
@@ -145,29 +143,25 @@ class SessionTest extends AbstractHibernateTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(span, trace.getSpan(0), "Session.replicate java.lang.Long")
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(EXCEPTION_TYPE, "org.hibernate.MappingException"),
-                                        equalTo(
-                                            EXCEPTION_MESSAGE, "Unknown entity: java.lang.Long"),
-                                        satisfies(
-                                            EXCEPTION_STACKTRACE,
-                                            val -> val.isInstanceOf(String.class)))),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                assertSessionSpan(span, trace.getSpan(0), "Session.replicate java.lang.Long")
+                    .hasEventsSatisfyingExactly(event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, "org.hibernate.MappingException"),
+                                equalTo(EXCEPTION_MESSAGE, "Unknown entity: java.lang.Long"),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class)))),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Transaction.commit",
+                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
   }
 
   @ParameterizedTest
@@ -183,22 +177,21 @@ class SessionTest extends AbstractHibernateTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session." + parameter.methodName + " " + parameter.resource),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
-                span -> assertClientSpan(span, trace.getSpan(2))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Session." + parameter.methodName + " " + parameter.resource),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Transaction.commit",
+                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
+            span -> assertClientSpan(span, trace.getSpan(2))));
   }
 
   @ParameterizedTest
@@ -215,18 +208,17 @@ class SessionTest extends AbstractHibernateTest {
           session.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
-                span -> assertClientSpan(span, trace.getSpan(1)),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span -> assertSessionSpan(span, trace.getSpan(0), parameter.resource),
+            span -> assertClientSpan(span, trace.getSpan(1)),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Transaction.commit",
+                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID))));
   }
 
   @Test
@@ -256,39 +248,38 @@ class SessionTest extends AbstractHibernateTest {
           session3.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("overlapping Sessions"),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
-                span ->
-                    assertSessionSpan(
-                        span,
-                        trace.getSpan(0),
-                        "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
-                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
-                span ->
-                    assertSpanWithSessionId(
-                        span,
-                        trace.getSpan(0),
-                        "Transaction.commit",
-                        trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
-                span -> assertClientSpan(span, trace.getSpan(5), "insert"),
-                span -> assertClientSpan(span, trace.getSpan(5), "delete")));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("overlapping Sessions"),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Session.insert io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
+            span ->
+                assertSessionSpan(
+                    span,
+                    trace.getSpan(0),
+                    "Session.save io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value"),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Session.delete io.opentelemetry.javaagent.instrumentation.hibernate.v3_3.Value",
+                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
+            span ->
+                assertSpanWithSessionId(
+                    span,
+                    trace.getSpan(0),
+                    "Transaction.commit",
+                    trace.getSpan(1).getAttributes().get(HIBERNATE_SESSION_ID)),
+            span -> assertClientSpan(span, trace.getSpan(5), "insert"),
+            span -> assertClientSpan(span, trace.getSpan(5), "delete")));
   }
 
   private static Stream<Arguments> provideArguments() {

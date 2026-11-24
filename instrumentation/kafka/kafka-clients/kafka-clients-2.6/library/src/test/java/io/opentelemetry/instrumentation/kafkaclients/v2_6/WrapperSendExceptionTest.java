@@ -47,21 +47,20 @@ class WrapperSendExceptionTest {
         .isInstanceOf(KafkaException.class)
         .hasMessage("send failed");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("send test-topic")
-                        .hasKind(SpanKind.PRODUCER)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("messaging.system.name"), "kafka"),
-                            equalTo(MESSAGING_DESTINATION_NAME, "test-topic"),
-                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                            equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                            equalTo(stringKey("kafka.message.key"), "test-key"),
-                            equalTo(ERROR_TYPE, KafkaException.class.getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("send test-topic")
+                    .hasKind(SpanKind.PRODUCER)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("messaging.system.name"), "kafka"),
+                        equalTo(MESSAGING_DESTINATION_NAME, "test-topic"),
+                        equalTo(MESSAGING_OPERATION_NAME, "send"),
+                        equalTo(MESSAGING_OPERATION_TYPE, "send"),
+                        equalTo(stringKey("kafka.message.key"), "test-key"),
+                        equalTo(ERROR_TYPE, KafkaException.class.getName()))));
   }
 }

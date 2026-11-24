@@ -30,8 +30,7 @@ class CpuCountTest {
                 .hasName("jvm.cpu.count")
                 .hasDescription("Number of processors available to the Java virtual machine.")
                 .hasUnit("{cpu}")
-                .hasLongSumSatisfying(
-                    count ->
-                        count.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(8))));
+                .hasLongSumSatisfying(count ->
+                    count.isNotMonotonic().hasPointsSatisfying(point -> point.hasValue(8))));
   }
 }

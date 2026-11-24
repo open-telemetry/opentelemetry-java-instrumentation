@@ -62,9 +62,8 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -73,21 +72,19 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
   void noSelectorCapturesEverything() {
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("key1"), "value1"),
-                equalTo(stringKey("key2"), "value2"),
-                equalTo(stringKey("other"), "value3")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("key1"), "value1"),
+            equalTo(stringKey("key2"), "value2"),
+            equalTo(stringKey("other"), "value3")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -99,9 +96,8 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
   }
 
   @Test
@@ -111,9 +107,8 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(equalTo(stringKey("key1"), "value1")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -123,12 +118,11 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("key1"), "value1"),
-                equalTo(stringKey("key2"), "value2"),
-                equalTo(stringKey("other"), "value3")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("key1"), "value1"),
+            equalTo(stringKey("key2"), "value2"),
+            equalTo(stringKey("other"), "value3")));
     assertThat(warnings()).isEmpty();
   }
 
@@ -148,12 +142,11 @@ class OpenTelemetryAppenderLogstashMarkerSelectorTest {
 
     log();
 
-    testing.waitAndAssertLogRecords(
-        logRecord ->
-            logRecord.hasAttributesSatisfyingExactly(
-                equalTo(stringKey("key1"), "value1"),
-                equalTo(stringKey("key2"), "value2"),
-                equalTo(stringKey("other"), "value3")));
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("key1"), "value1"),
+            equalTo(stringKey("key2"), "value2"),
+            equalTo(stringKey("other"), "value3")));
   }
 
   private void log() {

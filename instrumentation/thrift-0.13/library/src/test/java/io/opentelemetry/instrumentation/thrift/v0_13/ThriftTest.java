@@ -83,10 +83,8 @@ class ThriftTest extends AbstractThriftTest {
 
     assertThat(client.say("Plain", "Server")).isEqualTo("Say Plain Server");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertClientSpan(span, "say", port).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> assertClientSpan(span, "say", port).hasNoParent()));
   }
 
   @ParameterizedTest
@@ -97,9 +95,7 @@ class ThriftTest extends AbstractThriftTest {
 
     assertThat(client.say("Instrumented", "Server")).isEqualTo("Say Instrumented Server");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertServerSpan(span, "say", port).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span, "say", port).hasNoParent()));
   }
 }

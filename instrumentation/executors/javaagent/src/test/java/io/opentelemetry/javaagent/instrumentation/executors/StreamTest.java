@@ -29,16 +29,14 @@ class StreamTest {
                 .parallel()
                 .forEach(unused -> testing.runWithSpan("child", () -> {})));
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
-          assertions.add(span -> span.hasName("parent").hasNoParent());
-          IntStream.range(0, 20)
-              .forEach(
-                  unused ->
-                      assertions.add(span -> span.hasName("child").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace -> {
+      List<Consumer<SpanDataAssert>> assertions = new ArrayList<>();
+      assertions.add(span -> span.hasName("parent").hasNoParent());
+      IntStream.range(0, 20)
+          .forEach(
+              unused -> assertions.add(span -> span.hasName("child").hasParent(trace.getSpan(0))));
 
-          trace.hasSpansSatisfyingExactly(assertions);
-        });
+      trace.hasSpansSatisfyingExactly(assertions);
+    });
   }
 }

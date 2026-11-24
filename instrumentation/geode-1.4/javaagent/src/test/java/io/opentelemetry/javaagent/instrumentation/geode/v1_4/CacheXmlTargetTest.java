@@ -63,17 +63,15 @@ class CacheXmlTargetTest {
 
       region.putAll(emptyMap());
 
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("putAll xml-region")
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, GEODE),
-                              equalTo(DB_COLLECTION_NAME, "xml-region"),
-                              equalTo(DB_OPERATION_NAME, "putAll"),
-                              equalTo(SERVER_ADDRESS, "192.0.2.1:10334,192.0.2.2:10335/orders"))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("putAll xml-region")
+                  .hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(DB_SYSTEM_NAME, GEODE),
+                      equalTo(DB_COLLECTION_NAME, "xml-region"),
+                      equalTo(DB_OPERATION_NAME, "putAll"),
+                      equalTo(SERVER_ADDRESS, "192.0.2.1:10334,192.0.2.2:10335/orders"))));
     }
   }
 }

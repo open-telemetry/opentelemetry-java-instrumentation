@@ -132,13 +132,12 @@ public class MetaDataCollector {
         span.spanKind = spanKind.toString();
         span.attributes = new ArrayList<>();
 
-        attributes.forEach(
-            (key, value) -> {
-              AttributeInfo attr = new AttributeInfo();
-              attr.name = key.getKey();
-              attr.type = key.getType().toString();
-              span.attributes.add(attr);
-            });
+        attributes.forEach((key, value) -> {
+          AttributeInfo attr = new AttributeInfo();
+          attr.name = key.getKey();
+          attr.type = key.getType().toString();
+          span.attributes.add(attr);
+        });
 
         scopeSpans.spans.add(span);
       }

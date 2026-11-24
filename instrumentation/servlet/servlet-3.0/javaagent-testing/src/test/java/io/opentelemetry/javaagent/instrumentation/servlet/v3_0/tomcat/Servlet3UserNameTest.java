@@ -84,18 +84,17 @@ class Servlet3UserNameTest extends AbstractHttpServerUsingTest<Tomcat> {
             request.headers().toBuilder().add("X-Test-Principal", "true").build());
     client.execute(request).aggregate().join();
 
-    testing.waitAndAssertTraces(
-        trace -> {
-          trace.hasSpansSatisfyingExactly(
-              span -> span.hasKind(SpanKind.SERVER), span -> span.hasName("controller"));
-          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
-              .isEqualTo("io.opentelemetry.servlet-3.0");
-          assertThat(trace.getSpan(0).getAttributes().get(USER_NAME))
-              .isEqualTo(
-                  Boolean.getBoolean("otel.instrumentation.common.user.name.enabled")
-                      ? "test-user"
-                      : null);
-        });
+    testing.waitAndAssertTraces(trace -> {
+      trace.hasSpansSatisfyingExactly(
+          span -> span.hasKind(SpanKind.SERVER), span -> span.hasName("controller"));
+      assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
+          .isEqualTo("io.opentelemetry.servlet-3.0");
+      assertThat(trace.getSpan(0).getAttributes().get(USER_NAME))
+          .isEqualTo(
+              Boolean.getBoolean("otel.instrumentation.common.user.name.enabled")
+                  ? "test-user"
+                  : null);
+    });
   }
 
   private static class PrincipalValve extends ValveBase {

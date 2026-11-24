@@ -22,7 +22,8 @@ public class LatestAgentSnapshotResolver {
     Path localJavaagentPath = findLocalJavaagentJar();
 
     if (localJavaagentPath == null || !Files.exists(localJavaagentPath)) {
-      throw new IOException("Local javaagent JAR not found. Please run './gradlew :javaagent:assemble' from the project root first.");
+      throw new IOException(
+          "Local javaagent JAR not found. Please run './gradlew :javaagent:assemble' from the project root first.");
     }
 
     logger.info("Using local javaagent JAR: {}", localJavaagentPath);
@@ -69,9 +70,9 @@ public class LatestAgentSnapshotResolver {
           .filter(path -> {
             String filename = path.getFileName().toString();
             // Look for the main jar: opentelemetry-javaagent-VERSION.jar (no additional suffixes)
-            return filename.startsWith("opentelemetry-javaagent-") &&
-                   filename.endsWith(".jar") &&
-                   !filename.matches(".*-[a-z]+\\.jar"); // excludes anything with -word.jar pattern
+            return filename.startsWith("opentelemetry-javaagent-")
+                && filename.endsWith(".jar")
+                && !filename.matches(".*-[a-z]+\\.jar"); // excludes anything with -word.jar pattern
           })
           .findFirst()
           .orElse(null);
@@ -81,4 +82,3 @@ public class LatestAgentSnapshotResolver {
     }
   }
 }
-

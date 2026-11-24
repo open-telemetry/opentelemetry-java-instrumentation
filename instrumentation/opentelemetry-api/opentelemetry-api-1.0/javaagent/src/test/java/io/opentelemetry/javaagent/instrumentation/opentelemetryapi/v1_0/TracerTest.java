@@ -51,10 +51,9 @@ class TracerTest {
     span.end();
     assertThat(span.getSpanContext()).isSameAs(context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                spanDataAssert -> spanDataAssert.hasName("test").hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            spanDataAssert -> spanDataAssert.hasName("test").hasNoParent()));
   }
 
   @Test
@@ -103,19 +102,17 @@ class TracerTest {
     testSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasKind(PRODUCER)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("string"), "1"),
-                            equalTo(longKey("long"), 2L),
-                            equalTo(doubleKey("double"), 3.0),
-                            equalTo(booleanKey("boolean"), true))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasKind(PRODUCER)
+                .hasNoParent()
+                .hasStatus(StatusData.error())
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("string"), "1"),
+                    equalTo(longKey("long"), 2L),
+                    equalTo(doubleKey("double"), 3.0),
+                    equalTo(booleanKey("boolean"), true))));
   }
 
   @Test
@@ -131,12 +128,10 @@ class TracerTest {
     parentSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span -> span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -152,12 +147,10 @@ class TracerTest {
     parentSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span -> span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -175,12 +168,10 @@ class TracerTest {
     parentSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span -> span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -195,12 +186,10 @@ class TracerTest {
     parentSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span -> span.hasName("test").hasParent(trace.getSpan(0)).hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -236,10 +225,9 @@ class TracerTest {
     testSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -253,10 +241,9 @@ class TracerTest {
     testSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test").hasTotalAttributeCount(0).hasException(throwable)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("test").hasTotalAttributeCount(0).hasException(throwable)));
   }
 
   @Test
@@ -273,20 +260,17 @@ class TracerTest {
     throwable.printStackTrace(new PrintWriter(writer));
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasTotalAttributeCount(0)
-                        .hasEventsSatisfyingExactly(
-                            event ->
-                                event
-                                    .hasName("exception")
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
-                                        equalTo(EXCEPTION_STACKTRACE, writer.toString()),
-                                        equalTo(stringKey("dog"), "bark")))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasTotalAttributeCount(0)
+                .hasEventsSatisfyingExactly(event ->
+                    event
+                        .hasName("exception")
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(EXCEPTION_TYPE, "java.lang.IllegalStateException"),
+                            equalTo(EXCEPTION_STACKTRACE, writer.toString()),
+                            equalTo(stringKey("dog"), "bark")))));
   }
 
   @Test
@@ -301,10 +285,9 @@ class TracerTest {
     testSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -319,10 +302,9 @@ class TracerTest {
     testSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("test2").hasNoParent().hasTotalAttributeCount(0)));
   }
 
   @Test
@@ -353,16 +335,14 @@ class TracerTest {
     testSpan.end();
 
     // Then
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasKind(PRODUCER)
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0)
-                        .hasInstrumentationScopeInfo(
-                            InstrumentationScopeInfo.builder("test").setVersion("1.2.3").build())));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("test")
+                .hasKind(PRODUCER)
+                .hasNoParent()
+                .hasTotalAttributeCount(0)
+                .hasInstrumentationScopeInfo(
+                    InstrumentationScopeInfo.builder("test").setVersion("1.2.3").build())));
   }
 
   @Test
@@ -383,25 +363,23 @@ class TracerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("linked").hasNoParent().hasTotalAttributeCount(0)),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0)
-                        .hasLinksSatisfying(
-                            links -> {
-                              assertThat(links).hasSize(1);
-                              LinkData link = links.get(0);
-                              assertThat(link.getSpanContext().getTraceId())
-                                  .isEqualTo(linkedSpanContext.getTraceId());
-                              assertThat(link.getSpanContext().getSpanId())
-                                  .isEqualTo(linkedSpanContext.getSpanId());
-                              assertThat(link.getSpanContext().getTraceFlags().asByte())
-                                  .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
-                              assertThat(link.getSpanContext().isRemote())
-                                  .isEqualTo(linkedSpanContext.isRemote());
-                              assertThat(link.getAttributes().asMap()).isEmpty();
-                            })));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("test")
+                    .hasNoParent()
+                    .hasTotalAttributeCount(0)
+                    .hasLinksSatisfying(links -> {
+                      assertThat(links).hasSize(1);
+                      LinkData link = links.get(0);
+                      assertThat(link.getSpanContext().getTraceId())
+                          .isEqualTo(linkedSpanContext.getTraceId());
+                      assertThat(link.getSpanContext().getSpanId())
+                          .isEqualTo(linkedSpanContext.getSpanId());
+                      assertThat(link.getSpanContext().getTraceFlags().asByte())
+                          .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
+                      assertThat(link.getSpanContext().isRemote())
+                          .isEqualTo(linkedSpanContext.isRemote());
+                      assertThat(link.getAttributes().asMap()).isEmpty();
+                    })));
   }
 
   @Test
@@ -430,30 +408,28 @@ class TracerTest {
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("linked").hasNoParent().hasTotalAttributeCount(0)),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("test")
-                        .hasNoParent()
-                        .hasTotalAttributeCount(0)
-                        .hasLinksSatisfying(
-                            links -> {
-                              assertThat(links).hasSize(1);
-                              LinkData link = links.get(0);
-                              assertThat(link.getSpanContext().getTraceId())
-                                  .isEqualTo(linkedSpanContext.getTraceId());
-                              assertThat(link.getSpanContext().getSpanId())
-                                  .isEqualTo(linkedSpanContext.getSpanId());
-                              assertThat(link.getSpanContext().getTraceFlags().asByte())
-                                  .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
-                              assertThat(link.getSpanContext().isRemote())
-                                  .isEqualTo(linkedSpanContext.isRemote());
-                              Attributes attrs = link.getAttributes();
-                              assertThat(attrs.asMap())
-                                  .containsOnly(
-                                      entry(stringKey("string"), "1"),
-                                      entry(longKey("long"), 2L),
-                                      entry(doubleKey("double"), 3.0),
-                                      entry(booleanKey("boolean"), true));
-                            })));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("test")
+                    .hasNoParent()
+                    .hasTotalAttributeCount(0)
+                    .hasLinksSatisfying(links -> {
+                      assertThat(links).hasSize(1);
+                      LinkData link = links.get(0);
+                      assertThat(link.getSpanContext().getTraceId())
+                          .isEqualTo(linkedSpanContext.getTraceId());
+                      assertThat(link.getSpanContext().getSpanId())
+                          .isEqualTo(linkedSpanContext.getSpanId());
+                      assertThat(link.getSpanContext().getTraceFlags().asByte())
+                          .isEqualTo(linkedSpanContext.getTraceFlags().asByte());
+                      assertThat(link.getSpanContext().isRemote())
+                          .isEqualTo(linkedSpanContext.isRemote());
+                      Attributes attrs = link.getAttributes();
+                      assertThat(attrs.asMap())
+                          .containsOnly(
+                              entry(stringKey("string"), "1"),
+                              entry(longKey("long"), 2L),
+                              entry(doubleKey("double"), 3.0),
+                              entry(booleanKey("boolean"), true));
+                    })));
   }
 }

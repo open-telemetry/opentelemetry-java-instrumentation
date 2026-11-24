@@ -12,7 +12,7 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils;
 import java.util.Properties;
@@ -34,7 +34,7 @@ public final class JdbcConnectionPoolMetricsUtil {
       return dbNamespace;
     }
 
-    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    ServerTarget target = dbInfo.getConfiguredServerTarget();
     if (target != null && !target.getAddress().isEmpty()) {
       return endpoint(target.getAddress(), target.getPort());
     }
@@ -57,7 +57,7 @@ public final class JdbcConnectionPoolMetricsUtil {
 
     Integer serverPort = UrlParsingUtils.parsePort(getPropertyValue(properties, "portNumber"));
     if (serverName != null && !serverName.isEmpty()) {
-      dbInfoBuilder.configuredServerTarget(DbServerTarget.create(serverName, serverPort));
+      dbInfoBuilder.configuredServerTarget(ServerTarget.create(serverName, serverPort));
     }
 
     String databaseName = getPropertyValue(properties, "databaseName");
@@ -72,7 +72,7 @@ public final class JdbcConnectionPoolMetricsUtil {
     AttributesBuilder attributes = Attributes.builder();
     attributes.put(DB_SYSTEM_NAME, dbInfo.getDbSystemName());
     attributes.put(DB_NAMESPACE, dbInfo.getDbNamespace());
-    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    ServerTarget target = dbInfo.getConfiguredServerTarget();
     if (target != null) {
       attributes.put(SERVER_ADDRESS, target.getAddress());
       Integer port = target.getPort();

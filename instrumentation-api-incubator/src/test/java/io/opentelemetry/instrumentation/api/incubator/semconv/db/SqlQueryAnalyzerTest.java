@@ -5,8 +5,6 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.db;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS;
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -22,9 +20,13 @@ import org.junit.jupiter.params.provider.ValueSource;
 class SqlQueryAnalyzerTest {
 
   private static final SqlQueryAnalyzer ANALYZER = SqlQueryAnalyzer.create(true);
+  private static final SqlDialect LITERALS =
+      SqlDialect.builder().setDoubleQuotesAreIdentifiers(false).build();
+  private static final SqlDialect IDENTIFIERS =
+      SqlDialect.builder().setDoubleQuotesAreIdentifiers(true).build();
 
   private static SqlQuery analyze(String sql) {
-    return ANALYZER.analyze(sql, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    return ANALYZER.analyze(sql, LITERALS);
   }
 
   private static SqlQuery analyze(String sql, SqlDialect dialect) {
@@ -34,9 +36,7 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void nullQuery(boolean sanitizationEnabled) {
-    SqlQuery result =
-        SqlQueryAnalyzer.create(sanitizationEnabled)
-            .analyze(null, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = SqlQueryAnalyzer.create(sanitizationEnabled).analyze(null, LITERALS);
 
     assertThat(result.getQueryText()).isNull();
     assertThat(result.getQuerySummary()).isNull();
@@ -48,30 +48,31 @@ class SqlQueryAnalyzerTest {
   @Test
   void sanitizationDisabled() {
     String query = "CALL unsanitized_procedure('secret')";
-    SqlQuery result =
-        SqlQueryAnalyzer.create(false).analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = SqlQueryAnalyzer.create(false).analyze(query, LITERALS);
 
     assertThat(result.getQueryText()).isEqualTo(query);
     assertThat(result.getQuerySummary()).isNull();
     assertThat(result.getOperationName()).isNull();
     assertThat(result.getCollectionName()).isNull();
     assertThat(result.getStoredProcedureName()).isNull();
-    assertThat(SqlQueryAnalyzer.isCached(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
+    assertThat(SqlQueryAnalyzer.isCached(query, LITERALS)).isFalse();
   }
 
   @Test
   void cacheDistinguishesDialects() {
     String query = "SELECT \"dialect_value\" FROM dialect_cache_test";
 
-    SqlQuery literals = analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
-    SqlQuery identifiers = analyze(query, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    SqlQuery literals = analyze(query, LITERALS);
+    SqlQuery identifiers = analyze(query, IDENTIFIERS);
 
     assertThat(literals.getQueryText()).isEqualTo("SELECT ? FROM dialect_cache_test");
     assertThat(identifiers.getQueryText()).isEqualTo(query);
     assertThat(literals.getQuerySummary()).isEqualTo("SELECT dialect_cache_test");
     assertThat(identifiers.getQuerySummary()).isEqualTo("SELECT dialect_cache_test");
-    assertThat(analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isSameAs(literals);
-    assertThat(analyze(query, DOUBLE_QUOTES_ARE_IDENTIFIERS)).isSameAs(identifiers);
+    assertThat(analyze(query, SqlDialect.builder().setDoubleQuotesAreIdentifiers(false).build()))
+        .isSameAs(literals);
+    assertThat(analyze(query, SqlDialect.builder().setDoubleQuotesAreIdentifiers(true).build()))
+        .isSameAs(identifiers);
   }
 
   @Test
@@ -82,20 +83,20 @@ class SqlQueryAnalyzerTest {
 
     assertThat(result.getQueryText()).isEqualTo("SELECT ? FROM cache_threshold_test ");
     assertThat(result.getQuerySummary()).isEqualTo("SELECT cache_threshold_test");
-    assertThat(SqlQueryAnalyzer.isCached(query, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isTrue();
+    assertThat(SqlQueryAnalyzer.isCached(query, LITERALS)).isTrue();
     assertThat(analyze(query)).isSameAs(result);
 
     String largeQuery = query + " ";
     SqlQuery largeResult = analyze(largeQuery);
     assertThat(largeResult).isEqualTo(result);
-    assertThat(SqlQueryAnalyzer.isCached(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
+    assertThat(SqlQueryAnalyzer.isCached(largeQuery, LITERALS)).isFalse();
     assertThat(analyze(largeQuery)).isEqualTo(largeResult).isNotSameAs(largeResult);
   }
 
   @ParameterizedTest
   @MethodSource("sqlArgs")
   void sanitizeSql(String original, String expected, String expectedQuerySummary) {
-    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = analyze(original, LITERALS);
     assertThat(result.getQueryText()).isEqualTo(expected);
     assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
   }
@@ -103,7 +104,7 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("simplifyArgs")
   void simplifySql(String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = analyze(original, LITERALS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
@@ -122,8 +123,7 @@ class SqlQueryAnalyzerTest {
 
   @Test
   void sanitizeGrantObjectNamedPassword() {
-    SqlQuery result =
-        ANALYZER.analyze("GRANT SELECT ON password TO admin", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = ANALYZER.analyze("GRANT SELECT ON password TO admin", LITERALS);
 
     assertThat(result.getQueryText()).isEqualTo("GRANT SELECT ON password TO admin");
     assertThat(result.getQuerySummary()).isEqualTo("GRANT");
@@ -134,7 +134,7 @@ class SqlQueryAnalyzerTest {
     SqlQuery result =
         ANALYZER.analyze(
             "SELECT 1; GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY Password1",
-            DOUBLE_QUOTES_ARE_STRING_LITERALS);
+            LITERALS);
 
     assertThat(result.getQueryText())
         .isEqualTo("SELECT ?; GRANT ALL PRIVILEGES ON database.* TO user IDENTIFIED BY ?");
@@ -143,9 +143,7 @@ class SqlQueryAnalyzerTest {
 
   @Test
   void sanitizeDdlObjectNamedPassword() {
-    SqlQuery result =
-        ANALYZER.analyze(
-            "CREATE USER password PASSWORD Password1", DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = ANALYZER.analyze("CREATE USER password PASSWORD Password1", LITERALS);
 
     assertThat(result.getQueryText()).isEqualTo("CREATE USER password PASSWORD ?");
     assertThat(result.getQuerySummary()).isEqualTo("CREATE USER password");
@@ -434,8 +432,7 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("backslashArgs")
   void sanitizeBackslashes(String original, String expected, String expectedQuerySummary) {
-    for (SqlDialect dialect :
-        new SqlDialect[] {DOUBLE_QUOTES_ARE_STRING_LITERALS, DOUBLE_QUOTES_ARE_IDENTIFIERS}) {
+    for (SqlDialect dialect : new SqlDialect[] {LITERALS, IDENTIFIERS}) {
       SqlQuery result = analyze(original, dialect);
 
       assertThat(result.getQueryText()).isEqualTo(expected);
@@ -557,7 +554,7 @@ class SqlQueryAnalyzerTest {
     SqlQuery result =
         analyze(
             "SELECT * FROM \"C:\\\\\"",
-            identifiers ? DOUBLE_QUOTES_ARE_IDENTIFIERS : DOUBLE_QUOTES_ARE_STRING_LITERALS);
+            SqlDialect.builder().setDoubleQuotesAreIdentifiers(identifiers).build());
 
     assertThat(result.getQueryText())
         .isEqualTo(identifiers ? "SELECT * FROM \"C:\\\\\"" : "SELECT * FROM ?");
@@ -585,7 +582,7 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("ddlArgs")
   void checkDdlOperationStatementsAreOk(String actual, Function<String, SqlQuery> expectFunc) {
-    SqlQuery result = analyze(actual, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = analyze(actual, LITERALS);
     SqlQuery expected = expectFunc.apply(actual);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());
@@ -599,7 +596,7 @@ class SqlQueryAnalyzerTest {
     String s = "'";
     SqlQueryAnalyzer analyzer = SqlQueryAnalyzer.create(true);
     for (int i = 0; i < 10000; i++) {
-      assertThat(analyzer.analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isNotNull();
+      assertThat(analyzer.analyze(s, LITERALS)).isNotNull();
       s += "'";
     }
   }
@@ -610,7 +607,7 @@ class SqlQueryAnalyzerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, LITERALS);
     assertThat(result.getQueryText()).isEqualTo("?");
   }
 
@@ -620,7 +617,7 @@ class SqlQueryAnalyzerTest {
     for (int i = 0; i < 10000; i++) {
       s += String.valueOf(i);
     }
-    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = SqlQueryAnalyzer.create(true).analyze(s, LITERALS);
     assertThat(result.getQueryText()).isEqualTo(s.substring(0, AutoSqlSanitizer.LIMIT));
   }
 
@@ -653,7 +650,7 @@ class SqlQueryAnalyzerTest {
       for (int c = 0; c < 1000; c++) {
         sb.append((char) r.nextInt(Character.MAX_VALUE));
       }
-      SqlQueryAnalyzer.create(true).analyze(sb.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS);
+      SqlQueryAnalyzer.create(true).analyze(sb.toString(), LITERALS);
     }
   }
 
@@ -665,10 +662,7 @@ class SqlQueryAnalyzerTest {
     }
     s.append("?)");
 
-    String analyzed =
-        SqlQueryAnalyzer.create(true)
-            .analyze(s.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
-            .getQueryText();
+    String analyzed = SqlQueryAnalyzer.create(true).analyze(s.toString(), LITERALS).getQueryText();
 
     assertThat(analyzed).isEqualTo("select col from table where col in (?)");
   }
@@ -678,11 +672,9 @@ class SqlQueryAnalyzerTest {
     // test that short query is cached
     String shortQuery = "SELECT * FROM TABLE WHERE FIELD = 1234";
     String analyzedShort =
-        SqlQueryAnalyzer.create(true)
-            .analyze(shortQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)
-            .getQueryText();
+        SqlQueryAnalyzer.create(true).analyze(shortQuery, LITERALS).getQueryText();
     assertThat(analyzedShort).doesNotContain("1234");
-    assertThat(SqlQueryAnalyzer.isCached(shortQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isTrue();
+    assertThat(SqlQueryAnalyzer.isCached(shortQuery, LITERALS)).isTrue();
 
     // test that large query is not cached
     StringBuffer s = new StringBuffer();
@@ -691,11 +683,9 @@ class SqlQueryAnalyzerTest {
     }
     String largeQuery = s.toString();
     String analyzedLarge =
-        SqlQueryAnalyzer.create(true)
-            .analyze(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)
-            .getQueryText();
+        SqlQueryAnalyzer.create(true).analyze(largeQuery, LITERALS).getQueryText();
     assertThat(analyzedLarge).doesNotContain("1234");
-    assertThat(SqlQueryAnalyzer.isCached(largeQuery, DOUBLE_QUOTES_ARE_STRING_LITERALS)).isFalse();
+    assertThat(SqlQueryAnalyzer.isCached(largeQuery, LITERALS)).isFalse();
   }
 
   @Test
@@ -709,9 +699,7 @@ class SqlQueryAnalyzerTest {
       sql.append("very_long_table_name_").append(i);
     }
     String result =
-        SqlQueryAnalyzer.create(true)
-            .analyze(sql.toString(), DOUBLE_QUOTES_ARE_STRING_LITERALS)
-            .getQuerySummary();
+        SqlQueryAnalyzer.create(true).analyze(sql.toString(), LITERALS).getQuerySummary();
     assertThat(result).isNotNull();
     assertThat(result)
         .isEqualTo(
@@ -731,7 +719,7 @@ class SqlQueryAnalyzerTest {
   @ParameterizedTest
   @MethodSource("operationCaseArgs")
   void querySummaryPreservesOperationCase(String original, String expectedQuerySummary) {
-    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+    SqlQuery result = analyze(original, LITERALS);
     assertThat(result.getQuerySummary()).isEqualTo(expectedQuerySummary);
   }
 
@@ -1476,7 +1464,7 @@ class SqlQueryAnalyzerTest {
   @MethodSource("doubleQuotesAsIdentifiersArgs")
   void simplifySqlDoubleQuotesAsIdentifiers(
       String original, Function<String, SqlQuery> expectedFunction) {
-    SqlQuery result = analyze(original, DOUBLE_QUOTES_ARE_IDENTIFIERS);
+    SqlQuery result = analyze(original, IDENTIFIERS);
     SqlQuery expected = expectedFunction.apply(original);
     assertThat(result.getQueryText()).isEqualTo(expected.getQueryText());
     assertThat(result.getOperationName()).isEqualTo(expected.getOperationName());

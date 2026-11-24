@@ -110,22 +110,20 @@ class ClickHouseClientV2Test {
     QueryResponse response = client.query("select * from " + TABLE_NAME).join();
     response.close();
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("select test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME),
-                            equalTo(DB_QUERY_SUMMARY, "select test_table"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("select test_table")
+                .hasKind(SpanKind.CLIENT)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                    equalTo(DB_NAMESPACE, DATABASE_NAME),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, host),
+                    equalTo(NETWORK_PEER_PORT, (long) port),
+                    equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME),
+                    equalTo(DB_QUERY_SUMMARY, "select test_table"))));
 
     assertDurationMetric(
         testing,
@@ -237,37 +235,35 @@ class ClickHouseClientV2Test {
           response.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("insert test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(
-                                DB_QUERY_TEXT, "insert into " + TABLE_NAME + " values(?)(?)(?)"),
-                            equalTo(DB_QUERY_SUMMARY, "insert test_table")),
-                span ->
-                    span.hasName("select test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME),
-                            equalTo(DB_QUERY_SUMMARY, "select test_table"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("insert test_table")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, (long) port),
+                        equalTo(DB_QUERY_TEXT, "insert into " + TABLE_NAME + " values(?)(?)(?)"),
+                        equalTo(DB_QUERY_SUMMARY, "insert test_table")),
+            span ->
+                span.hasName("select test_table")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, (long) port),
+                        equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME),
+                        equalTo(DB_QUERY_SUMMARY, "select test_table"))));
   }
 
   @Test
@@ -283,55 +279,51 @@ class ClickHouseClientV2Test {
           response.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("select test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME),
-                            equalTo(DB_QUERY_SUMMARY, "select test_table"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("select test_table")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, (long) port),
+                        equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME),
+                        equalTo(DB_QUERY_SUMMARY, "select test_table"))));
   }
 
   @Test
   void testQueryThrowsServerException() {
     Throwable thrown =
-        catchThrowable(
-            () -> {
-              QueryResponse response = client.query("select * from non_existent_table").get();
-              response.close();
-            });
+        catchThrowable(() -> {
+          QueryResponse response = client.query("select * from non_existent_table").get();
+          response.close();
+        });
 
     assertThat(thrown).isInstanceOf(ServerException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("select non_existent_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasStatus(StatusData.error())
-                        .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
-                            equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
-                            equalTo(ERROR_TYPE, "60"),
-                            equalTo(DB_RESPONSE_STATUS_CODE, "60"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("select non_existent_table")
+                .hasKind(SpanKind.CLIENT)
+                .hasStatus(StatusData.error())
+                .hasException(thrown)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                    equalTo(DB_NAMESPACE, DATABASE_NAME),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, host),
+                    equalTo(NETWORK_PEER_PORT, (long) port),
+                    equalTo(DB_QUERY_TEXT, "select * from non_existent_table"),
+                    equalTo(DB_QUERY_SUMMARY, "select non_existent_table"),
+                    equalTo(ERROR_TYPE, "60"),
+                    equalTo(DB_RESPONSE_STATUS_CODE, "60"))));
 
     assertDurationMetric(
         testing,
@@ -350,13 +342,10 @@ class ClickHouseClientV2Test {
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttribute(DB_RESPONSE_STATUS_CODE, "60")
-                                    .hasAttribute(ERROR_TYPE, "60"))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasAttribute(DB_RESPONSE_STATUS_CODE, "60")
+                        .hasAttribute(ERROR_TYPE, "60")));
   }
 
   @Test
@@ -370,23 +359,22 @@ class ClickHouseClientV2Test {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("select test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME + " limit ?"),
-                            equalTo(DB_QUERY_SUMMARY, "select test_table"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("select test_table")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, (long) port),
+                        equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME + " limit ?"),
+                        equalTo(DB_QUERY_SUMMARY, "select test_table"))));
   }
 
   @Test
@@ -398,23 +386,22 @@ class ClickHouseClientV2Test {
           assertThat(records).isEmpty();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("select test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME + " limit ?"),
-                            equalTo(DB_QUERY_SUMMARY, "select test_table"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("select test_table")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, (long) port),
+                        equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME + " limit ?"),
+                        equalTo(DB_QUERY_SUMMARY, "select test_table"))));
   }
 
   @Test
@@ -432,36 +419,35 @@ class ClickHouseClientV2Test {
           }
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("insert test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_QUERY_TEXT, "insert into " + TABLE_NAME + " values(?)"),
-                            equalTo(DB_QUERY_SUMMARY, "insert test_table")),
-                span ->
-                    span.hasName("select test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME + " limit ?"),
-                            equalTo(DB_QUERY_SUMMARY, "select test_table"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("insert test_table")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, (long) port),
+                        equalTo(DB_QUERY_TEXT, "insert into " + TABLE_NAME + " values(?)"),
+                        equalTo(DB_QUERY_SUMMARY, "insert test_table")),
+            span ->
+                span.hasName("select test_table")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, (long) port),
+                        equalTo(DB_QUERY_TEXT, "select * from " + TABLE_NAME + " limit ?"),
+                        equalTo(DB_QUERY_SUMMARY, "select test_table"))));
   }
 
   @Test
@@ -482,25 +468,24 @@ class ClickHouseClientV2Test {
           response.close();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("select test_table")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
-                            equalTo(DB_NAMESPACE, DATABASE_NAME),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, host),
-                            equalTo(NETWORK_PEER_PORT, (long) port),
-                            equalTo(
-                                DB_QUERY_TEXT,
-                                "select * from " + TABLE_NAME + " where value={param_s: String}"),
-                            equalTo(DB_QUERY_SUMMARY, "select test_table"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("select test_table")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, CLICKHOUSE),
+                        equalTo(DB_NAMESPACE, DATABASE_NAME),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, host),
+                        equalTo(NETWORK_PEER_PORT, (long) port),
+                        equalTo(
+                            DB_QUERY_TEXT,
+                            "select * from " + TABLE_NAME + " where value={param_s: String}"),
+                        equalTo(DB_QUERY_SUMMARY, "select test_table"))));
   }
 
   private static void assertServerTarget(Set<String> endpoints, String address, Integer port)
