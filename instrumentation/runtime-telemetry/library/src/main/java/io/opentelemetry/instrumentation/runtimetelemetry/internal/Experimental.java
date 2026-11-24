@@ -74,9 +74,10 @@ public final class Experimental {
    *
    * <p>Metric names and selector patterns are matched case-sensitively. {@code ?} matches any
    * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No metrics are sourced from JFR unless
-   * included or excluded patterns are configured, and {@code *} selects all metrics. If only
-   * excluded patterns are configured, all other metrics that JFR supports are sourced from JFR.
+   * patterns take precedence over included patterns. No metrics are sourced from JFR by default.
+   * Configure a selector or enable {@link #setEmitExperimentalJfrMetrics} to select metrics. {@code
+   * *} selects all metrics. If only excluded patterns are configured, all other metrics that JFR
+   * supports are sourced from JFR.
    *
    * <p>Metrics that JFR actually registers are suppressed from JMX to avoid duplicates. This method
    * is a no-op on Java versions prior to 17.

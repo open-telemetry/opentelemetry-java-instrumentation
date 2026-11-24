@@ -96,7 +96,7 @@ otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=jvm.mem
 otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded=jvm.memory.allocation
 ```
 
-Matching is case-sensitive. `*` matches any number of characters and `?` matches one character. Configuring either selector property activates JFR. No metrics are sourced from JFR unless included or excluded patterns are configured, and `included=*` selects all metrics. Excluded patterns take precedence over included patterns, including over experimental JFR shorthand selections. If only excluded patterns are configured, all other metrics that JFR supports are sourced from JFR.
+Matching is case-sensitive. `*` matches any number of characters and `?` matches one character. No metrics are sourced from JFR by default. Configure a selector or set `otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true` to select metrics. `included=*` selects all metrics. Excluded patterns take precedence over included patterns, including over experimental JFR shorthand selections. If only excluded patterns are configured, all other metrics that JFR supports are sourced from JFR.
 
 JFR registers only matching metrics and starts its recording stream only when at least one handler remains. Metrics whose JFR handlers cannot fully replace the JMX series, such as memory-pool metrics with collector-specific gaps, remain on JMX. JMX also registers JMX-only metrics such as `jvm.cpu.time` and `jvm.system.cpu.load_1m`.
 

@@ -21,9 +21,9 @@ configurations:
     declarative_name: java.runtime_telemetry.jfr_metrics/development.included
     description: >
       Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
-      patterns with * and ?. Configuring either JFR metric selector property activates JFR. No
-      metrics are sourced from JFR unless included or excluded patterns are configured. Use * to
-      select all metrics.
+      patterns with * and ?. No metrics are sourced from JFR by default. Configure a selector or
+      enable otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics to select metrics.
+      Use * to select all metrics.
     type: list
     default: ""
     examples:
