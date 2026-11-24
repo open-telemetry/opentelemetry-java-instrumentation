@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -18,6 +20,14 @@ dependencies {
 
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:apache-httpclient:apache-httpclient-4.0:javaagent"))
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("org.apache.httpcomponents.client5:httpclient5:5.0")
+    }
+  }
 }
 
 tasks.named<Test>("test") {

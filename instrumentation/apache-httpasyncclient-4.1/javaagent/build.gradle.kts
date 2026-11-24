@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -15,4 +17,12 @@ muzzle {
 
 dependencies {
   library("org.apache.httpcomponents:httpasyncclient:4.1")
+}
+
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("org.apache.httpcomponents:httpasyncclient:4.1")
+    }
+  }
 }
