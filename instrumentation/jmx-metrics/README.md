@@ -105,6 +105,7 @@ instrumentation/development:
 ```
 
 Inline rules use the same syntax as rules in configuration files and are added to any rules loaded from files.
+Invalid inline rules are logged and skipped individually, so other valid inline rules are still loaded.
 
 ### Basic Syntax
 

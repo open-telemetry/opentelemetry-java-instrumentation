@@ -209,7 +209,7 @@ class JmxMetricInsightInstallerTest {
   }
 
   @Test
-  void invalidInlineRulePreservesEarlierRules() throws IOException {
+  void invalidInlineRuleDoesNotPreventOtherInlineRules() throws IOException {
     DeclarativeConfigProperties config;
     try (InputStream input = getClass().getResourceAsStream("/jmx-declarative-invalid-rule.yaml")) {
       config =
