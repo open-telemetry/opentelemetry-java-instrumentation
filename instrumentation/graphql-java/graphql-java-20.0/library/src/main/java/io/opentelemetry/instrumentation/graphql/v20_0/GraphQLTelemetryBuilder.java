@@ -100,7 +100,9 @@ public final class GraphQLTelemetryBuilder {
    * #setOperationSpanEnabled(boolean)}), the dedicated GraphQL operation span.
    *
    * <p>GraphQL errors are recorded once, as {@code exception} events: on the operation span when it
-   * is created, otherwise on the current span.
+   * is created, otherwise on the current span. An execution that fails with an exception rather
+   * than returning errors is recorded only on the operation span, so when that is disabled the
+   * failure is left to whatever instrumentation owns the current span.
    *
    * <p>Intended for requests that run a single GraphQL operation. If several operations run under
    * the same span, later executions overwrite earlier attributes, and an earlier operation name can
