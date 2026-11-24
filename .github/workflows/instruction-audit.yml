@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       publish:
-        description: Allow one draft PR for a verified, publishable finding
+        description: Allow one ready-for-review PR for a verified, publishable finding
         type: boolean
         default: false
       continuation:
@@ -21,7 +21,7 @@ jobs:
       actions: write
       contents: write
       copilot-requests: write
-    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@b38cc8829271c7f1757688df0909ed321f7c8629
+    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@be81fbb3aef8f21008e201d1f8e5279b967600bb
     with:
       publish: ${{ inputs.publish }}
       continuation: ${{ inputs.continuation }}
