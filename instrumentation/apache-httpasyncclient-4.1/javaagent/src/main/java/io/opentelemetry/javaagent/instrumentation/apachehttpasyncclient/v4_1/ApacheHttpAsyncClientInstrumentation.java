@@ -169,7 +169,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (context == null) {
         // this is unexpected
         logger.fine("context was never set");
-        completeDelegate(result);
+        try (Scope ignored = parentContext.makeCurrent()) {
+          completeDelegate(result);
+        }
         return;
       }
 
@@ -185,7 +187,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (context == null) {
         // this is unexpected
         logger.fine("context was never set");
-        failDelegate(ex);
+        try (Scope ignored = parentContext.makeCurrent()) {
+          failDelegate(ex);
+        }
         return;
       }
 
@@ -202,7 +206,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (context == null) {
         // this is unexpected
         logger.fine("context was never set");
-        cancelDelegate();
+        try (Scope ignored = parentContext.makeCurrent()) {
+          cancelDelegate();
+        }
         return;
       }
 
