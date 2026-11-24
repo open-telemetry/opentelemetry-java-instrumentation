@@ -146,7 +146,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
       return;
     }
 
-    String body = extractRequestBody(accessor, request, requestBodyCaptureConfig);
+    String body = extractRequestBody(accessor, request);
     if (body != null) {
       serverSpan.setAttribute(SPAN_BODY_ATTRIBUTE, body);
     }

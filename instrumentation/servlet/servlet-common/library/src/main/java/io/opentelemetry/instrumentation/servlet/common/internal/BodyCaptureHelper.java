@@ -14,7 +14,10 @@ import java.nio.ByteBuffer;
 public abstract class BodyCaptureHelper<REQUEST, INPUT> {
 
   /** Servlet attribute name used to store the request body. */
-  public static final String REQUEST_BODY_ATTRIBUTE = "otel.request.body";
+  public static final String REQUEST_BODY_BUFFER_ATTRIBUTE = "otel.request.body.buffer";
+
+  /** Servlet attribute name used to mark whether the request body capture is enabled on request */
+  public static final String REQUEST_BODY_MARKER_ATTRIBUTE = "otel.request.body.marker";
 
   private final ServletAccessor<REQUEST, ?> accessor;
 
@@ -48,14 +51,14 @@ public abstract class BodyCaptureHelper<REQUEST, INPUT> {
       return inputStream;
     }
 
-    if (accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE) != null) {
+    if (accessor.getRequestAttribute(request, REQUEST_BODY_BUFFER_ATTRIBUTE) != null) {
       // The first stream obtained for this request is the one that is captured: later streams are
       // not captured, so that a body read more than once is never recorded twice or overwritten.
       return inputStream;
     }
 
     ByteBuffer buffer = ByteBuffer.allocate(maxBufferSize);
-    accessor.setRequestAttribute(request, REQUEST_BODY_ATTRIBUTE, buffer);
+    accessor.setRequestAttribute(request, REQUEST_BODY_BUFFER_ATTRIBUTE, buffer);
     return wrapInput(inputStream, buffer);
   }
 

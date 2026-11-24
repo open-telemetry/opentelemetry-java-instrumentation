@@ -5,7 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
-import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_BUFFER_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -51,7 +52,16 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   public void onStart(
       AttributesBuilder attributes,
       Context parentContext,
-      ServletRequestContext<REQUEST> requestServletRequestContext) {}
+      ServletRequestContext<REQUEST> requestServletRequestContext) {
+
+    REQUEST request = requestServletRequestContext.request();
+    String contentType = accessor.getRequestHeader(request, "Content-Type");
+    String contentDisposition = accessor.getRequestHeader(request, "Content-Disposition");
+    if (!shouldMarkRequestForBodyCapture(config, contentType, contentDisposition)) {
+      return;
+    }
+    accessor.setRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE, true);
+  }
 
   @Override
   public void onEnd(
@@ -61,64 +71,88 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       @Nullable ServletResponseContext<RESPONSE> responseServletResponseContext,
       @Nullable Throwable error) {
 
-    if (!config.isEnabled()) {
+    REQUEST request = requestServletRequestContext.request();
+    Object marker = accessor.getRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE);
+    if (marker == null) {
+      // request not marked for body capture
       return;
     }
+    accessor.setRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE, null);
 
-    String body = extractRequestBody(accessor, requestServletRequestContext.request(), config);
+    String body = extractRequestBody(accessor, request);
     if (body != null) {
       attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }
   }
 
   /**
+   * Determines whether the request should be marked for body capture.
+   *
+   * @param config configuration
+   * @param contentType value of the content-type header, if available
+   * @param contentDisposition value of the content-disposition header, if available
+   * @return true if the request should be marked for body capture, false otherwise
+   */
+  public static boolean shouldMarkRequestForBodyCapture(
+      BodyCaptureConfig config, @Nullable String contentType, @Nullable String contentDisposition) {
+    if (!config.isEnabled()) {
+      return false;
+    }
+    // prevent capturing the body when content-disposition indicates a binary body
+    if (contentDisposition != null && !"identity".equalsIgnoreCase(contentDisposition)) {
+      return false;
+    }
+
+    if (contentType == null) {
+      // no body capture without content type
+      return false;
+    }
+
+    String mediaType = getAndNormalizeMediaTypeFromContentTypeHeader(contentType);
+    if (null == mediaType) {
+      // don't attempt to decode body without media type
+      return false;
+    }
+    return config.getMediaTypes().matches(mediaType);
+  }
+
+  /**
    * Extract and removes the request body stored in request attributes.
    *
-   * @param accessor servlet accessor
-   * @param request servlet request
    * @param <REQUEST> request type
    * @param <RESPONSE> response type
+   * @param accessor servlet accessor
+   * @param request servlet request
    * @return extracted request body value, or {@code null} if no or empty request body was captured
    */
   @Nullable
   public static <REQUEST, RESPONSE> String extractRequestBody(
-      ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request, BodyCaptureConfig config) {
-    Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_ATTRIBUTE);
+      ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
+    Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_BUFFER_ATTRIBUTE);
     if (!(bodyAttribute instanceof ByteBuffer)) {
       return null;
     }
     String contentType = accessor.getRequestHeader(request, "Content-Type");
 
     // remove request attribute so the buffer is no longer accessible for writing
-    accessor.setRequestAttribute(request, REQUEST_BODY_ATTRIBUTE, null);
-    return getRequestBodyValue((ByteBuffer) bodyAttribute, contentType, config);
+    accessor.setRequestAttribute(request, REQUEST_BODY_BUFFER_ATTRIBUTE, null);
+    return getRequestBodyValue((ByteBuffer) bodyAttribute, contentType);
   }
 
   /**
-   * Extracts request body value
+   * Extracts request body value, body capture pre-requisites must have been checked with {@link
+   * #shouldMarkRequestForBodyCapture(BodyCaptureConfig, String, String)} before calling this
+   * method.
    *
    * @param buffer request body buffer
    * @param contentType value of the Content-Type header, which may contain a charset parameter
-   * @param config request body capture configuration
    * @return extracted body value as string, or {@code null} if the body is empty, or the content
    *     type is not supported, unknown, missing or excluded by configuration.
    */
   @Nullable
-  public static String getRequestBodyValue(
-      ByteBuffer buffer, @Nullable String contentType, BodyCaptureConfig config) {
+  public static String getRequestBodyValue(ByteBuffer buffer, @Nullable String contentType) {
     if (buffer.position() == 0 || contentType == null) {
       // empty buffer or no content type header provided
-      return null;
-    }
-
-    String mediaType = getAndNormalizeMediaTypeFromContentTypeHeader(contentType);
-    if (null == mediaType) {
-      // don't attempt to decode body without media type
-      return null;
-    }
-
-    if (!config.getMediaTypes().matches(mediaType)) {
-      // media type is not allowed by configuration
       return null;
     }
 

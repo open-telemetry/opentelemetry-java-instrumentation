@@ -108,7 +108,7 @@ public class BodyCaptureConfig {
   /**
    * Returns the maximum size of the request body to capture.
    *
-   * @return the maximum size of the request body to capture, returned value is >= 1
+   * @return the maximum size of the request body to capture, returned value is {@code >= 1}
    */
   public int getMaxSize() {
     return maxSize;
@@ -117,8 +117,8 @@ public class BodyCaptureConfig {
   /**
    * Sets the maximum size of the request body to capture
    *
-   * @param maxSize the maximum size of the request body to capture, if <=0, the default value of
-   *     {@link #DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE} will be used
+   * @param maxSize the maximum size of the request body to capture, if {@code <= 0}, the default
+   *     value of {@link #DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE} will be used
    * @return this
    */
   @CanIgnoreReturnValue

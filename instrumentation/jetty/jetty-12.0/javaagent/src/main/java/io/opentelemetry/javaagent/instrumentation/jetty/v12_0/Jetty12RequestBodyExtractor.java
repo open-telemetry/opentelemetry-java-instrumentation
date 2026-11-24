@@ -5,15 +5,17 @@
 
 package io.opentelemetry.javaagent.instrumentation.jetty.v12_0;
 
-import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_BUFFER_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getRequestBodyValue;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.shouldMarkRequestForBodyCapture;
 import static org.eclipse.jetty.http.HttpHeader.CONTENT_TYPE;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
-import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
 import org.eclipse.jetty.server.Request;
@@ -33,7 +35,14 @@ class Jetty12RequestBodyExtractor implements AttributesExtractor<Request, Respon
   }
 
   @Override
-  public void onStart(AttributesBuilder attributes, Context parentContext, Request request) {}
+  public void onStart(AttributesBuilder attributes, Context parentContext, Request request) {
+    String contentType = request.getHeaders().get("Content-Type");
+    String contentDisposition = request.getHeaders().get("Content-Disposition");
+    if (!shouldMarkRequestForBodyCapture(config, contentType, contentDisposition)) {
+      return;
+    }
+    request.setAttribute(REQUEST_BODY_MARKER_ATTRIBUTE, true);
+  }
 
   @Override
   public void onEnd(
@@ -42,14 +51,20 @@ class Jetty12RequestBodyExtractor implements AttributesExtractor<Request, Respon
       Request request,
       @Nullable Response response,
       @Nullable Throwable error) {
-    Object bodyAttribute = request.getAttribute(REQUEST_BODY_ATTRIBUTE);
+
+    if (request.getAttribute(REQUEST_BODY_MARKER_ATTRIBUTE) == null) {
+      return;
+    }
+    request.setAttribute(REQUEST_BODY_MARKER_ATTRIBUTE, null);
+
+    Object bodyAttribute = request.getAttribute(REQUEST_BODY_BUFFER_ATTRIBUTE);
     if (!(bodyAttribute instanceof ByteBuffer buffer)) {
       return;
     }
-    request.setAttribute(REQUEST_BODY_ATTRIBUTE, null);
+    request.setAttribute(REQUEST_BODY_BUFFER_ATTRIBUTE, null);
 
     String contentType = request.getHeaders().get(CONTENT_TYPE);
-    String body = ServletRequestBodyExtractor.getRequestBodyValue(buffer, contentType, config);
+    String body = getRequestBodyValue(buffer, contentType);
     if (body != null) {
       attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }

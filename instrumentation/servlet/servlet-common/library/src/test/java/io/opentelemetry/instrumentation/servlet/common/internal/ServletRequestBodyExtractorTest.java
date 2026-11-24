@@ -6,11 +6,12 @@
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
 import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
-import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_BUFFER_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getAndNormalizeMediaTypeFromContentTypeHeader;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getCharsetFromContentTypeHeader;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getRequestBodyValue;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.shouldMarkRequestForBodyCapture;
 import static java.nio.charset.StandardCharsets.ISO_8859_1;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,53 +71,61 @@ class ServletRequestBodyExtractorTest {
 
   @Test
   void noBodyAttribute() {
-    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
+    assertThat(extractRequestBody(accessor, request)).isNull();
     assertThat(requestAttributes).isEmpty();
   }
 
   @Test
   void notABuffer() {
-    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, "body");
+    requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, "body");
 
-    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
+    assertThat(extractRequestBody(accessor, request)).isNull();
 
     // attributes that are not a buffer are not ours to remove
-    assertThat(requestAttributes).containsEntry(REQUEST_BODY_ATTRIBUTE, "body");
+    assertThat(requestAttributes).containsEntry(REQUEST_BODY_BUFFER_ATTRIBUTE, "body");
   }
 
   @Test
   void emptyBuffer() {
     ByteBuffer buffer = ByteBuffer.allocate(10);
-    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
+    requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, buffer);
 
-    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
+    assertThat(extractRequestBody(accessor, request)).isNull();
 
-    assertThat(requestAttributes).doesNotContainKey(REQUEST_BODY_ATTRIBUTE);
+    assertThat(requestAttributes).doesNotContainKey(REQUEST_BODY_BUFFER_ATTRIBUTE);
   }
 
   @Test
   void bodyExtractedOnce() {
 
     ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
-    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
+    requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, buffer);
     requestContentType = "text/plain; charset=UTF-8";
 
-    assertThat(extractRequestBody(accessor, request, CONFIG)).isEqualTo("abc");
-    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
+    assertThat(extractRequestBody(accessor, request)).isEqualTo("abc");
+    assertThat(extractRequestBody(accessor, request)).isNull();
   }
 
   @Test
   void withoutContentTypeNoCapture() {
-    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null, CONFIG)).isNull();
-    assertThat(getRequestBodyValue(bufferOf("request-body".getBytes(UTF_8)), null, CONFIG))
-        .isNull();
+    assertThat(shouldMarkRequestForBodyCapture(CONFIG, null, null)).isFalse();
+
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null)).isNull();
+    assertThat(getRequestBodyValue(bufferOf("request-body".getBytes(UTF_8)), null)).isNull();
+  }
+
+  @Test
+  void contentDispositionFiltering() {
+    assertThat(shouldMarkRequestForBodyCapture(CONFIG, "text/plain", null)).isTrue();
+    assertThat(shouldMarkRequestForBodyCapture(CONFIG, "text/plain", "identity")).isTrue();
+    assertThat(shouldMarkRequestForBodyCapture(CONFIG, "text/plain", "gzip")).isFalse();
   }
 
   @Test
   void nonUtf8WithContentTypeWithEncoding() {
-    assertThat(
-            getRequestBodyValue(
-                bufferOf(ISO_8859_1_BODY), "text/plain; charset=ISO-8859-1", CONFIG))
+    String contentType = "text/plain; charset=ISO-8859-1";
+    assertThat(shouldMarkRequestForBodyCapture(CONFIG, contentType, null)).isTrue();
+    assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), "text/plain; charset=ISO-8859-1"))
         .isEqualTo("café");
   }
 
@@ -141,9 +150,7 @@ class ServletRequestBodyExtractorTest {
   @Test
   void unknownCharsetAssumedUtf8() {
     assertThat(getCharsetFromContentTypeHeader("text/plain; charset=unknown")).isEqualTo(UTF_8);
-    assertThat(
-            getRequestBodyValue(
-                bufferOf("café".getBytes(UTF_8)), "text/plain; charset=unknown", CONFIG))
+    assertThat(getRequestBodyValue(bufferOf("café".getBytes(UTF_8)), "text/plain; charset=unknown"))
         .isEqualTo("café");
   }
 
@@ -151,7 +158,9 @@ class ServletRequestBodyExtractorTest {
   void truncatedUtf8() {
     ByteBuffer buffer = ByteBuffer.allocate(6);
     buffer.put("café".getBytes(UTF_8)).put((byte) 0xC3); // truncated UTF-8 sequence
-    assertThat(getRequestBodyValue(buffer, "text/plain", CONFIG)).isEqualTo("café");
+
+    assertThat(shouldMarkRequestForBodyCapture(CONFIG, "text/plain", null)).isTrue();
+    assertThat(getRequestBodyValue(buffer, "text/plain")).isEqualTo("café");
   }
 
   @ParameterizedTest
@@ -179,24 +188,22 @@ class ServletRequestBodyExtractorTest {
   @Test
   void mediaTypeNotAllowed() {
     ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
-    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
+    requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, buffer);
     requestContentType = "application/octet-stream";
 
-    assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
+    // media type filtering is only applied on request start
+    assertThat(shouldMarkRequestForBodyCapture(CONFIG, requestContentType, null)).isFalse();
   }
 
   @Test
   void mediaTypeNotAllowedByConfiguration() {
-    ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
-    requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
-    requestContentType = "application/json";
-
     BodyCaptureConfig config =
         createDefault()
             .setEnabled(true)
             .setMediaTypes(IncludeExclude.builder().setIncluded("text/*").build());
 
-    assertThat(extractRequestBody(accessor, request, config)).isNull();
+    // media type filtering is only applied on request start
+    assertThat(shouldMarkRequestForBodyCapture(config, "application/json", null)).isFalse();
   }
 
   private static ByteBuffer bufferOf(byte[] bytes) {
