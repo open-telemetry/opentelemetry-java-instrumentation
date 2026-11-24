@@ -14,7 +14,7 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import java.nio.ByteBuffer;
-import java.nio.charset.CharacterCodingException;
+import java.nio.CharBuffer;
 import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
@@ -157,17 +157,18 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     }
 
     buffer.flip();
-    try {
-      CharsetDecoder decoder =
-          getCharsetFromContentTypeHeader(contentType)
-              .newDecoder()
-              // ignore allows to decode as much as we can and cut of the rest.
-              .onMalformedInput(CodingErrorAction.IGNORE)
-              .onUnmappableCharacter(CodingErrorAction.IGNORE);
-      return decoder.decode(buffer).toString();
-    } catch (CharacterCodingException e) {
-      return null;
-    }
+    CharsetDecoder decoder =
+        getCharsetFromContentTypeHeader(contentType)
+            .newDecoder()
+            .onMalformedInput(CodingErrorAction.REPORT)
+            .onUnmappableCharacter(CodingErrorAction.REPORT);
+    // a byte never decodes to more than one char, so this is always large enough
+    CharBuffer text = CharBuffer.allocate(buffer.remaining());
+    // On the first invalid byte sequence, which includes a multi-byte character cut by the size
+    // limit, decoding stops: we keep the text decoded so far and never add replacement characters.
+    decoder.decode(buffer, text, true);
+    text.flip();
+    return text.toString();
   }
 
   // package-protected for testing

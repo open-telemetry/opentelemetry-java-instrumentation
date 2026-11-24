@@ -163,6 +163,33 @@ class ServletRequestBodyExtractorTest {
     assertThat(getRequestBodyValue(buffer, "text/plain")).isEqualTo("café");
   }
 
+  @Test
+  void invalidByteInTheMiddleStopsDecoding() {
+    ByteBuffer buffer = ByteBuffer.allocate(16);
+    buffer.put("abc".getBytes(UTF_8)).put((byte) 0xFF).put("def".getBytes(UTF_8));
+
+    assertThat(getRequestBodyValue(buffer, "text/plain")).isEqualTo("abc");
+  }
+
+  @Test
+  void invalidByteAndTruncationKeepsTextBeforeFirstInvalidByte() {
+    ByteBuffer buffer = ByteBuffer.allocate(16);
+    buffer.put("café".getBytes(UTF_8)).put((byte) 0xFF).put("é".getBytes(UTF_8)).put((byte) 0xC3);
+
+    assertThat(getRequestBodyValue(buffer, "text/plain")).isEqualTo("café");
+  }
+
+  @Test
+  void noReplacementCharacterAdded() {
+    ByteBuffer buffer = ByteBuffer.allocate(16);
+    buffer.put("a".getBytes(UTF_8)).put((byte) 0xC3).put((byte) 0x28).put("b".getBytes(UTF_8));
+
+    assertThat(getRequestBodyValue(buffer, "text/plain"))
+        .isEqualTo("a")
+        .doesNotContain("\uFFFD")
+        .doesNotContain("?");
+  }
+
   @ParameterizedTest
   @CsvSource(
       delimiterString = "|",
