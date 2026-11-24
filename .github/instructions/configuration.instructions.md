@@ -16,11 +16,11 @@ user-facing instrumentation configuration.
 - Experimental features use an `experimental` marker in the flat name and the
   corresponding `/development` YAML form. Preview flat names use a `preview` marker and an
   unstable YAML form, either `/development` or `preview` in the key. Stable feature names need
-  neither marker. An alpha implementation artifact does not make its user-facing settings
-  experimental.
-- Stable configuration names remain stable even when alpha code reads them. Retain a deprecated
-  stable name until the next major version. Experimental and preview names may be removed in a
-  subsequent minor release. The `otel.javaagent.testing.*` namespace has no stability guarantee.
+  neither marker.
+- Use [VERSIONING.md](../../VERSIONING.md) to determine which settings have a compatibility
+  guarantee and when they can be removed. Apply the policy to the published artifact that exposes
+  the setting to users, not the internal module that reads it. Settings exposed only through alpha
+  artifacts have no compatibility guarantee.
 - Preserve already-published names rather than renaming them to match a mechanical conversion
   or naming convention. Use a `SPECIAL_MAPPINGS` bridge entry only when normalized flat-property
   lookup does not resolve the published mapping.
