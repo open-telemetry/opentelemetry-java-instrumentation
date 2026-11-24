@@ -77,11 +77,11 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
         contextRunner.withPropertyValues("otel.instrumentation.mongo.capture-query-text=true"),
         satisfies(
             DB_QUERY_TEXT,
-            value ->
-                value
+            val ->
+                val
                     .isNotNull()
-                    .satisfies(queryText ->
-                        assertThat(Document.parse(queryText).get("filter", Document.class))
+                    .satisfies(v ->
+                        assertThat(Document.parse(v).get("filter", Document.class))
                             .isEqualTo(new Document("item", "?")))));
   }
 
