@@ -22,7 +22,7 @@ class BodyCaptureConfigTest {
     assertThat(config.getMaxSize()).isEqualTo(1024);
     assertThat(config.getMediaTypes().getIncluded())
         .containsExactlyInAnyOrder(
-            "text/*", "*/json", "*+json", "*/xml", "+xml", "*/yaml", "*+yaml");
+            "text/*", "*/json", "*+json", "*/xml", "*+xml", "*/yaml", "*+yaml");
     assertThat(config.getMediaTypes().getExcluded())
         .containsExactlyInAnyOrder("multipart/*", "application/x-www-form-urlencoded");
   }
@@ -47,6 +47,32 @@ class BodyCaptureConfigTest {
   void maxSize_invalid(int value) {
     BodyCaptureConfig config = createDefault().setMaxSize(value);
     assertThat(config.getMaxSize()).isEqualTo(1024);
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "text/plain",
+        "application/json",
+        "application/problem+json",
+        "application/xml",
+        "application/soap+xml",
+        "application/yaml",
+        "application/vnd.foo+yaml"
+      })
+  void defaultMediaTypesMatch(String mediaType) {
+    assertThat(createDefault().getMediaTypes().matches(mediaType)).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(
+      strings = {
+        "application/octet-stream",
+        "application/x-www-form-urlencoded",
+        "multipart/form-data"
+      })
+  void defaultMediaTypesDoNotMatch(String mediaType) {
+    assertThat(createDefault().getMediaTypes().matches(mediaType)).isFalse();
   }
 
   @Test
