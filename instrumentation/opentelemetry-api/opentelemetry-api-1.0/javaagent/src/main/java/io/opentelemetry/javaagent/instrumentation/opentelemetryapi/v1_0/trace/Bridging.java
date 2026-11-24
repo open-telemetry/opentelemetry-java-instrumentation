@@ -16,6 +16,7 @@ import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.TraceStateBuilder;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.ApplicationSpanHolder;
 import io.opentelemetry.javaagent.instrumentation.opentelemetryapi.v1_0.ValueBridging;
 import java.util.ArrayList;
@@ -39,6 +40,11 @@ import javax.annotation.Nullable;
 public class Bridging {
 
   private static final Logger logger = Logger.getLogger(Bridging.class.getName());
+  private static final VirtualField<
+          application.io.opentelemetry.api.common.AttributeKey<?>, AttributeKey<?>>
+      AGENT_KEY =
+          VirtualField.find(
+              application.io.opentelemetry.api.common.AttributeKey.class, AttributeKey.class);
 
   public static application.io.opentelemetry.api.trace.Span toApplication(Span agentSpan) {
     // we add ApplicationSpanHolder interface to span implementations used in agent via
@@ -146,36 +152,18 @@ public class Bridging {
     return agentAttributes.build();
   }
 
-  // TODO optimize this by storing shaded AttributeKey inside of application AttributeKey instead of
-  // creating every time
-  @SuppressWarnings({"rawtypes"}) // conversion uses raw AttributeKey
+  @SuppressWarnings("rawtypes") // callers use the raw key to bridge VALUE attributes
   @Nullable
   public static AttributeKey toAgent(
-      application.io.opentelemetry.api.common.AttributeKey applicationKey) {
-    switch (applicationKey.getType()) {
-      case STRING:
-        return AttributeKey.stringKey(applicationKey.getKey());
-      case BOOLEAN:
-        return AttributeKey.booleanKey(applicationKey.getKey());
-      case LONG:
-        return AttributeKey.longKey(applicationKey.getKey());
-      case DOUBLE:
-        return AttributeKey.doubleKey(applicationKey.getKey());
-      case STRING_ARRAY:
-        return AttributeKey.stringArrayKey(applicationKey.getKey());
-      case BOOLEAN_ARRAY:
-        return AttributeKey.booleanArrayKey(applicationKey.getKey());
-      case LONG_ARRAY:
-        return AttributeKey.longArrayKey(applicationKey.getKey());
-      case DOUBLE_ARRAY:
-        return AttributeKey.doubleArrayKey(applicationKey.getKey());
-      default:
-        if (applicationKey.getType().name().equals("VALUE")) {
-          return AttributeKey.valueKey(applicationKey.getKey());
-        }
-        logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
-        return null;
+      application.io.opentelemetry.api.common.AttributeKey<?> applicationKey) {
+    AttributeKey<?> agentKey = AGENT_KEY.get(applicationKey);
+    if (agentKey == null) {
+      agentKey = createAgentKey(applicationKey);
+      if (agentKey != null) {
+        AGENT_KEY.set(applicationKey, agentKey);
+      }
     }
+    return agentKey;
   }
 
   public static List<AttributeKey<?>> toAgent(
@@ -208,6 +196,35 @@ public class Bridging {
     TraceStateBuilder agentTraceState = TraceState.builder();
     applicationTraceState.forEach(agentTraceState::put);
     return agentTraceState.build();
+  }
+
+  @Nullable
+  private static AttributeKey<?> createAgentKey(
+      application.io.opentelemetry.api.common.AttributeKey<?> applicationKey) {
+    switch (applicationKey.getType()) {
+      case STRING:
+        return AttributeKey.stringKey(applicationKey.getKey());
+      case BOOLEAN:
+        return AttributeKey.booleanKey(applicationKey.getKey());
+      case LONG:
+        return AttributeKey.longKey(applicationKey.getKey());
+      case DOUBLE:
+        return AttributeKey.doubleKey(applicationKey.getKey());
+      case STRING_ARRAY:
+        return AttributeKey.stringArrayKey(applicationKey.getKey());
+      case BOOLEAN_ARRAY:
+        return AttributeKey.booleanArrayKey(applicationKey.getKey());
+      case LONG_ARRAY:
+        return AttributeKey.longArrayKey(applicationKey.getKey());
+      case DOUBLE_ARRAY:
+        return AttributeKey.doubleArrayKey(applicationKey.getKey());
+      default:
+        if (applicationKey.getType().name().equals("VALUE")) {
+          return AttributeKey.valueKey(applicationKey.getKey());
+        }
+        logger.log(FINE, "unexpected attribute key type: {0}", applicationKey.getType());
+        return null;
+    }
   }
 
   private Bridging() {}
