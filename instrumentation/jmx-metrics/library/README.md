@@ -42,9 +42,9 @@ import java.time.Duration;
 OpenTelemetry openTelemetry = ...;
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
-    // Configure loading embedded metric definitions (optional)
-  .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build()) // load internal metrics for all systems, this will load all internal stable metrics.
-  .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().setIncluded("kafka.*").build()) // opt-in for all `kafka.*` internal unstable metrics
+  // Configure loading bundled metric definitions (optional)
+  .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build()) // load bundled definitions for all systems
+  .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("kafka.*").build()) // opt in to bundled unstable kafka.* metrics
   // Load metrics from classpath resource (optional)
   .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/tomcat.yaml"))
   // Load custom metrics by path (optional)
@@ -62,8 +62,8 @@ jmxTelemetry.start();
 
 | Filter | Description |
 | --- | --- |
-| `setInternalMetricsSystemFilter` | Systems whose bundled rules are loaded, such as `tomcat`. No bundled rules are loaded unless included or excluded patterns are configured. `*` selects all systems. |
-| `setInternalMetricsUnstableMetricsFilter` | Unstable bundled metrics to enable for the selected systems, such as `kafka.*`. No unstable bundled metrics are enabled unless included or excluded patterns are configured. `*` selects all unstable bundled metrics. This filter never applies to custom rules, even when a custom metric has the same name as an unstable bundled metric. |
+| `setBundledMetricsSystemFilter` | Systems whose bundled rules are loaded, such as `tomcat`. No bundled rules are loaded unless included or excluded patterns are configured. `*` selects all systems. |
+| `setUnstableBundledMetricsFilter` | Unstable bundled metrics to enable for the selected systems, such as `kafka.*`. No unstable bundled metrics are enabled unless included or excluded patterns are configured. `*` selects all unstable bundled metrics. This filter never applies to custom rules, even when a custom metric has the same name as an unstable bundled metric. |
 | `setMetrics` | Metrics to collect from both bundled and custom rules. All metrics are collected unless included or excluded patterns are configured. |
 
 Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
