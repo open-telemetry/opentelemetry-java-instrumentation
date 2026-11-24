@@ -58,8 +58,8 @@ context remains the captured caller context regardless of span-ending order.
 
 ## Coverage
 
-When these boundaries change, cover the relevant application request/body generation, response
-consumption including deferred demand, and completion/failure callbacks. Exercise supported inline
-and asynchronous execution, no caller span, custom context values, and restoration of an unrelated
+Cover supported context boundaries for application request/body generation, response consumption
+including deferred demand, and completion/failure callbacks. Exercise supported inline and
+asynchronous execution, no caller span, custom context values, and restoration of an unrelated
 callback-thread context. Verify outgoing propagation and independent outgoing work from callbacks
 without assuming the CLIENT or PRODUCER span is always a leaf.

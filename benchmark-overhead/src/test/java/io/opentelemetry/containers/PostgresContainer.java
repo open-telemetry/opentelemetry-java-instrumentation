@@ -18,21 +18,17 @@ public class PostgresContainer {
   public static final String PASSWORD = "petclinic";
   public static final String USERNAME = "petclinic";
   public static final String DATABASE_NAME = "petclinic";
+  public static final String IMAGE =
+      "postgres@sha256:eb63372c1e05c755f55fa30cbd07aecc443676fc6c0fa90b9002d01537841e1a";
 
   private final Network network;
-  private final String image;
 
   public PostgresContainer(Network network) {
-    this(network, "postgres:9.6.22");
-  }
-
-  public PostgresContainer(Network network, String image) {
     this.network = network;
-    this.image = image;
   }
 
   public PostgreSQLContainer<?> build() throws Exception {
-    return new PostgreSQLContainer<>(image)
+    return new PostgreSQLContainer<>(IMAGE)
         .withNetwork(network)
         .withNetworkAliases("postgres")
         .withLogConsumer(new Slf4jLogConsumer(logger))

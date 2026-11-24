@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS vets (
   id SERIAL,
-  first_name VARCHAR(30),
-  last_name VARCHAR(30),
+  first_name TEXT,
+  last_name TEXT,
   CONSTRAINT pk_vets PRIMARY KEY (id)
 );
 
@@ -12,7 +12,7 @@ ALTER SEQUENCE vets_id_seq RESTART WITH 100;
 
 CREATE TABLE IF NOT EXISTS specialties (
   id SERIAL,
-  name VARCHAR(80),
+  name TEXT,
   CONSTRAINT pk_specialties PRIMARY KEY (id)
 );
 
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS vet_specialties (
 
 CREATE TABLE IF NOT EXISTS types (
   id SERIAL,
-  name VARCHAR(80),
+  name TEXT,
   CONSTRAINT pk_types PRIMARY KEY (id)
 );
 
@@ -43,11 +43,11 @@ ALTER SEQUENCE types_id_seq RESTART WITH 100;
 
 CREATE TABLE IF NOT EXISTS owners (
   id SERIAL,
-  first_name VARCHAR(30),
-  last_name VARCHAR(30),
-  address VARCHAR(255),
-  city VARCHAR(80),
-  telephone VARCHAR(20),
+  first_name TEXT,
+  last_name TEXT,
+  address TEXT,
+  city TEXT,
+  telephone VARCHAR(10) NOT NULL,
   CONSTRAINT pk_owners PRIMARY KEY (id)
 );
 
@@ -58,8 +58,8 @@ ALTER SEQUENCE owners_id_seq RESTART WITH 100;
 
 CREATE TABLE IF NOT EXISTS pets (
   id SERIAL,
-  name VARCHAR(30),
-  birth_date DATE,
+  name TEXT NOT NULL,
+  birth_date DATE NOT NULL,
   type_id INT NOT NULL,
   owner_id INT NOT NULL,
   FOREIGN KEY (owner_id) REFERENCES owners(id),
@@ -75,8 +75,8 @@ ALTER SEQUENCE pets_id_seq RESTART WITH 100;
 CREATE TABLE IF NOT EXISTS visits (
   id SERIAL,
   pet_id INT NOT NULL,
-  visit_date DATE,
-  description VARCHAR(255),
+  visit_date DATE NOT NULL,
+  description TEXT NOT NULL,
   FOREIGN KEY (pet_id) REFERENCES pets(id),
   CONSTRAINT pk_visits PRIMARY KEY (id)
 );
@@ -85,7 +85,7 @@ ALTER SEQUENCE visits_id_seq RESTART WITH 100;
 
 CREATE TABLE IF NOT EXISTS users (
   username VARCHAR(20) NOT NULL ,
-  password VARCHAR(20) NOT NULL ,
+  password VARCHAR(60) NOT NULL ,
   enabled boolean NOT NULL DEFAULT true ,
   CONSTRAINT pk_users PRIMARY KEY (username)
 );

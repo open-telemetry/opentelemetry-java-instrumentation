@@ -35,6 +35,9 @@ import java.util.logging.Logger;
 /** Builder for {@link JmxTelemetry} */
 public final class JmxTelemetryBuilder {
 
+  private static final IncludeExclude EXCLUDE_ALL =
+      IncludeExclude.builder().setExcluded("*").build();
+
   private static final Logger logger = Logger.getLogger(JmxTelemetryBuilder.class.getName());
 
   private final OpenTelemetry openTelemetry;
@@ -47,11 +50,9 @@ public final class JmxTelemetryBuilder {
   private IncludeExclude metrics = IncludeExclude.builder().build();
 
   // exclude all systems by default
-  private IncludeExclude internalMetricsSystemFilter =
-      IncludeExclude.builder().setExcluded("*").build();
+  private IncludeExclude internalMetricsSystemFilter = EXCLUDE_ALL;
   // exclude all unstable metrics by default
-  private IncludeExclude internalMetricsUnstableMetricsFilter =
-      IncludeExclude.builder().setExcluded("*").build();
+  private IncludeExclude internalMetricsUnstableMetricsFilter = EXCLUDE_ALL;
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -120,9 +121,9 @@ public final class JmxTelemetryBuilder {
    * Configures which JMX metrics are collected.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
-   * of characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns collects every metric that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector collects every metric.
+   * of characters, including none. Excluded patterns take precedence over included patterns. All
+   * metrics are collected unless included or excluded patterns are configured. If only excluded
+   * patterns are configured, every other metric is collected.
    *
    * @param metrics metric names to include and exclude
    * @return builder instance
@@ -136,12 +137,18 @@ public final class JmxTelemetryBuilder {
   /**
    * Configure which systems should have their internal metrics automatically registered.
    *
+   * <p>No systems are registered unless included or excluded patterns are configured; an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an unset one. Include
+   * {@code "*"} to select all systems. If only excluded patterns are configured, every other system
+   * is selected.
+   *
    * @param systemFilter system filter
    * @return this
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
-    internalMetricsSystemFilter = requireNonNull(systemFilter, "systemFilter");
+    requireNonNull(systemFilter, "systemFilter");
+    internalMetricsSystemFilter = systemFilter.isEmpty() ? EXCLUDE_ALL : systemFilter;
     return this;
   }
 
@@ -149,12 +156,18 @@ public final class JmxTelemetryBuilder {
    * Configure which unstable internal metrics should be enabled, unless enabled they are
    * filtered-out.
    *
+   * <p>No unstable internal metrics are enabled unless included or excluded patterns are
+   * configured; an {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an
+   * unset one. Include {@code "*"} to select all unstable internal metrics. If only excluded
+   * patterns are configured, every other unstable internal metric is selected.
+   *
    * @param metricsFilter metric filter
    * @return this
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
-    internalMetricsUnstableMetricsFilter = requireNonNull(metricsFilter, "metricsFilter");
+    requireNonNull(metricsFilter, "metricsFilter");
+    internalMetricsUnstableMetricsFilter = metricsFilter.isEmpty() ? EXCLUDE_ALL : metricsFilter;
     return this;
   }
 
