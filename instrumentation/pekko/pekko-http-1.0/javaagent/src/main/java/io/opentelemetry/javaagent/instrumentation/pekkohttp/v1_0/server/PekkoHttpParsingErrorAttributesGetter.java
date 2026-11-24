@@ -98,16 +98,14 @@ class PekkoHttpParsingErrorAttributesGetter
   @Override
   public String getNetworkProtocolName(
       PekkoHttpParsingErrorRequest request, @Nullable HttpResponse response) {
-    String protocol = request.protocol();
-    return protocol != null ? HttpProtocolUtil.getProtocol(protocol) : null;
+    return HttpProtocolUtil.getProtocol(request.protocol());
   }
 
   @Nullable
   @Override
   public String getNetworkProtocolVersion(
       PekkoHttpParsingErrorRequest request, @Nullable HttpResponse response) {
-    String protocol = request.protocol();
-    return protocol != null ? HttpProtocolUtil.getVersion(protocol) : null;
+    return HttpProtocolUtil.getVersion(request.protocol());
   }
 
   /**

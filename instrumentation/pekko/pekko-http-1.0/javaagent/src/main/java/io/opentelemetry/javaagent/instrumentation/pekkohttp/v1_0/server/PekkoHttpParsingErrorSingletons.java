@@ -86,7 +86,7 @@ public class PekkoHttpParsingErrorSingletons {
     PARSING_ERROR.set(info, null);
 
     PekkoHttpParsingErrorRequest request =
-        new PekkoHttpParsingErrorRequest(info, method, rawRequestTarget, protocol);
+        new PekkoHttpParsingErrorRequest(method, rawRequestTarget, protocol);
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return null;
