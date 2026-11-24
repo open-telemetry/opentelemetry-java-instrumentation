@@ -1,1 +1,1 @@
-{"path": ".github/instructions/configuration.instructions.md", "text": "An empty selector has no patterns in either list. Treat it as absent and use the setting's own\ndefault; `IncludeExclude.isEmpty()` identifies it. This matches flat configuration, which cannot\ndistinguish empty values from unset values."}
+{"path": ".github/instructions/configuration.instructions.md", "text": "For a none-by-default setting, document select-all as `included: [\"*\"]`, or `included=*` in flat\nconfiguration. Flat configuration cannot express a present selector with no included patterns."}
