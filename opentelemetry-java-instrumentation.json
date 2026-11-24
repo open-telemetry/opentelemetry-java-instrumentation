@@ -1,1 +1,1 @@
-{"path": ".github/instructions/configuration.instructions.md", "text": "The setting's baseline determines what absence means:"}
+{"path": ".github/instructions/configuration.instructions.md", "text": "An empty selector has no patterns in either list. Treat it as absent and use the setting's own\ndefault; `IncludeExclude.isEmpty()` identifies it. This matches flat configuration, which cannot\ndistinguish empty values from unset values."}
