@@ -75,7 +75,7 @@ class SpringAwsSqsBatchProcessAttributesGetter
 
   @Override
   public Long getBatchMessageCount(SpringAwsSqsBatchProcessRequest request, @Nullable Void unused) {
-    return (long) request.getMessages().size();
+    return (long) request.getMessageCount();
   }
 
   // headers are the sqs message attributes, not the spring message headers, which also carry

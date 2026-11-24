@@ -5,32 +5,25 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
-import static java.util.Collections.unmodifiableList;
-
 import io.opentelemetry.instrumentation.awssdk.v2_2.internal.SqsMessage;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import org.springframework.messaging.Message;
 import software.amazon.awssdk.core.interceptor.ExecutionAttributes;
 
 class SpringAwsSqsBatchProcessRequest {
-  private final List<Message<?>> messages;
+  private final int messageCount;
   private final List<SqsMessage> sqsMessages;
   private final ExecutionAttributes receiveRequest;
 
   SpringAwsSqsBatchProcessRequest(
-      Collection<? extends Message<?>> messages,
-      List<SqsMessage> sqsMessages,
-      ExecutionAttributes receiveRequest) {
-    // the listener receives the same collection and may modify it before processing completes
-    this.messages = unmodifiableList(new ArrayList<>(messages));
+      int messageCount, List<SqsMessage> sqsMessages, ExecutionAttributes receiveRequest) {
+    // captured eagerly since the listener may modify the batch before processing completes
+    this.messageCount = messageCount;
     this.sqsMessages = sqsMessages;
     this.receiveRequest = receiveRequest;
   }
 
-  List<Message<?>> getMessages() {
-    return messages;
+  int getMessageCount() {
+    return messageCount;
   }
 
   // the sqs messages of the batch that carry tracing state

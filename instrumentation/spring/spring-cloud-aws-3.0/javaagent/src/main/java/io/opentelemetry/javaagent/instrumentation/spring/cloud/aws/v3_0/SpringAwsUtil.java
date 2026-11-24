@@ -143,7 +143,8 @@ public class SpringAwsUtil {
 
     Instrumenter<SpringAwsSqsBatchProcessRequest, Void> instrumenter = batchProcessInstrumenter();
     SpringAwsSqsBatchProcessRequest request =
-        new SpringAwsSqsBatchProcessRequest(messages, sqsMessages, tracingContexts.get(0).request);
+        new SpringAwsSqsBatchProcessRequest(
+            messages.size(), sqsMessages, tracingContexts.get(0).request);
     Context parentContext = Context.current();
     Context context =
         instrumenter.shouldStart(parentContext, request)
