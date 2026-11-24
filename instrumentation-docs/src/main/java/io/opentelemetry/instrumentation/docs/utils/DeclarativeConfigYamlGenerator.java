@@ -517,7 +517,7 @@ public class DeclarativeConfigYamlGenerator {
     if (value instanceof Boolean || value instanceof Number) {
       return value.toString();
     }
-    if (value instanceof Map<?,?> map && map.isEmpty()) {
+    if (value instanceof Map<?, ?> map && map.isEmpty()) {
       return "{}";
     }
     return String.valueOf(value);
