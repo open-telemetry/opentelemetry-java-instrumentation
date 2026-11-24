@@ -21,8 +21,9 @@ configurations:
     declarative_name: java.runtime_telemetry.jfr_metrics/development.included
     description: >
       Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob
-      patterns with * and ?. Configuring either JFR metric selector property activates JFR. Use *
-      to select all metrics.
+      patterns with * and ?. Configuring either JFR metric selector property activates JFR. No
+      metrics are sourced from JFR unless included or excluded patterns are configured. Use * to
+      select all metrics.
     type: list
     default: ""
     examples:
@@ -30,10 +31,10 @@ configurations:
   - name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
     declarative_name: java.runtime_telemetry.jfr_metrics/development.excluded
     description: >
-      Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with * and
-      ?. Excluded patterns take precedence over included patterns, including over experimental JFR
-      shorthand selections. Configuring this property without included selects all metrics except those
-      excluded.
+      Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with *
+      and ?. Excluded patterns take precedence over included patterns, including over experimental
+      JFR shorthand selections. If only excluded patterns are configured, all other metrics that JFR
+      supports are sourced from JFR.
     type: list
     default: ""
     examples:
