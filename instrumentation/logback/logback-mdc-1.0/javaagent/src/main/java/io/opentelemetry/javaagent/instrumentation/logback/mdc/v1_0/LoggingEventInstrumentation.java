@@ -21,7 +21,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import io.opentelemetry.api.baggage.Baggage;
-import io.opentelemetry.api.baggage.BaggageEntry;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
@@ -94,13 +93,10 @@ class LoggingEventInstrumentation implements TypeInstrumentation {
       if (ADD_BAGGAGE) {
         Baggage baggage = Baggage.fromContext(context);
 
-        // using a lambda here does not play nicely with instrumentation bytecode process
-        // (Java 6 related errors are observed) so relying on for loop instead
-        for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
-          spanContextData.put(
-              // prefix all baggage values to avoid clashes with existing context
-              "baggage." + entry.getKey(), entry.getValue().getValue());
-        }
+        baggage.forEach((key, value) ->
+            spanContextData.put(
+                // prefix all baggage values to avoid clashes with existing context
+                "baggage." + key, value.getValue()));
       }
 
       return spanContextData;
