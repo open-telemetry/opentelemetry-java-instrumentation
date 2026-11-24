@@ -55,7 +55,8 @@ public class ContextDispatcher implements Dispatcher {
       } else {
         Context context = payload.extract();
         SpanContext spanContext = Span.fromContext(context).getSpanContext();
-        ThreadLocalContext.INSTANCE.set(spanContext.isValid() ? context : null);
+        ThreadLocalContext.INSTANCE.set(
+            spanContext.isValid() ? payload.extract(Context.current()) : null);
       }
     }
 

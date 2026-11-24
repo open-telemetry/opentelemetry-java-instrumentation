@@ -93,9 +93,13 @@ public class ContextPayload {
   }
 
   public Context extract() {
+    return extract(Context.root());
+  }
+
+  public Context extract(Context parentContext) {
     return GlobalOpenTelemetry.getPropagators()
         .getTextMapPropagator()
-        .extract(Context.root(), this, ContextPayloadGetter.INSTANCE);
+        .extract(parentContext, this, ContextPayloadGetter.INSTANCE);
   }
 
   private enum ContextPayloadGetter implements TextMapGetter<ContextPayload> {
