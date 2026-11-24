@@ -135,13 +135,12 @@ class SuppressionTest {
         assertThat(dropped).isInstanceOf(OpenTelemetryInstrument.class);
         assertThat(reader.collectAllMetrics())
             .singleElement()
-            .satisfies(
-                metric -> {
-                  assertThat(metric.getName()).isEqualTo("mapped_keep");
-                  assertThat(metric.getDoubleSumData().getPoints())
-                      .singleElement()
-                      .satisfies(point -> assertThat(point.getValue()).isEqualTo(3));
-                });
+            .satisfies(metric -> {
+              assertThat(metric.getName()).isEqualTo("mapped_keep");
+              assertThat(metric.getDoubleSumData().getPoints())
+                  .singleElement()
+                  .satisfies(point -> assertThat(point.getValue()).isEqualTo(3));
+            });
       } finally {
         registry.close();
       }

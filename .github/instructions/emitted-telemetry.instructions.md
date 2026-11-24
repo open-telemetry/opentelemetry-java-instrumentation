@@ -116,11 +116,11 @@ attributes alone do not justify a schema URL on a custom operation.
 
 ## Conformance evidence and coverage
 
-A conformance conclusion identifies the exact requirement in the adopted version, the changed
-behavior, its observable consequence, and the expected behavior or justified exception. Do not
-infer a rule from memory or another convention version.
+A conformance finding cites the exact requirement in the adopted semantic convention, describes
+the observable telemetry behavior, and explains the expected behavior or applicable exception.
+Do not infer a rule from memory or another convention version.
 
-Add observable telemetry tests for changed normative behavior, including relevant conditional
+Verify normative behavior with observable telemetry tests, including relevant conditional
 requirements, default/opt-in modes, domain-specific errors, and required redaction. There is no
 requirement for a unit test per convention field or an omission test solely because a feature is
 `MAY`.

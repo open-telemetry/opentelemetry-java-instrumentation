@@ -4,14 +4,15 @@ applyTo: "**/*.java,**/*.kt,**/*.scala"
 
 # Java, Kotlin, and Scala tests
 
-Apply behavior-coverage rules when the corresponding production behavior changes.
+Apply behavior-coverage rules to supported production behavior.
 The remaining sections apply to test code and shared testing modules.
 
 ## Behavior coverage
 
 - Cover instrumentation behavior primarily through integration tests using normal library APIs,
-  real services where relevant, and emitted-telemetry assertions. For javaagent changes, use the
-  installed agent against the required library versions to verify transformation and compatibility.
+  real services where relevant, and emitted-telemetry assertions. For javaagent instrumentation,
+  use the installed agent against the required library versions to verify transformation and
+  compatibility.
 - Keep library and javaagent instrumentation tests separate. Do not activate both for the same
   library in one JVM. Cross-process tests may use different forms in different processes to verify
   context propagation.
@@ -26,30 +27,29 @@ The remaining sections apply to test code and shared testing modules.
   injection/isolation, or reflective behavior itself.
 - Test supported behavior. Do not add tests that only prove
   removed settings are ignored, or preview variants that repeat the same behavior.
-  When configuration wiring changes, test the real initialization path and emitted
-  telemetry, not just helpers.
+  For configuration wiring, test the real initialization path and emitted telemetry,
+  not just helpers.
 - Do not add historical-absence assertions merely because telemetry
   or functionality was removed or made opt-in. An absence assertion must verify
   a supported contract that would merit testing even if the previous behavior
   had never existed; do not mechanically replace old presence assertions with
   absence assertions in unrelated integration or smoke tests. Keep focused
-  coverage for supported settings, changed defaults, explicit opt-in/opt-out,
+  coverage for supported settings and defaults, explicit opt-in/opt-out,
   and default enablement, as well as exact assertions of supported telemetry.
 - Instrumentation selectors such as `otel.instrumentation.<name>.enabled`
   are escape hatches for buggy instrumentation, not general telemetry-tuning
-  settings. Do not add per-instrumentation selector tests for new
-  modules, aliases, renames, or consolidations. This includes module name-list
-  assertions, enable/disable matrices, precedence, legacy-name handling,
-  flat/YAML parity, warning checks, and dedicated JVM variants or test projects.
-  Test shared enablement or alias-helper changes centrally. Keep coverage for
-  actual default-enablement changes, feature settings, and
-  instrumentation behavior; tests may use selectors to isolate that behavior.
+  settings. Do not use per-instrumentation tests to verify generic selector behavior or
+  alias wiring. This includes module name-list assertions, enable/disable matrices, precedence,
+  legacy-name handling, flat/YAML parity, warning checks, and dedicated JVM variants or test
+  projects. Test shared enablement and alias-helper behavior centrally. Keep coverage for actual
+  default enablement, feature settings, and instrumentation behavior; tests may use selectors to
+  isolate that behavior.
 
 ## General patterns
 
 - In Java, keep JUnit test classes and test methods package-private unless broader visibility is
   required.
-- Use AssertJ (`assertThat(...)`) for assertions in new test code. Do not
+- Use AssertJ (`assertThat(...)`) for assertions in test code. Do not
   use JUnit `Assert.*` or Hamcrest `assertThat`.
 - In Java tests that statically import
   `io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat`, do not also import

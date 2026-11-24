@@ -118,28 +118,24 @@ class JvmMetricsDeduplicationDefaultTest {
         System.gc();
         // An empty bridge export is meaningful only after Micrometer received a GC notification.
         await()
-            .untilAsserted(
-                () ->
-                    assertThat(otherRegistry.find("jvm.gc.pause").timers())
-                        .anySatisfy(timer -> assertThat(timer.count()).isPositive()));
+            .untilAsserted(() ->
+                assertThat(otherRegistry.find("jvm.gc.pause").timers())
+                    .anySatisfy(timer -> assertThat(timer.count()).isPositive()));
         assertThat(Metrics.globalRegistry.find("jvm.gc.pause").timers())
             .anySatisfy(timer -> assertThat(timer.count()).isPositive());
         testing.waitAndAssertMetrics(
             RUNTIME_TELEMETRY_SCOPE,
             "jvm.gc.duration",
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric.getHistogramData().getPoints())
-                            .anySatisfy(point -> assertThat(point.getCount()).isPositive())));
+                metrics.anySatisfy(metric ->
+                    assertThat(metric.getHistogramData().getPoints())
+                        .anySatisfy(point -> assertThat(point.getCount()).isPositive())));
         assertThat(testing.metrics())
             .filteredOn(
                 metric -> metric.getInstrumentationScopeInfo().getName().equals(MICROMETER_SCOPE))
             .extracting(MetricData::getName)
-            .noneMatch(
-                name ->
-                    name.startsWith("jvm.gc.pause")
-                        || name.startsWith("jvm.gc.concurrent.phase.time"));
+            .noneMatch(name ->
+                name.startsWith("jvm.gc.pause") || name.startsWith("jvm.gc.concurrent.phase.time"));
       } finally {
         Metrics.removeRegistry(otherRegistry);
         otherRegistry.close();
