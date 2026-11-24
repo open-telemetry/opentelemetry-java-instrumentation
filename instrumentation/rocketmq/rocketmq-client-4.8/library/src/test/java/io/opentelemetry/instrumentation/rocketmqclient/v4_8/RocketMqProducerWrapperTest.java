@@ -12,7 +12,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_MESSAGE_ID;
@@ -256,8 +255,7 @@ class RocketMqProducerWrapperTest {
                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2),
-                    equalTo(SERVER_ADDRESS, "ns.example"),
-                    equalTo(SERVER_PORT, 9876),
+                    equalTo(SERVER_ADDRESS, "ns.example:9876"),
                     equalTo(ERROR_TYPE, MQClientException.class.getName()))));
   }
 
@@ -285,8 +283,7 @@ class RocketMqProducerWrapperTest {
                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2),
-                    equalTo(SERVER_ADDRESS, "ns.example"),
-                    equalTo(SERVER_PORT, 9876),
+                    equalTo(SERVER_ADDRESS, "ns.example:9876"),
                     equalTo(ERROR_TYPE, MQClientException.class.getName()))));
   }
 
@@ -509,8 +506,7 @@ class RocketMqProducerWrapperTest {
                         equalTo(MESSAGING_OPERATION_NAME, "send"),
                         equalTo(MESSAGING_OPERATION_TYPE, "send"),
                         equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
-                        equalTo(SERVER_ADDRESS, "ns.example"),
-                        equalTo(SERVER_PORT, 9876),
+                        equalTo(SERVER_ADDRESS, "ns.example:9876"),
                         equalTo(NETWORK_PEER_ADDRESS, "localhost"),
                         equalTo(NETWORK_PEER_PORT, 10911),
                         equalTo(MESSAGING_MESSAGE_ID, null))));

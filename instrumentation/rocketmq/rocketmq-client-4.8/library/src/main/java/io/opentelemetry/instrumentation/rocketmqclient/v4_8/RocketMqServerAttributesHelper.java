@@ -6,10 +6,8 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
@@ -33,7 +31,7 @@ final class RocketMqServerAttributesHelper {
       return Attributes.empty();
     }
 
-    ServerTargetBuilder builder = ServerTarget.builder();
+    ServerTargetBuilder builder = ServerTarget.builder().setPortAlwaysInline(true);
     for (String endpoint : namesrvAddr.split(";")) {
       int separator = endpoint.lastIndexOf(':');
       if (separator <= 0) {
@@ -53,16 +51,7 @@ final class RocketMqServerAttributesHelper {
     }
 
     ServerTarget target = builder.build();
-    if (target == null) {
-      return Attributes.empty();
-    }
-    AttributesBuilder attributes = Attributes.builder();
-    attributes.put(SERVER_ADDRESS, target.getAddress());
-    Integer port = target.getPort();
-    if (port != null) {
-      attributes.put(SERVER_PORT, port);
-    }
-    return attributes.build();
+    return target == null ? Attributes.empty() : Attributes.of(SERVER_ADDRESS, target.getAddress());
   }
 
   static Attributes getProducerAttributes(@Nullable DefaultMQProducerImpl producer) {

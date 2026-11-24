@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
@@ -20,33 +19,29 @@ class RocketMqServerAttributesHelperTest {
 
   @ParameterizedTest
   @MethodSource("targets")
-  void formatsConfiguredNameServers(String configured, String address, Long port) {
+  void formatsConfiguredNameServers(String configured, String address) {
     assertThat(RocketMqServerAttributesHelper.createAttributes(configured))
-        .isEqualTo(
-            Attributes.builder().put(SERVER_ADDRESS, address).put(SERVER_PORT, port).build());
+        .isEqualTo(Attributes.of(SERVER_ADDRESS, address));
   }
 
   private static Stream<Arguments> targets() {
     return Stream.of(
-        argumentSet("single", "ns.example:9876", "ns.example", 9876L),
-        argumentSet("IPv4", "127.0.0.1:9876", "127.0.0.1", 9876L),
-        argumentSet("bracketed IPv6", "[2001:db8::1]:9876", "2001:db8::1", 9876L),
-        argumentSet("unbracketed IPv6", "2001:db8::1:9876", "2001:db8::1", 9876L),
+        argumentSet("single", "ns.example:9876", "ns.example:9876"),
+        argumentSet("IPv4", "127.0.0.1:9876", "127.0.0.1:9876"),
+        argumentSet("bracketed IPv6", "[2001:db8::1]:9876", "[2001:db8::1]:9876"),
+        argumentSet("unbracketed IPv6", "2001:db8::1:9876", "[2001:db8::1]:9876"),
         argumentSet(
             "order and duplicate endpoints",
             "ns-b:9876;ns-a:9877;ns-b:9876",
-            "ns-b:9876,ns-a:9877,ns-b:9876",
-            null),
+            "ns-b:9876,ns-a:9877,ns-b:9876"),
         argumentSet(
             "multiple IPv6 endpoints",
             "[2001:db8::1]:9876;2001:db8::2:9877",
-            "[2001:db8::1]:9876,[2001:db8::2]:9877",
-            null),
+            "[2001:db8::1]:9876,[2001:db8::2]:9877"),
         argumentSet(
             "bounded list",
             "ns1:9876;ns2:9876;ns3:9876;ns4:9876;ns5:9876;ns6:9876",
-            "ns1:9876,ns2:9876,ns3:9876,ns4:9876,ns5:9876",
-            null));
+            "ns1:9876,ns2:9876,ns3:9876,ns4:9876,ns5:9876"));
   }
 
   @ParameterizedTest

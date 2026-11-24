@@ -11,7 +11,6 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
@@ -63,8 +62,8 @@ class RocketMqTelemetryTest {
     send(secondHook, second, "second");
 
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> assertSend(span, "first", "ns-a", 9876)),
-        trace -> trace.hasSpansSatisfyingExactly(span -> assertSend(span, "second", "ns-b", 9877)));
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertSend(span, "first", "ns-a:9876")),
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertSend(span, "second", "ns-b:9877")));
   }
 
   private static DefaultMQProducer producer(String namesrvAddr) {
@@ -93,7 +92,7 @@ class RocketMqTelemetryTest {
     hook.sendMessageAfter(request);
   }
 
-  private static void assertSend(SpanDataAssert span, String topic, String server, int port) {
+  private static void assertSend(SpanDataAssert span, String topic, String server) {
     span.hasName("send " + topic)
         .hasKind(PRODUCER)
         .hasAttributesSatisfyingExactly(
@@ -102,7 +101,6 @@ class RocketMqTelemetryTest {
             equalTo(MESSAGING_OPERATION_NAME, "send"),
             equalTo(MESSAGING_OPERATION_TYPE, "send"),
             equalTo(SERVER_ADDRESS, server),
-            equalTo(SERVER_PORT, port),
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_PEER_PORT, 10911));
   }
@@ -122,10 +120,9 @@ class RocketMqTelemetryTest {
     consume(secondHook, "second");
 
     testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertProcess(span, "first", "ns-a:9876")),
         trace ->
-            trace.hasSpansSatisfyingExactly(span -> assertProcess(span, "first", "ns-a", 9876L)),
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> assertProcess(span, "second", "ns-b", 9877L)));
+            trace.hasSpansSatisfyingExactly(span -> assertProcess(span, "second", "ns-b:9877")));
   }
 
   @Test
@@ -136,7 +133,7 @@ class RocketMqTelemetryTest {
     consume(hook, "topic");
 
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> assertProcess(span, "topic", null, null)));
+        trace -> trace.hasSpansSatisfyingExactly(span -> assertProcess(span, "topic", null)));
   }
 
   private static void consume(ConsumeMessageHook hook, String topic) throws UnknownHostException {
@@ -153,7 +150,7 @@ class RocketMqTelemetryTest {
     hook.consumeMessageAfter(request);
   }
 
-  private static void assertProcess(SpanDataAssert span, String topic, String server, Long port) {
+  private static void assertProcess(SpanDataAssert span, String topic, String server) {
     span.hasName("process " + topic)
         .hasKind(CONSUMER)
         .hasAttributesSatisfyingExactly(
@@ -163,7 +160,6 @@ class RocketMqTelemetryTest {
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(MESSAGING_CONSUMER_GROUP_NAME, "consumer-group"),
             equalTo(SERVER_ADDRESS, server),
-            equalTo(SERVER_PORT, port),
             equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
             equalTo(NETWORK_PEER_PORT, 10911));
   }

@@ -13,7 +13,6 @@ import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
-import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
@@ -95,8 +94,7 @@ class RocketMqInstrumenterFactoryTest {
                     equalTo(MESSAGING_DESTINATION_NAME, "topic"),
                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                    equalTo(SERVER_ADDRESS, "ns.example"),
-                    equalTo(SERVER_PORT, 9876),
+                    equalTo(SERVER_ADDRESS, "ns.example:9876"),
                     equalTo(NETWORK_PEER_ADDRESS, "broker.example"),
                     equalTo(NETWORK_PEER_PORT, 10911),
                     equalTo(
@@ -152,8 +150,7 @@ class RocketMqInstrumenterFactoryTest {
     Context context = instrumenter.start(Context.root(), request);
     ReadableSpan startedSpan = (ReadableSpan) Span.fromContext(context);
     assertThat(startedSpan.toSpanData().getAttributes().get(SERVER_ADDRESS))
-        .isEqualTo("ns.example");
-    assertThat(startedSpan.toSpanData().getAttributes().get(SERVER_PORT)).isEqualTo(9876L);
+        .isEqualTo("ns.example:9876");
     assertThat(startedSpan.toSpanData().getAttributes().get(NETWORK_PEER_ADDRESS)).isNull();
     assertThat(startedSpan.toSpanData().getAttributes().get(NETWORK_PEER_PORT)).isNull();
 
@@ -180,8 +177,7 @@ class RocketMqInstrumenterFactoryTest {
                     equalTo(MESSAGING_OPERATION_NAME, "send"),
                     equalTo(MESSAGING_OPERATION_TYPE, "send"),
                     equalTo(MESSAGING_BATCH_MESSAGE_COUNT, batchCount),
-                    equalTo(SERVER_ADDRESS, "ns.example"),
-                    equalTo(SERVER_PORT, 9876),
+                    equalTo(SERVER_ADDRESS, "ns.example:9876"),
                     equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
                     equalTo(NETWORK_PEER_PORT, expectedPort))));
   }
@@ -217,8 +213,7 @@ class RocketMqInstrumenterFactoryTest {
                     equalTo(
                         MESSAGING_BATCH_MESSAGE_COUNT,
                         messages.size() > 1 ? (long) messages.size() : null),
-                    equalTo(SERVER_ADDRESS, "ns.example"),
-                    equalTo(SERVER_PORT, 9876),
+                    equalTo(SERVER_ADDRESS, "ns.example:9876"),
                     equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
                     equalTo(NETWORK_PEER_PORT, expectedPort))));
   }
