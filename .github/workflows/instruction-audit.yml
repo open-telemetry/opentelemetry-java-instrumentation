@@ -21,7 +21,7 @@ jobs:
       actions: write
       contents: write
       copilot-requests: write
-    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@5e1e448c1c0e638bc714dce85e47ba227ace550a
+    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@b38cc8829271c7f1757688df0909ed321f7c8629
     with:
       publish: ${{ inputs.publish }}
       continuation: ${{ inputs.continuation }}
