@@ -132,7 +132,7 @@ class Jedis23ReplyIsolationTest {
         .satisfies(error -> assertThat((Throwable) error).hasMessageContaining("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
     assertNestedErrors(nestedErrors);
-    assertBatchErrorType("WRONGTYPE", "PIPELINE");
+    assertBatchErrorType(JedisDataException.class.getName(), "PIPELINE");
   }
 
   @ParameterizedTest
@@ -174,7 +174,7 @@ class Jedis23ReplyIsolationTest {
         .satisfies(error -> assertThat((Throwable) error).hasMessageContaining("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
     assertNestedErrors(nestedErrors);
-    assertBatchErrorType("WRONGTYPE", "MULTI");
+    assertBatchErrorType(JedisDataException.class.getName(), "MULTI");
   }
 
   @ParameterizedTest
