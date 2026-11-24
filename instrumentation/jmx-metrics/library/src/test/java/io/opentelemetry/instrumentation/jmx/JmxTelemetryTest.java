@@ -220,6 +220,9 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
     if (emptySelectors) {
       builder
+          .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
+          .setInternalMetricsUnstableMetricsFilter(
+              IncludeExclude.builder().setIncluded("*").build())
           .setInternalMetricsSystemFilter(IncludeExclude.builder().build())
           .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
     }
