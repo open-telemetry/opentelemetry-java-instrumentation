@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -86,8 +87,11 @@ public abstract class AbstractMongoClientTest<T> {
 
   protected abstract InstrumentationExtension testing();
 
-  protected static boolean capturesQueryText() {
-    return Boolean.getBoolean("otel.instrumentation.mongo.capture-query-text");
+  protected boolean capturesQueryText() {
+    return Boolean.getBoolean(
+        testing() instanceof AgentInstrumentationExtension
+            ? "otel.instrumentation.mongo.capture-query-text"
+            : "test.captureQueryText");
   }
 
   protected boolean supportsNetworkPeer() {

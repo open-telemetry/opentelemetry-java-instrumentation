@@ -5,12 +5,21 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+
 import com.mongodb.client.MongoClient;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
+import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.testcontainers.junit.jupiter.Container;
@@ -43,6 +52,8 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
 
   @BeforeEach
   void setUpContext() {
+    // Closing an application context shuts down its exporters.
+    SpringSmokeTestRunner.resetExporters();
     contextRunner =
         new ApplicationContextRunner()
             .withAllowBeanDefinitionOverriding(true)
@@ -55,9 +66,51 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
             .withPropertyValues(getMongoUriProperty() + "=" + container.getReplicaSetUrl());
   }
 
+  @Test
+  void omitsQueryTextByDefault() {
+    assertMongoQueryText(contextRunner, equalTo(DB_QUERY_TEXT, null));
+  }
+
+  @Test
+  void capturesSanitizedQueryTextWhenEnabled() {
+    assertMongoQueryText(
+        contextRunner.withPropertyValues("otel.instrumentation.mongo.capture-query-text=true"),
+        satisfies(
+            DB_QUERY_TEXT,
+            value ->
+                value
+                    .isNotNull()
+                    .satisfies(queryText ->
+                        assertThat(Document.parse(queryText).get("filter", Document.class))
+                            .isEqualTo(new Document("item", "?")))));
+  }
+
+  private void assertMongoQueryText(
+      ApplicationContextRunner runner, AttributeAssertion queryTextAssertion) {
+    runMongoClientTest(
+        runner,
+        () -> {
+          mongoClient
+              .getDatabase("test")
+              .runCommand(
+                  new Document("find", "items")
+                      .append("filter", new Document("item", "example-value")));
+
+          testing.waitAndAssertTraces(trace ->
+              trace.hasSpansSatisfyingExactly(span ->
+                  span.hasKind(SpanKind.CLIENT)
+                      .hasName("find items")
+                      .hasAttributesSatisfying(queryTextAssertion)));
+        });
+  }
+
   @Override
   protected void runMongoClientTest(Runnable runnable) {
-    contextRunner.run(applicationContext -> {
+    runMongoClientTest(contextRunner, runnable);
+  }
+
+  private void runMongoClientTest(ApplicationContextRunner runner, Runnable runnable) {
+    runner.run(applicationContext -> {
       testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
       mongoClient = applicationContext.getBean(MongoClient.class);
 

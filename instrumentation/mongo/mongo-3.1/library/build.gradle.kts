@@ -28,7 +28,7 @@ testing.suites {
 
     register("QueryText") {
       filter.includeTestsMatching("*MongoClientTest")
-      systemProperty("otel.instrumentation.mongo.capture-query-text", "true")
+      systemProperty("test.captureQueryText", "true")
       systemProperty("metadataConfig", "MongoTelemetryBuilder.setCaptureQueryText(true)")
     }
   }
