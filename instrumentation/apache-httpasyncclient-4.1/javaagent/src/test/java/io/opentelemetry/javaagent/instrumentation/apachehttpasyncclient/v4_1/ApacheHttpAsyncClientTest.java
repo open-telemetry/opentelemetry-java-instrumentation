@@ -153,13 +153,10 @@ class ApacheHttpAsyncClientTest {
         InetSocketAddress proxyAddress)
         throws Exception {
       String host = uri.getHost();
-      byte[] addressBytes = InetAddress.getByName(host).getAddress();
-
-      // Store the host to avoid reverse DNS when HttpCore 4.4 calls InetAddress.getHostName().
-      InetAddress targetAddress = InetAddress.getByAddress(host, addressBytes);
 
       // Use an explicit destination IP to catch it being incorrectly reported as the network peer.
-      HttpHost target = new HttpHost(targetAddress, uri.getPort(), uri.getScheme());
+      HttpHost target =
+          new HttpHost(InetAddress.getByName(host), host, uri.getPort(), uri.getScheme());
 
       HttpClientContext context = HttpClientContext.create();
       context.setRequestConfig(

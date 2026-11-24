@@ -16,6 +16,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -132,8 +133,7 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
       this.target = target;
     }
 
-    public synchronized void start(
-        HttpRequest httpRequest, @Nullable ApacheHttpClientRequest.NetworkPeer peer) {
+    public synchronized void start(HttpRequest httpRequest, @Nullable InetSocketAddress peer) {
       if (started || ended) {
         return;
       }
@@ -198,8 +198,7 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
-      ApacheHttpClientRequest.NetworkPeer peer =
-          ApacheHttpClientRequest.captureNetworkPeer(httpContext);
+      InetSocketAddress peer = ApacheHttpClientRequest.captureNetworkPeer(httpContext);
       HttpRequest request = delegate.generateRequest();
       if (request != null) {
         state.start(request, peer);

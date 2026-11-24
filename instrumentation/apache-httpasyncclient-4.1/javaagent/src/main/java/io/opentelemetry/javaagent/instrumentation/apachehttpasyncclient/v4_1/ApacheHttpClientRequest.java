@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -31,8 +32,8 @@ class ApacheHttpClientRequest {
 
   private final HttpRequest delegate;
   @Nullable private final HttpHost target;
-  @Nullable private volatile NetworkPeer latestNetworkPeer;
-  @Nullable private NetworkPeer networkPeer;
+  @Nullable private volatile InetSocketAddress latestNetworkPeer;
+  @Nullable private InetSocketAddress networkPeer;
 
   ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
@@ -110,24 +111,19 @@ class ApacheHttpClientRequest {
     networkPeer = latestNetworkPeer;
   }
 
-  void setNetworkPeer(@Nullable NetworkPeer peer) {
+  void setNetworkPeer(@Nullable InetSocketAddress peer) {
     if (peer != null) {
       latestNetworkPeer = peer;
     }
   }
 
   @Nullable
-  String getNetworkPeerAddress() {
-    return networkPeer == null ? null : networkPeer.address;
+  InetSocketAddress getNetworkPeer() {
+    return networkPeer;
   }
 
   @Nullable
-  Integer getNetworkPeerPort() {
-    return networkPeer == null ? null : networkPeer.port;
-  }
-
-  @Nullable
-  static NetworkPeer captureNetworkPeer(HttpContext context) {
+  static InetSocketAddress captureNetworkPeer(HttpContext context) {
     try {
       Object value = context.getAttribute(HttpCoreContext.HTTP_CONNECTION);
       if (!(value instanceof HttpInetConnection)) {
@@ -137,7 +133,7 @@ class ApacheHttpClientRequest {
       InetAddress address = connection.getRemoteAddress();
       return address == null
           ? null
-          : new NetworkPeer(address.getHostAddress(), connection.getRemotePort());
+          : new InetSocketAddress(address, Math.max(connection.getRemotePort(), 0));
     } catch (Throwable t) {
       logger.log(FINE, "Unable to capture network peer", t);
       return null;
@@ -188,16 +184,6 @@ class ApacheHttpClientRequest {
     } catch (URISyntaxException e) {
       logger.log(FINE, e.getMessage(), e);
       return null;
-    }
-  }
-
-  static final class NetworkPeer {
-    private final String address;
-    private final int port;
-
-    private NetworkPeer(String address, int port) {
-      this.address = address;
-      this.port = port;
     }
   }
 }
