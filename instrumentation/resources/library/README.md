@@ -31,7 +31,9 @@ Implemented attributes:
 - `host.arch`
 - `host.id`
 
-Host ID detection is enabled by default. In property-based configuration, detection is skipped when `host.id` is already set by another resource provider or through `otel.resource.attributes`.
+Host ID detection is enabled by default. With property-based configuration, local ID detection
+is skipped when `otel.resource.attributes` supplies `host.id`. A host ID supplied by a cloud
+provider bundled with the Java agent takes precedence over the locally detected ID.
 
 For programmatic use, `HostResource.create(true)` includes host ID detection, while `HostResource.get()` omits it.
 

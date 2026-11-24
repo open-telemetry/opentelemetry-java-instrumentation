@@ -389,6 +389,8 @@
   the consolidated provider also disables host name and architecture collection.
   Host ID detection is now enabled by default in the Java agent and Spring Boot starter.
   Remove `otel.resource.providers.host-id.enabled`, which is no longer supported.
+  To override the detected `host.id`, custom resource providers must use `order()` greater
+  than `-1`.
 - Rename public library instrumentation entrypoints from `wrap`/`wrapXxx` to `instrument`
   overloads, retaining distinct `instrumentXxx` names where required.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
