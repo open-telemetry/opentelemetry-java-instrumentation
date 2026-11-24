@@ -10,9 +10,9 @@ import static java.util.Collections.singletonList;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import java.net.http.HttpHeaders;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -27,7 +27,8 @@ public final class HttpHeadersSetter {
   }
 
   public HttpHeaders inject(HttpHeaders original, Context context) {
-    Map<String, List<String>> headerMap = new HashMap<>(original.map());
+    Map<String, List<String>> headerMap = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
+    headerMap.putAll(original.map());
 
     contextPropagators
         .getTextMapPropagator()
@@ -36,6 +37,7 @@ public final class HttpHeadersSetter {
             headerMap,
             (carrier, key, value) -> {
               if (carrier != null) {
+                carrier.remove(key);
                 carrier.put(key, singletonList(value));
               }
             });

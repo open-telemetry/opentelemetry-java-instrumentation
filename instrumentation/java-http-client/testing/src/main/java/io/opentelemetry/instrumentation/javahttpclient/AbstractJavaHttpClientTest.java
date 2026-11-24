@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.javahttpclient;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
@@ -27,6 +28,8 @@ import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
 import java.util.concurrent.CompletableFuture;
@@ -172,5 +175,32 @@ public abstract class AbstractJavaHttpClientTest extends AbstractHttpClientTest<
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
                         equalTo(stringKey("throwable"), CancellationException.class.getName()))));
+  }
+
+  @Test
+  void requestWithMixedCaseExistingTracingHeaders() throws IOException, InterruptedException {
+    String method = "GET";
+    URI uri = resolveAddress("/success");
+
+    Map<String, String> headers = new HashMap<>();
+    for (String field :
+        testing.getOpenTelemetry().getPropagators().getTextMapPropagator().fields()) {
+      String capitalized = field.substring(0, 1).toUpperCase(Locale.ROOT) + field.substring(1);
+      String value =
+          field.equals("traceparent")
+              ? "00-0af7651916cd43dd8448eb211c80319c-b7ad6b7169203331-01"
+              : "12345789";
+      headers.put(capitalized, value);
+    }
+
+    HttpRequest request = buildRequest(method, uri, headers);
+    int responseCode = sendRequest(request, method, uri, headers);
+
+    assertThat(responseCode).isEqualTo(200);
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> assertClientSpan(span, uri, method, responseCode, null).hasNoParent(),
+            span -> assertServerSpan(span).hasParent(trace.getSpan(0))));
   }
 }
