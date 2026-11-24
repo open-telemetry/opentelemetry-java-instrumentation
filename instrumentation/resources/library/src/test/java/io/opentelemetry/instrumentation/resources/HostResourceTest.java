@@ -13,7 +13,13 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.resources.Resource;
 import io.opentelemetry.semconv.SchemaUrls;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
+@ResourceLock(Resources.SYSTEM_PROPERTIES)
 class HostResourceTest {
   @Test
   void shouldCreateRuntimeAttributes() {
@@ -25,5 +31,29 @@ class HostResourceTest {
     assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
     assertThat(attributes.get(HOST_NAME)).isNotBlank();
     assertThat(attributes.get(HOST_ARCH)).isNotBlank();
+  }
+
+  @Test
+  @SetSystemProperty(key = "os.arch", value = "aarch64")
+  void hostArchUsesSemconvValue() {
+    Resource resource = HostResource.buildResource();
+
+    assertThat(resource.getAttribute(HOST_ARCH)).isEqualTo("arm64");
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "x86_64, amd64",
+    "aarch64, arm64",
+    "arm, arm32",
+    "i386, x86",
+    "ppc, ppc32",
+    "ppc64le, ppc64",
+    "amd64, amd64",
+    "s390x, s390x",
+    "riscv64, riscv64"
+  })
+  void toHostArch(String osArch, String hostArch) {
+    assertThat(HostResource.toHostArch(osArch)).isEqualTo(hostArch);
   }
 }

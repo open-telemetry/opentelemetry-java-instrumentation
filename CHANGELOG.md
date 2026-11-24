@@ -362,6 +362,9 @@
   - `kafka.server.messages`, `kafka.server.requests`, `kafka.server.failed_requests` and
     `kafka.server.network.io` now have a `kafka.topic.name` attribute instead of a broker-wide value.
   - `kafka.server.isr.operations` is now a counter instead of an updowncounter.
+- The `host.arch` resource attribute now uses the semantic convention values instead of the raw
+  `os.arch` value: `aarch64` becomes `arm64`, `x86_64` becomes `amd64`, `i386` becomes `x86`,
+  `arm` becomes `arm32`, `ppc` becomes `ppc32`, and `ppc64le` becomes `ppc64`.
 
 ### ⚠️ Breaking changes to non-stable APIs
 
