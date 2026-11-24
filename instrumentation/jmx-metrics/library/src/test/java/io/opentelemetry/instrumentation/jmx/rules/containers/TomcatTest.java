@@ -11,7 +11,6 @@ import static io.opentelemetry.instrumentation.jmx.rules.assertions.DataPointAtt
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static org.junit.jupiter.params.provider.Arguments.arguments;
-import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
 import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
