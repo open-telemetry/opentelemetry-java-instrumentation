@@ -83,12 +83,12 @@ public class JmxMetricInsightInstaller implements AgentListener {
   }
 
   private static void addInlineRules(DeclarativeConfigProperties config, JmxTelemetryBuilder jmx) {
-    try {
-      config.getStructuredList("rules", emptyList()).stream()
-          .map(DeclarativeConfigProperties::toMap)
-          .forEach(rule -> Internal.addRule(jmx, rule));
-    } catch (RuntimeException e) {
-      logger.log(SEVERE, "Error while loading inline JMX rules", e);
+    for (DeclarativeConfigProperties rule : config.getStructuredList("rules", emptyList())) {
+      try {
+        Internal.addRule(jmx, DeclarativeConfigProperties.toMap(rule));
+      } catch (RuntimeException e) {
+        logger.log(SEVERE, "Error while loading an inline JMX rule", e);
+      }
     }
   }
 

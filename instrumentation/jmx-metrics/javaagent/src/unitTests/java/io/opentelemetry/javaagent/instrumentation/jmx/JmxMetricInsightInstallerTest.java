@@ -225,7 +225,8 @@ class JmxMetricInsightInstallerTest {
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
         metric -> metric.hasName("custom.test.first"),
-        metric -> metric.hasName("custom.test.second"));
+        metric -> metric.hasName("custom.test.second"),
+        metric -> metric.hasName("custom.test.after_invalid"));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx", "custom.test.invalid", AbstractIterableAssert::isEmpty);

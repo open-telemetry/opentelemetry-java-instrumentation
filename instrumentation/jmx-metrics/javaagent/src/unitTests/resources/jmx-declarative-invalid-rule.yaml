@@ -21,3 +21,9 @@ instrumentation/development:
               metric: custom.test.invalid
               type: invalid
               unit: "{thread}"
+        - bean: java.lang:type=Threading
+          mapping:
+            ThreadCount:
+              metric: custom.test.after_invalid
+              type: gauge
+              unit: "{thread}"
