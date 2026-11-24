@@ -135,7 +135,12 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Configure which systems should have their internal metrics automatically registered.
+   * Configures which systems have their bundled metric definitions registered. Bundled definitions
+   * ship with the library, unlike custom rules added using {@link #addRules(InputStream)}. No
+   * systems are selected by default.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns.
    *
    * <p>No systems are registered unless included or excluded patterns are configured; an
    * {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an unset one. Include
@@ -146,29 +151,53 @@ public final class JmxTelemetryBuilder {
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
+  public JmxTelemetryBuilder setBundledMetricsSystemFilter(IncludeExclude systemFilter) {
     requireNonNull(systemFilter, "systemFilter");
     internalMetricsSystemFilter = systemFilter.isEmpty() ? EXCLUDE_ALL : systemFilter;
     return this;
   }
 
   /**
-   * Configure which unstable internal metrics should be enabled, unless enabled they are
-   * filtered-out.
+   * Configures which unstable metrics from bundled definitions are enabled. Custom rules added
+   * using {@link #addRules(InputStream)} are not affected. No unstable bundled metrics are enabled
+   * by default.
    *
-   * <p>No unstable internal metrics are enabled unless included or excluded patterns are
-   * configured; an {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an
-   * unset one. Include {@code "*"} to select all unstable internal metrics. If only excluded
-   * patterns are configured, every other unstable internal metric is selected.
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns.
+   *
+   * <p>No unstable bundled metrics are enabled unless included or excluded patterns are configured;
+   * an {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an unset one.
+   * Include {@code "*"} to select all unstable bundled metrics. If only excluded patterns are
+   * configured, every other unstable bundled metric is selected.
    *
    * @param metricsFilter metric filter
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
+  public JmxTelemetryBuilder setUnstableBundledMetricsFilter(IncludeExclude metricsFilter) {
     requireNonNull(metricsFilter, "metricsFilter");
     internalMetricsUnstableMetricsFilter = metricsFilter.isEmpty() ? EXCLUDE_ALL : metricsFilter;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setBundledMetricsSystemFilter(IncludeExclude)} instead. May be removed
+   *     in the next minor release.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
+    return setBundledMetricsSystemFilter(systemFilter);
+  }
+
+  /**
+   * @deprecated Use {@link #setUnstableBundledMetricsFilter(IncludeExclude)} instead. May be
+   *     removed in the next minor release.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
+    return setUnstableBundledMetricsFilter(metricsFilter);
   }
 
   /** Sets the {@link ClassLoader} to be used to load SPI implementations. */

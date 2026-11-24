@@ -26,7 +26,7 @@ jobs:
         run: echo "version=$(cat .java-version)" >> "$GITHUB_OUTPUT"
       - uses: graalvm/setup-graalvm@60e76998d25690099182b796e99b8804da582d90 # v1.6.10
         with:
-          version: "25.2.4"
+          java-version: ${{ steps.read-java.outputs.version }}
           distribution: "graalvm"
       - name: Increase gradle daemon heap size
         run: |
