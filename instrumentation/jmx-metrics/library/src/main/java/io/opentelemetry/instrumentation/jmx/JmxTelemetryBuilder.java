@@ -134,28 +134,61 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Configure which systems should have their internal metrics automatically registered.
+   * Configures which systems have their bundled metric definitions registered. Bundled definitions
+   * ship with the library, unlike custom rules added using {@link #addRules(InputStream)}. No
+   * systems are selected by default.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns selects every system that is not excluded, and an empty
+   * selector selects every system.
    *
    * @param systemFilter system filter
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
+  public JmxTelemetryBuilder setBundledMetricsSystemFilter(IncludeExclude systemFilter) {
     internalMetricsSystemFilter = requireNonNull(systemFilter, "systemFilter");
     return this;
   }
 
   /**
-   * Configure which unstable internal metrics should be enabled, unless enabled they are
-   * filtered-out.
+   * Configures which unstable metrics from bundled definitions are enabled. Custom rules added
+   * using {@link #addRules(InputStream)} are not affected. No unstable bundled metrics are enabled
+   * by default.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns. A
+   * selector with no included patterns selects every metric that is not excluded, and an empty
+   * selector selects every metric.
    *
    * @param metricsFilter metric filter
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
+  public JmxTelemetryBuilder setUnstableBundledMetricsFilter(IncludeExclude metricsFilter) {
     internalMetricsUnstableMetricsFilter = requireNonNull(metricsFilter, "metricsFilter");
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setBundledMetricsSystemFilter(IncludeExclude)} instead. May be removed
+   *     in the next minor release.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
+    return setBundledMetricsSystemFilter(systemFilter);
+  }
+
+  /**
+   * @deprecated Use {@link #setUnstableBundledMetricsFilter(IncludeExclude)} instead. May be
+   *     removed in the next minor release.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
+    return setUnstableBundledMetricsFilter(metricsFilter);
   }
 
   /** Sets the {@link ClassLoader} to be used to load SPI implementations. */

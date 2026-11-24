@@ -71,7 +71,7 @@ class HandlerTest {
     JmxTelemetry telemetry =
         JmxTelemetry.builder(testing.getOpenTelemetry())
             .addRules(getClass().getResourceAsStream("/jmx/rules/handler.yaml"))
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm").build())
+            .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm").build())
             .setMetrics(
                 IncludeExclude.builder()
                     .setIncluded("test.thread.count", "jvm.thread.count")

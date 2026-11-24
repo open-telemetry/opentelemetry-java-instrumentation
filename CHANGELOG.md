@@ -506,6 +506,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `JmxTelemetryBuilder.setInternalMetricsSystemFilter` and
+  `setInternalMetricsUnstableMetricsFilter` in favor of `setBundledMetricsSystemFilter` and
+  `setUnstableBundledMetricsFilter`, respectively.
 - Deprecate `NetworkAttributesGetter.getNetworkLocalInetSocketAddress()` and
   `getNetworkPeerInetSocketAddress()` in favor of `getNetworkLocalSocketAddress()` and
   `getNetworkPeerSocketAddress()`.

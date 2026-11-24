@@ -42,9 +42,9 @@ import java.time.Duration;
 OpenTelemetry openTelemetry = ...;
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
-    // Configure loading embedded metric definitions (optional)
-  .setInternalMetricsSystemFilter(IncludeExclude.builder().build()) // load internal metrics for all systems, this will load all internal stable metrics.
-  .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().setIncluded("kafka.*").build()) // opt-in for all `kafka.*` internal unstable metrics
+  // Configure loading bundled metric definitions (optional)
+  .setBundledMetricsSystemFilter(IncludeExclude.builder().build()) // load bundled definitions for all systems
+  .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("kafka.*").build()) // opt in to bundled unstable kafka.* metrics
   // Load metrics from classpath resource (optional)
   .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/tomcat.yaml"))
   // Load custom metrics by path (optional)
@@ -61,5 +61,6 @@ jmxTelemetry.start();
 Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
 Excluded patterns take precedence over included patterns. A selector with no included patterns
 collects every metric that is not excluded. An empty selector collects every metric.
-The unstable-metrics filter applies only to embedded rules. Custom rules added with `addRules`
-remain subject to `setMetrics`, even when they use the name of an embedded unstable metric.
+Bundled definitions ship with the library; no systems or unstable bundled metrics are enabled by
+default. The unstable-metrics filter applies only to bundled rules. Custom rules added with `addRules`
+remain subject to `setMetrics`, even when they use the name of a bundled unstable metric.
