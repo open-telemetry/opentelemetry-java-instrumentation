@@ -374,6 +374,9 @@ public class OpenTelemetryAppender extends AbstractAppender {
       return value -> true;
     }
 
+    private static final AtomicBoolean deprecatedContextDataAttributesWarningLogged =
+        new AtomicBoolean();
+
     @Nullable
     private Predicate<String> getEffectiveContextDataAttributes() {
       if (contextDataAttributes != null) {
@@ -387,8 +390,22 @@ public class OpenTelemetryAppender extends AbstractAppender {
       if (!selector.isEmpty()) {
         return selector::matches;
       }
-      return SelectorConfig.resolveLegacyLiteral(
-          splitAndFilterBlanksAndNulls(captureContextDataAttributes));
+      Predicate<String> deprecatedSelector =
+          SelectorConfig.resolveLegacyLiteral(
+              splitAndFilterBlanksAndNulls(captureContextDataAttributes));
+      if (deprecatedSelector != null
+          && deprecatedContextDataAttributesWarningLogged.compareAndSet(false, true)) {
+        org.apache.logging.log4j.status.StatusLogger.getLogger()
+            .warn(
+                "The captureContextDataAttributes setting of the OpenTelemetry appender and the"
+                    + " otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes"
+                    + " property are deprecated and may be removed in the next minor release. Use"
+                    + " contextDataAttributesIncluded, contextDataAttributesExcluded, or"
+                    + " otel.instrumentation.log4j-appender.experimental.mdc-attributes.included"
+                    + " or otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded"
+                    + " instead.");
+      }
+      return deprecatedSelector;
     }
   }
 
