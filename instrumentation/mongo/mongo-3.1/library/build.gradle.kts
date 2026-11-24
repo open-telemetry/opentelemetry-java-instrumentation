@@ -20,6 +20,12 @@ dependencies {
 
 testing.suites {
   executions("test") {
+    configureDefault {
+      if (otelProps.collectMetadata) {
+        filter.includeTestsMatching("*MongoClientTest")
+      }
+    }
+
     register("QueryText") {
       filter.includeTestsMatching("*MongoClientTest")
       systemProperty("otel.instrumentation.mongo.capture-query-text", "true")

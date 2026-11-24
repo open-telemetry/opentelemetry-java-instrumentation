@@ -7,7 +7,6 @@
 - MongoDB spans capture query text only when opted in. Set
   `otel.instrumentation.mongo.capture-query-text=true` in the agent or Spring Boot starter,
   or call `MongoTelemetryBuilder.setCaptureQueryText(true)` in library instrumentation.
-
 - Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
   `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
