@@ -139,11 +139,6 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       return null;
     }
     contentType = contentType.toLowerCase(Locale.ROOT);
-    if (contentType.startsWith("multipart/")) {
-      // multipart is not supported
-      return null;
-    }
-
     int semicolonIndex = contentType.indexOf(';');
     String mediaType = contentType;
     if (semicolonIndex != -1) {

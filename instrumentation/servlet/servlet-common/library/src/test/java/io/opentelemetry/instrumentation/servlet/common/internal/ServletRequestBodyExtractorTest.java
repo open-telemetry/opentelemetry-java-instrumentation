@@ -16,6 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -38,6 +39,7 @@ class ServletRequestBodyExtractorTest {
 
   private final Object request = new Object();
   private final Map<String, Object> requestAttributes = new HashMap<>();
+  private String requestContentType = null;
 
   @SuppressWarnings("unchecked")
   private final ServletAccessor<Object, Object> accessor = mock(ServletAccessor.class);
@@ -60,6 +62,8 @@ class ServletRequestBodyExtractorTest {
             })
         .when(accessor)
         .setRequestAttribute(any(), anyString(), any());
+
+    when(accessor.getRequestHeader(any(), eq("Content-Type"))).thenAnswer(invocation -> requestContentType);
   }
 
   @Test
@@ -93,22 +97,16 @@ class ServletRequestBodyExtractorTest {
 
     ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
     requestAttributes.put(REQUEST_BODY_ATTRIBUTE, buffer);
+    requestContentType = "text/plain; charset=UTF-8";
 
     assertThat(extractRequestBody(accessor, request, CONFIG)).isEqualTo("abc");
     assertThat(extractRequestBody(accessor, request, CONFIG)).isNull();
   }
 
   @Test
-  void validUtf8Body() {
-    ByteBuffer buffer = bufferOf("request-body".getBytes(UTF_8));
-
-    String body = getRequestBodyValue(buffer, null, CONFIG);
-    assertThat(body).isEqualTo("request-body");
-  }
-
-  @Test
   void withoutContentTypeNoCapture() {
     assertThat(getRequestBodyValue(bufferOf(ISO_8859_1_BODY), null, CONFIG)).isNull();
+    assertThat(getRequestBodyValue(bufferOf("request-body".getBytes(UTF_8)), null, CONFIG)).isNull();
   }
 
   @Test
@@ -150,7 +148,7 @@ class ServletRequestBodyExtractorTest {
   void truncatedUtf8() {
     ByteBuffer buffer = ByteBuffer.allocate(6);
     buffer.put("café".getBytes(UTF_8)).put((byte) 0xC3); // truncated UTF-8 sequence
-    assertThat(getRequestBodyValue(buffer, null, CONFIG)).isEqualTo("café");
+    assertThat(getRequestBodyValue(buffer, "text/plain", CONFIG)).isEqualTo("café");
   }
 
   @ParameterizedTest
@@ -168,9 +166,7 @@ class ServletRequestBodyExtractorTest {
         "text/plain|text/plain",
         "text/plain;|text/plain",
         "text/plain ;|text/plain",
-        "text/plain; charset=ISO-8859-1|text/plain",
-        // multipart should be ignored
-        "multipart/form-data; boundary=AaB03x|null",
+        "text/plain; charset=ISO-8859-1|text/plain"
       })
   void mediaType(String contentType, @Nullable String expectedMediaType) {
     assertThat(getAndNormalizeMediaTypeFromContentTypeHeader(contentType))
