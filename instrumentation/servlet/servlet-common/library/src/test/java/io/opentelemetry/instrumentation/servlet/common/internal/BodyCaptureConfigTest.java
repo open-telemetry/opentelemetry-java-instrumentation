@@ -5,7 +5,6 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
-import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
 import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -20,7 +19,7 @@ class BodyCaptureConfigTest {
   void defaults() {
     BodyCaptureConfig config = createDefault();
     assertThat(config.isEnabled()).isFalse();
-    assertThat(config.getMaxSize()).isEqualTo(DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE);
+    assertThat(config.getMaxSize()).isEqualTo(1024);
     assertThat(config.getMediaTypes().getIncluded())
         .containsExactly("text/*", "*/json", "*+json", "*/xml", "+xml", "*/yaml", "*+yaml");
     assertThat(config.getMediaTypes().getExcluded()).containsExactly("multipart/*");
@@ -45,7 +44,7 @@ class BodyCaptureConfigTest {
   @ValueSource(ints = {0, -1, -100})
   void maxSize_invalid(int value) {
     BodyCaptureConfig config = createDefault().setMaxSize(value);
-    assertThat(config.getMaxSize()).isEqualTo(DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE);
+    assertThat(config.getMaxSize()).isEqualTo(1024);
   }
 
   @Test
@@ -56,5 +55,20 @@ class BodyCaptureConfigTest {
     assertThat(config.getMediaTypes().matches("text/plain")).isTrue();
     assertThat(config.getMediaTypes().matches("application/json")).isFalse();
     assertThat(config.getMediaTypes().matches("multipart/form-data")).isFalse();
+  }
+
+  @Test
+  void mediaTypesTrySetEmpty() {
+    BodyCaptureConfig config = createDefault();
+    IncludeExclude defaultValue = config.getMediaTypes();
+    assertThat(defaultValue.isEmpty()).isFalse();
+    config.setMediaTypes(
+        IncludeExclude.builder().setIncluded("text/*").setExcluded("multipart/*").build());
+    assertThat(config.getMediaTypes()).isNotEqualTo(defaultValue);
+
+    IncludeExclude empty = IncludeExclude.builder().build();
+    assertThat(empty.isEmpty()).isTrue();
+    config.setMediaTypes(empty);
+    assertThat(config.getMediaTypes()).isEqualTo(defaultValue);
   }
 }

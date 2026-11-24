@@ -5,14 +5,18 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
+import static java.util.Collections.emptyList;
 import static java.util.logging.Level.WARNING;
 import static java.util.stream.Collectors.toList;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
+import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.api.config.IncludeExcludeBuilder;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -23,7 +27,14 @@ public class BodyCaptureConfig {
   private static final Logger logger = Logger.getLogger(BodyCaptureConfig.class.getName());
 
   /** Default maximum size of the request body to capture. */
-  public static final int DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE = 1024;
+  private static final int DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE = 1024;
+
+  /** Default media types to capture */
+  private static final IncludeExclude DEFAULT_MEDIA_TYPES =
+      IncludeExclude.builder()
+          .setIncluded("text/*", "*/json", "*+json", "*/xml", "+xml", "*/yaml", "*+yaml")
+          .setExcluded("multipart/*")
+          .build();
 
   private boolean enabled;
   private int maxSize;
@@ -32,11 +43,7 @@ public class BodyCaptureConfig {
   private BodyCaptureConfig() {
     this.enabled = false;
     this.maxSize = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
-    this.mediaTypes =
-        IncludeExclude.builder()
-            .setIncluded("text/*", "*/json", "*+json", "*/xml", "+xml", "*/yaml", "*+yaml")
-            .setExcluded("multipart/*")
-            .build();
+    this.mediaTypes = DEFAULT_MEDIA_TYPES;
   }
 
   /**
@@ -46,6 +53,35 @@ public class BodyCaptureConfig {
    */
   public static BodyCaptureConfig createDefault() {
     return new BodyCaptureConfig();
+  }
+
+  public static BodyCaptureConfig fromDeclarativeConfig(
+      @Nullable DeclarativeConfigProperties baseConfig) {
+    BodyCaptureConfig result = createDefault();
+    if (baseConfig == null) {
+      return result;
+    }
+    result.setEnabled(baseConfig.getBoolean("enabled", false));
+    int maxSize = baseConfig.getInt("max_size", DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE);
+    if (maxSize <= 0) {
+      logger.log(
+          WARNING,
+          "Invalid request body capture max size {0}, using default value {1}",
+          new Object[] {maxSize, DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE});
+      maxSize = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
+    }
+    result.setMaxSize(maxSize);
+
+    DeclarativeConfigProperties mediaTypesConfig = baseConfig.get("media_types");
+    if (mediaTypesConfig != null) {
+      List<String> included = mediaTypesConfig.getScalarList("included", String.class);
+      List<String> excluded = mediaTypesConfig.getScalarList("excluded", String.class);
+      IncludeExcludeBuilder mediaTypesBuilder = IncludeExclude.builder();
+      mediaTypesBuilder.setIncluded(included != null ? included : emptyList());
+      mediaTypesBuilder.setExcluded(excluded != null ? excluded : emptyList());
+      result.setMediaTypes(mediaTypesBuilder.build());
+    }
+    return result;
   }
 
   /**
@@ -87,14 +123,7 @@ public class BodyCaptureConfig {
    */
   @CanIgnoreReturnValue
   public BodyCaptureConfig setMaxSize(int maxSize) {
-    if (maxSize <= 0) {
-      logger.log(
-          WARNING,
-          "Invalid request body capture max size {0}, using default value {1}",
-          new Object[] {maxSize, DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE});
-      maxSize = DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
-    }
-    this.maxSize = maxSize;
+    this.maxSize = maxSize <= 0 ? DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE : maxSize;
     return this;
   }
 
@@ -102,11 +131,15 @@ public class BodyCaptureConfig {
    * Sets the media types to capture.
    *
    * @param mediaTypes the media types to capture, values will be normalized to lower case for
-   *     case-insensitive comparison
+   *     case-insensitive comparison. If empty, the {@link #DEFAULT_MEDIA_TYPES} will be used.
    * @return this
    */
   @CanIgnoreReturnValue
   public BodyCaptureConfig setMediaTypes(IncludeExclude mediaTypes) {
+    if (mediaTypes.isEmpty()) {
+      this.mediaTypes = DEFAULT_MEDIA_TYPES;
+      return this;
+    }
     this.mediaTypes =
         IncludeExclude.builder()
             .setIncluded(normalizeMediaTypePatterns(mediaTypes.getIncluded()))

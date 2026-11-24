@@ -6,8 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
 import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.EXPERIMENTAL;
-import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE;
-import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.fromDeclarativeConfig;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -37,12 +36,7 @@ public class ServletConfig {
     traceIdRequestAttributeEnabled =
         config.get("trace_id_request_attribute/development").getBoolean("enabled", false);
 
-    DeclarativeConfigProperties captureRequestBody = config.get("capture_request_body/development");
-    bodyCaptureConfig =
-        createDefault()
-            .setEnabled(captureRequestBody.getBoolean("enabled", false))
-            .setMaxSize(
-                captureRequestBody.getInt("max_size", DEFAULT_CAPTURE_REQUEST_BODY_MAX_SIZE));
+    bodyCaptureConfig = fromDeclarativeConfig(config.get("capture_request_body/development"));
   }
 
   @Nullable
