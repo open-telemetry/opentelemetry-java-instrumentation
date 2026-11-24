@@ -6,74 +6,103 @@
 
 - Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
   `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
+
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
+
 - OSHI disk and network packet metrics now use `system.device.name` instead of `system.device`;
   memory metrics use `system.memory.state="available"` instead of `"free"`.
+
 - Apache HttpClient 4.3 library instrumentation no longer automatically emits
   `network.peer.address` or `network.peer.port` inferred from the route target.
   Use `server.address` and `server.port` for logical destination grouping.
+
 - Configured service mappings now emit `server.service.name` and `server.service.namespace`, and no longer emit `peer.service`, `service.peer.name`, or `service.peer.namespace`. Rename `otel.instrumentation.common.peer-service-mapping` to `otel.instrumentation.common.server-service-mapping`; in YAML, use `java.common.server_service_mapping` with `target` instead of `peer`.
+
 - Rename `otel.instrumentation.grpc.{client,server}.request-metadata.{included,excluded}` to
   `otel.instrumentation.grpc.{client,server}.request-headers.{included,excluded}`.
+
 - Captured gRPC request attributes now use `rpc.request.header.<key>` instead of
   `rpc.request.metadata.<key>`.
+
 - Rename `messaging.system` to `messaging.system.name` (`aws_sqs` becomes `aws.sqs`) and adopt
   the system-specific attribute renames from
   [semantic-conventions #4250](https://github.com/open-telemetry/semantic-conventions/pull/4250).
   Experimental messaging attributes also lose the `messaging.` prefix (for example,
   `messaging.kafka.bootstrap.servers` becomes `kafka.bootstrap.servers`).
+
 - AWS Lambda invocation spans now replace alias suffixes in `cloud.resource_id` with the resolved
   function version when available.
+
 - AWS Lambda spans now use `faas.invocation.id` instead of `faas.invocation_id` for invocation IDs.
+
 - Replace `SpringWebfluxClientTelemetry.addFilter(list)` and
   `addFilterAndRegisterReactorHook(list)` with `createFilter()` and
   `createFilterAndRegisterReactorHook()`, used with `WebClient.Builder.filter(...)`.
+
 - RPC telemetry now uses only the conventions with schema version 1.44.0: `rpc.system.name`,
   fully qualified `rpc.method`, `rpc.status_code`, and `error.type`, with updated span names.
   RPC duration metrics use `rpc.client.call.duration` and `rpc.server.call.duration` in seconds.
   RPC opt-in/preview flags and `general.rpc.semconv` settings no longer select legacy or dual emission.
+
 - GenAI error type getters now return the final value. Returning `null` omits `error.type`; overrides
   should return `error == null ? null : error.getClass().getName()` for the exception-class fallback.
+
 - HTTP client and server getters now determine `error.type`; their returned value, including `null`,
   is used as-is.
+
 - RPC attribute getters return the final `error.type`; returning `null` omits it even when an
   exception exists.
+
 - Messaging `MessagingAttributesGetter.getErrorType()` overrides now provide the final
   `error.type` value. Return `null` to omit it, or return `error == null ? null :
   error.getClass().getName()` for exception-class fallback.
+
 - Require R2DBC SPI 1.0 or later.
+
 - Rename the Spark Java instrumentation selector from `spark-2.3` to `spark-2.4`.
+
 - `DbClientAttributesGetter.getErrorType()` now returns the final `error.type`; returning `null`
   omits it even with an exception.
+
 - Spring Boot Java agent resource providers move from
   `io.opentelemetry.instrumentation.spring.resources` to
   `io.opentelemetry.javaagent.instrumentation.spring.boot.resources`. Update class names in
   `otel.java.enabled.resource.providers` and `otel.java.disabled.resource.providers`.
+
 - Spring Rabbit 1.0 is no longer supported. Use the `spring-rabbit-1.1` selector; telemetry scope
   changes from `io.opentelemetry.spring-rabbit-1.0` to `io.opentelemetry.spring-rabbit-1.1`.
+
 - `InstrumenterBuilder` no longer infers a schema URL from attribute extractors. Call
   `setSchemaUrl()` with the schema for the conventions defining the instrumenter's signals;
   otherwise its telemetry has no schema URL.
+
 - Remove the Spring Boot starter-provided `ConfigProperties` bean in declarative mode.
   Read configuration through `ConfigProvider` and `DeclarativeConfigProperties` instead.
+
 - `@WithSpan` and `@AddingSpanAttributes` no longer allow targeting constructors
   (which didn't work properly anyways).
+
 - Kotlin suspend function `@WithSpan` instrumentation now uses only the
   `kotlinx-coroutines-annotations` selector and is disabled by default. Use
   `otel.instrumentation.kotlinx-coroutines-annotations.enabled=true` instead of the
   `kotlinx-coroutines`, `kotlinx-coroutines-1.0`,
   `kotlinx-coroutines-opentelemetry-instrumentation-annotations`, or
   `opentelemetry-instrumentation-annotations` selectors to control suspend function annotations.
+
 - The Java agent no longer captures thread details by default. Set
   `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
+
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
   remain, instead of emitting an empty object.
+
 - Process command resource attributes are now disabled by default. Set
   `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
+
 - Declarative Java agent instrumentation selectors no longer accept dotted-version compatibility
   spellings. In `distribution.javaagent.instrumentation.enabled` and `.disabled`, replace
   selectors such as `reactor_3.1` with `reactor_3_1`.
+
 - Java agent telemetry now uses the following instrumentation scopes. Update views, dashboards
   and filters matching the previous names:
 
@@ -89,11 +118,13 @@
 - Couchbase Java SDK 3.1 and 3.2+ spans now use the agent-owned scope names instead of
   `com.couchbase.client.jvm`. SDK 3.1 uses `io.opentelemetry.couchbase-3.1`; SDK 3.2+ uses
   `io.opentelemetry.couchbase-3.2`.
+
 - Java agent instrumentation selectors now always use the versioned component name first,
   followed by supported role, versionless and umbrella selectors. When several selectors are
   configured, the first matching selector determines enablement. For example,
   `otel.instrumentation.lettuce-5.0.enabled` takes precedence over
   `otel.instrumentation.lettuce.enabled`.
+
 - Remove legacy Java agent selectors and implementation-only aliases from
   `otel.instrumentation.<name>.enabled`. Use the component selectors below. Where several
   implementations now share a component selector, there is no implementation-only replacement;
@@ -151,40 +182,51 @@
   `jaxrs-annotations` for that default-off feature. The `jaxws` umbrella no longer enables the
   JWS annotation module; use `jaxws-jws-api`. The `reactor-netty` selector no longer controls
   the server integration in Spring WebFlux; use `reactor-netty-server` or `spring-webflux-server`.
+
 - Couchbase 2.x SQL queries now use the shared SQL attribute extractor and no longer emit
   `db.operation.name`. SQL query attributes and span names are derived from the raw query text.
   Disabling query sanitization now affects only `db.query.text`: `db.query.summary` and
   query-derived span names are still produced, matching other SQL instrumentations. This applies
   to `otel.instrumentation.couchbase.query-sanitization.enabled=false`, including when inherited
   from the common database setting.
+
 - Remove bundled support for the contrib `otel.traces.sampler=linksbased_parentbased_always_on` and
   declarative `rule_based_routing` samplers. The links-based sampler has no replacement. For
   compatible rule-based policies, consider the SDK incubator declarative `composite/development`
   `rule_based` sampler; its rules use case-sensitive exact/wildcard matching and per-rule samplers,
   and unmatched spans are dropped. This differs from the contrib sampler's regex, action, and
   fallback behavior.
+
 - The Java agent now instruments Lettuce 5.1 and later with the Lettuce 5.0 integration, changing
   the instrumentation scope from `io.opentelemetry.lettuce-5.1` to
   `io.opentelemetry.lettuce-5.0`. The Java agent no longer emits command-encoding events, and
   `otel.instrumentation.lettuce.experimental.command-encoding-events.enabled` is no longer
   supported. Replace the removed `otel.instrumentation.lettuce-5.1.enabled` selector with
   `otel.instrumentation.lettuce.enabled` to enable or disable Lettuce instrumentation.
+
 - OpenTelemetry API bridges remain enabled when
   `otel.instrumentation.common.default-enabled=false`. Disable them explicitly with
   `otel.instrumentation.opentelemetry-api.enabled=false`.
+
 - The Java agent no longer instruments Jedis 1.x.
+
 - Remove deprecated Java agent enablement aliases. In `otel.instrumentation.<name>.enabled`,
   replace `liberty-dispatcher` with `liberty-dispatcher-20.0`, `scala-fork-join` with
   `scala-forkjoin`, and `scala-fork-join-2.8` with `scala-forkjoin-2.8`.
   The removed `azure-core-1.36-context` and `azure-core-1.53-context` aliases have no context-only
   replacement; `azure-core-1.36` and `azure-core-1.53` each control both SDK and context instrumentation.
+
 - Removed `otel.instrumentation.couchbase.experimental-span-attributes`. Use `otel.instrumentation.couchbase.emit-experimental-telemetry=true` to enable experimental span attributes for Couchbase 2.x and 3.x. For Couchbase 3.x, this also enables the Couchbase Java SDK's internal `request_encoding` and `dispatch_to_server` spans.
+
 - Couchbase 3.x operation spans now use the `CLIENT` span kind. Couchbase 3.0 and legacy-bridge 3.1 spans now use the `io.opentelemetry.couchbase-3.0` and `io.opentelemetry.couchbase-3.1` instrumentation scopes, respectively.
+
 - The Java agent no longer bundles the deprecated Zipkin exporter, and the dedicated Spring Boot Zipkin
   starter has been removed.
+
 - Hibernate, Hystrix, and Twilio agent instrumentations are now disabled by default. Enable them with
   `otel.instrumentation.hibernate.enabled=true`, `otel.instrumentation.hystrix.enabled=true`, and
   `otel.instrumentation.twilio.enabled=true`, respectively.
+
 - JMX metric collection now always uses instrumentation selectors, including
   `otel.instrumentation.jmx.enabled` and `otel.instrumentation.common.default-enabled`.
   The deprecated `otel.jmx.enabled` and `otel.jmx.target.system` settings are removed.
@@ -192,12 +234,15 @@
   `distribution.javaagent.instrumentation.disabled` selectors instead of `java.jmx.enabled`.
   Stable bundled metrics are collected automatically except JVM rules, which overlap with runtime
   telemetry. Use `otel.jmx.metrics.experimental.included` to opt in to unstable metrics by name.
+
 - Runtime telemetry metrics and package-emitter events now always use the
   `io.opentelemetry.runtime-telemetry` instrumentation scope. Update views, dashboards, and filters
   that match `io.opentelemetry.runtime-telemetry-java8` or
   `io.opentelemetry.runtime-telemetry-java17`.
+
 - JMX `jvm.gc.duration` metrics always include `jvm.gc.cause`. Remove
   `otel.instrumentation.runtime-telemetry.capture-gc-cause`; GC cause is no longer configurable.
+
 - Remove the deprecated runtime telemetry configuration properties and their declarative forms:
   - Replace `otel.instrumentation.runtime-telemetry.emit-experimental-telemetry` with
     `otel.instrumentation.runtime-telemetry.emit-experimental-metrics`.
@@ -209,7 +254,9 @@
     `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*`.
   - Replace `otel.instrumentation.runtime-telemetry.experimental.prefer-jfr` with explicit metric
     selections in `otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included`.
+
 - Remove the legacy JFR metric name `jvm.cpu.limit`. Use `jvm.cpu.count` instead.
+
 - Remove the retired flat settings `otel.instrumentation.common.db-statement-sanitizer.enabled`
   and `otel.instrumentation.<module>.statement-sanitizer.enabled`; use
   `otel.instrumentation.common.db.query-sanitization.enabled` and
@@ -217,8 +264,10 @@
   Replace `java.common.database.sqlcommenter/development.enabled` with
   `java.common.db.sqlcommenter/development.enabled`; the flat setting
   `otel.instrumentation.common.db.experimental.sqlcommenter.enabled` remains supported.
+
 - Apache Wicket resource requests now always use the resource reference class name for `http.route`
   and the HTTP server span name, instead of the servlet wildcard route.
+
 - The Java agent, Spring Boot setup, and standalone appenders now capture structured log attributes from Log4j
   `MapMessage` entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured
   arguments by default. Replace the former flat settings for Log4j MapMessage
@@ -241,12 +290,14 @@
   `structuredAttributesIncluded` and `structuredAttributesExcluded` in XML, or
   `setStructuredAttributes(IncludeExclude)` programmatically.
   Log4j `MapMessage` keys are emitted as their original log attribute names.
+
 - Micrometer timers and distribution summaries no longer emit separate `.max` gauge metrics; use the
   maximum from their histogram instead. Custom meter statistic suffixes are appended after the base
   name passes through the naming convention (for example, Prometheus mode changes
   `my.meter.count.bytes` to `my.meter.bytes.count`). Remove the deprecated
   `otel.instrumentation.micrometer.histogram-gauges.enabled` setting and use
   `otel.instrumentation.micrometer.experimental.histogram-gauges.enabled`.
+
 - Servlet principal and Spring Security identity capture now emit `user.name` and string-array
   `user.roles` instead of `enduser.id` and comma-separated `enduser.role`. Replace
   `otel.instrumentation.common.enduser.id.enabled` and
@@ -257,6 +308,7 @@
   `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`.
   The `otel.instrumentation.common.enduser.scope.enabled` setting and `enduser.scope` capture are
   removed. Identity capture remains disabled by default.
+
 - Remove Log4j appender correlation reconstructed from trace-ID, span-ID, and
   trace-flags strings.
   For standalone asynchronous logging, configure
@@ -268,10 +320,12 @@
   Replace `otel.instrumentation.common.logging.trace-id`, `.span-id`, and
   `.trace-flags` with `.trace-id-key`, `.span-id-key`, and `.trace-flags-key`,
   respectively.
+
 - Remove `otel.instrumentation.grpc.capture-metadata.client.request` and
   `otel.instrumentation.grpc.capture-metadata.server.request`.
   Use `otel.instrumentation.grpc.client.request-headers.included` and
   `otel.instrumentation.grpc.server.request-headers.included`.
+
 - Captured messaging header attribute keys now preserve dashes unconditionally; for example,
   `messaging.header.Test_Message_Id` is now `messaging.header.Test-Message-Id`. Replace
   `otel.instrumentation.messaging.experimental.headers.included=Test-Message-*` with
@@ -282,11 +336,13 @@
   use `otel.instrumentation.common.messaging.headers.included` / `.excluded` instead.
   `otel.instrumentation.messaging.experimental.receive-telemetry.enabled` is also no longer
   supported; use `otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled`.
+
 - Disable native Kafka client metrics by default. Enable them with
   `otel.instrumentation.kafka-clients-metrics.enabled=true`. Kafka tracing and messaging operation
   metrics retain their existing defaults.
   The `kafka`, `kafka-clients`, `kafka-clients-0.11`, and `kafka-clients-metrics-0.11`
   selectors no longer enable native metrics.
+
 - OSHI system metrics use schema version 1.44.0 and scope `io.opentelemetry.oshi-5.0`.
   Update `system.network.packets` to `system.network.packet.count`, plural count units to
   `{packet}`, `{error}`, and `{operation}`. Replace memory `state` with `system.memory.state`;
@@ -296,23 +352,29 @@
   Remove `otel.instrumentation.oshi.experimental-metrics.enabled`; OSHI no longer emits `runtime.java.memory`
   or `runtime.java.cpu_time`. `jvm.memory.used` measures JVM pools, not process RSS or virtual
   memory, and `jvm.cpu.time` does not split user/system CPU time.
+
 - Remove the deprecated GraphQL configuration properties
   `otel.instrumentation.graphql.add-operation-name-to-span-name.enabled` and
   `otel.instrumentation.graphql.query-sanitizer.enabled`. Use
   `otel.instrumentation.graphql.operation-name-in-span-name.enabled` and
   `otel.instrumentation.graphql.query-sanitization.enabled`, respectively.
+
 - The Java agent and standalone libraries now use the existing v1.43.0 messaging implementation.
+
 - Remove support for the deprecated controller and view telemetry aliases. Replace
   `otel.instrumentation.common.experimental.controller-telemetry.enabled` and
   `otel.instrumentation.common.experimental.view-telemetry.enabled` with
   `otel.instrumentation.common.controller-telemetry.enabled` and
   `otel.instrumentation.common.view-telemetry.enabled`.
+
 - Emit only stable source code attributes: `code.function.name` replaces `code.namespace` and
   `code.function`, and log records use `code.file.path` and `code.line.number` instead of
   `code.filepath` and `code.lineno`. The `code` and `code/dup` opt-ins and
   `general.code.semconv` declarative settings no longer select legacy emission.
+
 - Change the Java agent's `telemetry.distro.name` resource attribute from
   `opentelemetry-java-instrumentation` to `opentelemetry-javaagent`.
+
 - Database telemetry now uses schema version 1.44.0.
   Update telemetry queries and dashboards for `db.system.name`, `db.namespace`, `db.query.text`,
   `db.operation.name`, and `db.collection.name` instead of their legacy keys, and for stable system
@@ -324,9 +386,11 @@
   singular count units such as `{connection}`, and seconds instead of milliseconds for durations.
   Pool attributes use `db.client.connection.pool.name` and `db.client.connection.state`; unnamed
   pools use stable database-derived names, and DBCP retains the first registered pool name.
+
 - Servlet request parameter attribute keys now preserve the original parameter-name casing, and
   trace/span request attributes are disabled by default. Re-enable the latter with
   `otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled=true`.
+
 - Elasticsearch and OpenSearch query bodies are now always captured.
   The `otel.instrumentation.elasticsearch.capture-search-query` and
   `otel.instrumentation.opensearch.capture-search-query` properties
@@ -335,6 +399,7 @@
   `otel.instrumentation.elasticsearch.query-sanitization.enabled` or
   `otel.instrumentation.opensearch.query-sanitization.enabled`, which override
   `otel.instrumentation.common.db.query-sanitization.enabled`.
+
 - The experimental Kafka broker JMX metrics now start with the JMX domain of their MBean, use
   singular count units (for example `{message}` instead of `{messages}`), and report durations in
   seconds. Update dashboards and alerts that use the old names:
