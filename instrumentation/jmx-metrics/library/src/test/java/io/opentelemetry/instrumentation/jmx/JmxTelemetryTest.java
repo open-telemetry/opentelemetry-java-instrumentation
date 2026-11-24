@@ -145,7 +145,8 @@ class JmxTelemetryTest {
             .setInternalMetricsSystemFilter(
                 IncludeExclude.builder().setIncluded("jvm-test").build())
             // include all unstable metrics (stable ones already included)
-            .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+            .setInternalMetricsUnstableMetricsFilter(
+                IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -169,7 +170,7 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // enable stable metrics for every system
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().build());
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build());
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
@@ -191,9 +192,10 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // enable stable metrics for every system
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().build())
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
             // every system included by default, we just enable all unstable metrics
-            .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+            .setInternalMetricsUnstableMetricsFilter(
+                IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -212,9 +214,15 @@ class JmxTelemetryTest {
         .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
   }
 
-  @Test
-  void includeNothingByDefault() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void includeNothingByDefault(boolean emptySelectors) {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    if (emptySelectors) {
+      builder
+          .setInternalMetricsSystemFilter(IncludeExclude.builder().build())
+          .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+    }
     builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
   }
@@ -249,6 +257,8 @@ class JmxTelemetryTest {
     if (includeUnstable) {
       builder.setInternalMetricsUnstableMetricsFilter(
           IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    } else {
+      builder.setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
     }
     AutoCloseable collection = builder.build().start();
     cleanup.deferCleanup(collection);
