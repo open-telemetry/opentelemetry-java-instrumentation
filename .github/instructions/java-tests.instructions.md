@@ -145,9 +145,11 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   module-specific experimental flag may use a per-class constant such as
   `EXPERIMENTAL_ATTRIBUTES`; keep the conventional `experimental(value)`
   helper for attribute values absent when the flag is off.
+
 - Database instrumentation tests run either the default or stable database
   semconv mode. Do not add `database/dup` test tasks or expand assertions to
   cover both modes at once.
+
 - Use `SemconvStabilityUtil.maybeStable(...)` when old and stable database keys
   carry the same expected value:
 
@@ -158,6 +160,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
   Do not replace these with separate null-gated assertions for the old and
   stable keys.
+
 - Keep short conditional expected values directly in the assertion when the
   expected values differ by mode or an attribute exists in only one mode:
 
@@ -170,6 +173,7 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   `oldOrExperimental(value)`, or `expectedNamespace()` when no established
   semconv utility applies. Seeing both expected values at the assertion is more
   useful than deduplicating a short expression.
+
 - Do not conditionally build a `List<AttributeAssertion>` and then pass that
   list to `hasAttributesSatisfyingExactly(...)`. Pass each assertion directly
   and keep the mode check with its expected value. Retain helpers only for
@@ -199,9 +203,11 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
   Its name unambiguously means the value is expected only when experimental
   attributes are enabled, and `null` otherwise, so it reads clearer than the
   inlined ternary it would otherwise become.
+
 - A helper may still obtain the mode flag or perform nontrivial derivation from
   test data. It should not choose between short expected values on the
   assertion's behalf.
+
 - Put the ternary around the narrowest value that changes. Do not duplicate a
   whole assertion chain or attribute block for each mode.
 

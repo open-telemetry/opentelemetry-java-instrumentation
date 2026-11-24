@@ -208,8 +208,10 @@ When checking or wiring a `javaagent/` module:
    versioned subdirectories for the same library. For example, if the module is
    `instrumentation/netty/netty-4.0/javaagent`, the grouping directory is
    `instrumentation/netty`.
+
 2. List the subdirectories of the grouping directory to find candidate modules that
    also have a `javaagent/` subdirectory.
+
 3. **Filter to true version siblings.** A sibling is a module whose directory name shares
    the **same component prefix** and differs **only in the trailing version number**.
    Strip the trailing `-<version>` from each directory name to obtain the component
@@ -224,8 +226,10 @@ When checking or wiring a `javaagent/` module:
      other (different components that happen to share a parent grouping directory).
 
 4. Exclude the current module itself from the filtered list.
+
 5. For each remaining sibling, check whether `build.gradle.kts` contains a
    `testInstrumentation(project(":instrumentation:...:javaagent"))` entry for it.
+
 6. If any sibling is missing, add the `testInstrumentation` dependency and verify by running
    the module's tests.
 

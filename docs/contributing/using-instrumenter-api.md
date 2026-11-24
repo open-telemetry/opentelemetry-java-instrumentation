@@ -125,6 +125,7 @@ instrumentation produced the telemetry. Make sure you always provide the version
 the `Instrumenter`. You can do this in two ways:
 
 - By calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`.
+
 - By making sure that the JAR file with your instrumentation library contains a properties file in
   the `META-INF/io/opentelemetry/instrumentation/` directory. You must name the file
   `${instrumentationName}.properties`, where `${instrumentationName}` is the name of the
