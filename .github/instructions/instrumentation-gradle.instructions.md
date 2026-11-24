@@ -195,6 +195,16 @@ The suite's test task and execution variants run without the agent. Keep test-on
 local and reuse convention-provided dependencies and compiler options, such as testing-common and
 `-parameters`.
 
+Use a fixed version for third-party dependencies that only provide API types or fixtures for
+javaagent helper unit tests. Use the module's baseline when it supplies the needed API. The
+installed-agent integration suite covers supported library versions; `testLatestDeps` does not
+need to upgrade every unit-test fixture.
+
+Use `baseVersion("...").orLatest()` in a unit suite when running against a newer library release
+adds coverage for library behavior or a compatibility path under test. Pass a range to `orLatest`
+when the suite targets a bounded compatibility range. Keep a fixed version when the test requires
+that version's API, behavior, or regression boundary.
+
 When helper tests need a separate dependency classpath, use `unitTests("nameUnitTests")` in the
 existing `javaagent` module.
 
