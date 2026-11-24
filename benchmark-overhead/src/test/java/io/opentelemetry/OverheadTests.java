@@ -79,35 +79,37 @@ public class OverheadTests {
   }
 
   void runAppOnce(TestConfig config, Agent agent) throws Exception {
-    GenericContainer<?> postgres = new PostgresContainer(NETWORK).build();
-    postgres.start();
+    try (GenericContainer<?> postgres = new PostgresContainer(NETWORK).build()) {
+      postgres.start();
 
-    GenericContainer<?> petclinic =
-        new PetClinicRestContainer(NETWORK, collector, agent, namingConventions).build();
-    long start = System.currentTimeMillis();
-    petclinic.start();
-    writeStartupTimeFile(agent, start);
+      try (GenericContainer<?> petclinic =
+          new PetClinicRestContainer(NETWORK, collector, agent, namingConventions).build()) {
+        long start = System.currentTimeMillis();
+        petclinic.start();
+        writeStartupTimeFile(agent, start);
 
-    if (config.getWarmupSeconds() > 0) {
-      doWarmupPhase(config, petclinic);
+        if (config.getWarmupSeconds() > 0) {
+          doWarmupPhase(config, petclinic);
+        }
+
+        long testStart = System.currentTimeMillis();
+        startRecording(agent, petclinic);
+
+        GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, namingConventions).build();
+        k6.start();
+
+        long runDuration = System.currentTimeMillis() - testStart;
+        runDurations.put(agent.getName(), runDuration);
+
+        // This is required to get a graceful exit of the VM before testcontainers kills it
+        // forcibly.
+        // Without it, our jfr file will be empty.
+        petclinic.execInContainer("kill", "1");
+        while (petclinic.isRunning()) {
+          MILLISECONDS.sleep(500);
+        }
+      }
     }
-
-    long testStart = System.currentTimeMillis();
-    startRecording(agent, petclinic);
-
-    GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, namingConventions).build();
-    k6.start();
-
-    long runDuration = System.currentTimeMillis() - testStart;
-    runDurations.put(agent.getName(), runDuration);
-
-    // This is required to get a graceful exit of the VM before testcontainers kills it forcibly.
-    // Without it, our jfr file will be empty.
-    petclinic.execInContainer("kill", "1");
-    while (petclinic.isRunning()) {
-      MILLISECONDS.sleep(500);
-    }
-    postgres.stop();
   }
 
   private void startRecording(Agent agent, GenericContainer<?> petclinic) throws Exception {
@@ -121,7 +123,10 @@ public class OverheadTests {
       "name=petclinic",
       "filename=" + outFile
     };
-    petclinic.execInContainer(command);
+    var result = petclinic.execInContainer(command);
+    if (result.getExitCode() != 0) {
+      throw new IllegalStateException("Could not start JFR: " + result);
+    }
   }
 
   private void doWarmupPhase(TestConfig testConfig, GenericContainer<?> petclinic)
@@ -140,7 +145,10 @@ public class OverheadTests {
       "name=warmup",
       "filename=warmup.jfr"
     };
-    petclinic.execInContainer(startCommand);
+    var startResult = petclinic.execInContainer(startCommand);
+    if (startResult.getExitCode() != 0) {
+      throw new IllegalStateException("Could not start warmup JFR: " + startResult);
+    }
 
     long deadline = System.currentTimeMillis() + SECONDS.toMillis(testConfig.getWarmupSeconds());
     while (System.currentTimeMillis() < deadline) {
@@ -156,7 +164,10 @@ public class OverheadTests {
 
     System.out.println("Stopping disposable JFR warmup recording...");
     String[] stopCommand = {"jcmd", "1", "JFR.stop", "name=warmup"};
-    petclinic.execInContainer(stopCommand);
+    var stopResult = petclinic.execInContainer(stopCommand);
+    if (stopResult.getExitCode() != 0) {
+      throw new IllegalStateException("Could not stop warmup JFR: " + stopResult);
+    }
 
     System.out.println("Warmup complete.");
   }
