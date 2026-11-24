@@ -104,7 +104,7 @@ private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
 ## Schema URLs
 
 Use the schema URL of the adopted semantic convention that defines the emitted span, metric, or
-log in its effective mode. Use the version the instrumentation adopted, not the semconv
+log in its effective mode. Use the version adopted for that signal's convention, not the semconv
 dependency version. If no convention defines the signal, leave its schema URL unset. Supporting
 attributes cannot select, change, or invalidate the URL, and a parent span's schema does not
 establish a convention for its child. For example, a span defined by GenAI conventions uses the
