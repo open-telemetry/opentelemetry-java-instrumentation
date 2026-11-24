@@ -257,10 +257,9 @@ class JmxTelemetryTest {
                     .setIncluded("jvm.memory.used", "jvm.memory.init", "jvm.thread.count")
                     .setExcluded("jvm.thread.count")
                     .build());
-    if (includeUnstable) {
-      builder.setInternalMetricsUnstableMetricsFilter(
-          IncludeExclude.builder().setIncluded("jvm.memory.init").build());
-    } else {
+    builder.setInternalMetricsUnstableMetricsFilter(
+        IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    if (!includeUnstable) {
       builder.setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
     }
     AutoCloseable collection = builder.build().start();
