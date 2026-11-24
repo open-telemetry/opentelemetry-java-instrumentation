@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertAttributesExtractor;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertSpanNameExtractor;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertSpanStatusExtractor;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -43,7 +44,7 @@ public final class ServletTelemetryBuilder {
       builder;
   private final ServletInstrumenterBuilder<HttpServletRequest, HttpServletResponse> servletBuilder;
   private boolean addTraceIdRequestAttribute = false;
-  private BodyCaptureConfig requestBodyCaptureConfig;
+  private BodyCaptureConfig requestBodyCaptureConfig = createDefault();
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(

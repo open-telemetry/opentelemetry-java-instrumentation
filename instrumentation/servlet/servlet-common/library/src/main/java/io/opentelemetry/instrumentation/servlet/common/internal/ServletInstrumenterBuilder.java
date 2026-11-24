@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -31,7 +33,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
-  private BodyCaptureConfig requestBodyCaptureConfig;
+  private BodyCaptureConfig requestBodyCaptureConfig = createDefault();
 
   private boolean propagateOperationListenersToOnEnd;
   private boolean captureExperimentalAttributes;
