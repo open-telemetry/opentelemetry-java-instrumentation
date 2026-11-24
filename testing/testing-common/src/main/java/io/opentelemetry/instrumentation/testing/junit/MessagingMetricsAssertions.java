@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.testing.junit;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.sdk.metrics.data.MetricData;
@@ -50,12 +50,8 @@ public final class MessagingMetricsAssertions {
   }
 
   private static void verifyCounter(MetricData metric, long value, Attributes attributes) {
-    assertThat(metric.getLongSumData().getPoints())
-        .singleElement()
-        .satisfies(point -> {
-          assertThat(point.getValue()).isEqualTo(value);
-          assertThat(point.getAttributes()).isEqualTo(attributes);
-        });
+    assertThat(metric)
+        .hasLongSumPointsSatisfying(point -> point.hasValue(value).hasAttributes(attributes));
   }
 
   private static void verifyHistogram(MetricData metric, Attributes... attributes) {

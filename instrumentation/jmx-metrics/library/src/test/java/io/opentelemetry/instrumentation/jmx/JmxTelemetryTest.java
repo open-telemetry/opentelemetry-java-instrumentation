@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.jmx;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
 import static java.util.stream.Collectors.toSet;
@@ -144,7 +145,8 @@ class JmxTelemetryTest {
             .setInternalMetricsSystemFilter(
                 IncludeExclude.builder().setIncluded("jvm-test").build())
             // include all unstable metrics (stable ones already included)
-            .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+            .setInternalMetricsUnstableMetricsFilter(
+                IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -168,7 +170,7 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // enable stable metrics for every system
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().build());
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build());
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
@@ -190,9 +192,10 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // enable stable metrics for every system
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().build())
+            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
             // every system included by default, we just enable all unstable metrics
-            .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+            .setInternalMetricsUnstableMetricsFilter(
+                IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -211,9 +214,18 @@ class JmxTelemetryTest {
         .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
   }
 
-  @Test
-  void includeNothingByDefault() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void includeNothingByDefault(boolean emptySelectors) {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    if (emptySelectors) {
+      builder
+          .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
+          .setInternalMetricsUnstableMetricsFilter(
+              IncludeExclude.builder().setIncluded("*").build())
+          .setInternalMetricsSystemFilter(IncludeExclude.builder().build())
+          .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+    }
     builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
   }
@@ -245,9 +257,10 @@ class JmxTelemetryTest {
                     .setIncluded("jvm.memory.used", "jvm.memory.init", "jvm.thread.count")
                     .setExcluded("jvm.thread.count")
                     .build());
-    if (includeUnstable) {
-      builder.setInternalMetricsUnstableMetricsFilter(
-          IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    builder.setInternalMetricsUnstableMetricsFilter(
+        IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    if (!includeUnstable) {
+      builder.setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
     }
     AutoCloseable collection = builder.build().start();
     cleanup.deferCleanup(collection);
@@ -260,11 +273,9 @@ class JmxTelemetryTest {
               .filteredOn(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl() == null)
               .isNotEmpty()
               .allSatisfy(metric -> {
-                assertThat(metric.getLongSumData().getPoints())
-                    .singleElement()
-                    .satisfies(point ->
-                        assertThat(point.getAttributes().get(stringKey("test.source")))
-                            .isEqualTo("custom"));
+                assertThat(metric)
+                    .hasLongSumPointsSatisfying(point ->
+                        point.hasAttributesSatisfying(equalTo(stringKey("test.source"), "custom")));
               });
           metrics
               .filteredOn(metric -> metric.getInstrumentationScopeInfo().getSchemaUrl() != null)

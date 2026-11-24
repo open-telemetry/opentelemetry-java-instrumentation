@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -25,6 +26,12 @@ dependencies {
 val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation("io.kubernetes:client-java-api:7.0.0")
+    }
+  }
+
   // version22Test reuses the same test source against `latest.release` in latest-deps mode
   // (currently 26.x), and against 22.0.0 otherwise, to exercise the upper end of the v20+
   // builder API line.

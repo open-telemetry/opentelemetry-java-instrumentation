@@ -15,14 +15,20 @@ import java.util.List;
 public class MainResultsPersister implements ResultsPersister {
 
   private final TestConfig config;
+  private final Path resultsDir;
 
   public MainResultsPersister(TestConfig config) {
+    this(config, Paths.get("results"));
+  }
+
+  MainResultsPersister(TestConfig config, Path resultsDir) {
     this.config = config;
+    this.resultsDir = resultsDir;
   }
 
   @Override
   public void write(List<AppPerfResults> results) {
-    Path outputDir = Paths.get("results", config.getName());
+    Path outputDir = resultsDir.resolve("petclinic-v2").resolve(config.getName());
     ensureCreated(outputDir);
     new ConsoleResultsPersister().write(results);
     new FileSummaryPersister(outputDir.resolve("summary.txt")).write(results);

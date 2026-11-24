@@ -1,19 +1,18 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
+      implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:bootstrap"))
+      implementation("com.fasterxml.jackson.core:jackson-core")
       implementation("org.elasticsearch.client:rest:5.0.0")
     }
   }
-}
-
-tasks.check {
-  dependsOn(testing.suites)
 }
 
 dependencies {

@@ -49,6 +49,22 @@ class AgentStartupBenchmark {
 
   @Test
   void measureStartup() throws Exception {
+    String workload = System.getProperty("startup.benchmark.workload", "smoke");
+    if (!workload.equals("smoke") && !workload.equals("petclinic")) {
+      throw new IllegalArgumentException("Unknown startup workload: " + workload);
+    }
+    Path annotations =
+        workload.equals("petclinic") ? Path.of(required("annotations")).toAbsolutePath() : null;
+    Path helper =
+        workload.equals("petclinic") ? Path.of(required("petclinicHelper")).toAbsolutePath() : null;
+    try (PetclinicStartupFixture petclinic =
+        annotations == null ? null : PetclinicStartupFixture.start(annotations, helper)) {
+      measureStartup(petclinic, annotations);
+    }
+  }
+
+  private static void measureStartup(PetclinicStartupFixture petclinic, Path annotations)
+      throws Exception {
     List<Configuration> configurations = new ArrayList<>();
     configurations.add(new Configuration("no-agent", null, "none"));
     String baselineAgent = System.getProperty("startup.benchmark.baselineAgent", "");
@@ -58,7 +74,7 @@ class AgentStartupBenchmark {
     }
     configurations.add(new Configuration("agent", agent(required("agent")), required("revision")));
     Path recorder = recorder();
-    Path fixture = fixtureClass();
+    Path fixture = petclinic == null ? fixtureClass() : null;
     int samples = count("samples", 1);
     int warmups = count("warmups", 0);
     Path directory =
@@ -67,7 +83,26 @@ class AgentStartupBenchmark {
     Files.createDirectories(directory);
     Properties metadata = new Properties();
     metadata.setProperty("status", "incomplete");
-    metadata.setProperty("image.reference", StartupFixture.IMAGE);
+    metadata.setProperty("workload", petclinic == null ? "smoke" : "petclinic");
+    metadata.setProperty(
+        "image.reference",
+        petclinic == null ? StartupFixture.IMAGE : PetclinicStartupFixture.IMAGE);
+    if (petclinic != null) {
+      metadata.setProperty(
+          "application.version", "spring-petclinic-rest 4.0.2 (Spring Boot 4.1.2)");
+      metadata.setProperty("application.image.tag", "petclinic-rest-base:20261122233729");
+      metadata.setProperty("application.profiles", "postgres,spring-data-jpa");
+      metadata.setProperty("database.image.reference", PetclinicStartupFixture.DATABASE_IMAGE);
+      metadata.setProperty("database.version", "postgres 18.7");
+      metadata.setProperty("readiness", PetclinicStartupFixture.READINESS_PATH + " seeded owner 1");
+      metadata.setProperty("annotations.sha256", checksum(annotations));
+      metadata.setProperty("annotations.path", annotations.toString());
+      metadata.setProperty("helper.sha256", checksum(petclinic.helper()));
+      metadata.setProperty("helper.path", petclinic.helper().toString());
+    }
+    metadata.setProperty(
+        "timing",
+        "application JVM uptime at the first successful readiness response; includes JVM/agent initialization and application/request work before sampling; excludes container setup, database provisioning, and return network transit; probe polling affects when the successful request reaches the application");
     metadata.setProperty("samples", Integer.toString(samples));
     metadata.setProperty("warmups", Integer.toString(warmups));
     metadata.setProperty("resources", "quota=2 CPUs; memory=1 GiB; heap=512 MiB");
@@ -77,7 +112,9 @@ class AgentStartupBenchmark {
       String name = configuration.name();
       metadata.setProperty(
           "command." + name,
-          "java " + String.join(" ", arguments(configuration.agent() != null, false)));
+          "java "
+              + String.join(
+                  " ", arguments(configuration.agent() != null, false, petclinic != null)));
       metadata.setProperty(name + ".source.revision", configuration.revision());
       if (configuration.agent() != null) {
         try (JarFile jar = new JarFile(configuration.agent().toFile())) {
@@ -88,11 +125,14 @@ class AgentStartupBenchmark {
         metadata.setProperty(name + ".sha256", checksum(configuration.agent()));
         metadata.setProperty(name + ".path", configuration.agent().toString());
         metadata.setProperty(
-            "command.profile." + name, "java " + String.join(" ", arguments(true, true)));
+            "command.profile." + name,
+            "java " + String.join(" ", arguments(true, true, petclinic != null)));
       }
     }
     metadata.setProperty("recorder.sha256", checksum(recorder));
-    metadata.setProperty("fixture.sha256", checksum(fixture));
+    if (fixture != null) {
+      metadata.setProperty("fixture.sha256", checksum(fixture));
+    }
     metadata.setProperty("recorder.path", recorder.toString());
     metadata.setProperty("source.revision", System.getProperty("startup.benchmark.revision"));
     metadata.setProperty("measurement.order", "rotating configuration order each round");
@@ -114,7 +154,8 @@ class AgentStartupBenchmark {
                 false,
                 directory,
                 metadata,
-                docker);
+                docker,
+                petclinic);
         observations.add(observation);
         report.append(observation);
         assertThat(observation.status()).isEqualTo("ok");
@@ -123,7 +164,17 @@ class AgentStartupBenchmark {
     report.summarize(observations);
     for (Configuration configuration : configurations) {
       if (configuration.agent() != null) {
-        sample(configuration, recorder, fixture, -1, false, true, directory, metadata, docker);
+        sample(
+            configuration,
+            recorder,
+            fixture,
+            -1,
+            false,
+            true,
+            directory,
+            metadata,
+            docker,
+            petclinic);
       }
     }
     metadata.setProperty("status", "complete");
@@ -139,7 +190,8 @@ class AgentStartupBenchmark {
       boolean profile,
       Path directory,
       Properties metadata,
-      DockerClient docker)
+      DockerClient docker,
+      PetclinicStartupFixture petclinic)
       throws Exception {
     boolean withAgent = configuration.agent() != null;
     String name =
@@ -148,34 +200,32 @@ class AgentStartupBenchmark {
             : "sample-" + configuration.name() + "-" + round;
     double load = ManagementFactory.getOperatingSystemMXBean().getSystemLoadAverage();
     try (GenericContainer<?> application =
-            container()
+            container(petclinic != null)
                 .withCopyFileToContainer(
                     MountableFile.forHostPath(recorder), "/tmp/startup-recorder.jar")
-                .withCopyFileToContainer(
-                    MountableFile.forHostPath(fixture), "/app/classes/" + APPLICATION_CLASS)
                 .withCreateContainerCmdModifier(cmd -> cmd.withEntrypoint("java"))
-                .withCommand(arguments(withAgent, profile).toArray(String[]::new))
-                .withExposedPorts(8080)
+                .withCommand(
+                    arguments(withAgent, profile, petclinic != null).toArray(String[]::new))
+                .withExposedPorts(petclinic == null ? 8080 : 9966)
                 .waitingFor(Wait.forListeningPort().withStartupTimeout(TIMEOUT))
                 .withStartupAttempts(1);
         HttpClient client = HttpClient.newBuilder().connectTimeout(TIMEOUT).build()) {
       try {
+        if (petclinic == null) {
+          application.withCopyFileToContainer(
+              MountableFile.forHostPath(fixture), "/app/classes/" + APPLICATION_CLASS);
+        } else {
+          petclinic.configure(application);
+        }
         if (withAgent) {
           application.withCopyFileToContainer(
               MountableFile.forHostPath(configuration.agent()), "/tmp/agent.jar");
         }
         application.start();
-        HttpResponse<String> response = awaitReadiness(application, client);
+        ReadinessResult readiness = awaitReadiness(application, client, petclinic != null);
         Instant cutoff = Instant.now();
-        double startupSeconds =
-            startupSeconds(
-                response.statusCode(),
-                response.body(),
-                response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null));
-        String jvmVersion = response.headers().firstValue(JVM_VERSION_HEADER).orElse(null);
-        if (jvmVersion == null || jvmVersion.isBlank()) {
-          throw new IllegalArgumentException("Missing application JVM version response header");
-        }
+        double startupSeconds = readiness.uptimeSeconds();
+        String jvmVersion = readiness.jvmVersion();
 
         var image = docker.inspectImageCmd(application.getContainerInfo().getImageId()).exec();
         metadata.setProperty("image.id", image.getId());
@@ -221,15 +271,15 @@ class AgentStartupBenchmark {
     }
   }
 
-  private static HttpResponse<String> awaitReadiness(
-      GenericContainer<?> application, HttpClient client) throws Exception {
+  private static ReadinessResult awaitReadiness(
+      GenericContainer<?> application, HttpClient client, boolean petclinic) throws Exception {
     URI uri =
         URI.create(
             "http://"
                 + application.getHost()
                 + ":"
-                + application.getMappedPort(8080)
-                + "/greeting");
+                + application.getMappedPort(petclinic ? 9966 : 8080)
+                + (petclinic ? PetclinicStartupFixture.READINESS_PATH : "/greeting"));
     HttpRequest request = HttpRequest.newBuilder(uri).timeout(TIMEOUT).GET().build();
     long deadline = System.nanoTime() + TIMEOUT.toNanos();
     IOException lastConnectionFailure = null;
@@ -238,11 +288,12 @@ class AgentStartupBenchmark {
         HttpResponse<String> response =
             client.send(request, HttpResponse.BodyHandlers.ofString(UTF_8));
         if (response.statusCode() == 200) {
-          startupSeconds(
+          return readinessResult(
               response.statusCode(),
               response.body(),
-              response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null));
-          return response;
+              response.headers().firstValue(STARTUP_UPTIME_HEADER).orElse(null),
+              response.headers().firstValue(JVM_VERSION_HEADER).orElse(null),
+              petclinic);
         }
         if (response.statusCode() != 404 && response.statusCode() != 503) {
           throw new IOException("Readiness returned HTTP " + response.statusCode());
@@ -258,7 +309,10 @@ class AgentStartupBenchmark {
       Thread.sleep(50);
     }
     throw new IOException(
-        "Timed out waiting for successful /greeting readiness", lastConnectionFailure);
+        "Timed out waiting for successful "
+            + (petclinic ? PetclinicStartupFixture.READINESS_PATH : "/greeting")
+            + " readiness",
+        lastConnectionFailure);
   }
 
   static double startupSeconds(int status, String body, String uptimeHeader) {
@@ -266,6 +320,27 @@ class AgentStartupBenchmark {
       throw new IllegalArgumentException(
           "Readiness must return HTTP 200 and body Hi!, got HTTP " + status + " and " + body);
     }
+    return uptimeSeconds(uptimeHeader);
+  }
+
+  static double petclinicStartupSeconds(int status, String body, String uptimeHeader) {
+    PetclinicStartupFixture.validateResponse(status, body);
+    return uptimeSeconds(uptimeHeader);
+  }
+
+  static ReadinessResult readinessResult(
+      int status, String body, String uptimeHeader, String jvmVersionHeader, boolean petclinic) {
+    double uptimeSeconds =
+        petclinic
+            ? petclinicStartupSeconds(status, body, uptimeHeader)
+            : startupSeconds(status, body, uptimeHeader);
+    if (jvmVersionHeader == null || jvmVersionHeader.isBlank()) {
+      throw new IllegalArgumentException("Missing application JVM version response header");
+    }
+    return new ReadinessResult(uptimeSeconds, jvmVersionHeader);
+  }
+
+  private static double uptimeSeconds(String uptimeHeader) {
     if (uptimeHeader == null) {
       throw new IllegalArgumentException("Missing application JVM uptime response header");
     }
@@ -282,6 +357,10 @@ class AgentStartupBenchmark {
   }
 
   static List<String> arguments(boolean withAgent, boolean profile) {
+    return arguments(withAgent, profile, false);
+  }
+
+  static List<String> arguments(boolean withAgent, boolean profile, boolean petclinic) {
     List<String> arguments = new ArrayList<>(List.of("-Xmx512m"));
     if (profile) {
       arguments.add("-XX:FlightRecorderOptions=stackdepth=256");
@@ -290,13 +369,23 @@ class AgentStartupBenchmark {
     if (withAgent) {
       arguments.add("-javaagent:/tmp/agent.jar");
     }
-    arguments.addAll(
-        List.of("-cp", "/app/resources:/app/classes:/app/libs/*", StartupFixture.APPLICATION));
+    if (petclinic) {
+      arguments.addAll(
+          List.of(
+              "-Dloader.path=/app/annotations,/app/startup-helper",
+              "-cp",
+              "/app/spring-petclinic-rest.jar",
+              "org.springframework.boot.loader.launch.PropertiesLauncher"));
+    } else {
+      arguments.addAll(
+          List.of("-cp", "/app/resources:/app/classes:/app/libs/*", StartupFixture.APPLICATION));
+    }
     return arguments;
   }
 
-  private static GenericContainer<?> container() {
-    return new GenericContainer<>(DockerImageName.parse(StartupFixture.IMAGE))
+  private static GenericContainer<?> container(boolean petclinic) {
+    return new GenericContainer<>(
+            DockerImageName.parse(petclinic ? PetclinicStartupFixture.IMAGE : StartupFixture.IMAGE))
         .withEnv("JAVA_TOOL_OPTIONS", "")
         .withEnv("JDK_JAVA_OPTIONS", "")
         .withEnv("_JAVA_OPTIONS", "")
@@ -361,6 +450,8 @@ class AgentStartupBenchmark {
     }
     return value;
   }
+
+  record ReadinessResult(double uptimeSeconds, String jvmVersion) {}
 
   private static void saveMetadata(Path directory, Properties metadata) throws IOException {
     try (OutputStream out = Files.newOutputStream(directory.resolve("metadata.properties"))) {
