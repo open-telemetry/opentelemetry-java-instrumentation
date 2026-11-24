@@ -7,9 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1.ApacheHttpAsyncClientSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -55,11 +56,13 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute")
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("java.util.List")))
-            .and(takesArgument(2, named("java.util.List")))
-            .and(takesArgument(3, named("org.apache.http.protocol.HttpContext")))
-            .and(takesArgument(4, named("org.apache.http.concurrent.FutureCallback"))),
+            .and(
+                takesArguments(
+                    named("org.apache.http.HttpHost"),
+                    is(List.class),
+                    is(List.class),
+                    named("org.apache.http.protocol.HttpContext"),
+                    named("org.apache.http.concurrent.FutureCallback"))),
         getClass().getName() + "$PipeliningClientAdvice");
   }
 
