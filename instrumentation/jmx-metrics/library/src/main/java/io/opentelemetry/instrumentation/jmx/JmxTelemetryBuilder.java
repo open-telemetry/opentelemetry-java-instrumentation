@@ -136,12 +136,19 @@ public final class JmxTelemetryBuilder {
   /**
    * Configure which systems should have their internal metrics automatically registered.
    *
+   * <p>An empty selector restores the default of registering no systems. To register all systems,
+   * explicitly include {@code "*"}.
+   *
    * @param systemFilter system filter
    * @return this
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
-    internalMetricsSystemFilter = requireNonNull(systemFilter, "systemFilter");
+    requireNonNull(systemFilter, "systemFilter");
+    internalMetricsSystemFilter =
+        systemFilter.isEmpty()
+            ? IncludeExclude.builder().setExcluded("*").build()
+            : systemFilter;
     return this;
   }
 
@@ -149,12 +156,19 @@ public final class JmxTelemetryBuilder {
    * Configure which unstable internal metrics should be enabled, unless enabled they are
    * filtered-out.
    *
+   * <p>An empty selector restores the default of enabling no unstable metrics. To enable all
+   * unstable metrics, explicitly include {@code "*"}.
+   *
    * @param metricsFilter metric filter
    * @return this
    */
   @CanIgnoreReturnValue
   public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
-    internalMetricsUnstableMetricsFilter = requireNonNull(metricsFilter, "metricsFilter");
+    requireNonNull(metricsFilter, "metricsFilter");
+    internalMetricsUnstableMetricsFilter =
+        metricsFilter.isEmpty()
+            ? IncludeExclude.builder().setExcluded("*").build()
+            : metricsFilter;
     return this;
   }
 
