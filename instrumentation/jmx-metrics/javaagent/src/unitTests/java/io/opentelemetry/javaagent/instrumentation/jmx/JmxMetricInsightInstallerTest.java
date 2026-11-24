@@ -195,12 +195,10 @@ class JmxMetricInsightInstallerTest {
                 .hasName("custom.test.embedded")
                 .hasUnit("{thread}")
                 .hasDescription("Current number of threads.")
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributes(
-                                    Attributes.of(stringKey("test.source"), "declarative")))));
+                .hasLongGaugeSatisfying(gauge ->
+                    gauge.hasPointsSatisfying(point ->
+                        point.hasAttributes(
+                            Attributes.of(stringKey("test.source"), "declarative")))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx", "custom.test.excluded", metrics -> metrics.isEmpty());

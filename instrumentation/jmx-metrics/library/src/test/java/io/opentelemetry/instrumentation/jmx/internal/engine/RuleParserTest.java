@@ -576,31 +576,28 @@ class RuleParserTest {
     List<Map<String, Object>> rules = (List<Map<String, Object>>) data.get("rules");
 
     assertThat(parser.createMetricDef(rules.get(0)))
-        .satisfies(
-            def -> {
-              assertThat(def.getBeanGroup().getNamePatterns())
-                  .extracting(ObjectName::toString)
-                  .containsExactly("my-test:type=4");
-              assertThat(def.getMetricExtractors())
-                  .extracting(extractor -> extractor.getInfo().getMetricName())
-                  .containsExactlyInAnyOrder(
-                      "PREFIX.METRIC_NAME1", "PREFIX.METRIC_NAME2", "PREFIX.ATTRIBUTE3");
-              assertThat(def.getMetricExtractors())
-                  .anySatisfy(
-                      extractor -> {
-                        assertThat(extractor.getMetricValueExtractor().getAttributeName())
-                            .isEqualTo("A.b");
-                        MetricInfo info = extractor.getInfo();
-                        assertThat(info.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
-                        assertThat(info.getDescription()).isEqualTo("DESCRIPTION1");
-                        assertThat(info.getType()).isEqualTo(MetricInfo.Type.COUNTER);
-                        assertThat(info.getSourceUnit()).isEqualTo("SOURCE_UNIT1");
-                        assertThat(info.getUnit()).isEqualTo("UNIT1");
-                        assertThat(extractor.getAttributes())
-                            .extracting(MetricAttribute::getAttributeName)
-                            .containsExactlyInAnyOrder("LABEL_KEY1", "LABEL_KEY2", "LABEL_KEY3");
-                      });
-            });
+        .satisfies(def -> {
+          assertThat(def.getBeanGroup().getNamePatterns())
+              .extracting(ObjectName::toString)
+              .containsExactly("my-test:type=4");
+          assertThat(def.getMetricExtractors())
+              .extracting(extractor -> extractor.getInfo().getMetricName())
+              .containsExactlyInAnyOrder(
+                  "PREFIX.METRIC_NAME1", "PREFIX.METRIC_NAME2", "PREFIX.ATTRIBUTE3");
+          assertThat(def.getMetricExtractors())
+              .anySatisfy(extractor -> {
+                assertThat(extractor.getMetricValueExtractor().getAttributeName()).isEqualTo("A.b");
+                MetricInfo info = extractor.getInfo();
+                assertThat(info.getMetricName()).isEqualTo("PREFIX.METRIC_NAME1");
+                assertThat(info.getDescription()).isEqualTo("DESCRIPTION1");
+                assertThat(info.getType()).isEqualTo(MetricInfo.Type.COUNTER);
+                assertThat(info.getSourceUnit()).isEqualTo("SOURCE_UNIT1");
+                assertThat(info.getUnit()).isEqualTo("UNIT1");
+                assertThat(extractor.getAttributes())
+                    .extracting(MetricAttribute::getAttributeName)
+                    .containsExactlyInAnyOrder("LABEL_KEY1", "LABEL_KEY2", "LABEL_KEY3");
+              });
+        });
   }
 
   private static void checkConstantMetricAttribute(
