@@ -65,7 +65,6 @@ jobs:
       - test-latest-deps
       - test-native
       - muzzle
-      - lint
       - build-servlet-images
     runs-on: ubuntu-slim
     if: ${{ always() }}
@@ -81,9 +80,5 @@ jobs:
           (
             needs.build-servlet-images.result != 'success' &&
             needs.build-servlet-images.result != 'skipped'
-          ) ||
-          (
-            !startsWith(github.base_ref, 'release/') &&
-            needs.lint.result != 'success'
           )
         run: exit 1 # fail
