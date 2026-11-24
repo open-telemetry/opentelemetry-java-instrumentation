@@ -10,7 +10,8 @@ max_concurrency = 4
 include_fragments = "full"
 
 remap = [
-  "https://docs.oracle.com/(.*)#.*$ https://docs.oracle.com/$1"
+  "https://docs.oracle.com/(.*)#.*$ https://docs.oracle.com/$1",
+  '^https://central\.sonatype\.com/artifact/io\.opentelemetry\.instrumentation/opentelemetry-rocketmq-client-4\.8$ https://repo.maven.apache.org/maven2/io/opentelemetry/instrumentation/opentelemetry-rocketmq-client-4.8/maven-metadata.xml'
 ]
 
 # excluding links to pull requests and issues is done for performance
