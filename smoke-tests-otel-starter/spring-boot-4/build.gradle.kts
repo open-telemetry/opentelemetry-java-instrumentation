@@ -25,7 +25,7 @@ dependencies {
 
   testImplementation(project(":smoke-tests-otel-starter:spring-boot-common"))
 
-  testImplementation("org.springframework:spring-test:7.1.0")
+  testImplementation("org.springframework:spring-test")
   testImplementation("org.springframework.boot:spring-boot-resttestclient")
   testImplementation("org.springframework.boot:spring-boot-restclient")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
