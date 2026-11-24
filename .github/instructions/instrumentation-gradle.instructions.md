@@ -7,17 +7,15 @@ applyTo: "**/build.gradle.kts,settings.gradle.kts,**/settings.gradle.kts,.github
 Apply module-specific rules only to instrumentation projects. Test-task wiring rules also apply
 to shared infrastructure and other projects using the same conventions.
 
-- New module: register each subproject in `settings.gradle.kts`, include supported-library
+- Register each instrumentation subproject in `settings.gradle.kts`, include supported-library
   documentation and module metadata, choose the correct plugin (`otel.javaagent-instrumentation`,
   `otel.library-instrumentation`, or `otel.java-conventions` for testing), and wire actual test
-  variants. New javaagent modules need Muzzle coverage for their supported ranges.
-  Include new telemetry-collection test variants in
-  `.github/scripts/instrumentations.sh`, keep `settings.gradle.kts` entries alphabetical,
-  add the supported-library entry, and regenerate `.fossa.yml` with
-  `generateFossaConfiguration` when adding a module. For a new javaagent module with user-facing
-  settings, document them in a settings table in its `javaagent/README.md` or a shared parent
-  README. A standalone library instrumentation needs a library README with dependency and
-  usage details.
+  variants. Javaagent modules need Muzzle coverage for their supported ranges.
+  Keep `settings.gradle.kts` entries alphabetical and `.fossa.yml` consistent with the output of
+  `generateFossaConfiguration`. Regenerate `.fossa.yml` when adding a module. Document user-facing
+  javaagent settings in a settings table in the module's `javaagent/README.md` or a shared parent
+  README. A standalone library instrumentation needs a library README with dependency and usage
+  details.
 - Muzzle `pass` blocks need the target group, artifact, version range and inverse assertion
   where an inverse exists. A pass covering all versions has no meaningful inverse. If
   multiple `InstrumentationModule`s share a project, separate their ranges and exclude
@@ -47,11 +45,11 @@ to shared infrastructure and other projects using the same conventions.
   shared fixtures; a transitive dependency alone is not enough. The plugin limits all `Test` tasks
   in the project, including container-free suites and variants. Use narrower scheduling only for a
   demonstrated problem, and keep unrelated test settings scoped to the tasks that need them.
-- Check metadata collection when its wiring or collected telemetry changes, not as unrelated
-  cleanup. Collect default telemetry and supported non-default telemetry modes. Register
+- Metadata collection covers default telemetry and supported non-default telemetry modes. Register
   representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
   instrumentation scope and telemetry shape; equivalent suites need not all collect. Shared test
-  conventions forward `-PcollectMetadata=true` to test JVMs.
+  conventions forward `-PcollectMetadata=true` to test JVMs. Verify collection when its wiring or
+  collected telemetry changes, not as unrelated cleanup.
 - `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
   instrumentation defaults, regardless of task name or settings on `test`.
   Otherwise include only non-default user-facing settings
@@ -178,10 +176,10 @@ builds. Retain dependencies needed to realize and include suites; extra wiring i
 they are already reliably included.
 Wire standalone `Test` tasks separately.
 
-Preserve conditional execution declarations and compatibility/JDK/resource selection when moving
-blocks: an unconditional executions call can add otherwise unselected suites to `check`. Apply JDK
-gates to every execution requiring them, using the configured test JVM rather than the build JVM.
-Do not migrate opt-in smoke-test matrices or benchmarks into `check`.
+Keep conditional executions under their compatibility, JDK, and resource gates: an unconditional
+executions call can add otherwise unselected suites to `check`. Apply JDK gates to every execution
+requiring them, using the configured test JVM rather than the build JVM. Keep opt-in smoke-test
+matrices and benchmarks out of `check`.
 
 Combine mutually selected baseline/latest suites only with equivalent sources/behavior and unchanged
 dependency coverage, using existing version-selection helpers. Keep simultaneously tested runtimes
@@ -225,8 +223,8 @@ maps and deterministic discovered-class loops.
 ### Verification and scheduling
 
 Check default/variant configuration and `check` graphs in relevant baseline/latest/JDK modes,
-including explicit suite realization. Verify real discovery and execution after filter changes:
-default-only exclusions must stay off variants, and no-test failure behavior must be preserved.
+including explicit suite realization. Verify real discovery and execution where task filters apply:
+default-only exclusions must stay off variants, and no-test failure behavior must work as configured.
 
 Remove locks, build services, or environment setup only after verifying current framework
 initialization and concurrent-test behavior. Preserve real shared-workspace/Testcontainers

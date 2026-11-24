@@ -1,19 +1,19 @@
 # OpenTelemetry Java Instrumentation rules
 
-These rules and the applicable `.github/instructions/*.instructions.md` files guide both
-implementation and code review. Apply a rule only when its stated conditions hold. Keep its
-exceptions, rationale, and useful examples in the same topic file, not in a second guidance catalog.
+These rules and the applicable `.github/instructions/*.instructions.md` files guide implementation,
+audits of existing code, and pull request reviews. Apply a rule only when its stated conditions
+hold. Keep its exceptions, rationale, and useful examples in the same topic file, not in a second
+guidance catalog.
 
 ## Correctness and compatibility
 
 - Preserve lifecycle ownership, reentrancy, concurrency, error handling, and telemetry under
-  supported library usage. Trace relevant callers, configuration, initialization, registration,
-  and tests rather than reasoning only from edited syntax. Do not add defenses for unsupported
-  hypothetical failures.
+  supported library usage. Verify these contracts by tracing relevant callers, configuration,
+  initialization, registration, and tests. Do not add defenses for unsupported hypothetical failures.
 - Verify library and framework assumptions against the supported dependency versions and concrete
   implementations. Check comments and copied code against the behavior they describe.
-- For a public Java API change, identify the *publishing artifact* and determine API status
-  from its published contract and intended external use, not source path or visibility alone.
+- Determine whether a Java symbol is supported public API from its *publishing artifact*,
+  published contract, and intended external use, not source path or visibility alone.
   Symbols explicitly documented as internal, unsupported, and subject to change are not supported
   public APIs merely because their artifact is published; implementation-only changes to them need
   no public-API deprecation cycle or CHANGELOG entry. This does not exempt `.internal` packages or
@@ -29,15 +29,14 @@ exceptions, rationale, and useful examples in the same topic file, not in a seco
 - A deprecation scheduled for a major-version behavior change keeps that timing even in an alpha
   artifact. Examples include semconv migrations, interface overrides following an upstream removal,
   and the flat `ConfigProperties` bridge.
-- User-facing configuration names and outgoing telemetry identities also have compatibility
-  contracts. When a module is renamed, inspect both its `otel.instrumentation.<name>.enabled`
-  alias and emitted `otel.scope.name`, including scope-version lookup.
-  Preserving one does not preserve the other. Keep version lookup aligned with the name passed to
-  `Instrumenter.builder(...)`. Assess telemetry changes under `VERSIONING.md`, including the
-  changes that the adopted semantic conventions permit; not every telemetry edit is breaking.
-- For any instrumentation module changed, compare new or changed configuration reads, types, and
-  defaults with its `metadata.yaml`, including settings read in a dependent common module. The general
-  module enable/disable property is not a metadata configuration entry.
+- User-facing configuration names and outgoing telemetry identities have separate compatibility
+  contracts. Check supported `otel.instrumentation.<name>.enabled` aliases independently of emitted
+  `otel.scope.name`, including for modules that have been renamed. Keep scope-version lookup aligned
+  with the name passed to `Instrumenter.builder(...)`. Assess telemetry compatibility under
+  `VERSIONING.md` and the adopted semantic conventions; not every telemetry difference is breaking.
+- Compare an instrumentation module's `metadata.yaml` with the settings the module reads,
+  including their types and defaults and any reads in dependent common modules. The general module
+  enable/disable property is not a metadata configuration entry.
 
 For example, an alpha API deprecation delegates to its replacement:
 
@@ -65,7 +64,7 @@ For a stable API, the Javadoc states removal in the next major version instead.
   steps. Describe the released behavior directly, without
   referring to preview flags used to stage the change. Omit statements about behavior that is
   unchanged unless they are necessary to clarify the change's scope.
-- Add README and usage documentation for a concrete reader need: setup,
+- README and usage documentation should meet a concrete reader need: setup,
   configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
   A code change alone does not require a README addition. Do not add prose merely to inventory
   automatically emitted attributes or schema URLs, narrate internal build or instrumentation
@@ -82,12 +81,21 @@ For a stable API, the Javadoc states removal in the next major version instead.
   sections or historical comparisons. PR descriptions may include migration guidance, old/new
   examples, and removed properties or APIs.
 
-## When reviewing
+## When auditing existing code
+
+- Apply the relevant rules to all code in the requested scope, including unchanged code and its
+  metadata, documentation, and tests. Read related code outside that scope when needed to establish
+  the contract. Report concrete violations with their locations, evidence, and an actionable fix.
+- If a finding depends on what was previously supported, compare against the relevant released
+  artifact, documented contract, or version history. Without that baseline, do not claim a
+  compatibility break. Do not treat established exceptions as violations.
+
+## When reviewing a pull request
 
 - Review changed behavior, tracing the relevant callers, configuration, lifecycle, and tests.
-  Report a concrete defect or an explicit repository convention violated on a changed line.
-  Include the supported failure mode or the violated convention and an actionable fix.
-  If the evidence or an exception is unclear, do not comment.
+  Report only concrete defects or explicit convention violations introduced by the diff, and
+  anchor each finding on a changed line. Include the supported failure mode or the violated
+  convention and an actionable fix. If the evidence or an exception is unclear, do not comment.
 - Do not report pre-existing issues, speculative risks, or failures CI surfaces directly:
   compilation, Spotless formatting, Checkstyle, ErrorProne, NullAway, or failing tests.
   Missing coverage for behavior CI does not exercise can still matter. Do not ask the author
