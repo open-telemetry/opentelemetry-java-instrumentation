@@ -86,7 +86,7 @@ class ServletBodyCaptureTest {
   private static void testCaptureRequestBody(
       ServletTelemetryBuilder builder, @Nullable String expected) throws Exception {
 
-    String value = captureRequestBody(builder, "request-body".getBytes(UTF_8), null);
+    String value = captureRequestBody(builder, "request-body".getBytes(UTF_8), "text/plain");
     if (expected == null) {
       assertThat(value).isNull();
     } else {
@@ -96,7 +96,7 @@ class ServletBodyCaptureTest {
 
   @Nullable
   private static String captureRequestBody(
-      ServletTelemetryBuilder builder, byte[] body, @Nullable String contentType) throws Exception {
+      ServletTelemetryBuilder builder, byte[] body, String contentType) throws Exception {
     Filter filter = builder.build().createFilter();
 
     HttpServletRequest request = requestWithBody(body, contentType);
