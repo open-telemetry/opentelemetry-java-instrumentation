@@ -1,2 +1,5 @@
+[settings]
+base_branch = "maintenance/v2.x"
+
 [checks.lychee]
 check_all_local = true
