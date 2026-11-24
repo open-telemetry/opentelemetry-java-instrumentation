@@ -4,8 +4,8 @@ applyTo: "instrumentation/spring/**/*,smoke-tests-otel-starter/**/*,smoke-tests/
 
 # Spring Boot starter testing
 
-Apply these rules when adding or evaluating coverage for the library-mode
-`opentelemetry-spring-boot-starter` and `OpenTelemetryAutoConfiguration`.
+Apply these rules to coverage for the library-mode `opentelemetry-spring-boot-starter`
+and `OpenTelemetryAutoConfiguration`.
 
 ## Test layers
 
@@ -28,6 +28,6 @@ Both starter test layers use a separate `testDeclarativeConfig` source set with 
 `resources/application.yaml` containing `otel.file_format: "1.0"`. Mode selection follows
 `EarlyConfig.isDeclarativeConfig`, not an in-test flag.
 
-For changed mode-specific wiring that needs both modes, add coverage in the normal and declarative
-source sets rather than parameterizing one class over a mode selected during initialization.
+Cover mode-specific wiring that needs both modes in the normal and declarative source sets
+rather than parameterizing one class over a mode selected during initialization.
 This does not require duplicate behavior matrices for equivalent flat/YAML settings.

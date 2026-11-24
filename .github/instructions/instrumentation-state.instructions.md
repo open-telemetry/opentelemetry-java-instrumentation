@@ -185,10 +185,10 @@ producer, consumer, and failure cleanup.
 
 ## Supported concurrency and lock scope
 
-Before adding or removing synchronization, establish which supported initialization, completion,
-cancellation, retry, nested, and reuse paths can overlap. Account for subclasses, custom
-implementations, fallback storage, and skipped advice. Prefer library ordering or an existing
-operation context over a new handoff protocol.
+Evaluate synchronization against the supported initialization, completion, cancellation, retry,
+nested, and reuse paths that can overlap. Account for subclasses, custom implementations, fallback
+storage, and skipped advice. Prefer library ordering or an existing operation context over a
+separate handoff protocol.
 
 Publish related mutable state as a unit. One immutable value can use a safely published reference;
 several fields may need one short private lock. Use a once-claim CAS when supported cross-thread
