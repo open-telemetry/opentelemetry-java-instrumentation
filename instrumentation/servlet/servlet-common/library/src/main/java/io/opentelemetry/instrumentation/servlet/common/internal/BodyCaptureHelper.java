@@ -45,9 +45,9 @@ public abstract class BodyCaptureHelper<REQUEST, INPUT> {
       return inputStream;
     }
 
-    // prevent capturing the body when content-disposition indicates a binary body
-    String contentDisposition = accessor.getRequestHeader(request, "Content-Disposition");
-    if (contentDisposition != null && !"identity".equalsIgnoreCase(contentDisposition)) {
+    // prevent capturing the body when content-encoding indicates a binary body
+    String contentEncoding = accessor.getRequestHeader(request, "Content-Encoding");
+    if (contentEncoding != null && !"identity".equalsIgnoreCase(contentEncoding)) {
       return inputStream;
     }
 

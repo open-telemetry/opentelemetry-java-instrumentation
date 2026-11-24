@@ -115,7 +115,7 @@ class ServletRequestBodyExtractorTest {
   }
 
   @Test
-  void contentDispositionFiltering() {
+  void contentEncodingFiltering() {
     assertThat(shouldMarkRequestForBodyCapture(CONFIG, "text/plain", null)).isTrue();
     assertThat(shouldMarkRequestForBodyCapture(CONFIG, "text/plain", "identity")).isTrue();
     assertThat(shouldMarkRequestForBodyCapture(CONFIG, "text/plain", "gzip")).isFalse();

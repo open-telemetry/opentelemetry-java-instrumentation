@@ -37,7 +37,7 @@ class Jetty12RequestBodyExtractor implements AttributesExtractor<Request, Respon
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, Request request) {
     String contentType = request.getHeaders().get("Content-Type");
-    String contentDisposition = request.getHeaders().get("Content-Disposition");
+    String contentDisposition = request.getHeaders().get("Content-Encoding");
     if (!shouldMarkRequestForBodyCapture(config, contentType, contentDisposition)) {
       return;
     }

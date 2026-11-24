@@ -56,8 +56,8 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
 
     REQUEST request = requestServletRequestContext.request();
     String contentType = accessor.getRequestHeader(request, "Content-Type");
-    String contentDisposition = accessor.getRequestHeader(request, "Content-Disposition");
-    if (!shouldMarkRequestForBodyCapture(config, contentType, contentDisposition)) {
+    String contentEncoding = accessor.getRequestHeader(request, "Content-Encoding");
+    if (!shouldMarkRequestForBodyCapture(config, contentType, contentEncoding)) {
       return;
     }
     accessor.setRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE, true);
@@ -90,16 +90,16 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
    *
    * @param config configuration
    * @param contentType value of the content-type header, if available
-   * @param contentDisposition value of the content-disposition header, if available
+   * @param contentEncoding value of the content-encoding header, if available
    * @return true if the request should be marked for body capture, false otherwise
    */
   public static boolean shouldMarkRequestForBodyCapture(
-      BodyCaptureConfig config, @Nullable String contentType, @Nullable String contentDisposition) {
+      BodyCaptureConfig config, @Nullable String contentType, @Nullable String contentEncoding) {
     if (!config.isEnabled()) {
       return false;
     }
-    // prevent capturing the body when content-disposition indicates a binary body
-    if (contentDisposition != null && !"identity".equalsIgnoreCase(contentDisposition)) {
+    // prevent capturing the body when content-encoding indicates a binary body
+    if (contentEncoding != null && !"identity".equalsIgnoreCase(contentEncoding)) {
       return false;
     }
 
