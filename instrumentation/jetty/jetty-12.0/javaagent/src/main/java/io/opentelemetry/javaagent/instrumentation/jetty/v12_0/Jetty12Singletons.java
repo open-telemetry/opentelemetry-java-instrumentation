@@ -29,7 +29,7 @@ class Jetty12Singletons {
                       .captureServletAttributes()
                       .recordException()
                       .init(context));
-              if (ServletConfig.get().getCaptureRequestBodyEnabled()) {
+              if (ServletConfig.get().getRequestBodyCaptureConfig().isEnabled()) {
                 // with jetty 12, the request body can be read after the servlet service has
                 // returned.
                 builder.addAttributesExtractor(new Jetty12RequestBodyExtractor());

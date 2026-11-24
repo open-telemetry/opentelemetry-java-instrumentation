@@ -140,7 +140,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void captureRequestBody(Span serverSpan, REQUEST request) {
-    if (!servletConfig.getCaptureRequestBodyEnabled()) {
+    if (!servletConfig.getRequestBodyCaptureConfig().isEnabled()) {
       return;
     }
 

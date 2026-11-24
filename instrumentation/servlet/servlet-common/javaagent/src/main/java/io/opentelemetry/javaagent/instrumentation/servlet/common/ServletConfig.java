@@ -58,10 +58,6 @@ public class ServletConfig {
     return traceIdRequestAttributeEnabled;
   }
 
-  public boolean getCaptureRequestBodyEnabled() {
-    return bodyCaptureConfig.isEnabled();
-  }
-
   public BodyCaptureConfig getRequestBodyCaptureConfig() {
     return bodyCaptureConfig;
   }
