@@ -43,7 +43,7 @@ OpenTelemetry openTelemetry = ...;
 
 JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
   // Configure loading bundled metric definitions (optional)
-  .setBundledMetricsSystemFilter(IncludeExclude.builder().build()) // load bundled definitions for all systems
+  .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build()) // load bundled definitions for all systems
   .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("kafka.*").build()) // opt in to bundled unstable kafka.* metrics
   // Load metrics from classpath resource (optional)
   .addRules(JmxTelemetry.class.getClassLoader().getResourceAsStream("jmx/rules/tomcat.yaml"))
@@ -58,9 +58,14 @@ JmxTelemetry jmxTelemetry = JmxTelemetry.builder(openTelemetry)
 jmxTelemetry.start();
 ```
 
+### Filters
+
+| Filter | Description |
+| --- | --- |
+| `setBundledMetricsSystemFilter` | Systems whose bundled rules are loaded, such as `tomcat`. No bundled rules are loaded unless included or excluded patterns are configured. `*` selects all systems. |
+| `setUnstableBundledMetricsFilter` | Unstable bundled metrics to enable for the selected systems, such as `kafka.*`. No unstable bundled metrics are enabled unless included or excluded patterns are configured. `*` selects all unstable bundled metrics. This filter never applies to custom rules, even when a custom metric has the same name as an unstable bundled metric. |
+| `setMetrics` | Metrics to collect from both bundled and custom rules. All metrics are collected unless included or excluded patterns are configured. |
+
 Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
-Excluded patterns take precedence over included patterns. A selector with no included patterns
-collects every metric that is not excluded. An empty selector collects every metric.
-Bundled definitions ship with the library; no systems or unstable bundled metrics are enabled by
-default. The unstable-metrics filter applies only to bundled rules. Custom rules added with `addRules`
-remain subject to `setMetrics`, even when they use the name of a bundled unstable metric.
+Excluded patterns take precedence over included patterns. If only excluded patterns are configured,
+everything else is selected. An empty selector behaves the same as an unset filter.

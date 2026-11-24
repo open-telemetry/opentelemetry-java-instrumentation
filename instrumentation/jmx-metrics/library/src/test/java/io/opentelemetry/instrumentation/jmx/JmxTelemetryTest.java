@@ -148,7 +148,8 @@ class JmxTelemetryTest {
             // only load explicitly listed systems
             .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm-test").build())
             // include all unstable metrics (stable ones already included)
-            .setUnstableBundledMetricsFilter(IncludeExclude.builder().build());
+            .setUnstableBundledMetricsFilter(
+                IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -172,7 +173,7 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // enable stable metrics for every system
-            .setBundledMetricsSystemFilter(IncludeExclude.builder().build());
+            .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build());
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
@@ -194,9 +195,10 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // enable stable metrics for every system
-            .setBundledMetricsSystemFilter(IncludeExclude.builder().build())
-            // every system included by default, we just enable all unstable metrics
-            .setUnstableBundledMetricsFilter(IncludeExclude.builder().build());
+            .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
+            // include all unstable metrics
+            .setUnstableBundledMetricsFilter(
+                IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -215,9 +217,17 @@ class JmxTelemetryTest {
         .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
   }
 
-  @Test
-  void includeNothingByDefault() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void includeNothingByDefault(boolean emptySelectors) {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    if (emptySelectors) {
+      builder
+          .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
+          .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("*").build())
+          .setBundledMetricsSystemFilter(IncludeExclude.builder().build())
+          .setUnstableBundledMetricsFilter(IncludeExclude.builder().build());
+    }
     builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
   }
@@ -288,9 +298,11 @@ class JmxTelemetryTest {
         .flatMap(deprecated ->
             Stream.of(
                 argumentSet("omitted " + deprecated, deprecated, null, null, false),
-                argumentSet("omitted systems " + deprecated, deprecated, null, empty, false),
-                argumentSet("omitted unstable " + deprecated, deprecated, empty, null, false),
-                argumentSet("empty " + deprecated, deprecated, empty, empty, true),
+                argumentSet("omitted systems " + deprecated, deprecated, null, unstable, false),
+                argumentSet("omitted unstable " + deprecated, deprecated, systems, null, false),
+                argumentSet("empty " + deprecated, deprecated, empty, empty, false),
+                argumentSet("empty systems " + deprecated, deprecated, empty, unstable, false),
+                argumentSet("empty unstable " + deprecated, deprecated, systems, empty, false),
                 argumentSet("wildcards " + deprecated, deprecated, systems, unstable, true),
                 argumentSet(
                     "non-matching exclusions " + deprecated,
@@ -302,12 +314,12 @@ class JmxTelemetryTest {
                     "excluded system " + deprecated,
                     deprecated,
                     IncludeExclude.builder().setExcluded("test-*").build(),
-                    empty,
+                    unstable,
                     false),
                 argumentSet(
                     "excluded unstable " + deprecated,
                     deprecated,
-                    empty,
+                    systems,
                     IncludeExclude.builder().setExcluded("test.collision.*").build(),
                     false),
                 argumentSet(
@@ -372,9 +384,10 @@ class JmxTelemetryTest {
                     .setIncluded("jvm.memory.used", "jvm.memory.init", "jvm.thread.count")
                     .setExcluded("jvm.thread.count")
                     .build());
-    if (includeUnstable) {
-      builder.setUnstableBundledMetricsFilter(
-          IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    builder.setUnstableBundledMetricsFilter(
+        IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    if (!includeUnstable) {
+      builder.setUnstableBundledMetricsFilter(IncludeExclude.builder().build());
     }
     AutoCloseable collection = builder.build().start();
     cleanup.deferCleanup(collection);

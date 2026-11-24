@@ -40,9 +40,9 @@ For metadata edits or non-obvious declarative mappings, use
 
 ## Applying repository rules
 
-The repository rules guide implementation and review alike. Restrictions in
-`When reviewing` govern review comments, not which issues the cleanup agent may
-fix: fix in-scope CI-detectable problems too.
+Apply the repository rules to existing code throughout the requested module.
+Pull request reporting restrictions do not limit which in-scope issues the
+cleanup agent may fix, including problems caught by CI.
 
 ## Scope
 
