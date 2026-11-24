@@ -7,6 +7,10 @@ on:
         description: Allow one draft PR for a verified, publishable finding
         type: boolean
         default: false
+      continuation:
+        description: Internal continuation state
+        type: string
+        default: ''
 
 permissions: {}
 
@@ -14,11 +18,13 @@ jobs:
   audit:
     if: github.event_name == 'workflow_dispatch'
     permissions:
+      actions: write
       contents: write
       copilot-requests: write
-    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@662cc5ddeff3d0727913184d1d4be0c950c57e8c
+    uses: open-telemetry/shared-workflows/.github/workflows/instruction-audit.yml@e7329d844f449bebfde6a2009734cbbbf9129f22
     with:
       publish: ${{ inputs.publish }}
+      continuation: ${{ inputs.continuation }}
       otelbot_client_id: ${{ vars.OTELBOT_CLIENT_ID }}
     secrets:
       otelbot_private_key: ${{ secrets.OTELBOT_PRIVATE_KEY }}
