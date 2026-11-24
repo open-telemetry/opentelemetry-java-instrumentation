@@ -40,6 +40,7 @@ import kotlin.coroutines.intrinsics.COROUTINE_SUSPENDED
 import kotlin.coroutines.intrinsics.startCoroutineUninterceptedOrReturn
 import kotlin.coroutines.intrinsics.suspendCoroutineUninterceptedOrReturn
 import kotlin.coroutines.resume
+import kotlin.coroutines.startCoroutine
 
 // Callers resumed inline after a tail delegated WithSpan (an Unconfined caller, a completion
 // without an interceptor) see their own context, not the span that just ended.
@@ -115,6 +116,55 @@ class TailCallWithSpanInlineResumeTest {
     }
     return completed.get(10, TimeUnit.SECONDS)
   }
+
+  @Test
+  fun `undispatched withContext without a dispatcher preserves the caller context`() {
+    val caller = tracer.spanBuilder("caller").startSpan()
+    val callerContext = caller.storeInContext(Context.root())
+    val executor = Executors.newSingleThreadExecutor()
+    try {
+      executor.submit {
+        lateinit var suspended: Continuation<Int>
+        var completed: Result<Unit>? = null
+        val call: suspend () -> Unit = {
+          assertThat(outerUndispatchedTail { suspended = it }).isEqualTo(7)
+          assertThat(innerUndispatchedTail()).isEqualTo(42)
+          assertThat(Span.fromContext(Context.current()).spanContext).isEqualTo(caller.spanContext)
+        }
+        callerContext.makeCurrent().use {
+          call.startCoroutine(Continuation(EmptyCoroutineContext) { completed = it })
+        }
+        // The outer withContext resumes the caller with the outer tail's runtime marker applied.
+        suspended.resume(7)
+        checkNotNull(completed).getOrThrow()
+        assertThat(Context.current()).isSameAs(Context.root())
+      }.get(10, TimeUnit.SECONDS)
+    } finally {
+      executor.shutdown()
+      caller.end()
+    }
+
+    testing.waitAndAssertTraces(
+      { trace ->
+        trace.hasSpansSatisfyingExactly(
+          { it.hasName("caller").hasNoParent() },
+          { it.hasName("outer-tail").hasParent(trace.getSpan(0)) },
+          { it.hasName("inner-tail").hasParent(trace.getSpan(0)) },
+        )
+      },
+    )
+  }
+
+  @WithSpan("outer-tail")
+  private suspend fun outerUndispatchedTail(register: (Continuation<Int>) -> Unit): Int = withContext(CoroutineName("outer")) {
+    suspendCoroutineUninterceptedOrReturn { continuation ->
+      register(continuation)
+      COROUTINE_SUSPENDED
+    }
+  }
+
+  @WithSpan("inner-tail")
+  private suspend fun innerUndispatchedTail(): Int = withContext(CoroutineName("inner")) { 42 }
 
   // A continuation resumed without interception runs the caller inline, before resume returns.
   @Test
