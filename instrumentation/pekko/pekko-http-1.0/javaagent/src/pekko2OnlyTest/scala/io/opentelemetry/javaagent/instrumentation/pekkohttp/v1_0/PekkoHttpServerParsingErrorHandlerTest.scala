@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0
 
-import com.typesafe.config.ConfigFactory
 import io.opentelemetry.api.trace.SpanKind
 import io.opentelemetry.instrumentation.testing.junit.{
   AgentInstrumentationExtension,
@@ -18,6 +17,7 @@ import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.event.LoggingAdapter
 import org.apache.pekko.http.{IllegalRequestContext, ParsingErrorHandler}
 import org.apache.pekko.http.javadsl.{model => jm}
+import org.apache.pekko.http.scaladsl.Http
 import org.apache.pekko.http.scaladsl.model.{
   ErrorInfo,
   HttpRequest,
@@ -62,19 +62,17 @@ class PekkoHttpServerParsingErrorHandlerTest {
     assertRejectionTraced(classOf[OverloadDelegatingParsingErrorHandler])
 
   private def assertRejectionTraced(handlerClass: Class[_]): Unit = {
-    implicit val system: ActorSystem = ActorSystem(
-      "parsing-error-handler-test",
-      ConfigFactory
-        .parseString(
-          "pekko.http.server.parsing.error-handler = \"" + handlerClass.getName + "\""
-        )
-        .withFallback(ConfigFactory.load())
-    )
+    implicit val system: ActorSystem = ActorSystem("parsing-error-handler-test")
     try {
       val handler: HttpRequest => HttpResponse = _ => HttpResponse()
+      val settings =
+        ServerSettings(system).withParsingErrorHandler(handlerClass.getName)
       val binding =
         Await.result(
-          PekkoHttpTestBinding.bindSync(handler, "localhost", 0),
+          Http()
+            .newServerAt("localhost", 0)
+            .withSettings(settings)
+            .bindSync(handler),
           10.seconds
         )
       val port = binding.localAddress.getPort
