@@ -4,11 +4,12 @@ applyTo: "instrumentation/**/library/**/*.java,instrumentation/**/library/**/*.k
 
 # Library instrumentation
 
-- New public `*Telemetry` entry points provide `create(OpenTelemetry)` or
+- Public `*Telemetry` entry points normally provide `create(OpenTelemetry)` or
   `builder(OpenTelemetry)`. An entry point without customization may omit a builder.
   Where both exist, `create()` delegates to `builder(...).build()`. Builder setters return
   `this` and carry `@CanIgnoreReturnValue`, the constructor is package-private, and
-  `build()` returns the telemetry instance.
+  `build()` returns the telemetry instance. Preserve published entry points that differ rather
+  than breaking callers to match the convention.
 - Public `*Telemetry` methods that instrument an existing library object and return its
   instrumented form use `instrument(...)`. Prefer overloads over type-name
   or sync/async suffixes when parameter types distinguish the operations and are available

@@ -36,7 +36,7 @@ public class MicrometerSingletons {
     Experimental.setPrometheusMode(
         builder, config.get("prometheus_mode").getBoolean("enabled", false));
     Experimental.setBaseTimeUnit(
-        builder, TimeUnitParser.parseConfigValue(config.getString("base_time_unit")));
+        builder, TimeUnitParser.parseConfigValue(config.getString("base_time_unit", "s")));
     Experimental.setMicrometerHistogramGaugesEnabled(
         builder, config.get("histogram_gauges/development").getBoolean("enabled", false));
     meterRegistry = builder.build();

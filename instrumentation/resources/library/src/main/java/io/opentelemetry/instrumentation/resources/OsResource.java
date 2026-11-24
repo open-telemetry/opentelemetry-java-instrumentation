@@ -86,7 +86,7 @@ public final class OsResource {
       return OsTypeValues.HPUX;
     } else if (os.startsWith("aix")) {
       return OsTypeValues.AIX;
-    } else if (os.startsWith("solaris")) {
+    } else if (os.startsWith("solaris") || os.startsWith("sunos")) {
       return OsTypeValues.SOLARIS;
     } else if (os.startsWith("z/os")) {
       return OsTypeValues.ZOS;

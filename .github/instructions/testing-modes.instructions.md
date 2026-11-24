@@ -135,7 +135,7 @@ private static <T> T experimental(T value) {
 
 ## Default instrumentation enablement
 
-When a module's default enablement changes, exercise the same representative library operation
+Verify module-specific default enablement by exercising the same representative library operation
 through the installed agent in enabled and disabled JVMs. The enabled run emits instrumentation
 telemetry; the disabled run emits none. Do not substitute direct `defaultEnabled()` calls,
 configuration mocks, or installation-internal assertions.
