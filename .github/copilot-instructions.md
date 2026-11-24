@@ -34,9 +34,10 @@ guidance catalog.
   `otel.scope.name`, including for modules that have been renamed. Keep scope-version lookup aligned
   with the name passed to `Instrumenter.builder(...)`. Assess telemetry compatibility under
   `VERSIONING.md` and the adopted semantic conventions; not every telemetry difference is breaking.
-- Compare an instrumentation module's `metadata.yaml` with the settings the module reads,
-  including their types and defaults and any reads in dependent common modules. The general module
-  enable/disable property is not a metadata configuration entry.
+- Keep instrumentation configuration metadata, including each module's `metadata.yaml` and shared
+  configuration definitions, aligned with the actual readers. Check supported setting names, types,
+  and defaults, including reads in dependent common modules. Confirm that a setting has no readers
+  before removing it from the metadata.
 
 For example, an alpha API deprecation delegates to its replacement:
 

@@ -4,10 +4,8 @@ applyTo: "instrumentation/**/metadata.yaml,instrumentation-docs/src/main/resourc
 
 # Instrumentation metadata
 
-Compare configuration entries with the module's actual readers, including dependent common modules.
-Keep names, types, defaults, and supported settings aligned with the code. Remove an unused setting
-only after confirming it has no readers. General module enablement is represented by
-`disabled_by_default`, not an ordinary configuration entry.
+Represent general module enablement with `disabled_by_default`, not an ordinary configuration
+entry.
 
 ## Entry shape
 
@@ -106,12 +104,10 @@ An intentionally deprecated declarative spelling is documented only on an entry 
 Add `examples` only for module-specific settings with non-obvious list, pattern, or enum formats,
 not booleans, `general.*`, or `java.common.*`.
 
-After editing metadata, run the focused round-trip/schema validation:
+After editing metadata, run the focused round-trip/schema validation. It checks flat-to-declarative
+lookup, types, schemas, and common-setting references. Passing it does not prove that a setting
+has a reader.
 
 ```bash
 ./gradlew :instrumentation-docs:test --tests DeclarativeConfigValidationTest
 ```
-
-It checks flat-to-declarative lookup, types, schemas, and common-setting references. Keep the
-documented type and default aligned with actual readers; round-trip conversion alone does not
-prove that a setting is used.

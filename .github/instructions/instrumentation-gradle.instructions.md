@@ -26,21 +26,13 @@ to shared infrastructure and other projects using the same conventions.
   whether a Byte Buddy method matcher will ever match.
   Keep existing inverse checks and skips unless the compatibility contract itself changes;
   skips apply to both the pass range and its inverse.
-- Versioned javaagent modules for the same component must load their sibling `:javaagent`
-  modules via `testInstrumentation` so tests exercise Muzzle selection together. Match the
-  component prefix before the trailing version, not just the grouping directory. Omit
-  siblings already bundled into `javaagent-for-testing` through `baseJavaagentLibs` in
-  `javaagent/build.gradle.kts`. The convention plugin also supplies `javaagent-bootstrap`;
-  an explicit `compileOnly` dependency on it is redundant.
+- The javaagent instrumentation convention plugin supplies `javaagent-bootstrap`; an explicit
+  `compileOnly` dependency on it is redundant.
 - Every explicitly registered custom `Test` task must set `testClassesDirs` and `classpath`;
   otherwise it can pass without running any tests. Include normal verification tasks in `check`,
   but preserve intentionally opt-in tasks. Prefer suite execution variants over manually copying
   a suite into another `Test` task. Keep `tasks.test` appropriate for standalone single-test-task
   projects.
-- Keep the baseline dependency in `library(...)`. Adding `testLibrary(...)` for a newer version
-  of the same coordinate does not test both versions: Gradle resolves one dependency graph,
-  normally selecting the higher version. Exercise the newer runtime in a wired version-specific
-  test suite.
 - Apply `otel.testcontainers-testing` in projects whose tests use Testcontainers, including through
   shared fixtures; a transitive dependency alone is not enough. The plugin limits all `Test` tasks
   in the project, including container-free suites and variants. Use narrower scheduling only for a
@@ -88,11 +80,15 @@ Incompatible toolchains/plugins and version-specific generated or shaded compile
 require a separate javaagent project. Keep newer optional compile-time types in `compileOnly` when
 appropriate.
 
-For version siblings, compare the component prefix before the trailing version, not just the parent
-directory. `netty-3.8` and `netty-4.1` are siblings; `akka-actor-2.3` and `akka-http-10.0` are not.
-Check `baseJavaagentLibs` before adding sibling `testInstrumentation` dependencies.
+Versioned javaagent modules for the same component must load their sibling `:javaagent` modules
+via `testInstrumentation` so tests exercise Muzzle selection together. Compare the component
+prefix before the trailing version, not just the parent directory. `netty-3.8` and `netty-4.1`
+are siblings; `akka-actor-2.3` and `akka-http-10.0` are not. Omit siblings already bundled into
+`javaagent-for-testing` through `baseJavaagentLibs` in `javaagent/build.gradle.kts`.
 
-`library(...)` supplies the baseline compile-only dependency and default test runtime.
+Keep the baseline dependency in `library(...)`, which supplies the compile-only dependency and
+default test runtime. Adding `testLibrary(...)` for a newer version of the same coordinate
+resolves one dependency graph, normally selecting the higher version, rather than testing both.
 `testLibrary(...)` is valid for a deliberately different single runtime or test-only artifact.
 To test two runtimes, leave baseline-compatible tests in `src/test`, put only newer-runtime tests
 in a dedicated `JvmTestSuite`, declare its runtime dependency in that suite, and wire the suites
