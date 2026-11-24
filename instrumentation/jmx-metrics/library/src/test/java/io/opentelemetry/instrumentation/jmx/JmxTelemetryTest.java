@@ -148,8 +148,7 @@ class JmxTelemetryTest {
             // only load explicitly listed systems
             .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm-test").build())
             // include all unstable metrics (stable ones already included)
-            .setUnstableBundledMetricsFilter(
-                IncludeExclude.builder().setIncluded("*").build());
+            .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -197,8 +196,7 @@ class JmxTelemetryTest {
             // enable stable metrics for every system
             .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
             // include all unstable metrics
-            .setUnstableBundledMetricsFilter(
-                IncludeExclude.builder().setIncluded("*").build());
+            .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 

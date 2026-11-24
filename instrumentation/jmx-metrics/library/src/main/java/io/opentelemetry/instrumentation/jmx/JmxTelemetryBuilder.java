@@ -165,10 +165,10 @@ public final class JmxTelemetryBuilder {
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
    * of characters, including none. Excluded patterns take precedence over included patterns.
    *
-   * <p>No unstable bundled metrics are enabled unless included or excluded patterns are
-   * configured; an {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an
-   * unset one. Include {@code "*"} to select all unstable bundled metrics. If only excluded
-   * patterns are configured, every other unstable bundled metric is selected.
+   * <p>No unstable bundled metrics are enabled unless included or excluded patterns are configured;
+   * an {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an unset one.
+   * Include {@code "*"} to select all unstable bundled metrics. If only excluded patterns are
+   * configured, every other unstable bundled metric is selected.
    *
    * @param metricsFilter metric filter
    * @return this
