@@ -97,16 +97,11 @@ mdc_attributes:
   excluded: [password]
 ```
 
-The setting's baseline determines what absence means:
-
-| Baseline | Absent or empty selector | Omitted `included` with non-empty `excluded` |
-| --- | --- | --- |
-| None by default | Select nothing | Select everything except excluded values |
-| All by default | Keep everything | Keep everything except excluded values |
-
-An empty selector has no patterns in either list. Treat it as absent and use the setting's own
-default; `IncludeExclude.isEmpty()` identifies it. This matches flat configuration, which cannot
-distinguish empty values from unset values.
+Use `IncludeExclude.isEmpty()` to identify a selector with no included or excluded patterns.
+Treat it as absent and use the setting's own default: select nothing for a none-by-default
+setting and keep everything for an all-by-default setting. This matches flat configuration, which
+cannot distinguish empty values from unset values. A selector with excluded patterns and no
+included patterns is not empty and selects everything except excluded values.
 
 For a none-by-default setting, document select-all as `included: ["*"]`, or `included=*` in flat
 configuration. Flat configuration cannot express a present selector with no included patterns.
