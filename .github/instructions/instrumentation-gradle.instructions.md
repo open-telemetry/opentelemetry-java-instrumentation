@@ -7,12 +7,13 @@ applyTo: "**/build.gradle.kts,settings.gradle.kts,**/settings.gradle.kts,.github
 Apply module-specific rules only to instrumentation projects. Test-task wiring rules also apply
 to shared infrastructure and other projects using the same conventions.
 
-- Register each instrumentation subproject in `settings.gradle.kts`, include supported-library
-  documentation and module metadata, choose the correct plugin (`otel.javaagent-instrumentation`,
+- Register each instrumentation subproject in `settings.gradle.kts`, include module metadata,
+  choose the correct plugin (`otel.javaagent-instrumentation`,
   `otel.library-instrumentation`, or `otel.java-conventions` for testing), and wire actual test
   variants. Javaagent modules need Muzzle coverage for their supported ranges.
   Keep `settings.gradle.kts` entries alphabetical and `.fossa.yml` consistent with the output of
-  `generateFossaConfiguration`. Regenerate `.fossa.yml` when adding a module. Document user-facing
+  `generateFossaConfiguration`. Regenerate `.fossa.yml` when adding a module.
+- Include supported-library documentation for each instrumentation subproject. Document user-facing
   javaagent settings in a settings table in the module's `javaagent/README.md` or a shared parent
   README. A standalone library instrumentation needs a library README with dependency and usage
   details.
