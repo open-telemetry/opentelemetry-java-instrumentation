@@ -554,11 +554,6 @@ instrumentation/development:
       # `rocketmq.broker_address`, `rocketmq.send_result`, `rocketmq.queue_id`, and
       # `rocketmq.queue_offset`.
       experimental_span_attributes/development: false
-      message_create_spans:
-        # Enables per-message Create spans for batch sends. Overrides the common messaging setting.
-        # Disabling this retains Send spans and context propagation and does not affect
-        # single-message sends.
-        enabled: true
     runtime_telemetry:
       # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
       emit_experimental_jfr_metrics/development: false
