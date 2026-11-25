@@ -69,22 +69,16 @@ class SpringCloudGatewayRouteIntegrationTest {
   }
 
   private static void assertServerRoute(String route) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + route)
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttribute(HTTP_ROUTE, route)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET " + route).hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, route)));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.spring-webflux-5.3",
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point -> point.hasAttribute(HTTP_ROUTE, route))));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.hasPointsSatisfying(point -> point.hasAttribute(HTTP_ROUTE, route))));
   }
 
   @Configuration(proxyBeanMethods = false)

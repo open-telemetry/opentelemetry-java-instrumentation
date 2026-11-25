@@ -40,12 +40,11 @@ class SpringCloudGatewayInstrumentationAutoConfigurationTest {
   void applicationProvidedGetter() {
     contextRunner
         .withUserConfiguration(CustomFilterConfiguration.class)
-        .run(
-            context -> {
-              assertThat(context).hasSingleBean(SpringCloudGatewayRouteGetter.class);
-              assertThat(context.getBean(SpringCloudGatewayRouteGetter.class))
-                  .isSameAs(context.getBean("customRouteGetter"));
-            });
+        .run(context -> {
+          assertThat(context).hasSingleBean(SpringCloudGatewayRouteGetter.class);
+          assertThat(context.getBean(SpringCloudGatewayRouteGetter.class))
+              .isSameAs(context.getBean("customRouteGetter"));
+        });
   }
 
   @Configuration(proxyBeanMethods = false)

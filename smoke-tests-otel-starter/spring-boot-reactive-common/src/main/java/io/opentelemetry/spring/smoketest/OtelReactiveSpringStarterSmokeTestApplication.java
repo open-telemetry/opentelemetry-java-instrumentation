@@ -32,17 +32,14 @@ public class OtelReactiveSpringStarterSmokeTestApplication {
             route ->
                 route
                     .path("/gateway/**")
-                    .filters(
-                        filters ->
-                            filters.filter(
-                                (exchange, chain) -> {
-                                  byte[] body = "gateway".getBytes(UTF_8);
-                                  return exchange
-                                      .getResponse()
-                                      .writeWith(
-                                          Mono.just(
-                                              exchange.getResponse().bufferFactory().wrap(body)));
-                                }))
+                    .filters(filters ->
+                        filters.filter((exchange, chain) -> {
+                          byte[] body = "gateway".getBytes(UTF_8);
+                          return exchange
+                              .getResponse()
+                              .writeWith(
+                                  Mono.just(exchange.getResponse().bufferFactory().wrap(body)));
+                        }))
                     .uri("http://localhost"))
         .build();
   }
