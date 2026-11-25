@@ -202,14 +202,13 @@ public abstract class AbstractReactorCoreTest {
   void propagatesContextValuesFromExternallyDrivenPublisher() {
     AtomicReference<FluxSink<String>> sink = new AtomicReference<>();
     AtomicReference<String> observedContextValue = new AtomicReference<>();
-    AtomicReference<Span> observedSpan = new AtomicReference<>();
     Flux<String> publisher = Flux.create(sink::set);
 
     try (Scope ignored =
         Context.root().with(TEST_CONTEXT_KEY, "test-context-value").makeCurrent()) {
       publisher.subscribe(unused -> {
         observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
-        observedSpan.set(Span.current());
+        testing.runWithSpan("subscriber", () -> {});
       });
     }
 
@@ -224,18 +223,17 @@ public abstract class AbstractReactorCoreTest {
     sink.get().complete();
 
     assertThat(observedContextValue.get()).isEqualTo("test-context-value");
-    assertThat(observedSpan.get().getSpanContext().isValid()).isFalse();
     assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
 
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()));
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("subscriber").hasNoParent()));
   }
 
   @Test
   void preservesExplicitlyClearedSpanFromExternallyDrivenPublisher() {
     AtomicReference<FluxSink<String>> sink = new AtomicReference<>();
     AtomicReference<String> observedContextValue = new AtomicReference<>();
-    AtomicReference<Span> observedSpan = new AtomicReference<>();
     Flux<String> publisher = Flux.create(sink::set);
 
     Context context =
@@ -243,7 +241,7 @@ public abstract class AbstractReactorCoreTest {
     try (Scope ignored = context.makeCurrent()) {
       publisher.subscribe(unused -> {
         observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
-        observedSpan.set(Span.current());
+        testing.runWithSpan("subscriber", () -> {});
       });
     }
 
@@ -257,10 +255,9 @@ public abstract class AbstractReactorCoreTest {
     sink.get().complete();
 
     assertThat(observedContextValue.get()).isEqualTo("test-context-value");
-    assertThat(observedSpan.get().getSpanContext().isValid()).isFalse();
-
     testing.waitAndAssertTraces(
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()));
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()),
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("subscriber").hasNoParent()));
   }
 
   @Test

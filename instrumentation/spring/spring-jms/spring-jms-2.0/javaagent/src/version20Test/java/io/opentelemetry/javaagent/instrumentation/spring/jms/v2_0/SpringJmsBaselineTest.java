@@ -19,8 +19,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.Attributes;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.instrumentation.spring.jms.v2_0.AbstractJmsTest;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -84,7 +82,7 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     cleanup.deferCleanup(connectionFactory::close);
 
     CountDownLatch consumerCreated = new CountDownLatch(1);
-    CompletableFuture<SpanContext> listenerContext = new CompletableFuture<>();
+    CompletableFuture<Void> listenerCompleted = new CompletableFuture<>();
     BaselineListenerContainer container = new BaselineListenerContainer(consumerCreated);
     container.setConnectionFactory(connectionFactory);
     container.setDestinationName(DESTINATION_NAME);
@@ -94,7 +92,10 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     container.setDurableSubscriptionName(SUBSCRIPTION_NAME);
     @SuppressWarnings("rawtypes")
     SessionAwareMessageListener listener =
-        (message, session) -> listenerContext.complete(Span.current().getSpanContext());
+        (message, session) -> {
+          testing.runWithSpan("listener", () -> {});
+          listenerCompleted.complete(null);
+        };
     container.setMessageListener(listener);
     cleanup.deferCleanup(container::destroy);
     container.afterPropertiesSet();
@@ -105,32 +106,28 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     template.setPubSubDomain(true);
     testing.runWithSpan("parent", () -> template.convertAndSend(DESTINATION_NAME, "a message"));
 
-    SpanContext processContext = listenerContext.get(10, SECONDS);
-    assertThat(processContext.isValid()).isTrue();
-
-    assertListenerSpans(processContext);
+    listenerCompleted.get(10, SECONDS);
+    assertListenerSpans();
     assertMetrics();
   }
 
-  private void assertListenerSpans(SpanContext processContext) {
+  private void assertListenerSpans() {
     Consumer<TraceAssert> parentTraceAssertion =
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span -> span.hasName("parent").hasNoParent(),
                 span -> span.hasName("send " + DESTINATION_NAME).hasParent(trace.getSpan(0)),
-                span -> {
-                  assertConsumerSpan(
-                      span,
-                      trace.getSpan(1),
-                      trace.getSpan(1),
-                      DESTINATION_NAME,
-                      "process",
-                      false,
-                      null,
-                      SUBSCRIPTION_NAME);
-                  assertThat(processContext.getTraceId()).isEqualTo(trace.getSpan(2).getTraceId());
-                  assertThat(processContext.getSpanId()).isEqualTo(trace.getSpan(2).getSpanId());
-                });
+                span ->
+                    assertConsumerSpan(
+                        span,
+                        trace.getSpan(1),
+                        trace.getSpan(1),
+                        DESTINATION_NAME,
+                        "process",
+                        false,
+                        null,
+                        SUBSCRIPTION_NAME),
+                span -> span.hasName("listener").hasParent(trace.getSpan(2)));
 
     if (Boolean.getBoolean(RECEIVE_TELEMETRY_PROPERTY)) {
       AtomicReference<SpanData> producerSpan = new AtomicReference<>();

@@ -23,8 +23,6 @@ import static org.assertj.core.api.Assertions.catchThrowable;
 import io.netty.handler.codec.http.HttpMethod;
 import io.netty.resolver.AddressResolverGroup;
 import io.opentelemetry.api.common.AttributeKey;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -41,7 +39,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -143,19 +140,15 @@ abstract class AbstractReactorNettyHttpClientTest
 
   @Test
   void shouldExposeContextToHttpClientCallbacks() throws InterruptedException {
-    AtomicReference<Span> onRequestSpan = new AtomicReference<>();
-    AtomicReference<Span> afterRequestSpan = new AtomicReference<>();
-    AtomicReference<Span> onResponseSpan = new AtomicReference<>();
-    AtomicReference<Span> afterResponseSpan = new AtomicReference<>();
     CountDownLatch latch = new CountDownLatch(1);
 
     HttpClient httpClient =
         createHttpClient()
-            .doOnRequest((rq, con) -> onRequestSpan.set(Span.current()))
-            .doAfterRequest((rq, con) -> afterRequestSpan.set(Span.current()))
-            .doOnResponse((rs, con) -> onResponseSpan.set(Span.current()))
+            .doOnRequest((rq, con) -> testing.runWithSpan("onRequest", () -> {}))
+            .doAfterRequest((rq, con) -> testing.runWithSpan("afterRequest", () -> {}))
+            .doOnResponse((rs, con) -> testing.runWithSpan("onResponse", () -> {}))
             .doAfterResponseSuccess((rs, con) -> {
-              afterResponseSpan.set(Span.current());
+              testing.runWithSpan("afterResponse", () -> {});
               latch.countDown();
             });
 
@@ -172,35 +165,39 @@ abstract class AbstractReactorNettyHttpClientTest
                 })
                 .block());
 
-    latch.await(10, SECONDS);
+    assertThat(latch.await(10, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(trace -> {
+      trace.hasSize(7);
       SpanData parentSpan = trace.getSpan(0);
-      SpanData nettyClientSpan = trace.getSpan(1);
+      SpanData nettyClientSpan =
+          IntStream.range(0, 7)
+              .mapToObj(trace::getSpan)
+              .filter(span -> span.getKind() == CLIENT)
+              .findFirst()
+              .orElseThrow(AssertionError::new);
 
-      trace.hasSpansSatisfyingExactly(
+      trace.hasSpansSatisfyingExactlyInAnyOrder(
           span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
           span -> span.hasName("GET").hasKind(CLIENT).hasParent(parentSpan),
-          span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan));
-
-      assertSameSpan(parentSpan, onRequestSpan);
-      assertSameSpan(nettyClientSpan, afterRequestSpan);
-      assertSameSpan(nettyClientSpan, onResponseSpan);
-      assertSameSpan(parentSpan, afterResponseSpan);
+          span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(nettyClientSpan),
+          span -> span.hasName("onRequest").hasParent(parentSpan),
+          span -> span.hasName("afterRequest").hasParent(nettyClientSpan),
+          span -> span.hasName("onResponse").hasParent(nettyClientSpan),
+          span -> span.hasName("afterResponse").hasParent(parentSpan));
     });
   }
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   void shouldExposeContextToHttpRequestErrorCallback(boolean combinedCallbacks) {
-    AtomicReference<Span> onRequestErrorSpan = new AtomicReference<>();
-
     HttpClient httpClient =
         combinedCallbacks
             ? createHttpClient()
-                .doOnError((rq, err) -> onRequestErrorSpan.set(Span.current()), (rs, err) -> {})
+                .doOnError(
+                    (rq, err) -> testing.runWithSpan("requestError", () -> {}), (rs, err) -> {})
             : createHttpClient()
-                .doOnRequestError((rq, err) -> onRequestErrorSpan.set(Span.current()));
+                .doOnRequestError((rq, err) -> testing.runWithSpan("requestError", () -> {}));
 
     Throwable thrown =
         catchThrowable(() ->
@@ -216,7 +213,7 @@ abstract class AbstractReactorNettyHttpClientTest
     testing.waitAndAssertTraces(trace -> {
       SpanData parentSpan = trace.getSpan(0);
 
-      trace.hasSpansSatisfyingExactly(
+      trace.hasSpansSatisfyingExactlyInAnyOrder(
           span ->
               span.hasName("parent")
                   .hasKind(INTERNAL)
@@ -227,9 +224,8 @@ abstract class AbstractReactorNettyHttpClientTest
               span.hasKind(CLIENT)
                   .hasParent(parentSpan)
                   .hasStatus(StatusData.error())
-                  .hasException(thrown.getCause()));
-
-      assertSameSpan(parentSpan, onRequestErrorSpan);
+                  .hasException(thrown.getCause()),
+          span -> span.hasName("requestError").hasParent(parentSpan));
     });
   }
 
@@ -310,12 +306,5 @@ abstract class AbstractReactorNettyHttpClientTest
                 span.hasName("test-http-server")
                     .hasKind(SpanKind.SERVER)
                     .hasParent(trace.getSpan(1))));
-  }
-
-  private static void assertSameSpan(SpanData expected, AtomicReference<Span> actual) {
-    SpanContext expectedSpanContext = expected.getSpanContext();
-    SpanContext actualSpanContext = actual.get().getSpanContext();
-    assertThat(actualSpanContext.getTraceId()).isEqualTo(expectedSpanContext.getTraceId());
-    assertThat(actualSpanContext.getSpanId()).isEqualTo(expectedSpanContext.getSpanId());
   }
 }
