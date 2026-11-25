@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -20,35 +23,21 @@ dependencies {
   latestDepTestLibrary("io.github.resilience4j:resilience4j-circuitbreaker:latest.release")
 }
 
-tasks {
-  test {
-    jvmArgs("-Dotel.instrumentation.resilience4j-circuitbreaker.enabled=true")
-  }
-
-  val testDisabled = register<Test>("testDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("*DefaultEnablementTest")
+testing.suites {
+  executions("test") {
+    configureDefault {
+      systemProperty("otel.instrumentation.resilience4j-circuitbreaker.enabled", "true")
     }
-  }
 
-  val testExperimental = register<Test>("testExperimental") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
+    register("Disabled") {
+      filter {
+        includeTestsMatching("*DefaultEnablementTest")
+      }
+    }
 
-    jvmArgs(
-      "-Dotel.instrumentation.resilience4j-circuitbreaker.enabled=true",
-      "-Dotel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
-    )
-    systemProperty(
-      "metadataConfig",
-      "otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes=true"
-    )
-  }
-
-  check {
-    dependsOn(testDisabled, testExperimental)
+    register("Experimental") {
+      systemProperty("otel.instrumentation.resilience4j-circuitbreaker.enabled", "true")
+      telemetryConfig("otel.instrumentation.resilience4j-circuitbreaker.experimental-span-attributes", "true")
+    }
   }
 }
