@@ -58,7 +58,8 @@ For a stable API, the Javadoc states removal in the next major version instead.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
 - Add hand-written changelog entries only for deprecations or breaking changes, as specified in
-  CONTRIBUTING.md; normal changes rely on the generated changelog. Use the appropriate stable or
+  CONTRIBUTING.md; normal changes rely on the generated changelog. Document deprecations of
+  settings and instrumentation enablement aliases in the changelog. Use the appropriate stable or
   non-stable breaking-change heading and the corresponding PR label. Keep entries short, naming a
   deprecated interface and its replacement without repeating removal timing or obvious migration
   steps. Describe the released behavior directly, without

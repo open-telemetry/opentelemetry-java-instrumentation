@@ -117,7 +117,8 @@ not require changing the other. Preserve existing controls and ordering when mai
 - Use `isDeclaredBy` on a Byte Buddy method matcher only
   when a type matcher covers several types but advice targets a member declared by one
   specific type; a name and signature that already identify the method need no extra
-  restriction. `isMethod()` is redundant after a non-empty `named(...)` or
+  restriction.
+- `isMethod()` is redundant after a non-empty `named(...)` or
   `namedOneOf(...)` matcher. Keep it when the name can be empty, because `named("")`
   can match constructors and class initializers.
 

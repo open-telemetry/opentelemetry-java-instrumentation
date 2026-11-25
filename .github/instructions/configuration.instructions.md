@@ -58,6 +58,8 @@ When both an ordinary setting and its deprecated name are supported, read the re
 fall back to the deprecated name only when the replacement is absent, then choose the default.
 Log a `WARN` once at startup when the deprecated value is actually applied. Name the old and
 replacement flat properties, or their declarative paths if there is no flat form.
+Carrying both names must not warn when the replacement determines the result. This lets operators
+roll out a shared configuration to old and new deployments without warning on upgraded deployments.
 Deduplicate repeated reads with an existing once-only mechanism, such as a static `AtomicBoolean`
 for one setting or a keyed set for several, unless initialization guarantees one evaluation.
 
@@ -74,9 +76,6 @@ if (deprecatedValue != null) {
 return defaultValue;
 ```
 
-Carrying both names must not warn when the replacement determines the result. This lets operators
-roll out a shared configuration to old and new deployments without warning on upgraded deployments.
-When deprecating a setting or instrumentation enablement alias, document it in the CHANGELOG.
 Keep a code comment identifying the deprecated read.
 
 Instrumentation enablement aliases are different: enablement resolves an ordered list of equivalent

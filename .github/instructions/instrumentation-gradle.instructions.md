@@ -34,10 +34,8 @@ to shared infrastructure and other projects using the same conventions.
   `javaagent/build.gradle.kts`. The convention plugin also supplies `javaagent-bootstrap`;
   an explicit `compileOnly` dependency on it is redundant.
 - Every explicitly registered custom `Test` task must set `testClassesDirs` and `classpath`;
-  otherwise it can pass without running any tests. Include normal verification tasks in `check`,
-  but preserve intentionally opt-in tasks. Prefer suite execution variants over manually copying
-  a suite into another `Test` task. Keep `tasks.test` appropriate for standalone single-test-task
-  projects.
+  otherwise it can pass without running any tests.
+- Include normal verification tasks in `check`, but preserve intentionally opt-in tasks.
 - Keep the baseline dependency in `library(...)`. Adding `testLibrary(...)` for a newer version
   of the same coordinate does not test both versions: Gradle resolves one dependency graph,
   normally selecting the higher version. Exercise the newer runtime in a wired version-specific
@@ -116,8 +114,9 @@ and does not itself require runtime forwarding.
 ### Layout and configuration
 
 Use `JvmTestSuite` for distinct sources or dependency graphs, and execution variants for different
-flags or filters over a suite's existing compiled tests and runtime dependencies. Variants add no
-default task, compilation, or source set.
+flags or filters over a suite's existing compiled tests and runtime dependencies. Prefer variants
+over manually copying a suite into another `Test` task. Variants add no default task, compilation,
+or source set. Keep `tasks.test` appropriate for standalone single-test-task projects.
 
 Use one `testing.suites { ... }` container per build: all registrations first, then collection-level
 `executions(...)` declarations. Keep dependencies, sources, and compilation setup in registrations;

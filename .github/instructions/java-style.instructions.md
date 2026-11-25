@@ -21,7 +21,8 @@ The null-comparison rules also apply to Kotlin and Scala.
   Javaagent singleton accessors
   directly returning stored fields are an exception to getter naming. Public
   implementation classes that are not API belong in an `.internal` package.
-- **Fields**: declare fields `final` where possible. Use `SCREAMING_SNAKE_CASE` for
+- **Field finality**: declare fields `final` where possible.
+- **Constant and handle naming**: use `SCREAMING_SNAKE_CASE` for
   immutable value constants, not just because a field is `static final`. These include
   fixed `Duration` values, even when computed from configuration at startup, and canonical
   `INSTANCE`, `EMPTY`, and `NOOP` values. Use uppercase for private `static final` arrays
@@ -30,7 +31,8 @@ The null-comparison rules also apply to Kotlin and Scala.
   `MethodHandle`, and `Pattern`, are candidates for uppercase names, not an
   unconditional requirement. A `static final VirtualField` *must* be uppercase
   regardless of visibility or runtime initialization. Loggers, instrumenters,
-  helpers, and caches stay lower camel case. Collections exposed outside a class must be unmodifiable;
+  helpers, and caches stay lower camel case.
+- **Exposed collections**: collections exposed outside a class must be unmodifiable;
   `Arrays.asList` is fixed-size but not unmodifiable. Do not add a wrapper
   to a private non-escaping collection.
 - **Catch parameters**: in catch clauses only, name a used exception `e`,
@@ -68,9 +70,9 @@ The null-comparison rules also apply to Kotlin and Scala.
   signatures. Avoid it on the hot path unless the instrumented library uses it. See
   [Writing a Java library with better experience (slide 12)](https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12)
   for the API design rationale.
-- **Other conventions**: do not add `final` to parameters or locals. Do not flip
-  `value.equals(CONSTANT)` solely for speculative null safety.
-  Omit explicit type arguments on generic method calls when type inference
+- Do not add `final` to parameters or locals.
+- Do not flip `value.equals(CONSTANT)` solely for speculative null safety.
+- Omit explicit type arguments on generic method calls when type inference
   already works; keep them where compilation actually requires them.
 - **Conditional expressions**: avoid directly nested ternaries, even when
   parenthesized. Use named intermediate values, `if`/`else`, or early returns,
