@@ -99,42 +99,42 @@ The remaining sections apply to test code and shared testing modules.
 
 ## Parameterized cases
 
-Prefer `@ParameterizedTest` for repeated input/output scenarios using the same setup and assertion
-flow. For multi-field cases, use a nearby private static `Stream<Arguments>` method source and
-`Arguments.argumentSet("scenario", ...)` rather than a separate name parameter and
-`@ParameterizedTest(name = "{0}")`.
+- Prefer `@ParameterizedTest` for repeated input/output scenarios using the same setup and assertion
+  flow. For multi-field cases, use a nearby private static `Stream<Arguments>` method source and
+  `Arguments.argumentSet("scenario", ...)` rather than a separate name parameter and
+  `@ParameterizedTest(name = "{0}")`.
 
-Keep each row coherent. Split cases requiring materially different control flow instead of forcing
-them through one parameterized body. Prefer plain arguments over a dedicated `TestCase` wrapper;
-use a structured expected value only when it materially clarifies the assertions.
+- Keep each row coherent. Split cases requiring materially different control flow instead of forcing
+  them through one parameterized body. Prefer plain arguments over a dedicated `TestCase` wrapper;
+  use a structured expected value only when it materially clarifies the assertions.
 
 ## Resource lifecycle
 
-Keep try-with-resources for lifetimes that end before the rest of the test, such as a `Scope`,
-Mockito `MockedStatic`, response body, or short-lived stream. `AutoCleanupExtension` belongs in
-JUnit-managed tests, not generic utilities. Reuse an existing extension when one is in scope.
-Register deferred cleanup next to construction so a later setup failure cannot leak an earlier
-resource. A class-scoped resource uses `deferAfterAll`, not `deferCleanup`.
+- Keep try-with-resources for lifetimes that end before the rest of the test, such as a `Scope`,
+  Mockito `MockedStatic`, response body, or short-lived stream. `AutoCleanupExtension` belongs in
+  JUnit-managed tests, not generic utilities. Reuse an existing extension when one is in scope.
+  Register deferred cleanup next to construction so a later setup failure cannot leak an earlier
+  resource. A class-scoped resource uses `deferAfterAll`, not `deferCleanup`.
 
-For subclass-specific fixtures on abstract bases, `@TestInstance(Lifecycle.PER_CLASS)` and instance
-fields give each concrete subclass its own state. Clients, containers, addresses, ports, and
-helpers reading them must not be shared through static fields. An `AutoCleanupExtension` shared
-statically across concrete subclasses can retain the first lifecycle and miss later cleanup.
-True constants and pure helpers may remain static; `InstrumentationExtension` remains a
-`static final @RegisterExtension` so JUnit invokes its class-level callbacks, which fail the class
-on suppressed advice errors. In Scala, use an instance `@RegisterExtension val` on a `PER_CLASS`
-test class. JUnit does not scan the companion object's fields for registration.
+- For subclass-specific fixtures on abstract bases, `@TestInstance(Lifecycle.PER_CLASS)` and instance
+  fields give each concrete subclass its own state. Clients, containers, addresses, ports, and
+  helpers reading them must not be shared through static fields. An `AutoCleanupExtension` shared
+  statically across concrete subclasses can retain the first lifecycle and miss later cleanup.
+  True constants and pure helpers may remain static; `InstrumentationExtension` remains a
+  `static final @RegisterExtension` so JUnit invokes its class-level callbacks, which fail the class
+  on suppressed advice errors. In Scala, use an instance `@RegisterExtension val` on a `PER_CLASS`
+  test class. JUnit does not scan the companion object's fields for registration.
 
 ## Metrics
 
-`DbConnectionPoolMetricsAssertions.assertConnectionPoolEmitsMetrics()` already waits for each
-expected pool metric. Keep the asserted pool state valid until it returns, including borrowed
-connections needed to observe a used-connection point.
+- `DbConnectionPoolMetricsAssertions.assertConnectionPoolEmitsMetrics()` already waits for each
+  expected pool metric. Keep the asserted pool state valid until it returns, including borrowed
+  connections needed to observe a used-connection point.
 
-After unregistering an observable callback or removing a metric source, clear captured data and
-use Awaitility around the simplest relevant absence assertion, such as filtering metrics by
-instrumentation scope. Do not enumerate every possible metric name or add exporter-interval
-sleeps. The test runners force-flush metrics when reading them.
+- After unregistering an observable callback or removing a metric source, clear captured data and
+  use Awaitility around the simplest relevant absence assertion, such as filtering metrics by
+  instrumentation scope. Do not enumerate every possible metric name or add exporter-interval
+  sleeps. The test runners force-flush metrics when reading them.
 
 ## Discarding setup and cleanup telemetry
 
@@ -148,6 +148,15 @@ sleeps. The test runners force-flush metrics when reading them.
   attribute assertions, `waitAndAssertTraces(...)`, or assertion helpers solely
   to wait for setup telemetry. Keep assertions when that telemetry's contents
   are themselves part of the behavior under test.
+
+  For a required mid-test reset after a command producing exactly one completed trace:
+
+  ```java
+  jedis.lpush("wrong-type", "value");
+  testing.waitForTraces(1);
+  testing.clearData();
+  ```
+
 - Use the total trace count expected at that point and wait for all setup
   traces, not just the first one. Add a count-based wait only when the count
   is deterministic. If retries, concurrent/background work, or external-system
@@ -160,28 +169,20 @@ sleeps. The test runners force-flush metrics when reading them.
 - Do not wait for spans that intentionally remain open until the operation
   under test completes, such as an unfinished pipeline or transaction.
 
-For a required mid-test reset after a command producing exactly one completed trace:
-
-```java
-jedis.lpush("wrong-type", "value");
-testing.waitForTraces(1);
-testing.clearData();
-```
-
 ## AssertJ idioms
 
-Prefer built-in AssertJ collection/string/map assertions over manual extraction:
+- Prefer built-in AssertJ collection/string/map assertions over manual extraction:
 
-| Anti-pattern                                          | Idiomatic                                     |
-| ----------------------------------------------------- | --------------------------------------------- |
-| `assertThat(list.size()).isEqualTo(N)`                | `assertThat(list).hasSize(N)`                 |
-| `assertThat(list.isEmpty()).isTrue()` / `.hasSize(0)` | `assertThat(list).isEmpty()`                  |
-| `assertThat(list.contains(x)).isTrue()`               | `assertThat(list).contains(x)`                |
-| per-index `get(i)` checks of every element            | `assertThat(list).containsExactly(a, b, ...)` |
+  | Anti-pattern                                          | Idiomatic                                     |
+  | ----------------------------------------------------- | --------------------------------------------- |
+  | `assertThat(list.size()).isEqualTo(N)`                | `assertThat(list).hasSize(N)`                 |
+  | `assertThat(list.isEmpty()).isTrue()` / `.hasSize(0)` | `assertThat(list).isEmpty()`                  |
+  | `assertThat(list.contains(x)).isTrue()`               | `assertThat(list).contains(x)`                |
+  | per-index `get(i)` checks of every element            | `assertThat(list).containsExactly(a, b, ...)` |
 
-`containsExactly` already verifies size, so a separate `hasSize` is redundant.
-Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
-`assertThat(...).hasSize(N)`.
+  `containsExactly` already verifies size, so a separate `hasSize` is redundant.
+  Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
+  `assertThat(...).hasSize(N)`.
 
 ## Span attributes
 
@@ -208,23 +209,23 @@ Same shape applies to `String.length()`, `Map.size()`, and `array.length` →
 
 ## Attribute-assertion lambda parameters
 
-Inside a `satisfies(AttributeKey, lambda)` attribute-assertion the lambda
-parameter is an `AbstractAssert` (e.g. `AbstractStringAssert<?>`), not the raw
-value. Fluent calls like `taskId.contains(jobName)` are already proper
-assertions — do **not** wrap them in `assertThat(value.contains(x)).isTrue()`,
-which degrades the failure message.
+- Inside a `satisfies(AttributeKey, lambda)` attribute-assertion the lambda
+  parameter is an `AbstractAssert` (e.g. `AbstractStringAssert<?>`), not the raw
+  value. Fluent calls like `taskId.contains(jobName)` are already proper
+  assertions — do **not** wrap them in `assertThat(value.contains(x)).isTrue()`,
+  which degrades the failure message.
 
-Name the outer parameter `val` in Java (or `value` in Kotlin and Scala, where
-`val` is reserved). Use `v` only for a nested inner-lambda parameter.
+- Name the outer parameter `val` in Java (or `value` in Kotlin and Scala, where
+  `val` is reserved). Use `v` only for a nested inner-lambda parameter.
 
-This guidance applies only to attribute-assertion `satisfies(...)`; for
-`span.satisfies(...)`, `point.satisfies(...)`, etc. use a descriptive name
-(`spanData`, `pointData`, `result`).
+  This guidance applies only to attribute-assertion `satisfies(...)`; for
+  `span.satisfies(...)`, `point.satisfies(...)`, etc. use a descriptive name
+  (`spanData`, `pointData`, `result`).
 
-It also applies only to lambdas written **directly inline** as the
-`satisfies(AttributeKey, lambda)` argument, where the attribute key already
-documents what is being asserted. Lambdas passed to a custom helper such as
-`assertExceptionLog(typeAssertion, messageAssertion)` keep descriptive parameter names,
-even when the parameter is the same `AbstractStringAssert` type. In those helpers, descriptive
-parameter names identify the attribute each lambda asserts; renaming multiple parameters to `val`
-loses that context.
+  It also applies only to lambdas written **directly inline** as the
+  `satisfies(AttributeKey, lambda)` argument, where the attribute key already
+  documents what is being asserted. Lambdas passed to a custom helper such as
+  `assertExceptionLog(typeAssertion, messageAssertion)` keep descriptive parameter names,
+  even when the parameter is the same `AbstractStringAssert` type. In those helpers, descriptive
+  parameter names identify the attribute each lambda asserts; renaming multiple parameters to `val`
+  loses that context.

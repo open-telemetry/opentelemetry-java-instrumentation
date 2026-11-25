@@ -25,7 +25,10 @@ class StageSessionImplInstrumentation implements TypeInstrumentation {
   public ElementMatcher<TypeDescription> typeMatcher() {
     return namedOneOf(
         "org.hibernate.reactive.stage.impl.StageSessionImpl",
-        "org.hibernate.reactive.stage.impl.StageStatelessSessionImpl");
+        "org.hibernate.reactive.stage.impl.StageStatelessSessionImpl",
+        // hibernate reactive 5
+        "org.hibernate.reactive.stage.internal.StageSessionImpl",
+        "org.hibernate.reactive.stage.internal.StageStatelessSessionImpl");
   }
 
   @Override

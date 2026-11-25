@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpclient.v5_0.ApacheHttpClientSingletons.instrumenter;
-import static java.util.logging.Level.FINE;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
@@ -17,7 +16,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -164,8 +162,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   public static class WrappedFutureCallback<T> implements FutureCallback<T> {
 
-    private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
-
     private final Context parentContext;
     private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
@@ -181,16 +177,16 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       this.delegate = delegate;
     }
 
+    private void endSpan(Exception exception) {
+      // context is null here when the span creation was suppressed
+      if (context != null) {
+        instrumenter().end(context, httpRequest, getResponseFromHttpContext(), exception);
+      }
+    }
+
     @Override
     public void completed(T result) {
-      if (context == null) {
-        // this is unexpected
-        logger.log(FINE, "context was never set");
-        completeDelegate(result);
-        return;
-      }
-
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
+      endSpan(null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
@@ -199,15 +195,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void failed(Exception ex) {
-      if (context == null) {
-        // this is unexpected
-        logger.log(FINE, "context was never set");
-        failDelegate(ex);
-        return;
-      }
-
-      // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), ex);
+      endSpan(ex);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
@@ -216,16 +204,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void cancelled() {
-      if (context == null) {
-        // this is unexpected
-        logger.log(FINE, "context was never set");
-        cancelDelegate();
-        return;
-      }
-
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, httpRequest, getResponseFromHttpContext(), null);
+      endSpan(null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();

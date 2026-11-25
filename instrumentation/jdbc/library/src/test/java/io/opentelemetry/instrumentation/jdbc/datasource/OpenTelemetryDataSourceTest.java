@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -52,6 +53,7 @@ class OpenTelemetryDataSourceTest {
             span ->
                 span.hasName("TestDataSource.getConnection")
                     .hasKind(SpanKind.INTERNAL)
+                    .satisfies(hasScopeSchemaUrl(null))
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
                         equalTo(
