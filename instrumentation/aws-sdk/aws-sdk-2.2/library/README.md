@@ -1,23 +1,56 @@
-# AWS Java SDK v2 Instrumentation
+# Library Instrumentation for AWS SDK for Java version 2.2 and higher
 
-Instrumentation for [AWS Java SDK v2](https://github.com/aws/aws-sdk-java-v2).
+Provides OpenTelemetry instrumentation for the [AWS SDK for Java v2](https://github.com/aws/aws-sdk-java-v2).
 
-## Usage
+## Quickstart
 
-To instrument all AWS SDK clients include the `opentelemetry-aws-sdk-2.2-autoconfigure` submodule in your classpath.
+### Add these dependencies to your project
+
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-sdk-2.2).
+
+For Maven, add to your `pom.xml` dependencies:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-aws-sdk-2.2</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+  </dependency>
+</dependencies>
+```
+
+For Gradle, add to your dependencies:
+
+```kotlin
+implementation("io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2:OPENTELEMETRY_VERSION")
+```
+
+### Usage
+
+To instrument all AWS SDK clients, use the [autoconfigure module](../library-autoconfigure/README.md).
 
 To register instrumentation only on a specific SDK client, register the interceptor when creating it.
 
 ```java
-AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry).build();
+AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry);
 DynamoDbClient client = DynamoDbClient.builder()
-  .overrideConfiguration(ClientOverrideConfiguration.builder()
-    .addExecutionInterceptor(telemetry.createExecutionInterceptor()))
-    .build())
-  .build();
+    .overrideConfiguration(ClientOverrideConfiguration.builder()
+        .addExecutionInterceptor(telemetry.createExecutionInterceptor())
+        .build())
+    .build();
 ```
 
-For SQS an additional step is needed
+#### Wrap SQS and asynchronous Bedrock Runtime clients
+
+These clients need both an interceptor and a wrapper. With explicit registration, add
+`telemetry.createExecutionInterceptor()` to each client builder before building and wrapping the client.
+
+If you use the autoconfigure module, create `telemetry` with `AwsSdkTelemetry.create(openTelemetry)`
+using the same `OpenTelemetry` instance as the automatic interceptor. Do not register another
+interceptor.
+
+Wrap synchronous and asynchronous SQS clients after building them:
 
 ```java
 SqsClientBuilder sqsClientBuilder = SqsClient.builder();
@@ -31,13 +64,17 @@ SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 SqsAsyncClient sqsAsyncClient = telemetry.instrument(sqsAsyncClientBuilder.build());
 ```
 
-For the Bedrock Runtime async client, an additional step is also needed:
+Wrap the asynchronous Bedrock Runtime client after building it:
 
 ```java
 BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClient.builder();
 ...
 BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
+
+The [message content capture setting](../../README.md) configures the automatic interceptor, not
+the wrapper. To capture streaming response content, call `setGenaiCaptureMessageContent(true)` on
+the `AwsSdkTelemetry` builder used for the wrapper.
 
 ## Trace propagation
 
