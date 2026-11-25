@@ -1,6 +1,7 @@
 # OpenTelemetry Resource Providers
 
-Provides OpenTelemetry resource providers that identify the host, process, and runtime.
+Provides OpenTelemetry resource providers that populate container, host, operating system, process,
+and Java runtime attributes.
 
 ## Quickstart
 

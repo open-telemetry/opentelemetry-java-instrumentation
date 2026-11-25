@@ -1,6 +1,7 @@
 # Library Instrumentation for Guava version 10.0 and higher
 
-Provides OpenTelemetry support for asynchronous span completion with [Guava](https://github.com/google/guava).
+Provides OpenTelemetry instrumentation for [Guava](https://github.com/google/guava), enabling
+asynchronous span completion for `ListenableFuture` return values.
 
 ## Quickstart
 

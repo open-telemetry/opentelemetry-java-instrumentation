@@ -1,6 +1,7 @@
-# Library Instrumentation for AWS SDK for Java version 2.2 and higher
+# Autoconfigured Library Instrumentation for AWS SDK for Java version 2.2 and higher
 
-Provides automatic OpenTelemetry instrumentation for the [AWS SDK for Java v2](https://github.com/aws/aws-sdk-java-v2).
+Provides OpenTelemetry instrumentation for the [AWS SDK for Java v2](https://github.com/aws/aws-sdk-java-v2)
+that registers itself with every client.
 
 ## Quickstart
 

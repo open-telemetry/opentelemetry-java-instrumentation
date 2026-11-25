@@ -1,6 +1,7 @@
-# Library Instrumentation for SOFARPC version 5.4 and higher
+# Autoconfigured Library Instrumentation for SOFARPC version 5.4 and higher
 
-Provides automatic OpenTelemetry instrumentation for [SOFARPC](https://github.com/sofastack/sofa-rpc).
+Provides OpenTelemetry instrumentation for [SOFARPC](https://github.com/sofastack/sofa-rpc) that
+registers its filters automatically.
 
 ## Quickstart
 

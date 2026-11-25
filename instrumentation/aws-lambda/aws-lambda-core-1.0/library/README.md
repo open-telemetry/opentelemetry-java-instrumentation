@@ -104,15 +104,7 @@ link to tracing information provided by Lambda itself. To do so, add a dependenc
 Replace `OPENTELEMETRY_CONTRIB_VERSION` with the [latest
 release](https://central.sonatype.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
 
-Gradle:
-
-```kotlin
-dependencies {
-  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:OPENTELEMETRY_CONTRIB_VERSION")
-}
-```
-
-Maven:
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
 <dependencies>
@@ -122,6 +114,12 @@ Maven:
     <version>OPENTELEMETRY_CONTRIB_VERSION</version>
   </dependency>
 </dependencies>
+```
+
+For Gradle, add to your dependencies:
+
+```kotlin
+implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:OPENTELEMETRY_CONTRIB_VERSION")
 ```
 
 ## Trace propagation

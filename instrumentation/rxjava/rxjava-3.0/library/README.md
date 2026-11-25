@@ -1,6 +1,7 @@
-# Library Instrumentation for RxJava versions 3.0 through 3.1.0
+# Library Instrumentation for RxJava version 3.0 to 3.1.0
 
-Provides OpenTelemetry context propagation for [RxJava](https://github.com/ReactiveX/RxJava).
+Provides OpenTelemetry instrumentation for [RxJava](https://github.com/ReactiveX/RxJava), enabling
+context propagation through RxJava's execution model.
 
 For RxJava 3.1.1 and higher, use the [3.1.1 instrumentation](../../rxjava-3.1.1/library/README.md).
 
@@ -30,7 +31,8 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-rxjava-3.0:OPENTE
 
 ### Usage
 
-Enable context propagation once during application startup, before assembling RxJava pipelines:
+Enable RxJava instrumentation by calling `TracingAssembly.enable()` once during application startup,
+before assembling RxJava pipelines:
 
 ```java
 import io.opentelemetry.instrumentation.rxjava.v3_0.TracingAssembly;

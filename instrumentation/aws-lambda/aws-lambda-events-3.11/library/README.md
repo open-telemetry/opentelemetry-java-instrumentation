@@ -103,27 +103,27 @@ A `SERVER` span will be created with the name you specify for the function when 
 
 In addition, it is recommended to set up X-Ray trace propagation to be able to
 link to tracing information provided by Lambda itself. To do so, add a dependency on
-`opentelemetry-extension-tracepropagators`. Make sure the version matches the version of the SDK
-you use.
+`io.opentelemetry.contrib:opentelemetry-aws-xray-propagator`.
 
-Gradle:
+Replace `OPENTELEMETRY_CONTRIB_VERSION` with the [latest
+release](https://central.sonatype.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
 
-```kotlin
-dependencies {
-  implementation("io.opentelemetry:opentelemetry-extension-trace-propagators:0.8.0")
-}
-```
-
-Maven:
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
 <dependencies>
   <dependency>
-    <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-extension-trace-propagators</artifactId>
-    <version>0.8.0</version>
+    <groupId>io.opentelemetry.contrib</groupId>
+    <artifactId>opentelemetry-aws-xray-propagator</artifactId>
+    <version>OPENTELEMETRY_CONTRIB_VERSION</version>
   </dependency>
 </dependencies>
+```
+
+For Gradle, add to your dependencies:
+
+```kotlin
+implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:OPENTELEMETRY_CONTRIB_VERSION")
 ```
 
 #### SQS Handler

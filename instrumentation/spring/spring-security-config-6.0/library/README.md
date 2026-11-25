@@ -35,7 +35,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-spring-security-c
 
 ### Usage
 
-#### Usage in Spring WebMVC Applications
+#### Spring WebMVC applications
 
 When not using [automatic instrumentation](../javaagent/), you can enable identity attribute capturing
 for a `SecurityFilterChain` by applying a `UserAttributesHttpSecurityCustomizer`
@@ -68,7 +68,7 @@ class MyWebSecurityConfig {
 }
 ```
 
-#### Usage in Spring WebFlux Applications
+#### Spring WebFlux applications
 
 When not using [automatic instrumentation](../javaagent/), you can enable identity attribute capturing
 for a `SecurityWebFilterChain` by applying a `UserAttributesServerHttpSecurityCustomizer`
