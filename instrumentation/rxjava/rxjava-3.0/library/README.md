@@ -30,7 +30,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-rxjava-3.0:OPENTE
 
 ### Usage
 
-Enable context propagation once during application startup, before creating subscriptions:
+Enable context propagation once during application startup, before assembling RxJava pipelines:
 
 ```java
 import io.opentelemetry.instrumentation.rxjava.v3_0.TracingAssembly;

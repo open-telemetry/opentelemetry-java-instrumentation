@@ -28,7 +28,17 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-resources:OPENTEL
 
 ### Usage
 
-OpenTelemetry SDK autoconfiguration discovers the resource providers on the runtime classpath.
+With flat SDK configuration, autoconfiguration discovers the resource providers on the runtime
+classpath. With declarative configuration, list the detectors you want to use. For example, to
+enable the host detector:
+
+```yaml
+resource:
+  detection/development:
+    detectors:
+      - host:
+```
+
 For manual SDK configuration, merge resources such as `HostResource.get()`
 and `ProcessRuntimeResource.get()` into the resource supplied to your SDK.
 

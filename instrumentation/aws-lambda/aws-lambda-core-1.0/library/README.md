@@ -101,14 +101,14 @@ In addition, it is recommended to set up X-Ray trace propagation to be able to
 link to tracing information provided by Lambda itself. To do so, add a dependency on
 `io.opentelemetry.contrib:opentelemetry-aws-xray-propagator`.
 
-Replace `OPENTELEMETRY_VERSION` with the [latest
+Replace `OPENTELEMETRY_CONTRIB_VERSION` with the [latest
 release](https://central.sonatype.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
 
 Gradle:
 
 ```kotlin
 dependencies {
-  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:OPENTELEMETRY_VERSION")
+  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:OPENTELEMETRY_CONTRIB_VERSION")
 }
 ```
 
@@ -119,7 +119,7 @@ Maven:
   <dependency>
     <groupId>io.opentelemetry.contrib</groupId>
     <artifactId>opentelemetry-aws-xray-propagator</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
+    <version>OPENTELEMETRY_CONTRIB_VERSION</version>
   </dependency>
 </dependencies>
 ```

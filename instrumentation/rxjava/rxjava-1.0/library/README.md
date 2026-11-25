@@ -42,3 +42,5 @@ Here, `original` is your `Observable<T>`, `instrumenter` is an
 `Instrumenter<REQUEST, ?>` configured for the operation, and `requestFactory` is a
 `Supplier<REQUEST>` producing a request for each subscription. The wrapper starts a span
 per subscription and ends it when the subscription completes, fails, or is cancelled.
+All subscriptions use the parent context that was current when you called `perSubscription`.
+Create the wrapper while the intended parent context is current.

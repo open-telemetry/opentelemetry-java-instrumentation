@@ -35,13 +35,16 @@ To register instrumentation only on a specific SDK client, register the intercep
 ```java
 AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry);
 DynamoDbClient client = DynamoDbClient.builder()
-  .overrideConfiguration(ClientOverrideConfiguration.builder()
-    .addExecutionInterceptor(telemetry.createExecutionInterceptor()))
-    .build())
-  .build();
+    .overrideConfiguration(ClientOverrideConfiguration.builder()
+        .addExecutionInterceptor(telemetry.createExecutionInterceptor())
+        .build())
+    .build();
 ```
 
 #### Wrap SQS and asynchronous Bedrock Runtime clients
+
+These clients need both an interceptor and a wrapper. With explicit registration, add
+`telemetry.createExecutionInterceptor()` to each client builder before building and wrapping the client.
 
 If you use the autoconfigure module, create `telemetry` with `AwsSdkTelemetry.create(openTelemetry)`
 using the same `OpenTelemetry` instance as the automatic interceptor. Do not register another
