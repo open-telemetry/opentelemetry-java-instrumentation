@@ -8,10 +8,10 @@ Apply these rules to instrumentation modules and packages.
 
 ## Telemetry extraction
 
-Telemetry extraction should not initiate network I/O, wait for operation completion, or drive client
-execution. Use library getters when they expose available data. If an accessor performs those
-operations, use an existing callback or capture the value when the library records it; otherwise omit
-the unavailable attribute.
+- Telemetry extraction should not initiate network I/O, wait for operation completion, or drive client
+  execution. Use library getters when they expose available data. If an accessor performs those
+  operations, use an existing callback or capture the value when the library records it; otherwise omit
+  the unavailable attribute.
 
 ## Module boundaries
 

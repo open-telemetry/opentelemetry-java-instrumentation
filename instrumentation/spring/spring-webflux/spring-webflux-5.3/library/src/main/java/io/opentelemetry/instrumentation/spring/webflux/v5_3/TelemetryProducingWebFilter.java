@@ -9,6 +9,7 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
 import javax.annotation.Nullable;
 import org.reactivestreams.Subscription;
@@ -25,9 +26,13 @@ import reactor.util.annotation.NonNull;
 final class TelemetryProducingWebFilter implements WebFilter, Ordered {
 
   private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
+  @Nullable private final HttpServerRouteGetter<ServerWebExchange> routeFallback;
 
-  TelemetryProducingWebFilter(Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter) {
+  TelemetryProducingWebFilter(
+      Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter,
+      @Nullable HttpServerRouteGetter<ServerWebExchange> routeFallback) {
     this.instrumenter = instrumenter;
+    this.routeFallback = routeFallback;
   }
 
   @Override
@@ -35,7 +40,7 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
   public Mono<Void> filter(ServerWebExchange exchange, WebFilterChain chain) {
     Context parentContext = Context.current();
     Mono<Void> source = chain.filter(exchange);
-    return new TelemetryWrappedMono(source, instrumenter, parentContext, exchange);
+    return new TelemetryWrappedMono(source, instrumenter, parentContext, exchange, routeFallback);
   }
 
   @Override
@@ -49,16 +54,19 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
     private final Context parentContext;
     private final ServerWebExchange exchange;
+    @Nullable private final HttpServerRouteGetter<ServerWebExchange> routeFallback;
 
     TelemetryWrappedMono(
         Mono<Void> source,
         Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter,
         Context parentContext,
-        ServerWebExchange exchange) {
+        ServerWebExchange exchange,
+        @Nullable HttpServerRouteGetter<ServerWebExchange> routeFallback) {
       this.source = source;
       this.instrumenter = instrumenter;
       this.parentContext = parentContext;
       this.exchange = exchange;
+      this.routeFallback = routeFallback;
     }
 
     @Override
@@ -70,7 +78,8 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
       Context currentContext = instrumenter.start(parentContext, exchange);
       try (Scope ignored = currentContext.makeCurrent()) {
         this.source.subscribe(
-            new TelemetryWrappedSubscriber(actual, currentContext, instrumenter, exchange));
+            new TelemetryWrappedSubscriber(
+                actual, currentContext, instrumenter, exchange, routeFallback));
       }
     }
   }
@@ -80,16 +89,19 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
     private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
     private final Context currentOtelContext;
     private final ServerWebExchange exchange;
+    @Nullable private final HttpServerRouteGetter<ServerWebExchange> routeFallback;
 
     TelemetryWrappedSubscriber(
         CoreSubscriber<? super Void> actual,
         Context currentOtelContext,
         Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter,
-        ServerWebExchange exchange) {
+        ServerWebExchange exchange,
+        @Nullable HttpServerRouteGetter<ServerWebExchange> routeFallback) {
       this.actual = actual;
       this.instrumenter = instrumenter;
       this.currentOtelContext = currentOtelContext;
       this.exchange = exchange;
+      this.routeFallback = routeFallback;
     }
 
     @Override
@@ -146,6 +158,10 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
                   ? null
                   : WebfluxServerHttpAttributesGetter.INSTANCE.getHttpRoute(exchange),
           exchange);
+      if (routeFallback != null) {
+        HttpServerRoute.update(
+            currentContext, HttpServerRouteSource.SERVER, routeFallback, exchange);
+      }
       instrumenter.end(
           currentContext,
           exchange,

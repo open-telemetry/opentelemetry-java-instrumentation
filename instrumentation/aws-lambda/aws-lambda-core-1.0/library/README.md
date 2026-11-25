@@ -1,8 +1,41 @@
-# AWS Lambda Instrumentation
+# Library Instrumentation for AWS Lambda Core version 1.0 and higher
 
-This package contains libraries to help instrument AWS lambda functions in your code.
+Provides OpenTelemetry instrumentation for [AWS Lambda Java handlers](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html).
 
-## Using wrappers
+## Quickstart
+
+### Add these dependencies to your project
+
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-lambda-core-1.0).
+
+For Maven, add to your `pom.xml` dependencies:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-aws-lambda-core-1.0</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+  </dependency>
+</dependencies>
+```
+
+For Gradle, add to your dependencies:
+
+```kotlin
+implementation("io.opentelemetry.instrumentation:opentelemetry-aws-lambda-core-1.0:OPENTELEMETRY_VERSION")
+```
+
+### Usage
+
+#### Using wrappers
+
+The wrappers initialize the OpenTelemetry SDK using autoconfiguration.
+In addition to the instrumentation dependency above, the deployed function needs
+`io.opentelemetry:opentelemetry-sdk-extension-autoconfigure` and dependencies for the configured
+exporters at runtime.
+See [SDK autoconfiguration](https://opentelemetry.io/docs/languages/java/configuration/#zero-code-sdk-autoconfigure)
+for dependency setup and exporter configuration.
 
 To use the instrumentation, configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName`
 and use one of wrappers as your lambda `Handler`.
@@ -15,7 +48,7 @@ Available wrappers:
 
 When using known Lambda event types as parameters, use [aws-lambda-events-3.11](../../aws-lambda-events-3.11/library).
 
-## Using handlers
+#### Using handlers
 
 To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
 that extend `TracingRequestHandler` (or `TracingRequestStreamHandler`). You will need to change the method name to `doHandleRequest`
@@ -45,41 +78,39 @@ public class MyRequestHandler extends TracingRequestHandler<String, String> {
 
 A `SERVER` span will be created with the name you specify for the function when deploying it.
 
-In addition, it is recommended to set up X-Ray trace propagation to be able to
-link to tracing information provided by Lambda itself. To do so, add a dependency on
+## Trace propagation
+
+### X-Ray propagation
+
+To continue traces provided by Lambda, add a dependency on
 `io.opentelemetry.contrib:opentelemetry-aws-xray-propagator`.
 
-Replace `OPENTELEMETRY_VERSION` with the [latest
+Replace `OPENTELEMETRY_CONTRIB_VERSION` with the [latest
 release](https://central.sonatype.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
 
-Gradle:
-
-```kotlin
-dependencies {
-  implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:OPENTELEMETRY_VERSION")
-}
-```
-
-Maven:
+For Maven, add to your `pom.xml` dependencies:
 
 ```xml
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.contrib</groupId>
     <artifactId>opentelemetry-aws-xray-propagator</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
+    <version>OPENTELEMETRY_CONTRIB_VERSION</version>
   </dependency>
 </dependencies>
 ```
 
-## Trace propagation
+For Gradle, add to your dependencies:
 
-Context propagation for this instrumentation can be done either with X-Ray propagation or regular HTTP propagation. If X-Ray is enabled for instrumented lambda, it will be preferred. If X-Ray is disabled, HTTP propagation will be tried (that is HTTP headers will be read to check for a valid trace context).
+```kotlin
+implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:OPENTELEMETRY_CONTRIB_VERSION")
+```
 
-### X-Ray propagation
+For wrappers, set `OTEL_PROPAGATORS=tracecontext,baggage,xray-lambda` to enable X-Ray alongside
+the default propagators.
 
-This instrumentation supports propagating traces using the `X-Amzn-Trace-Id` format for both normal
-requests and SQS requests. X-Ray propagation is always enabled, there is no need to configure it explicitly.
+If you build the SDK yourself, add `AwsXrayLambdaPropagator.getInstance()` after your other
+propagators.
 
 ### HTTP headers based propagation
 
