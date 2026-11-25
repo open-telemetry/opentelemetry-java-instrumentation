@@ -44,18 +44,17 @@ does not establish conformance.
 When attributing span or metric errors, keep a nested operation's server-error response and
 protocol code with that operation. Handle escaping callback exceptions under the outer client's
 failure and span-lifecycle policy, separately from its own response classification. Do not relay
-nested server-error confirmation just to classify the callback exception.
+nested server-error confirmation just to classify the callback exception. For example, Redis
+`PING` receives `PONG`, then an application response builder issues an independent `GET` that
+receives `WRONGTYPE`. If the builder catches the exception, that failure alone does not fail
+`PING`. If it escapes, the outer call may fail during callback processing. Either way,
+`WRONGTYPE` belongs to `GET`, not to `PING`'s successful server response.
 
 Unless the applicable semantic convention says otherwise, prefer an available protocol failure code
 over a generic exception reporting that failure. Prefer useful typed exception classes for timeout,
 connection, and local-processing failures. Apply these choices consistently by failure category,
 not through per-code specificity checks. Fall back to the exception class when no applicable code is
 available. Record `db.response.status_code` independently.
-
-For example, Redis `PING` receives `PONG`, then an application response builder issues an independent
-`GET` that receives `WRONGTYPE`. If the builder catches the exception, that failure alone does not
-fail `PING`. If it escapes, the outer call may fail during callback processing. Either way,
-`WRONGTYPE` belongs to `GET`, not to `PING`'s successful server response.
 
 ## Requirement levels
 
@@ -104,15 +103,14 @@ private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
 
 ## Schema URLs
 
-Select the schema URL from the semantic convention defining the emitted span, metric, or log.
-Its version follows the convention adopted by that signal and its effective mode, not the latest
-semconv dependency. Registered attributes alone do not establish a signal
-convention; supporting attributes must not select, change, or invalidate its schema.
-If no semantic convention defines the emitted signal, leave its schema URL unset.
-
-For example, GenAI operations use the GenAI schema despite supporting RPC attributes. Controller
-spans have no defined convention, even when nested under an HTTP server span. Code or exception
-attributes alone do not justify a schema URL on a custom operation.
+Use the schema URL of the adopted semantic convention that defines the emitted span, metric, or
+log in its effective mode. Use the version adopted for that signal's convention, not the semconv
+dependency version. If no convention defines the signal, leave its schema URL unset. Supporting
+attributes cannot select, change, or invalidate the URL, and a parent span's schema does not
+establish a convention for its child. For example, a span defined by GenAI conventions uses the
+GenAI schema even when it carries RPC attributes. Custom controller, JDBC data-source, and servlet
+response method spans do not gain a schema from their parent or supporting attributes such as
+database, code, or exception attributes.
 
 ## Conformance evidence and coverage
 

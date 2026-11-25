@@ -45,18 +45,6 @@ The null-comparison rules also apply to Kotlin and Scala.
   `@SuppressWarnings("unused")` belongs on the class. Use
   `"deprecation"` rather than `"OtelDeprecatedApiUsage"` for verified
   intentional deprecated API use.
-- **Attribute setters**: `AttributesBuilder.put`, `Span.setAttribute`,
-  `SpanBuilder.setAttribute`, and `LogRecordBuilder.setAttribute` ignore a
-  null value. A guard around a directly passed nullable value, such as a
-  `String` or boxed primitive, is redundant, except when an `Integer`
-  passed for `AttributeKey<Long>` selects the `int` overload and would
-  unbox null. Retain a guard protecting a dereference or derived computation.
-- **Nullability**: `TextMapGetter.get`/`getAll` and `TextMapSetter.set`
-  receive a nullable carrier under the upstream SDK contract. Annotate
-  it and guard carrier-specific logic; pure delegation to another
-  getter/setter needs the annotation but not another guard. `keys` does
-  not have this nullable-carrier contract. Do not add `@Nullable` in
-  test code.
 - **Class organization**: order static fields (final before non-final),
   static initializers, instance fields (final before non-final),
   constructors, methods, then nested classes. Place callers before
@@ -102,42 +90,32 @@ plugins {
 
 ## Nullable carriers and attribute overloads
 
-The upstream propagation interfaces have these carrier contracts:
+- **Nullable carriers**: Under the upstream SDK contract, the carrier is nullable in
+  `TextMapGetter.get`, `TextMapGetter.getAll`, and `TextMapSetter.set`, but not in
+  `TextMapGetter.keys`. Annotate nullable carriers and guard carrier-specific logic. Pure delegation
+  to another getter or setter needs the annotation but not another guard. Do not add `@Nullable`
+  in test code.
 
-| Interface | Method | Nullable parameter |
-| --- | --- | --- |
-| `TextMapGetter<CarrierT>` | `get(CarrierT, String)` | `carrier` |
-| `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` |
-| `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
-| `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` |
+  ```java
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    return delegate.get(carrier, key);
+  }
+  ```
 
-A getter that delegates directly to another `TextMapGetter` can pass the nullable carrier
-through without a second guard:
+- **Attribute setters**: `AttributesBuilder.put`, `Span.setAttribute`,
+  `SpanBuilder.setAttribute`, and `LogRecordBuilder.setAttribute` ignore null values. Pass a
+  nullable `String` or a boxed value matching the key directly: for example,
+  `span.setAttribute(META_ENABLED, metadata.getEnabled())` uses the nullable generic overload
+  when `META_ENABLED` is an `AttributeKey<Boolean>` and the getter returns `Boolean`. Retain
+  guards around dereferences or derived computations, such as `view.getClass().getName()`.
+  Also guard a nullable `Integer` passed for `AttributeKey<Long>`: Java selects the primitive
+  `int` overload and unboxes before the setter runs.
 
-```java
-@Override
-@Nullable
-public String get(@Nullable C carrier, String key) {
-  return delegate.get(carrier, key);
-}
-```
-
-For attribute setters, Java overload selection determines whether null reaches the setter.
-An `Integer` passed for `AttributeKey<Long>` selects the primitive `int` overload and unboxes
-before the setter runs, so keep its guard:
-
-```java
-Integer statusCode = response.getStatusCode();
-if (statusCode != null) {
-  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
-}
-```
-
-A boxed value matching the key uses the nullable generic overload:
-
-```java
-span.setAttribute(META_ENABLED, metadata.getEnabled());
-```
-
-Here `META_ENABLED` is an `AttributeKey<Boolean>`. A guard around
-`view.getClass().getName()` protects a dereference, not just the setter.
+  ```java
+  Integer statusCode = response.getStatusCode();
+  if (statusCode != null) {
+    attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
+  }
+  ```

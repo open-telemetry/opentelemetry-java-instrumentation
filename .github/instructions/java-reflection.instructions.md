@@ -13,71 +13,22 @@ Prefer a direct Java call when supported library versions expose a compatible me
 Java access works. This gives the compiler and Muzzle a clear view of the dependency. Use reflection
 only when compatibility, access, or runtime discovery requires it.
 
-Before treating a lookup as runtime-class-dependent, identify the member's actual declaring type.
-A receiver typed as `Object`, or existing code that calls `receiver.getClass()`, does not prove that
-each implementation needs a separate lookup. An existing `ClassValue` does not prove it either.
-A `Method` obtained from an interface or base class can invoke compatible implementations.
-
-## Decide from the declaring type
-
-Choose a cache with this checklist:
-
-1. Identify the class or interface that declares the member.
-2. For one fixed optional class or one version-selected stable interface, cache one nullable
-   `static final Method` or `MethodHandle`.
-3. Use `ClassValue` only when the required metadata truly varies by concrete runtime class.
-
-For a fixed optional `DomainSocketAddress.path()`, avoid
-`pathMethods.get(address.getClass())`. An exact class-name check strongly indicates one declaring
-type. Load that class once without initialization and cache its method:
-
-```java
-private static final @Nullable Method DOMAIN_SOCKET_PATH =
-    findMethod("io.netty.channel.unix.DomainSocketAddress", "path");
-```
-
-Likewise, avoid `unwrapMethods.get(connection.getClass())` when a stable `Connection` interface
-declares `unwrap()`. Resolve the interface selected for the detected library version once:
-
-```java
-private static final @Nullable Method CONNECTION_UNWRAP =
-    findVersionedInterfaceMethod("Connection", "unwrap");
-```
-
-An interface `Method` can invoke compatible implementations; their concrete classes do not require
-separate entries.
-
-In contrast, use `ClassValue` when unrelated generated classes each declare the required method and
-no shared type declares it:
-
-```java
-private static final ClassValue<Method> generatedValueMethod =
-    new ClassValue<Method>() {
-      @Override
-      protected Method computeValue(Class<?> type) {
-        return findGeneratedValueMethod(type);
-      }
-    };
-
-return generatedValueMethod.get(receiver.getClass()).invoke(receiver);
-```
-
-## Cache repeated lookup
+## Cache repeated lookup by declaring type
 
 For production Java code that repeats the same reflective method lookup on a path that may execute
-more than once, resolve the method once and cache the resulting `Method` or `MethodHandle`. Use a
-`static final` field when the declaring class is fixed.
-
-When a fixed declaring type is optional or unavailable at compile time, load it once by name without
-initializing it, for example with `Class.forName(name, false, helperClassLoader)`, and cache the
-nullable method in a `static final` field.
-
-When the lookup depends on the runtime class, use `ClassValue` instead of a static map keyed by
-`Class<?>`. Static maps can keep application class loaders alive. Cache missing methods too when
-supported library versions may not provide the method.
-
-Do not apply this rule to test code or a lookup that is provably executed only once during
-initialization.
+more than once, cache the resulting `Method` or `MethodHandle` according to the actual declaring
+type. Use one `static final` field for a fixed declaring type, including a version-selected
+interface. A method from an interface or base class works for compatible implementations.
+If the fixed type is optional or unavailable at compile time, load it once by name without
+initialization, for example with `Class.forName(name, false, helperClassLoader)`. Cache missing
+methods too when supported versions may not provide them, using a nullable field for a fixed type.
+When the required metadata varies by concrete runtime class, such as for unrelated generated
+classes that each declare the member, use `ClassValue` instead of a static map keyed by `Class<?>`,
+which can keep application class loaders alive. Neither an `Object` receiver nor an existing
+`getClass()` or `ClassValue` proves that lookup depends on the runtime class. For example,
+`DomainSocketAddress.path()` and `unwrap()` on a version-selected `Connection` interface each
+use a fixed declaring type and do not need per-class entries. This caching rule does not apply to
+test code or lookups that provably run once during initialization.
 
 Keep an application-specific static cache in a helper whose defining class loader is isolated for
 that application. A bootstrap or otherwise shared helper must not cache one application's `Class`,
@@ -87,9 +38,6 @@ that application. A bootstrap or otherwise shared helper must not cache one appl
 
 | Situation | Preferred approach |
 | --- | --- |
-| Supported versions expose a compatible member and normal access works | Direct Java call |
-| A fixed optional class or version-selected stable interface declares the member | One nullable static cached `Method` or `MethodHandle` |
-| The declaring type or required method metadata depends on the concrete runtime class | `ClassValue` containing the cached accessor |
 | A method handle is needed and the supported signatures are known | Cached `MethodHandle` using `findStatic` or `findVirtual`; try the known version-specific alternatives |
 | Access requires a target-associated lookup, or `CallSite` linking is part of the design | `MethodHandle` |
 | Setup performs a one-time call, construction, or field access | `Method`, `Constructor`, or `Field` |
