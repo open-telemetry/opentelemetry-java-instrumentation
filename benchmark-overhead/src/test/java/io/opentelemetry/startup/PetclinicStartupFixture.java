@@ -6,6 +6,7 @@
 package io.opentelemetry.startup;
 
 import com.jayway.jsonpath.JsonPath;
+import io.opentelemetry.containers.PetClinicRestContainer;
 import io.opentelemetry.containers.PostgresContainer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -17,11 +18,8 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.MountableFile;
 
 final class PetclinicStartupFixture implements AutoCloseable {
-  static final String IMAGE =
-      "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/"
-          + "petclinic-rest-base@sha256:2f1c1ef26b7e847a5b175326ed998b1fa7a50177cb0e0cacb555d6f15cb96d8e";
-  static final String DATABASE_IMAGE =
-      "postgres@sha256:3273a713362e7bc2c2c4ea9a653b24febf2653c5d5c95003d81f6d2fdd415f18";
+  static final String IMAGE = PetClinicRestContainer.IMAGE;
+  static final String DATABASE_IMAGE = PostgresContainer.IMAGE;
   static final String READINESS_PATH = "/petclinic/api/owners/1";
 
   private final Network network;
@@ -52,19 +50,21 @@ final class PetclinicStartupFixture implements AutoCloseable {
     try (JarFile jar = new JarFile(helper.toFile())) {
       var advice =
           jar.getJarEntry("io/opentelemetry/startup/PetclinicStartupUptimeResponseAdvice.class");
-      var registration = jar.getJarEntry("META-INF/spring.factories");
+      var registration =
+          jar.getJarEntry(
+              "META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports");
       if (advice == null
           || registration == null
           || !new String(jar.getInputStream(registration).readAllBytes(), StandardCharsets.UTF_8)
-              .contains(
-                  "org.springframework.boot.autoconfigure.EnableAutoConfiguration=io.opentelemetry.startup.PetclinicStartupUptimeResponseAdvice")) {
+              .lines()
+              .anyMatch("io.opentelemetry.startup.PetclinicStartupUptimeResponseAdvice"::equals)) {
         throw new IllegalArgumentException("Invalid Petclinic startup helper JAR: " + helper);
       }
     }
     Network network = Network.newNetwork();
     PostgreSQLContainer<?> database = null;
     try {
-      database = new PostgresContainer(network, DATABASE_IMAGE).build();
+      database = new PostgresContainer(network).build();
       database.start();
       var seed =
           database.execInContainer(
@@ -95,7 +95,8 @@ final class PetclinicStartupFixture implements AutoCloseable {
             MountableFile.forHostPath(annotations), "/app/annotations/annotations.jar")
         .withCopyFileToContainer(
             MountableFile.forHostPath(helper), "/app/startup-helper/petclinic-startup-helper.jar")
-        .withEnv("spring_profiles_active", "postgresql,spring-data-jpa")
+        .withEnv("spring_profiles_active", "postgres,spring-data-jpa")
+        .withEnv("spring_sql_init_mode", "never")
         .withEnv(
             "spring_datasource_url",
             "jdbc:postgresql://postgres:5432/" + PostgresContainer.DATABASE_NAME)

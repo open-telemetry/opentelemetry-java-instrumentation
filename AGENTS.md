@@ -18,10 +18,10 @@ build and test commands, style expectations, and scope.
 ## Repository rules
 
 Read [`.github/copilot-instructions.md`](.github/copilot-instructions.md) and the applicable
-`.github/instructions/*.instructions.md` files when analyzing or changing code. The topic files'
-`applyTo` patterns select relevant paths; their stated conditions determine which rules apply.
-The same rules guide implementation and review, with review-only behavior in the
-`When reviewing` section of `.github/copilot-instructions.md`.
+`.github/instructions/*.instructions.md` files when analyzing, auditing, or changing code.
+The topic files' `applyTo` patterns select relevant paths; their stated conditions determine which
+rules apply. Apply the same code rules to a checkout audit and a pull request review, but follow
+the reporting rules for each task in `.github/copilot-instructions.md`.
 
 Keep each topic's rules, exceptions, explanations, and examples together in its instruction file.
 Do not maintain a separate agent knowledge catalog. Read the instructions for related callers,

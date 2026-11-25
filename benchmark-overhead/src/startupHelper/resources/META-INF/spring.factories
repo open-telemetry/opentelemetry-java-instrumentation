@@ -1,1 +1,0 @@
-org.springframework.boot.autoconfigure.EnableAutoConfiguration=io.opentelemetry.startup.PetclinicStartupUptimeResponseAdvice

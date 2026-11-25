@@ -324,7 +324,7 @@ class Jedis30ClientTest {
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
     assertNestedErrors(nestedErrors);
-    assertBatchErrorType("WRONGTYPE", "PIPELINE");
+    assertBatchErrorType(JedisDataException.class.getName(), "PIPELINE");
   }
 
   @ParameterizedTest
@@ -378,7 +378,7 @@ class Jedis30ClientTest {
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
     assertNestedErrors(nestedErrors);
-    assertBatchErrorType("WRONGTYPE", "MULTI");
+    assertBatchErrorType(JedisDataException.class.getName(), "MULTI");
   }
 
   @ParameterizedTest

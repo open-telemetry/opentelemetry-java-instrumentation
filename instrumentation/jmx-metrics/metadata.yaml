@@ -21,9 +21,8 @@ configurations:
     declarative_name: java.jmx.metrics.included
     description: >
       Comma-separated list of case-sensitive glob patterns for metric names to collect. "*" matches
-      any number of characters and "?" matches one character. Excluded patterns take precedence
-      over included patterns. When no included patterns are configured, all metrics that are not
-      excluded are collected. With neither selector property configured, all metrics are collected.
+      any number of characters and "?" matches one character. All metrics are collected unless
+      included or excluded patterns are configured.
     type: list
     default: ""
     examples:
@@ -33,8 +32,9 @@ configurations:
     description: >
       Comma-separated list of case-sensitive glob patterns for unstable (experimental) bundled
       metric names to opt in to. "*" matches any number of characters and "?" matches one character.
-      Normal metric include and exclude filters also apply. Custom metric definitions do not
-      require experimental opt-in.
+      No unstable bundled metrics are collected unless included patterns are configured. "*" selects
+      all unstable bundled metrics. Normal metric include and exclude filters also apply. Custom
+      metric definitions do not require experimental opt-in.
     type: list
     default: ""
     examples:
@@ -44,9 +44,8 @@ configurations:
     description: >
       Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*"
       matches any number of characters and "?" matches one character. Excluded patterns take
-      precedence over included patterns. When no included patterns are configured, all metrics that
-      are not excluded are collected. With neither selector property configured, all metrics are
-      collected.
+      precedence over included patterns. If only excluded patterns are configured, all other metrics
+      are collected.
     type: list
     default: ""
     examples:

@@ -60,7 +60,7 @@ class AgentStartupReportTest {
             "-Dloader.path=/app/annotations,/app/startup-helper",
             "-cp",
             "/app/spring-petclinic-rest.jar",
-            "org.springframework.boot.loader.PropertiesLauncher");
+            "org.springframework.boot.loader.launch.PropertiesLauncher");
     assertThat(agent)
         .containsExactly(
             "-Xmx512m",
@@ -68,7 +68,7 @@ class AgentStartupReportTest {
             "-Dloader.path=/app/annotations,/app/startup-helper",
             "-cp",
             "/app/spring-petclinic-rest.jar",
-            "org.springframework.boot.loader.PropertiesLauncher");
+            "org.springframework.boot.loader.launch.PropertiesLauncher");
     assertThat(AgentStartupBenchmark.arguments(false, true, true))
         .contains("-Dloader.path=/app/annotations,/app/startup-helper");
   }

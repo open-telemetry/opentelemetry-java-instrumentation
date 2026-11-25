@@ -93,9 +93,10 @@ function rand(max){
 
 function randomVet(specialties) {
     const first = randItem(firstNames);
-    const last = randItem(adj);
+    const last = randItem(surnames);
     const numSpec = rand(specialties.length);
-    const spec = [...Array(numSpec).keys()].map(n => randItem(specialties))
+    const available = specialties.slice();
+    const spec = [...Array(numSpec).keys()].map(() => available.splice(rand(available.length), 1)[0])
     return {
         firstName: first,
         lastName: last,
@@ -116,26 +117,15 @@ function randomOwner(){
    };
 }
 
-function randomPet(types, owner) {
-    const birthDate = "2020/12/31";
+function randomPet(types) {
+    const birthDate = "2020-12-31";
     const petName = ((rand(100) > 50) ? "" : `${randItem(adj)} `) + randItem(petNames);
-    const typeId = randItem(types).id;
+    const type = randItem(types);
 
     return {
      "birthDate": birthDate,
-     "id": 0, // one will be chosen for us
      "name": petName,
-     "owner": {
-       "id": owner.id,
-       "firstName": null,
-       "lastName": "",
-       "address": "",
-       "city": "",
-       "telephone": ""
-     },
-     "type": {
-       "id": typeId
-     },
+     "type": type,
      "visits": []
    }
  }
