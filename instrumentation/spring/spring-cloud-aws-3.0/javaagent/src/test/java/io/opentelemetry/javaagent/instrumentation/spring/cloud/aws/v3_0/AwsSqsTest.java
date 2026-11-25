@@ -318,7 +318,7 @@ class AwsSqsTest {
   }
 
   @Test
-  void sqsBatchListener() throws Exception {
+  void sqsBatchListener() {
     List<Message<Object>> messages = new CopyOnWriteArrayList<>();
     AwsSqsTestApplication.batchInterceptor = messages::addAll;
     List<String> createSpanIds = assertBatchesProcessed("batch-queue", "batch-queue");
@@ -385,7 +385,7 @@ class AwsSqsTest {
     assertBatchesProcessed("batch-queue.fifo", "batch-queue.fifo");
   }
 
-  // runs with headers.included=* and headers.excluded=Excluded-Header
+  // runs with headers.included=* and headers.excluded=Test-Message-Excluded-Header
   @Test
   void sqsBatchListenerHeaders() {
     List<List<String>> batches = new CopyOnWriteArrayList<>();
@@ -393,41 +393,62 @@ class AwsSqsTest {
     MessageListenerContainer<?> container =
         containerRegistry.getContainerById("header-batch-listener");
     container.stop();
-    try (SqsClient client = sqsClient()) {
-      String queueUrl =
-          client.getQueueUrl(request -> request.queueName("header-batch-queue")).queueUrl();
-      client.sendMessageBatch(request ->
-          request
-              .queueUrl(queueUrl)
-              .entries(
-                  headerMessage("1", "hello", "first"), headerMessage("2", "world", "second")));
-    }
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          try (SqsClient client = sqsClient()) {
+            String queueUrl =
+                client.getQueueUrl(request -> request.queueName("header-batch-queue")).queueUrl();
+            client.sendMessageBatch(request ->
+                request
+                    .queueUrl(queueUrl)
+                    .entries(
+                        headerMessage("1", "hello", "first"),
+                        headerMessage("2", "world", "second")));
+          }
+        });
     container.start();
 
-    await()
-        .untilAsserted(() -> {
-          assertThat(batches)
-              .singleElement()
-              .satisfies(batch -> assertThat(batch).containsExactlyInAnyOrder("hello", "world"));
-          assertThat(findSpans("process header-batch-queue")).hasSize(1);
-        });
-    // the exact attributes leave no room for the excluded attribute, the spring headers, the
-    // receipt handles or the message bodies
-    assertThat(findSpans("process header-batch-queue"))
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("Sqs.GetQueueUrl").hasParent(trace.getSpan(0)),
+                span -> span.hasName("send header-batch-queue").hasParent(trace.getSpan(0))),
+        // the sdk starts the creation span of each message of a batch send as a new trace
+        trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("create header-batch-queue").hasKind(SpanKind.PRODUCER).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("create header-batch-queue").hasKind(SpanKind.PRODUCER).hasNoParent()),
+        // the listener container looks up the queue url when it is started
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("Sqs.GetQueueUrl").hasNoParent()),
+        // the exact attributes leave no room for the excluded attribute, the spring headers, the
+        // receipt handles or the message bodies
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("process header-batch-queue")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "header-batch-queue"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                            satisfies(
+                                stringArrayKey("messaging.header.Test-Message-Header"),
+                                val -> val.containsExactlyInAnyOrder("first", "second"))),
+                span -> span.hasName("delete header-batch-queue").hasParent(trace.getSpan(0))));
+    // both messages were delivered to a single listener invocation
+    assertThat(batches)
         .singleElement()
-        .satisfies(span ->
-            assertThat(span)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
-                    equalTo(MESSAGING_DESTINATION_NAME, "header-batch-queue"),
-                    equalTo(MESSAGING_OPERATION_NAME, "process"),
-                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
-                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
-                    equalTo(SERVER_ADDRESS, "localhost"),
-                    equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
-                    satisfies(
-                        stringArrayKey("messaging.header.Test-Header"),
-                        values -> values.containsExactlyInAnyOrder("first", "second"))));
+        .satisfies(batch -> assertThat(batch).containsExactlyInAnyOrder("hello", "world"));
   }
 
   private static SendMessageBatchRequestEntry headerMessage(String id, String body, String value) {
@@ -436,8 +457,8 @@ class AwsSqsTest {
         .messageBody(body)
         .messageAttributes(
             Map.of(
-                "Test-Header", stringAttribute(value),
-                "Excluded-Header", stringAttribute("excluded-" + value)))
+                "Test-Message-Header", stringAttribute(value),
+                "Test-Message-Excluded-Header", stringAttribute("excluded-" + value)))
         .build();
   }
 
