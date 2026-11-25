@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5Accessor;
@@ -79,7 +80,8 @@ public class Servlet5Singletons {
   }
 
   public static HttpServletRequest wrapForBodyCaptureIfNeeded(HttpServletRequest request) {
-    if (!helper().captureRequestBodyEnabled()) {
+    if (request.getAttribute(BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE) == null) {
+      // no marker, no need to wrap
       return request;
     }
     return Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(

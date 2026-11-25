@@ -37,6 +37,7 @@ public class JakartaServletServiceAdvice {
     private final ServletRequestContext<HttpServletRequest> requestContext;
     @Nullable private final Context context;
     private final Scope scope;
+    private final HttpServletRequest wrappedRequest;
 
     public AdviceScope(
         CallDepth callDepth,
@@ -83,6 +84,14 @@ public class JakartaServletServiceAdvice {
         HttpServerResponseCustomizerHolder.getCustomizer()
             .customize(contextToUpdate, response, new Servlet5HttpServerResponseMutator());
       }
+
+      // thus must happen after the helper.start(...) call as we rely on marker attribute being
+      // set to know if wrapping is needed or not.
+      wrappedRequest = Servlet5Singletons.wrapForBodyCaptureIfNeeded(request);
+    }
+
+    public HttpServletRequest getWrappedRequest() {
+      return wrappedRequest;
     }
 
     public void exit(
@@ -115,10 +124,7 @@ public class JakartaServletServiceAdvice {
       response = new Servlet5SnippetInjectingResponseWrapper(response, snippet);
     }
 
-    // TODO: optimize and avoid wrapping when span is not sampled
-    // or make the wrapping no-op when span is not sampled
-    HttpServletRequest request =
-        Servlet5Singletons.wrapForBodyCaptureIfNeeded((HttpServletRequest) servletRequest);
+    HttpServletRequest request = (HttpServletRequest) servletRequest;
 
     AdviceScope adviceScope =
         new AdviceScope(
@@ -127,7 +133,7 @@ public class JakartaServletServiceAdvice {
             request,
             response);
 
-    return new Object[] {adviceScope, request, response};
+    return new Object[] {adviceScope, adviceScope.getWrappedRequest(), response};
   }
 
   @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
