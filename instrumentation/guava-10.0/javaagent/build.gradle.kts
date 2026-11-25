@@ -32,7 +32,7 @@ dependencies {
 testing.suites {
   unitTests {
     dependencies {
-      implementation("com.google.guava:guava:${baseVersion("10.0").orLatest()}")
+      implementation("com.google.guava:guava:10.0")
       implementation(project(":instrumentation-annotations-support"))
     }
   }
