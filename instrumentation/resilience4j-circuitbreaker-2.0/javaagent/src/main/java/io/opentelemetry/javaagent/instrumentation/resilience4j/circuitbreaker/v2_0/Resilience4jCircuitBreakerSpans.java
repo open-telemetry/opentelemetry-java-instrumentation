@@ -259,20 +259,28 @@ public class Resilience4jCircuitBreakerSpans {
     return attachment;
   }
 
-  public static <T> void applyFutureConsumer(
-      OnceConsumer<T> onceConsumer, Consumer<T> consumer, Future<?> future) {
+  @Nullable
+  static AttachedPendingSpan enterFutureGet(Future<?> future, OnceConsumer<?> onceConsumer) {
     Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
     AttachedPendingSpan attachment = spans == null ? null : spans.peek();
-    if (attachment == null || attachment.future != future) {
-      onceConsumer.applyOnce(consumer);
-      return;
+    if (attachment == null || attachment.future != future || attachment.onceConsumer != null) {
+      return null;
     }
+    attachment.onceConsumer = onceConsumer;
+    return attachment;
+  }
 
-    onceConsumer.applyOnce(value -> {
+  static <T> Consumer<T> wrapFutureConsumer(OnceConsumer<T> onceConsumer, Consumer<T> consumer) {
+    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
+    AttachedPendingSpan attachment = spans == null ? null : spans.peek();
+    if (attachment == null || attachment.onceConsumer != onceConsumer) {
+      return consumer;
+    }
+    return value -> {
       // Only the reader that wins OnceConsumer's CAS executes this callback.
       attachment.completionOwner = true;
       consumer.accept(value);
-    });
+    };
   }
 
   static void detachPendingSpan(AttachedPendingSpan attachment) {
@@ -382,6 +390,7 @@ public class Resilience4jCircuitBreakerSpans {
     private final Scope scope;
     @Nullable private final Future<?> future;
     @Nullable private final Capture enclosingCapture;
+    @Nullable private OnceConsumer<?> onceConsumer;
     private boolean completionOwner;
 
     private AttachedPendingSpan(
@@ -393,6 +402,10 @@ public class Resilience4jCircuitBreakerSpans {
       this.scope = scope;
       this.future = future;
       this.enclosingCapture = enclosingCapture;
+    }
+
+    void clearOnceConsumer() {
+      onceConsumer = null;
     }
 
     void endFuture(String outcome, @Nullable Throwable throwable) {

@@ -41,13 +41,13 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class AcquirePermissionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Resilience4jCircuitBreakerSpans.AttemptToken onEnter(
         @Advice.This CircuitBreaker circuitBreaker) {
       return Resilience4jCircuitBreakerSpans.beginAcquisition(circuitBreaker);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker,
         @Advice.Enter @Nullable Resilience4jCircuitBreakerSpans.AttemptToken token,
@@ -63,13 +63,13 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class TryAcquirePermissionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Resilience4jCircuitBreakerSpans.AttemptToken onEnter(
         @Advice.This CircuitBreaker circuitBreaker) {
       return Resilience4jCircuitBreakerSpans.beginAcquisition(circuitBreaker);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker,
         @Advice.Enter @Nullable Resilience4jCircuitBreakerSpans.AttemptToken token,
@@ -88,7 +88,7 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class PublishCircuitErrorEventAdvice {
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.This CircuitBreaker circuitBreaker,
         @Advice.Argument(3) @Nullable Throwable throwable) {
@@ -99,12 +99,12 @@ class CircuitBreakerStateMachineInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class OnResultAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.This CircuitBreaker circuitBreaker) {
       Resilience4jCircuitBreakerSpans.enterOnResult(circuitBreaker);
     }
 
-    @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class)
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit() {
       Resilience4jCircuitBreakerSpans.endOnResult();
     }

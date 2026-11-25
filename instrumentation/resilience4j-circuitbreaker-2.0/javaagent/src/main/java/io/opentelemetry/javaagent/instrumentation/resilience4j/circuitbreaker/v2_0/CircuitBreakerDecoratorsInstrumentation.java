@@ -60,7 +60,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class SupplierAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(1))
     public static <T> Supplier<T> onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
@@ -69,7 +69,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T> Supplier<T> onExit(
         @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Supplier<T> result) {
       return Resilience4jCircuitBreakerDecorators.wrapSupplier(circuitBreaker, result);
@@ -79,7 +79,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallableAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(1))
     public static <T> Callable<T> onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
@@ -88,7 +88,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T> Callable<T> onExit(
         @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Callable<T> result) {
       return Resilience4jCircuitBreakerDecorators.wrapCallable(circuitBreaker, result);
@@ -98,7 +98,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class RunnableAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(1))
     public static Runnable onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Argument(1) Runnable runnable) {
@@ -106,7 +106,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Runnable onExit(
         @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Runnable result) {
       return Resilience4jCircuitBreakerDecorators.wrapRunnable(circuitBreaker, result);
@@ -116,7 +116,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CompletionStageSupplierAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(1))
     public static <T> Supplier<CompletionStage<T>> onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
@@ -126,7 +126,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T> Supplier<CompletionStage<T>> onExit(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
         @Advice.Return Supplier<CompletionStage<T>> result) {
@@ -138,7 +138,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FutureSupplierAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(1))
     public static <T> Supplier<Future<T>> onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
@@ -147,7 +147,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T> Supplier<Future<T>> onExit(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
         @Advice.Return Supplier<Future<T>> result) {
@@ -158,7 +158,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class FunctionAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(1))
     public static <T, R> Function<T, R> onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
@@ -167,7 +167,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T, R> Function<T, R> onExit(
         @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Function<T, R> result) {
       return Resilience4jCircuitBreakerDecorators.wrapFunction(circuitBreaker, result);
@@ -177,7 +177,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class ConsumerAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(1))
     public static <T> Consumer<T> onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker,
@@ -186,7 +186,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static <T> Consumer<T> onExit(
         @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Consumer<T> result) {
       return Resilience4jCircuitBreakerDecorators.wrapConsumer(circuitBreaker, result);
@@ -196,7 +196,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CheckedDecoratorAdvice {
 
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @AssignReturned.ToArguments(@ToArgument(1))
     public static Object onEnter(
         @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Argument(1) Object delegate) {
@@ -204,7 +204,7 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     }
 
     @AssignReturned.ToReturned
-    @Advice.OnMethodExit(suppress = Throwable.class)
+    @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static Object onExit(
         @Advice.Argument(0) CircuitBreaker circuitBreaker, @Advice.Return Object result) {
       return Resilience4jCircuitBreakerDecorators.wrapChecked(circuitBreaker, result);

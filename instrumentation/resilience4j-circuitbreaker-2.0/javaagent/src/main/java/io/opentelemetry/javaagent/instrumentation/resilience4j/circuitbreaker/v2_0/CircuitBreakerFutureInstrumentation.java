@@ -6,68 +6,69 @@
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0;
 
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
+import io.github.resilience4j.core.functions.OnceConsumer;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import net.bytebuddy.asm.AsmVisitorWrapper;
+import java.util.function.Consumer;
+import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.asm.Advice.AssignReturned;
+import net.bytebuddy.asm.Advice.AssignReturned.ToArguments.ToArgument;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
-import org.objectweb.asm.ClassWriter;
-import org.objectweb.asm.MethodVisitor;
-import org.objectweb.asm.Opcodes;
 
 class CircuitBreakerFutureInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("io.github.resilience4j.circuitbreaker.CircuitBreaker$CircuitBreakerFuture");
+    return namedOneOf(
+        "io.github.resilience4j.circuitbreaker.CircuitBreaker$CircuitBreakerFuture",
+        "io.github.resilience4j.core.functions.OnceConsumer");
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    String helper =
-        getClass().getPackageName().replace('.', '/') + "/Resilience4jCircuitBreakerSpans";
-    transformer.applyTransformer(
-        (builder, typeDescription, classLoader, javaModule, protectionDomain) ->
-            builder.visit(
-                new AsmVisitorWrapper.ForDeclaredMethods()
-                    .method(
-                        named("get")
-                            .and(takesArguments(0).or(takesArguments(long.class, TimeUnit.class))),
-                        (type, method, visitor, context, pool, writerFlags, readerFlags) ->
-                            new FutureGetVisitor(visitor, helper))
-                    .writerFlags(ClassWriter.COMPUTE_MAXS)));
+    transformer.applyAdviceToMethod(
+        named("get").and(takesArguments(0).or(takesArguments(long.class, TimeUnit.class))),
+        getClass().getName() + "$GetAdvice");
+    transformer.applyAdviceToMethod(
+        named("applyOnce").and(takesArguments(Consumer.class)),
+        getClass().getName() + "$ApplyOnceAdvice");
   }
 
-  private static final class FutureGetVisitor extends MethodVisitor {
-    private final String helper;
+  @SuppressWarnings("unused")
+  public static class GetAdvice {
 
-    private FutureGetVisitor(MethodVisitor visitor, String helper) {
-      super(AsmApi.VERSION, visitor);
-      this.helper = helper;
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static Resilience4jCircuitBreakerSpans.AttachedPendingSpan onEnter(
+        @Advice.This Future<?> future,
+        @Advice.FieldValue("onceToCircuitbreaker") OnceConsumer<?> onceConsumer) {
+      return Resilience4jCircuitBreakerSpans.enterFutureGet(future, onceConsumer);
     }
 
-    @Override
-    public void visitMethodInsn(
-        int opcode, String owner, String name, String descriptor, boolean isInterface) {
-      if (opcode == Opcodes.INVOKEVIRTUAL
-          && owner.equals("io/github/resilience4j/core/functions/OnceConsumer")
-          && name.equals("applyOnce")
-          && descriptor.equals("(Ljava/util/function/Consumer;)V")) {
-        super.visitVarInsn(Opcodes.ALOAD, 0);
-        super.visitMethodInsn(
-            Opcodes.INVOKESTATIC,
-            helper,
-            "applyFutureConsumer",
-            "(Lio/github/resilience4j/core/functions/OnceConsumer;Ljava/util/function/Consumer;"
-                + "Ljava/util/concurrent/Future;)V",
-            false);
-        return;
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void onExit(
+        @Advice.Enter @Nullable Resilience4jCircuitBreakerSpans.AttachedPendingSpan attachment) {
+      if (attachment != null) {
+        attachment.clearOnceConsumer();
       }
-      super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ApplyOnceAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @AssignReturned.ToArguments(@ToArgument(0))
+    public static <T> Consumer<T> onEnter(
+        @Advice.This OnceConsumer<T> onceConsumer, @Advice.Argument(0) Consumer<T> consumer) {
+      return Resilience4jCircuitBreakerSpans.wrapFutureConsumer(onceConsumer, consumer);
     }
   }
 }
