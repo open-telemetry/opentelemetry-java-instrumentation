@@ -20,18 +20,24 @@ import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.AsyncEvent;
+import jakarta.servlet.AsyncListener;
 import jakarta.servlet.Filter;
 import jakarta.servlet.ReadListener;
 import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -81,6 +87,104 @@ class ServletBodyCaptureTest {
     ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
     Experimental.setCaptureRequestBody(builder, createDefault().setEnabled(true).setMaxSize(7));
     testCaptureRequestBody(builder, "request");
+  }
+
+  @Test
+  void capturesRequestBody_asyncContextRequestFromStartAsync() throws Exception {
+    // the async context returned by a no-arg startAsync() exposes the container request
+    String value =
+        captureAsync((req, async) -> {
+          AsyncContext context = req.startAsync();
+          readRequestBody(context.getRequest(), BODY);
+          assertThat(context.hasOriginalRequestAndResponse()).isTrue();
+        });
+
+    assertThat(value).isEqualTo("request-body");
+  }
+
+  @Test
+  void capturesRequestBody_asyncContextRequestFromGetAsyncContext() throws Exception {
+    String value =
+        captureAsync((req, async) -> {
+          req.startAsync();
+          readRequestBody(req.getAsyncContext().getRequest(), BODY);
+        });
+
+    assertThat(value).isEqualTo("request-body");
+  }
+
+  @Test
+  void asyncContextKeepsRequestPassedByApplication() throws Exception {
+    AtomicReference<Boolean> sameRequest = new AtomicReference<>();
+    String value =
+        captureAsync((req, async) -> {
+          AsyncContext context = req.startAsync(req, mock(ServletResponse.class));
+          sameRequest.set(context.getRequest() == req);
+          assertThat(context.hasOriginalRequestAndResponse()).isFalse();
+          readRequestBody(context.getRequest(), BODY);
+        });
+
+    assertThat(sameRequest.get()).isTrue();
+    assertThat(value).isEqualTo("request-body");
+  }
+
+  private static final byte[] BODY = "request-body".getBytes(UTF_8);
+
+  /** Application code that runs in the filter chain, with the container async context mock. */
+  private interface AsyncApplication {
+    void run(HttpServletRequest request, AsyncContext containerAsyncContext) throws IOException;
+  }
+
+  @Nullable
+  private static String captureAsync(AsyncApplication application) throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, createDefault().setEnabled(true));
+    Filter filter = builder.build().createFilter();
+
+    HttpServletRequest request = requestWithBody(BODY, "text/plain");
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    // like a container, the async context refers to the request it has been started on, which is
+    // the container request and not the wrappers added by filters, unless the application
+    // explicitly provides its own request
+    List<AsyncListener> listeners = new ArrayList<>();
+    AsyncContext noArgContext = mock(AsyncContext.class);
+    when(noArgContext.getRequest()).thenReturn(request);
+    when(noArgContext.hasOriginalRequestAndResponse()).thenReturn(true);
+    doAnswer(
+            invocation -> {
+              listeners.add(invocation.getArgument(0));
+              return null;
+            })
+        .when(noArgContext)
+        .addListener(any());
+    when(request.startAsync()).thenReturn(noArgContext);
+    when(request.getAsyncContext()).thenReturn(noArgContext);
+    when(request.startAsync(any(), any()))
+        .thenAnswer(invocation -> {
+          AsyncContext context = mock(AsyncContext.class);
+          when(context.getRequest()).thenReturn(invocation.getArgument(0));
+          when(context.hasOriginalRequestAndResponse()).thenReturn(false);
+          doAnswer(
+                  listenerInvocation -> {
+                    listeners.add(listenerInvocation.getArgument(0));
+                    return null;
+                  })
+              .when(context)
+              .addListener(any());
+          return context;
+        });
+
+    filter.doFilter(
+        request, response, (req, res) -> application.run((HttpServletRequest) req, noArgContext));
+
+    // the span ends when the async processing completes
+    for (AsyncListener listener : listeners) {
+      listener.onComplete(new AsyncEvent(noArgContext));
+    }
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    return traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY);
   }
 
   private static void testCaptureRequestBody(
