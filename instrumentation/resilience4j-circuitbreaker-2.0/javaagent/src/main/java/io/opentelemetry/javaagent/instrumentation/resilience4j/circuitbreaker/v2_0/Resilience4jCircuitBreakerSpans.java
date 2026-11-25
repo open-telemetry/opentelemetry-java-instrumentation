@@ -259,35 +259,20 @@ public class Resilience4jCircuitBreakerSpans {
     return attachment;
   }
 
-  @Nullable
-  public static AttachedPendingSpan enterFutureGet(Future<?> future, OnceConsumer<?> onceConsumer) {
+  public static <T> void applyFutureConsumer(
+      OnceConsumer<T> onceConsumer, Consumer<T> consumer, Future<?> future) {
     Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
     AttachedPendingSpan attachment = spans == null ? null : spans.peek();
     if (attachment == null || attachment.future != future) {
-      return null;
+      onceConsumer.applyOnce(consumer);
+      return;
     }
-    attachment.onceConsumer = onceConsumer;
-    return attachment;
-  }
 
-  public static void exitFutureGet(@Nullable AttachedPendingSpan attachment) {
-    if (attachment != null) {
-      attachment.onceConsumer = null;
-    }
-  }
-
-  public static <T> Consumer<T> wrapFutureConsumer(
-      OnceConsumer<T> onceConsumer, Consumer<T> consumer) {
-    Deque<AttachedPendingSpan> spans = attachedPendingSpans.get();
-    AttachedPendingSpan attachment = spans == null ? null : spans.peek();
-    if (attachment == null || attachment.onceConsumer != onceConsumer) {
-      return consumer;
-    }
-    return value -> {
+    onceConsumer.applyOnce(value -> {
       // Only the reader that wins OnceConsumer's CAS executes this callback.
       attachment.completionOwner = true;
       consumer.accept(value);
-    };
+    });
   }
 
   static void detachPendingSpan(AttachedPendingSpan attachment) {
@@ -330,6 +315,9 @@ public class Resilience4jCircuitBreakerSpans {
     // The innermost capture or completion attachment owns classification. A newer capture also
     // guards raw callbacks made by that decorated call's user code.
     if (attachment != null && capture == attachment.enclosingCapture) {
+      if (attachment.future != null && !attachment.completionOwner) {
+        return null;
+      }
       pendingSpan = attachment.pendingSpan;
       if (!pendingSpan.isFor(circuitBreaker) || pendingSpan.resultClassified) {
         // Once the attempt's own result has been classified, direct calls made by stage
@@ -394,7 +382,6 @@ public class Resilience4jCircuitBreakerSpans {
     private final Scope scope;
     @Nullable private final Future<?> future;
     @Nullable private final Capture enclosingCapture;
-    @Nullable private OnceConsumer<?> onceConsumer;
     private boolean completionOwner;
 
     private AttachedPendingSpan(

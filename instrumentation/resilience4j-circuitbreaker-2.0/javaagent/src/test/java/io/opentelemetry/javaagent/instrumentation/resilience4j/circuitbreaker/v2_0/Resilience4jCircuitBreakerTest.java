@@ -1142,6 +1142,32 @@ class Resilience4jCircuitBreakerTest {
   }
 
   @Test
+  void rawOnResultInsideFutureGetDoesNotClassifyDecoratedAttempt() throws Exception {
+    CircuitBreaker circuitBreaker =
+        CircuitBreaker.of(
+            "test-circuit-breaker",
+            CircuitBreakerConfig.custom()
+                .recordResult(result -> Integer.valueOf(500).equals(result))
+                .build());
+    CompletableFuture<Integer> future =
+        new CompletableFuture<>() {
+          @Override
+          public Integer get() throws InterruptedException, ExecutionException {
+            circuitBreaker.onResult(0, NANOSECONDS, 200);
+            return super.get();
+          }
+        };
+    future.complete(500);
+    Supplier<Future<Integer>> decorated =
+        CircuitBreaker.decorateFuture(circuitBreaker, () -> future);
+
+    Future<Integer> decoratedFuture = testing.runWithSpan("parent", decorated::get);
+    assertThat(decoratedFuture.get()).isEqualTo(500);
+
+    assertCircuitBreakerSpan("closed", "failure");
+  }
+
+  @Test
   void createsFailureSpanWhenDecoratedFutureResultMatchesPredicateOnDifferentThread()
       throws Exception {
     CircuitBreakerConfig.Builder builder = CircuitBreakerConfig.custom();
@@ -1224,6 +1250,7 @@ class Resilience4jCircuitBreakerTest {
           executor.submit(
               () -> followerTimed ? decoratedFuture.get(10, SECONDS) : decoratedFuture.get());
       assertThat(follower.get(10, SECONDS)).isEqualTo(500);
+      assertThat(testing.spans()).extracting(span -> span.getName()).containsExactly("parent");
       releaseClassification.countDown();
       assertThat(owner.get(10, SECONDS)).isEqualTo(500);
     } finally {
