@@ -5,7 +5,9 @@ applyTo: "**/*.java,**/*.kt,**/*.scala,**/build.gradle.kts"
 # Instrumentation test modes
 
 Apply these rules when tests exercise configuration-dependent behavior or test-task wiring
-selects such behavior. Do not create variants for features the tests do not exercise.
+selects such behavior.
+
+- Do not create variants for features the tests do not exercise.
 
 ## Experimental and semconv coverage
 

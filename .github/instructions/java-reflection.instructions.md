@@ -4,8 +4,10 @@ applyTo: "**/*.java,**/*.kt,**/*.scala,**/*.groovy"
 
 # Java reflection and method handles
 
-Apply these rules to reflection-based compatibility code. Choose lookup and cache scope from the
-declaring type, supported signatures, class loaders, access, and failure behavior.
+Apply these rules to reflection-based compatibility code.
+
+- Choose lookup and cache scope from the declaring type, supported signatures, class loaders,
+  access, and failure behavior.
 
 ## Prefer direct access
 

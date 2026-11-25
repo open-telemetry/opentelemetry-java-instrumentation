@@ -1,9 +1,11 @@
 # OpenTelemetry Java Instrumentation rules
 
 These rules and the applicable `.github/instructions/*.instructions.md` files guide implementation,
-audits of existing code, and pull request reviews. Apply a rule only when its stated conditions
-hold. Keep its exceptions, rationale, and useful examples in the same topic file, not in a second
-guidance catalog.
+audits of existing code, and pull request reviews.
+
+- Apply a rule only when its stated conditions hold.
+- Keep a rule's exceptions, rationale, and useful examples in the same topic file, not in a
+  second guidance catalog.
 
 ## Correctness and compatibility
 

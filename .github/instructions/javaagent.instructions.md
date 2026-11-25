@@ -5,7 +5,8 @@ applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/*
 # Javaagent modules and matching
 
 Apply these rules to javaagent modules, type/method matching, and collaborator holders.
-Inspect registration and the supported library lifecycle before choosing a pattern.
+
+- Inspect registration and the supported library lifecycle before choosing a pattern.
 
 ## Registration
 

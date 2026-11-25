@@ -4,9 +4,7 @@ applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/*
 
 # Javaagent advice and scope ownership
 
-Apply these rules to executable Byte Buddy advice and the helpers it calls. Inspect how advice is
-registered before deciding whether a test, infrastructure, throw-free, or helper-injection
-exception applies.
+Apply these rules to executable Byte Buddy advice and the helpers it calls.
 
 ## Advice structure and transformation
 
@@ -36,7 +34,7 @@ exception applies.
   let unexpected failures break application code. Log suppressed unexpected failures where they
   occur unless they are expected optional probes.
 
-  Suppression is unnecessary for:
+  Inspect how advice is registered before applying an exception. Suppression is unnecessary for:
 
   - test code;
   - intentional internal infrastructure, such as class-loading/lambda support where swallowing
