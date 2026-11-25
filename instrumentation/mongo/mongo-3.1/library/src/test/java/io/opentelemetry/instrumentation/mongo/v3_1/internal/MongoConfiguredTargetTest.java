@@ -45,12 +45,12 @@ class MongoConfiguredTargetTest {
 
   private static final ServerAddress SELECTED_SERVER = new ServerAddress("db2.example", 27018);
 
-  private final MongoDbAttributesGetter getter =
-      new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
-
   @RegisterExtension
   private static final LibraryInstrumentationExtension testing =
       LibraryInstrumentationExtension.create();
+
+  private final MongoDbAttributesGetter getter =
+      new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
   @Test
   void defaultListenerOmitsQueryText() {

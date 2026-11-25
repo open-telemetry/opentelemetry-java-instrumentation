@@ -78,8 +78,7 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
         satisfies(
             DB_QUERY_TEXT,
             val ->
-                val
-                    .isNotNull()
+                val.isNotNull()
                     .satisfies(v ->
                         assertThat(Document.parse(v).get("filter", Document.class))
                             .isEqualTo(new Document("item", "?")))));
