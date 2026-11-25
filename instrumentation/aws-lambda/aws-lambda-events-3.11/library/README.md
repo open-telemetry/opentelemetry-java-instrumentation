@@ -1,17 +1,35 @@
-# AWS Lambda Instrumentation
+# Library Instrumentation for AWS Lambda Events version 3.11 and higher
 
-This package contains libraries to help instrument AWS lambda functions in your code.
+Provides OpenTelemetry instrumentation for [AWS Lambda Java handlers](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html)
+that use AWS Lambda event types.
 
-## Dependencies
+## Quickstart
 
-Add this dependency to your application, replacing `OPENTELEMETRY_VERSION` with the
-[latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-lambda-events-3.11):
+### Add these dependencies to your project
+
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-lambda-events-3.11).
+
+For Maven, add to your `pom.xml` dependencies:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-aws-lambda-events-3.11</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+  </dependency>
+</dependencies>
+```
+
+For Gradle, add to your dependencies:
 
 ```kotlin
 implementation("io.opentelemetry.instrumentation:opentelemetry-aws-lambda-events-3.11:OPENTELEMETRY_VERSION")
 ```
 
-## Using wrappers
+### Usage
+
+#### Using wrappers
 
 To use the instrumentation, configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName`
 and use one of wrappers as your lambda `Handler`.
@@ -27,7 +45,7 @@ Available wrappers:
 If you are only using `TracingRequestStreamWrapper`, consider using [aws-lambda-core-1.0](../../aws-lambda-core-1.0/library) instead to reduce the size of
 your compiled function.
 
-## Using handlers
+#### Using handlers
 
 To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
 that extend `TracingRequestHandler` (or `TracingRequestStreamHandler`). You will need to change the method name to `doHandleRequest`
@@ -82,7 +100,7 @@ Maven:
 </dependencies>
 ```
 
-## SQS Handler
+#### SQS Handler
 
 This package provides a special handler for SQS-triggered functions to include messaging data.
 If using SQS, it is recommended to use them instead of `TracingRequestHandler`.

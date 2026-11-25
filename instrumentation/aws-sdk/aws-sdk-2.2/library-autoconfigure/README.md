@@ -1,20 +1,36 @@
-# Automatic Library Instrumentation for AWS SDK for Java 2.2 and Higher
+# Library Instrumentation for AWS SDK for Java version 2.2 and higher
 
-## Dependencies
+Provides automatic OpenTelemetry instrumentation for the [AWS SDK for Java v2](https://github.com/aws/aws-sdk-java-v2).
 
-Add this dependency to your application, replacing `OPENTELEMETRY_VERSION` with the
-[latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-sdk-2.2-autoconfigure):
+## Quickstart
 
-```kotlin
-implementation("io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure:OPENTELEMETRY_VERSION")
+### Add these dependencies to your project
+
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-sdk-2.2-autoconfigure).
+
+For Maven, add to your `pom.xml` dependencies:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-aws-sdk-2.2-autoconfigure</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+    <scope>runtime</scope>
+  </dependency>
+</dependencies>
 ```
 
-## Usage
+For Gradle, add to your dependencies:
 
-Include this artifact on the application classpath and initialize the global
-`OpenTelemetry` instance before creating RPC or SDK clients and servers.
+```kotlin
+runtimeOnly("io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2-autoconfigure:OPENTELEMETRY_VERSION")
+```
 
-AWS SDK v2 discovers the tracing interceptor through its global execution-interceptor SPI.
-No per-client interceptor registration is needed. For the additional client wrapping
-required by SQS and asynchronous Bedrock Runtime, see the
-[plain library usage](../../aws-sdk-2.2/library#usage).
+### Usage
+
+Register your SDK with `GlobalOpenTelemetry` before building any AWS SDK clients. The AWS SDK
+loads the tracing execution interceptor automatically; you don't need to add it to each client.
+See the [AWS SDK instrumentation settings](../../README.md) for configuration.
+
+For SQS and asynchronous Bedrock Runtime, also [wrap the clients](../library/README.md#wrap-sqs-and-asynchronous-bedrock-runtime-clients).

@@ -1,17 +1,34 @@
-# AWS Lambda Instrumentation
+# Library Instrumentation for AWS Lambda Core version 1.0 and higher
 
-This package contains libraries to help instrument AWS lambda functions in your code.
+Provides OpenTelemetry instrumentation for [AWS Lambda Java handlers](https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html).
 
-## Dependencies
+## Quickstart
 
-Add this dependency to your application, replacing `OPENTELEMETRY_VERSION` with the
-[latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-lambda-core-1.0):
+### Add these dependencies to your project
+
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-lambda-core-1.0).
+
+For Maven, add to your `pom.xml` dependencies:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-aws-lambda-core-1.0</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+  </dependency>
+</dependencies>
+```
+
+For Gradle, add to your dependencies:
 
 ```kotlin
 implementation("io.opentelemetry.instrumentation:opentelemetry-aws-lambda-core-1.0:OPENTELEMETRY_VERSION")
 ```
 
-## Using wrappers
+### Usage
+
+#### Using wrappers
 
 To use the instrumentation, configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName`
 and use one of wrappers as your lambda `Handler`.
@@ -24,7 +41,7 @@ Available wrappers:
 
 When using known Lambda event types as parameters, use [aws-lambda-events-3.11](../../aws-lambda-events-3.11/library).
 
-## Using handlers
+#### Using handlers
 
 To use the instrumentation, replace your function classes that implement `RequestHandler` (or `RequestStreamHandler`) with those
 that extend `TracingRequestHandler` (or `TracingRequestStreamHandler`). You will need to change the method name to `doHandleRequest`
