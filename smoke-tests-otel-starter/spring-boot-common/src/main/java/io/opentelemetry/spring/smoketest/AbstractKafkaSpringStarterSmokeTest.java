@@ -25,8 +25,8 @@ import org.assertj.core.api.AbstractLongAssert;
 import org.assertj.core.api.AbstractStringAssert;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -101,7 +101,7 @@ abstract class AbstractKafkaSpringStarterSmokeTest extends AbstractSpringStarter
     runnable.run();
   }
 
-  @Configuration
+  @TestConfiguration
   public static class KafkaConfig {
 
     @Autowired OpenTelemetry openTelemetry;

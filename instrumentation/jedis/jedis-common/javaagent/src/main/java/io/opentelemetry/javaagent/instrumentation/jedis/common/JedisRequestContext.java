@@ -225,13 +225,6 @@ public class JedisRequestContext<T> implements JedisServerErrorContext {
     if (currentRequestContext.get() == this) {
       currentRequestContext.restore(previousContext);
     }
-    if (previousContext != null && serverErrors != null) {
-      // Deferred responses can throw after detachment. Retain confirmation without failing a parent
-      // that may handle or ignore these errors.
-      for (Throwable serverError : serverErrors) {
-        previousContext.addServerError(serverError);
-      }
-    }
     Throwable completionThrowable = methodThrowable;
     if (completionThrowable == null && captureServerErrors && result instanceof List<?>) {
       for (Object value : (List<?>) result) {

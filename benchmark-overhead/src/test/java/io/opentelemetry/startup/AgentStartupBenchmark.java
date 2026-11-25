@@ -88,11 +88,12 @@ class AgentStartupBenchmark {
         "image.reference",
         petclinic == null ? StartupFixture.IMAGE : PetclinicStartupFixture.IMAGE);
     if (petclinic != null) {
-      metadata.setProperty("application.version", "spring-petclinic-rest 2.4.2");
-      metadata.setProperty("application.image.tag", "petclinic-rest-base:20230601125442");
-      metadata.setProperty("application.profiles", "postgresql,spring-data-jpa");
+      metadata.setProperty(
+          "application.version", "spring-petclinic-rest 4.0.2 (Spring Boot 4.1.2)");
+      metadata.setProperty("application.image.tag", "petclinic-rest-base:20261122233729");
+      metadata.setProperty("application.profiles", "postgres,spring-data-jpa");
       metadata.setProperty("database.image.reference", PetclinicStartupFixture.DATABASE_IMAGE);
-      metadata.setProperty("database.version", "postgres 9.6.22");
+      metadata.setProperty("database.version", "postgres 18.7");
       metadata.setProperty("readiness", PetclinicStartupFixture.READINESS_PATH + " seeded owner 1");
       metadata.setProperty("annotations.sha256", checksum(annotations));
       metadata.setProperty("annotations.path", annotations.toString());
@@ -374,7 +375,7 @@ class AgentStartupBenchmark {
               "-Dloader.path=/app/annotations,/app/startup-helper",
               "-cp",
               "/app/spring-petclinic-rest.jar",
-              "org.springframework.boot.loader.PropertiesLauncher"));
+              "org.springframework.boot.loader.launch.PropertiesLauncher"));
     } else {
       arguments.addAll(
           List.of("-cp", "/app/resources:/app/classes:/app/libs/*", StartupFixture.APPLICATION));

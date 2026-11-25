@@ -25,7 +25,8 @@ configurations:
     description: >
       A comma-separated list of ASCII request header key patterns to capture on client spans.
       Matching is case-insensitive. `?` matches one character and `*` matches zero or more
-      characters.
+      characters. No request headers are captured unless included or excluded patterns are
+      configured. `*` captures all ASCII request headers.
     default: ''
     examples:
       - "custom-request-header"
@@ -35,9 +36,10 @@ configurations:
     type: list
     description: >
       A comma-separated list of ASCII request header key patterns to exclude from client spans.
-      Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and
-      `*` matches zero or more characters. If included is not configured, all non-excluded ASCII
-      headers are captured, which may expose sensitive information.
+      Matching is case-insensitive. `?` matches one character and `*` matches zero or more
+      characters. Excluded patterns take precedence over included patterns. If only excluded
+      patterns are configured, all other ASCII request headers are captured, which may expose
+      sensitive information.
     default: ''
     examples:
       - "authorization,*-token"
@@ -47,7 +49,8 @@ configurations:
     description: >
       A comma-separated list of ASCII request header key patterns to capture on server spans.
       Matching is case-insensitive. `?` matches one character and `*` matches zero or more
-      characters.
+      characters. No request headers are captured unless included or excluded patterns are
+      configured. `*` captures all ASCII request headers.
     default: ''
     examples:
       - "custom-request-header"
@@ -57,9 +60,10 @@ configurations:
     type: list
     description: >
       A comma-separated list of ASCII request header key patterns to exclude from server spans.
-      Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and
-      `*` matches zero or more characters. If included is not configured, all non-excluded ASCII
-      headers are captured, which may expose sensitive information.
+      Matching is case-insensitive. `?` matches one character and `*` matches zero or more
+      characters. Excluded patterns take precedence over included patterns. If only excluded
+      patterns are configured, all other ASCII request headers are captured, which may expose
+      sensitive information.
     default: ''
     examples:
       - "authorization,*-token"

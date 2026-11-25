@@ -29,12 +29,17 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledOnOs;
 import org.junit.jupiter.api.condition.OS;
+import org.junit.jupiter.api.parallel.ResourceLock;
+import org.junit.jupiter.api.parallel.Resources;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.NullSource;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.junitpioneer.jupiter.SetSystemProperty;
 
+@ResourceLock(Resources.SYSTEM_PROPERTIES)
 class HostResourceTest {
   @Test
   void shouldCreateRuntimeAttributes() {
@@ -272,5 +277,29 @@ class HostResourceTest {
   void runCommandThatDoesNotExist() {
     assertThat(HostResource.runCommand(singletonList("/nonexistent/otel-test-command"), 5000))
         .isEmpty();
+  }
+
+  @Test
+  @SetSystemProperty(key = "os.arch", value = "aarch64")
+  void hostArchUsesSemconvValue() {
+    Resource resource = HostResource.buildResource();
+
+    assertThat(resource.getAttribute(HOST_ARCH)).isEqualTo("arm64");
+  }
+
+  @ParameterizedTest
+  @CsvSource({
+    "x86_64, amd64",
+    "aarch64, arm64",
+    "arm, arm32",
+    "i386, x86",
+    "ppc, ppc32",
+    "ppc64le, ppc64",
+    "amd64, amd64",
+    "s390x, s390x",
+    "riscv64, riscv64"
+  })
+  void toHostArch(String osArch, String hostArch) {
+    assertThat(HostResource.toHostArch(osArch)).isEqualTo(hostArch);
   }
 }
