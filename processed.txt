@@ -637,3 +637,4 @@ spark-2.4:javaagent
 spring-rabbit-1.1:javaagent
 mcp-java-sdk-0.14:javaagent
 logback:bootstrap
+spring-cloud-gateway-3.0:library
