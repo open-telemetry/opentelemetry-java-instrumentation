@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.guava.v10_0;
+package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 
 import static io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndSupport.tryToGetResponse;
 
@@ -15,18 +15,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategy;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 
-public final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
-  // Visible for testing
+final class GuavaAsyncOperationEndStrategy implements AsyncOperationEndStrategy {
+  // visible for testing
   static final AttributeKey<Boolean> CANCELED_ATTRIBUTE_KEY =
       AttributeKey.booleanKey("guava.canceled");
-
-  public static GuavaAsyncOperationEndStrategy create() {
-    return builder().build();
-  }
-
-  public static GuavaAsyncOperationEndStrategyBuilder builder() {
-    return new GuavaAsyncOperationEndStrategyBuilder();
-  }
 
   private final boolean captureExperimentalSpanAttributes;
 
