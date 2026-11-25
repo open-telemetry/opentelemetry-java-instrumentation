@@ -39,7 +39,9 @@ Filter clientFilter = telemetry.newClientFilter();
 Filter serverFilter = telemetry.newServerFilter();
 ```
 
-Add `clientFilter` to the filters passed to `ConsumerConfig.setFilterRef(...)` and
-`serverFilter` to those passed to `ProviderConfig.setFilterRef(...)`, retaining any existing
-application filters. Configure the filters before calling `ConsumerConfig.refer()` or `ProviderConfig.export()`.
-For automatic filter registration, use the [autoconfigure module](../library-autoconfigure/README.md).
+Add `clientFilter` to the list passed to `ConsumerConfig.setFilterRef(...)` and `serverFilter`
+to the list passed to `ProviderConfig.setFilterRef(...)`. These setters replace the filter list,
+so include any existing application filters.
+
+For automatic filter registration, use the [autoconfigure module](../library-autoconfigure/README.md)
+instead.
