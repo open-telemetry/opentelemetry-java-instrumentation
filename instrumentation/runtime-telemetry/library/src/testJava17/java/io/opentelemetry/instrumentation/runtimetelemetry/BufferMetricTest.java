@@ -42,36 +42,21 @@ class BufferMetricTest {
                 .hasName("jvm.buffer.count")
                 .hasDescription("Number of buffers in the pool.")
                 .hasUnit(UNIT_BUFFERS)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributes(directBuffer)
-                                    .hasValueSatisfying(v -> v.isPositive()))),
+                .hasLongSumPointsSatisfying(point ->
+                    point.hasAttributes(directBuffer).hasValueSatisfying(v -> v.isPositive())),
         metric ->
             metric
                 .hasName("jvm.buffer.memory.limit")
                 .hasDescription("Measure of total memory capacity of buffers.")
                 .hasUnit(BYTES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributes(directBuffer)
-                                    .hasValueSatisfying(v -> v.isPositive()))),
+                .hasLongSumPointsSatisfying(point ->
+                    point.hasAttributes(directBuffer).hasValueSatisfying(v -> v.isPositive())),
         metric ->
             metric
                 .hasName("jvm.buffer.memory.used")
                 .hasDescription("Measure of memory used by buffers.")
                 .hasUnit(BYTES)
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributes(directBuffer)
-                                    .hasValueSatisfying(v -> v.isPositive()))));
+                .hasLongSumPointsSatisfying(point ->
+                    point.hasAttributes(directBuffer).hasValueSatisfying(v -> v.isPositive())));
   }
 }

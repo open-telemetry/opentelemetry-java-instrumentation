@@ -5,22 +5,28 @@
 
 package io.opentelemetry.instrumentation.netty.v4_1;
 
-import com.google.auto.value.AutoValue;
 import io.netty.channel.Channel;
 import io.netty.handler.codec.http.HttpRequest;
 import io.opentelemetry.instrumentation.netty.common.v4_0.internal.NettyCommonRequest;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
-/** A wrapper that combines an {@link HttpRequest} with its associated {@link Channel}. */
-@AutoValue
-public abstract class NettyRequest {
+/** An opaque view of an {@link HttpRequest} and its associated {@link Channel}. */
+public final class NettyRequest {
 
-  static NettyRequest create(NettyCommonRequest delegate) {
-    return new AutoValue_NettyRequest(delegate);
+  private final NettyCommonRequest delegate;
+
+  private NettyRequest(NettyCommonRequest delegate) {
+    this.delegate = delegate;
   }
 
-  abstract NettyCommonRequest delegate();
+  static NettyRequest create(NettyCommonRequest delegate) {
+    return new NettyRequest(delegate);
+  }
+
+  NettyCommonRequest delegate() {
+    return delegate;
+  }
 
   /** Returns the HTTP request. */
   public HttpRequest getRequest() {

@@ -38,6 +38,20 @@ class ViburInstrumentationTest extends AbstractViburInstrumentationTest {
   @Override
   protected void shutdown(ViburDBCPDataSource viburDataSource) {}
 
+  @Test
+  void shouldStopReportingMetricsOnTerminate() {
+    try (ViburDBCPDataSource dataSource = newDataSource()) {
+      dataSource.setPoolInitialSize(0);
+      dataSource.start();
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME, "db.client.connection.limit", metrics -> metrics.isNotEmpty());
+
+      dataSource.terminate();
+
+      assertNoConnectionPoolMetrics();
+    }
+  }
+
   @ParameterizedTest
   @MethodSource("defaultPoolNameArguments")
   void shouldUseDerivedPoolName(

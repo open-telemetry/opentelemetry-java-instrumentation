@@ -17,7 +17,6 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesGetter;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -38,19 +37,16 @@ abstract class HttpCommonAttributesExtractor<
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
   final GETTER getter;
-  private final HttpStatusCodeConverter statusCodeConverter;
   private final CapturedHttpHeaders capturedRequestHeaders;
   private final CapturedHttpHeaders capturedResponseHeaders;
   private final Set<String> knownMethods;
 
   HttpCommonAttributesExtractor(
       GETTER getter,
-      HttpStatusCodeConverter statusCodeConverter,
       CapturedHttpHeaders capturedRequestHeaders,
       CapturedHttpHeaders capturedResponseHeaders,
       Set<String> knownMethods) {
     this.getter = getter;
-    this.statusCodeConverter = statusCodeConverter;
     this.capturedRequestHeaders = capturedRequestHeaders;
     this.capturedResponseHeaders = capturedResponseHeaders;
     this.knownMethods = new HashSet<>(knownMethods);
@@ -69,15 +65,22 @@ abstract class HttpCommonAttributesExtractor<
     if (capturedRequestHeaders.isEmpty()) {
       return;
     }
-    Collection<String> names =
-        capturedRequestHeaders.enumerateNames()
-            ? capturedRequestHeaders.matchingNames(getter.getHttpRequestHeaderNames(request))
-            : capturedRequestHeaders.exactNames();
-    for (String name : names) {
-      List<String> values = getter.getHttpRequestHeader(request, name);
-      if (!values.isEmpty()) {
-        attributes.put(capturedRequestHeaders.attributeKey(name), values);
+    if (capturedRequestHeaders.enumerateNames()) {
+      for (String name :
+          capturedRequestHeaders.matchingNames(getter.getHttpRequestHeaderNames(request))) {
+        captureRequestHeader(attributes, request, name);
       }
+    } else {
+      for (String name : capturedRequestHeaders.exactNames()) {
+        captureRequestHeader(attributes, request, name);
+      }
+    }
+  }
+
+  private void captureRequestHeader(AttributesBuilder attributes, REQUEST request, String name) {
+    List<String> values = getter.getHttpRequestHeader(request, name);
+    if (!values.isEmpty()) {
+      attributes.put(capturedRequestHeaders.attributeKey(name), values);
     }
   }
 
@@ -89,32 +92,15 @@ abstract class HttpCommonAttributesExtractor<
       @Nullable RESPONSE response,
       @Nullable Throwable error) {
 
-    Integer statusCode = null;
     if (response != null) {
-      statusCode = getter.getHttpResponseStatusCode(request, response, error);
+      Integer statusCode = getter.getHttpResponseStatusCode(request, response, error);
       if (statusCode != null && statusCode > 0) {
         attributes.put(HTTP_RESPONSE_STATUS_CODE, (long) statusCode);
       }
 
       captureResponseHeaders(attributes, request, response);
     }
-
-    String errorType = null;
-    if (statusCode != null && statusCode > 0) {
-      if (statusCodeConverter.isError(statusCode)) {
-        errorType = statusCode.toString();
-      }
-    } else {
-      errorType = getter.getErrorType(request, response, error);
-      // fall back to exception class name & _OTHER
-      if (errorType == null && error != null) {
-        errorType = error.getClass().getName();
-      }
-      if (errorType == null) {
-        errorType = _OTHER;
-      }
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
     String protocolName = lowercaseStr(getter.getNetworkProtocolName(request, response));
     String protocolVersion = lowercaseStr(getter.getNetworkProtocolVersion(request, response));
@@ -132,16 +118,24 @@ abstract class HttpCommonAttributesExtractor<
     if (capturedResponseHeaders.isEmpty()) {
       return;
     }
-    Collection<String> names =
-        capturedResponseHeaders.enumerateNames()
-            ? capturedResponseHeaders.matchingNames(
-                getter.getHttpResponseHeaderNames(request, response))
-            : capturedResponseHeaders.exactNames();
-    for (String name : names) {
-      List<String> values = getter.getHttpResponseHeader(request, response, name);
-      if (!values.isEmpty()) {
-        attributes.put(capturedResponseHeaders.attributeKey(name), values);
+    if (capturedResponseHeaders.enumerateNames()) {
+      for (String name :
+          capturedResponseHeaders.matchingNames(
+              getter.getHttpResponseHeaderNames(request, response))) {
+        captureResponseHeader(attributes, request, response, name);
       }
+    } else {
+      for (String name : capturedResponseHeaders.exactNames()) {
+        captureResponseHeader(attributes, request, response, name);
+      }
+    }
+  }
+
+  private void captureResponseHeader(
+      AttributesBuilder attributes, REQUEST request, RESPONSE response, String name) {
+    List<String> values = getter.getHttpResponseHeader(request, response, name);
+    if (!values.isEmpty()) {
+      attributes.put(capturedResponseHeaders.attributeKey(name), values);
     }
   }
 

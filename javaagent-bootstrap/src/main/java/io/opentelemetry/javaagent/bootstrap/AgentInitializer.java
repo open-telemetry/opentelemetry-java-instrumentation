@@ -32,6 +32,8 @@ public final class AgentInitializer {
   public static void initialize(
       Instrumentation inst, File javaagentFile, boolean fromPremain, @Nullable String agentArgs)
       throws Exception {
+    InstrumentationHolder.setInstrumentation(inst);
+    JavaagentFileHolder.setJavaagentFile(javaagentFile);
     if (agentClassLoader != null) {
       return;
     }
@@ -278,6 +280,7 @@ public final class AgentInitializer {
 
   private AgentInitializer() {}
 
+  // visible for testing
   @SuppressWarnings("SystemOut")
   static void setSystemProperties(@Nullable String agentArgs) {
     boolean debug = false;
@@ -302,6 +305,7 @@ public final class AgentInitializer {
     }
   }
 
+  // visible for testing
   static boolean isJdkToolMainClass(@Nullable String cmd) {
     if (cmd == null) {
       return false;

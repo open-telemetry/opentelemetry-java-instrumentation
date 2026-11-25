@@ -25,6 +25,7 @@ final class TracedSubscriber<T, REQUEST> extends Subscriber<T> {
       AtomicReference<Context> contextRef,
       REQUEST request,
       Context parentContext) {
+    super(delegate);
     this.delegate = delegate;
     this.instrumenter = instrumenter;
     this.contextRef = contextRef;

@@ -8,11 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.couchbase.v2_0;
 import static io.opentelemetry.javaagent.instrumentation.couchbase.v2_0.VirtualFieldHelper.COUCHBASE_SERVER_TARGET;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.couchbase.client.core.ClusterFacade;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -31,7 +31,13 @@ class CouchbaseClusterTargetInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        isConstructor().and(takesArguments(3)).and(takesArgument(2, boolean.class)),
+        isConstructor()
+            .and(
+                takesArgument(
+                    1,
+                    namedOneOf(
+                        "com.couchbase.client.java.ConnectionString",
+                        "com.couchbase.client.core.utils.ConnectionString"))),
         getClass().getName() + "$ConstructorAdvice");
   }
 
@@ -42,7 +48,7 @@ class CouchbaseClusterTargetInstrumentation implements TypeInstrumentation {
     public static void captureConfiguredTarget(
         @Advice.FieldValue("core") ClusterFacade core,
         @Advice.Argument(1) Object connectionString) {
-      DbServerTarget target = CouchbaseConnectionStrings.target(connectionString);
+      ServerTarget target = CouchbaseConnectionStrings.target(connectionString);
       if (target != null) {
         COUCHBASE_SERVER_TARGET.set(core, target);
       }

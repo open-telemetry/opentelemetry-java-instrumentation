@@ -17,4 +17,4 @@ configurations:
     description: Enables experimental span attribute `lettuce.command.cancelled`.
     type: boolean
     default: false
-  - ref: common.peer-service-mapping
+  - ref: common.server-service-mapping

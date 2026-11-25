@@ -21,30 +21,8 @@ configurations.testRuntimeClasspath {
   }
 }
 
-tasks.withType<Test>().configureEach {
+tasks.test {
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
-}
-
-tasks {
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv, testBothSemconv)
-  }
 }

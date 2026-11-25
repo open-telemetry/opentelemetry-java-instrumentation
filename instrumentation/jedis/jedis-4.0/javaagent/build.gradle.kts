@@ -1,5 +1,9 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -17,42 +21,45 @@ dependencies {
   compileOnly("com.google.auto.value:auto-value-annotations")
   annotationProcessor("com.google.auto.value:auto-value")
 
-  implementation(project(":instrumentation:jedis:jedis-common-1.4:javaagent"))
+  implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
 
   testInstrumentation(project(":instrumentation:jedis:jedis-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:jedis:jedis-3.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("jedis51Test") {
-      sources {
-        java {
-          setSrcDirs(listOf("src/test/java"))
-        }
-      }
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:jedis:jedis-common:javaagent"))
+      implementation("redis.clients:jedis:4.0.0")
+    }
+  }
 
-      dependencies {
-        implementation("redis.clients:jedis:5.1.0")
-        implementation("org.testcontainers:testcontainers")
+  register<JvmTestSuite>("jedis51Test") {
+    sources {
+      java {
+        setSrcDirs(listOf("src/test/java"))
       }
+    }
+
+    dependencies {
+      implementation("redis.clients:jedis:5.1.0")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
+  executions("test", "jedis51Test") {
+    configureEach {
+      // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
+      jvmArgs("-Djava.net.preferIPv4Stack=true")
+      systemProperty("testLatestDeps", otelProps.testLatestDeps && !name.startsWith("jedis51"))
+      systemProperty(
+        "testJedis51OrLater",
+        otelProps.testLatestDeps || name.startsWith("jedis51"),
+      )
     }
   }
 }
 
-tasks {
-  withType<Test>().configureEach {
-    // latest dep test fails because peer ip is 0:0:0:0:0:0:0:1 instead of 127.0.0.1
-    jvmArgs("-Djava.net.preferIPv4Stack=true")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    systemProperty(
-      "testJedis51OrLater",
-      otelProps.testLatestDeps || name.startsWith("jedis51"),
-    )
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
-  }
-
-  check {
-    dependsOn(testing.suites)
-  }
+tasks.check {
+  dependsOn(testing.suites)
 }

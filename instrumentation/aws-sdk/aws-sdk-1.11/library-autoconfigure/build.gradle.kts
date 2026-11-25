@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -20,32 +22,23 @@ dependencies {
   testLibrary("com.amazonaws:aws-java-sdk-sqs:1.11.106")
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
-    systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
-  }
-
-  val testReceiveSpansDisabled = register<Test>("testReceiveSpansDisabled") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    filter {
-      includeTestsMatching("SqsSuppressReceiveSpansTest")
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("otel.instrumentation.aws-sdk.experimental-span-attributes", "true")
+      systemProperty("otel.instrumentation.common.messaging.headers.included", "Test-Message-Header")
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
-    include("**/SqsSuppressReceiveSpansTest.*")
-  }
-
-  test {
-    filter {
-      excludeTestsMatching("SqsSuppressReceiveSpansTest")
+    configureDefault {
+      filter.excludeTestsMatching("SqsSuppressReceiveSpansTest")
+      jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
     }
-    jvmArgs("-Dotel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true")
-  }
-
-  check {
-    dependsOn(testReceiveSpansDisabled)
+    register("ReceiveSpansDisabled") {
+      filter {
+        includeTestsMatching("SqsSuppressReceiveSpansTest")
+      }
+      include("**/SqsSuppressReceiveSpansTest.*")
+    }
   }
 }
 

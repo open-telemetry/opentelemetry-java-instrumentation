@@ -53,7 +53,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
   void testDisableSqsMessageCreateSpans() {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(getTesting().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes());
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AwsSdkTelemetry disabledTelemetry = telemetryBuilder.build();
     SqsClientBuilder builder = SqsClient.builder();
@@ -63,7 +63,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
             .addExecutionInterceptor(disabledTelemetry.createExecutionInterceptor())
             .build());
 
-    try (SqsClient client = disabledTelemetry.wrap(builder.build())) {
+    try (SqsClient client = disabledTelemetry.instrument(builder.build())) {
       client.createQueue(createQueueRequest);
       client.sendMessageBatch(sendMessageBatchRequest);
 
@@ -73,12 +73,11 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
                   trace.hasSpansSatisfyingExactly(
                       span -> span.hasName("Sqs.CreateQueue").hasKind(SpanKind.CLIENT)),
               trace ->
-                  trace.hasSpansSatisfyingExactly(
-                      span ->
-                          span.hasName("send testSdkSqs")
-                              .hasKind(SpanKind.PRODUCER)
-                              .hasNoParent()
-                              .hasTotalRecordedLinks(0)));
+                  trace.hasSpansSatisfyingExactly(span ->
+                      span.hasName("send testSdkSqs")
+                          .hasKind(SpanKind.PRODUCER)
+                          .hasNoParent()
+                          .hasTotalRecordedLinks(0)));
     }
   }
 
@@ -93,7 +92,7 @@ class Aws2SqsDefaultPropagatorTest extends Aws2SqsTracingTest {
             .addExecutionInterceptor(noopTelemetry.createExecutionInterceptor())
             .build());
 
-    try (SqsClient client = noopTelemetry.wrap(builder.build())) {
+    try (SqsClient client = noopTelemetry.instrument(builder.build())) {
       client.createQueue(createQueueRequest);
 
       assertThat(client.sendMessageBatch(sendMessageBatchRequest).successful()).hasSize(3);

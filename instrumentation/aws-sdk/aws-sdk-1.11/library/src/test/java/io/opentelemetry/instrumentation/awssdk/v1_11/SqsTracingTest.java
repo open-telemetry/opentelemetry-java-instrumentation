@@ -49,8 +49,8 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   public AmazonSQSAsyncClientBuilder configureClient(AmazonSQSAsyncClientBuilder client) {
     return client.withRequestHandlers(
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true)
-            .setMessagingReceiveTelemetryEnabled(true)
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes())
+            .setMessagingReceiveTelemetryEnabled(receiveTelemetryEnabled())
             .setHeaders(
                 IncludeExclude.builder()
                     .setIncluded("Test-Message-*")
@@ -79,10 +79,9 @@ class SqsTracingTest extends AbstractSqsTracingTest {
               String frameworkSpanId = Span.current().getSpanContext().getSpanId();
               response
                   .getMessages()
-                  .forEach(
-                      message ->
-                          assertThat(Span.current().getSpanContext().getSpanId())
-                              .isEqualTo(frameworkSpanId));
+                  .forEach(message ->
+                      assertThat(Span.current().getSpanContext().getSpanId())
+                          .isEqualTo(frameworkSpanId));
             });
     testing()
         .waitAndAssertTraces(
@@ -94,7 +93,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
   void testDisableSqsMessageCreateSpans() {
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes());
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AmazonSQSAsync client =
         newClientBuilder()
@@ -116,12 +115,11 @@ class SqsTracingTest extends AbstractSqsTracingTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.PRODUCER)
-                            .hasNoParent()
-                            .hasTotalRecordedLinks(0)));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.PRODUCER)
+                        .hasNoParent()
+                        .hasTotalRecordedLinks(0)));
   }
 
   @Test
@@ -154,7 +152,7 @@ class SqsTracingTest extends AbstractSqsTracingTest {
     assumeTrue(supportsMessageSystemAttributes());
     AwsSdkTelemetryBuilder telemetryBuilder =
         AwsSdkTelemetry.builder(testing().getOpenTelemetry())
-            .setCaptureExperimentalSpanAttributes(true);
+            .setCaptureExperimentalSpanAttributes(captureExperimentalSpanAttributes());
     telemetryBuilder.setBatchSendMessageCreationSpansEnabled(false);
     AmazonSQSAsync client =
         newClientBuilder()
@@ -186,19 +184,16 @@ class SqsTracingTest extends AbstractSqsTracingTest {
                 trace.hasSpansSatisfyingExactly(
                     span -> span.hasName("SQS.CreateQueue").hasKind(SpanKind.CLIENT)),
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasNoParent()
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .singleElement()
-                                        .satisfies(
-                                            link ->
-                                                assertThat(link.getSpanContext().getSpanId())
-                                                    .isEqualTo("53995c3f42cd8ad8")))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasNoParent()
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .singleElement()
+                                .satisfies(link ->
+                                    assertThat(link.getSpanContext().getSpanId())
+                                        .isEqualTo("53995c3f42cd8ad8")))));
   }
 
   @Test
@@ -245,16 +240,14 @@ class SqsTracingTest extends AbstractSqsTracingTest {
                   span -> span.hasName("create testSdkSqs").hasKind(SpanKind.PRODUCER));
             },
             trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span ->
-                        span.hasName("send testSdkSqs")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasLinksSatisfying(
-                                links ->
-                                    assertThat(links)
-                                        .extracting(link -> link.getSpanContext().getSpanId())
-                                        .containsExactlyInAnyOrder(
-                                            firstCreateSpan.get().getSpanId(),
-                                            secondCreateSpan.get().getSpanId()))));
+                trace.hasSpansSatisfyingExactly(span ->
+                    span.hasName("send testSdkSqs")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasLinksSatisfying(links ->
+                            assertThat(links)
+                                .extracting(link -> link.getSpanContext().getSpanId())
+                                .containsExactlyInAnyOrder(
+                                    firstCreateSpan.get().getSpanId(),
+                                    secondCreateSpan.get().getSpanId()))));
   }
 }

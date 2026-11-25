@@ -31,7 +31,7 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanStatusExtractor;
-import io.opentelemetry.semconv.SchemaUrls;
+import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -186,8 +186,9 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
    * Configures the instrumentation to recognize an alternative set of HTTP request methods.
    *
    * <p>By default, this instrumentation defines "known" methods as the ones listed in <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and the PATCH
-   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a>, the PATCH method
+   * defined in <a href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a> and the QUERY
+   * method defined in <a href="https://www.rfc-editor.org/rfc/rfc10008.html">RFC10008</a>.
    *
    * <p>Note: calling this method <b>overrides</b> the default known method sets completely; it does
    * not supplement it.
@@ -272,7 +273,7 @@ public final class DefaultHttpServerInstrumenterBuilder<REQUEST, RESPONSE> {
             .addAttributesExtractors(additionalExtractors)
             .addContextCustomizer(httpServerRouteBuilder.build())
             .addOperationMetrics(HttpServerMetrics.get())
-            .setSchemaUrl(SchemaUrls.V1_41_0);
+            .setSchemaUrl(HttpSchemaUrls.SCHEMA_URL);
     Experimental.setExceptionEventExtractor(
         builder,
         (logRecordBuilder, context, request) -> {

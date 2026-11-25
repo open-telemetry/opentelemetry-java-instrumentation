@@ -7,8 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -28,10 +26,7 @@ class TransactionImplInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("registerProducedTopic")
-            .and(isPublic())
-            .and(takesArguments(1))
-            .and(takesArgument(0, String.class)),
+        named("registerProducedTopic").and(isPublic()),
         getClass().getName() + "$RegisterProducedTopicAdvice");
   }
 

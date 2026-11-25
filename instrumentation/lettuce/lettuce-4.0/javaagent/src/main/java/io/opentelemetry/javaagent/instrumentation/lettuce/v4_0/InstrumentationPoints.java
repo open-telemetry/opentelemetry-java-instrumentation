@@ -40,19 +40,18 @@ public class InstrumentationPoints {
     if (throwable != null) {
       endCommand(command, context, throwable, asyncCommand);
     } else if (expectsResponse(command)) {
-      asyncCommand.handleAsync(
-          (value, ex) -> {
-            if (ex instanceof CancellationException) {
-              if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
-                Span span = Span.fromContext(context);
-                span.setAttribute("lettuce.command.cancelled", true);
-              }
-              // and don't report this as an error
-              ex = null;
-            }
-            endCommand(command, context, ex, asyncCommand);
-            return null;
-          });
+      asyncCommand.handleAsync((value, ex) -> {
+        if (ex instanceof CancellationException) {
+          if (CAPTURE_EXPERIMENTAL_SPAN_ATTRIBUTES) {
+            Span span = Span.fromContext(context);
+            span.setAttribute("lettuce.command.cancelled", true);
+          }
+          // and don't report this as an error
+          ex = null;
+        }
+        endCommand(command, context, ex, asyncCommand);
+        return null;
+      });
     } else {
       // No response is expected, so we must finish the span now.
       endCommand(command, context, null, asyncCommand);

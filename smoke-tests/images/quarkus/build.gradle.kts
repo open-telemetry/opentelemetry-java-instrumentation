@@ -17,16 +17,16 @@ plugins {
   id("java")
 
   id("com.google.cloud.tools.jib")
-  id("io.quarkus") version "3.40.1"
+  id("io.quarkus") version "4.0.0"
 }
 
 dependencies {
-  implementation(enforcedPlatform("io.quarkus:quarkus-bom:3.40.1"))
+  implementation(enforcedPlatform("io.quarkus:quarkus-bom:4.0.0"))
   implementation("io.quarkus:quarkus-rest")
 }
 
-// Quarkus 3.7+ requires Java 17+
-val targetJDK = project.findProperty("targetJDK") ?: "17"
+// Quarkus 4 requires Java 21+
+val targetJDK = project.findProperty("targetJDK") ?: "21"
 
 val tag = findProperty("tag")
   ?: DateTimeFormatter.ofPattern("yyyyMMdd.HHmmSS").format(LocalDateTime.now())
@@ -35,8 +35,8 @@ java {
   // this is needed to avoid jib failing with
   // "Your project is using Java 21 but the base image is for Java 17"
   // (it seems the jib plugins does not understand toolchains yet)
-  sourceCompatibility = JavaVersion.VERSION_17
-  targetCompatibility = JavaVersion.VERSION_17
+  sourceCompatibility = JavaVersion.VERSION_21
+  targetCompatibility = JavaVersion.VERSION_21
 }
 
 val repo = System.getenv("GITHUB_REPOSITORY") ?: "open-telemetry/opentelemetry-java-instrumentation"
@@ -58,8 +58,8 @@ jib {
 tasks {
   withType<JavaCompile>().configureEach {
     with(options) {
-      // Quarkus 3.7+ requires Java 17+
-      release.set(17)
+      // Quarkus 4 requires Java 21+
+      release.set(21)
     }
   }
 

@@ -12,7 +12,7 @@ import static io.r2dbc.spi.ConnectionFactoryOptions.PORT;
 import static io.r2dbc.spi.ConnectionFactoryOptions.PROTOCOL;
 import static io.r2dbc.spi.ConnectionFactoryOptions.SSL;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.r2dbc.spi.ConnectionFactoryOptions;
 import java.util.HashMap;
 import java.util.Map;
@@ -44,7 +44,7 @@ final class R2dbcConnectionInfo {
 
   private final String systemName;
   @Nullable private final String namespace;
-  @Nullable private final DbServerTarget configuredServerTarget;
+  @Nullable private final ServerTarget configuredServerTarget;
 
   R2dbcConnectionInfo(ConnectionFactoryOptions factoryOptions) {
     String driver =
@@ -75,7 +75,7 @@ final class R2dbcConnectionInfo {
   }
 
   @Nullable
-  DbServerTarget getConfiguredServerTarget() {
+  ServerTarget getConfiguredServerTarget() {
     return configuredServerTarget;
   }
 

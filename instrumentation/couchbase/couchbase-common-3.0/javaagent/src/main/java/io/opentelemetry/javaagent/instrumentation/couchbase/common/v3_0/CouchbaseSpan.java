@@ -5,6 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_0;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
@@ -19,8 +21,12 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_SYST
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.api.logs.LogRecordBuilder;
+import io.opentelemetry.api.logs.Logger;
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.StatusCode;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import java.time.Instant;
@@ -41,11 +47,17 @@ public final class CouchbaseSpan {
   }
 
   private final Span span;
+  private final Logger exceptionLogger;
   private final boolean makeCurrentOnEnd;
   private final boolean mapLegacyNetworkPeerAttributes;
 
-  CouchbaseSpan(Span span, boolean makeCurrentOnEnd, boolean mapLegacyNetworkPeerAttributes) {
+  CouchbaseSpan(
+      Span span,
+      Logger exceptionLogger,
+      boolean makeCurrentOnEnd,
+      boolean mapLegacyNetworkPeerAttributes) {
     this.span = span;
+    this.exceptionLogger = exceptionLogger;
     this.makeCurrentOnEnd = makeCurrentOnEnd;
     this.mapLegacyNetworkPeerAttributes = mapLegacyNetworkPeerAttributes;
   }
@@ -114,7 +126,17 @@ public final class CouchbaseSpan {
   }
 
   public void recordException(Throwable throwable) {
-    span.recordException(throwable);
+    if (emitExceptionAsSpanEvents()) {
+      span.recordException(throwable);
+    }
+    if (emitExceptionAsLogs() && span.getSpanContext().isValid()) {
+      LogRecordBuilder logRecordBuilder = exceptionLogger.logRecordBuilder();
+      logRecordBuilder.setContext(Context.current().with(span));
+      logRecordBuilder.setEventName("db.client.operation.exception");
+      logRecordBuilder.setSeverity(Severity.WARN);
+      logRecordBuilder.setException(throwable);
+      logRecordBuilder.emit();
+    }
   }
 
   public void end() {

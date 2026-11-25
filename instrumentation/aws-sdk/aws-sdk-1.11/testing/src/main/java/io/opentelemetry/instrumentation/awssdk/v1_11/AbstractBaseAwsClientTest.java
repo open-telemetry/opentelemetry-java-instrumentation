@@ -13,11 +13,11 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satis
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PROTOCOL_VERSION;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
 import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
-import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
@@ -90,36 +90,33 @@ public abstract class AbstractBaseAwsClientTest extends AbstractAwsSdkTest {
         .isNotEmpty();
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> {
-                      List<AttributeAssertion> attributes =
-                          new ArrayList<>(
-                              asList(
-                                  equalTo(URL_FULL, server.httpUri().toString()),
-                                  equalTo(HTTP_REQUEST_METHOD, method),
-                                  equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                                  equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                                  equalTo(SERVER_PORT, server.httpPort()),
-                                  equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                                  equalTo(RPC_SYSTEM, "aws-api"),
-                                  satisfies(RPC_SERVICE, val -> val.contains(service)),
-                                  equalTo(RPC_METHOD, operation),
-                                  equalTo(stringKey("aws.agent"), experimental("java-aws-sdk"))));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span -> {
+              List<AttributeAssertion> attributes =
+                  new ArrayList<>(
+                      asList(
+                          equalTo(URL_FULL, server.httpUri().toString()),
+                          equalTo(HTTP_REQUEST_METHOD, method),
+                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                          equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                          equalTo(SERVER_PORT, server.httpPort()),
+                          equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                          equalTo(RPC_SYSTEM, "aws-api"),
+                          satisfies(RPC_SERVICE, val -> val.contains(service)),
+                          equalTo(RPC_METHOD, operation),
+                          equalTo(stringKey("aws.agent"), experimental("java-aws-sdk"))));
 
-                      if (hasRequestId()) {
-                        attributes.add(
-                            satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
-                      }
+              if (hasRequestId()) {
+                attributes.add(satisfies(AWS_REQUEST_ID, val -> val.isInstanceOf(String.class)));
+              }
 
-                      attributes.addAll(additionalAttributes);
+              attributes.addAll(additionalAttributes);
 
-                      span.hasName(service + "." + operation)
-                          .hasKind(operation.equals("SendMessage") ? PRODUCER : CLIENT)
-                          .hasNoParent()
-                          .hasAttributesSatisfyingExactly(attributes);
-                    }));
+              span.hasName(service + "." + operation)
+                  .hasKind(operation.equals("SendMessage") ? PRODUCER : CLIENT)
+                  .hasNoParent()
+                  .hasAttributesSatisfyingExactly(attributes);
+            }));
   }
 
   @SuppressWarnings("unchecked")

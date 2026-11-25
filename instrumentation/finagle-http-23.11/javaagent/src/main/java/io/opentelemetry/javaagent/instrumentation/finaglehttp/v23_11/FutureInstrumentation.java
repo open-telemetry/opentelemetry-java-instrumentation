@@ -42,7 +42,7 @@ class FutureInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class RespondAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Function1<Try<?>, BoxedUnit> onEnter(
         @Advice.Argument(0) Function1<Try<?>, BoxedUnit> f) {
@@ -52,7 +52,7 @@ class FutureInstrumentation implements TypeInstrumentation {
 
   @SuppressWarnings("unused")
   public static class TransformAdvice {
-    @Advice.OnMethodEnter(suppress = Throwable.class)
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Advice.AssignReturned.ToArguments(@ToArgument(0))
     public static Function1<Try<?>, Future<?>> onEnter(
         @Advice.Argument(0) Function1<Try<?>, Future<?>> f) {

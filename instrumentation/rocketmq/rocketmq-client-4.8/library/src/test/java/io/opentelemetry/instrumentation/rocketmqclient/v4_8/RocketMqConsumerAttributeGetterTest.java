@@ -46,8 +46,18 @@ class RocketMqConsumerAttributeGetterTest {
     when(response.getProps())
         .thenReturn(singletonMap(MixAll.CONSUME_CONTEXT_TYPE, ConsumeReturnType.EXCEPTION.name()));
 
-    assertThat(getter.getErrorType(request(), response, null))
+    assertThat(getter.getErrorType(request(), response, new IllegalStateException()))
         .isEqualTo(ConsumeReturnType.EXCEPTION.name());
+  }
+
+  @Test
+  void fallsBackToExceptionTypeWhenConsumeResponseHasNoErrorType() {
+    ConsumeMessageContext response = mock(ConsumeMessageContext.class);
+    when(response.isSuccess()).thenReturn(true);
+    IllegalStateException error = new IllegalStateException();
+
+    assertThat(getter.getErrorType(request(), response, error))
+        .isEqualTo(IllegalStateException.class.getName());
   }
 
   @Test

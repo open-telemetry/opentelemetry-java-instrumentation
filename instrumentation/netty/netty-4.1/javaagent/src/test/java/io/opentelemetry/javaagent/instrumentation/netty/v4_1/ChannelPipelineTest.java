@@ -181,7 +181,7 @@ class ChannelPipelineTest {
     assertThat(channelPipeline.first()).isEqualTo(handler);
     assertThat(channelPipeline.last()).isEqualTo(noopHandler);
 
-    channelPipeline.removeLast();
+    assertThat(channelPipeline.removeLast()).isSameAs(noopHandler);
     // http and instrumentation handlers will be remained;
     assertThat(channelPipeline.toMap()).hasSize(1);
     assertThat(channelPipeline.first()).isEqualTo(handler);

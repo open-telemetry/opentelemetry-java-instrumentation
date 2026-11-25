@@ -49,7 +49,7 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
       KafkaTelemetry kafkaTelemetry = KafkaTelemetry.create(testing.getOpenTelemetry());
       return () ->
           producerFactories.forEach(
-              producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::wrap));
+              producerFactory -> producerFactory.addPostProcessor(kafkaTelemetry::instrument));
     }
 
     @Bean

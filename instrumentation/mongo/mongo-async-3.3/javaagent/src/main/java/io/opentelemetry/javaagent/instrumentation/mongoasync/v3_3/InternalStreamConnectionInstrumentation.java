@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.mongodb.async.SingleResultCallback;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -46,7 +46,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(0) SingleResultCallback<Object> callback) {
-      return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+      return new SingleResultCallbackWrapper(Context.current(), callback);
     }
   }
 
@@ -57,7 +57,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(1) SingleResultCallback<Object> callback) {
-      return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+      return new SingleResultCallbackWrapper(Context.current(), callback);
     }
   }
 
@@ -68,7 +68,7 @@ final class InternalStreamConnectionInstrumentation implements TypeInstrumentati
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static SingleResultCallback<Object> wrapCallback(
         @Advice.Argument(2) SingleResultCallback<Object> callback) {
-      return new SingleResultCallbackWrapper(Java8BytecodeBridge.currentContext(), callback);
+      return new SingleResultCallbackWrapper(Context.current(), callback);
     }
   }
 }

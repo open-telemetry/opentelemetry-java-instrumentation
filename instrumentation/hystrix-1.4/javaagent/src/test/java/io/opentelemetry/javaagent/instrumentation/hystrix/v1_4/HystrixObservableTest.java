@@ -21,6 +21,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -75,21 +76,20 @@ class HystrixObservableTest {
 
     assertThat(result).isEqualTo("Hello!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("tracedMethod")
-                        .hasParent(trace.getSpan(1))
-                        .hasTotalAttributeCount(0)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("tracedMethod")
+                    .hasParent(trace.getSpan(1))
+                    .hasTotalAttributeCount(0)));
   }
 
   private static Stream<Arguments> baseArguments() {
@@ -97,115 +97,124 @@ class HystrixObservableTest {
         Arguments.of(
             named(
                 "toObservable",
-                new Parameter(null, null, cmd -> cmd.toObservable().toBlocking().first()))),
+                new Parameter(null, null, cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-I",
                 new Parameter(
-                    Schedulers.immediate(), null, cmd -> cmd.toObservable().toBlocking().first()))),
+                    Schedulers.immediate(),
+                    null,
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-T",
                 new Parameter(
                     Schedulers.trampoline(),
                     null,
-                    cmd -> cmd.toObservable().toBlocking().first()))),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-C",
                 new Parameter(
                     Schedulers.computation(),
                     null,
-                    cmd -> cmd.toObservable().toBlocking().first()))),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-IO",
                 new Parameter(
-                    Schedulers.io(), null, cmd -> cmd.toObservable().toBlocking().first()))),
+                    Schedulers.io(), null, cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable-NT",
                 new Parameter(
-                    Schedulers.newThread(), null, cmd -> cmd.toObservable().toBlocking().first()))),
+                    Schedulers.newThread(),
+                    null,
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+I",
                 new Parameter(
-                    null, Schedulers.immediate(), cmd -> cmd.toObservable().toBlocking().first()))),
+                    null,
+                    Schedulers.immediate(),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+T",
                 new Parameter(
                     null,
                     Schedulers.trampoline(),
-                    cmd -> cmd.toObservable().toBlocking().first()))),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+C",
                 new Parameter(
                     null,
                     Schedulers.computation(),
-                    cmd -> cmd.toObservable().toBlocking().first()))),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+IO",
                 new Parameter(
-                    null, Schedulers.io(), cmd -> cmd.toObservable().toBlocking().first()))),
+                    null, Schedulers.io(), cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
             named(
                 "toObservable+NT",
                 new Parameter(
-                    null, Schedulers.newThread(), cmd -> cmd.toObservable().toBlocking().first()))),
+                    null,
+                    Schedulers.newThread(),
+                    cmd -> cmd.toObservable().toBlocking().single()))),
         Arguments.of(
-            named("observe", new Parameter(null, null, cmd -> cmd.observe().toBlocking().first()))),
+            named(
+                "observe", new Parameter(null, null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-I",
                 new Parameter(
-                    Schedulers.immediate(), null, cmd -> cmd.observe().toBlocking().first()))),
+                    Schedulers.immediate(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-T",
                 new Parameter(
-                    Schedulers.trampoline(), null, cmd -> cmd.observe().toBlocking().first()))),
+                    Schedulers.trampoline(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-C",
                 new Parameter(
-                    Schedulers.computation(), null, cmd -> cmd.observe().toBlocking().first()))),
+                    Schedulers.computation(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-IO",
-                new Parameter(Schedulers.io(), null, cmd -> cmd.observe().toBlocking().first()))),
+                new Parameter(Schedulers.io(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe-NT",
                 new Parameter(
-                    Schedulers.newThread(), null, cmd -> cmd.observe().toBlocking().first()))),
+                    Schedulers.newThread(), null, cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+I",
                 new Parameter(
-                    null, Schedulers.immediate(), cmd -> cmd.observe().toBlocking().first()))),
+                    null, Schedulers.immediate(), cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+T",
                 new Parameter(
-                    null, Schedulers.trampoline(), cmd -> cmd.observe().toBlocking().first()))),
+                    null, Schedulers.trampoline(), cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+C",
                 new Parameter(
-                    null, Schedulers.computation(), cmd -> cmd.observe().toBlocking().first()))),
+                    null, Schedulers.computation(), cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+IO",
-                new Parameter(null, Schedulers.io(), cmd -> cmd.observe().toBlocking().first()))),
+                new Parameter(null, Schedulers.io(), cmd -> cmd.observe().toBlocking().single()))),
         Arguments.of(
             named(
                 "observe+NT",
                 new Parameter(
-                    null, Schedulers.newThread(), cmd -> cmd.observe().toBlocking().first()))));
+                    null, Schedulers.newThread(), cmd -> cmd.observe().toBlocking().single()))));
   }
 
   private static Stream<Arguments> provideCommandActionArguments() {
@@ -220,24 +229,19 @@ class HystrixObservableTest {
                         Schedulers.newThread(),
                         cmd -> {
                           BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+                          CompletableFuture<Void> completion = new CompletableFuture<>();
                           Subscription subscription =
                               cmd.toObservable()
                                   .subscribe(
-                                      next -> {
-                                        try {
-                                          queue.put(next);
-                                        } catch (InterruptedException e) {
-                                          throw new RuntimeException(e);
-                                        }
-                                      });
-                          String returnValue;
+                                      queue::add,
+                                      completion::completeExceptionally,
+                                      () -> completion.complete(null));
                           try {
-                            returnValue = queue.take();
-                          } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                            completion.join();
+                            return queue.remove();
+                          } finally {
+                            subscription.unsubscribe();
                           }
-                          subscription.unsubscribe();
-                          return returnValue;
                         })))));
   }
 
@@ -279,26 +283,25 @@ class HystrixObservableTest {
 
     assertThat(result).isEqualTo("Fallback!");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("ExampleGroup.TestCommand.fallback")
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent().hasTotalAttributeCount(0),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(new IllegalArgumentException())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("ExampleGroup.TestCommand.fallback")
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("ExampleGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
   }
 
   private static Stream<Arguments> provideCommandFallbackArguments() {
@@ -313,24 +316,19 @@ class HystrixObservableTest {
                         null,
                         cmd -> {
                           BlockingQueue<String> queue = new LinkedBlockingQueue<>();
+                          CompletableFuture<Void> completion = new CompletableFuture<>();
                           Subscription subscription =
                               cmd.toObservable()
                                   .subscribe(
-                                      next -> {
-                                        try {
-                                          queue.put(next);
-                                        } catch (InterruptedException e) {
-                                          throw new RuntimeException(e);
-                                        }
-                                      });
-                          String returnValue;
+                                      queue::add,
+                                      completion::completeExceptionally,
+                                      () -> completion.complete(null));
                           try {
-                            returnValue = queue.take();
-                          } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
+                            completion.join();
+                            return queue.remove();
+                          } finally {
+                            subscription.unsubscribe();
                           }
-                          subscription.unsubscribe();
-                          return returnValue;
                         })))));
   }
 
@@ -358,46 +356,43 @@ class HystrixObservableTest {
     }
 
     Throwable exception =
-        catchException(
-            () ->
-                testing.runWithSpan(
-                    "parent",
-                    () -> {
-                      HystrixObservableCommand<String> val =
-                          new TestCommand(setter("FailingGroup"));
-                      return parameter.operation.apply(val);
-                    }));
+        catchException(() ->
+            testing.runWithSpan(
+                "parent",
+                () -> {
+                  HystrixObservableCommand<String> val = new TestCommand(setter("FailingGroup"));
+                  return parameter.operation.apply(val);
+                }));
 
     assertThat(exception)
         .isInstanceOf(HystrixRuntimeException.class)
         .hasCauseInstanceOf(IllegalArgumentException.class);
     HystrixRuntimeException hystrixRuntimeException = (HystrixRuntimeException) exception;
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("parent")
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(exception),
-                span ->
-                    span.hasName("FailingGroup.TestCommand.execute")
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(exception.getCause())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("FailingGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
-                span ->
-                    span.hasName("FailingGroup.TestCommand.fallback")
-                        .hasParent(trace.getSpan(1))
-                        .hasException(hystrixRuntimeException.getFallbackException())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
-                            equalTo(stringKey("hystrix.group"), experimental("FailingGroup")),
-                            equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("parent")
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(exception),
+            span ->
+                span.hasName("FailingGroup.TestCommand.execute")
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(exception.getCause())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("FailingGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false))),
+            span ->
+                span.hasName("FailingGroup.TestCommand.fallback")
+                    .hasParent(trace.getSpan(1))
+                    .hasException(hystrixRuntimeException.getFallbackException())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("hystrix.command"), experimental("TestCommand")),
+                        equalTo(stringKey("hystrix.group"), experimental("FailingGroup")),
+                        equalTo(booleanKey("hystrix.circuit_open"), experimental(false)))));
   }
 
   private static Stream<Arguments> provideCommandNoFallbackResultsInErrorArguments() {

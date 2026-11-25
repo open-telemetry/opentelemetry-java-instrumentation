@@ -16,14 +16,14 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
-import io.opentelemetry.instrumentation.api.incubator.semconv.service.peer.ServicePeerAttributesExtractor;
+import io.opentelemetry.instrumentation.api.incubator.semconv.service.ServerServiceAttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.semconv.SchemaUrls;
 
 public class LettuceSingletons {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.lettuce-5.0";
@@ -47,6 +47,7 @@ public class LettuceSingletons {
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(builder);
 
@@ -59,6 +60,7 @@ public class LettuceSingletons {
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(batchAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(batchAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get());
     setDbClientExceptionEventExtractor(batchBuilder);
     batchInstrumenter = batchBuilder.buildInstrumenter(SpanKindExtractor.alwaysClient());
@@ -72,10 +74,10 @@ public class LettuceSingletons {
             .addAttributesExtractor(
                 ServerAttributesExtractor.create(connectNetworkAttributesGetter))
             .addAttributesExtractor(
-                ServicePeerAttributesExtractor.create(
+                ServerServiceAttributesExtractor.create(
                     connectNetworkAttributesGetter, GlobalOpenTelemetry.get()))
             .addAttributesExtractor(new LettuceConnectAttributesExtractor())
-            .setSchemaUrl(SchemaUrls.V1_44_0)
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .setEnabled(
                 DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "lettuce")
                     .get("connection_telemetry")

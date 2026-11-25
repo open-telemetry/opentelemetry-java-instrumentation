@@ -206,6 +206,11 @@ public abstract class AbstractMongo31ClientTest
     collection.updateOne(new BsonDocument(), new BsonDocument());
   }
 
+  @Override
+  protected Document runCommand(String dbName, Document command) {
+    return client.getDatabase(dbName).runCommand(command);
+  }
+
   @Test
   void testClientFailure() {
     MongoClientOptions options = MongoClientOptions.builder().serverSelectionTimeout(10).build();
@@ -213,11 +218,10 @@ public abstract class AbstractMongo31ClientTest
     cleanup.deferCleanup(client);
 
     assertThatExceptionOfType(MongoTimeoutException.class)
-        .isThrownBy(
-            () -> {
-              MongoDatabase db = client.getDatabase("test_db");
-              db.createCollection(createCollectionName());
-            });
+        .isThrownBy(() -> {
+          MongoDatabase db = client.getDatabase("test_db");
+          db.createCollection(createCollectionName());
+        });
     // Unfortunately not caught by our instrumentation.
     assertThat(testing().spans()).isEmpty();
   }

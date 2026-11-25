@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.Messagin
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanKindExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingProcessInstrumenterFactory;
+import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingSchemaUrls;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.ErrorCauseExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
@@ -134,6 +135,7 @@ public final class KafkaInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, SEND_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, SEND_OPERATION_NAME, headers))
@@ -179,6 +181,7 @@ public final class KafkaInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, POLL_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, POLL_OPERATION_NAME, headers))
@@ -219,6 +222,7 @@ public final class KafkaInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, PROCESS_OPERATION_NAME, headers))
@@ -256,24 +260,22 @@ public final class KafkaInstrumenterFactory {
   private static <REQUEST> void addConsumedMessagesIfNoReceiveOperation(
       InstrumenterBuilder<REQUEST, Void> builder, ToLongFunction<REQUEST> messageCounter) {
     builder
-        .addContextCustomizer(
-            (context, request, startAttributes) -> {
-              long consumedMessagesCount =
-                  KafkaConsumerContextUtil.hasReceiveOperation(context)
-                      ? 0
-                      : messageCounter.applyAsLong(request);
-              return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
-            })
+        .addContextCustomizer((context, request, startAttributes) -> {
+          long consumedMessagesCount =
+              KafkaConsumerContextUtil.hasReceiveOperation(context)
+                  ? 0
+                  : messageCounter.applyAsLong(request);
+          return context.with(CONSUMED_MESSAGES_COUNT_KEY, consumedMessagesCount);
+        })
         .addOperationMetrics(consumedMessagesMetrics);
   }
 
   private static void addReceiveConsumedMessages(
       InstrumenterBuilder<KafkaReceiveRequest, Void> builder) {
     builder
-        .addContextCustomizer(
-            (context, request, startAttributes) ->
-                context.with(
-                    CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecordList())))
+        .addContextCustomizer((context, request, startAttributes) ->
+            context.with(
+                CONSUMED_MESSAGES_COUNT_KEY, countConsumedMessages(request.getRecordList())))
         .addOperationMetrics(consumedMessagesMetrics);
   }
 
@@ -303,6 +305,7 @@ public final class KafkaInstrumenterFactory {
                 openTelemetry,
                 instrumentationName,
                 MessagingSpanNameExtractor.create(getter, operationType, PROCESS_OPERATION_NAME))
+            .setSchemaUrl(MessagingSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(
                 buildMessagingAttributesExtractor(
                     getter, operationType, PROCESS_OPERATION_NAME, headers))

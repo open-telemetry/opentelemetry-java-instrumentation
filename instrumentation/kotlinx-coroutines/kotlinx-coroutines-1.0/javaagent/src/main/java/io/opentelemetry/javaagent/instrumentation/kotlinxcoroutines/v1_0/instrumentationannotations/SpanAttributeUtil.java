@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.kotlinxcoroutines.v1_0.instru
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.AnnotationNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -35,7 +36,8 @@ class SpanAttributeUtil {
   static List<Parameter> collectAnnotatedParameters(MethodNode source) {
     List<Parameter> annotatedParameters = new ArrayList<>();
     if (source.visibleParameterAnnotations != null) {
-      int slot = 1; // this is in slot 0
+      // this is in slot 0 of instance methods
+      int slot = (source.access & Opcodes.ACC_STATIC) != 0 ? 0 : 1;
       Type[] parameterTypes = Type.getArgumentTypes(source.desc);
       for (int i = 0; i < parameterTypes.length; i++) {
         Type type = parameterTypes[i];

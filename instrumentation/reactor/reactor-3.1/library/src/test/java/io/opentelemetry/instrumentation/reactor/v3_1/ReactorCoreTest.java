@@ -26,6 +26,8 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import org.junit.jupiter.api.AfterAll;
@@ -87,48 +89,44 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
         "parent",
         () ->
             monoSpan(
-                    Mono.fromCallable(
-                        () -> {
-                          Span.current().setAttribute("inner", "foo");
-                          return 1;
-                        }),
+                    Mono.fromCallable(() -> {
+                      Span.current().setAttribute("inner", "foo");
+                      return 1;
+                    }),
                     "inner")
                 .block());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("inner")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "foo"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("inner")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "foo"))));
   }
 
   @Test
   @SuppressWarnings("unchecked")
   void fluxInNonBlockingPublisherAssembly() {
     Flux<Integer> source =
-        Flux.defer(
-            () -> {
-              Span.current().setAttribute("inner", "foo");
-              return Flux.just(5, 6);
-            });
+        Flux.defer(() -> {
+          Span.current().setAttribute("inner", "foo");
+          return Flux.just(5, 6);
+        });
     testing.runWithSpan(
         "parent",
         () -> {
           Flux<Integer> interim =
               ContextPropagationOperator.ScalarPropagatingFlux.create(source)
-                  .doOnEach(
-                      signal -> {
-                        if (signal.isOnError()) {
-                          // reactor 3.1 does not support getting context here yet
-                          Span.current().setStatus(StatusCode.ERROR);
-                          Span.current().end();
-                        } else if (signal.isOnComplete()) {
-                          Span.current().end();
-                        }
-                      });
+                  .doOnEach(signal -> {
+                    if (signal.isOnError()) {
+                      // reactor 3.1 does not support getting context here yet
+                      Span.current().setStatus(StatusCode.ERROR);
+                      Span.current().end();
+                    } else if (signal.isOnComplete()) {
+                      Span.current().end();
+                    }
+                  });
           try {
             interim =
                 (Flux<Integer>)
@@ -151,14 +149,13 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
           interim.collectList().block();
         });
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("inner")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "foo"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("inner")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "foo"))));
   }
 
   @Test
@@ -186,19 +183,18 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
 
     assertThat(result).isEqualTo(1);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span ->
-                    span.hasName("middle")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(stringKey("middle"), testLatestDeps() ? null : "foo")),
-                span ->
-                    span.hasName("inner")
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "bar"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span ->
+                span.hasName("middle")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(stringKey("middle"), testLatestDeps() ? null : "foo")),
+            span ->
+                span.hasName("inner")
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(equalTo(stringKey("inner"), "bar"))));
   }
 
   @Test
@@ -211,17 +207,15 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                   assertThat(Span.current().getSpanContext().isValid()).isFalse();
                   return 1;
                 })
-            .transform(
-                mono -> {
-                  // NB: Because context propagation is disabled, this span is effectively leaked as
-                  // we cannot access it again to
-                  // end after processing.
-                  Span span = tracer.spanBuilder("before").startSpan();
-                  return ContextPropagationOperator.runWithContext(mono, Context.root().with(span))
-                      .doOnEach(
-                          unused ->
-                              assertThat(Span.current().getSpanContext().isValid()).isFalse());
-                })
+            .transform(mono -> {
+              // NB: Because context propagation is disabled, this span is effectively leaked as
+              // we cannot access it again to
+              // end after processing.
+              Span span = tracer.spanBuilder("before").startSpan();
+              return ContextPropagationOperator.runWithContext(mono, Context.root().with(span))
+                  .doOnEach(
+                      unused -> assertThat(Span.current().getSpanContext().isValid()).isFalse());
+            })
             .block();
 
     tracingOperator.registerOnEachOperator();
@@ -231,18 +225,16 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
                   assertThat(Span.current().getSpanContext().isValid()).isTrue();
                   return 2;
                 })
-            .transform(
-                mono -> {
-                  Span span = tracer.spanBuilder("after").startSpan();
-                  return ContextPropagationOperator.runWithContext(mono, Context.root().with(span))
-                      .doOnEach(
-                          signal -> {
-                            assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                            if (signal.isOnComplete()) {
-                              Span.current().end();
-                            }
-                          });
-                })
+            .transform(mono -> {
+              Span span = tracer.spanBuilder("after").startSpan();
+              return ContextPropagationOperator.runWithContext(mono, Context.root().with(span))
+                  .doOnEach(signal -> {
+                    assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                    if (signal.isOnComplete()) {
+                      Span.current().end();
+                    }
+                  });
+            })
             .block();
 
     assertThat(result1).isEqualTo(1);
@@ -282,19 +274,30 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
   }
 
   @Test
+  void fluxPassesDownstreamDemandToSource() {
+    List<Long> requests = new CopyOnWriteArrayList<>();
+    // hide() prevents fusion so that demand reaches the source as request() calls
+    Flux<Integer> source = Flux.range(0, 100).hide().doOnRequest(requests::add);
+    Flux<Integer> flux = ContextPropagationOperator.runWithContext(source, Context.root());
+
+    StepVerifier.create(flux, 1).expectNext(0).thenCancel().verify();
+
+    assertThat(requests).containsExactly(1L);
+  }
+
+  @Test
   void doesNotOverrideInnerCurrentSpans() {
     Flux<Object> publish =
-        Flux.create(
-            sink -> {
-              for (int i = 0; i < 2; i++) {
-                Span s = tracer.spanBuilder("inner").startSpan();
-                try (Scope scope = s.makeCurrent()) {
-                  sink.next(i);
-                } finally {
-                  s.end();
-                }
-              }
-            });
+        Flux.create(sink -> {
+          for (int i = 0; i < 2; i++) {
+            Span s = tracer.spanBuilder("inner").startSpan();
+            try (Scope scope = s.makeCurrent()) {
+              sink.next(i);
+            } finally {
+              s.end();
+            }
+          }
+        });
 
     // as a result we'll have
     // 1. publish subscriber that creates inner spans
@@ -313,40 +316,36 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("inner")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("inner")
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("inner")
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("inner")
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))));
   }
 
   @Test
   void doesNotOverrideInnerCurrentSpansAsync() {
     Flux<Object> publish =
-        Flux.create(
-            sink -> {
-              Span s = tracer.spanBuilder("inner").startSpan();
-              try (Scope scope = s.makeCurrent()) {
-                sink.next(s);
-              } finally {
-                s.end();
-              }
-            });
+        Flux.create(sink -> {
+          Span s = tracer.spanBuilder("inner").startSpan();
+          try (Scope scope = s.makeCurrent()) {
+            sink.next(s);
+          } finally {
+            s.end();
+          }
+        });
 
     publish
         .take(1)
         .delayElements(Duration.ofMillis(1))
-        .doOnNext(
-            span -> {
-              assertThat(Span.current().getSpanContext().isValid()).isTrue();
-              assertThat(Span.current()).isSameAs(span);
-            })
+        .doOnNext(span -> {
+          assertThat(Span.current().getSpanContext().isValid()).isTrue();
+          assertThat(Span.current()).isSameAs(span);
+        })
         .subscribe(
             span -> assertThat(Span.current()).isSameAs(span), error -> fail(error.getMessage()));
 
@@ -358,17 +357,16 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
   @SuppressWarnings("unchecked")
   void doesNotOverrideInnerCurrentSpansWithThereIsOuterCurrent() {
     Flux<Object> publish =
-        Flux.create(
-            sink -> {
-              for (int i = 0; i < 2; i++) {
-                Span s = tracer.spanBuilder("inner").startSpan();
-                try (Scope scope = s.makeCurrent()) {
-                  sink.next(i);
-                } finally {
-                  s.end();
-                }
-              }
-            });
+        Flux.create(sink -> {
+          for (int i = 0; i < 2; i++) {
+            Span s = tracer.spanBuilder("inner").startSpan();
+            try (Scope scope = s.makeCurrent()) {
+              sink.next(i);
+            } finally {
+              s.end();
+            }
+          }
+        });
 
     // as a result we'll have
     // 1. publish subscriber that creates inner spans
@@ -380,11 +378,10 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       Flux<Object> interim =
           publish
               .take(2)
-              .doOnNext(
-                  n -> {
-                    assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                    Span.current().setAttribute("onNext", true);
-                  });
+              .doOnNext(n -> {
+                assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                Span.current().setAttribute("onNext", true);
+              });
       try {
         interim =
             (Flux<Object>)
@@ -406,18 +403,17 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
       outer.end();
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("outer").hasNoParent(),
-                span ->
-                    span.hasName("inner")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true)),
-                span ->
-                    span.hasName("inner")
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("outer").hasNoParent(),
+            span ->
+                span.hasName("inner")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true)),
+            span ->
+                span.hasName("inner")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(equalTo(booleanKey("onNext"), true))));
   }
 
   @ParameterizedTest
@@ -427,28 +423,26 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
     // context is not used as parent for retried operations
     AtomicBoolean beforeRetry = new AtomicBoolean(true);
     Flux<Integer> publish =
-        Flux.create(
-            sink -> {
-              assertThat(Context.current().get(TEST_CONTEXT_KEY)).isEqualTo("test-context-value");
-              for (int i = 0; i < 2; i++) {
-                int index = i;
-                testing.runWithSpan(
-                    "produce " + (beforeRetry.get() ? "before" : "after") + " retry " + i,
-                    () -> sink.next(index));
-              }
-            });
+        Flux.create(sink -> {
+          assertThat(Context.current().get(TEST_CONTEXT_KEY)).isEqualTo("test-context-value");
+          for (int i = 0; i < 2; i++) {
+            int index = i;
+            testing.runWithSpan(
+                "produce " + (beforeRetry.get() ? "before" : "after") + " retry " + i,
+                () -> sink.next(index));
+          }
+        });
 
     Flux<Integer> flux =
         Flux.defer(() -> publish.delaySubscription(Duration.ofMillis(1)))
             .doOnNext(message -> testing.runWithSpan("process " + message, () -> {}))
-            .handle(
-                (message, sink) -> {
-                  if (message == 1 && beforeRetry.compareAndSet(true, false)) {
-                    sink.error(new RuntimeException("Message has error"));
-                  } else {
-                    sink.next(message);
-                  }
-                });
+            .handle((message, sink) -> {
+              if (message == 1 && beforeRetry.compareAndSet(true, false)) {
+                sink.error(new RuntimeException("Message has error"));
+              } else {
+                sink.next(message);
+              }
+            });
 
     switch (retryKind) {
       case "retry":
@@ -496,35 +490,32 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
   void retryWithParentSpan() {
     AtomicBoolean beforeRetry = new AtomicBoolean(true);
     Flux<Integer> publish =
-        Flux.create(
-            sink ->
-                testing.runWithSpan(
-                    "produce " + (beforeRetry.get() ? "before" : "after") + " retry",
-                    () -> sink.next(0)));
+        Flux.create(sink ->
+            testing.runWithSpan(
+                "produce " + (beforeRetry.get() ? "before" : "after") + " retry",
+                () -> sink.next(0)));
 
     Flux<Object> flux =
         Flux.defer(() -> publish.delaySubscription(Duration.ofMillis(1)))
             .doOnNext(message -> testing.runWithSpan("process", () -> {}))
-            .handle(
-                (message, sink) -> {
-                  if (beforeRetry.compareAndSet(true, false)) {
-                    sink.error(new RuntimeException("Message has error"));
-                  } else {
-                    sink.next(message);
-                  }
-                })
+            .handle((message, sink) -> {
+              if (beforeRetry.compareAndSet(true, false)) {
+                sink.error(new RuntimeException("Message has error"));
+              } else {
+                sink.next(message);
+              }
+            })
             .retry();
 
     testing.runWithSpan("parent", () -> flux.subscribe());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasNoParent(),
-                span -> span.hasName("produce before retry").hasParent(trace.getSpan(0)),
-                span -> span.hasName("process").hasParent(trace.getSpan(0)),
-                span -> span.hasName("produce after retry").hasParent(trace.getSpan(0)),
-                span -> span.hasName("process").hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasNoParent(),
+            span -> span.hasName("produce before retry").hasParent(trace.getSpan(0)),
+            span -> span.hasName("process").hasParent(trace.getSpan(0)),
+            span -> span.hasName("produce after retry").hasParent(trace.getSpan(0)),
+            span -> span.hasName("process").hasParent(trace.getSpan(0))));
   }
 
   @SuppressWarnings("unchecked")
@@ -558,16 +549,15 @@ class ReactorCoreTest extends AbstractReactorCoreTest {
 
     Mono<T> interim =
         ContextPropagationOperator.ScalarPropagatingMono.create(mono)
-            .doOnEach(
-                signal -> {
-                  if (signal.isOnError()) {
-                    // reactor 3.1 does not support getting context here yet
-                    Span.current().setStatus(StatusCode.ERROR);
-                    Span.current().end();
-                  } else if (signal.isOnComplete()) {
-                    Span.current().end();
-                  }
-                });
+            .doOnEach(signal -> {
+              if (signal.isOnError()) {
+                // reactor 3.1 does not support getting context here yet
+                Span.current().setStatus(StatusCode.ERROR);
+                Span.current().end();
+              } else if (signal.isOnComplete()) {
+                Span.current().end();
+              }
+            });
     try {
       return (Mono<T>)
           MONO_CONTEXT_WRITE_METHOD.invoke(

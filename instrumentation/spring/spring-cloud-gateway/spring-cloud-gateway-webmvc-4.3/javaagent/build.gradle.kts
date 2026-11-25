@@ -22,8 +22,7 @@ dependencies {
 
   testImplementation(project(":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:testing"))
 
-  testLibrary("org.springframework.cloud:spring-cloud-starter-gateway-server-webmvc:5.0.0")
-  testLibrary("org.springframework.boot:spring-boot-starter-test:4.0.0")
+  testLibrary("org.springframework.boot:spring-boot-starter-test:3.5.0")
 
   // latest Spring Cloud release is not compatible with Spring Boot 4.1
   latestDepTestLibrary("org.springframework.boot:spring-boot-starter-test:4.0.+") // related dependency

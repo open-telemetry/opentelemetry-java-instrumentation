@@ -6,10 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
+import java.util.concurrent.Future;
 import javax.annotation.Nullable;
+import net.spy.memcached.ops.OperationException;
+import net.spy.memcached.ops.OperationStatus;
+import net.spy.memcached.ops.StatusCode;
 
 class SpymemcachedAttributesGetter
     implements DbClientAttributesGetter<SpymemcachedRequest, Object> {
@@ -26,9 +30,8 @@ class SpymemcachedAttributesGetter
   }
 
   @Override
-  @Nullable
   public String getDbQueryText(SpymemcachedRequest spymemcachedRequest) {
-    return null;
+    return spymemcachedRequest.getQueryText();
   }
 
   @Override
@@ -38,23 +41,68 @@ class SpymemcachedAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public String getDbResponseStatusCode(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    return getErrorStatusCode(response);
+  }
+
+  @Override
+  @Nullable
+  public String getErrorType(
+      SpymemcachedRequest request, @Nullable Object response, @Nullable Throwable error) {
+    if (error != null && !(error instanceof OperationException)) {
+      return error.getClass().getName();
+    }
+    if (response instanceof Future && ((Future<?>) response).isCancelled()) {
+      return error == null ? null : error.getClass().getName();
+    }
+    String errorStatusCode = getErrorStatusCode(response);
+    if (errorStatusCode != null) {
+      return errorStatusCode;
+    }
+    return error == null ? null : error.getClass().getName();
+  }
+
+  @Nullable
+  private static String getErrorStatusCode(@Nullable Object response) {
+    OperationStatus status = SpymemcachedSingletons.getResponseStatus(response);
+    if (status == null) {
+      return null;
+    }
+    StatusCode code = status.getStatusCode();
+    if (code == null || status.isSuccess()) {
+      return null;
+    }
+    switch (code) {
+      case SUCCESS:
+      case ERR_NOT_FOUND:
+      case ERR_EXISTS:
+      case ERR_NOT_STORED:
+      case CANCELLED:
+        return null;
+      default:
+        return code.name();
+    }
+  }
+
+  @Override
+  @Nullable
+  public SocketAddress getNetworkPeerSocketAddress(
       SpymemcachedRequest spymemcachedRequest, @Nullable Object response) {
-    InetSocketAddress address = spymemcachedRequest.getHandlingNodeAddress();
-    return address == null || address.isUnresolved() ? null : address;
+    return spymemcachedRequest.getHandlingNodeAddress();
   }
 
   @Override
   @Nullable
   public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
-    DbServerTarget target = spymemcachedRequest.getServerTarget();
+    ServerTarget target = spymemcachedRequest.getServerTarget();
     return target == null ? null : target.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(SpymemcachedRequest spymemcachedRequest) {
-    DbServerTarget target = spymemcachedRequest.getServerTarget();
+    ServerTarget target = spymemcachedRequest.getServerTarget();
     return target == null ? null : target.getPort();
   }
 }

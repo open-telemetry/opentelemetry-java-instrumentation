@@ -76,16 +76,12 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         "SemconvStability",
         "io.opentelemetry.instrumentation.api.internal.SemconvStability",
         "emit[a-zA-Z0-9]*",
+        filePattern = "^(?!Semconv(?:Rpc|Service)StabilityUtil\\.java$).*$",
       ),
       Rule(
         "TestLatestDeps",
         "io.opentelemetry.instrumentation.testing.util.TestLatestDeps",
         "testLatestDeps",
-      ),
-      Rule(
-        "SqlDialect",
-        "io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect",
-        "DOUBLE_QUOTES_ARE_[A-Z_]+"
       ),
       Rule("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
       Rule(

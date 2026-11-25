@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -34,15 +36,76 @@ if (!otelProps.testLatestDeps) {
   }
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("testSecretsManager") {
-      dependencies {
-        implementation(project())
-        implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
-        val version = baseVersion("1.12.80").orLatest()
-        implementation("com.amazonaws:aws-java-sdk-secretsmanager:$version")
+testing.suites {
+  register<JvmTestSuite>("testSecretsManager") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation:aws-sdk:aws-sdk-1.11:testing"))
+      val version = baseVersion("1.12.80").orLatest()
+      implementation("com.amazonaws:aws-java-sdk-secretsmanager:$version")
+    }
+  }
+
+  executions("test") {
+    configureDefault {
+      filter.excludeTestsMatching("SqsTracingTest.testProcessingOwnershipDisablesRawProcessSpansForResponse")
+    }
+    register("ExperimentalAttributes") {
+      systemProperty("test.captureExperimentalSpanAttributes", "true")
+      systemProperty(
+        "metadataConfig",
+        "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+      )
+      filter {
+        excludeTestsMatching("SqsSuppressReceiveSpansTest")
+        excludeTestsMatching("SqsTracingTest.testProcessingOwnershipDisablesRawProcessSpansForResponse")
+        excludeTestsMatching("SqsTracingTest.testDisableSqsMessageCreateSpans*")
+        excludeTestsMatching("SqsTracingTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+        excludeTestsMatching("SqsTracingTest.testDisableSqsMessageCreateSpansPreservesCustomContext")
+        excludeTestsMatching("SqsTracingTest.testBatchLinksSurviveLaterRequestClone")
       }
+    }
+    register("SqsReceiveTelemetry") {
+      systemProperty("test.captureExperimentalSpanAttributes", "true")
+      systemProperty(
+        "test.messagingReceiveTelemetryEnabled",
+        "true",
+      )
+      systemProperty(
+        "metadataConfig",
+        "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+          "AwsSdkTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)",
+      )
+      filter {
+        includeTestsMatching("SqsTracingTest")
+        excludeTestsMatching("SqsTracingTest.testDisableSqsMessageCreateSpans*")
+        excludeTestsMatching("SqsTracingTest.testNoopTelemetryDoesNotInjectInvalidCreationContext")
+        excludeTestsMatching("SqsTracingTest.testDisableSqsMessageCreateSpansPreservesCustomContext")
+        excludeTestsMatching("SqsTracingTest.testBatchLinksSurviveLaterRequestClone")
+      }
+    }
+    register("ExceptionSignalLogs") {
+      jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
+      systemProperty("test.captureExperimentalSpanAttributes", "true")
+      systemProperty(
+        "metadataConfig",
+        "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)," +
+          "otel.semconv.exception.signal.preview=logs",
+      )
+      filter {
+        includeTestsMatching("S3ClientTest")
+        includeTestsMatching("SqsTracingTest.testDeleteMessageError")
+      }
+    }
+  }
+
+  executions("testSecretsManager") {
+    register("ExperimentalAttributes") {
+      systemProperty("test.captureExperimentalSpanAttributes", "true")
+      systemProperty(
+        "metadataConfig",
+        "AwsSdkTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)",
+      )
     }
   }
 }
@@ -52,13 +115,7 @@ tasks {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
   }
 
-  val testExceptionSignalLogs = register<Test>("testExceptionSignalLogs") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
-  }
-
   check {
-    dependsOn(testing.suites, testExceptionSignalLogs)
+    dependsOn(testing.suites)
   }
 }

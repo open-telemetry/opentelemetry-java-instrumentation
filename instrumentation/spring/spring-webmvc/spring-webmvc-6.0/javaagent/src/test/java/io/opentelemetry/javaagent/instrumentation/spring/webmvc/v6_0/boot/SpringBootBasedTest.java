@@ -80,16 +80,15 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
               equalTo(
                   CODE_FUNCTION_NAME,
                   ResourceHttpRequestHandler.class.getName() + ".handleRequest"))
-          .hasEventsSatisfyingExactly(
-              event ->
-                  event
-                      .hasName("exception")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              EXCEPTION_TYPE,
-                              "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                          satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
-                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+          .hasEventsSatisfyingExactly(event ->
+              event
+                  .hasName("exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          EXCEPTION_TYPE,
+                          "org.springframework.web.servlet.resource.NoResourceFoundException"),
+                      satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {
       return super.assertHandlerSpan(span, method, endpoint);
@@ -121,7 +120,7 @@ class SpringBootBasedTest extends AbstractSpringBootBasedTest {
             getClass()
                 .getClassLoader()
                 .getResource(
-                    "org/springframework/web/servlet/v6_0/OpenTelemetryHandlerMappingFilter.class"))
+                    "io/opentelemetry/javaagent/instrumentation/spring/webmvc/v6_0/OpenTelemetryHandlerMappingFilter.class"))
         .isNotNull();
   }
 }

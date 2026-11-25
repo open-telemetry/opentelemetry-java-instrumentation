@@ -30,45 +30,45 @@ class SpanParserTest {
 
     String file1Content =
         """
-        when: default
-        spans_by_scope:
-          - scope: test
-            spans:
-              - span_kind: INTERNAL
-                attributes:
-          - scope: io.opentelemetry.clickhouse-client-0.5
-            spans:
-              - span_kind: SERVER
-                attributes:
-                  - name: server.address
-                    type: STRING
-      """;
+          when: default
+          spans_by_scope:
+            - scope: test
+              spans:
+                - span_kind: INTERNAL
+                  attributes:
+            - scope: io.opentelemetry.clickhouse-client-0.5
+              spans:
+                - span_kind: SERVER
+                  attributes:
+                    - name: server.address
+                      type: STRING
+        """;
 
     String file2Content =
         """
-        when: default
-        spans_by_scope:
-          - scope: test
-            spans:
-              - span_kind: INTERNAL
-                attributes:
-          - scope: io.opentelemetry.clickhouse-client-0.5
-            spans:
-              - span_kind: CLIENT
-                attributes:
-                  - name: db.statement
-                    type: STRING
-                  - name: server.port
-                    type: LONG
-                  - name: db.system
-                    type: STRING
-                  - name: server.address
-                    type: STRING
-                  - name: db.name
-                    type: STRING
-                  - name: db.operation
-                    type: STRING
-      """;
+          when: default
+          spans_by_scope:
+            - scope: test
+              spans:
+                - span_kind: INTERNAL
+                  attributes:
+            - scope: io.opentelemetry.clickhouse-client-0.5
+              spans:
+                - span_kind: CLIENT
+                  attributes:
+                    - name: db.statement
+                      type: STRING
+                    - name: server.port
+                      type: LONG
+                    - name: db.system
+                      type: STRING
+                    - name: server.address
+                      type: STRING
+                    - name: db.name
+                      type: STRING
+                    - name: db.operation
+                      type: STRING
+        """;
 
     Files.writeString(telemetryDir.resolve("spans-1.yaml"), file1Content);
     Files.writeString(telemetryDir.resolve("spans-2.yaml"), file2Content);
@@ -125,8 +125,9 @@ class SpanParserTest {
   }
 
   @Test
-  void testSpanAggregatorFiltersAndAggregatesCorrectly() {
+  void testSpanAggregatorFiltersSyntheticHeadersAndAggregatesCorrectly() {
     String targetScopeName = "my-instrumentation-scope";
+    String metadataConfig = "otel.semconv.exception.signal.preview=logs";
 
     EmittedSpans.Span span1 =
         new EmittedSpans.Span(
@@ -134,7 +135,8 @@ class SpanParserTest {
             List.of(
                 new TelemetryAttribute("my.operation", "STRING"),
                 new TelemetryAttribute("http.request.header.x-test-request", "STRING_ARRAY"),
-                new TelemetryAttribute("http.response.header.x-test-response", "STRING_ARRAY")));
+                new TelemetryAttribute("http.response.header.x-test-response", "STRING_ARRAY"),
+                new TelemetryAttribute("messaging.header.Test-Message-Header", "STRING_ARRAY")));
     EmittedSpans.Span span2 =
         new EmittedSpans.Span(
             "SERVER",
@@ -154,27 +156,26 @@ class SpanParserTest {
         new EmittedSpans.SpansByScope("other-scope", List.of(testSpan));
 
     EmittedSpans emittedSpans =
-        new EmittedSpans("default", List.of(targetSpansByScope, otherSpansByScope));
+        new EmittedSpans(metadataConfig, List.of(targetSpansByScope, otherSpansByScope));
 
     // Aggregate spans - only target scope should be included
     Map<String, Map<String, Set<TelemetryAttribute>>> spans =
-        SpanParser.SpanAggregator.aggregateSpans("default", emittedSpans, targetScopeName);
+        SpanParser.SpanAggregator.aggregateSpans(metadataConfig, emittedSpans, targetScopeName);
 
     Map<String, List<EmittedSpans.Span>> result =
         SpanParser.SpanAggregator.buildFilteredSpans(spans);
 
-    assertThat(result.size()).isEqualTo(1);
-    assertThat(result.get("default")).isNotNull();
-    assertThat(result.get("default").size()).isEqualTo(2); // CLIENT and SERVER spans
+    assertThat(result).containsOnlyKeys(metadataConfig);
+    assertThat(result.get(metadataConfig)).hasSize(2); // CLIENT and SERVER spans
 
     // Verify span kinds are preserved
     List<String> spanKinds =
-        result.get("default").stream().map(EmittedSpans.Span::getSpanKind).toList();
+        result.get(metadataConfig).stream().map(EmittedSpans.Span::getSpanKind).toList();
     assertThat(spanKinds).containsExactlyInAnyOrder("CLIENT", "SERVER");
 
     // Verify test attributes are filtered out
     List<TelemetryAttribute> clientAttributes =
-        result.get("default").stream()
+        result.get(metadataConfig).stream()
             .filter(span -> span.getSpanKind().equals("CLIENT"))
             .flatMap(span -> span.getAttributes().stream())
             .toList();
@@ -184,7 +185,7 @@ class SpanParserTest {
         .containsExactly("my.operation");
 
     List<TelemetryAttribute> serverAttributes =
-        result.get("default").stream()
+        result.get(metadataConfig).stream()
             .filter(span -> span.getSpanKind().equals("SERVER"))
             .flatMap(span -> span.getAttributes().stream())
             .toList();
@@ -201,39 +202,39 @@ class SpanParserTest {
 
     String file1Content =
         """
-        when: default
-        spans_by_scope:
-          - scope: io.opentelemetry.grpc-1.6
-            spans:
-              - span_kind: CLIENT
-                attributes:
-                  - name: rpc.system
-                    type: STRING
-                  - name: rpc.grpc.status_code
-                    type: LONG
-                  - name: server.port
-                    type: LONG
-                  - name: rpc.method
-                    type: STRING
-                  - name: rpc.service
-                    type: STRING
-                  - name: server.address
-                    type: STRING
-              - span_kind: SERVER
-                attributes:
-                  - name: rpc.system
-                    type: STRING
-                  - name: rpc.grpc.status_code
-                    type: LONG
-                  - name: server.port
-                    type: LONG
-                  - name: rpc.method
-                    type: STRING
-                  - name: rpc.service
-                    type: STRING
-                  - name: server.address
-                    type: STRING
-      """;
+          when: default
+          spans_by_scope:
+            - scope: io.opentelemetry.grpc-1.6
+              spans:
+                - span_kind: CLIENT
+                  attributes:
+                    - name: rpc.system
+                      type: STRING
+                    - name: rpc.grpc.status_code
+                      type: LONG
+                    - name: server.port
+                      type: LONG
+                    - name: rpc.method
+                      type: STRING
+                    - name: rpc.service
+                      type: STRING
+                    - name: server.address
+                      type: STRING
+                - span_kind: SERVER
+                  attributes:
+                    - name: rpc.system
+                      type: STRING
+                    - name: rpc.grpc.status_code
+                      type: LONG
+                    - name: server.port
+                      type: LONG
+                    - name: rpc.method
+                      type: STRING
+                    - name: rpc.service
+                      type: STRING
+                    - name: server.address
+                      type: STRING
+        """;
 
     Files.writeString(telemetryDir.resolve("spans-1.yaml"), file1Content);
 

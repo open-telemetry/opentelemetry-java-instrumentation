@@ -41,49 +41,43 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
     RoutingDsl router =
         new RoutingDsl()
             .GET(SUCCESS.getPath())
-            .routeTo(
-                () ->
-                    controller(
-                        SUCCESS, () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())))
+            .routeTo(() ->
+                controller(SUCCESS, () -> Results.status(SUCCESS.getStatus(), SUCCESS.getBody())))
             .GET(INDEXED_CHILD.getPath())
-            .routeTo(
-                () ->
-                    controller(
-                        INDEXED_CHILD,
-                        () -> {
-                          INDEXED_CHILD.collectSpanAttributes(
-                              it -> Http.Context.Implicit.request().getQueryString(it));
-                          return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
-                        }))
+            .routeTo(() ->
+                controller(
+                    INDEXED_CHILD,
+                    () -> {
+                      INDEXED_CHILD.collectSpanAttributes(
+                          it -> Http.Context.Implicit.request().getQueryString(it));
+                      return Results.status(INDEXED_CHILD.getStatus(), INDEXED_CHILD.getBody());
+                    }))
             .GET(QUERY_PARAM.getPath())
-            .routeTo(
-                () ->
-                    controller(
-                        QUERY_PARAM,
-                        () -> Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())))
+            .routeTo(() ->
+                controller(
+                    QUERY_PARAM,
+                    () -> Results.status(QUERY_PARAM.getStatus(), QUERY_PARAM.getBody())))
             .GET(REDIRECT.getPath())
             .routeTo(() -> controller(REDIRECT, () -> Results.found(REDIRECT.getBody())))
             .GET(CAPTURE_HEADERS.getPath())
-            .routeTo(
-                () ->
-                    controller(
-                        CAPTURE_HEADERS,
-                        () ->
-                            Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
-                                .withHeader(
-                                    "X-Test-Response",
-                                    Http.Context.Implicit.request().getHeader("X-Test-Request"))))
+            .routeTo(() ->
+                controller(
+                    CAPTURE_HEADERS,
+                    () ->
+                        Results.status(CAPTURE_HEADERS.getStatus(), CAPTURE_HEADERS.getBody())
+                            .withHeader(
+                                "X-Test-Response",
+                                Http.Context.Implicit.request().getHeader("X-Test-Request"))))
             .GET(ERROR.getPath())
             .routeTo(
                 () -> controller(ERROR, () -> Results.status(ERROR.getStatus(), ERROR.getBody())))
             .GET(EXCEPTION.getPath())
-            .routeTo(
-                () ->
-                    controller(
-                        EXCEPTION,
-                        () -> {
-                          throw new IllegalArgumentException(EXCEPTION.getBody());
-                        }));
+            .routeTo(() ->
+                controller(
+                    EXCEPTION,
+                    () -> {
+                      throw new IllegalArgumentException(EXCEPTION.getBody());
+                    }));
 
     return Server.forRouter(router.build(), port);
   }
@@ -100,13 +94,12 @@ class PlayServerTest extends AbstractHttpServerTest<Server> {
     options.setResponseCodeOnNonStandardHttpMethod(404);
     options.setVerifyServerSpanEndTime(
         false); // server spans are ended inside of the controller spans
-    options.setHttpAttributes(
-        serverEndpoint -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(HTTP_ROUTE);
-          return attributes;
-        });
+    options.setHttpAttributes(serverEndpoint -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpServerTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(HTTP_ROUTE);
+      return attributes;
+    });
 
     options.setExpectedException(new IllegalArgumentException(EXCEPTION.getBody()));
   }

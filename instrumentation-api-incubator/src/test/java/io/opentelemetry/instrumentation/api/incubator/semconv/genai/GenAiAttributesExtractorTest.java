@@ -13,6 +13,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STOP_SEQUENCES;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_REASONING_OUTPUT_TOKENS;
 import static java.util.Collections.emptyList;
@@ -84,7 +85,7 @@ class GenAiAttributesExtractorTest {
   }
 
   @Test
-  void fallsBackToExceptionClassForErrorType() {
+  void usesDefaultExceptionClassForErrorType() {
     AttributesExtractor<Request, Response> extractor =
         GenAiAttributesExtractor.create(new TestGetter());
     AttributesBuilder attributes = Attributes.builder();
@@ -96,7 +97,18 @@ class GenAiAttributesExtractorTest {
   }
 
   @Test
-  void usesGetterErrorTypeBeforeExceptionClass() {
+  void omitsErrorTypeWhenThereIsNoError() {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(new TestGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), new Request(false), null, null);
+
+    assertThat(attributes.build().get(ERROR_TYPE)).isNull();
+  }
+
+  @Test
+  void usesCustomFinalErrorType() {
     AttributesExtractor<Request, Response> extractor =
         GenAiAttributesExtractor.create(
             new TestGetter() {
@@ -114,17 +126,37 @@ class GenAiAttributesExtractorTest {
   }
 
   @Test
+  void explicitNullOmitsErrorTypeEvenWhenThereIsAnError() {
+    AttributesExtractor<Request, Response> extractor =
+        GenAiAttributesExtractor.create(
+            new TestGetter() {
+              @Override
+              public String getErrorType(Request request, Response response, Throwable error) {
+                return null;
+              }
+            });
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(
+        attributes, Context.root(), new Request(false), null, new IllegalStateException("failure"));
+
+    assertThat(attributes.build().get(ERROR_TYPE)).isNull();
+  }
+
+  @Test
   void extractsDetailedTokenUsageOnEnd() {
     AttributesExtractor<Request, Response> extractor =
         GenAiAttributesExtractor.create(new TestGetter());
     AttributesBuilder attributes = Attributes.builder();
 
-    extractor.onEnd(attributes, Context.root(), new Request(false), new Response(12L, 4L), null);
+    extractor.onEnd(
+        attributes, Context.root(), new Request(false), new Response(12L, 3L, 4L), null);
 
     assertThat(attributes.build())
         .isEqualTo(
             Attributes.builder()
                 .put(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 12L)
+                .put(GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS, 3L)
                 .put(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 4L)
                 .build());
   }
@@ -135,12 +167,13 @@ class GenAiAttributesExtractorTest {
         GenAiAttributesExtractor.create(new TestGetter());
     AttributesBuilder attributes = Attributes.builder();
 
-    extractor.onEnd(attributes, Context.root(), new Request(false), new Response(0L, 0L), null);
+    extractor.onEnd(attributes, Context.root(), new Request(false), new Response(0L, 0L, 0L), null);
 
     assertThat(attributes.build())
         .isEqualTo(
             Attributes.builder()
                 .put(GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS, 0L)
+                .put(GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS, 0L)
                 .put(GEN_AI_USAGE_REASONING_OUTPUT_TOKENS, 0L)
                 .build());
   }
@@ -166,10 +199,13 @@ class GenAiAttributesExtractorTest {
 
   private static final class Response {
     private final Long cacheReadInputTokens;
+    private final Long cacheCreationInputTokens;
     private final Long reasoningOutputTokens;
 
-    private Response(Long cacheReadInputTokens, Long reasoningOutputTokens) {
+    private Response(
+        Long cacheReadInputTokens, Long cacheCreationInputTokens, Long reasoningOutputTokens) {
       this.cacheReadInputTokens = cacheReadInputTokens;
+      this.cacheCreationInputTokens = cacheCreationInputTokens;
       this.reasoningOutputTokens = reasoningOutputTokens;
     }
   }
@@ -264,6 +300,11 @@ class GenAiAttributesExtractorTest {
     @Override
     public Long getUsageCacheReadInputTokens(Request request, @Nullable Response response) {
       return response == null ? null : response.cacheReadInputTokens;
+    }
+
+    @Override
+    public Long getUsageCacheCreationInputTokens(Request request, @Nullable Response response) {
+      return response == null ? null : response.cacheCreationInputTokens;
     }
 
     @Nullable

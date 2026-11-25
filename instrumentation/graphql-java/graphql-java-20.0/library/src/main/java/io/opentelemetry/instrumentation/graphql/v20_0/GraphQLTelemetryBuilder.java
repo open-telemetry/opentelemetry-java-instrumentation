@@ -41,15 +41,6 @@ public final class GraphQLTelemetryBuilder {
     return this;
   }
 
-  /**
-   * @deprecated Use {@link #setQuerySanitizationEnabled(boolean)} instead. Will be removed in 3.0.
-   */
-  @Deprecated // to be removed in 3.0
-  @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder setSanitizeQuery(boolean sanitizeQuery) {
-    return setQuerySanitizationEnabled(sanitizeQuery);
-  }
-
   /** Sets whether spans are created for GraphQL Data Fetchers. Default is {@code false}. */
   @CanIgnoreReturnValue
   public GraphQLTelemetryBuilder setDataFetcherInstrumentationEnabled(
@@ -80,16 +71,6 @@ public final class GraphQLTelemetryBuilder {
       boolean addOperationNameToSpanName) {
     this.addOperationNameToSpanName = addOperationNameToSpanName;
     return this;
-  }
-
-  /**
-   * @deprecated Use {@link #setOperationNameInSpanNameEnabled(boolean)} instead. Will be removed in
-   *     3.0.
-   */
-  @Deprecated // to be removed in 3.0
-  @CanIgnoreReturnValue
-  public GraphQLTelemetryBuilder setAddOperationNameToSpanName(boolean addOperationNameToSpanName) {
-    return setOperationNameInSpanNameEnabled(addOperationNameToSpanName);
   }
 
   /**

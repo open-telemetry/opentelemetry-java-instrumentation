@@ -7,52 +7,112 @@ package io.opentelemetry.instrumentation.grpc.v1_6;
 
 import io.grpc.Metadata;
 import io.grpc.MethodDescriptor;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.UnixSocketAddress;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcSocketAddressUtil;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.ParsedTarget;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
 public final class GrpcRequest {
 
-  private final MethodDescriptor<?, ?> method;
+  @Nullable private final MethodDescriptor<?, ?> method;
+  private final String fullMethodName;
+  @Nullable private final String originalFullMethodName;
 
   @Nullable private volatile Metadata metadata;
-
-  @Nullable private volatile String logicalHost;
-  private volatile int logicalPort = -1;
+  @Nullable private final String serverAddress;
+  @Nullable private final Integer serverPort;
   @Nullable private volatile SocketAddress peerSocketAddress;
+  @Nullable private volatile SocketAddress localSocketAddress;
 
   @Nullable private volatile Long requestSize;
   @Nullable private volatile Long responseSize;
 
-  GrpcRequest(
+  /**
+   * Creates a client-side gRPC request.
+   *
+   * @param method the gRPC method descriptor
+   * @param authority the channel authority (host:port)
+   * @param parsedTarget the pre-parsed gRPC target (from {@link
+   *     io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser#parse}), or {@code
+   *     null} if unavailable
+   */
+  static GrpcRequest createClientRequest(
+      MethodDescriptor<?, ?> method,
+      @Nullable String authority,
+      @Nullable ParsedTarget parsedTarget) {
+    ParsedTarget effective =
+        parsedTarget != null ? parsedTarget : GrpcTargetParser.parseAuthority(authority);
+    if (effective == null) {
+      return new GrpcRequest(method, null, null, null, null, null);
+    }
+    return new GrpcRequest(method, null, null, null, effective.getAddress(), effective.getPort());
+  }
+
+  /**
+   * Creates a server-side gRPC request.
+   *
+   * @param method the gRPC method descriptor
+   * @param metadata the request metadata
+   * @param peerSocketAddress the peer socket address
+   * @param localSocketAddress the local socket address
+   * @param authority the request authority
+   */
+  static GrpcRequest createServerRequest(
       MethodDescriptor<?, ?> method,
       @Nullable Metadata metadata,
       @Nullable SocketAddress peerSocketAddress,
+      @Nullable SocketAddress localSocketAddress,
       @Nullable String authority) {
+    ParsedTarget parsed = GrpcTargetParser.parseAuthority(authority);
+    return new GrpcRequest(
+        method,
+        metadata,
+        peerSocketAddress,
+        localSocketAddress,
+        parsed != null ? parsed.getAddress() : null,
+        parsed != null ? parsed.getPort() : null);
+  }
+
+  private GrpcRequest(
+      MethodDescriptor<?, ?> method,
+      @Nullable Metadata metadata,
+      @Nullable SocketAddress peerSocketAddress,
+      @Nullable SocketAddress localSocketAddress,
+      @Nullable String serverAddress,
+      @Nullable Integer serverPort) {
     this.method = method;
+    this.fullMethodName = method.getFullMethodName();
+    this.originalFullMethodName = null;
     this.metadata = metadata;
-    this.peerSocketAddress = peerSocketAddress;
-    setLogicalAddress(authority);
+    this.peerSocketAddress = GrpcSocketAddressUtil.normalize(peerSocketAddress);
+    this.localSocketAddress = GrpcSocketAddressUtil.normalize(localSocketAddress);
+    this.serverAddress = serverAddress;
+    this.serverPort = serverPort;
   }
 
-  private void setLogicalAddress(@Nullable String authority) {
-    if (authority == null) {
-      return;
-    }
-    int index = authority.indexOf(':');
-    if (index == -1) {
-      logicalHost = authority;
-    } else {
-      logicalHost = authority.substring(0, index);
-      try {
-        logicalPort = Integer.parseInt(authority.substring(index + 1));
-      } catch (NumberFormatException e) {
-        // ignore
-      }
-    }
+  GrpcRequest(String fullMethodName, @Nullable String originalFullMethodName, Metadata metadata) {
+    this.method = null;
+    this.fullMethodName = fullMethodName;
+    this.originalFullMethodName = originalFullMethodName;
+    this.metadata = metadata;
+    this.serverAddress = null;
+    this.serverPort = null;
   }
 
+  @Nullable
   public MethodDescriptor<?, ?> getMethod() {
     return method;
+  }
+
+  String getFullMethodName() {
+    return fullMethodName;
+  }
+
+  @Nullable
+  String getOriginalFullMethodName() {
+    return originalFullMethodName;
   }
 
   @Nullable
@@ -64,22 +124,63 @@ public final class GrpcRequest {
     this.metadata = metadata;
   }
 
+  /**
+   * Returns the server address.
+   *
+   * <p>When a target string is available (from gRPC channel configuration), the server address is
+   * extracted per the <a href="https://grpc.github.io/grpc/core/md_doc_naming.html">gRPC Name
+   * Resolution spec</a>. Otherwise, falls back to the authority (host portion).
+   */
   @Nullable
-  public String getLogicalHost() {
-    return logicalHost;
+  public String getServerAddress() {
+    return serverAddress;
   }
 
-  public int getLogicalPort() {
-    return logicalPort;
+  /**
+   * Returns the server port.
+   *
+   * <p>When a target string is available (from gRPC channel configuration), the server port is
+   * extracted per the <a href="https://grpc.github.io/grpc/core/md_doc_naming.html">gRPC Name
+   * Resolution spec</a>. Otherwise, falls back to the authority (port portion).
+   */
+  @Nullable
+  public Integer getServerPort() {
+    return serverPort;
   }
 
   @Nullable
   public SocketAddress getPeerSocketAddress() {
+    return originalAddress(peerSocketAddress);
+  }
+
+  @Nullable
+  SocketAddress getNormalizedPeerSocketAddress() {
     return peerSocketAddress;
   }
 
   void setPeerSocketAddress(@Nullable SocketAddress peerSocketAddress) {
-    this.peerSocketAddress = peerSocketAddress;
+    this.peerSocketAddress = GrpcSocketAddressUtil.normalize(peerSocketAddress);
+  }
+
+  @Nullable
+  public SocketAddress getLocalSocketAddress() {
+    return originalAddress(localSocketAddress);
+  }
+
+  @Nullable
+  SocketAddress getNormalizedLocalSocketAddress() {
+    return localSocketAddress;
+  }
+
+  void setLocalSocketAddress(@Nullable SocketAddress localSocketAddress) {
+    this.localSocketAddress = GrpcSocketAddressUtil.normalize(localSocketAddress);
+  }
+
+  @Nullable
+  private static SocketAddress originalAddress(@Nullable SocketAddress address) {
+    return address instanceof UnixSocketAddress
+        ? ((UnixSocketAddress) address).getOriginalAddress()
+        : address;
   }
 
   @Nullable

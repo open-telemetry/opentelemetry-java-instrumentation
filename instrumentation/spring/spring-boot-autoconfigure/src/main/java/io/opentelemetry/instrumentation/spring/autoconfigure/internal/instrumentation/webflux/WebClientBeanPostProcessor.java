@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumen
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxClientTelemetry;
-import io.opentelemetry.instrumentation.spring.webflux.v5_3.SpringWebfluxServerTelemetry;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.WebClientTracingFilter;
 import java.util.List;
@@ -36,12 +35,6 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
         .build();
   }
 
-  static SpringWebfluxServerTelemetry getWebfluxServerTelemetry(OpenTelemetry openTelemetry) {
-    return SpringWebfluxBuilderUtil.applyServerCommonConfig(
-            SpringWebfluxServerTelemetry.builder(openTelemetry), openTelemetry)
-        .build();
-  }
-
   @Override
   public Object postProcessAfterInitialization(Object bean, String beanName) {
     if (bean instanceof WebClient) {
@@ -56,13 +49,12 @@ final class WebClientBeanPostProcessor implements BeanPostProcessor {
     WebClient.Builder builder =
         webClient
             .mutate()
-            .filters(
-                filters -> {
-                  if (isFilterNotPresent(filters)) {
-                    getWebfluxClientTelemetry(openTelemetry).addFilter(filters);
-                    filterAdded.set(true);
-                  }
-                });
+            .filters(filters -> {
+              if (isFilterNotPresent(filters)) {
+                filters.add(getWebfluxClientTelemetry(openTelemetry).createFilter());
+                filterAdded.set(true);
+              }
+            });
 
     return filterAdded.get() ? builder.build() : webClient;
   }

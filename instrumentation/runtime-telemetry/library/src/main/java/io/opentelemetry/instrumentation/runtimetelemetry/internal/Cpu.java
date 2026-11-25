@@ -65,13 +65,12 @@ public class Cpu {
               .ofDoubles()
               .setDescription("CPU time used by the process as reported by the JVM.")
               .setUnit("s")
-              .buildWithCallback(
-                  observableMeasurement -> {
-                    Long cpuTimeNanos = processCpuTime.get();
-                    if (cpuTimeNanos != null && cpuTimeNanos >= 0) {
-                      observableMeasurement.record(cpuTimeNanos / NANOS_PER_S);
-                    }
-                  }));
+              .buildWithCallback(observableMeasurement -> {
+                Long cpuTimeNanos = processCpuTime.get();
+                if (cpuTimeNanos != null && cpuTimeNanos >= 0) {
+                  observableMeasurement.record(cpuTimeNanos / NANOS_PER_S);
+                }
+              }));
     }
     if (processCpuUtilization != null && metricNamePredicate.test("jvm.cpu.recent_utilization")) {
       observables.add(
@@ -79,13 +78,12 @@ public class Cpu {
               .gaugeBuilder("jvm.cpu.recent_utilization")
               .setDescription("Recent CPU utilization for the process as reported by the JVM.")
               .setUnit("1")
-              .buildWithCallback(
-                  observableMeasurement -> {
-                    Double cpuUsage = processCpuUtilization.get();
-                    if (cpuUsage != null && cpuUsage >= 0) {
-                      observableMeasurement.record(cpuUsage);
-                    }
-                  }));
+              .buildWithCallback(observableMeasurement -> {
+                Double cpuUsage = processCpuUtilization.get();
+                if (cpuUsage != null && cpuUsage >= 0) {
+                  observableMeasurement.record(cpuUsage);
+                }
+              }));
     }
 
     return observables;

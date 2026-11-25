@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -40,92 +42,62 @@ dependencies {
   testLibrary("com.lmax:disruptor:3.4.2")
 }
 
-tasks.withType<Test>().configureEach {
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
-}
+testing.suites {
+  executions("test") {
+    configureDefault {
+      jvmArgs(
+        "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
+        "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+        "-Dotel.instrumentation.common.logging.structured-attributes.included=key1,key2,order-*,user-?",
+        "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
+      )
+    }
+    configureEach {
+      // TODO run tests both with and without experimental log attributes
+      jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
+      jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 
-tasks {
-  test {
-    jvmArgs(
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
-      "-Dotel.instrumentation.common.logging.structured-attributes.included=key1,key2,order-*,user-?",
-      "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
-    )
-  }
+      if (otelProps.denyUnsafe) {
+        enabled = false
+      }
+    }
+    register("Async") {
+      jvmArgs(
+        "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
+        "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
+        "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
+        "-Dotel.instrumentation.common.logging.structured-attributes.included=key1,key2,order-*,user-?",
+        "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
+      )
+    }
+    register("LegacyMdcAttributes") {
+      filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
-  val testAsync = register<Test>("testAsync") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    jvmArgs(
-      "-DLog4j2.contextSelector=org.apache.logging.log4j.core.async.AsyncLoggerContextSelector",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.included=key1,key2,exact,prefix.*,single?,excluded*,otel.event.name",
-      "-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret,excluded*",
-      "-Dotel.instrumentation.common.logging.structured-attributes.included=key1,key2,order-*,user-?",
-      "-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret",
-    )
-  }
+      // the deprecated setting matches keys literally, so "*" alongside another entry does not
+      // capture every key
+      jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
+      systemProperty("testMdcConfiguration", "legacy")
+    }
+    register("MdcAttributeExclusionsOnly") {
+      filter.includeTestsMatching("*Log4jMdcSelectorTest")
 
-  val testLegacyMdcAttributes = register<Test>("testLegacyMdcAttributes") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMdcSelectorTest")
+      jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
+      systemProperty("testMdcConfiguration", "exclude-only")
+    }
+    register("StructuredAttributesExcludeOnly") {
+      filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
 
-    // the deprecated setting matches keys literally, so "*" alongside another entry does not
-    // capture every key
-    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-mdc-attributes=*,legacy")
-    systemProperty("testMdcConfiguration", "legacy")
-  }
+      jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret")
+      systemProperty("testMapMessageConfiguration", "exclude-only")
+    }
+    register("StructuredAttributesExcludedAll") {
+      filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
 
-  val testMdcAttributeExclusionsOnly = register<Test>("testMdcAttributeExclusionsOnly") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMdcSelectorTest")
-
-    jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded=prefix.secret")
-    systemProperty("testMdcConfiguration", "exclude-only")
-  }
-
-  val testStructuredAttributesExcludeOnly = register<Test>("testStructuredAttributesExcludeOnly") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
-
-    jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*-secret")
-    systemProperty("testMapMessageConfiguration", "exclude-only")
-  }
-
-  val testStructuredAttributesExcludedAll = register<Test>("testStructuredAttributesExcludedAll") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-    filter.includeTestsMatching("*Log4jMapMessageSelectorTest")
-
-    jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*")
-    systemProperty("testMapMessageConfiguration", "none")
-  }
-
-  check {
-    dependsOn(
-      testStructuredAttributesExcludedAll,
-      testAsync,
-      testLegacyMdcAttributes,
-      testMdcAttributeExclusionsOnly,
-      testStructuredAttributesExcludeOnly,
-    )
-  }
-
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
-      enabled = false
+      jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.excluded=*")
+      systemProperty("testMapMessageConfiguration", "none")
     }
   }
-}
-
-tasks.withType<Test>().configureEach {
-  // TODO run tests both with and without experimental log attributes
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
-  jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 }
 
 configurations {

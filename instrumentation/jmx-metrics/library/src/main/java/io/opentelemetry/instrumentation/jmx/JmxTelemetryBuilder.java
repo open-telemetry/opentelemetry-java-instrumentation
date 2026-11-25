@@ -35,6 +35,9 @@ import java.util.logging.Logger;
 /** Builder for {@link JmxTelemetry} */
 public final class JmxTelemetryBuilder {
 
+  private static final IncludeExclude EXCLUDE_ALL =
+      IncludeExclude.builder().setExcluded("*").build();
+
   private static final Logger logger = Logger.getLogger(JmxTelemetryBuilder.class.getName());
 
   private final OpenTelemetry openTelemetry;
@@ -47,11 +50,9 @@ public final class JmxTelemetryBuilder {
   private IncludeExclude metrics = IncludeExclude.builder().build();
 
   // exclude all systems by default
-  private IncludeExclude internalMetricsSystemFilter =
-      IncludeExclude.builder().setExcluded("*").build();
+  private IncludeExclude internalMetricsSystemFilter = EXCLUDE_ALL;
   // exclude all unstable metrics by default
-  private IncludeExclude internalMetricsUnstableMetricsFilter =
-      IncludeExclude.builder().setExcluded("*").build();
+  private IncludeExclude internalMetricsUnstableMetricsFilter = EXCLUDE_ALL;
 
   JmxTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -120,9 +121,9 @@ public final class JmxTelemetryBuilder {
    * Configures which JMX metrics are collected.
    *
    * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
-   * of characters, including none. Excluded patterns take precedence over included patterns. A
-   * selector with no included patterns collects every metric that is not excluded, and an
-   * {@linkplain IncludeExclude#isEmpty() empty} selector collects every metric.
+   * of characters, including none. Excluded patterns take precedence over included patterns. All
+   * metrics are collected unless included or excluded patterns are configured. If only excluded
+   * patterns are configured, every other metric is collected.
    *
    * @param metrics metric names to include and exclude
    * @return builder instance
@@ -134,28 +135,69 @@ public final class JmxTelemetryBuilder {
   }
 
   /**
-   * Configure which systems should have their internal metrics automatically registered.
+   * Configures which systems have their bundled metric definitions registered. Bundled definitions
+   * ship with the library, unlike custom rules added using {@link #addRules(InputStream)}. No
+   * systems are selected by default.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns.
+   *
+   * <p>No systems are registered unless included or excluded patterns are configured; an
+   * {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an unset one. Include
+   * {@code "*"} to select all systems. If only excluded patterns are configured, every other system
+   * is selected.
    *
    * @param systemFilter system filter
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
-    internalMetricsSystemFilter = requireNonNull(systemFilter, "systemFilter");
+  public JmxTelemetryBuilder setBundledMetricsSystemFilter(IncludeExclude systemFilter) {
+    requireNonNull(systemFilter, "systemFilter");
+    internalMetricsSystemFilter = systemFilter.isEmpty() ? EXCLUDE_ALL : systemFilter;
     return this;
   }
 
   /**
-   * Configure which unstable internal metrics should be enabled, unless enabled they are
-   * filtered-out.
+   * Configures which unstable metrics from bundled definitions are enabled. Custom rules added
+   * using {@link #addRules(InputStream)} are not affected. No unstable bundled metrics are enabled
+   * by default.
+   *
+   * <p>Matching is case-sensitive. {@code ?} matches one character and {@code *} matches any number
+   * of characters, including none. Excluded patterns take precedence over included patterns.
+   *
+   * <p>No unstable bundled metrics are enabled unless included or excluded patterns are configured;
+   * an {@linkplain IncludeExclude#isEmpty() empty} selector behaves the same as an unset one.
+   * Include {@code "*"} to select all unstable bundled metrics. If only excluded patterns are
+   * configured, every other unstable bundled metric is selected.
    *
    * @param metricsFilter metric filter
    * @return this
    */
   @CanIgnoreReturnValue
-  public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
-    internalMetricsUnstableMetricsFilter = requireNonNull(metricsFilter, "metricsFilter");
+  public JmxTelemetryBuilder setUnstableBundledMetricsFilter(IncludeExclude metricsFilter) {
+    requireNonNull(metricsFilter, "metricsFilter");
+    internalMetricsUnstableMetricsFilter = metricsFilter.isEmpty() ? EXCLUDE_ALL : metricsFilter;
     return this;
+  }
+
+  /**
+   * @deprecated Use {@link #setBundledMetricsSystemFilter(IncludeExclude)} instead. May be removed
+   *     in the next minor release.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setInternalMetricsSystemFilter(IncludeExclude systemFilter) {
+    return setBundledMetricsSystemFilter(systemFilter);
+  }
+
+  /**
+   * @deprecated Use {@link #setUnstableBundledMetricsFilter(IncludeExclude)} instead. May be
+   *     removed in the next minor release.
+   */
+  @Deprecated
+  @CanIgnoreReturnValue
+  public JmxTelemetryBuilder setInternalMetricsUnstableMetricsFilter(IncludeExclude metricsFilter) {
+    return setUnstableBundledMetricsFilter(metricsFilter);
   }
 
   /** Sets the {@link ClassLoader} to be used to load SPI implementations. */
@@ -173,21 +215,19 @@ public final class JmxTelemetryBuilder {
 
     // metric names from handlers are only available after handlers have been resolved
     // also, we should only include handlers that have been explicitly registered in the rules.
-    registeredHandlers.forEach(
-        h -> {
-          ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(h);
-          if (handler != null) {
-            registeredMetrics.addAll(handler.getMetricNames());
-          }
-        });
+    registeredHandlers.forEach(h -> {
+      ExperimentalJmxMetricHandler handler = handlerRegistry.getHandler(h);
+      if (handler != null) {
+        registeredMetrics.addAll(handler.getMetricNames());
+      }
+    });
     Set<String> userMetrics = new HashSet<>(registeredMetrics);
 
     MetricConfiguration metricConfiguration = new MetricConfiguration();
     userMetricDefs.forEach(metricConfiguration::addMetricDef);
 
     metricsDefinitions.loadInternalRules(internalMetricsSystemFilter, handlerRegistry);
-    metricsDefinitions.getMetricDefs(true).forEach(metricConfiguration::addMetricDef);
-    metricsDefinitions.getMetricDefs(false).forEach(metricConfiguration::addUnstableMetricDef);
+    metricsDefinitions.addMetricDefsTo(metricConfiguration);
 
     Set<String> stableMetrics = metricsDefinitions.getMetricNames(true);
     Set<String> unstableMetrics = metricsDefinitions.getMetricNames(false);

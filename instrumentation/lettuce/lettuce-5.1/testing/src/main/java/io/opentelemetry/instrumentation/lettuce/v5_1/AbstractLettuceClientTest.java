@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.util.Arrays.asList;
 
@@ -99,21 +100,21 @@ public abstract class AbstractLettuceClientTest {
     }
   }
 
-  protected void assertCommandErrorMetric(String errorType) {
+  protected void assertCommandMetric(String operation, String errorType) {
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.lettuce-5.1",
             "db.client.operation.duration",
             metrics ->
-                metrics.anySatisfy(
-                    metric ->
-                        assertThat(metric)
-                            .hasHistogramSatisfying(
-                                histogram ->
-                                    histogram.hasPointsSatisfying(
-                                        point ->
-                                            point.hasAttributesSatisfying(
-                                                equalTo(ERROR_TYPE, errorType))))));
+                metrics.anySatisfy(metric ->
+                    assertThat(metric)
+                        .hasHistogramSatisfying(histogram ->
+                            histogram.containsPointsSatisfying(point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfying(
+                                        equalTo(DB_OPERATION_NAME, operation),
+                                        equalTo(ERROR_TYPE, errorType))))));
   }
 
   protected String spanName(String operation) {

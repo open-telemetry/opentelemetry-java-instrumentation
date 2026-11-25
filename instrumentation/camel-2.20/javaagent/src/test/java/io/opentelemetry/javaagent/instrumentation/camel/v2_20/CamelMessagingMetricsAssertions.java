@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -12,7 +13,6 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_SYSTEM;
 import static java.util.stream.Collectors.toSet;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -42,6 +42,17 @@ public class CamelMessagingMetricsAssertions {
       String destination,
       String processErrorType,
       String processDestinationPartitionId) {
+    assertSendAndProcessMetrics(
+        testing, system, destination, null, processErrorType, processDestinationPartitionId);
+  }
+
+  public static void assertSendAndProcessMetrics(
+      InstrumentationExtension testing,
+      String system,
+      String destination,
+      String sendErrorType,
+      String processErrorType,
+      String processDestinationPartitionId) {
 
     assertDuration(
         testing,
@@ -51,7 +62,7 @@ public class CamelMessagingMetricsAssertions {
         "send",
         system,
         destination,
-        null,
+        sendErrorType,
         null);
     assertCounter(
         testing,
@@ -60,7 +71,7 @@ public class CamelMessagingMetricsAssertions {
         "send",
         system,
         destination,
-        null,
+        sendErrorType,
         null);
     assertDuration(
         testing,
@@ -146,10 +157,9 @@ public class CamelMessagingMetricsAssertions {
         errorType,
         null);
     assertThat(camelMetrics(testing))
-        .noneMatch(
-            metric ->
-                metric.getName().equals("messaging.client.operation.duration")
-                    || metric.getName().equals("messaging.client.sent.messages"));
+        .noneMatch(metric ->
+            metric.getName().equals("messaging.client.operation.duration")
+                || metric.getName().equals("messaging.client.sent.messages"));
   }
 
   private static void assertDuration(
@@ -166,55 +176,47 @@ public class CamelMessagingMetricsAssertions {
         INSTRUMENTATION_NAME,
         metricName,
         metrics ->
-            metrics.satisfiesExactly(
-                metric -> {
-                  assertThat(metric)
-                      .hasUnit("s")
-                      .hasDescription(description)
-                      .hasHistogramSatisfying(
-                          histogram ->
-                              histogram.hasPointsSatisfying(
-                                  point -> {
-                                    point.hasCount(1);
-                                    if (operationType != null) {
-                                      if (destinationPartitionId != null) {
-                                        point.hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                            equalTo(MESSAGING_SYSTEM, system),
-                                            equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                            equalTo(
-                                                MESSAGING_DESTINATION_PARTITION_ID,
-                                                destinationPartitionId),
-                                            equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                                            equalTo(ERROR_TYPE, errorType));
-                                      } else {
-                                        point.hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                            equalTo(MESSAGING_SYSTEM, system),
-                                            equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                            equalTo(MESSAGING_OPERATION_TYPE, operationType),
-                                            equalTo(ERROR_TYPE, errorType));
-                                      }
-                                    } else {
-                                      if (destinationPartitionId != null) {
-                                        point.hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                            equalTo(MESSAGING_SYSTEM, system),
-                                            equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                            equalTo(
-                                                MESSAGING_DESTINATION_PARTITION_ID,
-                                                destinationPartitionId),
-                                            equalTo(ERROR_TYPE, errorType));
-                                      } else {
-                                        point.hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                            equalTo(MESSAGING_SYSTEM, system),
-                                            equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                            equalTo(ERROR_TYPE, errorType));
-                                      }
-                                    }
-                                  }));
-                }));
+            metrics.satisfiesExactly(metric -> {
+              assertThat(metric)
+                  .hasUnit("s")
+                  .hasDescription(description)
+                  .hasHistogramPointsSatisfying(point -> {
+                    point.hasCount(1);
+                    if (operationType != null) {
+                      if (destinationPartitionId != null) {
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION_NAME, operationName),
+                            equalTo(stringKey("messaging.system.name"), system),
+                            equalTo(MESSAGING_DESTINATION_NAME, destination),
+                            equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId),
+                            equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                            equalTo(ERROR_TYPE, errorType));
+                      } else {
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION_NAME, operationName),
+                            equalTo(stringKey("messaging.system.name"), system),
+                            equalTo(MESSAGING_DESTINATION_NAME, destination),
+                            equalTo(MESSAGING_OPERATION_TYPE, operationType),
+                            equalTo(ERROR_TYPE, errorType));
+                      }
+                    } else {
+                      if (destinationPartitionId != null) {
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION_NAME, operationName),
+                            equalTo(stringKey("messaging.system.name"), system),
+                            equalTo(MESSAGING_DESTINATION_NAME, destination),
+                            equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId),
+                            equalTo(ERROR_TYPE, errorType));
+                      } else {
+                        point.hasAttributesSatisfyingExactly(
+                            equalTo(MESSAGING_OPERATION_NAME, operationName),
+                            equalTo(stringKey("messaging.system.name"), system),
+                            equalTo(MESSAGING_DESTINATION_NAME, destination),
+                            equalTo(ERROR_TYPE, errorType));
+                      }
+                    }
+                  });
+            }));
   }
 
   private static void assertCounter(
@@ -230,34 +232,28 @@ public class CamelMessagingMetricsAssertions {
         INSTRUMENTATION_NAME,
         metricName,
         metrics ->
-            metrics.satisfiesExactly(
-                metric -> {
-                  assertThat(metric)
-                      .hasUnit("{message}")
-                      .hasDescription(description)
-                      .hasLongSumSatisfying(
-                          sum ->
-                              sum.hasPointsSatisfying(
-                                  point -> {
-                                    point.hasValue(1);
-                                    if (destinationPartitionId != null) {
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                          equalTo(MESSAGING_SYSTEM, system),
-                                          equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                          equalTo(
-                                              MESSAGING_DESTINATION_PARTITION_ID,
-                                              destinationPartitionId),
-                                          equalTo(ERROR_TYPE, errorType));
-                                    } else {
-                                      point.hasAttributesSatisfyingExactly(
-                                          equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                          equalTo(MESSAGING_SYSTEM, system),
-                                          equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                          equalTo(ERROR_TYPE, errorType));
-                                    }
-                                  }));
-                }));
+            metrics.satisfiesExactly(metric -> {
+              assertThat(metric)
+                  .hasUnit("{message}")
+                  .hasDescription(description)
+                  .hasLongSumPointsSatisfying(point -> {
+                    point.hasValue(1);
+                    if (destinationPartitionId != null) {
+                      point.hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_OPERATION_NAME, operationName),
+                          equalTo(stringKey("messaging.system.name"), system),
+                          equalTo(MESSAGING_DESTINATION_NAME, destination),
+                          equalTo(MESSAGING_DESTINATION_PARTITION_ID, destinationPartitionId),
+                          equalTo(ERROR_TYPE, errorType));
+                    } else {
+                      point.hasAttributesSatisfyingExactly(
+                          equalTo(MESSAGING_OPERATION_NAME, operationName),
+                          equalTo(stringKey("messaging.system.name"), system),
+                          equalTo(MESSAGING_DESTINATION_NAME, destination),
+                          equalTo(ERROR_TYPE, errorType));
+                    }
+                  });
+            }));
   }
 
   private static void assertNoDuplicateMessagingMetrics(
@@ -278,11 +274,9 @@ public class CamelMessagingMetricsAssertions {
         testing.metrics().stream()
             .filter(metric -> metric.getName().equals("messaging.client.consumed.messages"))
             .flatMap(metric -> metric.getLongSumData().getPoints().stream())
-            .filter(
-                point ->
-                    system.equals(point.getAttributes().get(MESSAGING_SYSTEM))
-                        && destination.equals(
-                            point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
+            .filter(point ->
+                system.equals(point.getAttributes().get(stringKey("messaging.system.name")))
+                    && destination.equals(point.getAttributes().get(MESSAGING_DESTINATION_NAME)))
             .mapToLong(point -> point.getValue())
             .sum();
     assertThat(count).isEqualTo(expectedCount);
@@ -297,16 +291,14 @@ public class CamelMessagingMetricsAssertions {
     Set<MetricData> matchingMetrics =
         testing.metrics().stream()
             .filter(metric -> metricName.equals(metric.getName()))
-            .filter(
-                metric ->
-                    metric.getData().getPoints().stream()
-                        .anyMatch(
-                            point ->
-                                operationName.equals(
-                                        point.getAttributes().get(MESSAGING_OPERATION_NAME))
-                                    && system.equals(point.getAttributes().get(MESSAGING_SYSTEM))
-                                    && destination.equals(
-                                        point.getAttributes().get(MESSAGING_DESTINATION_NAME))))
+            .filter(metric ->
+                metric.getData().getPoints().stream()
+                    .anyMatch(point ->
+                        operationName.equals(point.getAttributes().get(MESSAGING_OPERATION_NAME))
+                            && system.equals(
+                                point.getAttributes().get(stringKey("messaging.system.name")))
+                            && destination.equals(
+                                point.getAttributes().get(MESSAGING_DESTINATION_NAME))))
             .collect(toSet());
     assertThat(matchingMetrics)
         .noneMatch(

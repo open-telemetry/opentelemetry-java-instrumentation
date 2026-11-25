@@ -8,6 +8,9 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.db.internal;
 import static java.util.Collections.emptyList;
 import static java.util.Comparator.comparing;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerEndpointUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -179,11 +182,11 @@ public final class RedisServerTarget {
 
   @Nullable
   private static RedisServerTarget networkTarget(List<Endpoint> endpoints, boolean unordered) {
-    DbServerTargetBuilder builder = DbServerTarget.builder(DEFAULT_PORT).setSorted(unordered);
+    ServerTargetBuilder builder = ServerTarget.builder(DEFAULT_PORT).setSorted(unordered);
     for (Endpoint endpoint : endpoints) {
       builder.addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port);
     }
-    DbServerTarget target = builder.build();
+    ServerTarget target = builder.build();
     if (target == null) {
       return null;
     }
@@ -199,17 +202,17 @@ public final class RedisServerTarget {
   }
 
   @Nullable
-  private static DbServerTarget sharedTarget(Endpoint endpoint) {
+  private static ServerTarget sharedTarget(Endpoint endpoint) {
     if (endpoint.socket) {
-      return DbServerTarget.unixSocket(endpoint.host);
+      return ServerTarget.unixSocket(endpoint.host);
     }
-    return DbServerTarget.builder(DEFAULT_PORT)
+    return ServerTarget.builder(DEFAULT_PORT)
         .addEndpoint(endpoint.host, endpoint.port == null ? -1 : endpoint.port)
         .build();
   }
 
   @Nullable
-  private static RedisServerTarget fromSharedTarget(@Nullable DbServerTarget target) {
+  private static RedisServerTarget fromSharedTarget(@Nullable ServerTarget target) {
     return target == null ? null : new RedisServerTarget(target.getAddress(), target.getPort());
   }
 
@@ -270,9 +273,9 @@ public final class RedisServerTarget {
     if (portStart <= 0) {
       return value;
     }
-    Integer port = Endpoint.parsePort(value.substring(portStart + 1));
+    Integer port = ServerEndpointUtil.parsePort(value.substring(portStart + 1));
     String host = value.substring(0, portStart);
-    return port != null && DbServerEndpointUtil.isIpv6Literal(host) ? endpoint(host, port) : value;
+    return port != null && ServerEndpointUtil.isIpv6Literal(host) ? endpoint(host, port) : value;
   }
 
   private static void appendHost(StringBuilder builder, String host, boolean hasPort) {
@@ -367,7 +370,7 @@ public final class RedisServerTarget {
           return null;
         }
         String host = authority.substring(1, hostEnd);
-        if (!DbServerEndpointUtil.isIpv6Literal(host)) {
+        if (!ServerEndpointUtil.isIpv6Literal(host)) {
           return null;
         }
         String rest = authority.substring(hostEnd + 1);
@@ -377,7 +380,7 @@ public final class RedisServerTarget {
         if (!rest.startsWith(":")) {
           return null;
         }
-        Integer port = parsePort(rest.substring(1));
+        Integer port = ServerEndpointUtil.parsePort(rest.substring(1));
         return port == null ? null : new Endpoint(host, port, false);
       }
       if (authority.indexOf('[') >= 0 || authority.indexOf(']') >= 0) {
@@ -387,11 +390,11 @@ public final class RedisServerTarget {
       int portStart = authority.indexOf(':');
       int secondColon = portStart < 0 ? -1 : authority.indexOf(':', portStart + 1);
       if (portStart > 0 && secondColon < 0) {
-        Integer port = parsePort(authority.substring(portStart + 1));
+        Integer port = ServerEndpointUtil.parsePort(authority.substring(portStart + 1));
         return port == null ? null : new Endpoint(authority.substring(0, portStart), port, false);
       }
       // an unbracketed literal IPv6 address has more than one colon and carries no port
-      if (secondColon >= 0 && DbServerEndpointUtil.isIpv6Literal(authority)) {
+      if (secondColon >= 0 && ServerEndpointUtil.isIpv6Literal(authority)) {
         return new Endpoint(authority, null, false);
       }
       if (portStart >= 0) {
@@ -444,22 +447,6 @@ public final class RedisServerTarget {
         }
       }
       return result;
-    }
-
-    @Nullable
-    private static Integer parsePort(String value) {
-      if (value.isEmpty() || value.length() > 5) {
-        return null;
-      }
-      int port = 0;
-      for (int i = 0; i < value.length(); i++) {
-        char c = value.charAt(i);
-        if (c < '0' || c > '9') {
-          return null;
-        }
-        port = port * 10 + (c - '0');
-      }
-      return port >= 1 && port <= 65535 ? port : null;
     }
 
     String renderConfigured() {

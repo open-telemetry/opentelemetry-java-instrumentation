@@ -36,11 +36,10 @@ public class TracingHandler implements Handler {
           instrumenter().start(parentOtelContext, INITIAL_SPAN_NAME);
       ctx.getExecution().add(otelContext);
       ctx.getResponse()
-          .beforeSend(
-              response -> {
-                RatpackSingletons.updateSpanNames(otelContext, ctx);
-                instrumenter().end(otelContext, INITIAL_SPAN_NAME, null, null);
-              });
+          .beforeSend(response -> {
+            RatpackSingletons.updateSpanNames(otelContext, ctx);
+            instrumenter().end(otelContext, INITIAL_SPAN_NAME, null, null);
+          });
       callbackContext = otelContext;
     } else {
       // just update the server span name
@@ -48,6 +47,9 @@ public class TracingHandler implements Handler {
           .beforeSend(response -> RatpackSingletons.updateServerSpanName(parentOtelContext, ctx));
       callbackContext = parentOtelContext;
     }
+
+    // Keep the error target separate from the Context entry used for HTTP client parenting.
+    ctx.getExecution().add(new ErrorContext(callbackContext));
 
     try (Scope ignored = callbackContext.makeCurrent()) {
       ctx.next();

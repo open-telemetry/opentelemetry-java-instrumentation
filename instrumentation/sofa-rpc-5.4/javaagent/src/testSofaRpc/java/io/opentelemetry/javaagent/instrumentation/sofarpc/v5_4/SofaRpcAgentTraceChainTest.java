@@ -21,11 +21,6 @@ class SofaRpcAgentTraceChainTest extends AbstractSofaRpcTraceChainTest {
   }
 
   @Override
-  protected boolean hasPeerService() {
-    return true;
-  }
-
-  @Override
   protected String genericMethodName() {
     return "$invoke";
   }

@@ -30,6 +30,13 @@ final class ChatAttributesGetter
     return GenAiAttributes.GenAiProviderNameIncubatingValues.OPENAI;
   }
 
+  @Nullable
+  @Override
+  public String getErrorType(
+      ChatCompletionRequest request, @Nullable ChatCompletion response, @Nullable Throwable error) {
+    return OpenAiErrorType.getErrorType(error);
+  }
+
   @Override
   public String getRequestModel(ChatCompletionRequest request) {
     return request.getRequest().model().asString();
@@ -76,16 +83,15 @@ final class ChatAttributesGetter
     return request
         .getRequest()
         .stop()
-        .map(
-            s -> {
-              if (s.isString()) {
-                return singletonList(s.asString());
-              }
-              if (s.isStrings()) {
-                return s.asStrings();
-              }
-              return null;
-            })
+        .map(s -> {
+          if (s.isString()) {
+            return singletonList(s.asString());
+          }
+          if (s.isStrings()) {
+            return s.asStrings();
+          }
+          return null;
+        })
         .orElse(null);
   }
 
@@ -113,8 +119,10 @@ final class ChatAttributesGetter
     if (response == null) {
       return emptyList();
     }
+    // A streamed response closed before a choice's finish reason arrives has no finish reason for
+    // that choice. Report "error" to keep the entries aligned with the choices.
     return response.choices().stream()
-        .map(choice -> choice.finishReason().asString())
+        .map(choice -> choice._finishReason().asKnown().map(r -> r.asString()).orElse("error"))
         .collect(toList());
   }
 

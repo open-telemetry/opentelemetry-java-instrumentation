@@ -9,7 +9,6 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.internal.ContextPropagationDebug;
 import io.opentelemetry.instrumentation.awslambdacore.v1_0.AwsLambdaRequest;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
@@ -55,7 +54,6 @@ public class AwsLambdaFunctionInstrumenter {
   }
 
   public Context extract(AwsLambdaRequest input) {
-    ContextPropagationDebug.debugContextLeakIfEnabled();
     // Look in both the http headers and the custom client context
     Map<String, String> headers = input.getHeaders();
     com.amazonaws.services.lambda.runtime.Context awsContext = input.getAwsContext();
@@ -77,7 +75,7 @@ public class AwsLambdaFunctionInstrumenter {
     return openTelemetry
         .getPropagators()
         .getTextMapPropagator()
-        .extract(Context.root(), headers, mapGetter);
+        .extract(Context.current(), headers, mapGetter);
   }
 
   @Nullable

@@ -5,13 +5,15 @@
 
 package io.opentelemetry.javaagent.instrumentation.elasticsearch.api.client.v7_16;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
-import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetricWithResponseStatus;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_RESPONSE_STATUS_CODE;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
@@ -81,11 +83,8 @@ class ElasticsearchClientTest {
 
     RestClient restClient =
         RestClient.builder(httpHost)
-            .setRequestConfigCallback(
-                builder ->
-                    builder
-                        .setConnectTimeout(Integer.MAX_VALUE)
-                        .setSocketTimeout(Integer.MAX_VALUE))
+            .setRequestConfigCallback(builder ->
+                builder.setConnectTimeout(Integer.MAX_VALUE).setSocketTimeout(Integer.MAX_VALUE))
             .build();
     cleanup.deferAfterAll(restClient);
 
@@ -100,79 +99,77 @@ class ElasticsearchClientTest {
     InfoResponse response = client.info();
     assertThat(response.version().number()).isEqualTo("7.17.28");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("info " + httpHost.getHostName() + ":" + httpHost.getPort())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, "info"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_FULL, httpHost.toURI() + "/"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort())),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
-                            equalTo(URL_FULL, httpHost.toURI() + "/"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("info " + httpHost.getHostName() + ":" + httpHost.getPort())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_RESPONSE_STATUS_CODE, "200"),
+                        equalTo(DB_OPERATION_NAME, "info"),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(URL_FULL, httpHost.toURI() + "/"),
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort())),
+            span ->
+                span.hasName("GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(URL_FULL, httpHost.toURI() + "/"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   @Test
   void elasticsearchIndex() throws IOException {
-    client.index(
-        r ->
-            r.id("test-id")
-                .index("test-index")
-                .document(new Person("person-name"))
-                .timeout(t -> t.time("10s")));
+    client.index(r ->
+        r.id("test-id")
+            .index("test-index")
+            .document(new Person("person-name"))
+            .timeout(t -> t.time("10s")));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("index " + httpHost.getHostName() + ":" + httpHost.getPort())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, "index"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, "PUT"),
-                            equalTo(
-                                URL_FULL,
-                                httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
-                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("index"), "test-index"),
-                            equalTo(DB_OPERATION_PARAMETER.getAttributeKey("id"), "test-id")),
-                span ->
-                    span.hasName("PUT")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, "PUT"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
-                            equalTo(
-                                URL_FULL,
-                                httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("index " + httpHost.getHostName() + ":" + httpHost.getPort())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_RESPONSE_STATUS_CODE, "201"),
+                        equalTo(DB_OPERATION_NAME, "index"),
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "PUT"),
+                        equalTo(
+                            URL_FULL, httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
+                        equalTo(DB_OPERATION_PARAMETER.getAttributeKey("index"), "test-index"),
+                        equalTo(DB_OPERATION_PARAMETER.getAttributeKey("id"), "test-id")),
+            span ->
+                span.hasName("PUT")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "PUT"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(
+                            URL_FULL, httpHost.toURI() + "/test-index/_doc/test-id?timeout=10s"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 201L))));
 
-    assertDurationMetric(
+    assertDurationMetricWithResponseStatus(
         testing,
         "io.opentelemetry.elasticsearch-rest-7.0",
+        "201",
         DB_OPERATION_NAME,
         DB_SYSTEM_NAME,
         SERVER_ADDRESS,
@@ -185,26 +182,25 @@ class ElasticsearchClientTest {
         s -> s.query(q -> q.match(m -> m.field("name").query(FieldValue.of("person-name")))),
         Person.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("search " + httpHost.getHostName() + ":" + httpHost.getPort())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(searchAttributes()),
-                span ->
-                    span.hasName("POST")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, "POST"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
-                            equalTo(URL_FULL, httpHost.toURI() + "/_search?typed_keys=true"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("search " + httpHost.getHostName() + ":" + httpHost.getPort())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(searchAttributes()),
+            span ->
+                span.hasName("POST")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "POST"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(URL_FULL, httpHost.toURI() + "/_search?typed_keys=true"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   private static List<AttributeAssertion> searchAttributes() {
@@ -212,6 +208,7 @@ class ElasticsearchClientTest {
         new ArrayList<>(
             asList(
                 equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                equalTo(DB_RESPONSE_STATUS_CODE, "200"),
                 equalTo(DB_OPERATION_NAME, "search"),
                 equalTo(SERVER_ADDRESS, httpHost.getHostName()),
                 equalTo(SERVER_PORT, httpHost.getPort()),
@@ -231,49 +228,46 @@ class ElasticsearchClientTest {
         () ->
             asyncClient
                 .info()
-                .thenAccept(
-                    infoResponse ->
-                        runWithSpan(
-                            "callback",
-                            () -> {
-                              request.setResponse(infoResponse);
-                              countDownLatch.countDown();
-                            })));
+                .thenAccept(infoResponse ->
+                    runWithSpan(
+                        "callback",
+                        () -> {
+                          request.setResponse(infoResponse);
+                          countDownLatch.countDown();
+                        })));
     assertThat(countDownLatch.await(10, SECONDS)).isTrue();
 
     assertThat(request.getResponse().version().number()).isEqualTo("7.17.28");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("info " + httpHost.getHostName() + ":" + httpHost.getPort())
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                            equalTo(DB_OPERATION_NAME, "info"),
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_FULL, httpHost.toURI() + "/")),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(SERVER_ADDRESS, httpHost.getHostName()),
-                            equalTo(SERVER_PORT, httpHost.getPort()),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(maybeStablePeerService(), "test-peer-service"),
-                            equalTo(URL_FULL, httpHost.toURI() + "/"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
-                span ->
-                    span.hasName("callback")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("info " + httpHost.getHostName() + ":" + httpHost.getPort())
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                        equalTo(DB_RESPONSE_STATUS_CODE, "200"),
+                        equalTo(DB_OPERATION_NAME, "info"),
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(URL_FULL, httpHost.toURI() + "/")),
+            span ->
+                span.hasName("GET")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(SERVER_ADDRESS, httpHost.getHostName()),
+                        equalTo(SERVER_PORT, httpHost.getPort()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(stringKey("server.service.name"), expectedMappedServiceName()),
+                        equalTo(URL_FULL, httpHost.toURI() + "/"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+            span ->
+                span.hasName("callback").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -305,17 +299,17 @@ class ElasticsearchClientTest {
   }
 
   private static void assertConfiguredTarget(String hostList) {
-    testing.waitAndAssertTraces(
-        trace ->
-            assertThat(trace.getSpan(0))
-                .hasName("info " + hostList)
-                .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfyingExactly(
-                    equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
-                    equalTo(DB_OPERATION_NAME, "info"),
-                    equalTo(HTTP_REQUEST_METHOD, "GET"),
-                    equalTo(URL_FULL, httpHost.toURI() + "/"),
-                    equalTo(SERVER_ADDRESS, hostList)));
+    testing.waitAndAssertTraces(trace ->
+        assertThat(trace.getSpan(0))
+            .hasName("info " + hostList)
+            .hasKind(SpanKind.CLIENT)
+            .hasAttributesSatisfyingExactly(
+                equalTo(DB_SYSTEM_NAME, ELASTICSEARCH),
+                equalTo(DB_RESPONSE_STATUS_CODE, "200"),
+                equalTo(DB_OPERATION_NAME, "info"),
+                equalTo(HTTP_REQUEST_METHOD, "GET"),
+                equalTo(URL_FULL, httpHost.toURI() + "/"),
+                equalTo(SERVER_ADDRESS, hostList)));
   }
 
   private static class AsyncRequest {

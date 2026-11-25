@@ -35,13 +35,12 @@ class BeanFinder {
   private final MetricRegistrar registrar;
   private final MetricConfiguration conf;
   private final ScheduledExecutorService exec =
-      Executors.newSingleThreadScheduledExecutor(
-          runnable -> {
-            Thread result = new Thread(runnable, "jmx_bean_finder");
-            result.setDaemon(true);
-            result.setContextClassLoader(null);
-            return result;
-          });
+      Executors.newSingleThreadScheduledExecutor(runnable -> {
+        Thread result = new Thread(runnable, "jmx_bean_finder");
+        result.setDaemon(true);
+        result.setContextClassLoader(null);
+        return result;
+      });
   private final long discoveryDelay;
   private final long maxDelay;
   private long delay = 1000; // number of milliseconds until first attempt to discover MBeans
@@ -186,7 +185,12 @@ class BeanFinder {
       if (!validObjectNames.isEmpty()) {
         // Ready to collect metric values
         registrar.enrollExtractor(
-            connection, validObjectNames, extractor, attributeInfo, conf.isUnstable(metricDef));
+            connection,
+            validObjectNames,
+            extractor,
+            attributeInfo,
+            conf.isUnstable(metricDef),
+            conf.getSchemaUrl(metricDef));
       }
     }
   }
@@ -194,7 +198,12 @@ class BeanFinder {
   private void resolveHandlers(
       Set<ObjectName> objectNames, MBeanServerConnection connection, MetricDef metricDef) {
     for (MetricHandlerHolder holder : metricDef.getHandlers()) {
-      registrar.enrollHandler(connection, objectNames, holder, conf.isUnstable(metricDef));
+      registrar.enrollHandler(
+          connection,
+          objectNames,
+          holder,
+          conf.isUnstable(metricDef),
+          conf.getSchemaUrl(metricDef));
     }
   }
 

@@ -10,7 +10,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.jaxrs.JaxrsContextPath;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -43,8 +42,7 @@ class JerseyServletContainerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Scope onEnter(@Advice.Argument(0) HttpServletRequest httpServletRequest) {
       Context context =
-          JaxrsContextPath.init(
-              Java8BytecodeBridge.currentContext(), httpServletRequest.getServletPath());
+          JaxrsContextPath.init(Context.current(), httpServletRequest.getServletPath());
       return context != null ? context.makeCurrent() : null;
     }
 

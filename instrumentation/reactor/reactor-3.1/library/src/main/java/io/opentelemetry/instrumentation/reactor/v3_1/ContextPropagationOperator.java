@@ -332,8 +332,10 @@ public final class ContextPropagationOperator {
     }
   }
 
+  // visible for testing
   static class ScalarPropagatingMono extends Mono<Object> implements Scannable {
 
+    // visible for testing
     static <T> Mono<T> create(Mono<T> source) {
       return new ScalarPropagatingMono(source).flatMap(unused -> source);
     }
@@ -361,10 +363,14 @@ public final class ContextPropagationOperator {
     }
   }
 
-  static class ScalarPropagatingFlux extends Flux<Object> implements Scannable {
+  // visible for testing
+  static class ScalarPropagatingFlux extends Mono<Object> implements Scannable {
 
+    // visible for testing
     static <T> Flux<T> create(Flux<T> source) {
-      return new ScalarPropagatingFlux(source).flatMap(unused -> source);
+      // flatMapMany passes downstream demand to the source unchanged, while Flux.flatMap would
+      // prefetch from it
+      return new ScalarPropagatingFlux(source).flatMapMany(unused -> source);
     }
 
     private final Flux<?> source;
@@ -390,6 +396,7 @@ public final class ContextPropagationOperator {
     }
   }
 
+  // visible for testing
   static class RunnableWrapper implements Runnable {
     private final Runnable delegate;
     private final Context context;

@@ -39,14 +39,13 @@ class JarDetails {
       Stream.of(JAR_EXTENSION, WAR_EXTENSION, EAR_EXTENSION)
           .collect(toMap(ext -> ('.' + ext + "!/"), identity()));
   private static final ThreadLocal<MessageDigest> sha256 =
-      ThreadLocal.withInitial(
-          () -> {
-            try {
-              return MessageDigest.getInstance("SHA-256");
-            } catch (NoSuchAlgorithmException e) {
-              throw new IllegalStateException(e);
-            }
-          });
+      ThreadLocal.withInitial(() -> {
+        try {
+          return MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+          throw new IllegalStateException(e);
+        }
+      });
 
   private final URL url;
   @Nullable private final Properties pom;
@@ -209,6 +208,7 @@ class JarDetails {
     }
   }
 
+  // visible for testing
   static String toHex(byte[] bytes) {
     char[] chars = new char[bytes.length * 2];
     for (int i = 0; i < bytes.length; i++) {

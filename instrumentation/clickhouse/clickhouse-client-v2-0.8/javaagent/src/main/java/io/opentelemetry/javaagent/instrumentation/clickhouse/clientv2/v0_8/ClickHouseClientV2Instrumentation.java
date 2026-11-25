@@ -5,7 +5,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.clickhouse.clientv2.v0_8.ClickHouseClientV2Singletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
@@ -16,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import com.clickhouse.client.api.Client;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.javaagent.bootstrap.CallDepth;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
@@ -68,11 +67,11 @@ class ClickHouseClientV2Instrumentation implements TypeInstrumentation {
         return null;
       }
 
-      DbServerTarget serverTarget = ClickHouseClientV2Singletons.configuredServerTarget(client);
+      ServerTarget serverTarget = ClickHouseClientV2Singletons.configuredServerTarget(client);
       CurrentServerInfo currentServerInfo = ClickHouseClientV2Singletons.currentServerInfo(client);
 
       String database = client.getConfiguration().get("database");
-      Context parentContext = currentContext();
+      Context parentContext = Context.current();
       ClickHouseDbRequest request =
           ClickHouseDbRequest.create(currentServerInfo.getPeer(), serverTarget, database, sqlQuery);
 

@@ -5,10 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.hibernate.common.v3_3;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import java.util.function.Function;
@@ -26,7 +25,7 @@ public class OperationNameUtil {
   public static String getOperationNameForQuery(@Nullable String query) {
     if (query != null) {
       // note: summarization is not affected by the choice of dialect
-      SqlQuery info = analyzer.analyze(query, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+      SqlQuery info = analyzer.analyze(query, SqlDialect.UNKNOWN);
       String summary = info.getQuerySummary();
       if (summary != null) {
         return summary;

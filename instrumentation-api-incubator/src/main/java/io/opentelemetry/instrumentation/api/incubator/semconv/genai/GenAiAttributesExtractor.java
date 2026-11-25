@@ -61,6 +61,8 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
   static final AttributeKey<Long> GEN_AI_USAGE_INPUT_TOKENS = longKey("gen_ai.usage.input_tokens");
   static final AttributeKey<Long> GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS =
       longKey("gen_ai.usage.cache_read.input_tokens");
+  static final AttributeKey<Long> GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS =
+      longKey("gen_ai.usage.cache_creation.input_tokens");
   static final AttributeKey<Long> GEN_AI_USAGE_OUTPUT_TOKENS =
       longKey("gen_ai.usage.output_tokens");
   static final AttributeKey<Long> GEN_AI_USAGE_REASONING_OUTPUT_TOKENS =
@@ -114,16 +116,14 @@ public final class GenAiAttributesExtractor<REQUEST, RESPONSE>
     attributes.put(
         GEN_AI_USAGE_CACHE_READ_INPUT_TOKENS,
         getter.getUsageCacheReadInputTokens(request, response));
+    attributes.put(
+        GEN_AI_USAGE_CACHE_CREATION_INPUT_TOKENS,
+        getter.getUsageCacheCreationInputTokens(request, response));
     attributes.put(GEN_AI_USAGE_OUTPUT_TOKENS, getter.getUsageOutputTokens(request, response));
     attributes.put(
         GEN_AI_USAGE_REASONING_OUTPUT_TOKENS,
         getter.getUsageReasoningOutputTokens(request, response));
-    String errorType = getter.getErrorType(request, response, error);
-    // fall back to exception class name
-    if (errorType == null && error != null) {
-      errorType = error.getClass().getName();
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
   }
 
   /**

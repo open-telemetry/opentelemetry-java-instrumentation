@@ -3,13 +3,14 @@ display_name: RabbitMQ
 library_link: https://www.rabbitmq.com/client-libraries/java-api-guide
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 configurations:
   - name: otel.instrumentation.rabbitmq.experimental-span-attributes
     declarative_name: java.rabbitmq.experimental_span_attributes/development
     description: >
       Enables experimental span attributes `rabbitmq.command`, `rabbitmq.delivery_mode`,
-      `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `messaging.rabbitmq.vhost.name`, and
-      `messaging.rabbitmq.cluster.name`.
+      `rabbitmq.queue`, `rabbitmq.record.queue_time_ms`, `rabbitmq.vhost.name`, and
+      `rabbitmq.cluster.name`.
     type: boolean
     default: false
   - ref: messaging.headers.included

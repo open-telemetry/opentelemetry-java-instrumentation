@@ -5,14 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.lettuce.v4_0;
 
-import static io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge.currentContext;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.COMMAND_CONTEXT_KEY;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.REACTIVE_DISPATCHER_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.lettuce.v4_0.LettuceSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import com.lambdaworks.redis.ReactiveCommandDispatcher;
 import com.lambdaworks.redis.api.StatefulConnection;
@@ -38,7 +36,7 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(isConstructor(), getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
-        named("call").and(takesArguments(1)).and(takesArgument(0, named("rx.Subscriber"))),
+        named("call").and(takesArgument(0, named("rx.Subscriber"))),
         getClass().getName() + "$CallAdvice");
   }
 
@@ -47,7 +45,7 @@ class LettuceReactiveCommandDispatcherInstrumentation implements TypeInstrumenta
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This ReactiveCommandDispatcher<?, ?, ?> dispatcher) {
-      REACTIVE_DISPATCHER_CONTEXT.set(dispatcher, currentContext());
+      REACTIVE_DISPATCHER_CONTEXT.set(dispatcher, Context.current());
     }
   }
 

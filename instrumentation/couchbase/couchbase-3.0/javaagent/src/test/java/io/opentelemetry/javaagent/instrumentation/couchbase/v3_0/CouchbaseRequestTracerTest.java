@@ -20,7 +20,6 @@ import com.couchbase.client.core.cnc.RequestTracer;
 import com.couchbase.client.core.env.CoreEnvironment;
 import com.couchbase.client.core.msg.RequestContext;
 import com.couchbase.client.core.msg.kv.BaseKeyValueRequest;
-import com.couchbase.client.core.service.ServiceType;
 import com.couchbase.client.java.env.ClusterEnvironment;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -51,7 +50,6 @@ class CouchbaseRequestTracerTest {
     InternalSpan requestSpan = requestTracer.internalSpan("get", parent);
 
     BaseKeyValueRequest request = mock(BaseKeyValueRequest.class);
-    when(request.serviceType()).thenReturn(ServiceType.KV);
     when(request.operationId()).thenReturn("0x17");
     when(request.key()).thenReturn("document".getBytes(UTF_8));
 
@@ -71,26 +69,24 @@ class CouchbaseRequestTracerTest {
     requestSpan.finish();
     parent.finish();
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                CouchbaseRequestTracerTest::assertParentSpan,
-                span -> assertRequestSpan(span, trace.getSpan(0)),
-                span ->
-                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(1))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(longKey("peer.latency"), experimental(42L))));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                CouchbaseRequestTracerTest::assertParentSpan,
-                span -> assertRequestSpan(span, trace.getSpan(0)));
-          }
-        });
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            CouchbaseRequestTracerTest::assertParentSpan,
+            span -> assertRequestSpan(span, trace.getSpan(0)),
+            span -> span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(1)),
+            span ->
+                span.hasName("dispatch_to_server")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(1))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(longKey("peer.latency"), experimental(42L))));
+      } else {
+        trace.hasSpansSatisfyingExactly(
+            CouchbaseRequestTracerTest::assertParentSpan,
+            span -> assertRequestSpan(span, trace.getSpan(0)));
+      }
+    });
   }
 
   @Test
@@ -101,7 +97,6 @@ class CouchbaseRequestTracerTest {
     InternalSpan requestSpan = requestTracer.internalSpan("get", parent);
 
     BaseKeyValueRequest request = mock(BaseKeyValueRequest.class);
-    when(request.serviceType()).thenReturn(ServiceType.KV);
     when(request.key()).thenReturn("document".getBytes(UTF_8));
 
     RequestContext requestContext = mock(RequestContext.class);
@@ -115,22 +110,21 @@ class CouchbaseRequestTracerTest {
     requestSpan.finish();
     parent.finish();
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("get").hasParent(trace.getSpan(0)),
-                span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
-                span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
-                span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)),
-                span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span -> span.hasName("get").hasParent(trace.getSpan(0)));
-          }
-        });
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> span.hasName("get").hasParent(trace.getSpan(0)),
+            span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
+            span -> span.hasName("request_encoding").hasParent(trace.getSpan(1)),
+            span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)),
+            span -> span.hasName("dispatch_to_server").hasParent(trace.getSpan(1)));
+      } else {
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span -> span.hasName("get").hasParent(trace.getSpan(0)));
+      }
+    });
   }
 
   private static void assertParentSpan(SpanDataAssert span) {
@@ -142,7 +136,6 @@ class CouchbaseRequestTracerTest {
         .hasName("get")
         .hasParent(parent)
         .hasAttributesSatisfyingExactly(
-            equalTo(stringKey("peer.service"), experimental("kv")),
             equalTo(stringKey("couchbase.operation_id"), experimental("0x17")),
             equalTo(stringKey("couchbase.document_id"), experimental("document")),
             equalTo(stringKey("couchbase.client_context.request_id"), experimental("abc")));

@@ -5,12 +5,8 @@
 
 package io.opentelemetry.instrumentation.sofarpc.v5_4;
 
-import static com.alipay.sofa.rpc.core.exception.RpcErrorType.SERVER_UNDECLARED_ERROR;
-
-import com.alipay.sofa.rpc.common.RemotingConstants;
 import com.alipay.sofa.rpc.config.AbstractInterfaceConfig;
 import com.alipay.sofa.rpc.config.ConsumerConfig;
-import com.alipay.sofa.rpc.core.exception.SofaRpcException;
 import com.alipay.sofa.rpc.core.request.SofaRequest;
 import com.alipay.sofa.rpc.core.response.SofaResponse;
 import com.alipay.sofa.rpc.filter.Filter;
@@ -18,6 +14,7 @@ import com.alipay.sofa.rpc.filter.FilterInvoker;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import javax.annotation.Nullable;
 
 final class TracingFilter extends Filter {
 
@@ -61,8 +58,7 @@ final class TracingFilter extends Filter {
     }
 
     if (isSynchronous) {
-      Throwable exception = extractException(response);
-      instrumenter.end(context, sofaRpcRequest, response, exception);
+      instrumenter.end(context, sofaRpcRequest, response, extractException(response));
     }
 
     return response;
@@ -92,7 +88,8 @@ final class TracingFilter extends Filter {
     return false;
   }
 
-  private static Throwable extractException(SofaResponse response) {
+  @Nullable
+  private static Throwable extractException(@Nullable SofaResponse response) {
     if (response == null) {
       return null;
     }
@@ -100,14 +97,6 @@ final class TracingFilter extends Filter {
     Object appResponse = response.getAppResponse();
     if (appResponse instanceof Throwable) {
       return (Throwable) appResponse;
-    }
-
-    if (response.isError()
-        || "true".equals(response.getResponseProp(RemotingConstants.HEAD_RESPONSE_ERROR))) {
-      String errorMsg = response.getErrorMsg();
-      if (errorMsg != null) {
-        return new SofaRpcException(SERVER_UNDECLARED_ERROR, errorMsg);
-      }
     }
 
     return null;

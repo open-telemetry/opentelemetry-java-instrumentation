@@ -22,7 +22,10 @@ import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcTargetParser;
+import io.opentelemetry.instrumentation.grpc.v1_6.internal.ParsedTarget;
 import java.util.concurrent.atomic.AtomicLongFieldUpdater;
+import javax.annotation.Nullable;
 
 final class TracingClientInterceptor implements ClientInterceptor {
 
@@ -49,22 +52,29 @@ final class TracingClientInterceptor implements ClientInterceptor {
   private final ContextPropagators propagators;
   private final boolean captureExperimentalSpanAttributes;
   private final boolean emitMessageEvents;
+  @Nullable private final ParsedTarget parsedTarget;
 
   TracingClientInterceptor(
       Instrumenter<GrpcRequest, Status> instrumenter,
       ContextPropagators propagators,
       boolean captureExperimentalSpanAttributes,
-      boolean emitMessageEvents) {
+      boolean emitMessageEvents,
+      @Nullable String target,
+      boolean computedTarget) {
     this.instrumenter = instrumenter;
     this.propagators = propagators;
     this.captureExperimentalSpanAttributes = captureExperimentalSpanAttributes;
     this.emitMessageEvents = emitMessageEvents;
+    this.parsedTarget =
+        computedTarget
+            ? GrpcTargetParser.parseComputedTarget(target)
+            : GrpcTargetParser.parse(target);
   }
 
   @Override
   public <REQUEST, RESPONSE> ClientCall<REQUEST, RESPONSE> interceptCall(
       MethodDescriptor<REQUEST, RESPONSE> method, CallOptions callOptions, Channel next) {
-    GrpcRequest request = new GrpcRequest(method, null, null, next.authority());
+    GrpcRequest request = GrpcRequest.createClientRequest(method, next.authority(), parsedTarget);
     Context parentContext = Context.current();
     if (!instrumenter.shouldStart(parentContext, request)) {
       return next.newCall(method, callOptions);
@@ -159,6 +169,13 @@ final class TracingClientInterceptor implements ClientInterceptor {
       }
 
       @Override
+      public void onHeaders(Metadata headers) {
+        try (Scope ignored = parentContext.makeCurrent()) {
+          delegate().onHeaders(headers);
+        }
+      }
+
+      @Override
       public void onMessage(RESPONSE message) {
         request.setResponseSize(BodySizeUtil.getBodySize(message));
         long messageId = RECEIVED_MESSAGE_ID_UPDATER.incrementAndGet(TracingClientCall.this);
@@ -173,7 +190,9 @@ final class TracingClientInterceptor implements ClientInterceptor {
 
       @Override
       public void onClose(Status status, Metadata trailers) {
-        request.setPeerSocketAddress(getAttributes().get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+        io.grpc.Attributes attributes = getAttributes();
+        request.setPeerSocketAddress(attributes.get(Grpc.TRANSPORT_ATTR_REMOTE_ADDR));
+        request.setLocalSocketAddress(GrpcAttributesUtil.getLocalSocketAddress(attributes));
         if (captureExperimentalSpanAttributes) {
           Span span = Span.fromContext(context);
           span.setAttribute(

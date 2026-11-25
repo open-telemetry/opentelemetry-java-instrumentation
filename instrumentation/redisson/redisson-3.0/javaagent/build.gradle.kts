@@ -1,5 +1,8 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
+  id("otel.testcontainers-testing")
 }
 
 muzzle {
@@ -26,9 +29,16 @@ dependencies {
   latestDepTestLibrary("org.redisson:redisson:3.16.+") // see redisson-3.17 module
 }
 
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation("org.redisson:redisson:${baseVersion("3.0.0").orLatest("3.16.+")}")
+    }
+  }
+}
+
 tasks {
   withType<Test>().configureEach {
     systemProperty("testLatestDeps", otelProps.testLatestDeps)
-    usesService(gradle.sharedServices.registrations["testcontainersBuildService"].service)
   }
 }

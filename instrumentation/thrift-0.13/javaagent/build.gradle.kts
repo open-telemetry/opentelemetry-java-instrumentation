@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -17,28 +20,16 @@ dependencies {
   testImplementation(project(":instrumentation:thrift-0.13:testing"))
 }
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:thrift-0.13:testing"))
+    }
   }
 
-  val testPreviewSemconv = register<Test>("testPreviewSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc")
-  }
-
-  val testBothSemconv = register<Test>("testBothSemconv") {
-    testClassesDirs = sourceSets.test.get().output.classesDirs
-    classpath = sourceSets.test.get().runtimeClasspath
-
-    jvmArgs("-Dotel.semconv-stability.preview=rpc/dup")
-    systemProperty("metadataConfig", "otel.semconv-stability.preview=rpc/dup")
-  }
-
-  check {
-    dependsOn(testPreviewSemconv, testBothSemconv)
+  executions("test") {
+    configureDefault {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
   }
 }

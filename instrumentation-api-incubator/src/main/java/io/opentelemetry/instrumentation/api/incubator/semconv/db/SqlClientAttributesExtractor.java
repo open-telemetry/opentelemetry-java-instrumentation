@@ -17,13 +17,11 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.internal.InternalNetworkAttributesExtractor;
 import io.opentelemetry.semconv.AttributeKeyTemplate;
-import io.opentelemetry.semconv.SchemaUrls;
 import java.util.Collection;
 import java.util.Map;
 import javax.annotation.Nullable;
@@ -39,7 +37,7 @@ import javax.annotation.Nullable;
  * SqlClientAttributesExtractorBuilder#setSingleOperationAndCollection(boolean)}.
  */
 public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider, SpanKeyProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   private static final AttributeKeyTemplate<String> DB_QUERY_PARAMETER =
       AttributeKeyTemplate.stringKeyTemplate("db.query.parameter");
@@ -173,10 +171,5 @@ public final class SqlClientAttributesExtractor<REQUEST, RESPONSE>
   @Override
   public SpanKey internalGetSpanKey() {
     return SpanKey.DB_CLIENT;
-  }
-
-  @Override
-  public String internalGetSchemaUrl() {
-    return SchemaUrls.V1_44_0;
   }
 }

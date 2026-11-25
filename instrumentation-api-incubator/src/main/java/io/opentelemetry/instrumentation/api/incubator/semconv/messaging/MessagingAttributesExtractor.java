@@ -5,10 +5,7 @@
 
 package io.opentelemetry.instrumentation.api.incubator.semconv.messaging;
 
-import static io.opentelemetry.instrumentation.api.internal.SemconvStability.messagingSchemaUrl;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
-import static java.util.Collections.emptyList;
-import static java.util.Collections.unmodifiableList;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -16,11 +13,9 @@ import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.instrumentation.api.internal.SchemaUrlProvider;
 import io.opentelemetry.instrumentation.api.internal.SpanKey;
 import io.opentelemetry.instrumentation.api.internal.SpanKeyProvider;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +31,7 @@ import javax.annotation.Nullable;
  * attribute extraction from request/response objects.
  */
 public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
-    implements AttributesExtractor<REQUEST, RESPONSE>, SchemaUrlProvider, SpanKeyProvider {
+    implements AttributesExtractor<REQUEST, RESPONSE>, SpanKeyProvider {
 
   // copied from MessagingIncubatingAttributes
   private static final AttributeKey<Long> MESSAGING_BATCH_MESSAGE_COUNT =
@@ -63,8 +58,8 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       AttributeKey.stringKey("messaging.operation.name");
   private static final AttributeKey<String> MESSAGING_OPERATION_TYPE =
       AttributeKey.stringKey("messaging.operation.type");
-  private static final AttributeKey<String> MESSAGING_SYSTEM =
-      AttributeKey.stringKey("messaging.system");
+  private static final AttributeKey<String> MESSAGING_SYSTEM_NAME =
+      AttributeKey.stringKey("messaging.system.name");
 
   /**
    * Creates the messaging attributes extractor for the given operation type.
@@ -132,7 +127,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         }
       }
     }
-    this.exactHeaderNames = unmodifiableList(new ArrayList<>(exactNames));
+    this.exactHeaderNames = new ArrayList<>(exactNames);
     this.exactHeaderAttributeKeys =
         CapturedMessageHeadersUtil.createLiteralAttributeKeys(exactHeaderNames);
     this.enumerateHeaderNames = enumerate;
@@ -140,7 +135,7 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
 
   @Override
   public void onStart(AttributesBuilder attributes, Context parentContext, REQUEST request) {
-    attributes.put(MESSAGING_SYSTEM, getter.getSystem(request));
+    attributes.put(MESSAGING_SYSTEM_NAME, getter.getSystem(request));
     boolean isTemporaryDestination = getter.isTemporaryDestination(request);
     if (isTemporaryDestination) {
       attributes.put(MESSAGING_DESTINATION_TEMPORARY, true);
@@ -169,28 +164,23 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
     attributes.put(MESSAGING_MESSAGE_ID, getter.getMessageId(request, response));
     attributes.put(MESSAGING_BATCH_MESSAGE_COUNT, getter.getBatchMessageCount(request, response));
-    String errorType = getter.getErrorType(request, response, error);
-    if (errorType == null && error != null) {
-      errorType = error.getClass().getName();
-    }
-    attributes.put(ERROR_TYPE, errorType);
+    attributes.put(ERROR_TYPE, getter.getErrorType(request, response, error));
 
-    for (String name : headerNames(request)) {
-      List<String> values = getter.getMessageHeader(request, name);
-      if (!values.isEmpty()) {
-        attributes.put(
-            CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
+    if (headers == null) {
+      return;
+    }
+    if (enumerateHeaderNames) {
+      for (String name : matchingHeaderNames(request, headers)) {
+        captureHeader(attributes, request, name);
+      }
+    } else {
+      for (String name : exactHeaderNames) {
+        captureHeader(attributes, request, name);
       }
     }
   }
 
-  private Collection<String> headerNames(REQUEST request) {
-    if (headers == null) {
-      return emptyList();
-    }
-    if (!enumerateHeaderNames) {
-      return exactHeaderNames;
-    }
+  private Set<String> matchingHeaderNames(REQUEST request, IncludeExclude headers) {
     Set<String> names = new LinkedHashSet<>(exactHeaderNames);
     for (String name : getter.getMessageHeaderNames(request)) {
       if (headers.matches(name)) {
@@ -198,6 +188,14 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
       }
     }
     return names;
+  }
+
+  private void captureHeader(AttributesBuilder attributes, REQUEST request, String name) {
+    List<String> values = getter.getMessageHeader(request, name);
+    if (!values.isEmpty()) {
+      attributes.put(
+          CapturedMessageHeadersUtil.attributeKey(name, exactHeaderAttributeKeys), values);
+    }
   }
 
   /**
@@ -219,10 +217,5 @@ public final class MessagingAttributesExtractor<REQUEST, RESPONSE>
         return SpanKey.CONSUMER_SETTLE;
     }
     throw new IllegalStateException("Can't possibly happen");
-  }
-
-  @Override
-  public String internalGetSchemaUrl() {
-    return messagingSchemaUrl();
   }
 }

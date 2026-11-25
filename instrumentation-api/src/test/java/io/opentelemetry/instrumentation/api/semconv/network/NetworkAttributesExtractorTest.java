@@ -150,4 +150,19 @@ class NetworkAttributesExtractorTest {
         .containsOnly(
             entry(NETWORK_LOCAL_ADDRESS, "1.2.3.4"), entry(NETWORK_PEER_ADDRESS, "4.3.2.1"));
   }
+
+  @Test
+  void doesNotSetPortsWithoutAddresses() {
+    Map<String, String> request = new HashMap<>();
+    request.put("localPort", "8080");
+    request.put("peerPort", "9090");
+
+    AttributesExtractor<Map<String, String>, Void> extractor =
+        NetworkAttributesExtractor.create(new TestNetworkAttributesGetter());
+    AttributesBuilder attributes = Attributes.builder();
+
+    extractor.onEnd(attributes, Context.root(), request, null, null);
+
+    assertThat(attributes.build()).isEmpty();
+  }
 }

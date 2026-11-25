@@ -24,7 +24,6 @@ import io.dropwizard.setup.Environment;
 import io.dropwizard.testing.ConfigOverride;
 import io.dropwizard.testing.DropwizardTestSupport;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
@@ -54,8 +53,7 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
             testApp(),
             null,
             ConfigOverride.config("server.applicationConnectors[0].port", String.valueOf(port)),
-            ConfigOverride.config(
-                "server.adminConnectors[0].port", String.valueOf(PortUtils.findOpenPort())));
+            ConfigOverride.config("server.adminConnectors[0].port", "0"));
     testSupport.before();
     return testSupport;
   }
@@ -76,20 +74,19 @@ class DropwizardTest extends AbstractHttpServerTest<DropwizardTestSupport<Config
     options.setResponseCodeOnNonStandardHttpMethod(405);
     options.setExpectedException(new IllegalStateException(EXCEPTION.getBody()));
 
-    options.setExpectedHttpRoute(
-        (endpoint, method) -> {
-          if (HttpConstants._OTHER.equals(method)) {
-            return getContextPath() + "/*";
-          }
+    options.setExpectedHttpRoute((endpoint, method) -> {
+      if (HttpConstants._OTHER.equals(method)) {
+        return getContextPath() + "/*";
+      }
 
-          if (NOT_FOUND.equals(endpoint)) {
-            return getContextPath() + "/*";
-          } else if (PATH_PARAM.equals(endpoint)) {
-            return getContextPath() + "/path/{id}/param";
-          } else {
-            return super.expectedHttpRoute(endpoint, method);
-          }
-        });
+      if (NOT_FOUND.equals(endpoint)) {
+        return getContextPath() + "/*";
+      } else if (PATH_PARAM.equals(endpoint)) {
+        return getContextPath() + "/path/{id}/param";
+      } else {
+        return super.expectedHttpRoute(endpoint, method);
+      }
+    });
   }
 
   Class<? extends Application<Configuration>> testApp() {

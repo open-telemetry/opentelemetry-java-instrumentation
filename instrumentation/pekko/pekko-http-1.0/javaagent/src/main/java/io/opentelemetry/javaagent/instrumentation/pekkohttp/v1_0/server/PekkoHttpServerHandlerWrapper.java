@@ -16,12 +16,15 @@ import org.apache.pekko.http.scaladsl.model.HttpResponse;
 import scala.Function1;
 import scala.concurrent.ExecutionContext;
 import scala.concurrent.Future;
+import scala.concurrent.Promise;
+import scala.concurrent.Promise$;
 import scala.runtime.AbstractFunction1;
 import scala.util.Success;
 import scala.util.Try;
 
 /**
- * Wraps the handler function that is passed to {@code Http2Ext.bindAndHandleAsync}.
+ * Wraps the handler function that is passed to {@code HttpExt.bindAndHandleAsync} or {@code
+ * Http2Ext.bindAndHandleAsync}.
  *
  * <p>With http/1.1 requests and responses are matched by their order in the connection flow, see
  * {@link PekkoHttpServerTracer}. Http/2 multiplexes concurrent streams on a single connection, so
@@ -53,6 +56,10 @@ public class PekkoHttpServerHandlerWrapper
     HttpRequest serverRequest = request;
     PekkoTracingRequest tracedRequest =
         serverRequest.getAttribute(PekkoTracingRequest.ATTR_KEY).orElse(null);
+    if (tracedRequest == null && !isHttp2(serverRequest)) {
+      // http/1.1 requests are already handled by PekkoFlowWrapper
+      return handler.apply(serverRequest);
+    }
     if (tracedRequest != null) {
       // remove the attribute before the request is passed to user code
       serverRequest = (HttpRequest) serverRequest.removeAttribute(PekkoTracingRequest.ATTR_KEY);
@@ -94,28 +101,43 @@ public class PekkoHttpServerHandlerWrapper
       return null;
     }
 
-    return responseFuture.transform(new EndSpanHandler(tracingRequest), executionContext);
+    // the response future is completed by application code, with the context of this request
+    // current, completing the future that is handed back to pekko with that context still current
+    // would let it flow into the stream callbacks that dispatch the next requests of the
+    // connection, whose handlers would then run as children of this request
+    Promise<HttpResponse> promise = Promise$.MODULE$.apply();
+    responseFuture.onComplete(new EndSpanHandler(tracingRequest, promise), executionContext);
+    return promise.future();
   }
 
   private static boolean isHttp2(HttpRequest request) {
     return request.getAttribute(Http2$.MODULE$.streamId()).isPresent();
   }
 
-  private static class EndSpanHandler
-      extends AbstractFunction1<Try<HttpResponse>, Try<HttpResponse>> {
+  private static class EndSpanHandler extends AbstractFunction1<Try<HttpResponse>, Object> {
     private final PekkoTracingRequest tracingRequest;
+    private final Promise<HttpResponse> promise;
 
-    EndSpanHandler(PekkoTracingRequest tracingRequest) {
+    EndSpanHandler(PekkoTracingRequest tracingRequest, Promise<HttpResponse> promise) {
       this.tracingRequest = tracingRequest;
+      this.promise = promise;
     }
 
     @Override
-    public Try<HttpResponse> apply(Try<HttpResponse> result) {
-      if (result.isSuccess()) {
-        return new Success<>(PekkoHttpServerSingletons.endSpan(tracingRequest, result.get()));
+    public Object apply(Try<HttpResponse> result) {
+      Try<HttpResponse> response = result;
+      try {
+        if (result.isSuccess()) {
+          response = new Success<>(PekkoHttpServerSingletons.endSpan(tracingRequest, result.get()));
+        } else {
+          PekkoHttpServerSingletons.endSpanWithError(tracingRequest, result.failed().get());
+        }
+      } finally {
+        try (Scope ignored = Context.root().makeCurrent()) {
+          promise.complete(response);
+        }
       }
-      PekkoHttpServerSingletons.endSpanWithError(tracingRequest, result.failed().get());
-      return result;
+      return null;
     }
   }
 }

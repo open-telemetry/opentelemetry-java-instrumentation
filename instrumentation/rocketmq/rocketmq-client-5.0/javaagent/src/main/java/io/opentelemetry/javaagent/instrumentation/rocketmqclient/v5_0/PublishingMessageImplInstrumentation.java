@@ -16,7 +16,6 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Map;
 import net.bytebuddy.asm.Advice;
-import net.bytebuddy.asm.Advice.AssignReturned;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.rocketmq.client.apis.message.Message;
@@ -42,7 +41,12 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
             .and(takesArgument(0, named("org.apache.rocketmq.client.apis.message.Message")))
             .and(
                 takesArgument(
-                    1, named("org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
+                    1,
+                    // The constructor declares ProducerSettings in 5.0.0 and
+                    // PublishingSettings in 5.0.1+.
+                    namedOneOf(
+                        "org.apache.rocketmq.client.java.impl.producer.ProducerSettings",
+                        "org.apache.rocketmq.client.java.impl.producer.PublishingSettings")))
             .and(takesArgument(2, boolean.class)),
         getClass().getName() + "$ConstructorAdvice");
     transformer.applyAdviceToMethod(
@@ -66,19 +70,17 @@ final class PublishingMessageImplInstrumentation implements TypeInstrumentation 
   @SuppressWarnings("unused")
   public static class GetPropertiesAdvice {
     /** Update the message properties to propagate context recorded by {@link MessageMapSetter}. */
-    @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static Map<String, String> onExit(
+    public static void onExit(
         @Advice.This MessageImpl messageImpl, @Advice.Return Map<String, String> properties) {
       if (!(messageImpl instanceof PublishingMessageImpl)) {
-        return properties;
+        return;
       }
       PublishingMessageImpl message = (PublishingMessageImpl) messageImpl;
       Map<String, String> extraProperties = VirtualFieldStore.getExtraPropertiesByMessage(message);
       if (extraProperties != null) {
         properties.putAll(extraProperties);
       }
-      return properties;
     }
   }
 }

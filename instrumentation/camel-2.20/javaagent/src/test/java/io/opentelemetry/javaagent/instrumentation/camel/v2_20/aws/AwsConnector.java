@@ -28,7 +28,6 @@ import com.amazonaws.services.sqs.model.PurgeQueueRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageRequest;
 import com.amazonaws.services.sqs.model.ReceiveMessageResult;
 import com.amazonaws.services.sqs.model.SendMessageRequest;
-import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import java.util.EnumSet;
 import org.elasticmq.rest.sqs.SQSRestServer;
 import org.elasticmq.rest.sqs.SQSRestServerBuilder;
@@ -54,9 +53,9 @@ class AwsConnector {
   }
 
   static AwsConnector elasticMq() {
-    int sqsPort = PortUtils.findOpenPort();
     SQSRestServer sqsRestServer =
-        SQSRestServerBuilder.withPort(sqsPort).withInterface("localhost").start();
+        SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
+    int sqsPort = sqsRestServer.waitUntilStarted().localAddress().getPort();
 
     AWSStaticCredentialsProvider credentials =
         new AWSStaticCredentialsProvider(new BasicAWSCredentials("x", "x"));

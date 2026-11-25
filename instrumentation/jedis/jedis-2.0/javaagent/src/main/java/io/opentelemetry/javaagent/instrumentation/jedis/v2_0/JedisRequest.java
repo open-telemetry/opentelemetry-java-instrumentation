@@ -11,7 +11,9 @@ import com.google.auto.value.AutoValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.RedisCommandSanitizer;
-import java.net.InetSocketAddress;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.SocketAddressUtil;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorRequest;
 import java.net.Socket;
 import java.net.SocketAddress;
 import java.util.List;
@@ -21,12 +23,13 @@ import redis.clients.jedis.Connection;
 import redis.clients.jedis.Protocol;
 
 @AutoValue
-public abstract class JedisRequest {
+public abstract class JedisRequest implements JedisServerErrorRequest {
   private static final RedisCommandSanitizer sanitizer =
       RedisCommandSanitizer.create(
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "jedis"));
   private static final int LIMIT = 32 * 1024;
-  @Nullable private InetSocketAddress peerAddress;
+  @Nullable private SocketAddress peerAddress;
+  @Nullable private JedisServerErrorContext serverErrorContext;
 
   public static JedisRequest create(Connection connection, Protocol.Command command) {
     return create(connection, command, emptyList());
@@ -44,7 +47,7 @@ public abstract class JedisRequest {
   }
 
   public static JedisRequest createTransaction(
-      List<JedisRequest> requests, @Nullable InetSocketAddress multiPeerAddress) {
+      List<JedisRequest> requests, @Nullable SocketAddress multiPeerAddress) {
     JedisRequest request = createBatch(requests, "MULTI");
     if (request.peerAddress == null) {
       request.peerAddress = multiPeerAddress;
@@ -83,19 +86,28 @@ public abstract class JedisRequest {
   @Nullable
   public abstract Long getBatchSize();
 
+  @Override
+  public void setServerErrorContext(JedisServerErrorContext context) {
+    serverErrorContext = context;
+  }
+
+  public boolean isServerError(@Nullable Throwable error) {
+    return error != null && serverErrorContext != null && serverErrorContext.isServerError(error);
+  }
+
   public void capturePeerAddress() {
     Socket socket = getConnection().getSocket();
     if (socket == null || !socket.isConnected() || socket.isClosed()) {
       return;
     }
     SocketAddress address = socket.getRemoteSocketAddress();
-    if (address instanceof InetSocketAddress && !((InetSocketAddress) address).isUnresolved()) {
-      peerAddress = (InetSocketAddress) address;
+    if (SocketAddressUtil.hasAddress(address)) {
+      peerAddress = address;
     }
   }
 
   @Nullable
-  public InetSocketAddress getPeerAddress() {
+  public SocketAddress getPeerAddress() {
     return peerAddress;
   }
 
@@ -106,9 +118,9 @@ public abstract class JedisRequest {
   }
 
   @Nullable
-  private static InetSocketAddress lastPeerAddress(List<JedisRequest> requests) {
+  private static SocketAddress lastPeerAddress(List<JedisRequest> requests) {
     for (int i = requests.size() - 1; i >= 0; i--) {
-      InetSocketAddress peerAddress = requests.get(i).getPeerAddress();
+      SocketAddress peerAddress = requests.get(i).getPeerAddress();
       if (peerAddress != null) {
         return peerAddress;
       }

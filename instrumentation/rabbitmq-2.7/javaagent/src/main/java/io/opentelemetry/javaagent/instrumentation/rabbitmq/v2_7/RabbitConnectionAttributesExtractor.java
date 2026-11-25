@@ -26,10 +26,10 @@ import javax.annotation.Nullable;
 class RabbitConnectionAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
-  private static final AttributeKey<String> MESSAGING_RABBITMQ_VHOST_NAME =
-      AttributeKey.stringKey("messaging.rabbitmq.vhost.name");
-  private static final AttributeKey<String> MESSAGING_RABBITMQ_CLUSTER_NAME =
-      AttributeKey.stringKey("messaging.rabbitmq.cluster.name");
+  private static final AttributeKey<String> RABBITMQ_VHOST_NAME =
+      AttributeKey.stringKey("rabbitmq.vhost.name");
+  private static final AttributeKey<String> RABBITMQ_CLUSTER_NAME =
+      AttributeKey.stringKey("rabbitmq.cluster.name");
 
   private final Function<REQUEST, Connection> connectionExtractor;
 
@@ -45,11 +45,11 @@ class RabbitConnectionAttributesExtractor<REQUEST, RESPONSE>
     }
     String vhost = VIRTUAL_HOST.get(connection);
     if (vhost != null && !vhost.isEmpty()) {
-      attributes.put(MESSAGING_RABBITMQ_VHOST_NAME, vhost);
+      attributes.put(RABBITMQ_VHOST_NAME, vhost);
     }
     String clusterName = clusterName(connection);
     if (clusterName != null && !clusterName.isEmpty()) {
-      attributes.put(MESSAGING_RABBITMQ_CLUSTER_NAME, clusterName);
+      attributes.put(RABBITMQ_CLUSTER_NAME, clusterName);
     }
   }
 

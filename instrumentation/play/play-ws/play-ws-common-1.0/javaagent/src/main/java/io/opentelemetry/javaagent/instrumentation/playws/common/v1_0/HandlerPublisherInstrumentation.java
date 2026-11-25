@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -40,7 +40,7 @@ public class HandlerPublisherInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(0))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Subscriber<?> enter(@Advice.Argument(0) Subscriber<?> subscriber) {
-      return new SubscriberWrapper<>(subscriber, Java8BytecodeBridge.currentContext());
+      return new SubscriberWrapper<>(subscriber, Context.current());
     }
   }
 }

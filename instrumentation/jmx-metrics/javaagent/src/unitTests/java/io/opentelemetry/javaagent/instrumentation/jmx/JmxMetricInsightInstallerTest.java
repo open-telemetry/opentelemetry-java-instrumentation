@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.jmx;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.singletonMap;
@@ -44,9 +45,9 @@ class JmxMetricInsightInstallerTest {
     JmxMetricInsightInstaller.configure(builder, config(emptyMap()));
 
     verify(builder)
-        .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+        .setBundledMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
     verify(builder)
-        .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().setExcluded("*").build());
+        .setUnstableBundledMetricsFilter(IncludeExclude.builder().setExcluded("*").build());
   }
 
   @Test
@@ -68,9 +69,9 @@ class JmxMetricInsightInstallerTest {
         config(singletonMap("otel.jmx.metrics.experimental.included", "tomcat.*,kafka.*")));
 
     verify(builder)
-        .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+        .setBundledMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
     verify(builder)
-        .setInternalMetricsUnstableMetricsFilter(
+        .setUnstableBundledMetricsFilter(
             IncludeExclude.builder().setIncluded("tomcat.*", "kafka.*").build());
   }
 
@@ -109,8 +110,16 @@ class JmxMetricInsightInstallerTest {
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx",
-        metric -> metric.hasName("tomcat.test.stable"),
-        metric -> metric.hasName("tomcat.test.unstable"));
+        metric ->
+            metric
+                .hasName("tomcat.test.stable")
+                .satisfies(
+                    data -> assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()),
+        metric ->
+            metric
+                .hasName("tomcat.test.unstable")
+                .satisfies(data ->
+                    assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
   }
 
   @Test
@@ -154,12 +163,8 @@ class JmxMetricInsightInstallerTest {
         metric ->
             metric
                 .hasName("tomcat.test.unstable")
-                .hasLongGaugeSatisfying(
-                    gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point.hasAttributes(
-                                    Attributes.of(stringKey("test.source"), "custom")))));
+                .hasLongGaugePointsSatisfying(point ->
+                    point.hasAttributes(Attributes.of(stringKey("test.source"), "custom"))));
   }
 
   @Test

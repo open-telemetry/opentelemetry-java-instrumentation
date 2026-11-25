@@ -23,6 +23,8 @@ import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.G;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.Trace;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.TracedClass;
 import io.opentelemetry.javaagent.tooling.bytebuddy.matcher.testclasses.UntracedClass;
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.stream.Stream;
 import net.bytebuddy.description.method.MethodDescription;
 import org.junit.jupiter.api.Test;
@@ -56,6 +58,40 @@ class HasSuperMethodMatcherTest {
   }
 
   @Test
+  void testCovariantInterfaceMethod() {
+    Method implementation =
+        method(CovariantInterfaceImplementation.class, String.class, String.class, false);
+    Method bridge =
+        method(CovariantInterfaceImplementation.class, Object.class, String.class, true);
+    Method overload =
+        method(CovariantInterfaceImplementation.class, String.class, Integer.class, false);
+
+    assertThat(
+            hasSuperMethod(isAnnotatedWith(Trace.class))
+                .matches(new MethodDescription.ForLoadedMethod(implementation)))
+        .isTrue();
+    assertThat(
+            hasSuperMethod(isAnnotatedWith(Trace.class))
+                .matches(new MethodDescription.ForLoadedMethod(bridge)))
+        .isFalse();
+    assertThat(
+            hasSuperMethod(isAnnotatedWith(Trace.class))
+                .matches(new MethodDescription.ForLoadedMethod(overload)))
+        .isFalse();
+  }
+
+  @Test
+  void testCovariantSuperclassMethod() {
+    Method implementation =
+        method(CovariantSuperclassImplementation.class, String.class, String.class, false);
+
+    assertThat(
+            hasSuperMethod(isAnnotatedWith(Trace.class))
+                .matches(new MethodDescription.ForLoadedMethod(implementation)))
+        .isTrue();
+  }
+
+  @Test
   void testConstructorNeverMatches() {
     MethodDescription method = mock(MethodDescription.class);
     when(method.isConstructor()).thenReturn(true);
@@ -68,21 +104,59 @@ class HasSuperMethodMatcherTest {
   }
 
   @Test
-  void testTraversalExceptions() throws Exception {
+  void testTraversalExceptions() {
     MethodDescription method = mock(MethodDescription.class);
-    MethodDescription.SignatureToken sigToken =
-        new MethodDescription.ForLoadedMethod(A.class.getDeclaredMethod("a")).asSignatureToken();
 
     when(method.isConstructor()).thenReturn(false);
-    when(method.asSignatureToken()).thenReturn(sigToken);
+    when(method.isBridge()).thenReturn(false);
     when(method.getDeclaringType()).thenReturn(null);
 
     boolean result = hasSuperMethod(none()).matches(method);
 
     assertThat(result).isFalse();
     verify(method, times(1)).isConstructor();
-    verify(method, times(1)).asSignatureToken();
+    verify(method, times(1)).isBridge();
     verify(method, times(1)).getDeclaringType();
     verifyNoMoreInteractions(method);
+  }
+
+  private static Method method(
+      Class<?> type, Class<?> returnType, Class<?> parameterType, boolean bridge) {
+    return Arrays.stream(type.getDeclaredMethods())
+        .filter(method -> method.getReturnType().equals(returnType))
+        .filter(method -> method.getParameterTypes()[0].equals(parameterType))
+        .filter(method -> method.isBridge() == bridge)
+        .findFirst()
+        .orElseThrow(AssertionError::new);
+  }
+
+  interface CovariantInterface {
+    @Trace
+    Object get(String value);
+  }
+
+  static class CovariantInterfaceImplementation implements CovariantInterface {
+    @Override
+    public String get(String value) {
+      return value;
+    }
+
+    public String get(Integer value) {
+      return value.toString();
+    }
+  }
+
+  static class CovariantSuperclass {
+    @Trace
+    public Object get(String value) {
+      return value;
+    }
+  }
+
+  static class CovariantSuperclassImplementation extends CovariantSuperclass {
+    @Override
+    public String get(String value) {
+      return value;
+    }
   }
 }

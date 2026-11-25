@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.resources.internal;
 
+import static io.opentelemetry.instrumentation.testing.util.ResourceSchemaAssertions.assertResourceEntitySchemasMatchSdk;
 import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toSet;
-import static org.assertj.core.api.Assertions.as;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -17,9 +17,10 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.resources.Resource;
+import io.opentelemetry.sdk.resources.internal.Entity;
+import io.opentelemetry.sdk.resources.internal.EntityUtil;
 import java.io.ByteArrayInputStream;
 import java.util.Set;
-import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -34,6 +35,10 @@ class ResourceDeclarativeConfigTest {
     String yaml =
         "file_format: \"1.1\"\n"
             + "tracer_provider:\n"
+            + "  processors:\n"
+            + "    - simple:\n"
+            + "        exporter:\n"
+            + "          test:\n"
             + "resource:\n"
             + "  attributes:\n"
             + "    - name: service.name\n"
@@ -46,31 +51,36 @@ class ResourceDeclarativeConfigTest {
     OpenTelemetrySdk openTelemetrySdk =
         DeclarativeConfiguration.parseAndCreate(new ByteArrayInputStream(yaml.getBytes(UTF_8)))
             .getSdk();
-    assertThat(openTelemetrySdk.getSdkTracerProvider())
-        .extracting("sharedState.resource", as(InstanceOfAssertFactories.type(Resource.class)))
-        .satisfies(
-            resource -> {
-              // From .resource.attributes
-              assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo("my-service");
+    openTelemetrySdk.getTracer("test").spanBuilder("test").startSpan().end();
+    testing.waitForTraces(1);
+    assertThat(testing.spans()).hasSize(1);
+    Resource exportedResource = testing.spans().get(0).getResource();
+    assertThat(exportedResource)
+        .satisfies(resource -> {
+          // From .resource.attributes
+          assertThat(resource.getAttribute(SERVICE_NAME)).isEqualTo("my-service");
 
-              // From ComponentProvider SPI
-              Set<String> attributeKeys =
-                  resource.getAttributes().asMap().keySet().stream()
-                      .map(AttributeKey::getKey)
-                      .collect(toSet());
-              // ContainerResourceComponentProvider - no container attributes reliably provided
-              // HostIdResourceComponentProvider - host.id attribute not reliably provided
-              // HostResourceComponentProvider
-              assertThat(attributeKeys).contains("host.arch", "host.name");
-              // OsResourceComponentProvider
-              assertThat(attributeKeys).contains("os.description", "os.type");
-              // ProcessResourceComponentProvider
-              assertThat(attributeKeys).contains("process.executable.path", "process.pid");
-              assertThat(attributeKeys)
-                  .doesNotContain("process.command_args", "process.command_line");
-              // ProcessRuntimeResourceComponentProvider
-              assertThat(attributeKeys).contains("process.runtime.description");
-              assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");
-            });
+          // From ComponentProvider SPI
+          Set<String> attributeKeys =
+              resource.getAttributes().asMap().keySet().stream()
+                  .map(AttributeKey::getKey)
+                  .collect(toSet());
+          // ContainerResourceComponentProvider - no container attributes reliably provided
+          // HostIdResourceComponentProvider - host.id attribute not reliably provided
+          // HostResourceComponentProvider
+          assertThat(attributeKeys).contains("host.arch", "host.name");
+          // OsResourceComponentProvider
+          assertThat(attributeKeys).contains("os.description", "os.type");
+          // ProcessResourceComponentProvider
+          assertThat(attributeKeys).contains("process.executable.path", "process.pid");
+          assertThat(attributeKeys).doesNotContain("process.command_args", "process.command_line");
+          // ProcessRuntimeResourceComponentProvider
+          assertThat(attributeKeys).contains("process.runtime.description");
+          assertThat(attributeKeys).contains("process.runtime.name", "process.runtime.version");
+          assertThat(EntityUtil.getEntities(resource))
+              .extracting(Entity::getType)
+              .contains("process.runtime");
+          assertResourceEntitySchemasMatchSdk(resource);
+        });
   }
 }

@@ -164,6 +164,11 @@ instrumented library: some of them expose interceptor/listener interfaces that c
 into the library, some others have a library interface that you can use to implement a decorator that
 emits telemetry when used.
 
+Factories and builders for instrumented library objects should return the library's interface or base
+class when it provides the full caller-facing contract. Concrete types are appropriate when required
+for supported setup or framework integration. This rule does not apply to OpenTelemetry-defined types
+or SPIs.
+
 Consider the following builder class:
 
 ```java
@@ -206,7 +211,7 @@ plugins {
 }
 
 dependencies {
-  api(project(":testing-common"))
+  api(project(":testing:testing-common"))
 
   // ...
 }
@@ -326,7 +331,7 @@ method. Unlike the library instrumentation, the javaagent instrumentation is sup
 without any explicit user code modification. Add an `AgentInstrumentationExtension` and try running
 tests in this class. All tests should pass.
 
-Note that all the tests inside the `javaagent` module are run using the `agent-for-testing`
+Note that all the tests inside the `javaagent` module are run using the `javaagent-for-testing`
 javaagent, with the instrumentation being loaded as an extension. This is done to perform the same
 bytecode instrumentation as when the agent is run against a normal app, and means that the javaagent
 instrumentation will be hidden inside the javaagent (loaded by the `AgentClassLoader`) and will not
@@ -463,27 +468,27 @@ accessible from the instrumented application code.
 Ideally javaagent instrumentation is just a thin wrapper over library instrumentation, and so there
 is no need to write unit tests that directly access the javaagent instrumentation classes.
 
-If you still want to write a unit test against javaagent instrumentation, add a JVM test suite
-whose name ends with `unitTests` to the `javaagent` module. These suites run without the javaagent
-and keep the instrumentation classes on the test classpath:
+If you still want to write a unit test against javaagent instrumentation, use the `unitTests`
+helper in a project applying `otel.javaagent-testing` (also applied by
+`otel.javaagent-instrumentation`). The helper requires the Javaagent testing plugin; ordinary
+Java and library projects should put their tests in `src/test` instead.
+It registers a JVM test suite with the current project as a
+dependency and includes it in `check`. Its test task and execution variants run without the
+javaagent and keep the instrumentation classes on the test classpath:
 
 ```kotlin
-testing {
-  suites {
-    register<JvmTestSuite>("unitTests") {
-      dependencies {
-        implementation(project())
-      }
-    }
-  }
-}
+import io.opentelemetry.instrumentation.gradle.unitTests
 
-tasks {
-  check {
-    dependsOn(testing.suites)
-  }
+testing.suites {
+  unitTests()
 }
 ```
 
-Place the tests under `src/unitTests`. Add any test-only dependencies to the suite's
-`dependencies` block.
+Place Java tests under `src/unitTests/java` and resources under `src/unitTests/resources`.
+Pass a configuration block to `unitTests` to add suite-local dependencies. The conventions
+already provide the common test libraries, instrumentation API, and incubating API.
+
+For a separate unit-test source set or dependency graph, use a second named suite such as
+`unitTests("protostellarUnitTests") { ... }`. Its name must end in `unitTests`, case-insensitively,
+and its sources go under `src/protostellarUnitTests`. Use an execution variant instead when the
+same compiled tests and dependencies only need different flags or filters.

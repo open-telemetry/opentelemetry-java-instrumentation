@@ -7,6 +7,8 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.lettuce.core.RedisCommandTimeoutException;
+import io.lettuce.core.RedisNoScriptException;
 import org.junit.jupiter.api.Test;
 
 class LettuceDbAttributesGetterTest {
@@ -14,19 +16,30 @@ class LettuceDbAttributesGetterTest {
   private final LettuceDbAttributesGetter getter = new LettuceDbAttributesGetter();
 
   @Test
-  void returnsRedisErrorPrefix() {
-    LettuceResponse response =
-        new LettuceResponse(
-            "WRONGTYPE Operation against a key holding the wrong kind of value",
-            new IllegalStateException());
-
-    assertThat(getter.getErrorType(null, response, response.getThrowable())).isEqualTo("WRONGTYPE");
+  void returnsExceptionFallbackWithoutResponse() {
+    assertThat(getter.getErrorType(null, null, new RedisCommandTimeoutException("timed out")))
+        .isEqualTo(RedisCommandTimeoutException.class.getName());
+    assertThat(
+            getter.getDbResponseStatusCode(
+                null, null, new RedisCommandTimeoutException("timed out")))
+        .isNull();
   }
 
   @Test
-  void ignoresClientErrorMessage() {
-    LettuceResponse response = new LettuceResponse("Connection closed", null);
+  void delegatesExceptionFallbackWhenReplyHasNoPrefix() {
+    LettuceResponse response = LettuceResponse.fromErrorMessage("   ");
 
-    assertThat(getter.getErrorType(null, response, null)).isNull();
+    assertThat(getter.getErrorType(null, response, null)).isEqualTo("_OTHER");
+    assertThat(getter.getDbResponseStatusCode(null, response, null)).isNull();
+    assertThat(getter.getErrorType(null, response, new RedisNoScriptException("missing script")))
+        .isEqualTo(RedisNoScriptException.class.getName());
+  }
+
+  @Test
+  void doesNotInventExceptionClassForUnknownFailure() {
+    assertThat(getter.getErrorType(null, LettuceResponse.unknownFailure(), null))
+        .isEqualTo("_OTHER");
+    assertThat(getter.getDbResponseStatusCode(null, LettuceResponse.unknownFailure(), null))
+        .isNull();
   }
 }

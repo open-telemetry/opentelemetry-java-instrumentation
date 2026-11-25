@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingExecutionInterceptor.SDK_REQUEST_ATTRIBUTE;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
+import static java.util.logging.Level.FINE;
 import static java.util.stream.Collectors.toList;
 
 import io.opentelemetry.api.common.AttributeKey;
@@ -79,6 +80,10 @@ import software.amazon.awssdk.thirdparty.jackson.core.JsonFactory;
  * any time.
  */
 public final class BedrockRuntimeImpl {
+
+  private static final java.util.logging.Logger logger =
+      java.util.logging.Logger.getLogger(BedrockRuntimeImpl.class.getName());
+
   private BedrockRuntimeImpl() {}
 
   // copied from GenAiIncubatingAttributes
@@ -583,16 +588,7 @@ public final class BedrockRuntimeImpl {
           (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
     }
 
-    TokenUsage usage = null;
-    if (sdkResponse instanceof ConverseResponse) {
-      usage = ((ConverseResponse) sdkResponse).usage();
-    } else {
-      BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
-          BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
-      if (streamHandler != null) {
-        usage = streamHandler.usage;
-      }
-    }
+    TokenUsage usage = getConverseTokenUsage(response);
     if (usage != null) {
       return integerToLong(usage.inputTokens());
     }
@@ -657,6 +653,37 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
+  static Long getUsageCacheReadInputTokens(Response response) {
+    return getTokenUsageCount(response, "cacheReadInputTokens");
+  }
+
+  @Nullable
+  static Long getUsageCacheCreationInputTokens(Response response) {
+    return getTokenUsageCount(response, "cacheWriteInputTokens");
+  }
+
+  @Nullable
+  private static Long getTokenUsageCount(Response response, String fieldName) {
+    TokenUsage usage = getConverseTokenUsage(response);
+    if (usage == null) {
+      return null;
+    }
+    // The cache token fields were added in bedrockruntime 2.31.12, after the version this library
+    // compiles against, so they are read by name and are absent on older SDKs.
+    return usage.getValueForField(fieldName, Integer.class).map(Integer::longValue).orElse(null);
+  }
+
+  @Nullable
+  private static TokenUsage getConverseTokenUsage(Response response) {
+    if (response.getSdkResponse() instanceof ConverseResponse) {
+      return ((ConverseResponse) response.getSdkResponse()).usage();
+    }
+    BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
+        BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
+    return streamHandler != null ? streamHandler.usage : null;
+  }
+
+  @Nullable
   static Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
     SdkResponse sdkResponse = response.getSdkResponse();
     if (sdkResponse instanceof InvokeModelResponse) {
@@ -665,16 +692,7 @@ public final class BedrockRuntimeImpl {
           (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
     }
 
-    TokenUsage usage = null;
-    if (sdkResponse instanceof ConverseResponse) {
-      usage = ((ConverseResponse) sdkResponse).usage();
-    } else {
-      BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
-          BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
-      if (streamHandler != null) {
-        usage = streamHandler.usage;
-      }
-    }
+    TokenUsage usage = getConverseTokenUsage(response);
     if (usage != null) {
       return integerToLong(usage.outputTokens());
     }
@@ -1061,16 +1079,15 @@ public final class BedrockRuntimeImpl {
         if (toolResultContent != null && toolResultContent.isList()) {
           List<ToolResultContentBlock> toolResultContentBlocks =
               toolResultContent.asList().stream()
-                  .map(
-                      toolResultContentBlockDoc -> {
-                        if (toolResultContentBlockDoc.isMap()) {
-                          Document json = toolResultContentBlockDoc.asMap().get("json");
-                          if (json != null) {
-                            return ToolResultContentBlock.builder().json(json).build();
-                          }
-                        }
-                        return null;
-                      })
+                  .map(toolResultContentBlockDoc -> {
+                    if (toolResultContentBlockDoc.isMap()) {
+                      Document json = toolResultContentBlockDoc.asMap().get("json");
+                      if (json != null) {
+                        return ToolResultContentBlock.builder().json(json).build();
+                      }
+                    }
+                    return null;
+                  })
                   .filter(Objects::nonNull)
                   .collect(toList());
           resultBlockBuilder.content(toolResultContentBlocks);
@@ -1192,6 +1209,7 @@ public final class BedrockRuntimeImpl {
     }
   }
 
+  // visible for testing
   abstract static class BedrockRuntimeStreamResponseHandler<R, S>
       implements EventStreamResponseHandler<R, S>, ImplicitContextKeyed {
     @Nullable
@@ -1213,6 +1231,7 @@ public final class BedrockRuntimeImpl {
     List<String> stopReasons;
     TokenUsage usage;
 
+    // visible for testing
     BedrockRuntimeStreamResponseHandler(EventStreamResponseHandler<R, S> delegate) {
       this.delegate = delegate;
     }
@@ -1227,11 +1246,21 @@ public final class BedrockRuntimeImpl {
     @Override
     public final void onEventStream(SdkPublisher<S> sdkPublisher) {
       delegate.onEventStream(
-          sdkPublisher.map(
-              event -> {
-                handleEvent(event);
-                return event;
-              }));
+          sdkPublisher.map(event -> {
+            handleEventSafely(event);
+            return event;
+          }));
+    }
+
+    // Telemetry parsing must never change the behavior of the application's stream.
+    // visible for testing
+    final void handleEventSafely(S event) {
+      try {
+        handleEvent(event);
+      } catch (RuntimeException e) {
+        // Keep the original event flowing to the delegate subscriber.
+        logger.log(FINE, "Failed to handle event", e);
+      }
     }
 
     @Override

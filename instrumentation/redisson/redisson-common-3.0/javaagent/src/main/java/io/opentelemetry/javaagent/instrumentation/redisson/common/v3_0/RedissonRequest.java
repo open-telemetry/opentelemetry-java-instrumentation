@@ -18,7 +18,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisS
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
@@ -56,8 +56,7 @@ public abstract class RedissonRequest {
     MethodHandles.Lookup lookup = MethodHandles.publicLookup();
     try {
       Class<?> promiseClass =
-          Class.forName(
-              "org.redisson.misc.RPromise", false, RedissonRequest.class.getClassLoader());
+          Class.forName("org.redisson.misc.RPromise", false, commandClass.getClassLoader());
       // try versions older than 3.16.8
       return lookup.findVirtual(commandClass, "getPromise", MethodType.methodType(promiseClass));
     } catch (NoSuchMethodException | ClassNotFoundException ignored) {
@@ -79,7 +78,7 @@ public abstract class RedissonRequest {
    * uniformly exposed across supported Redisson versions.
    */
   public static RedissonRequest create(
-      @Nullable InetSocketAddress address,
+      @Nullable SocketAddress address,
       Object command,
       @Nullable Long databaseIndex,
       @Nullable RedisServerTarget serverTarget) {
@@ -87,7 +86,7 @@ public abstract class RedissonRequest {
   }
 
   @Nullable
-  public abstract InetSocketAddress getAddress();
+  public abstract SocketAddress getAddress();
 
   public abstract Object getCommand();
 

@@ -31,12 +31,10 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("setSubscriptionName").and(takesArguments(1)).and(takesArgument(0, String.class)),
+        named("setSubscriptionName").and(takesArgument(0, String.class)),
         getClass().getName() + "$SetSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
-        named("setDurableSubscriptionName")
-            .and(takesArguments(1))
-            .and(takesArgument(0, String.class)),
+        named("setDurableSubscriptionName").and(takesArgument(0, String.class)),
         getClass().getName() + "$SetDurableSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
         namedOneOf("getSubscriptionName", "getDurableSubscriptionName")
@@ -44,15 +42,13 @@ class SpringJmsSubscriptionNameInstrumentation implements TypeInstrumentation {
             .and(returns(String.class)),
         getClass().getName() + "$GetSubscriptionNameAdvice");
     transformer.applyAdviceToMethod(
-        named("setSubscriptionDurable").and(takesArguments(1)).and(takesArgument(0, boolean.class)),
+        named("setSubscriptionDurable").and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetSubscriptionDurableAdvice");
     transformer.applyAdviceToMethod(
-        named("setSubscriptionShared").and(takesArguments(1)).and(takesArgument(0, boolean.class)),
+        named("setSubscriptionShared").and(takesArgument(0, boolean.class)),
         getClass().getName() + "$SetSubscriptionSharedAdvice");
     transformer.applyAdviceToMethod(
-        named("invokeListener")
-            .and(takesArguments(2))
-            .and(takesArgument(1, named("javax.jms.Message"))),
+        named("invokeListener").and(takesArgument(1, named("javax.jms.Message"))),
         getClass().getName() + "$InvokeListenerAdvice");
   }
 

@@ -5,10 +5,10 @@
 
 package io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal;
 
+import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_MESSAGE_KEY;
-import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_KAFKA_OFFSET;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -198,8 +198,8 @@ class KafkaBatchProcessSpanLinksExtractorTest {
     attributes.put(MESSAGING_DESTINATION_NAME, destination);
     attributes.put(MESSAGING_DESTINATION_PARTITION_ID, partition);
     return attributes
-        .put(MESSAGING_KAFKA_OFFSET, offset)
-        .put(MESSAGING_KAFKA_MESSAGE_KEY, key)
+        .put(longKey("kafka.offset"), offset)
+        .put(stringKey("kafka.message.key"), key)
         .build();
   }
 

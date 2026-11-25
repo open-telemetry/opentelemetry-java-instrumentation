@@ -54,23 +54,23 @@ public abstract class AttributeResourceProvider<D> implements ConditionalResourc
   public final Resource createResource(ConfigProperties config) {
     return attributeProvider
         .readData()
-        .map(
-            data -> {
-              if (filteredKeys == null) {
-                throw new IllegalStateException("shouldApply should be called first");
-              }
-              AttributesBuilder builder = Attributes.builder();
-              attributeGetters.entrySet().stream()
-                  .filter(e -> filteredKeys.contains(e.getKey()))
-                  .forEach(
-                      e ->
-                          e.getValue()
-                              .apply(data)
-                              .ifPresent(value -> putAttribute(builder, e.getKey(), value)));
-              return Resource.create(builder.build());
-            })
+        .map(data -> {
+          if (filteredKeys == null) {
+            throw new IllegalStateException("shouldApply should be called first");
+          }
+          AttributesBuilder builder = Attributes.builder();
+          attributeGetters.entrySet().stream()
+              .filter(e -> filteredKeys.contains(e.getKey()))
+              .forEach(e ->
+                  e.getValue()
+                      .apply(data)
+                      .ifPresent(value -> putAttribute(builder, e.getKey(), value)));
+          return buildResource(builder.build());
+        })
         .orElse(Resource.empty());
   }
+
+  abstract Resource buildResource(Attributes attributes);
 
   private static <T> void putAttribute(AttributesBuilder builder, AttributeKey<T> key, T value) {
     builder.put(key, value);

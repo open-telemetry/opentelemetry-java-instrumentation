@@ -9,7 +9,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGet
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.NettyRequest;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.ChannelUtil;
 import io.opentelemetry.javaagent.instrumentation.netty.v3_8.util.HttpSchemeUtil;
-import java.net.InetSocketAddress;
 import java.net.SocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -84,23 +83,15 @@ final class NettyHttpServerAttributesGetter
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       NettyRequest requestAndChannel, @Nullable HttpResponse response) {
-    SocketAddress address = requestAndChannel.channel().getRemoteAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return requestAndChannel.channel().getRemoteAddress();
   }
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public SocketAddress getNetworkLocalSocketAddress(
       NettyRequest requestAndChannel, @Nullable HttpResponse response) {
-    SocketAddress address = requestAndChannel.channel().getLocalAddress();
-    if (address instanceof InetSocketAddress) {
-      return (InetSocketAddress) address;
-    }
-    return null;
+    return requestAndChannel.channel().getLocalAddress();
   }
 }

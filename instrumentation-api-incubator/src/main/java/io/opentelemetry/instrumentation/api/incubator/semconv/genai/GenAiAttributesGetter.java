@@ -69,21 +69,26 @@ public interface GenAiAttributesGetter<REQUEST, RESPONSE> {
   }
 
   @Nullable
+  default Long getUsageCacheCreationInputTokens(REQUEST request, @Nullable RESPONSE response) {
+    return null;
+  }
+
+  @Nullable
   Long getUsageOutputTokens(REQUEST request, @Nullable RESPONSE response);
 
   /**
-   * Returns a description of a class of error the operation ended with.
+   * Returns the {@code error.type} value for the operation.
    *
-   * <p>If this method returns {@code null}, the exception class name (if any) will be used as error
-   * type.
+   * <p>The default implementation returns the exception class name, or {@code null} if there is no
+   * exception.
    *
-   * <p>The cardinality of the error type should be low. The instrumentations implementing this
-   * method are recommended to document the custom values they support.
+   * <p>The cardinality of the error type should be low. Implementations are recommended to document
+   * the custom values they support.
    */
   @Nullable
   default String getErrorType(
       REQUEST request, @Nullable RESPONSE response, @Nullable Throwable error) {
-    return null;
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable

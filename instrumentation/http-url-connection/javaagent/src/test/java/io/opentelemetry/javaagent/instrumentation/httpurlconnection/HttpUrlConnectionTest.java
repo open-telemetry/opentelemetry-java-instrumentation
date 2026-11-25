@@ -5,10 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.httpurlconnection;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.api.trace.SpanKind.SERVER;
-import static io.opentelemetry.instrumentation.testing.junit.service.SemconvServiceStabilityUtil.maybeStablePeerService;
+import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
 import static io.opentelemetry.javaagent.instrumentation.httpurlconnection.StreamUtils.readLines;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
@@ -136,26 +137,23 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(maybeStablePeerService(), "test-peer-service")));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasNoParent(),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(attributes),
-                span ->
-                    span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1)),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(attributes),
-                span ->
-                    span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasNoParent(),
+            span ->
+                span.hasName("GET")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(attributes),
+            span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1)),
+            span ->
+                span.hasName("GET")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(attributes),
+            span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(3))));
   }
 
   @RepeatedTest(10)
@@ -181,19 +179,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(maybeStablePeerService(), "test-peer-service")));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasNoParent(),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(attributes),
-                span ->
-                    span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasNoParent(),
+            span ->
+                span.hasName("GET")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(attributes),
+            span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
 
     connection.disconnect();
   }
@@ -234,19 +230,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(maybeStablePeerService(), "test-peer-service")));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasNoParent(),
-                span ->
-                    span.hasName("POST")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(attributes),
-                span ->
-                    span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasNoParent(),
+            span ->
+                span.hasName("POST")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(attributes),
+            span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }
 
   @Test
@@ -289,19 +283,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, url.toString()),
                 equalTo(HTTP_REQUEST_METHOD, "POST"),
                 equalTo(HTTP_RESPONSE_STATUS_CODE, STATUS),
-                equalTo(maybeStablePeerService(), "test-peer-service")));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("someTrace").hasNoParent(),
-                span ->
-                    span.hasName("POST")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(attributes),
-                span ->
-                    span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("someTrace").hasNoParent(),
+            span ->
+                span.hasName("POST")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(attributes),
+            span -> span.hasName("test-http-server").hasKind(SERVER).hasParent(trace.getSpan(1))));
   }
 
   @ParameterizedTest
@@ -310,18 +302,17 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
     String uri = scheme + "://localhost:" + PortUtils.UNUSABLE_PORT;
 
     Throwable thrown =
-        catchThrowable(
-            () ->
-                testing.runWithSpan(
-                    "someTrace",
-                    () -> {
-                      URL url = new URI(uri).toURL();
-                      URLConnection connection = url.openConnection();
-                      connection.setConnectTimeout(10000);
-                      connection.setReadTimeout(10000);
-                      assertThat(Span.current().getSpanContext().isValid()).isTrue();
-                      connection.getInputStream();
-                    }));
+        catchThrowable(() ->
+            testing.runWithSpan(
+                "someTrace",
+                () -> {
+                  URL url = new URI(uri).toURL();
+                  URLConnection connection = url.openConnection();
+                  connection.setConnectTimeout(10000);
+                  connection.setReadTimeout(10000);
+                  assertThat(Span.current().getSpanContext().isValid()).isTrue();
+                  connection.getInputStream();
+                }));
 
     List<AttributeAssertion> attributes =
         new ArrayList<>(
@@ -332,23 +323,22 @@ class HttpUrlConnectionTest extends AbstractHttpClientTest<HttpURLConnection> {
                 equalTo(URL_FULL, uri),
                 equalTo(HTTP_REQUEST_METHOD, "GET"),
                 equalTo(ERROR_TYPE, "java.net.ConnectException"),
-                equalTo(maybeStablePeerService(), "test-peer-service")));
+                equalTo(stringKey("server.service.name"), expectedMappedServiceName())));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("someTrace")
-                        .hasKind(INTERNAL)
-                        .hasNoParent()
-                        .hasStatus(StatusData.error())
-                        .hasException(thrown),
-                span ->
-                    span.hasName("GET")
-                        .hasKind(CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasException(thrown)
-                        .hasAttributesSatisfyingExactly(attributes)));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("someTrace")
+                    .hasKind(INTERNAL)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(thrown),
+            span ->
+                span.hasName("GET")
+                    .hasKind(CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasException(thrown)
+                    .hasAttributesSatisfyingExactly(attributes)));
   }
 }

@@ -5,13 +5,13 @@
 
 package io.opentelemetry.instrumentation.awslambdacore.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_ACCOUNT_ID;
 import static io.opentelemetry.semconv.incubating.CloudIncubatingAttributes.CLOUD_RESOURCE_ID;
-import static io.opentelemetry.semconv.incubating.FaasIncubatingAttributes.FAAS_INVOCATION_ID;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.Mockito.when;
@@ -58,8 +58,7 @@ class AwsLambdaStreamWrapperTest {
   void setUp() {
     when(context.getFunctionName()).thenReturn("my_function");
     when(context.getAwsRequestId()).thenReturn("1-22-333");
-    when(context.getInvokedFunctionArn())
-        .thenReturn("arn:aws:lambda:us-east-1:123456789:function:test");
+    AwsLambdaTestUtils.stubInvokedFunctionArn(context);
   }
 
   @AfterEach
@@ -77,18 +76,20 @@ class AwsLambdaStreamWrapperTest {
             testing.getOpenTelemetrySdk(), WrappedLambda.fromConfiguration());
     wrapper.handleRequest(input, output, context);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CLOUD_RESOURCE_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                            ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                            : null),
+                    equalTo(
+                        CLOUD_ACCOUNT_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
   }
 
   @Test
@@ -103,29 +104,30 @@ class AwsLambdaStreamWrapperTest {
     Throwable thrown = catchThrowable(() -> wrapper.handleRequest(input, output, context));
     assertThat(thrown).isInstanceOf(IllegalArgumentException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                "arn:aws:lambda:us-east-1:123456789:function:test"),
-                            equalTo(CLOUD_ACCOUNT_ID, "123456789"),
-                            equalTo(FAAS_INVOCATION_ID, "1-22-333"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.error())
+                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CLOUD_RESOURCE_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                            ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                            : null),
+                    equalTo(
+                        CLOUD_ACCOUNT_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"))));
 
     if (emitExceptionAsLogs()) {
-      testing.waitAndAssertLogRecords(
-          logRecord ->
-              logRecord
-                  .hasSeverity(Severity.ERROR)
-                  .hasEventName("faas.invocation.exception")
-                  .hasException(thrown)
-                  .hasTotalAttributeCount(3));
+      testing.waitAndAssertLogRecords(logRecord ->
+          logRecord
+              .hasSeverity(Severity.ERROR)
+              .hasEventName("faas.invocation.exception")
+              .hasException(thrown)
+              .hasTotalAttributeCount(3));
     }
   }
 

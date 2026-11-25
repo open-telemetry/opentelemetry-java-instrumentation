@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -18,57 +20,91 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.0:javaagent"))
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:jdbc:javaagent"))
+  testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
 }
 
-testing {
-  suites {
-    register<JvmTestSuite>("version3Test") {
-      dependencies {
-        implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
+val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
 
-        val version = baseVersion("3.0.0").orLatest("3.+")
-        implementation("io.vertx:vertx-web:$version")
-        implementation("io.vertx:vertx-jdbc-client:$version")
-        implementation("io.vertx:vertx-codegen:$version")
-        implementation("io.vertx:vertx-docgen:$version")
+testing.suites {
+  register<JvmTestSuite>("version3Test") {
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
+
+      val version = baseVersion("3.0.0").orLatest("3.+")
+      implementation("io.vertx:vertx-web:$version")
+      implementation("io.vertx:vertx-jdbc-client:$version")
+      implementation("io.vertx:vertx-codegen:$version")
+      implementation("io.vertx:vertx-docgen:$version")
+    }
+  }
+
+  register<JvmTestSuite>("version41Test") {
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
+
+      val version = baseVersion("4.1.0").orLatest("4.+")
+      implementation("io.vertx:vertx-web:$version")
+      implementation("io.vertx:vertx-jdbc-client:$version")
+      implementation("io.vertx:vertx-codegen:$version")
+    }
+  }
+
+  register<JvmTestSuite>("version45Test") {
+    sources {
+      java.srcDir("src/version41Test/java")
+    }
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
+      implementation("io.vertx:vertx-web:4.5.3")
+      implementation("io.vertx:vertx-codegen:4.5.3")
+    }
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(21)
+    }
+  }
+
+  register<JvmTestSuite>("version5Test") {
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
+
+      val version = baseVersion("5.0.0").orLatest()
+      implementation("io.vertx:vertx-web:$version")
+      implementation("io.vertx:vertx-jdbc-client:$version")
+      implementation("io.vertx:vertx-codegen:$version")
+    }
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(11)
+    }
+  }
+
+  executions("version3Test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+  }
+
+  executions("version45Test") {
+    configureEach {
+      filter {
+        includeTestsMatching("*.multiHandlerRoute")
+        includeTestsMatching("*.subRouterRouteIncludesMountPath")
+      }
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_21)) {
+        enabled = false
       }
     }
+  }
 
-    register<JvmTestSuite>("version41Test") {
-      dependencies {
-        implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
-
-        val version = baseVersion("4.1.0").orLatest("4.+")
-        implementation("io.vertx:vertx-web:$version")
-        implementation("io.vertx:vertx-jdbc-client:$version")
-        implementation("io.vertx:vertx-codegen:$version")
-      }
-    }
-
-    register<JvmTestSuite>("version5Test") {
-      dependencies {
-        implementation(project(":instrumentation:vertx:vertx-web-3.0:testing"))
-
-        val version = baseVersion("5.0.0").orLatest()
-        implementation("io.vertx:vertx-web:$version")
-        implementation("io.vertx:vertx-jdbc-client:$version")
-        implementation("io.vertx:vertx-codegen:$version")
+  executions("version5Test") {
+    configureEach {
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
+        enabled = false
       }
     }
   }
 }
 
 tasks {
-  named("compileVersion5TestJava", JavaCompile::class).configure {
-    options.release.set(11)
-  }
-  val testJavaVersion = otelProps.testJavaVersion ?: JavaVersion.current()
-  if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_11)) {
-    named("version5Test", Test::class).configure {
-      enabled = false
-    }
-  }
-
   check {
     dependsOn(testing.suites)
   }

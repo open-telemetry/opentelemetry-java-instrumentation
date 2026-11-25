@@ -11,12 +11,15 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.ExperimentalTestHelper.EXPERIMENTAL_TELEMETRY;
+import static io.opentelemetry.javaagent.instrumentation.couchbase.v3_2.ExperimentalTestHelper.experimental;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
@@ -64,9 +67,6 @@ import org.testcontainers.couchbase.CouchbaseService;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 class CouchbaseClient32Test {
-  private static final boolean EXPERIMENTAL_TELEMETRY =
-      Boolean.getBoolean("otel.instrumentation.couchbase.emit-experimental-telemetry");
-
   @RegisterExtension
   private static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
@@ -130,63 +130,58 @@ class CouchbaseClient32Test {
     dispatchAttributes.add(
         equalTo(NETWORK_PEER_ADDRESS, InetAddress.getByName(couchbase.getHost()).getHostAddress()));
     dispatchAttributes.add(equalTo(NETWORK_PEER_PORT, seedPort));
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertOperationSpan(
-                      span,
-                      "get",
-                      "id",
-                      testLatestDeps() ? StatusData.error() : StatusData.unset());
-                  span.hasNoParent();
-                },
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(dispatchAttributes));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertOperationSpan(
-                      span,
-                      "get",
-                      "id",
-                      testLatestDeps() ? StatusData.error() : StatusData.unset());
-                  span.hasNoParent();
-                });
-          }
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              assertOperationSpan(
+                  span,
+                  "get",
+                  "id",
+                  testLatestDeps() ? StatusData.error() : StatusData.unset(),
+                  testLatestDeps() ? DocumentNotFoundException.class.getName() : null);
+              span.hasNoParent();
+            },
+            span ->
+                span.hasName("dispatch_to_server")
+                    .hasKind(INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(dispatchAttributes));
+      } else {
+        trace.hasSpansSatisfyingExactly(span -> {
+          assertOperationSpan(
+              span,
+              "get",
+              "id",
+              testLatestDeps() ? StatusData.error() : StatusData.unset(),
+              testLatestDeps() ? DocumentNotFoundException.class.getName() : null);
+          span.hasNoParent();
         });
+      }
+    });
   }
 
   @Test
   void asyncWriteEmitsLifecycleSpans() {
     collection.async().upsert("async-id", JsonObject.create().put("value", "test")).join();
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertOperationSpan(span, "upsert", "async-id", StatusData.unset());
-                  span.hasNoParent();
-                },
-                span ->
-                    span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
-                span ->
-                    span.hasName("dispatch_to_server")
-                        .hasKind(INTERNAL)
-                        .hasParent(trace.getSpan(0)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  assertOperationSpan(span, "upsert", "async-id", StatusData.unset());
-                  span.hasNoParent();
-                });
-          }
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              assertOperationSpan(span, "upsert", "async-id", StatusData.unset());
+              span.hasNoParent();
+            },
+            span -> span.hasName("request_encoding").hasKind(INTERNAL).hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("dispatch_to_server").hasKind(INTERNAL).hasParent(trace.getSpan(0)));
+      } else {
+        trace.hasSpansSatisfyingExactly(span -> {
+          assertOperationSpan(span, "upsert", "async-id", StatusData.unset());
+          span.hasNoParent();
         });
+      }
+    });
   }
 
   @ParameterizedTest
@@ -218,17 +213,15 @@ class CouchbaseClient32Test {
             null);
     protostellarRequest.raisedResponseToUser(null);
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasName("get " + seedAddress + (expectedPort == null ? "" : portSuffix))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, "couchbase"),
-                            equalTo(longKey("db.couchbase.retries"), experimental(0L)),
-                            equalTo(SERVER_ADDRESS, seedAddress),
-                            equalTo(SERVER_PORT, expectedPort))));
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CLIENT)
+                .hasName("get " + seedAddress + (expectedPort == null ? "" : portSuffix))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "couchbase"),
+                    equalTo(longKey("db.couchbase.retries"), experimental(0L)),
+                    equalTo(SERVER_ADDRESS, seedAddress),
+                    equalTo(SERVER_PORT, expectedPort))));
   }
 
   private static Stream<Arguments> protostellarTargets() {
@@ -240,6 +233,15 @@ class CouchbaseClient32Test {
 
   private static void assertOperationSpan(
       SpanDataAssert span, String operation, String documentId, StatusData status) {
+    assertOperationSpan(span, operation, documentId, status, null);
+  }
+
+  private static void assertOperationSpan(
+      SpanDataAssert span,
+      String operation,
+      String documentId,
+      StatusData status,
+      String errorType) {
     span.hasKind(CLIENT)
         .hasName(operation + " _default")
         .satisfies(hasScopeName("io.opentelemetry.couchbase-3.2"))
@@ -249,15 +251,12 @@ class CouchbaseClient32Test {
             equalTo(DB_NAMESPACE, "test"),
             equalTo(DB_OPERATION_NAME, operation),
             equalTo(DB_COLLECTION_NAME, "_default"),
+            equalTo(ERROR_TYPE, errorType),
             equalTo(stringKey("db.couchbase.document_id"), experimental(documentId)),
             equalTo(stringKey("db.couchbase.scope"), experimental("_default")),
             equalTo(longKey("db.couchbase.retries"), experimental(0L)),
             equalTo(stringKey("db.couchbase.service"), experimental("kv")),
             equalTo(SERVER_ADDRESS, seedAddress),
             equalTo(SERVER_PORT, (long) seedPort));
-  }
-
-  private static <T> T experimental(T value) {
-    return EXPERIMENTAL_TELEMETRY ? value : null;
   }
 }

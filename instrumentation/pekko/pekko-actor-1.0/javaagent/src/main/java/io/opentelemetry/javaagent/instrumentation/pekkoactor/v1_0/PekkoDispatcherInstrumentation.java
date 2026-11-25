@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0;
 
 import static io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0.VirtualFields.ENVELOPE_PROPAGATED_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
 import io.opentelemetry.javaagent.bootstrap.executors.ExecutorAdviceHelper;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
@@ -25,7 +25,8 @@ class PekkoDispatcherInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.pekko.dispatch.Dispatcher");
+    return namedOneOf(
+        "org.apache.pekko.dispatch.Dispatcher", "org.apache.pekko.dispatch.BalancingDispatcher");
   }
 
   @Override
@@ -43,7 +44,7 @@ class PekkoDispatcherInstrumentation implements TypeInstrumentation {
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static PropagatedContext enterDispatch(@Advice.Argument(1) Envelope envelope) {
-      Context context = Java8BytecodeBridge.currentContext();
+      Context context = Context.current();
       if (ExecutorAdviceHelper.shouldPropagateContext(context, envelope.message())) {
         return ExecutorAdviceHelper.attachContextToTask(
             context, ENVELOPE_PROPAGATED_CONTEXT, envelope);

@@ -125,6 +125,7 @@ instrumentation produced the telemetry. Make sure you always provide the version
 the `Instrumenter`. You can do this in two ways:
 
 - By calling the `setInstrumentationVersion()` method on the `InstrumenterBuilder`.
+
 - By making sure that the JAR file with your instrumentation library contains a properties file in
   the `META-INF/io/opentelemetry/instrumentation/` directory. You must name the file
   `${instrumentationName}.properties`, where `${instrumentationName}` is the name of the
@@ -139,8 +140,24 @@ the `Instrumenter`. You can do this in two ways:
   The `Instrumenter` automatically detects the properties file and determines the instrumentation
   version based on its name.
 
-If the `Instrumenter` adheres to a specific OpenTelemetry schema, you can set the schema URL using
-the `setSchemaUrl()` method on the `InstrumenterBuilder`. To learn more about the OpenTelemetry
+If semantic conventions define the instrumented operation, explicitly select their schema URL using
+`setSchemaUrl()` on the `InstrumenterBuilder`:
+
+```java
+Instrumenter.<Request, Response>builder(openTelemetry, "my-instrumentation", spanNameExtractor)
+    .setSchemaUrl("https://opentelemetry.io/schemas/1.41.0")
+    .addAttributesExtractor(attributesExtractor)
+    .buildInstrumenter();
+```
+
+Choose the version adopted by the operation and its effective mode, not the latest semconv dependency.
+Supporting attributes from other domains do not change that choice. If no semantic convention defines
+the operation, leave the schema URL unset.
+
+The setting applies to the instrumenter's spans, operation metrics, and exception logs. Without
+`setSchemaUrl()`, telemetry has no schema URL.
+
+To learn more about OpenTelemetry
 schemas [see the Overview](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/schemas/README.md).
 
 ### Name the spans using the `SpanNameExtractor`

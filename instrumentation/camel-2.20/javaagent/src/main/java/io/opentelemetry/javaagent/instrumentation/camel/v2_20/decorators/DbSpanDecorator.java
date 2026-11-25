@@ -23,7 +23,6 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_SUMMARY;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
@@ -32,6 +31,7 @@ import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQuery;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlQueryAnalyzer;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.CamelDirection;
@@ -138,11 +138,11 @@ public class DbSpanDecorator extends BaseSpanDecorator {
     attributes.put(DB_NAMESPACE, namespace);
   }
 
+  // visible for testing
   void setQueryAttributes(AttributesBuilder attributes, Exchange exchange) {
     String rawQueryText = getRawQueryText(exchange);
     if (rawQueryText != null) {
-      // using the conservative default since the underlying database is unknown to camel
-      SqlQuery sqlQuery = analyzer.analyze(rawQueryText, DOUBLE_QUOTES_ARE_STRING_LITERALS);
+      SqlQuery sqlQuery = analyzer.analyze(rawQueryText, SqlDialect.forDbSystemName(system));
 
       if (sqlQuery != null) {
         attributes.put(DB_QUERY_TEXT, sqlQuery.getQueryText());

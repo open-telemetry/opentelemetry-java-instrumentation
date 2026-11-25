@@ -1,14 +1,6 @@
 # OSHI Instrumentation
 
-## Current metrics
-
-System metrics use schema 1.44.0 conventions.
-
-Network packet counts use `system.network.packet.count`. Count units are `{packet}`,
-`{error}`, and `{operation}` for packets, errors, and disk operations, respectively.
-Memory metrics use `system.memory.state`; network I/O and errors use `network.interface.name`
-and `network.io.direction`. Packet counts use `system.device`
-and `network.io.direction`; disk metrics use `system.device` and `disk.io.direction`.
+System metrics follow the [1.45.0 system semantic conventions](https://github.com/open-telemetry/semantic-conventions/blob/v1.45.0/docs/system/system-metrics.md).
 
 ## Using OSHI with OpenTelemetry Java agent
 

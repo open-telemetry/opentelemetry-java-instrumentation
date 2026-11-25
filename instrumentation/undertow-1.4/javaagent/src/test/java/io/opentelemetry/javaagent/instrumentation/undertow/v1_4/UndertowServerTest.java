@@ -18,6 +18,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ClientAttributes.CLIENT_ADDRESS;
+import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_MESSAGE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_STACKTRACE;
 import static io.opentelemetry.semconv.ExceptionAttributes.EXCEPTION_TYPE;
@@ -40,6 +41,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import io.undertow.Handlers;
 import io.undertow.Undertow;
@@ -131,17 +133,16 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
                     .addExactPath(
                         INDEXED_CHILD_FROM_REQUEST_BODY.rawPath(),
                         exchange ->
-                            exchange.dispatch(
-                                k -> {
-                                  k.startBlocking();
-                                  controller(
-                                      INDEXED_CHILD_FROM_REQUEST_BODY,
-                                      () -> {
-                                        String requestBody = readRequestBody(k.getInputStream());
-                                        bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
-                                        k.getResponseSender().send(requestBody);
-                                      });
-                                }))
+                            exchange.dispatch(k -> {
+                              k.startBlocking();
+                              controller(
+                                  INDEXED_CHILD_FROM_REQUEST_BODY,
+                                  () -> {
+                                    String requestBody = readRequestBody(k.getInputStream());
+                                    bodyConsumer(INDEXED_CHILD_FROM_REQUEST_BODY, requestBody);
+                                    k.getResponseSender().send(requestBody);
+                                  });
+                            }))
                     .addExactPath(
                         "sendResponse",
                         exchange -> {
@@ -211,32 +212,31 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8().trim()).isEqualTo("sendResponse");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET")
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasEventsSatisfyingExactly(
-                            event -> event.hasName("before-event"),
-                            event -> event.hasName("after-event"))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
-                            equalTo(URL_SCHEME, uri.getScheme()),
-                            equalTo(URL_PATH, uri.getPath()),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                            equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
-                            equalTo(NETWORK_PROTOCOL_VERSION, useHttp2() ? "2" : "1.1"),
-                            equalTo(SERVER_ADDRESS, uri.getHost()),
-                            equalTo(SERVER_PORT, uri.getPort()),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
-                span ->
-                    span.hasName("sendResponse")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET")
+                    .hasNoParent()
+                    .hasKind(SpanKind.SERVER)
+                    .hasEventsSatisfyingExactly(
+                        event -> event.hasName("before-event"),
+                        event -> event.hasName("after-event"))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
+                        equalTo(URL_SCHEME, uri.getScheme()),
+                        equalTo(URL_PATH, uri.getPath()),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                        equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                        equalTo(NETWORK_PROTOCOL_VERSION, useHttp2() ? "2" : "1.1"),
+                        equalTo(SERVER_ADDRESS, uri.getHost()),
+                        equalTo(SERVER_PORT, uri.getPort()),
+                        equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                        satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class))),
+            span ->
+                span.hasName("sendResponse")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
   }
 
   @Test
@@ -249,48 +249,47 @@ class UndertowServerTest extends AbstractHttpServerTest<Undertow> {
     assertThat(response.status().code()).isEqualTo(200);
     assertThat(response.contentUtf8().trim()).isEqualTo("sendResponseWithException");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> {
-                  span.hasName("GET")
-                      .hasNoParent()
-                      .hasKind(SpanKind.SERVER)
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
-                          equalTo(URL_SCHEME, uri.getScheme()),
-                          equalTo(URL_PATH, uri.getPath()),
-                          equalTo(HTTP_REQUEST_METHOD, "GET"),
-                          equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
-                          equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
-                          equalTo(NETWORK_PROTOCOL_VERSION, useHttp2() ? "2" : "1.1"),
-                          equalTo(SERVER_ADDRESS, uri.getHost()),
-                          equalTo(SERVER_PORT, uri.getPort()),
-                          equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                          satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)));
-                  if (emitExceptionAsSpanEvents()) {
-                    span.hasEventsSatisfyingExactly(
-                        event -> event.hasName("before-event"),
-                        event -> event.hasName("after-event"),
-                        event ->
-                            event
-                                .hasName("exception")
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(EXCEPTION_TYPE, Exception.class.getName()),
-                                    equalTo(EXCEPTION_MESSAGE, "exception after sending response"),
-                                    satisfies(
-                                        EXCEPTION_STACKTRACE,
-                                        val -> val.isInstanceOf(String.class))));
-                  } else {
-                    span.hasEventsSatisfyingExactly(
-                        event -> event.hasName("before-event"),
-                        event -> event.hasName("after-event"));
-                  }
-                },
-                span ->
-                    span.hasName("sendResponseWithException")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> {
+              span.hasName("GET")
+                  .hasNoParent()
+                  .hasKind(SpanKind.SERVER)
+                  .hasStatus(StatusData.error())
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(CLIENT_ADDRESS, TEST_CLIENT_IP),
+                      equalTo(URL_SCHEME, uri.getScheme()),
+                      equalTo(URL_PATH, uri.getPath()),
+                      equalTo(HTTP_REQUEST_METHOD, "GET"),
+                      equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                      equalTo(ERROR_TYPE, Exception.class.getName()),
+                      equalTo(USER_AGENT_ORIGINAL, TEST_USER_AGENT),
+                      equalTo(NETWORK_PROTOCOL_VERSION, useHttp2() ? "2" : "1.1"),
+                      equalTo(SERVER_ADDRESS, uri.getHost()),
+                      equalTo(SERVER_PORT, uri.getPort()),
+                      equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
+                      satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)));
+              if (emitExceptionAsSpanEvents()) {
+                span.hasEventsSatisfyingExactly(
+                    event -> event.hasName("before-event"),
+                    event -> event.hasName("after-event"),
+                    event ->
+                        event
+                            .hasName("exception")
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(EXCEPTION_TYPE, Exception.class.getName()),
+                                equalTo(EXCEPTION_MESSAGE, "exception after sending response"),
+                                satisfies(
+                                    EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+              } else {
+                span.hasEventsSatisfyingExactly(
+                    event -> event.hasName("before-event"), event -> event.hasName("after-event"));
+              }
+            },
+            span ->
+                span.hasName("sendResponseWithException")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))));
 
     if (emitExceptionAsLogs()) {
       assertExceptionLogs(

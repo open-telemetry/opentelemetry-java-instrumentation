@@ -7,7 +7,6 @@ package io.opentelemetry.instrumentation.lettuce.v5_1;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.net.InetSocketAddress;
-import java.util.Locale;
 import javax.annotation.Nullable;
 
 final class LettuceDbAttributesGetter
@@ -42,21 +41,26 @@ final class LettuceDbAttributesGetter
 
   @Nullable
   @Override
+  public String getDbResponseStatusCode(
+      LettuceRequest request, @Nullable LettuceResponse response, @Nullable Throwable error) {
+    return response == null ? null : response.getErrorCode();
+  }
+
+  @Nullable
+  @Override
   public String getErrorType(
       LettuceRequest request, @Nullable LettuceResponse response, @Nullable Throwable error) {
-    if (response == null) {
-      return null;
+    if (response != null) {
+      String errorCode = response.getErrorCode();
+      if (errorCode != null) {
+        return errorCode;
+      }
+      // Older Lettuce tracing can report a failure without exposing its exception.
+      if (response.isFailed() && error == null) {
+        return "_OTHER";
+      }
     }
-
-    String errorMessage = response.getErrorMessage();
-    if (errorMessage == null || errorMessage.isEmpty()) {
-      return null;
-    }
-
-    // Redis error prefix is the first upper-case, space-delimited word of the error message.
-    int separator = errorMessage.indexOf(' ');
-    String errorType = separator == -1 ? errorMessage : errorMessage.substring(0, separator);
-    return errorType.equals(errorType.toUpperCase(Locale.ROOT)) ? errorType : null;
+    return error == null ? null : error.getClass().getName();
   }
 
   @Nullable
@@ -75,7 +79,7 @@ final class LettuceDbAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       LettuceRequest request, @Nullable LettuceResponse unused) {
     return request.getAddress();
   }

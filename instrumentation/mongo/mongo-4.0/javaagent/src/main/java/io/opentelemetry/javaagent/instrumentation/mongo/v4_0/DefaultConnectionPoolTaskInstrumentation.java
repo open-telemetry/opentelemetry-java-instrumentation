@@ -9,7 +9,7 @@ import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
-import io.opentelemetry.javaagent.bootstrap.Java8BytecodeBridge;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.function.Consumer;
@@ -48,7 +48,7 @@ class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(2))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Consumer<Object> wrapCallback(@Advice.Argument(2) Consumer<Object> action) {
-      return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
+      return new TaskWrapper(Context.current(), action);
     }
   }
 
@@ -58,7 +58,7 @@ class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(3))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Consumer<Object> wrapCallback(@Advice.Argument(3) Consumer<Object> action) {
-      return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
+      return new TaskWrapper(Context.current(), action);
     }
   }
 
@@ -68,7 +68,7 @@ class DefaultConnectionPoolTaskInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments(@ToArgument(4))
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Consumer<Object> wrapCallback(@Advice.Argument(4) Consumer<Object> action) {
-      return new TaskWrapper(Java8BytecodeBridge.currentContext(), action);
+      return new TaskWrapper(Context.current(), action);
     }
   }
 }

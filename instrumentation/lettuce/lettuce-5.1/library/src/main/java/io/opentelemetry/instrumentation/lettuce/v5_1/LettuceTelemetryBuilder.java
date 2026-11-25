@@ -13,6 +13,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
+import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
@@ -54,16 +55,16 @@ public final class LettuceTelemetryBuilder {
                 INSTRUMENTATION_NAME,
                 RedisSpanNameExtractor.create(dbAttributesGetter))
             .addAttributesExtractor(DbClientAttributesExtractor.create(dbAttributesGetter))
+            .setSchemaUrl(DbSchemaUrls.SCHEMA_URL)
             .addOperationMetrics(DbClientMetrics.get())
-            .setSpanStatusExtractor(
-                (spanStatusBuilder, request, response, error) -> {
-                  if (response != null && response.getErrorMessage() != null) {
-                    spanStatusBuilder.setStatus(StatusCode.ERROR);
-                  } else {
-                    SpanStatusExtractor.getDefault()
-                        .extract(spanStatusBuilder, request, response, error);
-                  }
-                });
+            .setSpanStatusExtractor((spanStatusBuilder, request, response, error) -> {
+              if (response != null && response.isFailed()) {
+                spanStatusBuilder.setStatus(StatusCode.ERROR);
+              } else {
+                SpanStatusExtractor.getDefault()
+                    .extract(spanStatusBuilder, request, response, error);
+              }
+            });
     setDbClientExceptionEventExtractor(builder);
 
     Instrumenter<LettuceRequest, LettuceResponse> instrumenter =

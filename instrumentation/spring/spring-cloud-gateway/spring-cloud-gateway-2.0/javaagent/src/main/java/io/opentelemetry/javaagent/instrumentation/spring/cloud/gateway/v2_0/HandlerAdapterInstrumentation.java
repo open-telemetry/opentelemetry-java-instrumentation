@@ -43,9 +43,8 @@ class HandlerAdapterInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isPublic()
             .and(named("handle"))
-            .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange")))
-            .and(takesArgument(1, Object.class))
-            .and(takesArguments(2)),
+            .and(takesArguments(2))
+            .and(takesArgument(0, named("org.springframework.web.server.ServerWebExchange"))),
         getClass().getName() + "$HandleAdvice");
   }
 

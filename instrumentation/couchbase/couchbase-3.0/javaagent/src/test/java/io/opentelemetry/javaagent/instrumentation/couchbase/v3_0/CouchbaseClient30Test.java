@@ -10,7 +10,6 @@ import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.api.trace.SpanKind.INTERNAL;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.incubating.PeerIncubatingAttributes.PEER_SERVICE;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -93,39 +92,32 @@ class CouchbaseClient30Test {
       // Expected
     }
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
-              .isEqualTo("io.opentelemetry.couchbase-3.0");
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasName("get")
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, experimental("kv")),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
-                            equalTo(stringKey("couchbase.document_id"), experimental("id"))),
-                span ->
-                    span.hasKind(INTERNAL)
-                        .hasName("dispatch_to_server")
-                        .hasParent(trace.getSpan(0)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasName("get")
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, experimental("kv")),
-                            equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
-                            equalTo(stringKey("couchbase.document_id"), experimental("id"))));
-          }
-        });
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      assertThat(trace.getSpan(0).getInstrumentationScopeInfo().getName())
+          .isEqualTo("io.opentelemetry.couchbase-3.0");
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasKind(CLIENT)
+                    .hasName("get")
+                    .hasStatus(StatusData.unset())
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
+                        equalTo(stringKey("couchbase.document_id"), experimental("id"))),
+            span ->
+                span.hasKind(INTERNAL).hasName("dispatch_to_server").hasParent(trace.getSpan(0)));
+      } else {
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CLIENT)
+                .hasName("get")
+                .hasStatus(StatusData.unset())
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
+                    equalTo(stringKey("couchbase.document_id"), experimental("id"))));
+      }
+    });
   }
 
   @Test
@@ -133,37 +125,30 @@ class CouchbaseClient30Test {
     assertThatThrownBy(() -> collection.async().get("async-id").join())
         .hasCauseInstanceOf(DocumentNotFoundException.class);
 
-    testing.waitAndAssertTracesWithoutScopeVersionVerification(
-        trace -> {
-          if (EXPERIMENTAL_TELEMETRY) {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasName("get")
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, experimental("kv")),
-                            satisfies(
-                                stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
-                            equalTo(stringKey("couchbase.document_id"), experimental("async-id"))),
-                span ->
-                    span.hasKind(INTERNAL)
-                        .hasName("dispatch_to_server")
-                        .hasParent(trace.getSpan(0)));
-          } else {
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(CLIENT)
-                        .hasName("get")
-                        .hasStatus(StatusData.unset())
-                        .hasNoParent()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(PEER_SERVICE, experimental("kv")),
-                            equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
-                            equalTo(stringKey("couchbase.document_id"), experimental("async-id"))));
-          }
-        });
+    testing.waitAndAssertTracesWithoutScopeVersionVerification(trace -> {
+      if (EXPERIMENTAL_TELEMETRY) {
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasKind(CLIENT)
+                    .hasName("get")
+                    .hasStatus(StatusData.unset())
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        satisfies(stringKey("couchbase.operation_id"), val -> val.startsWith("0x")),
+                        equalTo(stringKey("couchbase.document_id"), experimental("async-id"))),
+            span ->
+                span.hasKind(INTERNAL).hasName("dispatch_to_server").hasParent(trace.getSpan(0)));
+      } else {
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(CLIENT)
+                .hasName("get")
+                .hasStatus(StatusData.unset())
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("couchbase.operation_id"), experimental("0x")),
+                    equalTo(stringKey("couchbase.document_id"), experimental("async-id"))));
+      }
+    });
   }
 
   private static <T> T experimental(T value) {

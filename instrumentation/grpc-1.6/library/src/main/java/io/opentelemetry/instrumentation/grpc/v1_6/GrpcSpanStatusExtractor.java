@@ -64,7 +64,7 @@ enum GrpcSpanStatusExtractor implements SpanStatusExtractor<GrpcRequest, Status>
     }
   }
 
-  private static boolean isServerError(Status status) {
+  static boolean isServerError(Status status) {
     return serverErrorStatuses.contains(status.getCode());
   }
 

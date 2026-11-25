@@ -4,6 +4,7 @@ description: >
 library_link: https://pulsar.apache.org/
 semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
 configurations:
   - name: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
     declarative_name: java.common.messaging.receive_telemetry/development.enabled
@@ -17,6 +18,6 @@ configurations:
   - name: otel.instrumentation.pulsar.experimental-span-attributes
     declarative_name: java.pulsar.experimental_span_attributes/development
     description: >
-      Enables the experimental span attribute `messaging.pulsar.message.type` for producer spans.
+      Enables the experimental span attribute `pulsar.message.type` for producer spans.
     type: boolean
     default: false
