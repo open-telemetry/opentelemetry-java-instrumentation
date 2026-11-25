@@ -72,18 +72,21 @@ testing.suites {
       )
     }
 
-    register("Experimental") {
-      filter {
-        excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
+    if (!otelProps.testLatestDeps) {
+      // Verify that enabling experimental attributes works with a client lacking both getters.
+      register("Experimental") {
+        filter {
+          includeTestsMatching("RocketMqClientTest.testSendAndConsumeNormalMessage")
+        }
+        systemProperty(
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+          "true",
+        )
+        systemProperty(
+          "otel.instrumentation.rocketmq-client.experimental-span-attributes",
+          "true",
+        )
       }
-      systemProperty(
-        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
-        "true",
-      )
-      systemProperty(
-        "otel.instrumentation.rocketmq-client.experimental-span-attributes",
-        "true",
-      )
     }
 
     register("ReceiveSpanDisabled") {
