@@ -370,7 +370,8 @@ Weak references and caches still have other uses. For example, a cache of metada
 and a weak interning pool can canonicalize equal value objects without retaining them.
 
 On production paths that can run repeatedly, resolve the virtual field once and reuse the handle.
-Runtime lookup uses reflection. A `static final` field can retain the handle:
+Runtime lookup uses reflection. A `static final` field, including one on a non-inlined advice
+class, can retain the handle:
 
 ```java
 private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
@@ -378,13 +379,11 @@ private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
 ```
 
 An existing holder that retains the handle, such as a static `MessagingTelemetryCarrier`, does
-not need a second cache. Non-inlined advice can initialize and retain the handle in its own
-class. One-off lookups, such as test setup, do not need a separate cache.
+not need a second cache.
 
-Inlined advice runs in the instrumented class, so the helper that provides the cached handle and
-the member the advice references must be accessible from that class. Do not rely on the deprecated
-inline rewrite of `VirtualField.find(...)`. It applies only to the two-argument overload. The
-named overload always uses runtime lookup.
+Inlined advice is not exempt; do not rely on the deprecated inline rewrite of
+`VirtualField.find(...)`. Inlined advice runs in the instrumented class, so the helper that
+provides the cached handle and the member the advice references must be accessible from that class.
 
 In normal javaagent instrumentation, use class literals for the carrier and attached value types
 and a string literal for the optional field name so Muzzle can discover and register the mapping.
