@@ -4,11 +4,13 @@ applyTo: ".github/copilot-instructions.md,.github/instructions/**/*.instructions
 
 # Writing repository instructions
 
-- Repository rules give coding agents and pull request reviewers a standard for acceptable
-  implementations, tests, configuration, and documentation. Compatibility guarantees across
-  releases are also rules. Procedures for editing or validating a change, such as when to run a
-  Gradle task, belong in the relevant workflow documentation. Review and audit reporting guidance
-  stays separate from repository rules.
+- State what must be true of the code, tests, configuration, or documentation. That includes
+  compatibility guarantees across releases. Keep short steps for meeting or checking a rule in
+  the same bullet. A checkout audit can report a violation of the rule, but cannot infer that
+  someone skipped a step.
+- Use sections for guidance that needs more space or applies to several rules. For example,
+  `Validation` can group checks with several steps, and review and audit sections can explain
+  how to report findings.
 - Each requirement that can be violated and fixed independently has its own top-level `-` bullet.
 - A rule's conditions, exceptions, rationale, and examples stay inside its bullet. Continuation
   paragraphs, nested lists, tables, and code fences are indented two spaces under `-`. This keeps

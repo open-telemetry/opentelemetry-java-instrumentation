@@ -11,7 +11,8 @@ to shared infrastructure and other projects using the same conventions.
   appropriate plugin (`otel.javaagent-instrumentation`, `otel.library-instrumentation`, or
   `otel.java-conventions` for testing), and wired test variants. Javaagent modules have Muzzle
   coverage for their supported ranges. `settings.gradle.kts` entries are alphabetical, and
-  `.fossa.yml` matches the output of `generateFossaConfiguration`.
+  `.fossa.yml` matches the output of `generateFossaConfiguration`. When adding a module, run
+  `./gradlew generateFossaConfiguration`.
 - Include supported-library documentation for each instrumentation subproject. Document user-facing
   javaagent settings in a settings table in the module's `javaagent/README.md` or a shared parent
   README. A standalone library instrumentation needs a library README with dependency and usage
@@ -38,8 +39,8 @@ to shared infrastructure and other projects using the same conventions.
 - Metadata collection covers default telemetry and supported non-default telemetry modes.
   Representative tasks in `.github/scripts/instrumentations.sh` collect each profile's
   instrumentation scope and telemetry shape; equivalent suites need not all collect. Shared test
-  conventions forward `-PcollectMetadata=true` to test JVMs. Collected metadata reflects the
-  telemetry emitted by the registered tasks for each profile.
+  conventions forward `-PcollectMetadata=true` to test JVMs. When wiring or collected telemetry
+  changes, verify that the registered tasks collect the expected telemetry for each profile.
 - `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
   instrumentation defaults, regardless of task name or settings on `test`.
   Otherwise include only non-default user-facing settings
@@ -198,8 +199,9 @@ to shared infrastructure and other projects using the same conventions.
   `sources.compileJavaTaskName`.
 
 - Fixture outputs, dependency inheritance, compiler releases, and packaging stay intact. Required
-  compilation and task ordering comes from source-set outputs or explicit dependencies. Disabling
-  newer-JVM tests does not remove compilation requirements.
+  compilation and task ordering comes from source-set outputs or explicit dependencies. Before
+  removing an explicit dependency, verify that source-set outputs preserve the ordering.
+  Disabling newer-JVM tests does not remove compilation requirements.
 
 - Preserve multi-release sources, sources JAR entries, and manifests.
 
@@ -213,19 +215,21 @@ to shared infrastructure and other projects using the same conventions.
 - `register("Suffix")` names a variant after its owning suite plus the suffix; it shares the suite's
   source directory. Version-suite names describe the runtime tested. A suite rename needs a reason
   other than normalizing its version separator. No API exists solely to preserve inconsistent
-  internal task names. Task and source callers and metadata-collection references use the current
-  names.
+  internal task names. When renaming a suite or variant, update its task and source callers and
+  metadata-collection references together.
 
 - Prefer the DSL to manual suite-to-task maps and unnecessary helpers; retain useful suffix/version
   maps and deterministic discovered-class loops.
 
 ### Test execution and scheduling
 
-- In supported baseline, latest-dependency, and JDK modes, tests have the intended default and
-  variant configuration and participate in the appropriate `check` graph, including when suites are
-  explicitly realized. Filtered tasks discover and run the intended tests. Default-only exclusions
-  do not apply to variants, and tasks fail when no tests run if configured to do so.
+- Default and variant tasks participate in the intended `check` graph, including when suites are
+  explicitly realized. Verify their configuration and wiring in the relevant baseline,
+  latest-dependency, and JDK modes. Default-only exclusions do not apply to variants, and tasks
+  fail when no tests run if configured to do so. When task filters apply, run the affected tasks
+  to verify discovery and execution.
 
 - Locks, build services, and environment setup reflect current framework initialization and
   concurrent-test requirements, including shared-workspace and Testcontainers constraints.
-  Historical requirements alone do not justify them.
+  Before removing them, check current initialization and concurrent-test behavior. Old comments
+  alone do not establish that they are needed.

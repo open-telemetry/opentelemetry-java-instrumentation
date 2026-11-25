@@ -413,16 +413,6 @@ every module that references it.
 To add a new shared option, add an entry to `shared-config-definitions.yaml` and reference it by id.
 To change an option for a single module only, define it inline instead of using a `ref`.
 
-### Validating configuration metadata
-
-To check flat-to-declarative lookup, types, schemas, and common-setting references locally, run:
-
-```bash
-./gradlew :instrumentation-docs:test --tests DeclarativeConfigValidationTest
-```
-
-Passing this check does not establish that the instrumentation reads the documented setting.
-
 ### Gradle File Derived Information
 
 We parse gradle files in order to determine several pieces of metadata:

@@ -46,9 +46,9 @@ Instrumentation code uses the declarative API for both flat properties and nativ
   migration paths, structured settings, and native configuration integration. Single-source
   declarative unit tests are not duplicates.
 - Central tests cover shared conversion, defaults, fallback, and precedence. Module tests cover
-  caller-specific logic. Fixtures, dependencies, task registrations, and metadata-collection inputs
-  for these tests have a remaining use. Metadata continues to describe supported settings even when
-  redundant test variants are absent.
+  caller-specific logic. Before removing redundant variants, verify both kinds of coverage remain.
+  Remove fixtures, dependencies, task registrations, and metadata-collection inputs that become
+  unused, but retain metadata describing supported settings.
 
 ## Deprecated settings and replacements
 

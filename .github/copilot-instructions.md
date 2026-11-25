@@ -51,7 +51,8 @@ guidance catalog.
 - Instrumentation configuration metadata, including each module's `metadata.yaml` and shared
   configuration definitions, matches supported setting names, types, and defaults in the actual
   readers, including readers in dependent common modules. A documented setting remains in metadata
-  while it has a supported reader.
+  while it has a supported reader. Before removing a setting from metadata, look for remaining
+  readers in the module and its dependent common modules.
 
 ## Documentation
 
@@ -65,6 +66,8 @@ guidance catalog.
   without repeating removal timing or obvious migration steps. They describe the released behavior
   without referring to preview flags used to stage the change or mentioning unchanged behavior
   unless it clarifies the change's scope.
+- When a change is breaking, add the `breaking change` label to its pull request, as described in
+  CONTRIBUTING.md.
 - README and usage documentation should meet a concrete reader need: setup,
   configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
   A code change alone does not require a README addition. Do not add prose merely to inventory

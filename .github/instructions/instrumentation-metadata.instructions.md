@@ -103,3 +103,13 @@ applyTo: "instrumentation/**/metadata.yaml,instrumentation-docs/src/main/resourc
 
 - Add `examples` only for module-specific settings with non-obvious list, pattern, or enum formats,
   not booleans, `general.*`, or `java.common.*`.
+
+## Validation
+
+- After editing metadata, run the focused round-trip and schema checks. They cover
+  flat-to-declarative lookup, types, schemas, and common-setting references. Passing them does not
+  prove that a setting has a reader.
+
+  ```bash
+  ./gradlew :instrumentation-docs:test --tests DeclarativeConfigValidationTest
+  ```
