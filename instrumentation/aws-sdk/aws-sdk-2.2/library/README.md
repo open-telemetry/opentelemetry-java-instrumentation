@@ -69,8 +69,10 @@ BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClien
 BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
 
-To capture Bedrock streaming response content, call `setGenaiCaptureMessageContent(true)` on the
-`AwsSdkTelemetry` builder and use the resulting instance for both the interceptor and the wrapper.
+Call `setGenaiCaptureMessageContent(true)` on the `AwsSdkTelemetry` builder to include full
+message content in Bedrock GenAI logs. Use the resulting instance for both the interceptor and the
+wrapper. This can record prompts, streaming and non-streaming replies, and tool arguments and
+results. Enable it only if that content is safe to export.
 
 ## Trace propagation
 
