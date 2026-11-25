@@ -20,12 +20,13 @@ import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryIn
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
     implements FunctionTimer, RemovableMeter, OpenTelemetryInstrument {
   private final TimeUnit baseTimeUnit;
-  private final ObservableLongCounter observableCount;
-  private final ObservableDoubleCounter observableTotalTime;
+  @Nullable private ObservableLongCounter observableCount;
+  @Nullable private ObservableDoubleCounter observableTotalTime;
 
   OpenTelemetryFunctionTimer(
       Id id,
@@ -98,7 +99,15 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
 
   @Override
   public void onRemove() {
-    observableCount.close();
-    observableTotalTime.close();
+    ObservableLongCounter observableCount = this.observableCount;
+    if (observableCount != null) {
+      observableCount.close();
+      this.observableCount = null;
+    }
+    ObservableDoubleCounter observableTotalTime = this.observableTotalTime;
+    if (observableTotalTime != null) {
+      observableTotalTime.close();
+      this.observableTotalTime = null;
+    }
   }
 }

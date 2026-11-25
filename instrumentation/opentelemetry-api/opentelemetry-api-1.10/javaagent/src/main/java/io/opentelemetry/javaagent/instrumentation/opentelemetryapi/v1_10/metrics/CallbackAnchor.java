@@ -10,7 +10,7 @@ import io.opentelemetry.javaagent.bootstrap.WeakRefRunnable;
 import java.lang.ref.WeakReference;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -74,12 +74,14 @@ public class CallbackAnchor {
   }
 
   // Some instrument wrappers may end up calling close() more than once. Guard the deferred
-  // release so each wrapper decrements the callback ref count at most once.
+  // release so each wrapper decrements the callback ref count at most once, and stop retaining
+  // the callback when a closed wrapper remains alive.
   public static Runnable releaseOnClose(Object callback) {
-    AtomicBoolean released = new AtomicBoolean();
+    AtomicReference<Object> callbackReference = new AtomicReference<>(callback);
     return () -> {
-      if (released.compareAndSet(false, true)) {
-        release(callback);
+      Object releasedCallback = callbackReference.getAndSet(null);
+      if (releasedCallback != null) {
+        release(releasedCallback);
       }
     };
   }

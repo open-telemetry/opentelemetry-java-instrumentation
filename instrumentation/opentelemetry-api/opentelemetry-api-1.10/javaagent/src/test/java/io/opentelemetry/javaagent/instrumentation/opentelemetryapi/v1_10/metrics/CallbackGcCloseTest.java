@@ -62,6 +62,21 @@ class CallbackGcCloseTest {
   }
 
   @Test
+  void closedWrapperDoesNotRetainCallback() throws Exception {
+    Object callback = new Object();
+    WeakReference<Object> callbackReference = new WeakReference<>(callback);
+    Runnable release = CallbackAnchor.releaseOnClose(callback);
+    callback = null;
+
+    release.run();
+    release.run();
+
+    GcUtils.awaitGc(callbackReference, Duration.ofSeconds(10));
+    assertThat(callbackReference.get()).isNull();
+    assertThat(release).isNotNull();
+  }
+
+  @Test
   void instrumentClosedWhenClassLoaderCollected() throws Exception {
     // 1. Build a child-first URLClassLoader that loads its own copy of the OTel API.
     //    The agent will instrument GlobalOpenTelemetry in this CL and inject all bridge helpers

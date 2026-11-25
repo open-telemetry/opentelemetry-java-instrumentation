@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.hikaricp.v3_0;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 
@@ -62,5 +63,14 @@ class OpenTelemetryMetricsTrackerTest {
     verify(userMetricsTracker).recordConnectionTimeout();
     verify(callback).close();
     verify(userMetricsTracker).close();
+    assertThat(tracker).extracting("callback").isNull();
+  }
+
+  @Test
+  void closesCallbackOnlyOnce() {
+    tracker.close();
+    tracker.close();
+
+    verify(callback).close();
   }
 }

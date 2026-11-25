@@ -18,11 +18,12 @@ import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleCounter;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.function.ToDoubleFunction;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
     implements FunctionCounter, RemovableMeter, OpenTelemetryInstrument {
 
-  private final ObservableDoubleCounter observableCount;
+  @Nullable private ObservableDoubleCounter observableCount;
 
   OpenTelemetryFunctionCounter(
       Id id,
@@ -59,6 +60,10 @@ final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
 
   @Override
   public void onRemove() {
-    observableCount.close();
+    ObservableDoubleCounter observableCount = this.observableCount;
+    if (observableCount != null) {
+      observableCount.close();
+      this.observableCount = null;
+    }
   }
 }

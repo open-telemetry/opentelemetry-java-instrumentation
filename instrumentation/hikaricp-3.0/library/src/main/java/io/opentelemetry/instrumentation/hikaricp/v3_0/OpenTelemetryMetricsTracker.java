@@ -12,6 +12,7 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.metrics.BatchCallback;
 import io.opentelemetry.api.metrics.DoubleHistogram;
 import io.opentelemetry.api.metrics.LongCounter;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
@@ -20,7 +21,7 @@ final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   private final IMetricsTracker userMetricsTracker;
 
-  private final BatchCallback callback;
+  @Nullable private BatchCallback callback;
   private final LongCounter timeouts;
   private final DoubleHistogram createTime;
   private final DoubleHistogram waitTime;
@@ -73,7 +74,11 @@ final class OpenTelemetryMetricsTracker implements IMetricsTracker {
 
   @Override
   public void close() {
-    callback.close();
+    BatchCallback callback = this.callback;
+    if (callback != null) {
+      callback.close();
+      this.callback = null;
+    }
     userMetricsTracker.close();
   }
 }

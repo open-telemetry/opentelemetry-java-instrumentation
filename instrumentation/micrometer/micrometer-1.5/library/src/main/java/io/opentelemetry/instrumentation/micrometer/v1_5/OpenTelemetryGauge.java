@@ -23,7 +23,7 @@ import javax.annotation.Nullable;
 final class OpenTelemetryGauge<T> extends AbstractMeter
     implements Gauge, RemovableMeter, OpenTelemetryInstrument {
 
-  private final ObservableDoubleGauge observableGauge;
+  @Nullable private ObservableDoubleGauge observableGauge;
 
   OpenTelemetryGauge(
       Id id,
@@ -59,6 +59,10 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
 
   @Override
   public void onRemove() {
-    observableGauge.close();
+    ObservableDoubleGauge observableGauge = this.observableGauge;
+    if (observableGauge != null) {
+      observableGauge.close();
+      this.observableGauge = null;
+    }
   }
 }
