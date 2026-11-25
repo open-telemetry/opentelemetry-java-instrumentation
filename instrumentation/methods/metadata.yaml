@@ -9,7 +9,7 @@ description: >
 configurations:
   - name: otel.instrumentation.methods.include
     declarative_name: java.methods.include
-    description: Semicolon-separated list of fully qualified class and method patterns to instrument.
+    description: Selects the classes and methods to instrument.
     type: list
     default: ""
     declarative_type: structured_list
