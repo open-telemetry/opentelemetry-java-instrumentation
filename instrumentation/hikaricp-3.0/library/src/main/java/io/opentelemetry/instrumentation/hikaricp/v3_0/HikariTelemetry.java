@@ -38,12 +38,26 @@ public final class HikariTelemetry {
    * delegate to trackers created by the {@code delegate} metrics tracker factory, if it is not
    * null.
    *
-   * @deprecated Use {@link #instrument(MetricsTrackerFactory)} instead.
+   * @deprecated Use {@link #instrument(MetricsTrackerFactory)} instead. May be removed in the next
+   *     minor release.
    */
   @Deprecated
   public MetricsTrackerFactory createMetricsTrackerFactory(
       @Nullable MetricsTrackerFactory delegate) {
     return instrument(delegate);
+  }
+
+  /**
+   * Returns a metrics tracker factory that adds the supplied configured database attributes to
+   * database metrics.
+   *
+   * @deprecated Use {@link #instrument(MetricsTrackerFactory, Attributes)} instead. May be removed
+   *     in the next minor release.
+   */
+  @Deprecated
+  public MetricsTrackerFactory createMetricsTrackerFactory(
+      @Nullable MetricsTrackerFactory delegate, Attributes databaseAttributes) {
+    return instrument(delegate, databaseAttributes);
   }
 
   /**
@@ -53,18 +67,6 @@ public final class HikariTelemetry {
    */
   public MetricsTrackerFactory instrument(@Nullable MetricsTrackerFactory delegate) {
     return instrument(delegate, Attributes.empty());
-  }
-
-  /**
-   * Returns a metrics tracker factory that adds the supplied configured database attributes to
-   * database metrics.
-   *
-   * @deprecated Use {@link #instrument(MetricsTrackerFactory, Attributes)} instead.
-   */
-  @Deprecated
-  public MetricsTrackerFactory createMetricsTrackerFactory(
-      @Nullable MetricsTrackerFactory delegate, Attributes databaseAttributes) {
-    return instrument(delegate, databaseAttributes);
   }
 
   /**

@@ -579,6 +579,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `FailsafeTelemetry.createCircuitBreaker(...)`, `FailsafeTelemetry.createRetryPolicy(...)`,
+  the one- and two-argument overloads of `HikariTelemetry.createMetricsTrackerFactory(...)`, and
+  `OkHttpTelemetry.createCallFactory(...)` in favor of their `instrument(...)` replacements.
 - Deprecate `JmxTelemetryBuilder.setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` in favor of `setBundledMetricsSystemFilter` and
   `setUnstableBundledMetricsFilter`, respectively.
