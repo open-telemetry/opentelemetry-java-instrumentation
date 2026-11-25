@@ -51,8 +51,16 @@ public final class FailsafeTelemetry {
    * @param circuitBreakerName identifier of given {@link CircuitBreaker}
    * @param <R> {@link CircuitBreaker}'s result type
    * @return instrumented {@link CircuitBreaker}
+   * @deprecated Use {@link #instrument(CircuitBreaker, String)} instead.
    */
+  @Deprecated
   public <R> CircuitBreaker<R> createCircuitBreaker(
+      CircuitBreaker<R> delegate, String circuitBreakerName) {
+    return instrument(delegate, circuitBreakerName);
+  }
+
+  /** Returns an instrumented copy of the supplied circuit breaker with the given metric name. */
+  public <R> CircuitBreaker<R> instrument(
       CircuitBreaker<R> delegate, String circuitBreakerName) {
     CircuitBreakerConfig<R> userConfig = delegate.getConfig();
     Meter meter = getMeter();
@@ -85,8 +93,15 @@ public final class FailsafeTelemetry {
    * @param retryPolicyName identifier of given {@link RetryPolicy}
    * @param <R> {@link RetryPolicy}'s result type
    * @return instrumented {@link RetryPolicy}
+   * @deprecated Use {@link #instrument(RetryPolicy, String)} instead.
    */
+  @Deprecated
   public <R> RetryPolicy<R> createRetryPolicy(RetryPolicy<R> delegate, String retryPolicyName) {
+    return instrument(delegate, retryPolicyName);
+  }
+
+  /** Returns an instrumented copy of the supplied retry policy with the given metric name. */
+  public <R> RetryPolicy<R> instrument(RetryPolicy<R> delegate, String retryPolicyName) {
     RetryPolicyConfig<R> userConfig = delegate.getConfig();
     Meter meter = getMeter();
     LongCounter executionCounter =

@@ -45,8 +45,18 @@ public final class OkHttpTelemetry {
    *
    * @param baseClient the OkHttpClient to wrap
    * @return an instrumented Call.Factory
+   * @deprecated Use {@link #instrument(OkHttpClient)} instead.
    */
+  @Deprecated
   public Call.Factory createCallFactory(OkHttpClient baseClient) {
+    return instrument(baseClient);
+  }
+
+  /**
+   * Returns an instrumented call factory wrapping the supplied client, supporting synchronous
+   * and asynchronous calls with context propagation.
+   */
+  public Call.Factory instrument(OkHttpClient baseClient) {
     OkHttpClient.Builder builder = baseClient.newBuilder();
     // add our interceptors before other interceptors
     builder.interceptors().add(0, new ContextInterceptor());

@@ -71,7 +71,17 @@ public class KafkaConsumerTelemetry {
     this.consumerProcessInstrumenter = consumerProcessInstrumenter;
   }
 
+  /**
+   * @deprecated Use {@link #instrument(ConsumerRecords, KafkaConsumerContext)} instead.
+   */
+  @Deprecated
   public <K, V> ConsumerRecords<K, V> addTracing(
+      ConsumerRecords<K, V> consumerRecords, KafkaConsumerContext consumerContext) {
+    return instrument(consumerRecords, consumerContext);
+  }
+
+  /** Returns records whose iteration records consumer processing telemetry. */
+  public <K, V> ConsumerRecords<K, V> instrument(
       ConsumerRecords<K, V> consumerRecords, KafkaConsumerContext consumerContext) {
     if (consumerRecords.isEmpty()) {
       return consumerRecords;
