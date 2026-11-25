@@ -10,10 +10,9 @@ applyTo: ".github/copilot-instructions.md,.github/instructions/**/*.instructions
 - Use sections for guidance that needs more space or applies to several rules. For example,
   `Validation` can group checks with several steps.
 - Each requirement that can be violated and fixed independently has its own top-level `-` bullet.
-- A rule's conditions, exceptions, rationale, and examples stay inside its bullet. Continuation
-  paragraphs, nested lists, tables, and code fences are indented two spaces under `-`. This keeps
-  the complete rule together for the
-  [instruction audit parser](https://github.com/open-telemetry/shared-workflows/blob/9b20b725a2dd19e03d3f9605c51680405373d217/.github/scripts/instruction-audit/rules.py).
+- Keep a rule's conditions, exceptions, rationale, and examples in the same bullet so it makes
+  sense on its own. Indent continuation paragraphs, nested lists, tables, and code fences by two
+  spaces.
 - Use headings to group related rules. State each rule's conditions in the bullet itself.
 - If a file needs a scope note, put it in one plain paragraph immediately below the `#` title,
   without a separate heading. Use the note to say where the file's rules apply, not to state
