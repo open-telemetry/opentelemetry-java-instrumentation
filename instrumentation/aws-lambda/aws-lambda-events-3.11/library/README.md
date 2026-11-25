@@ -60,6 +60,10 @@ implementation("io.opentelemetry:opentelemetry-exporter-otlp")
 To use the instrumentation, configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName`
 and use one of wrappers as your lambda `Handler`.
 
+If you use OTLP, set `OTEL_EXPORTER_OTLP_ENDPOINT` to the URL of a collector or backend that your
+function can reach. The SDK defaults to `localhost`, which requires a collector in the Lambda
+execution environment.
+
 In order to configure a span flush timeout (default is set to 10 seconds), please configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_FLUSH_TIMEOUT` env property. The value is in milliseconds.
 
 Available wrappers:
@@ -101,31 +105,6 @@ public class MyRequestHandler extends TracingRequestHandler<String, String> {
 
 A `SERVER` span will be created with the name you specify for the function when deploying it.
 
-In addition, it is recommended to set up X-Ray trace propagation to be able to
-link to tracing information provided by Lambda itself. To do so, add a dependency on
-`io.opentelemetry.contrib:opentelemetry-aws-xray-propagator`.
-
-Replace `OPENTELEMETRY_CONTRIB_VERSION` with the [latest
-release](https://central.sonatype.com/artifact/io.opentelemetry.contrib/opentelemetry-aws-xray-propagator).
-
-For Maven, add to your `pom.xml` dependencies:
-
-```xml
-<dependencies>
-  <dependency>
-    <groupId>io.opentelemetry.contrib</groupId>
-    <artifactId>opentelemetry-aws-xray-propagator</artifactId>
-    <version>OPENTELEMETRY_CONTRIB_VERSION</version>
-  </dependency>
-</dependencies>
-```
-
-For Gradle, add to your dependencies:
-
-```kotlin
-implementation("io.opentelemetry.contrib:opentelemetry-aws-xray-propagator:OPENTELEMETRY_CONTRIB_VERSION")
-```
-
 #### SQS Handler
 
 This package provides a special handler for SQS-triggered functions to include messaging data.
@@ -160,12 +139,14 @@ public class MyBatchHandler extends TracingSQSEventHandler {
 
 ## Trace propagation
 
-Context propagation for this instrumentation can be done either with X-Ray propagation or regular HTTP propagation. If X-Ray is enabled for instrumented lambda, it will be preferred. If X-Ray is disabled, HTTP propagation will be tried (that is HTTP headers will be read to check for a valid trace context).
-
 ### X-Ray propagation
 
-This instrumentation supports propagating traces using the `X-Amzn-Trace-Id` format for both normal
-requests and SQS requests. X-Ray propagation is always enabled, there is no need to configure it explicitly.
+The Events library brings in the X-Ray propagator at runtime, but the SDK does not enable it by
+default. For non-SQS wrappers, set `OTEL_PROPAGATORS=tracecontext,baggage,xray-lambda`.
+If you build the SDK yourself, follow the [Core X-Ray setup](../../aws-lambda-core-1.0/library/README.md#x-ray-propagation)
+to add a compile dependency and register the propagator.
+
+SQS handlers extract X-Ray context from messages without any SDK propagator configuration.
 
 ### HTTP headers based propagation
 
