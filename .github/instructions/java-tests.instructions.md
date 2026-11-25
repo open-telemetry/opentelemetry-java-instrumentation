@@ -93,17 +93,17 @@ The remaining sections apply to test code and shared testing modules.
   The trace DSL retries the complete assertion and preserves trace grouping; do not flatten
   `testing.spans()` after a wait to repeat the same exact assertion. Synchronized ad hoc or
   cross-trace filtering remains appropriate when the DSL cannot express the assertion.
-- To verify that context reaches a callback, task, or other asynchronous boundary, call
-  `testing.runWithSpan(...)` inside it and assert that span's position in the expected trace with
-  `hasParent(...)` or `hasNoParent()`. Do not capture `Span.current()` for later comparison, compare
-  span or trace IDs, or check `isValid()`. A valid span or a matching trace ID can still be the wrong
-  parent, and the probe span also exercises span creation at the boundary. Start the probe from the
-  context current at the boundary; making a captured context current first, or setting the parent
-  explicitly, hides propagation failures. If the callback already emits a span whose parent the
-  test asserts, a separate current-span check is redundant. Keep direct assertions for what trace
-  structure cannot show, such as custom `ContextKey` values, baggage, recording state, or API bridge
-  identity. Focused unit tests of scope or wrapper helpers may assert the current context directly
-  when emitting spans would add telemetry setup the test otherwise doesn't need.
+- To verify which span, if any, is current inside a callback or task, start a span there, for
+  example with `testing.runWithSpan(...)`, and assert its parent or root with `hasParent(...)` or
+  `hasNoParent()`. Do not capture `Span.current()` for comparison, compare span or trace IDs, or
+  check `isValid()`; a valid current span in the expected trace can still be the wrong parent.
+  Let the span inherit the context already current there. Do not make a captured context current
+  first or set the parent explicitly; either can hide a propagation failure. An existing span
+  assertion makes a direct current-span check redundant only if it verifies the same inherited
+  parentage for every invocation the check covers. Keep direct assertions for what trace structure
+  cannot show, such as custom `ContextKey` values, baggage, recording state, or API bridge identity.
+  Focused unit tests of scope or wrapper helpers may assert the current context directly when
+  emitting spans would add telemetry setup the test otherwise doesn't need.
 - Preserve span order in expected traces when execution order is deterministic.
   Use unordered assertions only when supported concurrency or asynchronous
   execution makes the order nondeterministic.
