@@ -58,6 +58,7 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
+import java.util.stream.IntStream;
 import org.apache.pekko.http.scaladsl.Http;
 import org.assertj.core.api.AbstractStringAssert;
 import org.elasticmq.rest.sqs.SQSRestServer;
@@ -331,12 +332,12 @@ class AwsSqsTest {
     // and by the batch process operation otherwise
     if (RECEIVE_TELEMETRY) {
       assertThat(sumBatchMessageCount("receive batch-queue")).isEqualTo(2);
-      assertBatchConsumedMessages("io.opentelemetry.aws-sdk-2.2", "receive", "batch-queue");
+      assertBatchConsumedMessages("io.opentelemetry.aws-sdk-2.2", "receive", "batch-queue", 2);
       assertNoConsumedMessages("io.opentelemetry.spring-cloud-aws-3.0");
     } else {
       assertNoConsumedMessages("io.opentelemetry.aws-sdk-2.2");
       assertBatchConsumedMessages(
-          "io.opentelemetry.spring-cloud-aws-3.0", "process", "batch-queue");
+          "io.opentelemetry.spring-cloud-aws-3.0", "process", "batch-queue", 2);
     }
 
     AwsSqsTestApplication.batchMessageHandler = null;
@@ -375,9 +376,69 @@ class AwsSqsTest {
 
   @Test
   void sqsCombinedBatchListener() {
-    assertBatchesProcessed(combinedBatchQueueUrl, "combined-batch-queue");
+    List<List<String>> batches = new CopyOnWriteArrayList<>();
+    AwsSqsTestApplication.batchMessageHandler =
+        batch -> testing.runWithSpan("callback", () -> batches.add(new ArrayList<>(batch)));
+    MessageListenerContainer<?> container =
+        containerRegistry.getContainerById("combined-batch-listener");
+    container.stop();
+    // a receive call returns at most 10 messages, so a single listener invocation with all 12
+    // messages needs the combined responses of several receive calls
+    List<String> payloads = IntStream.range(0, 12).mapToObj(i -> "message-" + i).toList();
+    try (SqsClient client = sqsClient()) {
+      // a batch send takes at most 10 messages
+      sendMessages(client, payloads.subList(0, 10));
+      sendMessages(client, payloads.subList(10, 12));
+    }
+    container.start();
+
+    // the acknowledgements can be split over a varying number of deletes, so the spans are
+    // filtered instead of asserting a fixed set of traces
+    await()
+        .untilAsserted(() -> {
+          assertThat(batches)
+              .singleElement()
+              .satisfies(batch -> assertThat(batch).containsExactlyInAnyOrderElementsOf(payloads));
+          assertThat(sumBatchMessageCount("delete combined-batch-queue")).isEqualTo(12);
+        });
+    List<String> createSpanIds =
+        findSpans("create combined-batch-queue").stream().map(SpanData::getSpanId).toList();
+    assertThat(createSpanIds).hasSize(12);
+    List<SpanData> processSpans = findSpans("process combined-batch-queue");
+    assertThat(processSpans)
+        .singleElement()
+        .satisfies(process ->
+            assertThat(process)
+                .hasKind(SpanKind.CONSUMER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "combined-batch-queue"),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 12L),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort))
+                .hasLinksSatisfying(links -> assertLinksToCreate(links, createSpanIds, 12)));
+    String processSpanId = processSpans.get(0).getSpanId();
+    assertThat(findSpans("callback"))
+        .singleElement()
+        .satisfies(callback -> assertThat(callback.getParentSpanId()).isEqualTo(processSpanId));
+    assertThat(findSpans("delete combined-batch-queue"))
+        .allSatisfy(delete -> assertThat(delete.getParentSpanId()).isEqualTo(processSpanId));
     assertBatchConsumedMessages(
-        "io.opentelemetry.spring-cloud-aws-3.0", "process", "combined-batch-queue");
+        "io.opentelemetry.spring-cloud-aws-3.0", "process", "combined-batch-queue", 12);
+  }
+
+  private static void sendMessages(SqsClient client, List<String> bodies) {
+    client.sendMessageBatch(request ->
+        request
+            .queueUrl(combinedBatchQueueUrl)
+            .entries(
+                bodies.stream()
+                    .map(body ->
+                        SendMessageBatchRequestEntry.builder().id(body).messageBody(body).build())
+                    .toList()));
   }
 
   @Test
@@ -539,7 +600,7 @@ class AwsSqsTest {
   }
 
   private static void assertBatchConsumedMessages(
-      String scope, String operationName, String queueName) {
+      String scope, String operationName, String queueName, long count) {
     testing.waitAndAssertMetrics(
         scope,
         "messaging.client.consumed.messages",
@@ -549,7 +610,7 @@ class AwsSqsTest {
                     .hasLongSumSatisfying(sum ->
                         sum.hasPointsSatisfying(point ->
                             point
-                                .hasValue(2)
+                                .hasValue(count)
                                 .hasAttributesSatisfyingExactly(
                                     equalTo(MESSAGING_OPERATION_NAME, operationName),
                                     equalTo(stringKey("messaging.system.name"), "aws.sqs"),

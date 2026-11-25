@@ -72,9 +72,11 @@ class AwsSqsTestApplication {
   }
 
   // configured with the queue url, and with more than 10 messages per poll, which makes spring
-  // combine the responses of several receive calls into one batch
+  // combine the responses of several receive calls into one batch; the test stops this listener
+  // while it sends messages, so that one poll receives all of them
   @SqsListener(
       value = "${test.combined-batch-queue-url}",
+      id = "combined-batch-listener",
       maxConcurrentMessages = "20",
       maxMessagesPerPoll = "20",
       pollTimeoutSeconds = "1")
