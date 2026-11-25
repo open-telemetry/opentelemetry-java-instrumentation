@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -225,7 +226,8 @@ public abstract class AbstractReactorCoreTest {
     assertThat(observedContextValue.get()).isEqualTo("test-context-value");
     assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
 
-    testing.waitAndAssertTraces(
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("producer", "subscriber"),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("subscriber").hasNoParent()));
   }
@@ -255,7 +257,8 @@ public abstract class AbstractReactorCoreTest {
     sink.get().complete();
 
     assertThat(observedContextValue.get()).isEqualTo("test-context-value");
-    testing.waitAndAssertTraces(
+    testing.waitAndAssertSortedTraces(
+        orderByRootSpanName("producer", "subscriber"),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()),
         trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("subscriber").hasNoParent()));
   }

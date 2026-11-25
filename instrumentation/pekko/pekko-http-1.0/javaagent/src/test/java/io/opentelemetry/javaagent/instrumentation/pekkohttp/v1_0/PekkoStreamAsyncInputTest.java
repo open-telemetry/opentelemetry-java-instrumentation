@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0;
 
+import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static java.util.concurrent.TimeUnit.SECONDS;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -70,7 +71,8 @@ class PekkoStreamAsyncInputTest {
       AsyncCallback<String> callback = ready.get(10, SECONDS);
       testing.runWithSpan("request", () -> callback.invoke("wake up"));
 
-      testing.waitAndAssertTraces(
+      testing.waitAndAssertSortedTraces(
+          orderByRootSpanName("request", "wakeup"),
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("request").hasNoParent()),
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("wakeup").hasNoParent()));
     } finally {
