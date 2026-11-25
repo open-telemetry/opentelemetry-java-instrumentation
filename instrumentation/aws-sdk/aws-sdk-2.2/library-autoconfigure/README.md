@@ -34,10 +34,6 @@ Register your SDK with `GlobalOpenTelemetry` before building any AWS SDK clients
 loads the tracing execution interceptor automatically.
 See the [AWS SDK instrumentation settings](../../README.md) for configuration.
 
-Autoconfigure does not wrap clients. To trace SQS message processing or collect telemetry from
-asynchronous Bedrock Runtime response streams, add
-[`opentelemetry-aws-sdk-2.2`](../library/README.md#add-these-dependencies-to-your-project) as a
-compile dependency alongside the autoconfigure runtime dependency.
-Then [wrap the clients after building them](../library/README.md#wrap-sqs-and-asynchronous-bedrock-runtime-clients).
-Use the wrapper methods without calling `addExecutionInterceptor(...)`; the SDK already loads
-the interceptor.
+Autoconfigure registers the interceptor but does not wrap SQS or asynchronous Bedrock Runtime clients.
+See [how to wrap these clients](../library/README.md#wrap-sqs-and-asynchronous-bedrock-runtime-clients)
+with or without autoconfigure.

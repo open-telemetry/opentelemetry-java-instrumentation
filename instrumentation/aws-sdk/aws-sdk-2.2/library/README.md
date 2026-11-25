@@ -28,9 +28,7 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2:OPENT
 
 ### Usage
 
-To instrument all AWS SDK clients, use the [autoconfigure module](../library-autoconfigure/README.md).
-
-To register instrumentation only on a specific SDK client, register the interceptor when creating it.
+For clients your application builds, register the interceptor on each client you want to instrument:
 
 ```java
 AwsSdkTelemetry telemetry = AwsSdkTelemetry.create(openTelemetry);
@@ -41,14 +39,14 @@ DynamoDbClient client = DynamoDbClient.builder()
     .build();
 ```
 
+To register the interceptor automatically on all AWS SDK clients, use the
+[autoconfigure module](../library-autoconfigure/README.md).
+
 #### Wrap SQS and asynchronous Bedrock Runtime clients
 
-These clients need both an interceptor and a wrapper. With explicit registration, add
-`telemetry.createExecutionInterceptor()` to each client builder before building and wrapping the client.
-
-If you use the autoconfigure module, create `telemetry` with `AwsSdkTelemetry.create(openTelemetry)`
-using the same `OpenTelemetry` instance as the automatic interceptor. Do not register another
-interceptor.
+These clients need both an interceptor and a wrapper. For manual setup, register the interceptor
+on the builder as shown above, then build and wrap the client using the same `AwsSdkTelemetry`
+instance.
 
 Wrap synchronous and asynchronous SQS clients after building them:
 
@@ -72,9 +70,14 @@ BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClien
 BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
 
-The [message content capture setting](../../README.md) configures the automatic interceptor, not
-the wrapper. To capture streaming response content, call `setGenaiCaptureMessageContent(true)` on
-the `AwsSdkTelemetry` builder used for the wrapper.
+If you already use autoconfigure, add the library above as a compile dependency alongside the
+autoconfigure runtime dependency. Use the `OpenTelemetry` instance you registered with
+`GlobalOpenTelemetry` to create `AwsSdkTelemetry`. Wrap the clients as shown without adding an
+interceptor to their builders.
+
+To capture streaming response content, call `setGenaiCaptureMessageContent(true)` on the
+`AwsSdkTelemetry` builder used for the wrapper. With autoconfigure, the
+[message content capture setting](../../README.md) applies only to the interceptor.
 
 ## Trace propagation
 
