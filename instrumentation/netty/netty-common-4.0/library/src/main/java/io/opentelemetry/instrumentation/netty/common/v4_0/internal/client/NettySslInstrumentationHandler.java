@@ -14,6 +14,7 @@ import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
+import java.lang.ref.WeakReference;
 import java.net.SocketAddress;
 import javax.annotation.Nullable;
 
@@ -29,8 +30,8 @@ public final class NettySslInstrumentationHandler extends ChannelDuplexHandler {
 
   // this is used elsewhere to manage the link between the underlying (user) handler and our handler
   // which is needed below so that we can unlink this handler when we remove it below
-  private static final VirtualField<ChannelHandler, ChannelHandler> INSTRUMENTATION_HANDLER_FIELD =
-      VirtualField.find(ChannelHandler.class, ChannelHandler.class);
+  private static final VirtualField<ChannelHandler, WeakReference<ChannelHandler>>
+      INSTRUMENTATION_HANDLER_FIELD = VirtualField.find(ChannelHandler.class, WeakReference.class);
 
   static {
     Class<?> sslHandshakeCompletionEvent = null;

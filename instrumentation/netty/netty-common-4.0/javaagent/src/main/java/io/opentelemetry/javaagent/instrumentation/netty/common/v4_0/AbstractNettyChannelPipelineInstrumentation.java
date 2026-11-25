@@ -7,7 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.netty.common.v4_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.getInstrumentationHandler;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.setInstrumentationHandler;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
@@ -69,12 +70,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(0) ChannelHandler handler) {
-      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
+      ChannelHandler ourHandler = getInstrumentationHandler(handler);
       if (ourHandler != null) {
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        CHANNEL_HANDLER.set(handler, null);
+        setInstrumentationHandler(handler, null);
       }
     }
   }
@@ -90,12 +91,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         return;
       }
 
-      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
+      ChannelHandler ourHandler = getInstrumentationHandler(handler);
       if (ourHandler != null) {
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        CHANNEL_HANDLER.set(handler, null);
+        setInstrumentationHandler(handler, null);
       }
     }
   }
@@ -112,12 +113,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         return;
       }
 
-      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
+      ChannelHandler ourHandler = getInstrumentationHandler(handler);
       if (ourHandler != null) {
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        CHANNEL_HANDLER.set(handler, null);
+        setInstrumentationHandler(handler, null);
       }
     }
   }
@@ -128,12 +129,12 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
-      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
+      ChannelHandler ourHandler = getInstrumentationHandler(handler);
       if (ourHandler != null) {
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        CHANNEL_HANDLER.set(handler, null);
+        setInstrumentationHandler(handler, null);
       }
     }
   }
@@ -145,7 +146,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
     @Advice.AssignReturned.ToReturned
     public static ChannelHandler removeHandler(
         @Advice.This ChannelPipeline pipeline, @Advice.Return ChannelHandler handler) {
-      ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
+      ChannelHandler ourHandler = getInstrumentationHandler(handler);
       if (ourHandler != null) {
         // Context is null when our handler has already been removed. This happens when calling
         // removeLast first removed our handler and we called removeLast again to remove the http
@@ -153,7 +154,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         if (pipeline.context(ourHandler) != null) {
           pipeline.remove(ourHandler);
         }
-        CHANNEL_HANDLER.set(handler, null);
+        setInstrumentationHandler(handler, null);
       } else {
         String handlerClassName = handler.getClass().getName();
         if (handlerClassName.endsWith("TracingHandler")
@@ -175,7 +176,7 @@ public abstract class AbstractNettyChannelPipelineInstrumentation implements Typ
         @Advice.This ChannelPipeline pipeline, @Advice.Argument(value = 1) String name) {
       ChannelHandler handler = pipeline.get(name);
       if (handler != null) {
-        ChannelHandler ourHandler = CHANNEL_HANDLER.get(handler);
+        ChannelHandler ourHandler = getInstrumentationHandler(handler);
         if (ourHandler != null) {
           name = ourHandler.getClass().getName();
         }

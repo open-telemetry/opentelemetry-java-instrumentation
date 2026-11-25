@@ -77,7 +77,7 @@ public class Helpers {
                 .pipeline()
                 .addAfter(codecCtx.name(), ourHandler.getClass().getName(), ourHandler);
             // attach this in this way to match up with how netty instrumentation expects things
-            VirtualFieldHelper.CHANNEL_HANDLER.set(codecCtx.handler(), ourHandler);
+            VirtualFieldHelper.setInstrumentationHandler(codecCtx.handler(), ourHandler);
           }
         }
       }
@@ -115,7 +115,7 @@ public class Helpers {
                 .pipeline()
                 .addAfter(codecCtx.name(), ourHandler.getClass().getName(), ourHandler);
             // attach this in this way to match up with how netty instrumentation expects things
-            VirtualFieldHelper.CHANNEL_HANDLER.set(codecCtx.handler(), ourHandler);
+            VirtualFieldHelper.setInstrumentationHandler(codecCtx.handler(), ourHandler);
           }
         }
       }

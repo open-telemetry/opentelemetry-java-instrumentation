@@ -5,7 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.netty.v4_1;
 
-import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.CHANNEL_HANDLER;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.getInstrumentationHandler;
+import static io.opentelemetry.javaagent.instrumentation.netty.common.v4_0.VirtualFieldHelper.setInstrumentationHandler;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.clientHandlerFactory;
 import static io.opentelemetry.javaagent.instrumentation.netty.v4_1.NettyClientSingletons.sslInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
@@ -77,7 +78,7 @@ public class NettyChannelPipelineInstrumentation
       }
 
       // don't add another instrumentation handler if there already is one attached
-      if (CHANNEL_HANDLER.get(handler) != null) {
+      if (getInstrumentationHandler(handler) != null) {
         return;
       }
 
@@ -117,7 +118,7 @@ public class NettyChannelPipelineInstrumentation
         try {
           pipeline.addAfter(name, ourHandler.getClass().getName(), ourHandler);
           // associate our handle with original handler so they could be removed together
-          CHANNEL_HANDLER.set(handler, ourHandler);
+          setInstrumentationHandler(handler, ourHandler);
         } catch (IllegalArgumentException ignored) {
           // Prevented adding duplicate handlers.
         }
