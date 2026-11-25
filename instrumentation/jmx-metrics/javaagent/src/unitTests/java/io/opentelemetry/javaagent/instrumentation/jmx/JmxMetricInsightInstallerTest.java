@@ -45,9 +45,9 @@ class JmxMetricInsightInstallerTest {
     JmxMetricInsightInstaller.configure(builder, config(emptyMap()));
 
     verify(builder)
-        .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+        .setBundledMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
     verify(builder)
-        .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().setExcluded("*").build());
+        .setUnstableBundledMetricsFilter(IncludeExclude.builder().setExcluded("*").build());
   }
 
   @Test
@@ -69,9 +69,9 @@ class JmxMetricInsightInstallerTest {
         config(singletonMap("otel.jmx.metrics.experimental.included", "tomcat.*,kafka.*")));
 
     verify(builder)
-        .setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+        .setBundledMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
     verify(builder)
-        .setInternalMetricsUnstableMetricsFilter(
+        .setUnstableBundledMetricsFilter(
             IncludeExclude.builder().setIncluded("tomcat.*", "kafka.*").build());
   }
 

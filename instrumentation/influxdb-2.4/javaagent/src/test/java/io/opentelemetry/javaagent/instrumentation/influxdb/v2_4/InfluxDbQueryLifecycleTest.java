@@ -1098,19 +1098,16 @@ class InfluxDbQueryLifecycleTest {
             metric
                 .hasName("db.client.operation.duration")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram -> {
-                  histogram.satisfies(data -> assertThat(data.getPoints()).hasSize(1));
-                  histogram.hasPointsSatisfying(point ->
-                      point
-                          .hasCount(1)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, "influxdb"),
-                              equalTo(DB_NAMESPACE, "mydb"),
-                              equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
-                              equalTo(SERVER_ADDRESS, "localhost"),
-                              equalTo(SERVER_PORT, 8086),
-                              equalTo(ERROR_TYPE, errorType)));
-                }));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasCount(1)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "influxdb"),
+                            equalTo(DB_NAMESPACE, "mydb"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT cpu"),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, 8086),
+                            equalTo(ERROR_TYPE, errorType))));
   }
 
   private static void assertNoDuration() {

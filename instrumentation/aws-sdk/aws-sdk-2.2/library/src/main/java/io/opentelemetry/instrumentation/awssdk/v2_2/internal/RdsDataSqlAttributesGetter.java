@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.singletonList;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
 import java.util.Collection;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -25,6 +23,7 @@ class RdsDataSqlAttributesGetter
 
   @Override
   public String getDbSystemName(ExecutionAttributes request) {
+    // RDS Data requests do not identify whether the engine is Aurora MySQL or PostgreSQL.
     return OTHER_SQL;
   }
 
@@ -32,11 +31,6 @@ class RdsDataSqlAttributesGetter
   @Nullable
   public String getDbNamespace(ExecutionAttributes request) {
     return sdkRequest(request).getValueForField("database", String.class).orElse(null);
-  }
-
-  @Override
-  public SqlDialect getSqlDialect(ExecutionAttributes request) {
-    return DOUBLE_QUOTES_ARE_STRING_LITERALS;
   }
 
   @Override

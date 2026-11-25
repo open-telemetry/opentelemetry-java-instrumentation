@@ -65,8 +65,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
             .get("experimental")
             .getScalarList("included", String.class, emptyList());
     // JVM rules overlap with runtime-telemetry.
-    jmx.setInternalMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
-    jmx.setInternalMetricsUnstableMetricsFilter(
+    jmx.setBundledMetricsSystemFilter(IncludeExclude.builder().setExcluded("jvm").build());
+    jmx.setUnstableBundledMetricsFilter(
         unstableInclude.isEmpty()
             ? IncludeExclude.builder().setExcluded("*").build()
             : IncludeExclude.builder().setIncluded(unstableInclude).build());

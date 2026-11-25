@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -41,13 +43,20 @@ dependencies {
 // Requires old Guava. Can't use enforcedPlatform since predates BOM
 configurations.testRuntimeClasspath.get().resolutionStrategy.force("com.google.guava:guava:19.0")
 
-tasks {
-  withType<Test>().configureEach {
-    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+testing.suites {
+  unitTests {
+    dependencies {
+      // SniEndPoint and Host.getEndPoint() were added in driver 3.8.0. Use the final 3.x release
+      // to test these APIs while the javaagent integration tests cover the 3.0.0 baseline.
+      implementation("com.datastax.cassandra:cassandra-driver-core:3.11.5")
+    }
   }
+}
 
-  if (otelProps.denyUnsafe) {
-    withType<Test>().configureEach {
+tasks {
+  test {
+    systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    if (otelProps.denyUnsafe) {
       enabled = false
     }
   }

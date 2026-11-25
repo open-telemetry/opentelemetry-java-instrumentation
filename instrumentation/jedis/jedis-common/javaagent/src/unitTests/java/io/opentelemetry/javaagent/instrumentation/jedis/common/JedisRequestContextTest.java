@@ -98,7 +98,8 @@ class JedisRequestContextTest {
 
     JedisRequestContext.captureServerError(nestedServerFailure);
     assertThat(nestedContext.detachAndEnd(null)).isNull();
-    assertThat(batchContext.isServerError(nestedServerFailure)).isTrue();
+    assertThat(nestedContext.isServerError(nestedServerFailure)).isTrue();
+    assertThat(batchContext.isServerError(nestedServerFailure)).isFalse();
     assertThat(batchContext.detachAndEnd(null)).isNull();
     assertDetached();
   }
@@ -113,7 +114,7 @@ class JedisRequestContextTest {
       JedisRequestContext.captureServerError(serverFailure);
 
       assertThat(replyContext.detachAndEnd(serverFailure)).isSameAs(serverFailure);
-      assertThat(batchContext.isServerError(serverFailure)).isTrue();
+      assertThat(batchContext.isServerError(serverFailure)).isFalse();
       assertThat(batchContext.detachAndEnd(null)).isNull();
     } finally {
       batchContext.detachAndEnd(null);
@@ -144,7 +145,7 @@ class JedisRequestContextTest {
       JedisRequestContext.captureServerError(handledFailure);
       callbackReply.detachAndEnd(handledFailure);
       assertThat(batchContext.detachAndEnd(null)).isSameAs(batchFailure);
-      assertThat(request.isServerError(handledFailure)).isTrue();
+      assertThat(request.isServerError(handledFailure)).isFalse();
       assertThat(request.isServerError(batchFailure)).isTrue();
     } finally {
       batchContext.detachAndEnd(null);
@@ -173,7 +174,7 @@ class JedisRequestContextTest {
       callbackReply.detachAndEnd(handledFailure);
       assertThat(batchContext.detachAndEnd(null)).isSameAs(serverFailure);
       assertThat(request.isServerError(serverFailure)).isTrue();
-      assertThat(request.isServerError(handledFailure)).isTrue();
+      assertThat(request.isServerError(handledFailure)).isFalse();
     } finally {
       batchContext.detachAndEnd(null);
     }
@@ -211,7 +212,7 @@ class JedisRequestContextTest {
       JedisRequestContext.captureServerError(serverFailure);
 
       assertThat(initializationContext.detachAndEnd(serverFailure)).isSameAs(serverFailure);
-      assertThat(outerContext.isServerError(serverFailure)).isTrue();
+      assertThat(outerContext.isServerError(serverFailure)).isFalse();
       assertThat(JedisRequestContext.attach()).isNull();
       assertThat(outerContext.detachAndEnd(null)).isNull();
     } finally {
@@ -295,8 +296,8 @@ class JedisRequestContextTest {
       JedisRequestContext.captureServerError(deferredFailure);
 
       assertThat(nestedContext.detachAndEnd(null)).isSameAs(firstFailure);
-      assertThat(batchContext.isServerError(firstFailure)).isTrue();
-      assertThat(batchContext.isServerError(deferredFailure)).isTrue();
+      assertThat(batchContext.isServerError(firstFailure)).isFalse();
+      assertThat(batchContext.isServerError(deferredFailure)).isFalse();
       assertThat(batchContext.detachAndEnd(null, asList(deferredFailure, "OK")))
           .isSameAs(deferredFailure);
     } finally {
@@ -314,7 +315,7 @@ class JedisRequestContextTest {
       JedisRequestContext.captureServerError(failure);
 
       assertThat(nestedContext.detachAndEnd(null)).isSameAs(failure);
-      assertThat(batchContext.isServerError(failure)).isTrue();
+      assertThat(batchContext.isServerError(failure)).isFalse();
       assertThat(batchContext.detachAndEnd(null, asList("PONG", "OK"))).isNull();
     } finally {
       batchContext.detachAndEnd(null);
@@ -331,7 +332,8 @@ class JedisRequestContextTest {
       JedisRequestContext.captureServerError(failure);
 
       assertThat(nestedContext.detachAndEnd(failure)).isSameAs(failure);
-      assertThat(batchContext.isServerError(failure)).isTrue();
+      assertThat(nestedContext.isServerError(failure)).isTrue();
+      assertThat(batchContext.isServerError(failure)).isFalse();
       assertThat(batchContext.detachAndEnd(null, asList(failure, "OK"))).isSameAs(failure);
     } finally {
       batchContext.detachAndEnd(null);
@@ -364,7 +366,8 @@ class JedisRequestContextTest {
       JedisRequestContext.captureServerError(failure);
 
       assertThat(nestedContext.detachAndEnd(failure)).isSameAs(failure);
-      assertThat(batchContext.isServerError(failure)).isTrue();
+      assertThat(nestedContext.isServerError(failure)).isTrue();
+      assertThat(batchContext.isServerError(failure)).isFalse();
       assertThat(batchContext.detachAndEnd(failure)).isSameAs(failure);
     } finally {
       batchContext.detachAndEnd(null);

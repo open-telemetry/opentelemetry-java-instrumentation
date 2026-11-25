@@ -4,6 +4,13 @@ import names from "./names.js";
 
 const baseUri = `http://petclinic:9966/petclinic/api`;
 
+export const options = {
+    thresholds: {
+        checks: ["rate==1"],
+        http_req_failed: ["rate==0"],
+    },
+};
+
 export default function() {
     const specialtiesUrl = `${baseUri}/specialties`;
     const specialtiesResponse = http.get(specialtiesUrl);
@@ -13,7 +20,6 @@ export default function() {
     const newVet = names.randomVet(specialties);
     const response = http.post(`${baseUri}/vets`, JSON.stringify(newVet),
             { headers: { 'Content-Type': 'application/json' } });
-    // we don't guard against dupes, so this could fail on occasion
     check(response, { "create vet status 201": (r) => r.status === 201 });
 
     // make sure we can fetch that vet back out
@@ -32,18 +38,17 @@ export default function() {
     const ownerId = JSON.parse(newOwnerResponse.body).id;
     const ownerResponse = http.get(`${baseUri}/owners/${ownerId}`);
     check(ownerResponse, { "fetch new owner status 200": r => r.status === 200});
-    const owner = JSON.parse(ownerResponse.body);
 
     // get the list of all pet types
     const petTypes = JSON.parse(http.get(`${baseUri}/pettypes`).body);
     const owners = JSON.parse(http.get(`${baseUri}/owners`).body);
 
     // create a 3 new random pets
-    const pet1 = names.randomPet(petTypes, owner);
-    const pet2 = names.randomPet(petTypes, owner);
-    const pet3 = names.randomPet(petTypes, owner);
+    const pet1 = names.randomPet(petTypes);
+    const pet2 = names.randomPet(petTypes);
+    const pet3 = names.randomPet(petTypes);
 
-    const petsUrl = `${baseUri}/pets`;
+    const petsUrl = `${baseUri}/owners/${ownerId}/pets`;
     const newPetResponses = http.batch([
         ["POST", petsUrl, JSON.stringify(pet1), { headers: { 'Content-Type': 'application/json' } } ],
         ["POST", petsUrl, JSON.stringify(pet2), { headers: { 'Content-Type': 'application/json' } } ],

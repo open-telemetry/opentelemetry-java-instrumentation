@@ -83,11 +83,6 @@ class StaticImportFormatter : FormatterFunc.NeedsFile, Serializable {
         "io.opentelemetry.instrumentation.testing.util.TestLatestDeps",
         "testLatestDeps",
       ),
-      Rule(
-        "SqlDialect",
-        "io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect",
-        "DOUBLE_QUOTES_ARE_[A-Z_]+"
-      ),
       Rule("Collectors", "java.util.stream.Collectors", "[a-z][a-zA-Z0-9]*"),
       Rule(
         "AttributeKey",

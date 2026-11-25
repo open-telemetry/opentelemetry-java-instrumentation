@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.spring.jms.v6_0;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.api.internal.SpanKey.CONSUMER_PROCESS;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static java.util.Collections.emptyEnumeration;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -107,13 +107,9 @@ class SpringJmsMessageListenerTest {
             metrics
                 .singleElement()
                 .satisfies(metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .singleElement()
-                        .satisfies(point -> {
-                          assertThat(point.getCount()).isEqualTo(count);
-                          assertThat(point.getAttributes())
-                              .isEqualTo(metricAttributes(destination));
-                        })));
+                    assertThat(metric)
+                        .hasHistogramPointsSatisfying(point ->
+                            point.hasCount(count).hasAttributes(metricAttributes(destination)))));
   }
 
   private static Attributes metricAttributes(String destination) {

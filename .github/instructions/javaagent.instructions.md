@@ -181,9 +181,9 @@ while the remaining depth is positive; do not leave unmatched increments on supp
 ## Holder conventions
 
 - Initialize shared instrumenters and collaborators at class load, using `GlobalOpenTelemetry.get()`
-  where an OpenTelemetry instance is needed. A new instrumentation normally uses
-  `io.opentelemetry.<module-name>` as its scope name; preserve established telemetry identity during
-  module maintenance.
+  where an OpenTelemetry instance is needed. Instrumentation normally uses
+  `io.opentelemetry.<module-name>` as its scope name. Preserve established telemetry identities
+  that differ.
 - In `*Singletons`, `*SpanNaming`, and similar holders, a zero-argument accessor directly
   returning a stored collaborator has the same lower-camel name as its field, without `get`.
   Callers static-import that accessor. This does not apply to methods that compute values,

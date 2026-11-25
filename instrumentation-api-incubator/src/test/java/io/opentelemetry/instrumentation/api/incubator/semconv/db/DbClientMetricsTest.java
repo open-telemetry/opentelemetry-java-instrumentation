@@ -211,44 +211,36 @@ class DbClientMetricsTest {
     assertThat(metricReader.collectAllMetrics())
         .satisfiesExactly(metric -> {
           assertThat(metric).hasName("db.client.operation.duration");
-          assertThat(metric.getHistogramData().getPoints())
-              .satisfiesExactlyInAnyOrder(
+          assertThat(metric)
+              .hasHistogramPointsSatisfying(
                   point ->
-                      assertThat(point.getAttributes().asMap())
-                          .isEqualTo(
-                              Attributes.builder()
-                                  .put(DB_SYSTEM_NAME, "myDb")
-                                  .put(DB_OPERATION_NAME, "failedWithCode")
-                                  .put(ERROR_TYPE, "400")
-                                  .put(DB_RESPONSE_STATUS_CODE, "400")
-                                  .build()
-                                  .asMap()),
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "failedWithCode")
+                              .put(ERROR_TYPE, "400")
+                              .put(DB_RESPONSE_STATUS_CODE, "400")
+                              .build()),
                   point ->
-                      assertThat(point.getAttributes().asMap())
-                          .isEqualTo(
-                              Attributes.builder()
-                                  .put(DB_SYSTEM_NAME, "myDb")
-                                  .put(DB_OPERATION_NAME, "failedWithoutCode")
-                                  .put(ERROR_TYPE, "io.example.DbException")
-                                  .build()
-                                  .asMap()),
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "failedWithoutCode")
+                              .put(ERROR_TYPE, "io.example.DbException")
+                              .build()),
                   point ->
-                      assertThat(point.getAttributes().asMap())
-                          .isEqualTo(
-                              Attributes.builder()
-                                  .put(DB_SYSTEM_NAME, "myDb")
-                                  .put(DB_OPERATION_NAME, "successfulWithCode")
-                                  .put(DB_RESPONSE_STATUS_CODE, "200")
-                                  .build()
-                                  .asMap()),
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "successfulWithCode")
+                              .put(DB_RESPONSE_STATUS_CODE, "200")
+                              .build()),
                   point ->
-                      assertThat(point.getAttributes().asMap())
-                          .isEqualTo(
-                              Attributes.builder()
-                                  .put(DB_SYSTEM_NAME, "myDb")
-                                  .put(DB_OPERATION_NAME, "successfulWithoutCode")
-                                  .build()
-                                  .asMap()));
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "successfulWithoutCode")
+                              .build()));
         });
   }
 

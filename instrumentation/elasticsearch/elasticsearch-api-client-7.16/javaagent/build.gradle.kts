@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -47,6 +49,12 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:elasticsearch:elasticsearch-rest-common-5.0:javaagent"))
+    }
+  }
+
   register<JvmTestSuite>("version8Test") {
     sources {
       java {

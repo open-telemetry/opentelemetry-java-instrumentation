@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.unitTests
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.testcontainers-testing")
@@ -35,6 +37,13 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":instrumentation:vertx:vertx-sql-client:vertx-sql-client-common-4.0:javaagent"))
+      implementation("io.vertx:vertx-sql-client:4.0.0")
+    }
+  }
+
   // pools over a list of servers were added in 4.2, and the module's own tests run against 4.0
   register<JvmTestSuite>("vertx42Test") {
     dependencies {

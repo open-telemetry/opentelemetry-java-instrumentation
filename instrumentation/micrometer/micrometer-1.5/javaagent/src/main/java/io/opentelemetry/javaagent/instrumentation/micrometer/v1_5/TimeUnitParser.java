@@ -17,16 +17,12 @@ import static java.util.logging.Level.WARNING;
 import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 
 final class TimeUnitParser {
 
   private static final Logger logger = Logger.getLogger(TimeUnitParser.class.getName());
 
-  static TimeUnit parseConfigValue(@Nullable String value) {
-    if (value == null) {
-      return SECONDS;
-    }
+  static TimeUnit parseConfigValue(String value) {
     // short names are UCUM names
     // long names are just TimeUnit values lowercased
     switch (value.toLowerCase(Locale.ROOT)) {

@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.camel.v2_20;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.util.Collections.emptyEnumeration;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
@@ -110,9 +110,8 @@ class SjmsRegisteredListenerTest {
         "messaging.process.duration",
         metrics ->
             metrics.satisfiesExactly(metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .singleElement()
-                    .satisfies(point -> assertThat(point.getCount()).isEqualTo(expectedCount))));
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point -> point.hasCount(expectedCount))));
   }
 
   private static void assertNoProcessDuration(String instrumentationName) {

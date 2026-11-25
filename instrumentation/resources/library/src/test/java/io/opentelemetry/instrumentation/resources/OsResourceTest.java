@@ -124,6 +124,15 @@ class OsResourceTest {
   }
 
   @Test
+  @SetSystemProperty(key = "os.name", value = "SunOS")
+  void sunos() {
+    Resource resource = OsResource.buildResource();
+    assertThat(resource.getSchemaUrl()).isEqualTo(SchemaUrls.V1_40_0);
+    assertThat(resource.getAttribute(OS_TYPE)).isEqualTo(SOLARIS);
+    assertThat(resource.getAttribute(OS_DESCRIPTION)).isNotEmpty();
+  }
+
+  @Test
   @SetSystemProperty(key = "os.name", value = "Z/OS 10")
   void zos() {
     Resource resource = OsResource.buildResource();
