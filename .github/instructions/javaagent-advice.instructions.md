@@ -31,27 +31,27 @@ exception applies.
 
 ## Failures and exceptional exits
 
-Executable enter and exit advice with fallible bodies needs `suppress = Throwable.class`,
-including when the possible failure is in a helper. Instrumentation and its helpers must not
-let unexpected failures break application code. Log suppressed unexpected failures where they
-occur unless they are expected optional probes.
+- Executable enter and exit advice with fallible bodies needs `suppress = Throwable.class`,
+  including when the possible failure is in a helper. Instrumentation and its helpers must not
+  let unexpected failures break application code. Log suppressed unexpected failures where they
+  occur unless they are expected optional probes.
 
-Suppression is unnecessary for:
+  Suppression is unnecessary for:
 
-- test code;
-- intentional internal infrastructure, such as class-loading/lambda support where swallowing
-  an error would corrupt operation;
-- provably throw-free bodies, such as returning a literal or reading a field with no possible
-  null dereference;
-- dummy advice registered with `none()` solely to trigger helper injection, because it never runs.
+  - test code;
+  - intentional internal infrastructure, such as class-loading/lambda support where swallowing
+    an error would corrupt operation;
+  - provably throw-free bodies, such as returning a literal or reading a field with no possible
+    null dereference;
+  - dummy advice registered with `none()` solely to trigger helper injection, because it never runs.
 
-Do not classify library calls, iteration, or reflection as throw-free. A helper call in a dummy
-advice body does not make suppression useful.
+  Do not classify library calls, iteration, or reflection as throw-free. A helper call in a dummy
+  advice body does not make suppression useful.
 
-Exit advice owning a scope, span, call-depth increment, or temporary state runs on exceptional exits
-with `onThrowable = Throwable.class` and releases what entry acquired. Return-only advice with no
-cleanup omits `onThrowable`: on an exceptional exit, `@Advice.Return` receives null or zero rather
-than a real result. Suppression and exceptional-exit selection solve different problems.
+- Exit advice owning a scope, span, call-depth increment, or temporary state runs on exceptional exits
+  with `onThrowable = Throwable.class` and releases what entry acquired. Return-only advice with no
+  cleanup omits `onThrowable`: on an exceptional exit, `@Advice.Return` receives null or zero rather
+  than a real result. Suppression and exceptional-exit selection solve different problems.
 
 ## Raw scope ownership
 
