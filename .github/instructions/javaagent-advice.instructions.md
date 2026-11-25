@@ -48,10 +48,10 @@ exception applies.
   Do not classify library calls, iteration, or reflection as throw-free. A helper call in a dummy
   advice body does not make suppression useful.
 
-Exit advice owning a scope, span, call-depth increment, or temporary state runs on exceptional exits
-with `onThrowable = Throwable.class` and releases what entry acquired. Return-only advice with no
-cleanup omits `onThrowable`: on an exceptional exit, `@Advice.Return` receives null or zero rather
-than a real result. Suppression and exceptional-exit selection solve different problems.
+- Exit advice owning a scope, span, call-depth increment, or temporary state runs on exceptional exits
+  with `onThrowable = Throwable.class` and releases what entry acquired. Return-only advice with no
+  cleanup omits `onThrowable`: on an exceptional exit, `@Advice.Return` receives null or zero rather
+  than a real result. Suppression and exceptional-exit selection solve different problems.
 
 ## Raw scope ownership
 
