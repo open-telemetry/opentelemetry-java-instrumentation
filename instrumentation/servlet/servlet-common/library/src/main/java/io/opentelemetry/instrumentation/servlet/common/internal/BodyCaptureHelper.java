@@ -45,9 +45,8 @@ public abstract class BodyCaptureHelper<REQUEST, INPUT> {
       return inputStream;
     }
 
-    // prevent capturing the body when content-encoding indicates a binary body
-    String contentEncoding = accessor.getRequestHeader(request, "Content-Encoding");
-    if (contentEncoding != null && !"identity".equalsIgnoreCase(contentEncoding)) {
+    // Only requests marked as eligible are buffered
+    if (accessor.getRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE) == null) {
       return inputStream;
     }
 

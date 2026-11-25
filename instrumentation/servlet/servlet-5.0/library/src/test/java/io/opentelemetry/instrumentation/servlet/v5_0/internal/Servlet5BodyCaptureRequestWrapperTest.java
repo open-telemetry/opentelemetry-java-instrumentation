@@ -7,9 +7,13 @@ package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper;
+import jakarta.servlet.ServletInputStream;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletRequestWrapper;
+import java.io.IOException;
 import org.junit.jupiter.api.Test;
 
 class Servlet5BodyCaptureRequestWrapperTest {
@@ -63,5 +67,29 @@ class Servlet5BodyCaptureRequestWrapperTest {
 
     assertThat(result).isInstanceOf(Servlet5BodyCaptureRequestWrapper.class);
     assertThat(result).isNotSameAs(applicationWrapper);
+  }
+
+  @Test
+  void inputStreamNotWrappedWhenRequestNotMarked() throws IOException {
+    ServletInputStream input = mock(ServletInputStream.class);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getInputStream()).thenReturn(input);
+    when(request.getAttribute(BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE)).thenReturn(null);
+
+    HttpServletRequest wrapper = Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(request, 10);
+
+    assertThat(wrapper.getInputStream()).isSameAs(input);
+  }
+
+  @Test
+  void inputStreamWrappedWhenRequestMarked() throws IOException {
+    ServletInputStream input = mock(ServletInputStream.class);
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    when(request.getInputStream()).thenReturn(input);
+    when(request.getAttribute(BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE)).thenReturn(true);
+
+    HttpServletRequest wrapper = Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(request, 10);
+
+    assertThat(wrapper.getInputStream()).isNotSameAs(input);
   }
 }
