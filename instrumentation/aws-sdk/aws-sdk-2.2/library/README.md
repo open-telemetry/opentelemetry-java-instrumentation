@@ -70,8 +70,7 @@ BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClien
 BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
 
-For streaming response telemetry with `invokeModelWithResponseStream`, pass a built request to the
-wrapped client. The overload that takes a builder lambda does not instrument the response stream.
+For example, call `invokeModelWithResponseStream` on the wrapped client:
 
 ```java
 InvokeModelWithResponseStreamRequest request =
