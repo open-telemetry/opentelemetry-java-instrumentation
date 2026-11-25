@@ -24,6 +24,7 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
@@ -56,6 +57,15 @@ public abstract class AbstractDubboRegistryTest {
   @RegisterExtension static final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
+
+  protected void configureService(ServiceConfig<?> service) {}
+
+  protected void configureReference(ReferenceConfig<?> referenceConfig) {}
+
+  protected <T, E extends Throwable> T runWithParentSpan(String name, ThrowingSupplier<T, E> action)
+      throws E {
+    return runWithSpan(name, action);
+  }
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -98,6 +108,7 @@ public abstract class AbstractDubboRegistryTest {
     service.setRef(new HelloServiceImpl());
     service.setVersion(SERVICE_VERSION);
     service.setGroup(SERVICE_GROUP);
+    configureService(service);
 
     DubboBootstrap providerBootstrap = DubboTestUtil.newDubboBootstrap();
     cleanup.deferCleanup(providerBootstrap::destroy);
@@ -116,6 +127,7 @@ public abstract class AbstractDubboRegistryTest {
     referenceConfig.setGroup(SERVICE_GROUP);
     referenceConfig.setTimeout(30000);
     referenceConfig.setInjvm(false);
+    configureReference(referenceConfig);
 
     ProtocolConfig consumerProtocol = new ProtocolConfig();
     consumerProtocol.setRegister(false);
@@ -134,7 +146,7 @@ public abstract class AbstractDubboRegistryTest {
     GenericService genericService = reference.get();
 
     Object response =
-        runWithSpan(
+        runWithParentSpan(
             "parent",
             () ->
                 genericService.$invoke(

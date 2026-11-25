@@ -24,8 +24,8 @@ class DubboManualConfigurationTest {
     List<Filter> providerFilters = filterLoader.getActivateExtension(url, "filter", "provider");
 
     assertThat(consumerFilters)
-        .noneMatch(filter -> filter.getClass().getName().endsWith("OpenTelemetryClientFilter"));
+        .noneMatch(filter -> filter.getClass().getName().contains("OpenTelemetry"));
     assertThat(providerFilters)
-        .noneMatch(filter -> filter.getClass().getName().endsWith("OpenTelemetryServerFilter"));
+        .noneMatch(filter -> filter.getClass().getName().contains("OpenTelemetry"));
   }
 }

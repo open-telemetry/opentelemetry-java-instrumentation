@@ -7,6 +7,8 @@ dependencies {
   annotationProcessor("com.google.auto.value:auto-value")
 
   library("org.apache.dubbo:dubbo:2.7.0")
+
+  testImplementation(project(":instrumentation:apache-dubbo-2.7:testing"))
 }
 
 tasks.withType<Test>().configureEach {

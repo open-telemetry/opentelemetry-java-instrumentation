@@ -4,11 +4,10 @@
 
 ### ⚠️ Breaking changes
 
-- Apache Dubbo library instrumentation no longer activates filters automatically. Add the
-  `opentelemetry-apache-dubbo-2.7-autoconfigure` artifact to retain automatic filter activation.
 - Empty selectors passed to `setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` now select nothing. Use
   `IncludeExclude.builder().setIncluded("*").build()` to select all.
+
 - Rename `io.opentelemetry.javaagent:opentelemetry-agent-for-testing` to
   `io.opentelemetry.javaagent:opentelemetry-javaagent-for-testing`.
 - Default RPC duration histogram boundaries now follow semantic conventions 1.45.0.
@@ -373,6 +372,8 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Apache Dubbo library instrumentation no longer activates filters automatically. Add the
+  `opentelemetry-apache-dubbo-2.7-autoconfigure` artifact to retain automatic filter activation.
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
   resource, or baggage values.
 - Logback library appenders and the Spring Boot starter capture only application-owned MDC values,
