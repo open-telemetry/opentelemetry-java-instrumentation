@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.instrumentation.guava.v10_0;
+package io.opentelemetry.javaagent.instrumentation.guava.v10_0;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -32,7 +32,7 @@ class GuavaAsyncOperationEndStrategyTest {
 
   @Mock private Span span;
 
-  private final AsyncOperationEndStrategy strategy = GuavaAsyncOperationEndStrategy.create();
+  private final AsyncOperationEndStrategy strategy = new GuavaAsyncOperationEndStrategy(false);
 
   @Test
   void listenableFutureSupported() {
@@ -81,7 +81,7 @@ class GuavaAsyncOperationEndStrategyTest {
     Context context = Context.root().with(span);
 
     strategy.end(instrumenter, context, "request", future, String.class);
-    future.cancel(true);
+    future.cancel(false);
 
     verify(instrumenter).end(context, "request", null, null);
   }
@@ -95,11 +95,10 @@ class GuavaAsyncOperationEndStrategyTest {
     SettableFuture<String> future = SettableFuture.create();
     Context context = Context.root().with(span);
 
-    AsyncOperationEndStrategy strategy =
-        GuavaAsyncOperationEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build();
+    AsyncOperationEndStrategy strategy = new GuavaAsyncOperationEndStrategy(true);
 
     strategy.end(instrumenter, context, "request", future, String.class);
-    future.cancel(true);
+    future.cancel(false);
 
     verify(span).setAttribute(GuavaAsyncOperationEndStrategy.CANCELED_ATTRIBUTE_KEY, true);
     verify(instrumenter).end(context, "request", null, null);
