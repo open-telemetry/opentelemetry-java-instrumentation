@@ -53,17 +53,16 @@ abstract class AbstractNatsTest {
                         .hasUnit("s")
                         .hasDescription(
                             "Duration of messaging operation initiated by a producer or consumer client.")
-                        .hasHistogramSatisfying(histogram ->
-                            histogram.hasPointsSatisfying(point ->
-                                point
-                                    .hasSumGreaterThan(0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                        equalTo(stringKey("messaging.system.name"), "nats"),
-                                        equalTo(ERROR_TYPE, errorType),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination),
-                                        equalTo(MESSAGING_OPERATION_TYPE, "send"))
-                                    .hasBucketBoundaries(DURATION_BUCKETS)))));
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                    equalTo(stringKey("messaging.system.name"), "nats"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "send"))
+                                .hasBucketBoundaries(DURATION_BUCKETS))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -74,15 +73,14 @@ abstract class AbstractNatsTest {
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages producer attempted to send to the broker.")
-                        .hasLongSumSatisfying(sum ->
-                            sum.hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, operationName),
-                                        equalTo(stringKey("messaging.system.name"), "nats"),
-                                        equalTo(ERROR_TYPE, errorType),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination))))));
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                    equalTo(stringKey("messaging.system.name"), "nats"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination)))));
   }
 
   void assertProcessMetrics(String destination, String errorType) {
@@ -96,16 +94,15 @@ abstract class AbstractNatsTest {
                     assertThat(metric)
                         .hasUnit("s")
                         .hasDescription("Duration of processing operation.")
-                        .hasHistogramSatisfying(histogram ->
-                            histogram.hasPointsSatisfying(point ->
-                                point
-                                    .hasSumGreaterThan(0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                        equalTo(stringKey("messaging.system.name"), "nats"),
-                                        equalTo(ERROR_TYPE, errorType),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination))
-                                    .hasBucketBoundaries(DURATION_BUCKETS)))));
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasSumGreaterThan(0)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "nats"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination))
+                                .hasBucketBoundaries(DURATION_BUCKETS))));
     testing()
         .waitAndAssertMetrics(
             INSTRUMENTATION_NAME,
@@ -116,15 +113,14 @@ abstract class AbstractNatsTest {
                         .hasUnit("{message}")
                         .hasDescription(
                             "Number of messages that were delivered to the application.")
-                        .hasLongSumSatisfying(sum ->
-                            sum.hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                        equalTo(stringKey("messaging.system.name"), "nats"),
-                                        equalTo(ERROR_TYPE, errorType),
-                                        equalTo(MESSAGING_DESTINATION_NAME, destination))))));
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "nats"),
+                                    equalTo(ERROR_TYPE, errorType),
+                                    equalTo(MESSAGING_DESTINATION_NAME, destination)))));
   }
 
   @BeforeAll

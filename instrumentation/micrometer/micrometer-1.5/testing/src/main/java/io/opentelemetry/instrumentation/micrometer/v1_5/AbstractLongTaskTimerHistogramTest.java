@@ -77,16 +77,15 @@ public abstract class AbstractLongTaskTimerHistogramTest {
             metric ->
                 metric
                     .hasName("testLongTaskTimerHistogram.histogram")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttributesSatisfyingExactly(equalTo(stringKey("le"), "0.1"))
-                                    .hasValue(2),
-                            point ->
-                                point
-                                    .hasAttributesSatisfyingExactly(equalTo(stringKey("le"), "1"))
-                                    .hasValue(3))));
+                    .hasDoubleGaugePointsSatisfying(
+                        point ->
+                            point
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("le"), "0.1"))
+                                .hasValue(2),
+                        point ->
+                            point
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("le"), "1"))
+                                .hasValue(3)));
 
     // when
     sample1.stop();
@@ -125,17 +124,14 @@ public abstract class AbstractLongTaskTimerHistogramTest {
             metric ->
                 metric
                     .hasName("testLongTaskTimerHistogram.histogram")
-                    .hasDoubleGaugeSatisfying(gauge ->
-                        gauge.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("le"), "0.1")),
-                            point ->
-                                point
-                                    .hasValue(0)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("le"), "1")))));
+                    .hasDoubleGaugePointsSatisfying(
+                        point ->
+                            point
+                                .hasValue(0)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("le"), "0.1")),
+                        point ->
+                            point
+                                .hasValue(0)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("le"), "1"))));
   }
 }

@@ -849,17 +849,14 @@ abstract class AbstractRocketMqClientTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .hasLongSumSatisfying(sum ->
-                            sum.hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
-                                        equalTo(
-                                            ERROR_TYPE,
-                                            InternalErrorException.class.getName()))))));
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
+                                    equalTo(ERROR_TYPE, InternalErrorException.class.getName())))));
 
     Attributes expectedAttributes =
         Attributes.builder()
@@ -894,16 +891,15 @@ abstract class AbstractRocketMqClientTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .hasHistogramSatisfying(histogram ->
-                            histogram.hasPointsSatisfying(point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(ERROR_TYPE, ConsumeResult.FAILURE.name()),
-                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                        equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC))))));
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasCount(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(ERROR_TYPE, ConsumeResult.FAILURE.name()),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                    equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC)))));
     // messaging.client.consumed.messages is owned by the receive operation here, which the retry
     // gate cannot hold back, so the redelivery would race this assertion; the counter is asserted
     // in testSendAndConsumeNormalMessage instead
@@ -932,14 +928,13 @@ abstract class AbstractRocketMqClientTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .hasLongSumSatisfying(sum ->
-                            sum.hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC))))));
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "send"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.rocketmq-client-5.0",
@@ -947,25 +942,24 @@ abstract class AbstractRocketMqClientTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .hasHistogramSatisfying(histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasCount(1)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(MESSAGING_OPERATION_NAME, "send"),
-                                            equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                            equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
-                                            equalTo(MESSAGING_OPERATION_TYPE, "send")),
-                                // the consumer keeps polling, so the number of recorded
-                                // receives is not deterministic
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                        .hasHistogramPointsSatisfying(
+                            point ->
+                                point
+                                    .hasCount(1)
+                                    .hasAttributesSatisfyingExactly(
+                                        equalTo(MESSAGING_OPERATION_NAME, "send"),
                                         equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
                                         equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
-                                        equalTo(MESSAGING_OPERATION_TYPE, "receive"))))));
+                                        equalTo(MESSAGING_OPERATION_TYPE, "send")),
+                            // the consumer keeps polling, so the number of recorded
+                            // receives is not deterministic
+                            point ->
+                                point.hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                    equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC),
+                                    equalTo(MESSAGING_OPERATION_TYPE, "receive")))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.rocketmq-client-5.0",
@@ -973,15 +967,14 @@ abstract class AbstractRocketMqClientTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .hasHistogramSatisfying(histogram ->
-                            histogram.hasPointsSatisfying(point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "process"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                        equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC))))));
+                        .hasHistogramPointsSatisfying(point ->
+                            point
+                                .hasCount(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                    equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC)))));
     testing()
         .waitAndAssertMetrics(
             "io.opentelemetry.rocketmq-client-5.0",
@@ -989,16 +982,14 @@ abstract class AbstractRocketMqClientTest {
             metrics ->
                 metrics.satisfiesExactly(metric ->
                     assertThat(metric)
-                        .satisfies(data -> assertThat(data.getLongSumData().getPoints()).hasSize(1))
-                        .hasLongSumSatisfying(sum ->
-                            sum.hasPointsSatisfying(point ->
-                                point
-                                    .hasValue(1)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(MESSAGING_OPERATION_NAME, "receive"),
-                                        equalTo(stringKey("messaging.system.name"), "rocketmq"),
-                                        equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
-                                        equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC))))));
+                        .hasLongSumPointsSatisfying(point ->
+                            point
+                                .hasValue(1)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, "receive"),
+                                    equalTo(stringKey("messaging.system.name"), "rocketmq"),
+                                    equalTo(MESSAGING_CONSUMER_GROUP_NAME, CONSUMER_GROUP),
+                                    equalTo(MESSAGING_DESTINATION_NAME, NORMAL_TOPIC)))));
     assertThat(testing().metrics())
         .filteredOn(metric ->
             metric

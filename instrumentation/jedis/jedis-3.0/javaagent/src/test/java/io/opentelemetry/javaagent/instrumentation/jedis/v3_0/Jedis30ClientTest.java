@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v3_0;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.util.TestServerServiceMapping.expectedMappedServiceName;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -22,7 +23,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
 import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -324,7 +324,7 @@ class Jedis30ClientTest {
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
     assertNestedErrors(nestedErrors);
-    assertBatchErrorType("WRONGTYPE", "PIPELINE");
+    assertBatchErrorType(JedisDataException.class.getName(), "PIPELINE");
   }
 
   @ParameterizedTest
@@ -378,7 +378,7 @@ class Jedis30ClientTest {
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
     assertNestedErrors(nestedErrors);
-    assertBatchErrorType("WRONGTYPE", "MULTI");
+    assertBatchErrorType(JedisDataException.class.getName(), "MULTI");
   }
 
   @ParameterizedTest
@@ -489,12 +489,10 @@ class Jedis30ClientTest {
         "db.client.operation.duration",
         metrics ->
             metrics.anySatisfy(metric ->
-                assertThat(metric.getHistogramData().getPoints())
-                    .singleElement()
-                    .satisfies(point -> {
-                      assertThat(point.getAttributes().get(DB_OPERATION_NAME)).isEqualTo("SET");
-                      assertThat(point.getAttributes().get(ERROR_TYPE)).isNull();
-                    })));
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point.hasAttributesSatisfying(
+                            equalTo(DB_OPERATION_NAME, "SET"), equalTo(ERROR_TYPE, null)))));
   }
 
   private static class ReplyPipeline extends Pipeline {

@@ -78,6 +78,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     forEachAppender(appender -> appender.setOpenTelemetry(openTelemetry));
   }
 
+  // only used by tests
   static void resetForTest() {
     forEachAppender(OpenTelemetryAppender::resetAppenderForTest);
   }

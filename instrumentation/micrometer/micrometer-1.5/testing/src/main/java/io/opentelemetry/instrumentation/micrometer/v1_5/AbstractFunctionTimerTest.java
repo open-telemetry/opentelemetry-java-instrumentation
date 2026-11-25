@@ -77,12 +77,10 @@ public abstract class AbstractFunctionTimerTest {
                     .hasName("testFunctionTimer.sum")
                     .hasDescription("This is a test function timer")
                     .hasUnit("s")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(42)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumPointsSatisfying(point ->
+                        point
+                            .hasValue(42)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(functionTimer);
@@ -153,12 +151,10 @@ public abstract class AbstractFunctionTimerTest {
                     .hasName("testFunctionTimer.sum")
                     .hasDescription("This is a test function timer")
                     .hasUnit("s")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(point ->
-                            point
-                                .hasValue(42)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasDoubleSumPointsSatisfying(point ->
+                        point
+                            .hasValue(42)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
 
     // when
     Metrics.globalRegistry.remove(functionTimer);
@@ -192,9 +188,8 @@ public abstract class AbstractFunctionTimerTest {
                 metric
                     .hasName("testNanoFunctionTimer.sum")
                     .hasUnit("s")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(
-                            point -> point.hasValue(0.001234).hasAttributes(Attributes.empty()))));
+                    .hasDoubleSumPointsSatisfying(
+                        point -> point.hasValue(0.001234).hasAttributes(Attributes.empty())));
   }
 
   @Test
@@ -229,16 +224,14 @@ public abstract class AbstractFunctionTimerTest {
                 metric
                     .hasName("testFunctionTimerWithTags.sum")
                     .hasUnit("s")
-                    .hasDoubleSumSatisfying(sum ->
-                        sum.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasValue(12)
-                                    .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "1")),
-                            point ->
-                                point
-                                    .hasValue(42)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("tag"), "2")))));
+                    .hasDoubleSumPointsSatisfying(
+                        point ->
+                            point
+                                .hasValue(12)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "1")),
+                        point ->
+                            point
+                                .hasValue(42)
+                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "2"))));
   }
 }

@@ -973,8 +973,7 @@ public abstract class AbstractHttpClientTest<REQUEST> implements HttpClientTypeA
                 .hasName("http.client.request.duration")
                 .hasDescription("Duration of HTTP client requests.")
                 .hasUnit("s")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(point -> point.hasSumGreaterThan(0.0))));
+                .hasHistogramPointsSatisfying(point -> point.hasSumGreaterThan(0.0)));
   }
 
   /**

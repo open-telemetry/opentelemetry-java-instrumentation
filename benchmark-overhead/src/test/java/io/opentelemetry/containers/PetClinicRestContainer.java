@@ -26,6 +26,9 @@ import org.testcontainers.utility.MountableFile;
 
 public class PetClinicRestContainer {
 
+  public static final String IMAGE =
+      "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/"
+          + "petclinic-rest-base@sha256:c33578f9be13bb3ba31cd5f46fb308b71363f9913622fc928998c407767bb2d7";
   private static final Logger logger = LoggerFactory.getLogger(PetClinicRestContainer.class);
   private static final int PETCLINIC_PORT = 9966;
   private final AgentResolver agentResolver = new AgentResolver();
@@ -48,9 +51,7 @@ public class PetClinicRestContainer {
     Optional<Path> agentJar = agentResolver.resolve(this.agent);
 
     GenericContainer<?> container =
-        new GenericContainer<>(
-                DockerImageName.parse(
-                    "ghcr.io/open-telemetry/opentelemetry-java-instrumentation/petclinic-rest-base:20230601125442"))
+        new GenericContainer<>(DockerImageName.parse(IMAGE))
             .withNetwork(network)
             .withNetworkAliases("petclinic")
             .withLogConsumer(new Slf4jLogConsumer(logger))
@@ -60,7 +61,8 @@ public class PetClinicRestContainer {
             .withCopyFileToContainer(
                 MountableFile.forClasspathResource("overhead.jfc"), "/app/overhead.jfc")
             .waitingFor(Wait.forHttp("/petclinic/actuator/health").forPort(PETCLINIC_PORT))
-            .withEnv("spring_profiles_active", "postgresql,spring-data-jpa")
+            .withEnv("spring_profiles_active", "postgres,spring-data-jpa")
+            .withEnv("spring_sql_init_mode", "never")
             .withEnv(
                 "spring_datasource_url",
                 "jdbc:postgresql://postgres:5432/" + PostgresContainer.DATABASE_NAME)

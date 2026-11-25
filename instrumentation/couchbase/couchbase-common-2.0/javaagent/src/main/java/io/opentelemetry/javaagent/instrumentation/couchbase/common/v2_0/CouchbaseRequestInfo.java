@@ -10,7 +10,7 @@ import static io.opentelemetry.context.ContextKey.named;
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.net.SocketAddress;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -38,7 +38,7 @@ public abstract class CouchbaseRequestInfo {
 
   public static CouchbaseRequestInfo create(
       @Nullable String bucket,
-      @Nullable DbServerTarget serverTarget,
+      @Nullable ServerTarget serverTarget,
       Class<?> declaringClass,
       String methodName) {
     String operation =
@@ -49,7 +49,7 @@ public abstract class CouchbaseRequestInfo {
   }
 
   public static CouchbaseRequestInfo create(
-      @Nullable String bucket, @Nullable DbServerTarget serverTarget, Object query) {
+      @Nullable String bucket, @Nullable ServerTarget serverTarget, Object query) {
     String sqlQueryText = CouchbaseQueryText.getSqlQueryText(query);
     return new AutoValue_CouchbaseRequestInfo(
         bucket,
@@ -86,7 +86,7 @@ public abstract class CouchbaseRequestInfo {
   public abstract String getOperation();
 
   @Nullable
-  public abstract DbServerTarget getServerTarget();
+  public abstract ServerTarget getServerTarget();
 
   // Each subscription needs independent mutable node state.
   public Supplier<CouchbaseRequestInfo> copySupplier() {

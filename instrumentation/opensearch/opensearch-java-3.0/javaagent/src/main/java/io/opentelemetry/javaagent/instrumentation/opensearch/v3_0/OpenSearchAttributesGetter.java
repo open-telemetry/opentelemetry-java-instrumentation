@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.util.concurrent.CompletionException;
 import javax.annotation.Nullable;
@@ -60,14 +60,14 @@ final class OpenSearchAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(OpenSearchRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target != null ? target.getAddress() : null;
   }
 
   @Override
   @Nullable
   public Integer getServerPort(OpenSearchRequest request) {
-    DbServerTarget target = request.getServerTarget();
+    ServerTarget target = request.getServerTarget();
     return target != null ? target.getPort() : null;
   }
 

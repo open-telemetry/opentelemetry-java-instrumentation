@@ -11,18 +11,19 @@ user-facing instrumentation configuration.
 ## Names and stability
 
 - Check both the flat property and declarative YAML form of an `otel.instrumentation.*` setting.
-  New flat-property segments use kebab-case; new YAML keys use snake_case.
-- For a new experimental feature, use an `experimental` marker in the flat name and the
+  Flat-property segments use kebab-case and YAML keys use snake_case, subject to the published
+  names below.
+- Experimental features use an `experimental` marker in the flat name and the
   corresponding `/development` YAML form. Preview flat names use a `preview` marker and an
   unstable YAML form, either `/development` or `preview` in the key. Stable feature names need
-  neither marker. An alpha implementation artifact does not make its user-facing settings
-  experimental.
-- Stable configuration names remain stable even when alpha code reads them. Retain a deprecated
-  stable name until the next major version. Experimental and preview names may be removed in a
-  subsequent minor release. The `otel.javaagent.testing.*` namespace has no stability guarantee.
-- Preserve already-published declarative names rather than renaming them to match a mechanical
-  conversion. Determine whether normalized flat-property lookup already resolves the name before
-  adding a `SPECIAL_MAPPINGS` bridge entry.
+  neither marker.
+- Use [VERSIONING.md](../../VERSIONING.md) to determine which settings have a compatibility
+  guarantee and when they can be removed. Apply the policy to the published artifact that exposes
+  the setting to users, not the internal module that reads it. Settings exposed only through alpha
+  artifacts have no compatibility guarantee.
+- Preserve already-published names rather than renaming them to match a mechanical conversion
+  or naming convention. Use a `SPECIAL_MAPPINGS` bridge entry only when normalized flat-property
+  lookup does not resolve the published mapping.
 
 ## Reading settings
 
@@ -47,15 +48,16 @@ migration paths, structured settings, and native configuration integration. Sing
 declarative unit tests are not duplicates.
 
 Test shared conversion, defaults, fallback, and precedence centrally. Keep caller-specific logic
-covered and add missing central coverage before removing module tests. Remove unused fixtures,
-dependencies, task registrations, and metadata-collection inputs with redundant variants, but
-retain metadata describing supported settings.
+covered in module tests. Before removing redundant variants, verify both kinds of coverage remain.
+Remove fixtures, dependencies, task registrations, and metadata-collection inputs that become
+unused, but retain metadata describing supported settings.
 
-## Renaming ordinary settings
+## Deprecated settings and replacements
 
-Read the replacement first, fall back to the deprecated name only when it is absent, then choose
-the default. Log a `WARN` once at startup when the deprecated value is actually applied. Name the
-old and replacement flat properties, or their declarative paths if there is no flat form.
+When both an ordinary setting and its deprecated name are supported, read the replacement first,
+fall back to the deprecated name only when the replacement is absent, then choose the default.
+Log a `WARN` once at startup when the deprecated value is actually applied. Name the old and
+replacement flat properties, or their declarative paths if there is no flat form.
 Deduplicate repeated reads with an existing once-only mechanism, such as a static `AtomicBoolean`
 for one setting or a keyed set for several, unless initialization guarantees one evaluation.
 
@@ -74,7 +76,7 @@ return defaultValue;
 
 Carrying both names must not warn when the replacement determines the result. This lets operators
 roll out a shared configuration to old and new deployments without warning on upgraded deployments.
-Document the deprecation in the CHANGELOG, including instrumentation enablement alias renames.
+When deprecating a setting or instrumentation enablement alias, document it in the CHANGELOG.
 Keep a code comment identifying the deprecated read.
 
 Instrumentation enablement aliases are different: enablement resolves an ordered list of equivalent
@@ -97,16 +99,11 @@ mdc_attributes:
   excluded: [password]
 ```
 
-The setting's baseline determines what absence means:
-
-| Baseline | Absent or empty selector | Omitted `included` with non-empty `excluded` |
-| --- | --- | --- |
-| None by default | Select nothing | Select everything except excluded values |
-| All by default | Keep everything | Keep everything except excluded values |
-
-An empty selector has no patterns in either list. Treat it as absent and use the setting's own
-default; `IncludeExclude.isEmpty()` identifies it. This matches flat configuration, which cannot
-distinguish empty values from unset values.
+Use `IncludeExclude.isEmpty()` to identify a selector with no included or excluded patterns.
+Treat it as absent and use the setting's own default: select nothing for a none-by-default
+setting and keep everything for an all-by-default setting. This matches flat configuration, which
+cannot distinguish empty values from unset values. A selector with excluded patterns and no
+included patterns is not empty and selects everything except excluded values.
 
 For a none-by-default setting, document select-all as `included: ["*"]`, or `included=*` in flat
 configuration. Flat configuration cannot express a present selector with no included patterns.

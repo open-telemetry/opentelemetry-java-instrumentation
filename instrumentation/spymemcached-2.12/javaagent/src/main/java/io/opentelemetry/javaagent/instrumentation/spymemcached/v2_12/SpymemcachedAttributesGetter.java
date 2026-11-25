@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.spymemcached.v2_12;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues;
 import java.net.SocketAddress;
 import java.util.concurrent.Future;
@@ -95,14 +95,14 @@ class SpymemcachedAttributesGetter
   @Override
   @Nullable
   public String getServerAddress(SpymemcachedRequest spymemcachedRequest) {
-    DbServerTarget target = spymemcachedRequest.getServerTarget();
+    ServerTarget target = spymemcachedRequest.getServerTarget();
     return target == null ? null : target.getAddress();
   }
 
   @Override
   @Nullable
   public Integer getServerPort(SpymemcachedRequest spymemcachedRequest) {
-    DbServerTarget target = spymemcachedRequest.getServerTarget();
+    ServerTarget target = spymemcachedRequest.getServerTarget();
     return target == null ? null : target.getPort();
   }
 }

@@ -38,6 +38,7 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.lang.reflect.Proxy;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
@@ -156,10 +157,9 @@ public abstract class AbstractRedissonClientTest {
   private static void disableConnectionPing(Object serverConfig)
       throws InvocationTargetException, IllegalAccessException {
     try {
-      serverConfig
-          .getClass()
-          .getMethod("setPingConnectionInterval", int.class)
-          .invoke(serverConfig, 0);
+      Method method = serverConfig.getClass().getMethod("setPingConnectionInterval", int.class);
+      method.setAccessible(true);
+      method.invoke(serverConfig, 0);
     } catch (NoSuchMethodException ignored) {
       // ignored
     }
@@ -419,29 +419,24 @@ public abstract class AbstractRedissonClientTest {
         metrics ->
             metrics
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram
-                        .satisfies(data -> assertThat(data.getPoints()).hasSize(3))
-                        .hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(ERROR_TYPE, "Custom.Callback!")),
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(attributes ->
-                                        assertThat(attributes.asMap())
-                                            .containsEntry(
-                                                ERROR_TYPE, RedisException.class.getName())),
-                            point ->
-                                point
-                                    .hasCount(1)
-                                    .hasAttributesSatisfying(attributes ->
-                                        assertThat(attributes.asMap())
-                                            .doesNotContainKey(ERROR_TYPE)))));
+                .hasHistogramPointsSatisfying(
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap())
+                                    .containsEntry(ERROR_TYPE, "Custom.Callback!")),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap())
+                                    .containsEntry(ERROR_TYPE, RedisException.class.getName())),
+                    point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(attributes ->
+                                assertThat(attributes.asMap()).doesNotContainKey(ERROR_TYPE))));
   }
 
   private static Class<?> loadCommandMapperType() throws ClassNotFoundException {

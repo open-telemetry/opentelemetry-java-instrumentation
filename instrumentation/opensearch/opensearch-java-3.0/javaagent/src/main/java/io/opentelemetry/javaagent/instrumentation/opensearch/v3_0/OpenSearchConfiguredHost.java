@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.v3_0;
 
 import static java.util.Collections.singletonList;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.OpenSearchServerTarget;
 import javax.annotation.Nullable;
 
@@ -16,13 +16,14 @@ public class OpenSearchConfiguredHost {
   private static final int NO_PORT = -1;
   private static final int INVALID = -2;
 
+  // only used by tests
   @Nullable
-  public static DbServerTarget parse(@Nullable String host) {
+  public static ServerTarget parse(@Nullable String host) {
     return parse(host, "");
   }
 
   @Nullable
-  public static DbServerTarget parse(@Nullable String host, String defaultScheme) {
+  public static ServerTarget parse(@Nullable String host, String defaultScheme) {
     if (host == null) {
       return null;
     }

@@ -4,7 +4,7 @@ applyTo: "instrumentation/**/*,instrumentation-api/**/*,instrumentation-api-incu
 
 # Instrumentation contracts
 
-Apply these rules when adding or changing instrumentation modules and packages.
+Apply these rules to instrumentation modules and packages.
 
 ## Telemetry extraction
 

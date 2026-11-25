@@ -51,13 +51,12 @@ public abstract class AbstractDistributionSummaryTest {
                     .hasName("testSummary")
                     .hasDescription("This is a test distribution summary")
                     .hasUnit("things")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(7)
-                                .hasCount(3)
-                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
-                                .hasBucketBoundaries(NO_BUCKETS))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasSum(7)
+                            .hasCount(3)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
+                            .hasBucketBoundaries(NO_BUCKETS)));
 
     // micrometer gauge histogram is not emitted
     testing()
@@ -75,13 +74,11 @@ public abstract class AbstractDistributionSummaryTest {
             metric ->
                 metric
                     .hasName("testSummary")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(point ->
-                            point
-                                .hasSum(7)
-                                .hasCount(3)
-                                .hasAttributesSatisfyingExactly(
-                                    equalTo(stringKey("tag"), "value")))));
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasSum(7)
+                            .hasCount(3)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))));
   }
 
   @Test
@@ -111,14 +108,13 @@ public abstract class AbstractDistributionSummaryTest {
                     .hasName("testSummaryWithCustomBuckets")
                     .hasDescription("This is a test distribution summary")
                     .hasUnit("things")
-                    .hasHistogramSatisfying(histogram ->
-                        histogram.hasPointsSatisfying(points ->
-                            points
-                                .hasSum(555.5)
-                                .hasCount(4)
-                                .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
-                                .hasBucketBoundaries(1, 10, 100, 1000)
-                                .hasBucketCounts(1, 1, 1, 1, 0))));
+                    .hasHistogramPointsSatisfying(points ->
+                        points
+                            .hasSum(555.5)
+                            .hasCount(4)
+                            .hasAttributesSatisfyingExactly(equalTo(stringKey("tag"), "value"))
+                            .hasBucketBoundaries(1, 10, 100, 1000)
+                            .hasBucketCounts(1, 1, 1, 1, 0)));
 
     // micrometer gauge histogram is not emitted
     testing()

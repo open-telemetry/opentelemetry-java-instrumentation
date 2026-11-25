@@ -10,8 +10,8 @@ import com.couchbase.client.core.CoreProtostellar;
 import com.couchbase.client.core.cnc.RequestSpan;
 import com.couchbase.client.core.env.SeedNode;
 import com.couchbase.client.core.util.ConnectionString;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTargetBuilder;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTargetBuilder;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseConnectionStrings;
 import io.opentelemetry.javaagent.instrumentation.couchbase.common.v3_1.CouchbaseServerTarget;
@@ -46,8 +46,7 @@ public final class CouchbaseProtostellarTargets {
       return;
     }
 
-    DbServerTargetBuilder target =
-        DbServerTarget.builder(PROTOSTELLAR_DEFAULT_PORT).setSorted(true);
+    ServerTargetBuilder target = ServerTarget.builder(PROTOSTELLAR_DEFAULT_PORT).setSorted(true);
     for (SeedNode seedNode : seedNodes) {
       if (seedNode == null) {
         target.addEndpoint(null, -1);
