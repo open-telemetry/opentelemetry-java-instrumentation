@@ -42,18 +42,18 @@ public class SpringAwsUtil {
   }
 
   @Nullable
-  public static TracingList initialize(
+  public static TracingList prepareTracingList(
       AbstractMessageConvertingMessageSource<?, ?> messageSource, Collection<?> messages) {
     TracingList tracingList =
         messages instanceof TracingList currentTracingList ? currentTracingList : null;
     if (tracingList != null && LISTENER_MODE.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
       tracingList.markProcessingOwnedOutsideSqsSdk();
     }
-    return currentTracingList.set(tracingList);
+    return tracingList;
   }
 
-  public static void restore(@Nullable TracingList previous) {
-    currentTracingList.restore(previous);
+  public static ScopedThreadValue<TracingList> currentTracingList() {
+    return currentTracingList;
   }
 
   // copy tracing state from the sqs message to spring message, we'll use that state when the

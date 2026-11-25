@@ -6,8 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.resetRequestAndContext;
-import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.setRequestAndContext;
+import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientState.currentRequestAndContext;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.HbaseClientUtil.createRequest;
 import static io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4.HbaseSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
@@ -74,7 +73,8 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
   @SuppressWarnings("unused")
   public static class CallMethodAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static RequestAndContext onEnter(
+    @Nullable
+    public static RequestAndContext[] onEnter(
         @Advice.This AbstractRpcClient<?> client,
         @Advice.Argument(0) Object md,
         @Advice.Argument(2) Object param) {
@@ -86,18 +86,20 @@ class AbstractRpcClientInstrumentation implements TypeInstrumentation {
       Context context = instrumenter().start(parentContext, request);
       Scope scope = context.makeCurrent();
       RequestAndContext requestAndContext = RequestAndContext.create(request, scope, context);
-      setRequestAndContext(requestAndContext);
-      return requestAndContext;
+      RequestAndContext[] state = {requestAndContext, null};
+      state[1] = currentRequestAndContext().set(requestAndContext);
+      return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter @Nullable RequestAndContext requestAndContext) {
-      resetRequestAndContext();
-      if (requestAndContext == null) {
+        @Advice.Enter @Nullable RequestAndContext[] state) {
+      if (state == null) {
         return;
       }
+      currentRequestAndContext().restore(state[1]);
+      RequestAndContext requestAndContext = state[0];
 
       requestAndContext.getScope().close();
 

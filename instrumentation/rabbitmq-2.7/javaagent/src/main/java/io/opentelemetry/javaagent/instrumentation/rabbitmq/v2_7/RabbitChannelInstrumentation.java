@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.currentRabbitContext;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.helper;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.channelInstrumenter;
@@ -124,6 +124,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
     public static class ChannelMethodAdviceScope {
       private final CallDepth callDepth;
+      @Nullable private Context previousContext;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final ChannelAndMethod request;
@@ -156,7 +157,6 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
-        CURRENT_RABBIT_CONTEXT.set(context);
         helper().setChannelAndMethod(context, request);
 
         return new ChannelMethodAdviceScope(callDepth, context, context.makeCurrent(), request);
@@ -172,7 +172,6 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
         scope.close();
 
-        CURRENT_RABBIT_CONTEXT.remove();
         channelInstrumenter(request).end(context, request, null, throwable);
       }
     }
@@ -180,14 +179,24 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static ChannelMethodAdviceScope onEnter(
         @Advice.This Channel channel, @Advice.Origin("Channel.#m") String method) {
-      return ChannelMethodAdviceScope.start(
-          CallDepth.forClass(Channel.class), channel, method, null);
+      ChannelMethodAdviceScope adviceScope =
+          ChannelMethodAdviceScope.start(CallDepth.forClass(Channel.class), channel, method, null);
+      if (adviceScope.context != null) {
+        adviceScope.previousContext = currentRabbitContext().set(adviceScope.context);
+      }
+      return adviceScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter ChannelMethodAdviceScope adviceScope) {
+        @Advice.Enter @Nullable ChannelMethodAdviceScope adviceScope) {
+      if (adviceScope == null) {
+        return;
+      }
+      if (adviceScope.context != null) {
+        currentRabbitContext().restore(adviceScope.previousContext);
+      }
       adviceScope.end(throwable);
     }
   }
@@ -200,14 +209,25 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.This Channel channel,
         @Advice.Origin("Channel.#m") String method,
         @Advice.Argument(0) long deliveryTag) {
-      return ChannelMethodAdvice.ChannelMethodAdviceScope.start(
-          CallDepth.forClass(Channel.class), channel, method, deliveryTag);
+      ChannelMethodAdvice.ChannelMethodAdviceScope adviceScope =
+          ChannelMethodAdvice.ChannelMethodAdviceScope.start(
+              CallDepth.forClass(Channel.class), channel, method, deliveryTag);
+      if (adviceScope.context != null) {
+        adviceScope.previousContext = currentRabbitContext().set(adviceScope.context);
+      }
+      return adviceScope;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void stopSpan(
         @Advice.Thrown @Nullable Throwable throwable,
-        @Advice.Enter ChannelMethodAdvice.ChannelMethodAdviceScope adviceScope) {
+        @Advice.Enter @Nullable ChannelMethodAdvice.ChannelMethodAdviceScope adviceScope) {
+      if (adviceScope == null) {
+        return;
+      }
+      if (adviceScope.context != null) {
+        currentRabbitContext().restore(adviceScope.previousContext);
+      }
       adviceScope.end(throwable);
     }
   }
@@ -217,6 +237,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
     public static class ChannelPublishAdviceScope {
       private final CallDepth callDepth;
+      @Nullable private Context previousContext;
       @Nullable private final Context context;
       @Nullable private final Scope scope;
       @Nullable private final ChannelAndMethod request;
@@ -252,7 +273,6 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
-        CURRENT_RABBIT_CONTEXT.set(context);
         helper().setChannelAndMethod(context, request);
 
         return new ChannelPublishAdviceScope(callDepth, context, context.makeCurrent(), request);
@@ -268,7 +288,6 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
         scope.close();
 
-        CURRENT_RABBIT_CONTEXT.remove();
         channelInstrumenter(request).end(context, request, null, throwable);
       }
     }
@@ -283,6 +302,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(4) AMQP.BasicProperties originalProps) {
       ChannelPublishAdviceScope adviceScope =
           ChannelPublishAdviceScope.start(channel, exchange, routingKey);
+      if (adviceScope.context != null) {
+        adviceScope.previousContext = currentRabbitContext().set(adviceScope.context);
+      }
 
       try {
         return new Object[] {adviceScope, addHeaders(adviceScope, originalProps)};
@@ -344,7 +366,11 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (enterArgs == null) {
         return;
       }
-      ((ChannelPublishAdviceScope) enterArgs[0]).end(throwable);
+      ChannelPublishAdviceScope adviceScope = (ChannelPublishAdviceScope) enterArgs[0];
+      if (adviceScope.context != null) {
+        currentRabbitContext().restore(adviceScope.previousContext);
+      }
+      adviceScope.end(throwable);
     }
   }
 
@@ -367,6 +393,9 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         @Advice.Argument(4) AMQP.BasicProperties originalProps) {
       ChannelPublishAdvice.ChannelPublishAdviceScope adviceScope =
           ChannelPublishAdvice.ChannelPublishAdviceScope.start(channel, exchange, routingKey);
+      if (adviceScope.context != null) {
+        adviceScope.previousContext = currentRabbitContext().set(adviceScope.context);
+      }
 
       try {
         return new Object[] {
@@ -385,7 +414,12 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
       if (enterArgs == null) {
         return;
       }
-      ((ChannelPublishAdvice.ChannelPublishAdviceScope) enterArgs[0]).end(throwable);
+      ChannelPublishAdvice.ChannelPublishAdviceScope adviceScope =
+          (ChannelPublishAdvice.ChannelPublishAdviceScope) enterArgs[0];
+      if (adviceScope.context != null) {
+        currentRabbitContext().restore(adviceScope.previousContext);
+      }
+      adviceScope.end(throwable);
     }
   }
 

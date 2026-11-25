@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic;
 
+import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic.ClassicPayloadLimit.currentPayloadLimit;
 import static io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic.VirtualFields.SEND_CONTEXT;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -45,16 +46,24 @@ class EndpointWriterInstrumentation implements TypeInstrumentation {
 
     @Nullable
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-    public static Scope onEnter(
+    public static Object[] onEnter(
         @Advice.This EndpointActor writer, @Advice.Argument(0) EndpointManager.Send send) {
-      ClassicPayloadLimit.set(writer);
+      Integer limit = ClassicPayloadLimit.maximumPayloadBytes(writer);
       Context context = SEND_CONTEXT.get(send);
-      return context == null ? null : context.makeCurrent();
+      Scope scope = context == null ? null : context.makeCurrent();
+      Object[] state = {scope, null};
+      state[1] =
+          limit == null ? currentPayloadLimit().get() : currentPayloadLimit().set(limit);
+      return state;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
-      ClassicPayloadLimit.clear();
+    public static void onExit(@Advice.Enter @Nullable Object[] state) {
+      if (state == null) {
+        return;
+      }
+      currentPayloadLimit().restore((Integer) state[1]);
+      Scope scope = (Scope) state[0];
       if (scope != null) {
         scope.close();
       }

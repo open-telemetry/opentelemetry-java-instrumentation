@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0.SpringAwsUtil.currentTracingList;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -63,12 +64,13 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
     public static TracingList methodEnter(
         @Advice.This AbstractMessageConvertingMessageSource<?, ?> messageSource,
         @Advice.Argument(0) Collection<?> messages) {
-      return SpringAwsUtil.initialize(messageSource, messages);
+      TracingList tracingList = SpringAwsUtil.prepareTracingList(messageSource, messages);
+      return currentTracingList().set(tracingList);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(@Advice.Enter @Nullable TracingList previous) {
-      SpringAwsUtil.restore(previous);
+      currentTracingList().restore(previous);
     }
   }
 

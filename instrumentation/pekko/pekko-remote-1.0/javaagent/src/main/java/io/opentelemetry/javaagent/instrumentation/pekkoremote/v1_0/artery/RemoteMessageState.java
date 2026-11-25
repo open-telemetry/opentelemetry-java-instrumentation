@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.artery;
 
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import javax.annotation.Nullable;
 import org.apache.pekko.remote.artery.InboundEnvelope;
 
@@ -20,37 +21,26 @@ import org.apache.pekko.remote.artery.InboundEnvelope;
  */
 public final class RemoteMessageState {
 
-  private static final ThreadLocal<Context> OUTBOUND_CONTEXT = new ThreadLocal<>();
-  private static final ThreadLocal<InboundEnvelope> INBOUND_ENVELOPE = new ThreadLocal<>();
+  private static final ScopedThreadValue<Context> currentOutboundContext = new ScopedThreadValue<>();
+  private static final ScopedThreadValue<InboundEnvelope> currentInboundEnvelope =
+      new ScopedThreadValue<>();
 
-  public static void startWrite(@Nullable Context context) {
-    if (context != null) {
-      OUTBOUND_CONTEXT.set(context);
-    }
-  }
-
-  public static void endWrite() {
-    OUTBOUND_CONTEXT.remove();
+  public static ScopedThreadValue<Context> currentOutboundContext() {
+    return currentOutboundContext;
   }
 
   @Nullable
   static Context contextToWrite() {
-    return OUTBOUND_CONTEXT.get();
+    return currentOutboundContext.get();
   }
 
-  public static void startRead(@Nullable InboundEnvelope envelope) {
-    if (envelope != null) {
-      INBOUND_ENVELOPE.set(envelope);
-    }
-  }
-
-  public static void endRead() {
-    INBOUND_ENVELOPE.remove();
+  public static ScopedThreadValue<InboundEnvelope> currentInboundEnvelope() {
+    return currentInboundEnvelope;
   }
 
   @Nullable
   static InboundEnvelope envelopeToRead() {
-    return INBOUND_ENVELOPE.get();
+    return currentInboundEnvelope.get();
   }
 
   private RemoteMessageState() {}

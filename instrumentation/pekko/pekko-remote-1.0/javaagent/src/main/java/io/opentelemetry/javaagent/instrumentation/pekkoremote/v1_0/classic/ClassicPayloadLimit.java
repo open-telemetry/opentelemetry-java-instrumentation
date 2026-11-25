@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkoremote.v1_0.classic;
 
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import javax.annotation.Nullable;
 import org.apache.pekko.remote.EndpointActor;
 import org.apache.pekko.remote.transport.PekkoProtocolTransport;
@@ -20,23 +21,25 @@ import org.apache.pekko.remote.transport.PekkoProtocolTransport;
  */
 public final class ClassicPayloadLimit {
 
-  private static final ThreadLocal<Integer> payloadLimit = new ThreadLocal<>();
+  private static final ScopedThreadValue<Integer> currentPayloadLimit = new ScopedThreadValue<>();
 
-  public static void set(EndpointActor writer) {
+  @Nullable
+  public static Integer maximumPayloadBytes(EndpointActor writer) {
     // the declared type of the transport is deprecated along with the rest of classic remoting
     Object transport = writer.transport();
     if (transport instanceof PekkoProtocolTransport) {
-      payloadLimit.set(((PekkoProtocolTransport) transport).maximumPayloadBytes());
+      return ((PekkoProtocolTransport) transport).maximumPayloadBytes();
     }
+    return null;
   }
 
-  public static void clear() {
-    payloadLimit.remove();
+  public static ScopedThreadValue<Integer> currentPayloadLimit() {
+    return currentPayloadLimit;
   }
 
   /** Whether a pdu of the given size may be written, true when no limit is known. */
   public static boolean fits(int size) {
-    @Nullable Integer limit = payloadLimit.get();
+    @Nullable Integer limit = currentPayloadLimit.get();
     return limit == null || size <= limit;
   }
 

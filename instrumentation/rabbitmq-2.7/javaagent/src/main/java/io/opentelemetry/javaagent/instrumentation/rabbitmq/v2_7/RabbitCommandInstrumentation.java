@@ -7,13 +7,14 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.currentRabbitContext;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import com.rabbitmq.client.Command;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.asm.Advice;
@@ -40,7 +41,11 @@ class RabbitCommandInstrumentation implements TypeInstrumentation {
 
   public static final class SpanHolder {
 
-    public static final ThreadLocal<Context> CURRENT_RABBIT_CONTEXT = new ThreadLocal<>();
+    private static final ScopedThreadValue<Context> currentRabbitContext = new ScopedThreadValue<>();
+
+    public static ScopedThreadValue<Context> currentRabbitContext() {
+      return currentRabbitContext;
+    }
 
     private SpanHolder() {}
   }
@@ -51,7 +56,7 @@ class RabbitCommandInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void setSpanNameAddHeaders(@Advice.This Command command) {
 
-      Context context = CURRENT_RABBIT_CONTEXT.get();
+      Context context = currentRabbitContext().get();
       if (context != null && command.getMethod() != null) {
         RabbitInstrumenterHelper.onCommand(Span.fromContext(context), command);
       }
