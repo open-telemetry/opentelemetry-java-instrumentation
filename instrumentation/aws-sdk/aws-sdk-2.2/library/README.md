@@ -61,7 +61,8 @@ SqsAsyncClientBuilder sqsAsyncClientBuilder = SqsAsyncClient.builder();
 SqsAsyncClient sqsAsyncClient = telemetry.instrument(sqsAsyncClientBuilder.build());
 ```
 
-Wrap the asynchronous Bedrock Runtime client after building it:
+Bedrock Runtime instrumentation requires AWS SDK version 2.25.63 or higher. Wrap the asynchronous
+client after building it:
 
 ```java
 BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClient.builder();
