@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.servlet.common.internal;
 
 import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
 import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_BUFFER_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getAndNormalizeMediaTypeFromContentTypeHeader;
 import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.getCharsetFromContentTypeHeader;
@@ -79,17 +80,16 @@ class ServletRequestBodyExtractorTest {
   @Test
   void notABuffer() {
     requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, "body");
+    requestAttributes.put(REQUEST_BODY_MARKER_ATTRIBUTE, true);
 
     assertThat(extractRequestBody(accessor, request)).isNull();
-
-    // attributes that are not a buffer are not ours to remove
-    assertThat(requestAttributes).containsEntry(REQUEST_BODY_BUFFER_ATTRIBUTE, "body");
   }
 
   @Test
   void emptyBuffer() {
     ByteBuffer buffer = ByteBuffer.allocate(10);
     requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, buffer);
+    requestAttributes.put(REQUEST_BODY_MARKER_ATTRIBUTE, true);
 
     assertThat(extractRequestBody(accessor, request)).isNull();
 
@@ -101,6 +101,7 @@ class ServletRequestBodyExtractorTest {
 
     ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
     requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, buffer);
+    requestAttributes.put(REQUEST_BODY_MARKER_ATTRIBUTE, true);
     requestContentType = "text/plain; charset=UTF-8";
 
     assertThat(extractRequestBody(accessor, request)).isEqualTo("abc");

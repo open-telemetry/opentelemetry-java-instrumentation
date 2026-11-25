@@ -72,12 +72,6 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
       @Nullable Throwable error) {
 
     REQUEST request = requestServletRequestContext.request();
-    Object marker = accessor.getRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE);
-    if (marker == null) {
-      // request not marked for body capture
-      return;
-    }
-    accessor.setRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE, null);
 
     String body = extractRequestBody(accessor, request);
     if (body != null) {
@@ -121,7 +115,7 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Extract and removes the request body stored in request attributes.
+   * Extract and removes the request body and marker stored in request attributes.
    *
    * @param <REQUEST> request type
    * @param <RESPONSE> response type
@@ -132,15 +126,29 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   @Nullable
   public static <REQUEST, RESPONSE> String extractRequestBody(
       ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
-    Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_BUFFER_ATTRIBUTE);
+
+    if (consumeRequestAttribute(accessor, request, REQUEST_BODY_MARKER_ATTRIBUTE) == null) {
+      // only requests with marker should be processed
+      return null;
+    }
+
+    Object bodyAttribute =
+        consumeRequestAttribute(accessor, request, REQUEST_BODY_BUFFER_ATTRIBUTE);
     if (!(bodyAttribute instanceof ByteBuffer)) {
       return null;
     }
-    String contentType = accessor.getRequestHeader(request, "Content-Type");
 
-    // remove request attribute so the buffer is no longer accessible for writing
-    accessor.setRequestAttribute(request, REQUEST_BODY_BUFFER_ATTRIBUTE, null);
+    String contentType = accessor.getRequestHeader(request, "Content-Type");
     return getRequestBodyValue((ByteBuffer) bodyAttribute, contentType);
+  }
+
+  private static <REQUEST, RESPONSE> Object consumeRequestAttribute(
+      ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request, String key) {
+    Object value = accessor.getRequestAttribute(request, key);
+    if (value != null) {
+      accessor.setRequestAttribute(request, key, null);
+    }
+    return value;
   }
 
   /**

@@ -19,8 +19,10 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAdditionalAttributesExtractor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestParametersExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
@@ -76,13 +78,19 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void addRequestAttributes(REQUEST request, Context context) {
-    if (!servletConfig.getTraceIdRequestAttributeEnabled()) {
-      return;
+    if (servletConfig.getTraceIdRequestAttributeEnabled()) {
+      SpanContext spanContext = Span.fromContext(context).getSpanContext();
+      accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
+      accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
     }
 
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-    accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
-    accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
+    BodyCaptureConfig bodyCaptureConfig = servletConfig.getRequestBodyCaptureConfig();
+    String contentType = accessor.getRequestHeader(request, "Content-Type");
+    String contentEncoding = accessor.getRequestHeader(request, "Content-Encoding");
+    if (ServletRequestBodyExtractor.shouldMarkRequestForBodyCapture(
+        bodyCaptureConfig, contentType, contentEncoding)) {
+      accessor.setRequestAttribute(request, BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE, true);
+    }
   }
 
   protected Context addServletContextPath(Context context, REQUEST request) {
@@ -141,11 +149,7 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void captureRequestBody(Span serverSpan, REQUEST request) {
-    BodyCaptureConfig requestBodyCaptureConfig = servletConfig.getRequestBodyCaptureConfig();
-    if (!requestBodyCaptureConfig.isEnabled()) {
-      return;
-    }
-
+    // here we assume that when request body is present, then it should be captured as attribute
     String body = extractRequestBody(accessor, request);
     if (body != null) {
       serverSpan.setAttribute(SPAN_BODY_ATTRIBUTE, body);
