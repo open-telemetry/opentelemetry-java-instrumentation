@@ -369,7 +369,7 @@ Weak references and caches still have other uses. For example, a cache of metada
 `Class` or `ClassLoader` is memoization rather than state attached to an individual library object,
 and a weak interning pool can canonicalize equal value objects without retaining them.
 
-Outside an advice method, look up the virtual field once and store its handle in a field:
+Look up the virtual field once and cache its handle in a `static final` field:
 
 ```java
 private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
@@ -378,8 +378,13 @@ private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
 
 The first argument is the carrier type and the second is the attached value type. In normal
 javaagent instrumentation, both should be class literals so muzzle can discover and register the
-mapping. Bytecode transformation rewrites calls with class-literal arguments in inlined `@Advice`
-methods. Lookups made outside advice execute at runtime and should be cached.
+mapping.
+
+Both inlined and non-inlined advice should use the cached handle from a helper or singleton.
+Inlined advice runs in the instrumented class, so the helper and the member it uses must be
+accessible from that class. Do not rely on the deprecated rewriting of `VirtualField.find(...)`
+calls in inlined advice.
+
 A rare lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle`
 method. The instrumentation module must implement `ExperimentalInstrumentationModule` and override
 `registerVirtualFields(...)` to register every possible carrier/value pair. The `(carrier class,
@@ -401,13 +406,6 @@ public static <T> void attachContext(
 Do not generalize this pattern with `VirtualField.find(Object.class, ...)`. The caller should select
 the narrow class or interface that identifies the library objects that can carry the state.
 
-Inside an inlined `@Advice` method, call `VirtualField.find(...)` directly where the virtual field
-is used. The call is rewritten during bytecode transformation and does not need to be cached. A
-non-inlined advice method (`inline = false`) must not call `VirtualField.find(...)` because the call
-is not rewritten. For non-inlined advice, put the handle in a `static final` field on a non-advice
-helper or singleton and reference that handle from the advice method. Use the same caching pattern
-for other lookups outside advice.
-
 The javaagent normally injects field-backed storage into eligible carrier implementations. It falls
 back to a weak-key, strong-value map when field injection is unavailable. Avoid storing a value that
 strongly references its carrier because that object graph can retain the weak key through the
@@ -423,7 +421,7 @@ read-modify-write operation. Attached state that can be updated concurrently mus
 required synchronization or atomic operations.
 
 Use of `VirtualField` requires the `muzzle-generation` Gradle plugin. Without it, the mapping is not
-registered and the javaagent cannot install or rewrite the field implementation.
+registered and the javaagent cannot install the virtual field implementation.
 
 ## Avoid using @Advice.Origin Method
 

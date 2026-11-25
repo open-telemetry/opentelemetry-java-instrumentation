@@ -65,15 +65,14 @@ javaagent instrumentation, not library-only code.
 
 - In normal instrumentation, call `VirtualField.find(Carrier.class, State.class)` with class
   literals so Muzzle generation discovers and registers the pair.
-- Inside inlined advice, call `find(...)` at the point of use; transformation rewrites the call.
-  Do not extract it merely to cache the lookup.
-- Non-inlined advice cannot call `find(...)` directly. Cache the handle in a `static final`
-  `SCREAMING_SNAKE_CASE` field on a non-advice helper or singleton and reference it from advice.
-  Outside advice, cache lookup in the same way.
+- Cache the handle in a `static final` `SCREAMING_SNAKE_CASE` field. Both inlined and non-inlined
+  advice use the cached handle from a non-advice helper or singleton rather than calling
+  `find(...)` directly. Rewriting `find(...)` calls in inlined advice is deprecated.
 - A rare runtime lookup for alternative carrier names runs outside advice in an `@NoMuzzle`
   method. Its module implements `ExperimentalInstrumentationModule` and registers every possible
   pair through `registerVirtualFields(...)`. Do not use this pattern when class literals suffice.
-- The containing module needs Muzzle generation to register mappings and rewrite inlined lookups.
+- The containing module needs Muzzle generation to register mappings so the agent can install
+  the virtual field implementations.
 
 ## Lifetime, fallback, and reuse
 
