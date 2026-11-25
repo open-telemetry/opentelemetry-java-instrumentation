@@ -431,6 +431,7 @@
   - `kafka.server.messages`, `kafka.server.requests`, `kafka.server.failed_requests` and
     `kafka.server.network.io` now have a `kafka.topic.name` attribute instead of a broker-wide value.
   - `kafka.server.isr.operations` is now a counter instead of an updowncounter.
+
 - The Micrometer bridge no longer bridges standard Micrometer JVM metrics that runtime telemetry
   also reports, such as `jvm.memory.used`, `jvm.threads.live` and `jvm.gc.pause`; use the runtime
   telemetry metrics instead. Set
