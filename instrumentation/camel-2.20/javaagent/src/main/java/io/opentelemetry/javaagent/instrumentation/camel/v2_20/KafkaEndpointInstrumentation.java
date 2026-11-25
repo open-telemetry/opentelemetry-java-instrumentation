@@ -38,16 +38,22 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$CreateExchangeAdvice");
   }
 
-  @SuppressWarnings("unused")
-  public static class CreateExchangeAdvice {
+  public static class KafkaTelemetryHelper {
 
+    private static final VirtualField<ConsumerRecord<?, ?>, MessagingTelemetrySignals>
+        RECORD_TELEMETRY = VirtualField.find(ConsumerRecord.class, MessagingTelemetrySignals.class);
     private static final MessagingTelemetryCarrier<ConsumerRecord<?, ?>> recordTelemetry =
-        MessagingTelemetryCarrier.create(
-            VirtualField.find(ConsumerRecord.class, MessagingTelemetrySignals.class));
+        MessagingTelemetryCarrier.create(RECORD_TELEMETRY);
 
     public static MessagingTelemetryCarrier<ConsumerRecord<?, ?>> recordTelemetry() {
       return recordTelemetry;
     }
+
+    private KafkaTelemetryHelper() {}
+  }
+
+  @SuppressWarnings("unused")
+  public static class CreateExchangeAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
@@ -55,7 +61,8 @@ class KafkaEndpointInstrumentation implements TypeInstrumentation {
         @Advice.Return @Nullable Exchange exchange) {
       if (exchange != null) {
         // the exchange is freshly created for this record, so nothing it could keep is stale
-        messageTelemetry().mergeFrom(recordTelemetry(), record, exchange.getIn());
+        messageTelemetry()
+            .mergeFrom(KafkaTelemetryHelper.recordTelemetry(), record, exchange.getIn());
       }
     }
   }

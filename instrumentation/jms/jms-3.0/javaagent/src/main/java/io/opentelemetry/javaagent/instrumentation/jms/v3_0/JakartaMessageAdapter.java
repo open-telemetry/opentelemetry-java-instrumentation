@@ -24,9 +24,10 @@ import javax.annotation.Nullable;
 
 public class JakartaMessageAdapter implements MessageAdapter {
 
+  private static final VirtualField<Message, MessagingTelemetrySignals> MESSAGE_TELEMETRY =
+      VirtualField.find(Message.class, MessagingTelemetrySignals.class);
   private static final MessagingTelemetryCarrier<Message> messageTelemetry =
-      MessagingTelemetryCarrier.create(
-          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
+      MessagingTelemetryCarrier.create(MESSAGE_TELEMETRY);
   private static final VirtualField<Message, JmsReceiveContext> RECEIVE_CONTEXT =
       VirtualField.find(Message.class, JmsReceiveContext.class);
   private static final VirtualField<Message, JmsMessageProcessingState> PROCESSING_STATE =

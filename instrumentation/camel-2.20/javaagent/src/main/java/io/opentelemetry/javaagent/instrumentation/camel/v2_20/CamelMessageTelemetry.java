@@ -12,9 +12,10 @@ import org.apache.camel.Message;
 
 public class CamelMessageTelemetry {
 
+  private static final VirtualField<Message, MessagingTelemetrySignals> MESSAGE_TELEMETRY =
+      VirtualField.find(Message.class, MessagingTelemetrySignals.class);
   private static final MessagingTelemetryCarrier<Message> messageTelemetry =
-      MessagingTelemetryCarrier.create(
-          VirtualField.find(Message.class, MessagingTelemetrySignals.class));
+      MessagingTelemetryCarrier.create(MESSAGE_TELEMETRY);
 
   public static MessagingTelemetryCarrier<Message> messageTelemetry() {
     return messageTelemetry;

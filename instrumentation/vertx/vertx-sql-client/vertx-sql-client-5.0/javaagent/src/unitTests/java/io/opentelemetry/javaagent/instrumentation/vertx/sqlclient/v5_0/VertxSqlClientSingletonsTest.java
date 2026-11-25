@@ -23,6 +23,9 @@ import io.vertx.sqlclient.internal.SqlConnectionInternal;
 import org.junit.jupiter.api.Test;
 
 class VertxSqlClientSingletonsTest {
+  private static final VirtualField<Connection, VertxSqlClientState> CONNECTION_STATE =
+      VirtualField.find(Connection.class, VertxSqlClientState.class);
+
   private static boolean initialized;
 
   @Test
@@ -32,7 +35,7 @@ class VertxSqlClientSingletonsTest {
     when(wrapper.unwrap()).thenReturn(connection);
     VertxSqlClientState state =
         new VertxSqlClientState(VertxSqlClientInfo.createUnknown("test"), false);
-    VirtualField.find(Connection.class, VertxSqlClientState.class).set(connection, state);
+    CONNECTION_STATE.set(connection, state);
 
     assertThat(VertxSqlClientSingletons.getClientState(wrapper)).isSameAs(state);
     assertThat(VertxSqlClientSingletons.getClientState(wrapper)).isSameAs(state);
@@ -46,7 +49,7 @@ class VertxSqlClientSingletonsTest {
     when(wrapper.unwrap()).thenReturn(connection);
     VertxSqlClientState state =
         new VertxSqlClientState(VertxSqlClientInfo.createUnknown("test"), false);
-    VirtualField.find(Connection.class, VertxSqlClientState.class).set(connection, state);
+    CONNECTION_STATE.set(connection, state);
 
     assertThat(VertxSqlClientSingletons.getClientState(wrapper)).isSameAs(state);
     assertThat(VertxSqlClientSingletons.getClientState(wrapper)).isSameAs(state);
@@ -134,7 +137,7 @@ class VertxSqlClientSingletonsTest {
         new VertxSqlClientState(VertxSqlClientInfo.createUnknown("selected"), false);
     VertxSqlClientState configured =
         new VertxSqlClientState(VertxSqlClientInfo.createUnknown("configured"), false);
-    VirtualField.find(Connection.class, VertxSqlClientState.class).set(connection, selected);
+    CONNECTION_STATE.set(connection, selected);
 
     assertThat(
             VertxSqlClientSingletons.attachClientState(Future.succeededFuture(client), configured)
@@ -153,7 +156,7 @@ class VertxSqlClientSingletonsTest {
         new VertxSqlClientState(VertxSqlClientInfo.createUnknown("supplied"), false);
     VertxSqlClientState unresolved =
         new VertxSqlClientState(VertxSqlClientInfo.createUnknown("unresolved"), true);
-    VirtualField.find(Connection.class, VertxSqlClientState.class).set(connection, supplied);
+    CONNECTION_STATE.set(connection, supplied);
 
     assertThat(
             VertxSqlClientSingletons.attachClientState(Future.succeededFuture(client), unresolved)

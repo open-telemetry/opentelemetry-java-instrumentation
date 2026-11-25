@@ -22,6 +22,11 @@ import org.junit.jupiter.api.Test;
 
 class JmsMessageListenerStartFailureTest {
 
+  private static final VirtualField<MessageListener, Boolean> CAMEL_OWNS_PROCESSING =
+      VirtualField.find(MessageListener.class, Boolean.class);
+  private static final VirtualField<Message, JmsMessageProcessingState> PROCESSING_STATE =
+      VirtualField.find(Message.class, JmsMessageProcessingState.class);
+
   @Test
   void releasesProcessingWhenListenerSetupFails() {
     Message message = newMessage();
@@ -44,19 +49,15 @@ class JmsMessageListenerStartFailureTest {
 
   @Test
   void camelOwnedListenerStillCompletesProcessingLifecycle() {
-    VirtualField<MessageListener, Boolean> camelOwnsProcessing =
-        VirtualField.find(MessageListener.class, Boolean.class);
-    VirtualField<Message, JmsMessageProcessingState> processingState =
-        VirtualField.find(Message.class, JmsMessageProcessingState.class);
     Message message = newMessage();
     MessageListener listener = ignored -> {};
-    camelOwnsProcessing.set(listener, true);
+    CAMEL_OWNS_PROCESSING.set(listener, true);
 
     JmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope firstScope =
         JmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope.start(
             listener, message);
     assertThat(firstScope).isNotNull();
-    JmsMessageProcessingState firstState = processingState.get(message);
+    JmsMessageProcessingState firstState = PROCESSING_STATE.get(message);
     firstScope.end(null);
     assertThat(firstState.isProcessingCompleted()).isTrue();
 
@@ -64,7 +65,7 @@ class JmsMessageListenerStartFailureTest {
         JmsMessageListenerInstrumentation.MessageListenerAdvice.AdviceScope.start(
             listener, message);
     assertThat(secondScope).isNotNull();
-    JmsMessageProcessingState secondState = processingState.get(message);
+    JmsMessageProcessingState secondState = PROCESSING_STATE.get(message);
     assertThat(secondState).isNotSameAs(firstState);
     secondScope.end(null);
     assertThat(secondState.isProcessingCompleted()).isTrue();

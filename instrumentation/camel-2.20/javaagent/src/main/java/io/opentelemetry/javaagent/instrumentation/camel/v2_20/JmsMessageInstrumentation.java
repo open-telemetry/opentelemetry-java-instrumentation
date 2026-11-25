@@ -37,16 +37,22 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
         getClass().getName() + "$StoreReceiveTelemetryAdvice");
   }
 
-  @SuppressWarnings("unused")
-  public static class StoreReceiveTelemetryAdvice {
+  public static class JmsTelemetryHelper {
 
+    private static final VirtualField<Message, MessagingTelemetrySignals> JMS_MESSAGE_TELEMETRY =
+        VirtualField.find(Message.class, MessagingTelemetrySignals.class);
     private static final MessagingTelemetryCarrier<Message> jmsMessageTelemetry =
-        MessagingTelemetryCarrier.create(
-            VirtualField.find(Message.class, MessagingTelemetrySignals.class));
+        MessagingTelemetryCarrier.create(JMS_MESSAGE_TELEMETRY);
 
     public static MessagingTelemetryCarrier<Message> jmsMessageTelemetry() {
       return jmsMessageTelemetry;
     }
+
+    private JmsTelemetryHelper() {}
+  }
+
+  @SuppressWarnings("unused")
+  public static class StoreReceiveTelemetryAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(
@@ -54,7 +60,8 @@ class JmsMessageInstrumentation implements TypeInstrumentation {
         @Advice.Argument(0) Message jmsMessage) {
       // a Camel message is refilled when its JMS message is swapped, so what it carried before must
       // not survive
-      messageTelemetry().replaceFrom(jmsMessageTelemetry(), jmsMessage, camelMessage);
+      messageTelemetry()
+          .replaceFrom(JmsTelemetryHelper.jmsMessageTelemetry(), jmsMessage, camelMessage);
     }
   }
 }

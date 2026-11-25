@@ -35,9 +35,10 @@ public class KafkaSingletons {
   private static final Instrumenter<KafkaProducerRequest, RecordMetadata> producerInstrumenter;
   private static final Instrumenter<KafkaReceiveRequest, Void> consumerReceiveInstrumenter;
   private static final Instrumenter<KafkaProcessRequest, Void> consumerProcessInstrumenter;
+  private static final VirtualField<ConsumerRecord<?, ?>, MessagingTelemetrySignals>
+      RECORD_TELEMETRY = VirtualField.find(ConsumerRecord.class, MessagingTelemetrySignals.class);
   private static final MessagingTelemetryCarrier<ConsumerRecord<?, ?>> recordTelemetry =
-      MessagingTelemetryCarrier.create(
-          VirtualField.find(ConsumerRecord.class, MessagingTelemetrySignals.class));
+      MessagingTelemetryCarrier.create(RECORD_TELEMETRY);
 
   static {
     KafkaInstrumenterFactory instrumenterFactory =
