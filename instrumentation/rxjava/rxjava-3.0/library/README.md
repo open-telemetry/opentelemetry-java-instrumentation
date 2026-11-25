@@ -40,7 +40,3 @@ import io.opentelemetry.instrumentation.rxjava.v3_0.TracingAssembly;
 TracingAssembly tracingAssembly = TracingAssembly.create();
 tracingAssembly.enable();
 ```
-
-The instrumentation installs RxJava plugin hooks to propagate OpenTelemetry context through
-subscriptions and scheduled work. Call `tracingAssembly.disable()` to restore the previous
-hooks.

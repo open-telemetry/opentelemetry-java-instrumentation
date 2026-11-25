@@ -46,5 +46,4 @@ AsyncOperationEndStrategies.instance().registerStrategy(GuavaAsyncOperationEndSt
 
 This lets instrumentation using the asynchronous annotation support keep a span open until
 its returned Guava `ListenableFuture` completes. It does not instrument arbitrary Guava calls
-by itself. To capture the experimental cancellation attribute, create the strategy with
-`GuavaAsyncOperationEndStrategy.builder().setCaptureExperimentalSpanAttributes(true).build()`.
+by itself.

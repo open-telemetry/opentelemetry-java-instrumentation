@@ -72,16 +72,9 @@ BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClien
 BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
 
-Message content capture is off by default. If you opt in, configure the `AwsSdkTelemetry` instance
-used to wrap the Bedrock client as shown below. With autoconfigure,
-`otel.instrumentation.genai.capture-message-content=true` enables capture in the interceptor but
-does not enable capture of streaming response content in the wrapper.
-
-```java
-AwsSdkTelemetry telemetry = AwsSdkTelemetry.builder(openTelemetry)
-    .setGenaiCaptureMessageContent(true)
-    .build();
-```
+The [message content capture setting](../../README.md) configures the automatic interceptor, not
+the wrapper. To capture streaming response content, call `setGenaiCaptureMessageContent(true)` on
+the `AwsSdkTelemetry` builder used for the wrapper.
 
 ## Trace propagation
 
