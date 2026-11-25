@@ -12,6 +12,7 @@ import java.lang.reflect.Proxy;
 import javax.annotation.Nullable;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
+import org.apache.dubbo.rpc.Result;
 
 /**
  * Wraps a Dubbo invoker to publish the consumer registry address for the current thread while the
@@ -91,15 +92,20 @@ final class RegistryCapturingInvoker implements InvocationHandler {
             + Integer.toHexString(System.identityHashCode(proxy));
       }
     }
-    if (isInvokerInvoke(method)) {
-      String previous = DubboRegistryUtil.pushCapturedRegistryAddress(registryAddress);
-      try {
-        return invokeDelegate(method, args);
-      } finally {
-        DubboRegistryUtil.restoreCapturedRegistryAddress(previous);
-      }
+    if (args != null && isInvokerInvoke(method)) {
+      return invokeWithRegistryAddress(delegate, (Invocation) args[0], registryAddress);
     }
     return invokeDelegate(method, args);
+  }
+
+  static Result invokeWithRegistryAddress(
+      Invoker<?> delegate, Invocation invocation, String registryAddress) {
+    String previous = DubboRegistryUtil.pushCapturedRegistryAddress(registryAddress);
+    try {
+      return delegate.invoke(invocation);
+    } finally {
+      DubboRegistryUtil.restoreCapturedRegistryAddress(previous);
+    }
   }
 
   private static boolean isInvokerInvoke(Method method) {
