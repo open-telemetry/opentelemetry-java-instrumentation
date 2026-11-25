@@ -38,6 +38,7 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.ContextKey;
@@ -123,10 +124,12 @@ class GrpcTest extends AbstractGrpcTest {
     closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
 
     ContextKey<String> key = ContextKey.named("custom-value");
+    AtomicReference<Span> callerSpan = new AtomicReference<>();
     ClientCall<Helloworld.Request, Helloworld.Response> call =
         testing.runWithSpan(
             "parent",
             () -> {
+              callerSpan.set(Span.current());
               try (Scope ignored = Context.current().with(key, "caller-value").makeCurrent()) {
                 return channel.newCall(GreeterGrpc.METHOD_SAY_HELLO, CallOptions.DEFAULT);
               }
@@ -164,6 +167,7 @@ class GrpcTest extends AbstractGrpcTest {
     assertThat(status.get().isOk()).isTrue();
     assertThat(response.get().getMessage()).isEqualTo("Hello test");
     assertThat(headersContext.get()).isNotNull();
+    assertThat(Span.fromContext(headersContext.get())).isSameAs(callerSpan.get());
     assertThat(headersContext.get().get(key)).isEqualTo("caller-value");
 
     testing.waitAndAssertTraces(trace ->
