@@ -39,7 +39,10 @@ public abstract class LettuceReactiveCommandHandler {
     LettuceConnectionState.copy(connection, command);
     context = instrumenter().start(Context.current(), command);
     if (!expectsResponse) {
-      instrumenter().end(context, command, null, null);
+      Context completedContext = context;
+      this.context = null;
+      this.command = null;
+      instrumenter().end(completedContext, command, null, null);
     }
   }
 
@@ -52,9 +55,13 @@ public abstract class LettuceReactiveCommandHandler {
     if (!expectsResponse || !spanEnded.compareAndSet(false, true)) {
       return;
     }
-    if (context != null && command != null) {
-      onSpanEnding(context, isCommandCancelled);
-      instrumenter().end(context, command, null, throwable);
+    Context completedContext = context;
+    RedisCommand<?, ?, ?> completedCommand = command;
+    context = null;
+    command = null;
+    if (completedContext != null && completedCommand != null) {
+      onSpanEnding(completedContext, isCommandCancelled);
+      instrumenter().end(completedContext, completedCommand, null, throwable);
     } else {
       logger.fine("Failed to end reactive Lettuce span because it probably wasn't started.");
     }

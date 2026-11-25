@@ -75,6 +75,9 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
     }
 
     public void endWhenThrown(HttpRequest request, @Nullable Throwable throwable) {
+      if (throwable != null && HTTP_REQUEST_CONTEXT.get(request) == context) {
+        HTTP_REQUEST_CONTEXT.set(request, null);
+      }
       scope.close();
       if (throwable != null) {
         instrumenter().end(context, request, null, throwable);
@@ -87,6 +90,7 @@ class GoogleHttpRequestInstrumentation implements TypeInstrumentation {
       if (context == null) {
         return null;
       }
+      HTTP_REQUEST_CONTEXT.set(request, null);
       return new AdviceScope(context, context.makeCurrent(), request);
     }
 

@@ -68,7 +68,11 @@ class LettuceAsyncCommandInstrumentation implements TypeInstrumentation {
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void onExit(@Advice.Enter @Nullable Scope scope) {
+    public static void onExit(
+        @Advice.This AsyncCommand<?, ?, ?> asyncCommand, @Advice.Enter @Nullable Scope scope) {
+      if (asyncCommand.isDone()) {
+        CONTEXT.set(asyncCommand, null);
+      }
       if (scope != null) {
         scope.close();
       }
