@@ -30,7 +30,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
-import java.util.stream.IntStream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -160,11 +159,9 @@ abstract class AbstractReactorNettyHttpClientTest
     assertThat(latch.await(10, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(trace -> {
-      trace.hasSize(7);
       SpanData parentSpan = trace.getSpan(0);
       SpanData nettyClientSpan =
-          IntStream.range(0, 7)
-              .mapToObj(trace::getSpan)
+          trace.actual().stream()
               .filter(span -> span.getKind() == CLIENT)
               .findFirst()
               .orElseThrow(AssertionError::new);

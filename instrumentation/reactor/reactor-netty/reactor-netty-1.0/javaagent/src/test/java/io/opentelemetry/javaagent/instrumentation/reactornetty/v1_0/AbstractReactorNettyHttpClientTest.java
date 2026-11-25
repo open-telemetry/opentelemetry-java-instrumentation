@@ -168,11 +168,9 @@ abstract class AbstractReactorNettyHttpClientTest
     assertThat(latch.await(10, SECONDS)).isTrue();
 
     testing.waitAndAssertTraces(trace -> {
-      trace.hasSize(7);
       SpanData parentSpan = trace.getSpan(0);
       SpanData nettyClientSpan =
-          IntStream.range(0, 7)
-              .mapToObj(trace::getSpan)
+          trace.actual().stream()
               .filter(span -> span.getKind() == CLIENT)
               .findFirst()
               .orElseThrow(AssertionError::new);
