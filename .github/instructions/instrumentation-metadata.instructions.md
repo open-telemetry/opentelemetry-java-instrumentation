@@ -4,9 +4,6 @@ applyTo: "instrumentation/**/metadata.yaml,instrumentation-docs/src/main/resourc
 
 # Instrumentation metadata
 
-- Represent general module enablement with `disabled_by_default`, not an ordinary configuration
-  entry.
-
 ## Entry shape
 
 - Use these fields to describe configuration settings:

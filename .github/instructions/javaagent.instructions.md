@@ -19,9 +19,8 @@ Apply these rules to javaagent modules, type/method matching, and collaborator h
 
 ## Enablement names
 
-Apply these rules to names registered by an `InstrumentationModule`. Public enablement names
-describe selectable behavior, not Muzzle implementation identities.
-
+- Enablement names registered by an `InstrumentationModule` describe selectable behavior, not
+  Muzzle implementation identities.
 - The primary is the full module-directory name, including versions, except where a default-off
   feature needs a separate identity within that module. Example: `spring-webflux-5.0`.
   Names use kebab-case. Order selectors as primary, optional role/feature, version-stripped

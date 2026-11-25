@@ -27,9 +27,8 @@ user-facing instrumentation configuration.
 
 ## Reading settings
 
-Instrumentation code uses the declarative API for both flat properties and native YAML.
-`ConfigPropertiesBackedDeclarativeConfigProperties` exposes flat values through that API.
-
+- Instrumentation code reads both flat properties and native YAML through the declarative API.
+  `ConfigPropertiesBackedDeclarativeConfigProperties` exposes flat values through that API.
 - In javaagent instrumentation, read ordinary settings through `DeclarativeConfigUtil`, supplying
   a default for unavailable YAML. Nullable reads are intentional when probing for replacement or
   deprecated names before choosing a default.

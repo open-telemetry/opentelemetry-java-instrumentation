@@ -97,9 +97,8 @@ javaagent instrumentation, not library-only code.
 
 ## Observable metric callbacks
 
-The SDK bundled with the javaagent holds the callback strongly until it is unregistered.
-
-- **Registration ownership.** Identify who owns the registration and when it ends. Verify that
+- **Registration ownership.** The SDK bundled with the javaagent holds the callback strongly until
+  it is unregistered. Identify who owns the registration and when it ends. Verify that
   every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
   the returned handle and remove any long-lived registry entries for that registration.
   Clearing a reference to the handle without closing it does not unregister the callback.

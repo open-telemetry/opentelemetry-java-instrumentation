@@ -53,7 +53,7 @@ audits of existing code, and pull request reviews.
 - Instrumentation configuration metadata, including each module's `metadata.yaml` and shared
   configuration definitions, matches supported setting names, types, and defaults in the actual
   readers, including readers in dependent common modules. General module enablement
-  (`otel.instrumentation.<name>.enabled`) is not an ordinary configuration entry. Record a
+  (`otel.instrumentation.<name>.enabled`) is not an ordinary configuration entry; record a
   default-off module with `disabled_by_default: true`. A documented setting remains in metadata
   while it has a supported reader. Before removing a setting from metadata, look for remaining
   readers in the module and its dependent common modules.
