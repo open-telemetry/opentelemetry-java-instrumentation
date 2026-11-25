@@ -44,9 +44,8 @@ To register the interceptor automatically on all AWS SDK clients, use the
 
 #### Wrap SQS and asynchronous Bedrock Runtime clients
 
-These clients need both an interceptor and a wrapper. For manual setup, register the interceptor
-on the builder as shown above, then build and wrap the client using the same `AwsSdkTelemetry`
-instance.
+These clients need both an interceptor and a wrapper. Register the interceptor on the builder as
+shown above, then build and wrap the client using the same `AwsSdkTelemetry` instance.
 
 Wrap synchronous and asynchronous SQS clients after building them:
 
@@ -70,14 +69,8 @@ BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClien
 BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
 
-If you already use autoconfigure, add the library above as a compile dependency alongside the
-autoconfigure runtime dependency. Use the `OpenTelemetry` instance you registered with
-`GlobalOpenTelemetry` to create `AwsSdkTelemetry`. Wrap the clients as shown without adding an
-interceptor to their builders.
-
-To capture streaming response content, call `setGenaiCaptureMessageContent(true)` on the
-`AwsSdkTelemetry` builder used for the wrapper. With autoconfigure, the
-[message content capture setting](../../README.md) applies only to the interceptor.
+To capture Bedrock streaming response content, call `setGenaiCaptureMessageContent(true)` on the
+`AwsSdkTelemetry` builder and use the resulting instance for both the interceptor and the wrapper.
 
 ## Trace propagation
 
