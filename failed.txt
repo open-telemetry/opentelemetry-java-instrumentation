@@ -25,3 +25,4 @@ spring-rabbit-1.1:javaagent	2026-10-23T05:42:48Z	agent artifact missing cleanup.
 mcp-java-sdk-0.14:javaagent	2026-11-04T07:33:12Z	agent artifact missing cleanup.patch/cleanup.noop
 logback:bootstrap	2026-11-09T10:32:52Z	agent artifact missing cleanup.patch/cleanup.noop
 spring-cloud-gateway-3.0:library	2026-11-25T15:34:22Z	agent artifact missing cleanup.patch/cleanup.noop
+spring-cloud-gateway-common:library	2026-11-25T15:40:15Z	agent artifact missing cleanup.patch/cleanup.noop
