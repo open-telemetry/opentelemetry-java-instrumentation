@@ -15,14 +15,11 @@ import static org.junit.jupiter.params.provider.Arguments.arguments;
 import io.opentelemetry.instrumentation.jmx.rules.MetricsVerifier;
 import io.opentelemetry.instrumentation.jmx.rules.TargetSystemTest;
 import io.opentelemetry.instrumentation.jmx.rules.assertions.AttributeMatcher;
-import java.net.URISyntaxException;
-import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Stream;
-import org.h2.Driver;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
@@ -43,8 +40,7 @@ class TomcatTest extends TargetSystemTest {
 
   @ParameterizedTest
   @MethodSource("tomcatArgs")
-  void testCollectedMetrics(String dockerImageName, boolean experimentalOptIn)
-      throws URISyntaxException {
+  void testCollectedMetrics(String dockerImageName, boolean experimentalOptIn) {
 
     List<String> jvmArgs = new ArrayList<>();
     jvmArgs.add(javaAgentJvmArgument());
@@ -75,8 +71,7 @@ class TomcatTest extends TargetSystemTest {
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
     target.withCopyFileToContainer(
-        MountableFile.forHostPath(
-            Paths.get(Driver.class.getProtectionDomain().getCodeSource().getLocation().toURI())),
+        MountableFile.forHostPath(getArtifactPath("io.opentelemetry.tomcat.h2.path")),
         "/usr/local/tomcat/lib/h2.jar");
 
     // Deploy example web application to the tomcat to enable reporting tomcat.session.active.count
