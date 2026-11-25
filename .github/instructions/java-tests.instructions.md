@@ -143,6 +143,7 @@ The remaining sections apply to test code and shared testing modules.
   telemetry assertions. When an operation can complete or export spans
   asynchronously, wait for its traces before clearing. A synchronous client
   call returning does not by itself establish that all telemetry was captured.
+
 - For telemetry that is only being discarded, use
   `testing.waitForTraces(expectedTraceCount)`. Do not introduce span-name or
   attribute assertions, `waitAndAssertTraces(...)`, or assertion helpers solely
@@ -162,10 +163,12 @@ The remaining sections apply to test code and shared testing modules.
   is deterministic. If retries, concurrent/background work, or external-system
   behavior can vary it, use an appropriate completion signal rather than
   guessing a count or adding a sleep.
+
 - `InstrumentationExtension` already clears captured telemetry before each
   test. Keep any necessary wait at the end of setup or cleanup even when
   removing a redundant explicit clear. Do not add or keep an explicit clear
   solely for per-test isolation; keep explicit clears for required mid-test resets.
+
 - Do not wait for spans that intentionally remain open until the operation
   under test completes, such as an unfinished pipeline or transaction.
 
