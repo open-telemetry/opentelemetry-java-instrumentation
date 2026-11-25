@@ -1,49 +1,25 @@
 # Library Instrumentation for Guava version 10.0 and higher
 
-Provides OpenTelemetry instrumentation for [Guava](https://github.com/google/guava), enabling
-asynchronous span completion for `ListenableFuture` return values.
+When a method annotated with `@WithSpan` returns a Guava `ListenableFuture`, the OpenTelemetry
+Java agent ends the span when the future completes rather than when the method returns. For example,
+this measures the full latency of a call made through a
+[gRPC future stub](https://grpc.io/docs/languages/java/generated-code/#future-stub).
 
 ## Quickstart
 
-### Add these dependencies to your project
-
-Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-guava-10.0).
-
-For Maven, add to your `pom.xml` dependencies:
-
-```xml
-<dependencies>
-  <dependency>
-    <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-guava-10.0</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
-  </dependency>
-  <dependency>
-    <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-instrumentation-annotations-support</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
-  </dependency>
-</dependencies>
-```
-
-For Gradle, add to your dependencies:
-
-```kotlin
-implementation("io.opentelemetry.instrumentation:opentelemetry-guava-10.0:OPENTELEMETRY_VERSION")
-implementation("io.opentelemetry.instrumentation:opentelemetry-instrumentation-annotations-support:OPENTELEMETRY_VERSION")
-```
-
-### Usage
-
-Register the asynchronous span-ending strategy once during application startup:
+Follow the [Java agent setup for `@WithSpan`](https://opentelemetry.io/docs/zero-code/java/agent/annotations/)
+and annotate a method whose declared return type is `ListenableFuture` or a subtype:
 
 ```java
-import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
-import io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy;
+import com.google.common.util.concurrent.ListenableFuture;
+import io.opentelemetry.instrumentation.annotations.WithSpan;
 
-AsyncOperationEndStrategies.instance().registerStrategy(GuavaAsyncOperationEndStrategy.create());
+@WithSpan
+public ListenableFuture<LookupResponse> lookup(LookupRequest request) {
+  return futureStub.lookup(request);
+}
 ```
 
-This lets instrumentation using the asynchronous annotation support keep a span open until
-its returned Guava `ListenableFuture` completes. It does not instrument arbitrary Guava calls
-by itself.
+The agent includes this support, so you don't need to add `opentelemetry-guava-10.0` to your
+application. The standalone artifact supplies only the span-ending strategy. Adding it to an
+application that uses the Spring Boot starter does not make `@WithSpan` wait for the future.
