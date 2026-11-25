@@ -119,11 +119,12 @@ public class MyBatchHandler extends TracingSQSEventHandler {
 ### X-Ray propagation
 
 The Events library brings in the X-Ray propagator at runtime, but the SDK does not enable it by
-default. For non-SQS wrappers, set `OTEL_PROPAGATORS=tracecontext,baggage,xray-lambda`.
+default. For wrappers, set `OTEL_PROPAGATORS=tracecontext,baggage,xray-lambda`.
 If you build the SDK yourself, follow the [Core X-Ray setup](../../aws-lambda-core-1.0/library/README.md#x-ray-propagation)
 to add a compile dependency and register the propagator.
 
-SQS handlers extract X-Ray context from messages without any SDK propagator configuration.
+SQS handlers extract the X-Ray context of individual messages without any SDK propagator
+configuration. The function span still uses the SDK propagators.
 
 ### HTTP headers based propagation
 
