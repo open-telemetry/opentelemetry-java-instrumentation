@@ -216,4 +216,4 @@ global_configurations:
     type: list
     default: ""
     deprecated: true
-    replaced_by: general.stability_opt_in_list
+    replaced_by: otel.semconv-stability.opt-in
