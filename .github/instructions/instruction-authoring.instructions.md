@@ -6,8 +6,7 @@ applyTo: ".github/copilot-instructions.md,.github/instructions/**/*.instructions
 
 - State what must be true of the code, tests, configuration, or documentation. That includes
   compatibility guarantees across releases. Keep short steps for meeting or checking a rule in
-  the same bullet. A checkout audit can report a violation of the rule, but cannot infer that
-  someone skipped a step.
+  the same bullet.
 - Use sections for guidance that needs more space or applies to several rules. For example,
   `Validation` can group checks with several steps, and review and audit sections can explain
   how to report findings.
