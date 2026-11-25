@@ -27,8 +27,8 @@ Apply these rules to Java code. The hot-path allocation rules also apply to Kotl
 
 ## Lambdas and method references
 
-Do not hoist a non-capturing lambda or method reference into a field to avoid allocation.
-HotSpot caches it at the `invokedynamic` call site.
+- Do not hoist a non-capturing lambda or method reference into a field to avoid allocation.
+  HotSpot caches it at the `invokedynamic` call site.
 
 ## Regular expressions
 
@@ -42,12 +42,12 @@ HotSpot caches it at the `invokedynamic` call site.
 
 ## Byte buffers
 
-`Value<ByteBuffer>.getValue()` returns a fresh read-only buffer on each call. Do not add
-`.duplicate()` solely to get independent position and limit state.
+- `Value<ByteBuffer>.getValue()` returns a fresh read-only buffer on each call. Do not add
+  `.duplicate()` solely to get independent position and limit state.
 
 ## Stateless telemetry collaborators
 
-Prefer constructing Java `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
-`AttributesExtractor`, `SpanNameExtractor`, and `HttpServerResponseMutator` implementations at
-registration instead of using singleton `INSTANCE` fields. Retain singletons on per-request hot
-paths. Kotlin `object` declarations are outside this rule.
+- Prefer constructing Java `TextMapGetter`, `TextMapSetter`, `*AttributesGetter`,
+  `AttributesExtractor`, `SpanNameExtractor`, and `HttpServerResponseMutator` implementations at
+  registration instead of using singleton `INSTANCE` fields. Retain singletons on per-request hot
+  paths. Kotlin `object` declarations are outside this rule.

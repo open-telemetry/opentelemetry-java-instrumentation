@@ -72,21 +72,21 @@ The null-comparison rules also apply to Kotlin and Scala.
 
 This general annotation guidance is aspirational and may not reflect the current codebase.
 
-Annotate nullable production parameters and fields with `javax.annotation.Nullable`, which the
-`otel.java-conventions` Gradle plugin includes as a `compileOnly` dependency.
-`@NonNull` is unnecessary because non-null is the default.
+- Annotate nullable production parameters and fields with `javax.annotation.Nullable`, which the
+  `otel.java-conventions` Gradle plugin includes as a `compileOnly` dependency.
+  `@NonNull` is unnecessary because non-null is the default.
 
-Public APIs should check for null parameters even when they are not annotated as nullable.
-Internal APIs do not need these defensive checks.
+- Public APIs should check for null parameters even when they are not annotated as nullable.
+  Internal APIs do not need these defensive checks.
 
-All modules should apply the `otel.nullaway-conventions` Gradle plugin for basic nullable-usage
-validation:
+- All modules should apply the `otel.nullaway-conventions` Gradle plugin for basic nullable-usage
+  validation:
 
-```kotlin
-plugins {
-  id("otel.nullaway-conventions")
-}
-```
+  ```kotlin
+  plugins {
+    id("otel.nullaway-conventions")
+  }
+  ```
 
 ## Nullable carriers and attribute overloads
 

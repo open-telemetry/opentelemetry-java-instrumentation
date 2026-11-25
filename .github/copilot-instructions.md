@@ -26,6 +26,20 @@ guidance catalog.
   at least as stable as the old API; deprecated methods delegate to their replacements, not vice
   versa. Include the replacement and removal timing in `@deprecated` Javadoc. Use plain
   `@Deprecated` for Java-8-compatible APIs, without `since` or `forRemoval`.
+
+  For example, an alpha API deprecation delegates to its replacement:
+
+  ```java
+  /**
+   * @deprecated Use {@link #newMethod()} instead. May be removed in the next minor release.
+   */
+  @Deprecated
+  public ReturnType oldMethod() {
+    return newMethod();
+  }
+  ```
+
+  For a stable API, the Javadoc states removal in the next major version instead.
 - A deprecation scheduled for a major-version behavior change keeps that timing even in an alpha
   artifact. Examples include semconv migrations, interface overrides following an upstream removal,
   and the flat `ConfigProperties` bridge.
@@ -38,20 +52,6 @@ guidance catalog.
   configuration definitions, aligned with the actual readers. Check supported setting names, types,
   and defaults, including reads in dependent common modules. Confirm that a setting has no readers
   before removing it from the metadata.
-
-For example, an alpha API deprecation delegates to its replacement:
-
-```java
-/**
- * @deprecated Use {@link #newMethod()} instead. May be removed in the next minor release.
- */
-@Deprecated
-public ReturnType oldMethod() {
-  return newMethod();
-}
-```
-
-For a stable API, the Javadoc states removal in the next major version instead.
 
 ## Documentation
 

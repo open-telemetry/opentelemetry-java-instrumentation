@@ -71,157 +71,160 @@ to shared infrastructure and other projects using the same conventions.
 
 ## Compatibility ranges and dependency graphs
 
-Prefer disjoint ranges for mutually exclusive compatibility implementations. Additive or
-higher-subrange behavior whose baseline remains compatible can stay in the same javaagent project,
-with separate `InstrumentationModule` classes and Muzzle passes. A different test matrix, helper
-project, Scala variant, or optional feature alone does not require another javaagent project.
-Incompatible toolchains/plugins and version-specific generated or shaded compile classpaths can
-require a separate javaagent project. Keep newer optional compile-time types in `compileOnly` when
-appropriate.
+- Prefer disjoint ranges for mutually exclusive compatibility implementations. Additive or
+  higher-subrange behavior whose baseline remains compatible can stay in the same javaagent project,
+  with separate `InstrumentationModule` classes and Muzzle passes. A different test matrix, helper
+  project, Scala variant, or optional feature alone does not require another javaagent project.
+  Incompatible toolchains/plugins and version-specific generated or shaded compile classpaths can
+  require a separate javaagent project. Keep newer optional compile-time types in `compileOnly` when
+  appropriate.
 
-Versioned javaagent modules for the same component must load their sibling `:javaagent` modules
-via `testInstrumentation` so tests exercise Muzzle selection together. Compare the component
-prefix before the trailing version, not just the parent directory. `netty-3.8` and `netty-4.1`
-are siblings; `akka-actor-2.3` and `akka-http-10.0` are not. Omit siblings already bundled into
-`javaagent-for-testing` through `baseJavaagentLibs` in `javaagent/build.gradle.kts`.
+- Versioned javaagent modules for the same component must load their sibling `:javaagent` modules
+  via `testInstrumentation` so tests exercise Muzzle selection together. Compare the component
+  prefix before the trailing version, not just the parent directory. `netty-3.8` and `netty-4.1`
+  are siblings; `akka-actor-2.3` and `akka-http-10.0` are not. Omit siblings already bundled into
+  `javaagent-for-testing` through `baseJavaagentLibs` in `javaagent/build.gradle.kts`.
 
-Keep the baseline dependency in `library(...)`, which supplies the compile-only dependency and
-default test runtime. Adding `testLibrary(...)` for a newer version of the same coordinate
-resolves one dependency graph, normally selecting the higher version, rather than testing both.
-`testLibrary(...)` is valid for a deliberately different single runtime or test-only artifact.
-To test two runtimes, leave baseline-compatible tests in `src/test`, put only newer-runtime tests
-in a dedicated `JvmTestSuite`, declare its runtime dependency in that suite, and wire the suites
-into `check`. Do not count direct helper unit tests as real installed-agent coverage.
+- Keep the baseline dependency in `library(...)`, which supplies the compile-only dependency and
+  default test runtime. Adding `testLibrary(...)` for a newer version of the same coordinate
+  resolves one dependency graph, normally selecting the higher version, rather than testing both.
+  `testLibrary(...)` is valid for a deliberately different single runtime or test-only artifact.
+  To test two runtimes, leave baseline-compatible tests in `src/test`, put only newer-runtime tests
+  in a dedicated `JvmTestSuite`, declare its runtime dependency in that suite, and wire the suites
+  into `check`. Do not count direct helper unit tests as real installed-agent coverage.
 
 ## Shared project properties
 
-Use `otelProps` for repository properties it already models, including `testLatestDeps`,
-`denyUnsafe`, `collectMetadata`, `testJavaVersion`, `testJavaVM`, `maxTestRetries`, and
-`enableStrictContext`. Module-local properties not modeled there can use `findProperty(...)`.
-`settings.gradle.kts` cannot use project extensions and reads
-`gradle.startParameter.projectProperties[...]` directly.
+- Use `otelProps` for repository properties it already models, including `testLatestDeps`,
+  `denyUnsafe`, `collectMetadata`, `testJavaVersion`, `testJavaVM`, `maxTestRetries`, and
+  `enableStrictContext`. Module-local properties not modeled there can use `findProperty(...)`.
+  `settings.gradle.kts` cannot use project extensions and reads
+  `gradle.startParameter.projectProperties[...]` directly.
 
-Forward `systemProperty("testLatestDeps", otelProps.testLatestDeps)` only to suites whose tests or
-used shared fixtures read it. `latestDepTestLibrary(...)` controls Gradle dependency resolution
-and does not itself require runtime forwarding.
+- Forward `systemProperty("testLatestDeps", otelProps.testLatestDeps)` only to suites whose tests or
+  used shared fixtures read it. `latestDepTestLibrary(...)` controls Gradle dependency resolution
+  and does not itself require runtime forwarding.
 
 ## Test suites and executions
 
 ### Layout and configuration
 
-Use `JvmTestSuite` for distinct sources or dependency graphs, and execution variants for different
-flags or filters over a suite's existing compiled tests and runtime dependencies. Prefer variants
-over manually copying a suite into another `Test` task. Variants add no default task, compilation,
-or source set. Keep `tasks.test` appropriate for standalone single-test-task projects.
+- Use `JvmTestSuite` for distinct sources or dependency graphs, and execution variants for different
+  flags or filters over a suite's existing compiled tests and runtime dependencies. Prefer variants
+  over manually copying a suite into another `Test` task. Variants add no default task, compilation,
+  or source set. Keep `tasks.test` appropriate for standalone single-test-task projects.
 
-Use one `testing.suites { ... }` container per build: all registrations first, then collection-level
-`executions(...)` declarations. Keep dependencies, sources, and compilation setup in registrations;
-JVM settings, filters, and variants belong in execution blocks, not nested in `register<JvmTestSuite>`
-or `named<JvmTestSuite>`. Select the built-in suite with `executions("test")`.
+- Use one `testing.suites { ... }` container per build: all registrations first, then collection-level
+  `executions(...)` declarations. Keep dependencies, sources, and compilation setup in registrations;
+  JVM settings, filters, and variants belong in execution blocks, not nested in `register<JvmTestSuite>`
+  or `named<JvmTestSuite>`. Select the built-in suite with `executions("test")`.
 
-Declare one executions block per suite, counting shared selectors. Use `executions("suiteA", "suiteB")`
-to share identical configuration; unqualified `executions { ... }` applies to every JVM suite,
-including later registrations. Use that scope only intentionally. Do not duplicate shared blocks,
-apply filtered or behavior-specific variants to unrelated suites, or rebuild common settings with
-suite-name checks.
+- Declare one executions block per suite, counting shared selectors. Use `executions("suiteA", "suiteB")`
+  to share identical configuration; unqualified `executions { ... }` applies to every JVM suite,
+  including later registrations. Use that scope only intentionally. Do not duplicate shared blocks,
+  apply filtered or behavior-specific variants to unrelated suites, or rebuild common settings with
+  suite-name checks.
 
-`configureEach` applies suite-wide settings, even without variants; `configureDefault` applies
-baseline-only settings that variants must not inherit. `register("Suffix")` configures a variant.
-Common configuration precedes default-only or variant-specific configuration.
+- `configureEach` applies suite-wide settings, even without variants; `configureDefault` applies
+  baseline-only settings that variants must not inherit. `register("Suffix")` configures a variant.
+  Common configuration precedes default-only or variant-specific configuration.
 
-```kotlin
-import io.opentelemetry.instrumentation.gradle.executions
-import io.opentelemetry.instrumentation.gradle.telemetryConfig
+  ```kotlin
+  import io.opentelemetry.instrumentation.gradle.executions
+  import io.opentelemetry.instrumentation.gradle.telemetryConfig
 
-testing.suites {
-  register<JvmTestSuite>("integrationTest") {
-    dependencies {
-      implementation(project())
+  testing.suites {
+    register<JvmTestSuite>("integrationTest") {
+      dependencies {
+        implementation(project())
+      }
+    }
+
+    executions("test", "integrationTest") {
+      configureEach {
+        jvmArgs("-Xss2m")
+      }
+      register("Experimental") {
+        telemetryConfig("otel.instrumentation.example.experimental-span-attributes", "true")
+      }
     }
   }
 
-  executions("test", "integrationTest") {
-    configureEach {
-      jvmArgs("-Xss2m")
-    }
-    register("Experimental") {
-      telemetryConfig("otel.instrumentation.example.experimental-span-attributes", "true")
-    }
+  tasks.check {
+    dependsOn(testing.suites)
   }
-}
+  ```
 
-tasks.check {
-  dependsOn(testing.suites)
-}
-```
+- Scope JVM opens, JDK/`denyUnsafe` gates, agent setup, inputs, and argument providers to their consumers.
+  Keep genuinely cross-suite `tasks.withType<Test>().configureEach` settings shared.
 
-Scope JVM opens, JDK/`denyUnsafe` gates, agent setup, inputs, and argument providers to their consumers.
-Keep genuinely cross-suite `tasks.withType<Test>().configureEach` settings shared.
-
-`telemetryConfig` sets a production JVM property and composes its `metadataConfig` profile.
-Do not use it for test-only switches selecting library builder options.
+- `telemetryConfig` sets a production JVM property and composes its `metadataConfig` profile.
+  Do not use it for test-only switches selecting library builder options.
 
 ### Lifecycle and coverage
 
-Gradle wires built-in `test` into `check`, but not custom suite registrations. Execution configuration
-adds its suite's default and variants when that suite is realized; applying the plugin or declaring a
-lazy selector is not sufficient. The `unitTests()` helper registers its suite and wires it into
-`check` without selecting unrelated suites; it needs no extra lifecycle wiring. Prefer unconditional
-`check { dependsOn(testing.suites) }` when all suites belong in `check`, including latest-dependency
-builds. Retain dependencies needed to realize and include suites; extra wiring is unnecessary when
-they are already reliably included.
-Wire standalone `Test` tasks separately.
+- Gradle wires built-in `test` into `check`, but not custom suite registrations. Execution configuration
+  adds its suite's default and variants when that suite is realized; applying the plugin or declaring a
+  lazy selector is not sufficient. The `unitTests()` helper registers its suite and wires it into
+  `check` without selecting unrelated suites; it needs no extra lifecycle wiring. Prefer unconditional
+  `check { dependsOn(testing.suites) }` when all suites belong in `check`, including latest-dependency
+  builds. Retain dependencies needed to realize and include suites; extra wiring is unnecessary when
+  they are already reliably included.
+  Wire standalone `Test` tasks separately.
 
-Keep conditional executions under their compatibility, JDK, and resource gates: an unconditional
-executions call can add otherwise unselected suites to `check`. Apply JDK gates to every execution
-requiring them, using the configured test JVM rather than the build JVM. Keep opt-in smoke-test
-matrices and benchmarks out of `check`.
+- Keep conditional executions under their compatibility, JDK, and resource gates: an unconditional
+  executions call can add otherwise unselected suites to `check`. Apply JDK gates to every execution
+  requiring them, using the configured test JVM rather than the build JVM. Keep opt-in smoke-test
+  matrices and benchmarks out of `check`.
 
-Combine mutually selected baseline/latest suites only with equivalent sources/behavior and unchanged
-dependency coverage, using existing version-selection helpers. Keep simultaneously tested runtimes
-and distinct compatibility paths separate.
+- Combine mutually selected baseline/latest suites only with equivalent sources/behavior and unchanged
+  dependency coverage, using existing version-selection helpers. Keep simultaneously tested runtimes
+  and distinct compatibility paths separate.
 
 ### Dependencies, classpaths, and naming
 
-For direct javaagent helper tests in projects applying `otel.javaagent-testing` (including through
-`otel.javaagent-instrumentation`), use `unitTests()` inside `testing.suites` and put tests under
-`src/unitTests/java`. The helper requires the Javaagent testing plugin; ordinary Java and library
-projects use `src/test`. The helper adds `implementation(project())` and wires the suite into `check`.
-The suite's test task and execution variants run without the agent. Keep test-only dependencies
-local and reuse convention-provided dependencies and compiler options, such as testing-common and
-`-parameters`.
+- For direct javaagent helper tests in projects applying `otel.javaagent-testing` (including through
+  `otel.javaagent-instrumentation`), use `unitTests()` inside `testing.suites` and put tests under
+  `src/unitTests/java`. The helper requires the Javaagent testing plugin; ordinary Java and library
+  projects use `src/test`. The helper adds `implementation(project())` and wires the suite into `check`.
+  The suite's test task and execution variants run without the agent. Keep test-only dependencies
+  local and reuse convention-provided dependencies and compiler options, such as testing-common and
+  `-parameters`.
 
-When helper tests need a separate dependency classpath, use `unitTests("nameUnitTests")` in the
-existing `javaagent` module.
+- When helper tests need a separate dependency classpath, use `unitTests("nameUnitTests")` in the
+  existing `javaagent` module.
 
-Prefer suite-local dependencies and compilation setup. When configuration/task names are needed,
-use `sources.implementationConfigurationName`, `sources.runtimeOnlyConfigurationName`, and
-`sources.compileJavaTaskName`.
+- Prefer suite-local dependencies and compilation setup. When configuration/task names are needed,
+  use `sources.implementationConfigurationName`, `sources.runtimeOnlyConfigurationName`, and
+  `sources.compileJavaTaskName`.
 
 - Preserve fixture outputs, dependency inheritance, compiler releases, and packaging. Remove explicit
   compile/task dependencies only after verifying that source-set outputs retain the ordering;
   disabling newer-JVM tests does not remove compilation requirements.
+
 - Preserve multi-release sources, sources JAR entries, and manifests.
+
 - Use full suite output, including resources, in custom runtime classpaths. Preserve pinned/shaded
   dependencies and lazy resolution; create dependency configurations outside lazy task actions.
+
 - Preserve artifact inputs/normalizers and JVM argument providers. For necessary legacy JVM-setting
   copies, use `setJvmArgs` and `setSystemProperties`, not `JavaForkOptions.copyTo`, which evaluates
   providers and can duplicate the javaagent or lose input tracking.
 
-`register("Suffix")` names a variant after its owning suite plus the suffix; it shares the suite's
-source directory. Version-suite names should describe the runtime tested. Do not normalize existing
-version separators or add APIs solely to preserve inconsistent internal task names. Update all
-task/source callers and metadata-collection references together when renaming.
+- `register("Suffix")` names a variant after its owning suite plus the suffix; it shares the suite's
+  source directory. Version-suite names should describe the runtime tested. Do not normalize existing
+  version separators or add APIs solely to preserve inconsistent internal task names. Update all
+  task/source callers and metadata-collection references together when renaming.
 
-Prefer the DSL to manual suite-to-task maps and unnecessary helpers; retain useful suffix/version
-maps and deterministic discovered-class loops.
+- Prefer the DSL to manual suite-to-task maps and unnecessary helpers; retain useful suffix/version
+  maps and deterministic discovered-class loops.
 
 ### Verification and scheduling
 
-Check default/variant configuration and `check` graphs in relevant baseline/latest/JDK modes,
-including explicit suite realization. Verify real discovery and execution where task filters apply:
-default-only exclusions must stay off variants, and no-test failure behavior must work as configured.
+- Check default/variant configuration and `check` graphs in relevant baseline/latest/JDK modes,
+  including explicit suite realization. Verify real discovery and execution where task filters apply:
+  default-only exclusions must stay off variants, and no-test failure behavior must work as configured.
 
-Remove locks, build services, or environment setup only after verifying current framework
-initialization and concurrent-test behavior. Preserve real shared-workspace/Testcontainers
-constraints; old comments alone do not establish their necessity.
+- Remove locks, build services, or environment setup only after verifying current framework
+  initialization and concurrent-test behavior. Preserve real shared-workspace/Testcontainers
+  constraints; old comments alone do not establish their necessity.

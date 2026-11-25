@@ -22,42 +22,42 @@ javaagent instrumentation, not library-only code.
 | A wrapper must not strongly retain its delegate | An explicit `WeakReference`, possibly in a virtual field |
 | Library instrumentation runs without agent transformation | Storage supported by the library API and lifecycle |
 
-Use `VirtualField` for instrumentation-owned context, span, suppression, or ownership state
-attached to requests, messages, futures, callbacks, connections, or other third-party instances.
-It normally injects storage into the carrier and falls back to weak-key storage when injection is
-unavailable. Do not replace real memoization, bounded caches, weak delegate links, or value
-interning mechanically.
+- Use `VirtualField` for instrumentation-owned context, span, suppression, or ownership state
+  attached to requests, messages, futures, callbacks, connections, or other third-party instances.
+  It normally injects storage into the carrier and falls back to weak-key storage when injection is
+  unavailable. Do not replace real memoization, bounded caches, weak delegate links, or value
+  interning mechanically.
 
 ## Typed virtual fields
 
-The caller that knows the library type selects the narrowest stable carrier that owns the state.
-A shared bootstrap helper need not name that type:
+- The caller that knows the library type selects the narrowest stable carrier that owns the state.
+  A shared bootstrap helper need not name that type:
 
-```java
-private static final VirtualField<Message, MessageState> MESSAGE_STATE =
-    VirtualField.find(Message.class, MessageState.class);
+  ```java
+  private static final VirtualField<Message, MessageState> MESSAGE_STATE =
+      VirtualField.find(Message.class, MessageState.class);
 
-public static void onMessage(Message message, MessageState state) {
-  MessagingStateHelper.set(MESSAGE_STATE, message, state);
-}
-```
+  public static void onMessage(Message message, MessageState state) {
+    MessagingStateHelper.set(MESSAGE_STATE, message, state);
+  }
+  ```
 
-```java
-public static <T> void set(VirtualField<T, MessageState> field, T carrier, MessageState state) {
-  field.set(carrier, state);
-}
-```
+  ```java
+  public static <T> void set(VirtualField<T, MessageState> field, T carrier, MessageState state) {
+    field.set(carrier, state);
+  }
+  ```
 
-Pass a small typed accessor instead when exposing the storage handle is inappropriate. Do not
-centralize associations in `Cache<Object, State>` or replace it with `VirtualField<Object, State>`.
-Broad interfaces are appropriate only when the state belongs to their whole abstraction, such as
-propagated task context on `Runnable`. If no narrower stable carrier exists, document why and
-verify fallback and lifecycle behavior.
+- Pass a small typed accessor instead when exposing the storage handle is inappropriate. Do not
+  centralize associations in `Cache<Object, State>` or replace it with `VirtualField<Object, State>`.
+  Broad interfaces are appropriate only when the state belongs to their whole abstraction, such as
+  propagated task context on `Runnable`. If no narrower stable carrier exists, document why and
+  verify fallback and lifecycle behavior.
 
-The `(carrier class, value class)` pair identifies the field. The same pair intentionally shares
-storage across instrumentations. Use a dedicated holder for unrelated state or several related
-values rather than colliding on `Object`, `Boolean`, `String`, or `Map` value types. A common value
-type is valid when sharing is deliberate or the pair is demonstrably unique.
+- The `(carrier class, value class)` pair identifies the field. The same pair intentionally shares
+  storage across instrumentations. Use a dedicated holder for unrelated state or several related
+  values rather than colliding on `Object`, `Boolean`, `String`, or `Map` value types. A common value
+  type is valid when sharing is deliberate or the pair is demonstrably unique.
 
 ## Virtual-field lookup and registration
 
@@ -71,143 +71,142 @@ type is valid when sharing is deliberate or the pair is demonstrably unique.
 - A rare runtime lookup for alternative carrier names runs outside advice in an `@NoMuzzle`
   method. Its module implements `ExperimentalInstrumentationModule` and registers every possible
   pair through `registerVirtualFields(...)`. Do not use this pattern when class literals suffice.
-
-The containing module needs Muzzle generation to register mappings and rewrite inlined lookups.
+- The containing module needs Muzzle generation to register mappings and rewrite inlined lookups.
 
 ## Lifetime, fallback, and reuse
 
-Virtual fields follow identity, not `equals()`. Setting `null` removes a fallback value:
+- Virtual fields follow identity, not `equals()`. Setting `null` removes a fallback value:
 
-```java
-STATE.set(carrier, null);
-```
+  ```java
+  STATE.set(carrier, null);
+  ```
 
-Clear per-operation state after consumption, on abandonment and failure, and before a pooled or
-reused carrier represents another operation. Garbage collection does not prevent stale state on
-reuse.
+- Clear per-operation state after consumption, on abandonment and failure, and before a pooled or
+  reused carrier represents another operation. Garbage collection does not prevent stale state on
+  reuse.
 
-Fallback storage has weak keys and strong values. A value that strongly references its carrier
-can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
-Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
+- Fallback storage has weak keys and strong values. A value that strongly references its carrier
+  can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
+  Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
 
-Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
-supported concurrent updates need an invariant before choosing synchronization or ownership.
-Do not choose a cache solely for `computeIfAbsent`.
+- Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
+  supported concurrent updates need an invariant before choosing synchronization or ownership.
+  Do not choose a cache solely for `computeIfAbsent`.
 
 ## Observable metric callbacks
 
 The SDK bundled with the javaagent holds the callback strongly until it is unregistered.
 
-**Registration ownership.** Identify who owns the registration and when it ends. Verify that
-every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
-the returned handle and remove any long-lived registry entries for that registration.
-Clearing a reference to the handle without closing it does not unregister the callback.
+- **Registration ownership.** Identify who owns the registration and when it ends. Verify that
+  every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
+  the returned handle and remove any long-lived registry entries for that registration.
+  Clearing a reference to the handle without closing it does not unregister the callback.
 
-After `close()`, the SDK handle still holds the callback. If the callback or the state it captures
-should be collectible while the owner is still alive, clear the field that stores the closed handle.
+  After `close()`, the SDK handle still holds the callback. If the callback or the state it captures
+  should be collectible while the owner is still alive, clear the field that stores the closed handle.
 
-A callback can strongly hold state that should live as long as the registration. For example,
-the HikariCP callback may capture `PoolStats`, which references the pool. When HikariCP shuts down
-the pool, the tracker must close the callback handle and clear the field that held it. If a
-shutdown path misses that cleanup, fix the hook rather than weakening the reference.
+  A callback can strongly hold state that should live as long as the registration. For example,
+  the HikariCP callback may capture `PoolStats`, which references the pool. When HikariCP shuts down
+  the pool, the tracker must close the callback handle and clear the field that held it. If a
+  shutdown path misses that cleanup, fix the hook rather than weakening the reference.
 
-**Collection without explicit shutdown.** If an object or class loader should be collectible
-while the registration is live, trace every strong reference to it from the SDK or other
-long-lived state. Check what the callback and its measurement functions capture, the class loaders
-that define the callback and its helpers, and any registry entries.
+- **Collection without explicit shutdown.** If an object or class loader should be collectible
+  while the registration is live, trace every strong reference to it from the SDK or other
+  long-lived state. Check what the callback and its measurement functions capture, the class loaders
+  that define the callback and its helpers, and any registry entries.
 
-A weak reference to the measured object is different from a weak reference to the callback.
-If you hold the callback itself weakly, give it an owner that keeps it alive while it should
-still report. Decide whether to skip recording or unregister when the target disappears.
+  A weak reference to the measured object is different from a weak reference to the callback.
+  If you hold the callback itself weakly, give it an owner that keeps it alive while it should
+  still report. Decide whether to skip recording or unregister when the target disappears.
 
-For example, `Gauge.builder(name, queue, Queue::size)` in Micrometer observes the queue weakly
-by default. The queue can be collected while the gauge stays registered, so the bridge skips
-recording once the queue is gone. Capturing the queue in the measurement function would keep
-it alive and defeat the weak reference.
+  For example, `Gauge.builder(name, queue, Queue::size)` in Micrometer observes the queue weakly
+  by default. The queue can be collected while the gauge stays registered, so the bridge skips
+  recording once the queue is gone. Capturing the queue in the measurement function would keep
+  it alive and defeat the weak reference.
 
 ## Temporary thread state
 
-Trace writers, readers, cleanup, and recursion. Thread confinement does not prevent nested calls
-from replacing outer state.
+- Trace writers, readers, cleanup, and recursion. Thread confinement does not prevent nested calls
+  from replacing outer state.
 
-For state installed on entry and cleaned on exit, prefer allocation-free `ScopedThreadValue`.
-Carry the previous value through `@Advice.Enter` and restore it on every exit, even when no current
-caller is known to reenter:
+- For state installed on entry and cleaned on exit, prefer allocation-free `ScopedThreadValue`.
+  Carry the previous value through `@Advice.Enter` and restore it on every exit, even when no current
+  caller is known to reenter:
 
-```java
-@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-public static @Nullable Request onEnter(@Advice.Argument(0) Request request) {
-  return currentRequest().set(request);
-}
-
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-public static void onExit(@Advice.Enter @Nullable Request previous) {
-  currentRequest().restore(previous);
-}
-```
-
-Here `currentRequest()` returns a `ScopedThreadValue<Request>`. `restore(null)` removes the entry.
-Use `ScopedThreadSuppression` for temporary suppression. Carry `tryAcquire()`'s result through
-entry and release only when this invocation acquired it:
-
-```java
-@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-public static boolean onEnter() {
-  return receiveSpanSuppression().tryAcquire();
-}
-
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-public static void onExit(@Advice.Enter boolean acquired) {
-  if (acquired) {
-    receiveSpanSuppression().release();
+  ```java
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+  public static @Nullable Request onEnter(@Advice.Argument(0) Request request) {
+    return currentRequest().set(request);
   }
-}
-```
 
-Use `isActive()` for read-only checks. Advice calls `set`/`restore` or `tryAcquire`/`release`
-directly so ownership stays visible; do not hide these mutations behind semantic enter/exit wrappers.
-Restore or release before fallible completion work that does not need the temporary state.
-Use `try`/`finally` when the work intentionally requires that state to remain installed.
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+  public static void onExit(@Advice.Enter @Nullable Request previous) {
+    currentRequest().restore(previous);
+  }
+  ```
 
-Keep a holder private in the narrowest owner. A single instrumentation class owns its holder;
-several classes in one module use a private field in `*Singletons`, exposed by a same-named
-zero-argument accessor and statically imported by callers. Cross-module state uses a focused
-shared bootstrap owner.
+  Here `currentRequest()` returns a `ScopedThreadValue<Request>`. `restore(null)` removes the entry.
+  Use `ScopedThreadSuppression` for temporary suppression. Carry `tryAcquire()`'s result through
+  entry and release only when this invocation acquired it:
 
-Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
-as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
-do not use `*ThreadLocal` for a wrapper accessor. Carrier-attached state may cross threads and does
-not use `current*`.
+  ```java
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+  public static boolean onEnter() {
+    return receiveSpanSuppression().tryAcquire();
+  }
 
-These entry/exit rules do not apply to long-lived thread caches, reusable objects, counters,
-persistent maps, or callback handoffs. Manage their actual lifetime. For a handoff, document its
-producer, consumer, and failure cleanup.
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+  public static void onExit(@Advice.Enter boolean acquired) {
+    if (acquired) {
+      receiveSpanSuppression().release();
+    }
+  }
+  ```
+
+  Use `isActive()` for read-only checks. Advice calls `set`/`restore` or `tryAcquire`/`release`
+  directly so ownership stays visible; do not hide these mutations behind semantic enter/exit wrappers.
+  Restore or release before fallible completion work that does not need the temporary state.
+  Use `try`/`finally` when the work intentionally requires that state to remain installed.
+
+- Keep a holder private in the narrowest owner. A single instrumentation class owns its holder;
+  several classes in one module use a private field in `*Singletons`, exposed by a same-named
+  zero-argument accessor and statically imported by callers. Cross-module state uses a focused
+  shared bootstrap owner.
+
+- Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
+  as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
+  do not use `*ThreadLocal` for a wrapper accessor. Carrier-attached state may cross threads and does
+  not use `current*`.
+
+- These entry/exit rules do not apply to long-lived thread caches, reusable objects, counters,
+  persistent maps, or callback handoffs. Manage their actual lifetime. For a handoff, document its
+  producer, consumer, and failure cleanup.
 
 ## Supported concurrency and lock scope
 
-Evaluate synchronization against the supported initialization, completion, cancellation, retry,
-nested, and reuse paths that can overlap. Account for subclasses, custom implementations, fallback
-storage, and skipped advice. Prefer library ordering or an existing operation context over a
-separate handoff protocol.
+- Evaluate synchronization against the supported initialization, completion, cancellation, retry,
+  nested, and reuse paths that can overlap. Account for subclasses, custom implementations, fallback
+  storage, and skipped advice. Prefer library ordering or an existing operation context over a
+  separate handoff protocol.
 
-Publish related mutable state as a unit. One immutable value can use a safely published reference;
-several fields may need one short private lock. Use a once-claim CAS when supported cross-thread
-completion paths race. For same-thread reentrancy, consuming state before invoking reentrant code
-may suffice. Do not add locks, generations, reservations, or CAS loops for hypothetical races.
+- Publish related mutable state as a unit. One immutable value can use a safely published reference;
+  several fields may need one short private lock. Use a once-claim CAS when supported cross-thread
+  completion paths race. For same-thread reentrancy, consuming state before invoking reentrant code
+  may suffice. Do not add locks, generations, reservations, or CAS loops for hypothetical races.
 
-A complete old immutable snapshot of descriptive connection metadata may briefly be acceptable
-during client or pool reconfiguration. Refresh at a stable lifecycle boundary, publish safely,
-and converge on the latest snapshot once updates stop. Do not mix fields from different snapshots
-or substitute a connected peer for a configured target. This allowance does not cover context,
-span lifecycle, suppression, completion ownership, request/response pairing, status, errors, or
-cleanup.
+- A complete old immutable snapshot of descriptive connection metadata may briefly be acceptable
+  during client or pool reconfiguration. Refresh at a stable lifecycle boundary, publish safely,
+  and converge on the latest snapshot once updates stop. Do not mix fields from different snapshots
+  or substitute a connected peer for a configured target. This allowance does not cover context,
+  span lifecycle, suppression, completion ownership, request/response pairing, status, errors, or
+  cleanup.
 
-Instrumentation locks protect short state reads, writes, and ownership decisions. Keep original
-library calls, instrumenter/SDK calls, application callbacks, overridable getters, collection
-traversal, logging, I/O, waits, and scope closure outside them. Capture work under the lock,
-release it, then perform external effects.
+- Instrumentation locks protect short state reads, writes, and ownership decisions. Keep original
+  library calls, instrumenter/SDK calls, application callbacks, overridable getters, collection
+  traversal, logging, I/O, waits, and scope closure outside them. Capture work under the lock,
+  release it, then perform external effects.
 
-JVM class-loading locks are an exception. A library-object monitor may also be necessary to
-coordinate with library or other instrumentation code; verify and document the owner and lock
-ordering. Preserve thread-bound scope closure, immediate application errors, and library timeouts
-and error behavior.
+  JVM class-loading locks are an exception. A library-object monitor may also be necessary to
+  coordinate with library or other instrumentation code; verify and document the owner and lock
+  ordering. Preserve thread-bound scope closure, immediate application errors, and library timeouts
+  and error behavior.

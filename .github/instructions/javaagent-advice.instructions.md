@@ -55,97 +55,97 @@ exception applies.
 
 ## Raw scope ownership
 
-In ordinary code, acquire scopes at the call site and use try-with-resources:
+- In ordinary code, acquire scopes at the call site and use try-with-resources:
 
-```java
-try (Scope ignored = context.makeCurrent()) {
-  doWork();
-}
-```
-
-When paired advice carries a raw `Scope` through `@Advice.Enter`, acquire it directly in enter
-advice and close that same scope in exit advice. A general helper returns the context or other
-state, not an open raw scope that obscures who closes it.
-
-```java
-@Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
-public static @Nullable Scope onEnter(@Advice.Argument(0) Request request) {
-  Context context = startContext(request);
-  if (context == null) {
-    return null;
+  ```java
+  try (Scope ignored = context.makeCurrent()) {
+    doWork();
   }
-  return context.makeCurrent();
-}
+  ```
 
-@Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-public static void onExit(@Advice.Enter @Nullable Scope scope) {
-  if (scope != null) {
-    scope.close();
+- When paired advice carries a raw `Scope` through `@Advice.Enter`, acquire it directly in enter
+  advice and close that same scope in exit advice. A general helper returns the context or other
+  state, not an open raw scope that obscures who closes it.
+
+  ```java
+  @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+  public static @Nullable Scope onEnter(@Advice.Argument(0) Request request) {
+    Context context = startContext(request);
+    if (context == null) {
+      return null;
+    }
+    return context.makeCurrent();
   }
-}
-```
 
-Complete fallible setup before `makeCurrent()` and acquire last, immediately before returning.
-If independent fallible work must follow acquisition, close the acquired scope if that work fails.
+  @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+  public static void onExit(@Advice.Enter @Nullable Scope scope) {
+    if (scope != null) {
+      scope.close();
+    }
+  }
+  ```
 
-Close the scope at the first safe point before fallible completion work. This prevents a suppressed
-failure from leaving context attached and avoids keeping operation context current unnecessarily.
-Use `finally` only when earlier completion work intentionally needs that context.
+- Complete fallible setup before `makeCurrent()` and acquire last, immediately before returning.
+  If independent fallible work must follow acquisition, close the acquired scope if that work fails.
 
-Repository instrumentation assumes `Context.makeCurrent()` and `Scope.close()` do not throw.
-Do not add defensive catches or `finally` blocks solely for hypothetical failures from those calls;
-this is a coding assumption, not a guarantee about arbitrary `ContextStorage` implementations.
+- Close the scope at the first safe point before fallible completion work. This prevents a suppressed
+  failure from leaving context attached and avoids keeping operation context current unnecessarily.
+  Use `finally` only when earlier completion work intentionally needs that context.
+
+- Repository instrumentation assumes `Context.makeCurrent()` and `Scope.close()` do not throw.
+  Do not add defensive catches or `finally` blocks solely for hypothetical failures from those calls;
+  this is a coding assumption, not a guarantee about arbitrary `ContextStorage` implementations.
 
 ## AdviceScope state
 
-A dedicated `AdviceScope` may own acquisition and closure through `start()` and `end()`.
-Use those names for ordinary scope factories and completion methods rather than one-off
-`create()` names.
-There are two justified shapes.
+- A dedicated `AdviceScope` may own acquisition and closure through `start()` and `end()`.
+  Use those names for ordinary scope factories and completion methods rather than one-off
+  `create()` names.
+  There are two justified shapes.
 
 ### Nullable state for conditional instrumentation
 
-Use `@Nullable AdviceScope` by default when entry may skip instrumentation. `start()` returns null
-when preconditions fail or `shouldStart` is false. When present, context and scope internals are
-non-null; `end()` closes the scope unconditionally. The null check belongs in exit advice.
+- Use `@Nullable AdviceScope` by default when entry may skip instrumentation. `start()` returns null
+  when preconditions fail or `shouldStart` is false. When present, context and scope internals are
+  non-null; `end()` closes the scope unconditionally. The null check belongs in exit advice.
 
-```java
-public static class AdviceScope {
-  private final Request request;
-  private final Context context;
-  private final Scope scope;
+  ```java
+  public static class AdviceScope {
+    private final Request request;
+    private final Context context;
+    private final Scope scope;
 
-  @Nullable
-  public static AdviceScope start(Request request) {
-    Context parent = Context.current();
-    if (!instrumenter().shouldStart(parent, request)) {
-      return null;
+    @Nullable
+    public static AdviceScope start(Request request) {
+      Context parent = Context.current();
+      if (!instrumenter().shouldStart(parent, request)) {
+        return null;
+      }
+      return new AdviceScope(request, instrumenter().start(parent, request));
     }
-    return new AdviceScope(request, instrumenter().start(parent, request));
-  }
 
-  private AdviceScope(Request request, Context context) {
-    this.request = request;
-    this.context = context;
-    this.scope = context.makeCurrent();
-  }
+    private AdviceScope(Request request, Context context) {
+      this.request = request;
+      this.context = context;
+      this.scope = context.makeCurrent();
+    }
 
-  public void end(@Nullable Throwable throwable) {
-    scope.close();
-    instrumenter().end(context, request, null, throwable);
+    public void end(@Nullable Throwable throwable) {
+      scope.close();
+      instrumenter().end(context, request, null, throwable);
+    }
   }
-}
-```
+  ```
 
-Paired exit advice runs on exceptional exits and calls `end()` only when the returned state is
-non-null. Do not combine nullable outer state with nullable tracing internals and a second
-scope-null guard.
+  Paired exit advice runs on exceptional exits and calls `end()` only when the returned state is
+  non-null. Do not combine nullable outer state with nullable tracing internals and a second
+  scope-null guard.
 
 ### Non-null placeholder for bookkeeping
 
-Nullable internals are justified in a non-null placeholder when exit still needs bookkeeping
-without a started tracing scope, such as call depth or wrapped arguments/listeners. Keep guards
-around only the optional tracing work.
+- Nullable internals are justified in a non-null placeholder when exit still needs bookkeeping
+  without a started tracing scope, such as call depth or wrapped arguments/listeners. Keep guards
+  around only the optional tracing work.
 
-Asynchronous completion changes where a span ends, not these two state models. Close thread-bound
-scopes on the thread where they opened and end asynchronous spans at their actual completion.
+- Asynchronous completion changes where a span ends, not these two state models. Close thread-bound
+  scopes on the thread where they opened and end asynchronous spans at their actual completion.
