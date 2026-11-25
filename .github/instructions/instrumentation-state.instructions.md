@@ -14,7 +14,7 @@ javaagent instrumentation, not library-only code.
 
   | Requirement | Storage |
   | --- | --- |
-  | Javaagent state belongs to a third-party object instance | Prefer a typed `VirtualField<Carrier, State>` with safe fallback |
+  | Javaagent state belongs to a third-party object instance | Typed `VirtualField<Carrier, State>` when [fallback is safe](#lifetime-fallback-and-reuse); otherwise see that section |
   | A shared helper supports callers with different carrier types | Caller-selected virtual field or typed accessor |
   | State is ambient for the current operation or scope | OpenTelemetry `Context`, `Scope`, or scoped thread state |
   | State belongs to an instrumentation-owned wrapper | An ordinary field |
@@ -92,11 +92,13 @@ javaagent instrumentation, not library-only code.
   strongly. A back-reference keeps the weak key alive, so garbage collection cannot remove the
   entry.
 
-  Check what the value can reach after later writes, including writes by other instrumentation
-  under non-default settings. For example, with span suppression set to `none`, a stored `Context`
-  can reach its Undertow exchange through a response saved in servlet async state. If cleanup
-  cannot be guaranteed, store detached data, use a weak back-reference if the state remains valid
-  when it clears, or keep the state in storage owned by the carrier.
+  Trace concrete paths from the value to its carrier, including mutable holders that other
+  instrumentation writes to later, possibly only under non-default settings. A value type that
+  could reach arbitrary objects, such as `Context`, is not a problem by itself. For example, with
+  span suppression set to `none`, a stored `Context` can reach its Undertow exchange through a
+  response saved in servlet async state. If cleanup cannot be guaranteed, store detached data, use
+  a weak back-reference if the state remains valid after the reference is cleared, or keep the
+  state in storage owned by the carrier.
 
 - Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
   supported concurrent updates need an invariant before choosing synchronization or ownership.
