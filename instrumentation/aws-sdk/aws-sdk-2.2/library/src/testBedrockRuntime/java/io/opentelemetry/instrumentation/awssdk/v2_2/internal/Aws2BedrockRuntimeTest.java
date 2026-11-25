@@ -6,11 +6,23 @@
 package io.opentelemetry.instrumentation.awssdk.v2_2.internal;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_RESPONSE_STATUS_CODE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_ADDRESS;
+import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
+import static io.opentelemetry.semconv.UrlAttributes.URL_FULL;
+import static io.opentelemetry.semconv.incubating.AwsIncubatingAttributes.AWS_REQUEST_ID;
 import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_PROVIDER_NAME;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MAX_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_MODEL;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STOP_SEQUENCES;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_STREAM;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TEMPERATURE;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_REQUEST_TOP_P;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_RESPONSE_FINISH_REASONS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_TOKEN_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
@@ -20,10 +32,13 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenA
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.AWS_BEDROCK;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
+import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.within;
 
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
@@ -163,14 +178,32 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
         trace.hasSpansSatisfyingExactly(span ->
             span.hasName("text_completion amazon.titan-text-lite-v1")
                 .hasKind(SpanKind.CLIENT)
-                .hasAttributesSatisfying(
+                .hasAttributesSatisfyingExactly(
                     equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
                     equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
                     equalTo(GEN_AI_REQUEST_MODEL, modelId),
                     equalTo(GEN_AI_REQUEST_STREAM, true),
+                    equalTo(GEN_AI_REQUEST_MAX_TOKENS, 100),
+                    satisfies(
+                        GEN_AI_REQUEST_TEMPERATURE, val -> val.isCloseTo(0.8, within(0.0001))),
+                    equalTo(GEN_AI_REQUEST_TOP_P, 1.0),
+                    equalTo(GEN_AI_REQUEST_STOP_SEQUENCES, singletonList("|")),
                     equalTo(GEN_AI_USAGE_INPUT_TOKENS, 7),
                     equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 100),
-                    equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("LENGTH")))));
+                    equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("LENGTH")),
+                    equalTo(RPC_SYSTEM, "aws-api"),
+                    equalTo(RPC_SERVICE, "BedrockRuntime"),
+                    equalTo(RPC_METHOD, "InvokeModelWithResponseStream"),
+                    equalTo(HTTP_REQUEST_METHOD, "POST"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    satisfies(SERVER_PORT, val -> val.isPositive()),
+                    satisfies(
+                        URL_FULL,
+                        val ->
+                            val.matches(
+                                "http://localhost:[0-9]+/model/amazon\\.titan-text-lite-v1/invoke-with-response-stream")),
+                    satisfies(AWS_REQUEST_ID, val -> val.isNotEmpty()))));
     SpanContext spanContext = testing.waitForTraces(1).get(0).get(0).getSpanContext();
     testing.waitAndAssertLogRecords(
         log ->
