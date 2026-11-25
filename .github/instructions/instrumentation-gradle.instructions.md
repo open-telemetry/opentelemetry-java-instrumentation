@@ -197,6 +197,10 @@ to shared infrastructure and other projects using the same conventions.
 - When helper tests need a separate dependency classpath, use `unitTests("nameUnitTests")` in the
   existing `javaagent` module.
 
+- Use fixed versions for third-party dependencies in `unitTests()`. Use the module's baseline unless
+  the test requires a different version. Use `baseVersion(...).orLatest(...)` only when the
+  latest-dependency run exercises a specific library compatibility path.
+
 - Prefer suite-local dependencies and compilation setup. When configuration/task names are needed,
   use `sources.implementationConfigurationName`, `sources.runtimeOnlyConfigurationName`, and
   `sources.compileJavaTaskName`.
