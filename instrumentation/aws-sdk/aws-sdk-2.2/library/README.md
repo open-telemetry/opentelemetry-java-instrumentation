@@ -70,6 +70,19 @@ BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClien
 BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
 ```
 
+For streaming response telemetry with `invokeModelWithResponseStream`, pass a built request to the
+wrapped client. The overload that takes a builder lambda does not instrument the response stream.
+
+```java
+InvokeModelWithResponseStreamRequest request =
+    InvokeModelWithResponseStreamRequest.builder()
+        .modelId(modelId)
+        .contentType("application/json")
+        .body(SdkBytes.fromUtf8String(requestJson))
+        .build();
+bedrockClient.invokeModelWithResponseStream(request, responseHandler);
+```
+
 Call `setGenaiCaptureMessageContent(true)` on the `AwsSdkTelemetry` builder to include full
 message content in Bedrock GenAI logs. Use the resulting instance for both the interceptor and the
 wrapper. This can record prompts, streaming and non-streaming replies, and tool arguments and
