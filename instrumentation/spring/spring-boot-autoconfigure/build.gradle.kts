@@ -62,7 +62,7 @@ dependencies {
   )
   implementation(
     project(
-      ":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:library"
+      ":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-3.0:library"
     )
   )
   implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))

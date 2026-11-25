@@ -6,7 +6,7 @@
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.springcloudgateway;
 
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.instrumentation.spring.cloud.gateway.v2_0.SpringCloudGatewayRouteGetter;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.v3_0.SpringCloudGatewayRouteGetter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
