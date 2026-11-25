@@ -1,4 +1,4 @@
-# Library Instrumentation for Apache Dubbo version 2.7 and higher
+# Library Autoconfigure for Apache Dubbo version 2.7 and higher
 
 Provides OpenTelemetry instrumentation for [Apache Dubbo](https://github.com/apache/dubbo).
 
@@ -6,7 +6,7 @@ Provides OpenTelemetry instrumentation for [Apache Dubbo](https://github.com/apa
 
 ### Add these dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-apache-dubbo-2.7).
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-apache-dubbo-2.7-autoconfigure).
 
 For Maven, add to your `pom.xml` dependencies:
 
@@ -14,7 +14,7 @@ For Maven, add to your `pom.xml` dependencies:
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
-    <artifactId>opentelemetry-apache-dubbo-2.7</artifactId>
+    <artifactId>opentelemetry-apache-dubbo-2.7-autoconfigure</artifactId>
     <version>OPENTELEMETRY_VERSION</version>
   </dependency>
 </dependencies>
@@ -23,7 +23,7 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```kotlin
-implementation("io.opentelemetry.instrumentation:opentelemetry-apache-dubbo-2.7:OPENTELEMETRY_VERSION")
+implementation("io.opentelemetry.instrumentation:opentelemetry-apache-dubbo-2.7-autoconfigure:OPENTELEMETRY_VERSION")
 ```
 
 ### Usage

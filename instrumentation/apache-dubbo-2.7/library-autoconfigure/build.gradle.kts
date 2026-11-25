@@ -2,9 +2,10 @@ plugins {
   id("otel.library-instrumentation")
 }
 
+base.archivesName.set("${base.archivesName.get()}-autoconfigure")
+
 dependencies {
-  compileOnly("com.google.auto.value:auto-value-annotations")
-  annotationProcessor("com.google.auto.value:auto-value")
+  implementation(project(":instrumentation:apache-dubbo-2.7:library"))
 
   library("org.apache.dubbo:dubbo:2.7.0")
 

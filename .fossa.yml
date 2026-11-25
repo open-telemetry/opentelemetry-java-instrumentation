@@ -81,6 +81,9 @@ targets:
       target: ':instrumentation:apache-dubbo-2.7:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:apache-dubbo-2.7:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:apache-dubbo-2.7:library-autoconfigure'
     - type: gradle
       path: ./

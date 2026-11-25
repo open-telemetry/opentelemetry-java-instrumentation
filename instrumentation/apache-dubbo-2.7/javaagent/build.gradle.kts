@@ -12,7 +12,7 @@ muzzle {
 }
 
 dependencies {
-  implementation(project(":instrumentation:apache-dubbo-2.7:library-autoconfigure"))
+  implementation(project(":instrumentation:apache-dubbo-2.7:library"))
 
   library("org.apache.dubbo:dubbo:2.7.0")
 }

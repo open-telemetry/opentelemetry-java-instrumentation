@@ -4,6 +4,8 @@
 
 ### ⚠️ Breaking changes
 
+- Apache Dubbo library instrumentation no longer activates filters automatically. Add the
+  `opentelemetry-apache-dubbo-2.7-autoconfigure` artifact to retain automatic filter activation.
 - Empty selectors passed to `setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` now select nothing. Use
   `IncludeExclude.builder().setIncluded("*").build()` to select all.
