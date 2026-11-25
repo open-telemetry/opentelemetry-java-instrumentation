@@ -15,11 +15,13 @@ import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.after
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.function.Consumer
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.DurationInt
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoSchedulerTest {
   @RegisterExtension val testing: InstrumentationExtension =
     AgentInstrumentationExtension.create()

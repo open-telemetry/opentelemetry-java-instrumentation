@@ -26,7 +26,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.TraceAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import java.io.File;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
@@ -82,7 +81,6 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     cleanup.deferCleanup(connectionFactory::close);
 
     CountDownLatch consumerCreated = new CountDownLatch(1);
-    CompletableFuture<Void> listenerCompleted = new CompletableFuture<>();
     BaselineListenerContainer container = new BaselineListenerContainer(consumerCreated);
     container.setConnectionFactory(connectionFactory);
     container.setDestinationName(DESTINATION_NAME);
@@ -92,10 +90,7 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     container.setDurableSubscriptionName(SUBSCRIPTION_NAME);
     @SuppressWarnings("rawtypes")
     SessionAwareMessageListener listener =
-        (message, session) -> {
-          testing.runWithSpan("listener", () -> {});
-          listenerCompleted.complete(null);
-        };
+        (message, session) -> testing.runWithSpan("listener", () -> {});
     container.setMessageListener(listener);
     cleanup.deferCleanup(container::destroy);
     container.afterPropertiesSet();
@@ -106,7 +101,6 @@ class SpringJmsBaselineTest extends AbstractJmsTest {
     template.setPubSubDomain(true);
     testing.runWithSpan("parent", () -> template.convertAndSend(DESTINATION_NAME, "a message"));
 
-    listenerCompleted.get(10, SECONDS);
     assertListenerSpans();
     assertMetrics();
   }

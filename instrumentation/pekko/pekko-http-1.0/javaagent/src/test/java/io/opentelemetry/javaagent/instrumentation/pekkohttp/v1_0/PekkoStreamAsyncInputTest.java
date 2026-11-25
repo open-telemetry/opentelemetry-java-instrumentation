@@ -30,7 +30,6 @@ class PekkoStreamAsyncInputTest {
   @Test
   void streamWakeupDoesNotInheritSubmittingSpan() throws Exception {
     CompletableFuture<AsyncCallback<String>> ready = new CompletableFuture<>();
-    CompletableFuture<Void> callbackCompleted = new CompletableFuture<>();
     ActorSystem system = ActorSystem.create("async-input-test");
     try {
       Source.fromGraph(
@@ -60,7 +59,6 @@ class PekkoStreamAsyncInputTest {
                       ready.complete(
                           createAsyncCallback(ignored -> {
                             testing.runWithSpan("wakeup", () -> {});
-                            callbackCompleted.complete(null);
                             completeStage();
                           }));
                     }
@@ -72,7 +70,6 @@ class PekkoStreamAsyncInputTest {
       AsyncCallback<String> callback = ready.get(10, SECONDS);
       testing.runWithSpan("request", () -> callback.invoke("wake up"));
 
-      callbackCompleted.get(10, SECONDS);
       testing.waitAndAssertTraces(
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("request").hasNoParent()),
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("wakeup").hasNoParent()));

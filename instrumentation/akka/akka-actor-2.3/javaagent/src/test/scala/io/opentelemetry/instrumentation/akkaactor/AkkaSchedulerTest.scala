@@ -14,11 +14,13 @@ import io.opentelemetry.instrumentation.testing.junit.{
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.TestInstance
 import org.junit.jupiter.api.extension.RegisterExtension
 import java.util.function.Consumer
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.DurationInt
 
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class AkkaSchedulerTest {
   @RegisterExtension val testing: InstrumentationExtension =
     AgentInstrumentationExtension.create()

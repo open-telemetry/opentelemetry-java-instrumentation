@@ -200,7 +200,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
       String messageId) {
     testing.waitAndAssertTraces(trace -> {
       if (hasParentSpan) {
-        trace.hasSpansSatisfyingExactlyInAnyOrder(
+        trace.hasSpansSatisfyingExactly(
             span -> span.hasName("parent").hasKind(INTERNAL).hasNoParent(),
             span ->
                 span.hasName(spanName)
