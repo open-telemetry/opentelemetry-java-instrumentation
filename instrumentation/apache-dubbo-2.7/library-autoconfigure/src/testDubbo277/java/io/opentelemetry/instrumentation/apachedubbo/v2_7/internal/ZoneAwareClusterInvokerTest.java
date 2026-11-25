@@ -46,8 +46,7 @@ class ZoneAwareClusterInvokerTest {
   @Test
   void preservesCustomMockClusterInvoker() {
     RegistryBackedDirectory directory = registryDirectory("zookeeper://localhost:2181");
-    @SuppressWarnings("unchecked")
-    Invoker<Object> provider = mock(Invoker.class);
+    ProviderInvoker provider = mock();
     MockClusterInvoker<Object> custom =
         new MockClusterInvoker<Object>(directory, provider) {
           @Override
@@ -63,8 +62,7 @@ class ZoneAwareClusterInvokerTest {
 
   private static Invoker<Object> registryInvoker(String address) {
     RegistryBackedDirectory directory = registryDirectory(address);
-    @SuppressWarnings("unchecked")
-    Invoker<Object> provider = mock(Invoker.class);
+    ProviderInvoker provider = mock();
     when(provider.invoke(any()))
         .thenAnswer(
             call -> new AppResponse(DubboRegistryUtil.extractRegistryAddress(call.getArgument(0))));
@@ -89,4 +87,6 @@ class ZoneAwareClusterInvokerTest {
   interface RegistryBackedDirectory extends Directory<Object> {
     Registry getRegistry();
   }
+
+  interface ProviderInvoker extends Invoker<Object> {}
 }
