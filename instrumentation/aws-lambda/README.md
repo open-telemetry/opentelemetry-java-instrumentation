@@ -12,46 +12,9 @@ We provide two packages for instrumenting AWS lambda functions.
 
 ## SDK setup for wrappers
 
-The wrappers use SDK autoconfiguration and export traces, metrics, and logs over OTLP by default.
-Use the same `OPENTELEMETRY_VERSION` as your Lambda instrumentation dependency. The BOM also
-manages that dependency's version.
-
-For Maven, add to your `pom.xml`:
-
-```xml
-<dependencyManagement>
-  <dependencies>
-    <dependency>
-      <groupId>io.opentelemetry.instrumentation</groupId>
-      <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
-      <version>OPENTELEMETRY_VERSION</version>
-      <type>pom</type>
-      <scope>import</scope>
-    </dependency>
-  </dependencies>
-</dependencyManagement>
-
-<dependencies>
-  <dependency>
-    <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
-  </dependency>
-  <dependency>
-    <groupId>io.opentelemetry</groupId>
-    <artifactId>opentelemetry-exporter-otlp</artifactId>
-  </dependency>
-</dependencies>
-```
-
-For Gradle, add to your dependencies:
-
-```kotlin
-implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:OPENTELEMETRY_VERSION"))
-implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
-implementation("io.opentelemetry:opentelemetry-exporter-otlp")
-```
-
-If you use OTLP, set `OTEL_EXPORTER_OTLP_ENDPOINT` to the URL of a collector or backend the function
-can reach. The default, `localhost`, requires a collector in the Lambda execution environment.
-If no signal uses OTLP, omit its exporter dependency and add the dependencies for the exporters
-you configure.
+The Lambda wrappers initialize the OpenTelemetry SDK using autoconfiguration.
+In addition to the Lambda instrumentation dependency shown in the library guides, the deployed
+function needs `io.opentelemetry:opentelemetry-sdk-extension-autoconfigure` and dependencies for
+the configured exporters at runtime.
+See [SDK autoconfiguration](https://opentelemetry.io/docs/languages/java/configuration/#zero-code-sdk-autoconfigure)
+for dependency setup and exporter configuration.
