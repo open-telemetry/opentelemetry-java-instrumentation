@@ -1,0 +1,12 @@
+<Context>
+  <Manager maxActiveSessions="42"/>
+  <Resource name="jdbc/TestDB"
+            auth="Container"
+            type="javax.sql.DataSource"
+            factory="org.apache.tomcat.jdbc.pool.DataSourceFactory"
+            initialSize="1"
+            maxActive="10"
+            minIdle="1"
+            driverClassName="org.h2.Driver"
+            url="jdbc:h2:mem:test"/>
+</Context>

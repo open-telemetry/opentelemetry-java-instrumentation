@@ -36,6 +36,7 @@ dependencies {
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("org.testcontainers:testcontainers")
+  testImplementation("com.h2database:h2:2.4.240")
 
   testImplementation("org.testcontainers:testcontainers-junit-jupiter")
   testImplementation("com.linecorp.armeria:armeria-junit5:1.31.3")

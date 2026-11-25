@@ -1,4 +1,5 @@
 <Context>
+  <Manager maxActiveSessions="42"/>
   <Resource name="jdbc/TestDB"
             auth="Container"
             type="javax.sql.DataSource"

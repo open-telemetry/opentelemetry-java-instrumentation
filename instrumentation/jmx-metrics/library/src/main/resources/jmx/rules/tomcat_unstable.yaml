@@ -12,14 +12,13 @@ rules:
       tomcat.host: param(host)
       tomcat.context: param(context)
     mapping:
-      # DBCP2 and Tomcat JDBC expose equivalent pool values under different names.
-      # A datasource uses one implementation, so these mappings intentionally converge
-      # on the same metrics.
       initialSize:
         metric: initial
         type: updowncounter
         unit: "{connection}"
         desc: The configured initial size of the JDBC connection pool.
+      # Both pools expose numActive and numIdle. Tomcat JDBC also exposes active and idle as
+      # aliases, which would double the counts if mapped here.
       numActive:
         metric: &metric count
         type: &type updowncounter
@@ -34,20 +33,7 @@ rules:
         desc: *desc
         metricAttribute:
           db.client.connection.state: const(idle)
-      active:
-        metric: *metric
-        type: *type
-        unit: *unit
-        desc: *desc
-        metricAttribute:
-          db.client.connection.state: const(used)
-      idle:
-        metric: *metric
-        type: *type
-        unit: *unit
-        desc: *desc
-        metricAttribute:
-          db.client.connection.state: const(idle)
+      # Tomcat JDBC exposes the limit as maxActive, and DBCP2 exposes it as maxTotal.
       maxActive:
         metric: &limit_metric limit
         type: &limit_type updowncounter
