@@ -99,15 +99,7 @@ applyTo: "instrumentation/**/metadata.yaml,instrumentation-docs/src/main/resourc
 - An intentionally deprecated declarative spelling is documented only on an entry with
   `deprecated: true`; current entries use the current supported spelling.
 
-## Examples and validation
+## Examples
 
 - Add `examples` only for module-specific settings with non-obvious list, pattern, or enum formats,
   not booleans, `general.*`, or `java.common.*`.
-
-- After editing metadata, run the focused round-trip/schema validation. It checks flat-to-declarative
-  lookup, types, schemas, and common-setting references. Passing it does not prove that a setting
-  has a reader.
-
-  ```bash
-  ./gradlew :instrumentation-docs:test --tests DeclarativeConfigValidationTest
-  ```

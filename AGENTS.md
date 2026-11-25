@@ -31,22 +31,6 @@ Before introducing weak references, weak-key caches, or another identity-keyed r
 javaagent state attached to third-party objects, read
 [instrumentation state](.github/instructions/instrumentation-state.instructions.md).
 
-### Writing repository instructions
-
-Write these instructions for coding agents and pull request reviewers. The instruction audit uses
-the same rules.
-
-- Use one top-level `-` bullet per requirement that can be applied on its own. If two requirements
-  can fail independently and need different fixes, give them sibling bullets.
-- Keep a rule's conditions, exceptions, rationale, and examples inside its bullet. Indent
-  continuation paragraphs, nested lists, tables, and code fences two spaces under `-`.
-- Use headings for navigation, not to supply a rule's conditions. File-wide scope notes and
-  standalone reference tables can stay outside bullets.
-- When restructuring rules, check the blocks with the parser version used by the audit. See the
-  [instruction audit parser](https://github.com/open-telemetry/shared-workflows/blob/9b20b725a2dd19e03d3f9605c51680405373d217/.github/scripts/instruction-audit/rules.py)
-  for how Markdown maps to blocks. Verify that related text stays together and unrelated rules
-  remain separate.
-
 ## Gradle Execution Rules
 
 - Never use `--rerun-tasks`. Use `--rerun` when needed.

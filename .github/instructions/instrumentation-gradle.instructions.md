@@ -7,12 +7,11 @@ applyTo: "**/build.gradle.kts,settings.gradle.kts,**/settings.gradle.kts,.github
 Apply module-specific rules only to instrumentation projects. Test-task wiring rules also apply
 to shared infrastructure and other projects using the same conventions.
 
-- Register each instrumentation subproject in `settings.gradle.kts`, include module metadata,
-  choose the correct plugin (`otel.javaagent-instrumentation`,
-  `otel.library-instrumentation`, or `otel.java-conventions` for testing), and wire actual test
-  variants. Javaagent modules need Muzzle coverage for their supported ranges.
-  Keep `settings.gradle.kts` entries alphabetical and `.fossa.yml` consistent with the output of
-  `generateFossaConfiguration`. Regenerate `.fossa.yml` when adding a module.
+- Each instrumentation subproject has an entry in `settings.gradle.kts`, module metadata, the
+  appropriate plugin (`otel.javaagent-instrumentation`, `otel.library-instrumentation`, or
+  `otel.java-conventions` for testing), and wired test variants. Javaagent modules have Muzzle
+  coverage for their supported ranges. `settings.gradle.kts` entries are alphabetical, and
+  `.fossa.yml` matches the output of `generateFossaConfiguration`.
 - Include supported-library documentation for each instrumentation subproject. Document user-facing
   javaagent settings in a settings table in the module's `javaagent/README.md` or a shared parent
   README. A standalone library instrumentation needs a library README with dependency and usage
@@ -36,11 +35,11 @@ to shared infrastructure and other projects using the same conventions.
   shared fixtures; a transitive dependency alone is not enough. The plugin limits all `Test` tasks
   in the project, including container-free suites and variants. Use narrower scheduling only for a
   demonstrated problem, and keep unrelated test settings scoped to the tasks that need them.
-- Metadata collection covers default telemetry and supported non-default telemetry modes. Register
-  representative tasks in `.github/scripts/instrumentations.sh` covering each profile's
+- Metadata collection covers default telemetry and supported non-default telemetry modes.
+  Representative tasks in `.github/scripts/instrumentations.sh` collect each profile's
   instrumentation scope and telemetry shape; equivalent suites need not all collect. Shared test
-  conventions forward `-PcollectMetadata=true` to test JVMs. Verify collection when its wiring or
-  collected telemetry changes, not as unrelated cleanup.
+  conventions forward `-PcollectMetadata=true` to test JVMs. Collected metadata reflects the
+  telemetry emitted by the registered tasks for each profile.
 - `metadataConfig` labels output; verify settings are applied separately. Leave it unset for
   instrumentation defaults, regardless of task name or settings on `test`.
   Otherwise include only non-default user-facing settings
@@ -198,9 +197,9 @@ to shared infrastructure and other projects using the same conventions.
   use `sources.implementationConfigurationName`, `sources.runtimeOnlyConfigurationName`, and
   `sources.compileJavaTaskName`.
 
-- Preserve fixture outputs, dependency inheritance, compiler releases, and packaging. Remove explicit
-  compile/task dependencies only after verifying that source-set outputs retain the ordering;
-  disabling newer-JVM tests does not remove compilation requirements.
+- Fixture outputs, dependency inheritance, compiler releases, and packaging stay intact. Required
+  compilation and task ordering comes from source-set outputs or explicit dependencies. Disabling
+  newer-JVM tests does not remove compilation requirements.
 
 - Preserve multi-release sources, sources JAR entries, and manifests.
 
@@ -212,19 +211,21 @@ to shared infrastructure and other projects using the same conventions.
   providers and can duplicate the javaagent or lose input tracking.
 
 - `register("Suffix")` names a variant after its owning suite plus the suffix; it shares the suite's
-  source directory. Version-suite names should describe the runtime tested. Do not normalize existing
-  version separators or add APIs solely to preserve inconsistent internal task names. Update all
-  task/source callers and metadata-collection references together when renaming.
+  source directory. Version-suite names describe the runtime tested. A suite rename needs a reason
+  other than normalizing its version separator. No API exists solely to preserve inconsistent
+  internal task names. Task and source callers and metadata-collection references use the current
+  names.
 
 - Prefer the DSL to manual suite-to-task maps and unnecessary helpers; retain useful suffix/version
   maps and deterministic discovered-class loops.
 
-### Verification and scheduling
+### Test execution and scheduling
 
-- Check default/variant configuration and `check` graphs in relevant baseline/latest/JDK modes,
-  including explicit suite realization. Verify real discovery and execution where task filters apply:
-  default-only exclusions must stay off variants, and no-test failure behavior must work as configured.
+- In supported baseline, latest-dependency, and JDK modes, tests have the intended default and
+  variant configuration and participate in the appropriate `check` graph, including when suites are
+  explicitly realized. Filtered tasks discover and run the intended tests. Default-only exclusions
+  do not apply to variants, and tasks fail when no tests run if configured to do so.
 
-- Remove locks, build services, or environment setup only after verifying current framework
-  initialization and concurrent-test behavior. Preserve real shared-workspace/Testcontainers
-  constraints; old comments alone do not establish their necessity.
+- Locks, build services, and environment setup reflect current framework initialization and
+  concurrent-test requirements, including shared-workspace and Testcontainers constraints.
+  Historical requirements alone do not justify them.

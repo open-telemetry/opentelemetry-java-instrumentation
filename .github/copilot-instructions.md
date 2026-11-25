@@ -48,24 +48,23 @@ guidance catalog.
   `otel.scope.name`, including for modules that have been renamed. Keep scope-version lookup aligned
   with the name passed to `Instrumenter.builder(...)`. Assess telemetry compatibility under
   `VERSIONING.md` and the adopted semantic conventions; not every telemetry difference is breaking.
-- Keep instrumentation configuration metadata, including each module's `metadata.yaml` and shared
-  configuration definitions, aligned with the actual readers. Check supported setting names, types,
-  and defaults, including reads in dependent common modules. Confirm that a setting has no readers
-  before removing it from the metadata.
+- Instrumentation configuration metadata, including each module's `metadata.yaml` and shared
+  configuration definitions, matches supported setting names, types, and defaults in the actual
+  readers, including readers in dependent common modules. A documented setting remains in metadata
+  while it has a supported reader.
 
 ## Documentation
 
 - Document flat properties without repeating equivalent declarative configuration.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
-- Add hand-written changelog entries only for deprecations or breaking changes, as specified in
-  CONTRIBUTING.md; normal changes rely on the generated changelog. Document deprecations of
-  settings and instrumentation enablement aliases in the changelog. Use the appropriate stable or
-  non-stable breaking-change heading and the corresponding PR label. Keep entries short, naming a
-  deprecated interface and its replacement without repeating removal timing or obvious migration
-  steps. Describe the released behavior directly, without
-  referring to preview flags used to stage the change. Omit statements about behavior that is
-  unchanged unless they are necessary to clarify the change's scope.
+- Hand-written changelog entries cover only deprecations and breaking changes, as specified in
+  CONTRIBUTING.md. Other changes appear in the generated changelog. Deprecations of settings and
+  instrumentation enablement aliases have entries. Breaking changes use the appropriate stable or
+  non-stable heading. Entries are short and name a deprecated interface and its replacement
+  without repeating removal timing or obvious migration steps. They describe the released behavior
+  without referring to preview flags used to stage the change or mentioning unchanged behavior
+  unless it clarifies the change's scope.
 - README and usage documentation should meet a concrete reader need: setup,
   configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
   A code change alone does not require a README addition. Do not add prose merely to inventory
