@@ -1,1 +1,1 @@
-{"path": ".github/instructions/instrumentation-state.instructions.md", "text": "- Inside inlined advice, call `find(...)` at the point of use; transformation rewrites the call.\n  Do not extract it merely to cache the lookup."}
+{"path": ".github/instructions/instrumentation-state.instructions.md", "text": "- Non-inlined advice cannot call `find(...)` directly. Cache the handle in a `static final`\n  `SCREAMING_SNAKE_CASE` field on a non-advice helper or singleton and reference it from advice.\n  Outside advice, cache lookup in the same way."}
