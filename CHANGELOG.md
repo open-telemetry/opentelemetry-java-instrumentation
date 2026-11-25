@@ -4,6 +4,9 @@
 
 ### ⚠️ Breaking changes
 
+- Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
+  their name. Rejected requests can now be split across `http.server.request.duration` series
+  by method, protocol version, and URL scheme.
 - Empty selectors passed to `setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` now select nothing. Use
   `IncludeExclude.builder().setIncluded("*").build()` to select all.
