@@ -7,16 +7,39 @@ that use AWS Lambda event types.
 
 ### Add these dependencies to your project
 
-Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-lambda-events-3.11).
+Replace `OPENTELEMETRY_VERSION` with the [latest instrumentation BOM release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-instrumentation-bom-alpha).
+The BOM keeps the instrumentation and SDK dependencies on compatible versions.
 
-For Maven, add to your `pom.xml` dependencies:
+The wrappers use SDK autoconfiguration and default to exporting traces, metrics, and logs over OTLP.
+If you configure other exporters, include their dependencies. Omit the OTLP exporter only if no signal uses it.
+
+For Maven, add to your `pom.xml`:
 
 ```xml
+<dependencyManagement>
+  <dependencies>
+    <dependency>
+      <groupId>io.opentelemetry.instrumentation</groupId>
+      <artifactId>opentelemetry-instrumentation-bom-alpha</artifactId>
+      <version>OPENTELEMETRY_VERSION</version>
+      <type>pom</type>
+      <scope>import</scope>
+    </dependency>
+  </dependencies>
+</dependencyManagement>
+
 <dependencies>
   <dependency>
     <groupId>io.opentelemetry.instrumentation</groupId>
     <artifactId>opentelemetry-aws-lambda-events-3.11</artifactId>
-    <version>OPENTELEMETRY_VERSION</version>
+  </dependency>
+  <dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-sdk-extension-autoconfigure</artifactId>
+  </dependency>
+  <dependency>
+    <groupId>io.opentelemetry</groupId>
+    <artifactId>opentelemetry-exporter-otlp</artifactId>
   </dependency>
 </dependencies>
 ```
@@ -24,7 +47,10 @@ For Maven, add to your `pom.xml` dependencies:
 For Gradle, add to your dependencies:
 
 ```kotlin
-implementation("io.opentelemetry.instrumentation:opentelemetry-aws-lambda-events-3.11:OPENTELEMETRY_VERSION")
+implementation(platform("io.opentelemetry.instrumentation:opentelemetry-instrumentation-bom-alpha:OPENTELEMETRY_VERSION"))
+implementation("io.opentelemetry.instrumentation:opentelemetry-aws-lambda-events-3.11")
+implementation("io.opentelemetry:opentelemetry-sdk-extension-autoconfigure")
+implementation("io.opentelemetry:opentelemetry-exporter-otlp")
 ```
 
 ### Usage
