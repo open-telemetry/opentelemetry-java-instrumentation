@@ -12,6 +12,7 @@ public final class GuavaAsyncOperationEndStrategyBuilder {
 
   GuavaAsyncOperationEndStrategyBuilder() {}
 
+  /** Whether to record the experimental {@code guava.canceled} span attribute on cancellation. */
   @CanIgnoreReturnValue
   public GuavaAsyncOperationEndStrategyBuilder setCaptureExperimentalSpanAttributes(
       boolean captureExperimentalSpanAttributes) {
