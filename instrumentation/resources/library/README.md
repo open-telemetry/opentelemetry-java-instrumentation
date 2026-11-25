@@ -3,6 +3,22 @@
 This package includes some standard `ResourceProvider`s for filling in attributes related to
 common environments. Currently, the resources provide the following semantic conventions:
 
+## Dependencies
+
+Add this dependency to your application, replacing `OPENTELEMETRY_VERSION` with the
+[latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-resources):
+
+```kotlin
+implementation("io.opentelemetry.instrumentation:opentelemetry-resources:OPENTELEMETRY_VERSION")
+```
+
+## Usage
+
+With OpenTelemetry SDK autoconfiguration, the resource providers are
+discovered automatically when this artifact is on the runtime classpath.
+For manual SDK configuration, merge resources such as `HostResource.get()`
+and `ProcessRuntimeResource.get()` into the resource supplied to your SDK.
+
 ## Populated attributes
 
 ### Container

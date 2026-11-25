@@ -9,6 +9,15 @@ Identity capture is disabled by default. Scope authorities are not captured.
 Also provides `Customizer` implementations to insert those filters into the filter chains created by
 `HttpSecurity` and `ServerHttpSecurity`, respectively.
 
+## Dependencies
+
+Add this dependency to your application, replacing `OPENTELEMETRY_VERSION` with the
+[latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-spring-security-config-6.0):
+
+```kotlin
+implementation("io.opentelemetry.instrumentation:opentelemetry-spring-security-config-6.0:OPENTELEMETRY_VERSION")
+```
+
 ## Usage in Spring WebMVC Applications
 
 When not using [automatic instrumentation](../javaagent/), you can enable identity attribute capturing

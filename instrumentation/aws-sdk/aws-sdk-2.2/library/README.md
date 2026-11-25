@@ -2,6 +2,15 @@
 
 Instrumentation for [AWS Java SDK v2](https://github.com/aws/aws-sdk-java-v2).
 
+## Dependencies
+
+Add this dependency to your application, replacing `OPENTELEMETRY_VERSION` with the
+[latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-sdk-2.2):
+
+```kotlin
+implementation("io.opentelemetry.instrumentation:opentelemetry-aws-sdk-2.2:OPENTELEMETRY_VERSION")
+```
+
 ## Usage
 
 To instrument all AWS SDK clients include the `opentelemetry-aws-sdk-2.2-autoconfigure` submodule in your classpath.

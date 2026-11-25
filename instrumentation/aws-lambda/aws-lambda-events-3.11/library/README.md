@@ -2,6 +2,15 @@
 
 This package contains libraries to help instrument AWS lambda functions in your code.
 
+## Dependencies
+
+Add this dependency to your application, replacing `OPENTELEMETRY_VERSION` with the
+[latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-aws-lambda-events-3.11):
+
+```kotlin
+implementation("io.opentelemetry.instrumentation:opentelemetry-aws-lambda-events-3.11:OPENTELEMETRY_VERSION")
+```
+
 ## Using wrappers
 
 To use the instrumentation, configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName`
