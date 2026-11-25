@@ -38,17 +38,17 @@ Apply these rules to reflection-based compatibility code.
 
 ## Choose the mechanism for the job
 
-| Situation | Preferred approach |
-| --- | --- |
-| A method handle is needed and the supported signatures are known | Cached `MethodHandle` using `findStatic` or `findVirtual`; try the known version-specific alternatives |
-| Access requires a target-associated lookup, or `CallSite` linking is part of the design | `MethodHandle` |
-| Setup performs a one-time call, construction, or field access | `Method`, `Constructor`, or `Field` |
-| The supported method signatures aren't known ahead of time | Reflective discovery using `Method`, `Constructor`, or `Field` |
-| Code receives reflection objects or inspects member metadata | `Method`, `Constructor`, or `Field` |
-| The caller deliberately handles `InvocationTargetException` | `Method` or `Constructor` |
+- Choose reflection or a method handle based on access and calling requirements. Do not choose
+  `MethodHandle` solely for an assumed performance advantage.
 
-- Do not choose `MethodHandle` solely for an assumed performance
-  advantage. Use the design criteria above instead.
+  | Situation | Preferred approach |
+  | --- | --- |
+  | A method handle is needed and the supported signatures are known | Cached `MethodHandle` using `findStatic` or `findVirtual`; try the known version-specific alternatives |
+  | Access requires a target-associated lookup, or `CallSite` linking is part of the design | `MethodHandle` |
+  | Setup performs a one-time call, construction, or field access | `Method`, `Constructor`, or `Field` |
+  | The supported method signatures aren't known ahead of time | Reflective discovery using `Method`, `Constructor`, or `Field` |
+  | Code receives reflection objects or inspects member metadata | `Method`, `Constructor`, or `Field` |
+  | The caller deliberately handles `InvocationTargetException` | `Method` or `Constructor` |
 
 - Mixed use of reflection objects and method handles does not itself require
   conversion.

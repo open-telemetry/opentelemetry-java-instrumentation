@@ -9,18 +9,20 @@ applyTo: "instrumentation/**/metadata.yaml,instrumentation-docs/src/main/resourc
 
 ## Entry shape
 
-| Field | Meaning |
-| --- | --- |
-| `name` | Flat property name; omit only for declarative-only settings |
-| `declarative_name` | YAML path, required when there is no flat property |
-| `type` | Flat-form `boolean`, `string`, `list`, `int`, or `map` |
-| `description` | User-facing behavior |
-| `default` | Value when unset; omit when absence falls back to another setting |
-| `deprecated` | `true` exactly when the description starts with `Deprecated` |
-| `replaced_by` | Documented replacement flat name, or declarative path if it has no flat form |
-| `examples` | Optional module-specific non-obvious formats |
-| `declarative_type` | Different YAML shape: `structured_list` or scalar `string`, `boolean`, `int` |
-| `declarative_schema` | Per-item object schema for a structured list |
+- Use these fields to describe configuration settings:
+
+  | Field | Meaning |
+  | --- | --- |
+  | `name` | Flat property name; omit only for declarative-only settings |
+  | `declarative_name` | YAML path, required when there is no flat property |
+  | `type` | Flat-form `boolean`, `string`, `list`, `int`, or `map` |
+  | `description` | User-facing behavior |
+  | `default` | Value when unset; omit when absence falls back to another setting |
+  | `deprecated` | `true` exactly when the description starts with `Deprecated` |
+  | `replaced_by` | Documented replacement flat name, or declarative path if it has no flat form |
+  | `examples` | Optional module-specific non-obvious formats |
+  | `declarative_type` | Different YAML shape: `structured_list` or scalar `string`, `boolean`, `int` |
+  | `declarative_schema` | Per-item object schema for a structured list |
 
 - `replaced_by` belongs only on deprecated entries. Deprecated entries are excluded from generated
   configuration examples.

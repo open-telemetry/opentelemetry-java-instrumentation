@@ -10,17 +10,19 @@ javaagent instrumentation, not library-only code.
 
 ## Choose storage by ownership
 
-| Requirement | Storage |
-| --- | --- |
-| Javaagent state belongs to a third-party object instance | Typed `VirtualField<Carrier, State>` |
-| A shared helper supports callers with different carrier types | Caller-selected virtual field or typed accessor |
-| State is ambient for the current operation or scope | OpenTelemetry `Context`, `Scope`, or scoped thread state |
-| State belongs to an instrumentation-owned wrapper | An ordinary field |
-| Derived metadata varies by class or lookup key | An appropriate cache or `ClassValue` |
-| Entries need a bound independent of key lifetime | A bounded cache |
-| Equal value objects are canonicalized without retention | A synchronized weak interning pool |
-| A wrapper must not strongly retain its delegate | An explicit `WeakReference`, possibly in a virtual field |
-| Library instrumentation runs without agent transformation | Storage supported by the library API and lifecycle |
+- Choose storage based on who owns the state and how long it lives:
+
+  | Requirement | Storage |
+  | --- | --- |
+  | Javaagent state belongs to a third-party object instance | Typed `VirtualField<Carrier, State>` |
+  | A shared helper supports callers with different carrier types | Caller-selected virtual field or typed accessor |
+  | State is ambient for the current operation or scope | OpenTelemetry `Context`, `Scope`, or scoped thread state |
+  | State belongs to an instrumentation-owned wrapper | An ordinary field |
+  | Derived metadata varies by class or lookup key | An appropriate cache or `ClassValue` |
+  | Entries need a bound independent of key lifetime | A bounded cache |
+  | Equal value objects are canonicalized without retention | A synchronized weak interning pool |
+  | A wrapper must not strongly retain its delegate | An explicit `WeakReference`, possibly in a virtual field |
+  | Library instrumentation runs without agent transformation | Storage supported by the library API and lifecycle |
 
 - Use `VirtualField` for instrumentation-owned context, span, suppression, or ownership state
   attached to requests, messages, futures, callbacks, connections, or other third-party instances.

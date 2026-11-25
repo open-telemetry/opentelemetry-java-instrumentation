@@ -15,7 +15,6 @@ applyTo: ".github/copilot-instructions.md,.github/instructions/**/*.instructions
   the complete rule together for the
   [instruction audit parser](https://github.com/open-telemetry/shared-workflows/blob/9b20b725a2dd19e03d3f9605c51680405373d217/.github/scripts/instruction-audit/rules.py).
 - Use headings to group related rules. State each rule's conditions in the bullet itself.
-  Standalone reference tables can stay outside bullets.
 - If a file needs a scope note, put it in one plain paragraph immediately below the `#` title,
   without a separate heading. Use the note to say where the file's rules apply, not to state
   individual requirements.
