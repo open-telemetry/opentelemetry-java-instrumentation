@@ -5,11 +5,10 @@ applyTo: ".github/copilot-instructions.md,.github/instructions/**/*.instructions
 # Writing repository instructions
 
 - State what must be true of the code, tests, configuration, or documentation. That includes
-  compatibility guarantees across releases. Keep short steps for meeting or checking a rule in
-  the same bullet.
+  compatibility guarantees across releases. Most rules don't need steps. Include a short step in
+  the same bullet only if it gives the reader a non-obvious way to meet or check the rule.
 - Use sections for guidance that needs more space or applies to several rules. For example,
-  `Validation` can group checks with several steps, and review and audit sections can explain
-  how to report findings.
+  `Validation` can group checks with several steps.
 - Each requirement that can be violated and fixed independently has its own top-level `-` bullet.
 - A rule's conditions, exceptions, rationale, and examples stay inside its bullet. Continuation
   paragraphs, nested lists, tables, and code fences are indented two spaces under `-`. This keeps
