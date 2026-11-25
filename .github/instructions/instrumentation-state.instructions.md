@@ -56,23 +56,27 @@ javaagent instrumentation, not library-only code.
   propagated task context on `Runnable`. If no narrower stable carrier exists, document why and
   verify fallback and lifecycle behavior.
 
-- The `(carrier class, value class)` pair identifies the field. The same pair intentionally shares
-  storage across instrumentations. Use a dedicated holder for unrelated state or several related
-  values rather than colliding on `Object`, `Boolean`, `String`, or `Map` value types. A common value
-  type is valid when sharing is deliberate or the pair is demonstrably unique.
+- The carrier class, value class, and optional field name identify the field. Lookups with the
+  same identity share storage across instrumentations. Use a dedicated holder for unrelated
+  state or several related values. A common value type such as `Object`, `Boolean`, `String`,
+  or `Map` is valid when sharing is deliberate or the field identity is demonstrably unique.
 
 ## Virtual-field lookup and registration
 
-- In normal instrumentation, call `VirtualField.find(Carrier.class, State.class)` with class
-  literals so Muzzle generation discovers and registers the pair.
-- Cache the handle in a `static final` `SCREAMING_SNAKE_CASE` field. Both inlined and non-inlined
-  advice use the cached handle from a non-advice helper or singleton rather than calling
-  `find(...)` directly. Rewriting `find(...)` calls in inlined advice is deprecated.
+- In normal instrumentation, use class literals for the carrier and value types in
+  `VirtualField.find(...)` and a string literal for a named field. Muzzle generation registers
+  these mappings so the agent can install the virtual field implementations.
+- Reuse the resolved handle on production paths that can run repeatedly. Runtime lookup uses
+  reflection. A `static final` `SCREAMING_SNAKE_CASE` field or a holder that already retains the
+  handle, such as a static `MessagingTelemetryCarrier`, is sufficient. Non-inlined advice can
+  initialize and retain the handle in its own class. One-off lookups, such as test setup, do not
+  need a separate cache.
+- When inlined advice uses a cached handle, reference it through a helper whose class and member
+  are accessible from the instrumented class. Do not rely on the deprecated inline rewrite. It
+  applies only to the two-argument overload; the named overload always uses runtime lookup.
 - A rare runtime lookup for alternative carrier names runs outside advice in an `@NoMuzzle`
   method. Its module implements `ExperimentalInstrumentationModule` and registers every possible
-  pair through `registerVirtualFields(...)`. Do not use this pattern when class literals suffice.
-- The containing module needs Muzzle generation to register mappings so the agent can install
-  the virtual field implementations.
+  mapping through `registerVirtualFields(...)`. Do not use this pattern when literals suffice.
 
 ## Lifetime, fallback, and reuse
 

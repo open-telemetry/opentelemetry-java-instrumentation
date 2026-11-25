@@ -369,28 +369,32 @@ Weak references and caches still have other uses. For example, a cache of metada
 `Class` or `ClassLoader` is memoization rather than state attached to an individual library object,
 and a weak interning pool can canonicalize equal value objects without retaining them.
 
-Look up the virtual field once and cache its handle in a `static final` field:
+On production paths that can run repeatedly, resolve the virtual field once and reuse the handle.
+Runtime lookup uses reflection. A `static final` field can retain the handle:
 
 ```java
 private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
     VirtualField.find(Runnable.class, Context.class);
 ```
 
-The first argument is the carrier type and the second is the attached value type. In normal
-javaagent instrumentation, both should be class literals so muzzle can discover and register the
-mapping.
+An existing holder that retains the handle, such as a static `MessagingTelemetryCarrier`, does
+not need a second cache. Non-inlined advice can initialize and retain the handle in its own
+class. One-off lookups, such as test setup, do not need a separate cache.
 
-Both inlined and non-inlined advice should use the cached handle from a helper or singleton.
-Inlined advice runs in the instrumented class, so the helper and the member it uses must be
-accessible from that class. Do not rely on the deprecated rewriting of `VirtualField.find(...)`
-calls in inlined advice.
+Inlined advice runs in the instrumented class, so the helper that provides the cached handle and
+the member the advice references must be accessible from that class. Do not rely on the deprecated
+inline rewrite of `VirtualField.find(...)`. It applies only to the two-argument overload. The
+named overload always uses runtime lookup.
+
+In normal javaagent instrumentation, use class literals for the carrier and attached value types
+and a string literal for the optional field name so Muzzle can discover and register the mapping.
+Those three components identify the virtual field across instrumentations. Use a dedicated holder
+class when common value types such as `Object`, `Boolean`, `String`, or `Map` could give unrelated
+state the same field identity.
 
 A rare lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle`
-method. The instrumentation module must implement `ExperimentalInstrumentationModule` and override
-`registerVirtualFields(...)` to register every possible carrier/value pair. The `(carrier class,
-value class)` pair identifies the virtual field across instrumentations, so use a dedicated holder
-class when common value types such as `Object`, `Boolean`, `String`, or `Map` could give unrelated
-state the same pair.
+method. The instrumentation module must implement `ExperimentalInstrumentationModule` and
+override `registerVirtualFields(...)` to register every possible mapping.
 
 When a shared bootstrap or common helper cannot name the library carrier type, keep the
 `VirtualField` lookup with the instrumentation-specific caller. Pass the typed handle, or a small
