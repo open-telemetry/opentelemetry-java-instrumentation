@@ -1201,7 +1201,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
   }
 
   @Test
@@ -1230,7 +1230,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
   }
 
   @Test
@@ -1262,7 +1262,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
   }
 
   @Test
@@ -1292,7 +1292,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
   }
 
   @ParameterizedTest
@@ -1416,7 +1416,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
 
     jedis.resetState();
     testing.clearData();

@@ -36,7 +36,7 @@ val DEPENDENCY_BOMS = listOf(
 
 val autoServiceVersion = "1.1.1"
 val autoValueVersion = "1.11.1"
-val errorProneVersion = "2.52.0"
+val errorProneVersion = "2.53.0"
 val byteBuddyVersion = "1.18.17"
 val asmVersion = "9.11.1"
 val jmhVersion = "1.37"
@@ -111,7 +111,7 @@ val DEPENDENCIES = listOf(
   "com.google.code.findbugs:jsr305:3.0.2",
   "org.apache.groovy:groovy:${groovyVersion}",
   "org.apache.groovy:groovy-json:${groovyVersion}",
-  "org.codehaus.mojo:animal-sniffer-annotations:1.29.1",
+  "org.codehaus.mojo:animal-sniffer-annotations:1.29.2",
   "org.junit-pioneer:junit-pioneer:1.9.1",
   "org.objenesis:objenesis:3.6",
   "javax.validation:validation-api:2.0.1.Final",
