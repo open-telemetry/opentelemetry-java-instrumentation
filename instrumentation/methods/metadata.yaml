@@ -12,6 +12,21 @@ configurations:
     description: Semicolon-separated list of fully qualified class and method patterns to instrument.
     type: list
     default: ""
+    declarative_type: structured_list
+    declarative_schema:
+      type: object
+      required: [class, methods]
+      properties:
+        class:
+          type: string
+          description: Fully qualified class name to instrument.
+          example: com.example.MyClass
+        methods:
+          type: array
+          description: Method objects with a required name and an optional span_kind (default INTERNAL).
+          example:
+            - name: method1
+              span_kind: INTERNAL
     examples:
       - "com.example.MyClass[method1]"
       - "com.example.MyClass[method1,method2];com.example.OtherClass[call]"

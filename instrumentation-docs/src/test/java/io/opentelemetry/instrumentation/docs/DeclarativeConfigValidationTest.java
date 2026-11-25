@@ -317,12 +317,12 @@ class DeclarativeConfigValidationTest {
     String declarativePath = config.declarativeName();
     ConfigurationType type = config.type();
 
-    // The declarative form is a structured list when either the flat type is structured_list
-    // (legacy) or the dedicated declarative_type marks it as such. server_service_mapping uses
-    // type: map (the flat target=service_name form) + declarative_type: structured_list.
+    // Only map-backed structured lists need the service-mapping round trip. List-backed settings
+    // such as methods.include retain their scalar-list flat lookup in the bridge.
     boolean structuredList =
         type == ConfigurationType.STRUCTURED_LIST
-            || config.declarativeType() == ConfigurationType.STRUCTURED_LIST;
+            || (type == ConfigurationType.MAP
+                && config.declarativeType() == ConfigurationType.STRUCTURED_LIST);
 
     // Create test value appropriate for the type
     TestValue testValue = structuredList ? structuredListTestValue() : createTestValue(type);
@@ -361,7 +361,7 @@ class DeclarativeConfigValidationTest {
     };
   }
 
-  // The only structured_list config with a flat property is the common server-service-mapping. Its
+  // The only map-backed structured_list config is the common server-service-mapping. Its
   // flat form is a target=service_name map, which the bridge turns into {target, service_name}
   // entries. readServiceMappingAsMap below rebuilds the target -> service_name map from those
   // entries, so the comparison exercises getStructuredList (what the consumer uses) rather than a
@@ -412,8 +412,7 @@ class DeclarativeConfigValidationTest {
    * Reads the server-service-mapping structured list through the bridge (the same {@code
    * getStructuredList} call {@code ServiceMappingResolver} makes) and collapses its {@code {target,
    * service_name}} entries back into a {@code target -> service_name} map, so it can be compared
-   * against the flat-property value the test fed in. This is specific to server-service-mapping,
-   * which is currently the only {@code structured_list} config.
+   * against the flat-property value the test fed in. This is specific to server-service-mapping.
    */
   private static Object readServiceMappingAsMap(
       DeclarativeConfigProperties current, String lastSegment) {
