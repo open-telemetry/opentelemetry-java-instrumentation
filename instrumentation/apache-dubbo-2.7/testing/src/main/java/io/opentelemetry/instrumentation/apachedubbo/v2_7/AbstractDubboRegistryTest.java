@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import static io.opentelemetry.instrumentation.apachedubbo.v2_7.AbstractDubboTest.assertLatestDeps;
-import static io.opentelemetry.instrumentation.testing.GlobalTraceUtil.runWithSpan;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -24,7 +23,6 @@ import io.opentelemetry.instrumentation.apachedubbo.v2_7.impl.HelloServiceImpl;
 import io.opentelemetry.instrumentation.test.utils.PortUtils;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import io.opentelemetry.semconv.SchemaUrls;
 import java.lang.reflect.Field;
 import java.net.InetAddress;
@@ -61,11 +59,6 @@ public abstract class AbstractDubboRegistryTest {
   protected void configureService(ServiceConfig<?> service) {}
 
   protected void configureReference(ReferenceConfig<?> referenceConfig) {}
-
-  protected <T, E extends Throwable> T runWithParentSpan(String name, ThrowingSupplier<T, E> action)
-      throws E {
-    return runWithSpan(name, action);
-  }
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -146,11 +139,12 @@ public abstract class AbstractDubboRegistryTest {
     GenericService genericService = reference.get();
 
     Object response =
-        runWithParentSpan(
-            "parent",
-            () ->
-                genericService.$invoke(
-                    "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
+        testing()
+            .runWithSpan(
+                "parent",
+                () ->
+                    genericService.$invoke(
+                        "hello", new String[] {String.class.getName()}, new Object[] {"hello"}));
 
     assertThat(response).isEqualTo("hello");
 

@@ -34,11 +34,7 @@ created with your `OpenTelemetry` instance:
 
 ```java
 public final class ClientFilterExtension implements Filter {
-  private static volatile Filter delegate;
-
-  public static void initialize(OpenTelemetry openTelemetry) {
-    delegate = DubboTelemetry.create(openTelemetry).newClientFilter();
-  }
+  public static volatile Filter delegate;
 
   @Override
   public Result invoke(Invoker<?> invoker, Invocation invocation) {
@@ -50,7 +46,7 @@ public final class ClientFilterExtension implements Filter {
 Initialize the wrapper and register it with Dubbo before creating consumers:
 
 ```java
-ClientFilterExtension.initialize(openTelemetry);
+ClientFilterExtension.delegate = DubboTelemetry.create(openTelemetry).newClientFilter();
 ExtensionLoader<Filter> filterExtensions = ExtensionLoader.getExtensionLoader(Filter.class);
 filterExtensions.addExtension("otelClient", ClientFilterExtension.class);
 

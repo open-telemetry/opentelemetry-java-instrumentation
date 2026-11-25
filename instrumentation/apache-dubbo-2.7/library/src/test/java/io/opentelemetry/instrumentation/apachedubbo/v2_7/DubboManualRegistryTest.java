@@ -7,11 +7,8 @@ package io.opentelemetry.instrumentation.apachedubbo.v2_7;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
-import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier;
 import org.apache.dubbo.common.extension.ExtensionLoader;
 import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.ServiceConfig;
@@ -32,12 +29,15 @@ class DubboManualRegistryTest extends AbstractDubboRegistryTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   private static OpenTelemetry originalGlobalOpenTelemetry;
-  private static DubboTelemetry dubboTelemetry;
+  private static Filter clientFilter;
+  private static Filter serverFilter;
 
   @BeforeAll
   static void registerFilters() {
     originalGlobalOpenTelemetry = GlobalOpenTelemetry.get();
-    dubboTelemetry = DubboTelemetry.create(testing.getOpenTelemetry());
+    DubboTelemetry telemetry = DubboTelemetry.create(testing.getOpenTelemetry());
+    clientFilter = telemetry.newClientFilter();
+    serverFilter = telemetry.newServerFilter();
 
     ExtensionLoader<Filter> filterLoader = ExtensionLoader.getExtensionLoader(Filter.class);
     filterLoader.addExtension(CLIENT_FILTER_NAME, ManualClientFilter.class);
@@ -68,39 +68,23 @@ class DubboManualRegistryTest extends AbstractDubboRegistryTest {
     referenceConfig.setFilter(CLIENT_FILTER_NAME);
   }
 
-  @Override
-  protected <T, E extends Throwable> T runWithParentSpan(String name, ThrowingSupplier<T, E> action)
-      throws E {
-    Span span =
-        testing.getOpenTelemetry().getTracer("test.manual-dubbo").spanBuilder(name).startSpan();
-    try (Scope ignored = span.makeCurrent()) {
-      return action.get();
-    } finally {
-      span.end();
-    }
-  }
-
   public static final class ManualClientFilter implements Filter {
-
-    private final Filter delegate = dubboTelemetry.newClientFilter();
 
     public ManualClientFilter() {}
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) {
-      return delegate.invoke(invoker, invocation);
+      return clientFilter.invoke(invoker, invocation);
     }
   }
 
   public static final class ManualServerFilter implements Filter {
 
-    private final Filter delegate = dubboTelemetry.newServerFilter();
-
     public ManualServerFilter() {}
 
     @Override
     public Result invoke(Invoker<?> invoker, Invocation invocation) {
-      return delegate.invoke(invoker, invocation);
+      return serverFilter.invoke(invoker, invocation);
     }
   }
 }
