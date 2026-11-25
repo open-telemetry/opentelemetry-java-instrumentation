@@ -83,9 +83,11 @@ javaagent instrumentation, not library-only code.
   STATE.set(carrier, null);
   ```
 
-- Clear per-operation state after consumption, on abandonment and failure, and before a pooled or
-  reused carrier represents another operation. Garbage collection does not prevent stale state on
-  reuse.
+- Clear per-operation state after its last consumer is done. On failure or abandonment, clear it
+  when no remaining consumer needs it. For example, a deferred write can still need the caller
+  context to parent its span after the command future is cancelled. Clear the state before a
+  pooled or reused carrier represents another operation. Garbage collection does not prevent stale
+  state on reuse.
 
 - Fallback storage has weak keys and strong values. A value that strongly references its carrier
   can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
