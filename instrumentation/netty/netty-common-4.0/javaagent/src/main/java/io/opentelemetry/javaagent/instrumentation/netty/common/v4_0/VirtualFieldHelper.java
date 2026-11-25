@@ -25,7 +25,8 @@ public class VirtualFieldHelper {
   public static void setInstrumentationHandler(
       ChannelHandler handler, @Nullable ChannelHandler instrumentationHandler) {
     CHANNEL_HANDLER.set(
-        handler, instrumentationHandler == null ? null : new WeakReference<>(instrumentationHandler));
+        handler,
+        instrumentationHandler == null ? null : new WeakReference<>(instrumentationHandler));
   }
 
   private VirtualFieldHelper() {}
