@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.resources.internal;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ARCH;
+import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_ID;
 import static io.opentelemetry.semconv.incubating.HostIncubatingAttributes.HOST_NAME;
 import static java.util.Collections.emptySet;
 import static java.util.Collections.singleton;
@@ -47,7 +48,14 @@ class ResourceProviderPropertiesCustomizerTest {
     public Resource createResource(ConfigProperties config) {
       return Resource.create(
           Attributes.of(
-              stringKey("key"), "value", HOST_NAME, "provider-host", HOST_ARCH, "provider-arch"));
+              stringKey("key"),
+              "value",
+              HOST_ID,
+              "cloud-id",
+              HOST_NAME,
+              "cloud-host",
+              HOST_ARCH,
+              "cloud-arch"));
     }
   }
 
@@ -80,20 +88,24 @@ class ResourceProviderPropertiesCustomizerTest {
   }
 
   @Test
-  void preservesEarlierHostDescriptions() {
+  void cloudHostAttributesTakePrecedence() {
+    assertThat(new HostResourceProvider().order()).isLessThan(new Provider().order());
+
     Map<String, String> props = new HashMap<>();
     props.put(
         ResourceProviderPropertiesCustomizer.ENABLED_KEY,
         PROVIDER_CLASS_NAME + "," + HostResourceProvider.class.getName());
-    Resource descriptions =
-        Resource.create(Attributes.of(HOST_NAME, "local-host", HOST_ARCH, "local-arch"));
+    Resource localHost =
+        Resource.create(
+            Attributes.of(HOST_ID, "local-id", HOST_NAME, "local-host", HOST_ARCH, "local-arch"));
     try (MockedStatic<HostResource> host = mockStatic(HostResource.class)) {
-      host.when(() -> HostResource.create(true)).thenReturn(descriptions);
+      host.when(() -> HostResource.create(true)).thenReturn(localHost);
 
       Attributes attributes = configure(props);
 
-      assertThat(attributes.get(HOST_NAME)).isEqualTo("provider-host");
-      assertThat(attributes.get(HOST_ARCH)).isEqualTo("provider-arch");
+      assertThat(attributes.get(HOST_ID)).isEqualTo("cloud-id");
+      assertThat(attributes.get(HOST_NAME)).isEqualTo("cloud-host");
+      assertThat(attributes.get(HOST_ARCH)).isEqualTo("cloud-arch");
       host.verify(() -> HostResource.create(true));
     }
   }
