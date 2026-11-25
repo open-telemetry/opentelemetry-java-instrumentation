@@ -30,8 +30,12 @@ implementation("io.opentelemetry.instrumentation:opentelemetry-aws-lambda-core-1
 
 #### Using wrappers
 
-Follow the [shared SDK setup](../../README.md#sdk-setup-for-wrappers) to add SDK autoconfiguration
-and configure your exporter.
+The wrappers initialize the OpenTelemetry SDK using autoconfiguration.
+In addition to the instrumentation dependency above, the deployed function needs
+`io.opentelemetry:opentelemetry-sdk-extension-autoconfigure` and dependencies for the configured
+exporters at runtime.
+See [SDK autoconfiguration](https://opentelemetry.io/docs/languages/java/configuration/#zero-code-sdk-autoconfigure)
+for dependency setup and exporter configuration.
 
 To use the instrumentation, configure `OTEL_INSTRUMENTATION_AWS_LAMBDA_HANDLER` env property to your lambda handler method in following format `package.ClassName::methodName`
 and use one of wrappers as your lambda `Handler`.

@@ -9,12 +9,3 @@ We provide two packages for instrumenting AWS lambda functions.
 
 - [aws-lambda-events-3.11](./aws-lambda-events-3.11/library) provides instrumentation of the Lambda library, including standard and custom event
   types, from `aws-lambda-java-events` 3.11+.
-
-## SDK setup for wrappers
-
-The Lambda wrappers initialize the OpenTelemetry SDK using autoconfiguration.
-In addition to the Lambda instrumentation dependency shown in the library guides, the deployed
-function needs `io.opentelemetry:opentelemetry-sdk-extension-autoconfigure` and dependencies for
-the configured exporters at runtime.
-See [SDK autoconfiguration](https://opentelemetry.io/docs/languages/java/configuration/#zero-code-sdk-autoconfigure)
-for dependency setup and exporter configuration.
