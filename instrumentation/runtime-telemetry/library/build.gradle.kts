@@ -2,6 +2,7 @@ import io.opentelemetry.instrumentation.gradle.executions
 
 plugins {
   id("otel.library-instrumentation")
+  id("org.graalvm.buildtools.native")
 }
 
 val mrJarVersions = listOf(17)
@@ -89,6 +90,18 @@ testing.suites {
     }
   }
 
+  register<JvmTestSuite>("testNativeImage") {
+    dependencies {
+      implementation(project())
+      implementation(project(":instrumentation-api"))
+      implementation("io.opentelemetry:opentelemetry-sdk-testing")
+    }
+
+    project.tasks.named<JavaCompile>(sources.compileJavaTaskName) {
+      options.release.set(17)
+    }
+  }
+
   executions("testJava17") {
     configureEach {
       systemProperty("metadataConfig", "Java17")
@@ -138,6 +151,50 @@ testing.suites {
       }
     }
   }
+
+  executions("testNativeImage") {
+    configureEach {
+      if (!testJavaVersion.isCompatibleWith(JavaVersion.VERSION_17)) {
+        enabled = false
+      }
+    }
+  }
+}
+
+graalvmNative {
+  val testNativeImage = testing.suites.named<JvmTestSuite>("testNativeImage")
+  registerTestBinary("runtimeTelemetryTest") {
+    forTestTask(tasks.named<Test>(testNativeImage.name))
+    usingSourceSet(testNativeImage.get().sources)
+  }
+
+  binaries.named("runtimeTelemetryTest") {
+    quickBuild.set(true)
+    buildArgs.addAll("--gc=serial", "--enable-monitoring=jfr")
+    resources.autodetect()
+  }
+
+  // See https://github.com/graalvm/native-build-tools/issues/572
+  metadataRepository {
+    enabled.set(false)
+  }
+
+  toolchainDetection.set(false)
+}
+
+tasks.named("nativeTest") {
+  // Run the dedicated suite, not the regular JVM unit tests.
+  enabled = false
+  setDependsOn(listOf("nativeRuntimeTelemetryTest"))
+}
+
+tasks.named("nativeTestCompile") {
+  enabled = false
+}
+
+// See https://github.com/gradle/gradle/issues/17559
+tasks.named("collectReachabilityMetadata") {
+  enabled = false
 }
 
 tasks {

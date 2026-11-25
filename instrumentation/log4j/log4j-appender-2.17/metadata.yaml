@@ -11,9 +11,8 @@ configurations:
       Comma-separated list of case-sensitive glob patterns for event-local structured log attribute
       keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash
       markers, and Logstash structured arguments. "*" matches any number of characters and "?"
-      matches one character. Excluded patterns take precedence. An exclude-only selector captures
-      every key not excluded. When the selector is absent or empty, all structured attributes are
-      captured by default. MDC and logger-context attributes remain separate and opt-in.
+      matches one character. All structured attributes are captured unless included or excluded
+      patterns are configured. MDC and logger-context attributes remain separate and opt-in.
     type: list
     default: ''
   - name: otel.instrumentation.common.logging.structured-attributes.excluded
@@ -22,8 +21,9 @@ configurations:
       Comma-separated list of case-sensitive glob patterns for event-local structured log attribute
       keys not to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback
       Logstash markers, and Logstash structured arguments. Excluded patterns take precedence over
-      included patterns. An exclude-only selector captures every key not excluded; "*" captures no
-      structured attributes. This does not affect otel.event.name, MDC, or logger context.
+      included patterns. If only excluded patterns are configured, all other structured attributes
+      are captured. "*" captures no structured attributes. This does not affect otel.event.name,
+      MDC, or logger context.
     type: list
     default: ''
   - name: otel.instrumentation.log4j-appender.experimental-log-attributes
@@ -61,12 +61,10 @@ configurations:
     declarative_name: java.log4j_appender.mdc_attributes/development.included
     description: >
       Comma-separated list of case-sensitive glob patterns for context data keys to capture as log
-      attributes. "*" matches any number of characters and "?" matches one character. Excluded
-      patterns take precedence over included patterns. No context data attributes are captured
-      unless an included pattern, an excluded pattern, or the deprecated
-      otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured;
-      configuring only excluded patterns captures all context data attributes that do not match
-      them. Captured context data attributes may contain sensitive information.
+      attributes. "*" matches any number of characters and "?" matches one character. No context
+      data attributes are captured unless included or excluded patterns, or the deprecated
+      otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting, are
+      configured. "*" captures all context data attributes.
     type: list
     default: ''
     examples:
@@ -77,11 +75,8 @@ configurations:
     description: >
       Comma-separated list of case-sensitive glob patterns for context data keys not to capture as
       log attributes. "*" matches any number of characters and "?" matches one character. Excluded
-      patterns take precedence over included patterns. No context data attributes are captured
-      unless an included pattern, an excluded pattern, or the deprecated
-      otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured;
-      configuring only excluded patterns captures all context data attributes that do not match
-      them. Captured context data attributes may contain sensitive information.
+      patterns take precedence over included patterns. If only excluded patterns are configured, all
+      other context data attributes are captured, which may expose sensitive information.
     type: list
     default: ''
     examples:

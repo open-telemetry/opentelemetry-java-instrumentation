@@ -1,7 +1,47 @@
 # OpenTelemetry Resource Providers
 
-This package includes some standard `ResourceProvider`s for filling in attributes related to
-common environments. Currently, the resources provide the following semantic conventions:
+Provides OpenTelemetry resource providers that populate container, host, operating system, process,
+and Java runtime attributes.
+
+## Quickstart
+
+### Add these dependencies to your project
+
+Replace `OPENTELEMETRY_VERSION` with the [latest release](https://central.sonatype.com/artifact/io.opentelemetry.instrumentation/opentelemetry-resources).
+
+For Maven, add to your `pom.xml` dependencies:
+
+```xml
+<dependencies>
+  <dependency>
+    <groupId>io.opentelemetry.instrumentation</groupId>
+    <artifactId>opentelemetry-resources</artifactId>
+    <version>OPENTELEMETRY_VERSION</version>
+  </dependency>
+</dependencies>
+```
+
+For Gradle, add to your dependencies:
+
+```kotlin
+implementation("io.opentelemetry.instrumentation:opentelemetry-resources:OPENTELEMETRY_VERSION")
+```
+
+### Usage
+
+With flat SDK configuration, autoconfiguration discovers the resource providers on the runtime
+classpath. With declarative configuration, list the detectors you want to use. For example, to
+enable the host detector:
+
+```yaml
+resource:
+  detection/development:
+    detectors:
+      - host:
+```
+
+For manual SDK configuration, merge resources such as `HostResource.get()`
+and `ProcessRuntimeResource.get()` into the resource supplied to your SDK.
 
 ## Populated attributes
 
