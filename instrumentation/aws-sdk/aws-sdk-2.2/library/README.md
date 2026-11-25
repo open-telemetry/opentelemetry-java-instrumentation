@@ -43,8 +43,9 @@ DynamoDbClient client = DynamoDbClient.builder()
 
 #### Wrap SQS and asynchronous Bedrock Runtime clients
 
-Use `AwsSdkTelemetry.create(openTelemetry)` to create the wrapper even if the autoconfigure
-module registers the interceptor. Use the same `OpenTelemetry` instance for both.
+If you use the autoconfigure module, create `telemetry` with `AwsSdkTelemetry.create(openTelemetry)`
+using the same `OpenTelemetry` instance as the automatic interceptor. Do not register another
+interceptor.
 
 Wrap synchronous and asynchronous SQS clients after building them:
 
@@ -66,6 +67,17 @@ Wrap the asynchronous Bedrock Runtime client after building it:
 BedrockRuntimeAsyncClientBuilder bedrockClientBuilder = BedrockRuntimeAsyncClient.builder();
 ...
 BedrockRuntimeAsyncClient bedrockClient = telemetry.instrumentBedrockRuntimeClient(bedrockClientBuilder.build());
+```
+
+Message content capture is off by default. If you opt in, configure the `AwsSdkTelemetry` instance
+used to wrap the Bedrock client as shown below. With autoconfigure,
+`otel.instrumentation.genai.capture-message-content=true` enables capture in the interceptor but
+does not enable capture of streaming response content in the wrapper.
+
+```java
+AwsSdkTelemetry telemetry = AwsSdkTelemetry.builder(openTelemetry)
+    .setGenaiCaptureMessageContent(true)
+    .build();
 ```
 
 ## Trace propagation
