@@ -16984,7 +16984,6 @@ libraries:
   source_path: instrumentation/servlet/servlet-5.0
   scope:
     name: io.opentelemetry.servlet-5.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
