@@ -169,11 +169,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (context == null) {
         // this is unexpected
         logger.fine("context was never set");
-        completeDelegate(result);
-        return;
+      } else {
+        instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
       }
-
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
@@ -185,12 +183,10 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (context == null) {
         // this is unexpected
         logger.fine("context was never set");
-        failDelegate(ex);
-        return;
+      } else {
+        // end span before calling delegate
+        instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
       }
-
-      // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
@@ -202,13 +198,11 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       if (context == null) {
         // this is unexpected
         logger.fine("context was never set");
-        cancelDelegate();
-        return;
+      } else {
+        // TODO (trask) add "canceled" span attribute
+        // end span before calling delegate
+        instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
       }
-
-      // TODO (trask) add "canceled" span attribute
-      // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();
