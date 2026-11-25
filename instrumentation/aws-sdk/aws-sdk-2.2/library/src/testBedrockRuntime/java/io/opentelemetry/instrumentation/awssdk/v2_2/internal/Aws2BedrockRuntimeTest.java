@@ -16,6 +16,7 @@ import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_INPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_USAGE_OUTPUT_TOKENS;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.CHAT;
+import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiOperationNameIncubatingValues.TEXT_COMPLETION;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiProviderNameIncubatingValues.AWS_BEDROCK;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.INPUT;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GenAiTokenTypeIncubatingValues.OUTPUT;
@@ -34,10 +35,13 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import software.amazon.awssdk.awscore.eventstream.EventStreamResponseHandler;
 import software.amazon.awssdk.core.SdkBytes;
 import software.amazon.awssdk.core.async.SdkPublisher;
@@ -106,6 +110,93 @@ class Aws2BedrockRuntimeTest extends AbstractAws2BedrockRuntimeTest {
   protected BedrockRuntimeAsyncClient configureBedrockRuntimeClient(
       BedrockRuntimeAsyncClient client) {
     return telemetry.instrumentBedrockRuntimeClient(client);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void testInvokeModelWithResponseStreamConsumer(boolean captureMessageContent) {
+    AwsSdkTelemetry telemetry =
+        AwsSdkTelemetry.builder(testing.getOpenTelemetry())
+            .setGenaiCaptureMessageContent(captureMessageContent)
+            .build();
+    BedrockRuntimeAsyncClientBuilder builder = BedrockRuntimeAsyncClient.builder();
+    builder.overrideConfiguration(
+        ClientOverrideConfiguration.builder()
+            .addExecutionInterceptor(telemetry.createExecutionInterceptor())
+            .build());
+    configureClient(builder);
+
+    String modelId = "amazon.titan-text-lite-v1";
+    SdkBytes body =
+        SdkBytes.fromUtf8String(
+            "{\"inputText\":\"List out every country in the world\","
+                + "\"textGenerationConfig\":{\"maxTokenCount\":100,\"temperature\":0.8,"
+                + "\"topP\":1,\"stopSequences\":[\"|\"]}}");
+    StringBuilder text = new StringBuilder();
+    InvokeModelWithResponseStreamResponseHandler responseHandler =
+        InvokeModelWithResponseStreamResponseHandler.builder()
+            .subscriber(
+                InvokeModelWithResponseStreamResponseHandler.Visitor.builder()
+                    .onChunk(chunk -> {
+                      JsonNode node = JsonNode.parser().parse(chunk.bytes().asByteArray());
+                      Document result = node.visit(new DocumentUnmarshaller());
+                      text.append(result.asMap().get("outputText").asString());
+                    })
+                    .build())
+            .build();
+    AtomicInteger consumerCalls = new AtomicInteger();
+    try (BedrockRuntimeAsyncClient client =
+        telemetry.instrumentBedrockRuntimeClient(builder.build())) {
+      client
+          .invokeModelWithResponseStream(
+              request -> {
+                consumerCalls.incrementAndGet();
+                request.modelId(modelId).body(body);
+              },
+              responseHandler)
+          .join();
+    }
+
+    assertThat(consumerCalls.get()).isEqualTo(1);
+    assertThat(text.toString()).contains("Here is the list of every country in the world");
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("text_completion amazon.titan-text-lite-v1")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfying(
+                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                    equalTo(GEN_AI_OPERATION_NAME, TEXT_COMPLETION),
+                    equalTo(GEN_AI_REQUEST_MODEL, modelId),
+                    equalTo(GEN_AI_REQUEST_STREAM, true),
+                    equalTo(GEN_AI_USAGE_INPUT_TOKENS, 7),
+                    equalTo(GEN_AI_USAGE_OUTPUT_TOKENS, 100),
+                    equalTo(GEN_AI_RESPONSE_FINISH_REASONS, singletonList("LENGTH")))));
+    SpanContext spanContext = testing.waitForTraces(1).get(0).get(0).getSpanContext();
+    testing.waitAndAssertLogRecords(
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                    equalTo(EVENT_NAME, "gen_ai.user.message"))
+                .hasSpanContext(spanContext)
+                .hasBody(
+                    captureMessageContent
+                        ? Value.of(
+                            KeyValue.of("content", Value.of("List out every country in the world")))
+                        : null),
+        log ->
+            log.hasAttributesSatisfyingExactly(
+                    equalTo(GEN_AI_PROVIDER_NAME, AWS_BEDROCK),
+                    equalTo(EVENT_NAME, "gen_ai.choice"))
+                .hasSpanContext(spanContext)
+                .hasBody(
+                    captureMessageContent
+                        ? Value.of(
+                            KeyValue.of("finish_reason", Value.of("LENGTH")),
+                            KeyValue.of("index", Value.of(0)),
+                            KeyValue.of("content", Value.of(text.toString())))
+                        : Value.of(
+                            KeyValue.of("finish_reason", Value.of("LENGTH")),
+                            KeyValue.of("index", Value.of(0)))));
   }
 
   @Test
