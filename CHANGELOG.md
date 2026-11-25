@@ -438,6 +438,7 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Rename `OkHttpTelemetry.createCallFactory(...)` to `instrument(...)`.
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
   resource, or baggage values.
 - Logback library appenders and the Spring Boot starter capture only application-owned MDC values,
@@ -580,8 +581,8 @@
 ### 🚫 Deprecations
 
 - Deprecate `FailsafeTelemetry.createCircuitBreaker(...)`, `FailsafeTelemetry.createRetryPolicy(...)`,
-  the delegate-taking `HikariTelemetry.createMetricsTrackerFactory(...)` overloads, and
-  `OkHttpTelemetry.createCallFactory(...)` in favor of their `instrument(...)` replacements.
+  and the delegate-taking `HikariTelemetry.createMetricsTrackerFactory(...)` overloads in favor of
+  their `instrument(...)` replacements.
 - Deprecate `JmxTelemetryBuilder.setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` in favor of `setBundledMetricsSystemFilter` and
   `setUnstableBundledMetricsFilter`, respectively.
