@@ -10,6 +10,23 @@ applyTo: "instrumentation/**/library/**/*.java,instrumentation/**/library/**/*.k
   `this` and carry `@CanIgnoreReturnValue`, the constructor is package-private, and
   `build()` returns the telemetry instance. Preserve published entry points that differ rather
   than breaking callers to match the convention.
+
+  For an entry point with customization, the convenience factory delegates to its builder:
+
+  ```java
+  public final class MyLibraryTelemetry {
+    public static MyLibraryTelemetry create(OpenTelemetry openTelemetry) {
+      return builder(openTelemetry).build();
+    }
+
+    public static MyLibraryTelemetryBuilder builder(OpenTelemetry openTelemetry) {
+      return new MyLibraryTelemetryBuilder(openTelemetry);
+    }
+  }
+  ```
+
+  An entry point with no customization can expose only `create(OpenTelemetry)`; it does not need
+  a builder solely for symmetry with other modules.
 - Public `*Telemetry` methods that instrument an existing library object and return its
   instrumented form use `instrument(...)`. Prefer overloads over type-name
   or sync/async suffixes when parameter types distinguish the operations and are available
@@ -25,20 +42,3 @@ applyTo: "instrumentation/**/library/**/*.java,instrumentation/**/library/**/*.k
   class over the OpenTelemetry implementation class when it is the complete intended caller-facing
   contract. This applies to library objects, not OpenTelemetry-defined types or SPIs; concrete types
   needed for supported setup or framework integration are not automatic violations.
-
-For an entry point with customization, the convenience factory delegates to its builder:
-
-```java
-public final class MyLibraryTelemetry {
-  public static MyLibraryTelemetry create(OpenTelemetry openTelemetry) {
-    return builder(openTelemetry).build();
-  }
-
-  public static MyLibraryTelemetryBuilder builder(OpenTelemetry openTelemetry) {
-    return new MyLibraryTelemetryBuilder(openTelemetry);
-  }
-}
-```
-
-An entry point with no customization can expose only `create(OpenTelemetry)`; it does not need
-a builder solely for symmetry with other modules.

@@ -1,9 +1,11 @@
 # OpenTelemetry Java Instrumentation rules
 
 These rules and the applicable `.github/instructions/*.instructions.md` files guide implementation,
-audits of existing code, and pull request reviews. Apply a rule only when its stated conditions
-hold. Keep its exceptions, rationale, and useful examples in the same topic file, not in a second
-guidance catalog.
+audits of existing code, and pull request reviews.
+
+- Apply a rule only when its stated conditions hold.
+- Keep a rule's exceptions, rationale, and useful examples in the same topic file, not in a
+  second guidance catalog.
 
 ## Correctness and compatibility
 
@@ -26,6 +28,20 @@ guidance catalog.
   at least as stable as the old API; deprecated methods delegate to their replacements, not vice
   versa. Include the replacement and removal timing in `@deprecated` Javadoc. Use plain
   `@Deprecated` for Java-8-compatible APIs, without `since` or `forRemoval`.
+
+  For example, an alpha API deprecation delegates to its replacement:
+
+  ```java
+  /**
+   * @deprecated Use {@link #newMethod()} instead. May be removed in the next minor release.
+   */
+  @Deprecated
+  public ReturnType oldMethod() {
+    return newMethod();
+  }
+  ```
+
+  For a stable API, the Javadoc states removal in the next major version instead.
 - A deprecation scheduled for a major-version behavior change keeps that timing even in an alpha
   artifact. Examples include semconv migrations, interface overrides following an upstream removal,
   and the flat `ConfigProperties` bridge.
@@ -34,36 +50,28 @@ guidance catalog.
   `otel.scope.name`, including for modules that have been renamed. Keep scope-version lookup aligned
   with the name passed to `Instrumenter.builder(...)`. Assess telemetry compatibility under
   `VERSIONING.md` and the adopted semantic conventions; not every telemetry difference is breaking.
-- Compare an instrumentation module's `metadata.yaml` with the settings the module reads,
-  including their types and defaults and any reads in dependent common modules. The general module
-  enable/disable property is not a metadata configuration entry.
-
-For example, an alpha API deprecation delegates to its replacement:
-
-```java
-/**
- * @deprecated Use {@link #newMethod()} instead. May be removed in the next minor release.
- */
-@Deprecated
-public ReturnType oldMethod() {
-  return newMethod();
-}
-```
-
-For a stable API, the Javadoc states removal in the next major version instead.
+- Instrumentation configuration metadata, including each module's `metadata.yaml` and shared
+  configuration definitions, matches supported setting names, types, and defaults in the actual
+  readers, including readers in dependent common modules. General module enablement
+  (`otel.instrumentation.<name>.enabled`) is not an ordinary configuration entry; record a
+  default-off module with `disabled_by_default: true`. A documented setting remains in metadata
+  while it has a supported reader. Before removing a setting from metadata, look for remaining
+  readers in the module and its dependent common modules.
 
 ## Documentation
 
 - Document flat properties without repeating equivalent declarative configuration.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
-- Add hand-written changelog entries only for deprecations or breaking changes, as specified in
-  CONTRIBUTING.md; normal changes rely on the generated changelog. Use the appropriate stable or
-  non-stable breaking-change heading and the corresponding PR label. Keep entries short, naming a
-  deprecated interface and its replacement without repeating removal timing or obvious migration
-  steps. Describe the released behavior directly, without
-  referring to preview flags used to stage the change. Omit statements about behavior that is
-  unchanged unless they are necessary to clarify the change's scope.
+- Hand-written changelog entries cover only deprecations and breaking changes, as specified in
+  CONTRIBUTING.md. Other changes appear in the generated changelog. Deprecations of settings and
+  instrumentation enablement aliases have entries. Breaking changes use the appropriate stable or
+  non-stable heading. Entries are short and name a deprecated interface and its replacement
+  without repeating removal timing or obvious migration steps. They describe the released behavior
+  without referring to preview flags used to stage the change or mentioning unchanged behavior
+  unless it clarifies the change's scope.
+- When a change is breaking, add the `breaking change` label to its pull request, as described in
+  CONTRIBUTING.md.
 - README and usage documentation should meet a concrete reader need: setup,
   configuration, API usage, or a non-obvious user-visible limitation or privacy constraint.
   A code change alone does not require a README addition. Do not add prose merely to inventory

@@ -21,7 +21,8 @@ The null-comparison rules also apply to Kotlin and Scala.
   Javaagent singleton accessors
   directly returning stored fields are an exception to getter naming. Public
   implementation classes that are not API belong in an `.internal` package.
-- **Fields**: declare fields `final` where possible. Use `SCREAMING_SNAKE_CASE` for
+- **Field finality**: declare fields `final` where possible.
+- **Constant and handle naming**: use `SCREAMING_SNAKE_CASE` for
   immutable value constants, not just because a field is `static final`. These include
   fixed `Duration` values, even when computed from configuration at startup, and canonical
   `INSTANCE`, `EMPTY`, and `NOOP` values. Use uppercase for private `static final` arrays
@@ -30,7 +31,8 @@ The null-comparison rules also apply to Kotlin and Scala.
   `MethodHandle`, and `Pattern`, are candidates for uppercase names, not an
   unconditional requirement. A `static final VirtualField` *must* be uppercase
   regardless of visibility or runtime initialization. Loggers, instrumenters,
-  helpers, and caches stay lower camel case. Collections exposed outside a class must be unmodifiable;
+  helpers, and caches stay lower camel case.
+- **Exposed collections**: collections exposed outside a class must be unmodifiable;
   `Arrays.asList` is fixed-size but not unmodifiable. Do not add a wrapper
   to a private non-escaping collection.
 - **Catch parameters**: in catch clauses only, name a used exception `e`,
@@ -43,18 +45,6 @@ The null-comparison rules also apply to Kotlin and Scala.
   `@SuppressWarnings("unused")` belongs on the class. Use
   `"deprecation"` rather than `"OtelDeprecatedApiUsage"` for verified
   intentional deprecated API use.
-- **Attribute setters**: `AttributesBuilder.put`, `Span.setAttribute`,
-  `SpanBuilder.setAttribute`, and `LogRecordBuilder.setAttribute` ignore a
-  null value. A guard around a directly passed nullable value, such as a
-  `String` or boxed primitive, is redundant, except when an `Integer`
-  passed for `AttributeKey<Long>` selects the `int` overload and would
-  unbox null. Retain a guard protecting a dereference or derived computation.
-- **Nullability**: `TextMapGetter.get`/`getAll` and `TextMapSetter.set`
-  receive a nullable carrier under the upstream SDK contract. Annotate
-  it and guard carrier-specific logic; pure delegation to another
-  getter/setter needs the annotation but not another guard. `keys` does
-  not have this nullable-carrier contract. Do not add `@Nullable` in
-  test code.
 - **Class organization**: order static fields (final before non-final),
   static initializers, instance fields (final before non-final),
   constructors, methods, then nested classes. Place callers before
@@ -68,9 +58,9 @@ The null-comparison rules also apply to Kotlin and Scala.
   signatures. Avoid it on the hot path unless the instrumented library uses it. See
   [Writing a Java library with better experience (slide 12)](https://speakerdeck.com/trustin/writing-a-java-library-with-better-experience?slide=12)
   for the API design rationale.
-- **Other conventions**: do not add `final` to parameters or locals. Do not flip
-  `value.equals(CONSTANT)` solely for speculative null safety.
-  Omit explicit type arguments on generic method calls when type inference
+- Do not add `final` to parameters or locals.
+- Do not flip `value.equals(CONSTANT)` solely for speculative null safety.
+- Omit explicit type arguments on generic method calls when type inference
   already works; keep them where compilation actually requires them.
 - **Conditional expressions**: avoid directly nested ternaries, even when
   parenthesized. Use named intermediate values, `if`/`else`, or early returns,
@@ -80,62 +70,51 @@ The null-comparison rules also apply to Kotlin and Scala.
 
 ## General nullability guidance
 
-This general annotation guidance is aspirational and may not reflect the current codebase.
+- Annotate nullable production parameters and fields with `javax.annotation.Nullable`, which the
+  `otel.java-conventions` Gradle plugin includes as a `compileOnly` dependency.
+  `@NonNull` is unnecessary because non-null is the default. The guidance in this section is
+  aspirational and may not reflect the current codebase.
 
-Annotate nullable production parameters and fields with `javax.annotation.Nullable`, which the
-`otel.java-conventions` Gradle plugin includes as a `compileOnly` dependency.
-`@NonNull` is unnecessary because non-null is the default.
+- Public APIs should check for null parameters even when they are not annotated as nullable.
+  Internal APIs do not need these defensive checks.
 
-Public APIs should check for null parameters even when they are not annotated as nullable.
-Internal APIs do not need these defensive checks.
+- All modules should apply the `otel.nullaway-conventions` Gradle plugin for basic nullable-usage
+  validation:
 
-All modules should apply the `otel.nullaway-conventions` Gradle plugin for basic nullable-usage
-validation:
-
-```kotlin
-plugins {
-  id("otel.nullaway-conventions")
-}
-```
+  ```kotlin
+  plugins {
+    id("otel.nullaway-conventions")
+  }
+  ```
 
 ## Nullable carriers and attribute overloads
 
-The upstream propagation interfaces have these carrier contracts:
+- **Nullable carriers**: Under the upstream SDK contract, the carrier is nullable in
+  `TextMapGetter.get`, `TextMapGetter.getAll`, and `TextMapSetter.set`, but not in
+  `TextMapGetter.keys`. Annotate nullable carriers and guard carrier-specific logic. Pure delegation
+  to another getter or setter needs the annotation but not another guard. Do not add `@Nullable`
+  in test code.
 
-| Interface | Method | Nullable parameter |
-| --- | --- | --- |
-| `TextMapGetter<CarrierT>` | `get(CarrierT, String)` | `carrier` |
-| `TextMapGetter<CarrierT>` | `getAll(CarrierT, String)` | `carrier` |
-| `TextMapGetter<CarrierT>` | `keys(CarrierT)` | none |
-| `TextMapSetter<CarrierT>` | `set(CarrierT, String, String)` | `carrier` |
+  ```java
+  @Override
+  @Nullable
+  public String get(@Nullable C carrier, String key) {
+    return delegate.get(carrier, key);
+  }
+  ```
 
-A getter that delegates directly to another `TextMapGetter` can pass the nullable carrier
-through without a second guard:
+- **Attribute setters**: `AttributesBuilder.put`, `Span.setAttribute`,
+  `SpanBuilder.setAttribute`, and `LogRecordBuilder.setAttribute` ignore null values. Pass a
+  nullable `String` or a boxed value matching the key directly: for example,
+  `span.setAttribute(META_ENABLED, metadata.getEnabled())` uses the nullable generic overload
+  when `META_ENABLED` is an `AttributeKey<Boolean>` and the getter returns `Boolean`. Retain
+  guards around dereferences or derived computations, such as `view.getClass().getName()`.
+  Also guard a nullable `Integer` passed for `AttributeKey<Long>`: Java selects the primitive
+  `int` overload and unboxes before the setter runs.
 
-```java
-@Override
-@Nullable
-public String get(@Nullable C carrier, String key) {
-  return delegate.get(carrier, key);
-}
-```
-
-For attribute setters, Java overload selection determines whether null reaches the setter.
-An `Integer` passed for `AttributeKey<Long>` selects the primitive `int` overload and unboxes
-before the setter runs, so keep its guard:
-
-```java
-Integer statusCode = response.getStatusCode();
-if (statusCode != null) {
-  attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
-}
-```
-
-A boxed value matching the key uses the nullable generic overload:
-
-```java
-span.setAttribute(META_ENABLED, metadata.getEnabled());
-```
-
-Here `META_ENABLED` is an `AttributeKey<Boolean>`. A guard around
-`view.getClass().getName()` protects a dereference, not just the setter.
+  ```java
+  Integer statusCode = response.getStatusCode();
+  if (statusCode != null) {
+    attributes.put(HTTP_RESPONSE_STATUS_CODE, statusCode);
+  }
+  ```
