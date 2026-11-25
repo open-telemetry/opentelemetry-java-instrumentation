@@ -88,23 +88,25 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
     assertThat(response).isEqualTo("gateway");
 
     AtomicReference<String> instrumentationName = new AtomicReference<>();
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/gateway/test"),
-            span -> {
-              span.hasName("GET " + routeId)
-                  .hasKind(SpanKind.SERVER)
-                  .hasAttribute(HTTP_ROUTE, routeId);
-              instrumentationName.set(span.actual().getInstrumentationScopeInfo().getName());
-            }));
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/gateway/test"),
+                span -> {
+                  span.hasName("GET " + routeId)
+                      .hasKind(SpanKind.SERVER)
+                      .hasAttribute(HTTP_ROUTE, routeId);
+                  instrumentationName.set(span.actual().getInstrumentationScopeInfo().getName());
+                }));
 
     testing.waitAndAssertMetrics(
         instrumentationName.get(),
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .hasHistogramSatisfying(histogram ->
-                    histogram.hasPointsSatisfying(
-                        point -> point.hasAttribute(HTTP_ROUTE, routeId))));
+                .hasHistogramSatisfying(
+                    histogram ->
+                        histogram.hasPointsSatisfying(
+                            point -> point.hasAttribute(HTTP_ROUTE, routeId))));
   }
 }
