@@ -18,16 +18,15 @@ and `OpenTelemetryAutoConfiguration`.
 - `smoke-tests/images/spring-boot` is a javaagent application image used by
   `smoke-tests/src/test`. It does not exercise the starter or put
   `OpenTelemetryAutoConfiguration` on its classpath.
-
-Use the starter smoke tests when coverage must establish that wiring produces working telemetry,
-not merely that a bean exists.
+- Use the starter smoke tests when coverage must establish that wiring produces working telemetry,
+  not merely that a bean exists.
 
 ## Declarative mode
 
-Both starter test layers use a separate `testDeclarativeConfig` source set with its own
-`resources/application.yaml` containing `otel.file_format: "1.0"`. Mode selection follows
-`EarlyConfig.isDeclarativeConfig`, not an in-test flag.
+- Both starter test layers use a separate `testDeclarativeConfig` source set with its own
+  `resources/application.yaml` containing `otel.file_format: "1.0"`. Mode selection follows
+  `EarlyConfig.isDeclarativeConfig`, not an in-test flag.
 
-Cover mode-specific wiring that needs both modes in the normal and declarative source sets
-rather than parameterizing one class over a mode selected during initialization.
-This does not require duplicate behavior matrices for equivalent flat/YAML settings.
+- Cover mode-specific wiring that needs both modes in the normal and declarative source sets
+  rather than parameterizing one class over a mode selected during initialization.
+  This does not require duplicate behavior matrices for equivalent flat/YAML settings.
