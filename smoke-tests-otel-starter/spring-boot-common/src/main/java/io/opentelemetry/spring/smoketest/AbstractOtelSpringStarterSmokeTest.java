@@ -28,7 +28,6 @@ import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import ch.qos.logback.classic.LoggerContext;
-import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.config.ConfigProvider;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
@@ -47,10 +46,8 @@ import io.opentelemetry.sdk.resources.Resource;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.TimeoutException;
 import org.assertj.core.api.AbstractIterableAssert;
-import org.assertj.core.api.MapAssert;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.MethodOrderer;
 import org.junit.jupiter.api.Test;
@@ -63,7 +60,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.context.event.EventListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.env.Environment;
@@ -92,7 +88,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   @Value("${local.server.port}")
   protected int port;
 
-  @Configuration(proxyBeanMethods = false)
+  @org.springframework.boot.test.context.TestConfiguration(proxyBeanMethods = false)
   static class TestConfiguration {
     @Autowired private ObjectProvider<JdbcTemplate> jdbcTemplate;
 
@@ -246,20 +242,16 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
     assertThat(exportedLogRecords).isNotEmpty();
     if (!nativeImage) {
       // log records differ in native image mode due to different startup timing
-      Optional<LogRecordData> firstInfo =
-          exportedLogRecords.stream().filter(log -> log.getSeverity() == Severity.INFO).findFirst();
-      assertThat(firstInfo).isPresent();
-
-      LogRecordData firstLog = firstInfo.get();
-      assertThat(firstLog.getBodyValue().asString())
-          .startsWith("Starting ")
-          .contains(this.getClass().getSimpleName());
-
-      MapAssert<AttributeKey<?>, Object> attributesAssert =
-          assertThat(firstLog.getAttributes().asMap());
-
-      attributesAssert.containsEntry(
-          CODE_FUNCTION_NAME, "org.springframework.boot.StartupInfoLogger.logStarting");
+      assertThat(exportedLogRecords)
+          .anySatisfy(log -> {
+            assertThat(log.getSeverity()).isEqualTo(Severity.INFO);
+            assertThat(log.getAttributes().get(CODE_FUNCTION_NAME))
+                .isEqualTo("org.springframework.boot.StartupInfoLogger.logStarting");
+            assertThat(log.getBodyValue()).isNotNull();
+            assertThat(log.getBodyValue().asString())
+                .startsWith("Starting ")
+                .contains(getClass().getSimpleName());
+          });
     }
   }
 
