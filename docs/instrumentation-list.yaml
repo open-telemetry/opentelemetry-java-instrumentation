@@ -1107,8 +1107,9 @@ definitions:
       name: otel.instrumentation.rocketmq-client.message-create-spans.enabled
       declarative_name: java.rocketmq_client.message_create_spans.enabled
       description: |
-        Enables per-message Create spans for batch sends. Overrides `otel.instrumentation.common.messaging.message-create-spans.enabled` for this instrumentation; when unset, that setting applies. Disabling this retains Send spans and context propagation and does not affect single-message sends.
+        Enables per-message Create spans for batch sends. Overrides the common messaging setting. Disabling this retains Send spans and context propagation and does not affect single-message sends.
       type: boolean
+      default: true
     otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics:
       name: otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics
       declarative_name: java.runtime_telemetry.emit_experimental_jfr_metrics/development
