@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -21,8 +22,6 @@ dependencies {
   library("com.google.guava:guava:10.0")
   compileOnly(project(":instrumentation-annotations-support"))
 
-  implementation(project(":instrumentation:guava-10.0:library"))
-
   testInstrumentation(project(":instrumentation:opentelemetry-extension-annotations-1.0:javaagent"))
 
   testImplementation(project(":instrumentation-annotations-support-testing"))
@@ -31,6 +30,13 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation("com.google.guava:guava:${baseVersion("10.0").orLatest()}")
+      implementation(project(":instrumentation-annotations-support"))
+    }
+  }
+
   register<JvmTestSuite>("version19Test") {
     dependencies {
       implementation("com.google.guava:guava:${baseVersion("19.0").orLatest()}")

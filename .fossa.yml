@@ -144,9 +144,6 @@ targets:
       target: ':instrumentation:guava-10.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:guava-10.0:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:gwt-2.0:javaagent'
     - type: gradle
       path: ./
