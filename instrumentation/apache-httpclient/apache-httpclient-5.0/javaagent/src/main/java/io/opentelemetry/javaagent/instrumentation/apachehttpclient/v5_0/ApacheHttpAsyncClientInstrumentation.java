@@ -177,16 +177,16 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       this.delegate = delegate;
     }
 
-    private void endSpan(HttpResponse response, Exception exception) {
+    private void endSpan(Exception exception) {
       // context is null here when the span creation was suppressed
       if (context != null) {
-        instrumenter().end(context, httpRequest, response, exception);
+        instrumenter().end(context, httpRequest, getResponseFromHttpContext(), exception);
       }
     }
 
     @Override
     public void completed(T result) {
-      endSpan(getResponseFromHttpContext(), null);
+      endSpan(null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
@@ -195,7 +195,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void failed(Exception ex) {
-      endSpan(getResponseFromHttpContext(), ex);
+      endSpan(ex);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
@@ -206,7 +206,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     public void cancelled() {
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      endSpan(getResponseFromHttpContext(), null);
+      endSpan(null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();
