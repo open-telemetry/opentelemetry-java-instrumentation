@@ -197,6 +197,12 @@ global_configurations:
     declarative_type: string
     default: ""
 
+  semconv-stability.preview:
+    name: otel.semconv-stability.preview
+    declarative_name: java.common.semconv_stability.preview
+    description: "Opt-in to emit preview (not yet stable) semantic conventions for the listed groups. Supported groups: `gen_ai`. The flat `otel.semconv-stability.preview` property is read only from system properties and environment variables, not from the agent configuration file."
+    type: list
+
   semconv-exception.signal.preview:
     name: otel.semconv.exception.signal.preview
     declarative_name: general.semconv_exception.signal.preview
