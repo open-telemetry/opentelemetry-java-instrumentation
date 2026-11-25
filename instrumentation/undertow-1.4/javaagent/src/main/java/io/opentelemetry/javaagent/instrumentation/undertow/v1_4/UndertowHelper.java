@@ -8,15 +8,17 @@ package io.opentelemetry.javaagent.instrumentation.undertow.v1_4;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.bootstrap.undertow.KeyHolder;
 import io.opentelemetry.javaagent.bootstrap.undertow.UndertowActiveHandlers;
 import io.undertow.server.DefaultResponseListener;
 import io.undertow.server.HttpServerExchange;
-import io.undertow.util.AttachmentKey;
 import javax.annotation.Nullable;
 
 public class UndertowHelper {
+  private static final VirtualField<HttpServerExchange, Context> SERVER_CONTEXT =
+      VirtualField.find(HttpServerExchange.class, Context.class);
+
   private final Instrumenter<HttpServerExchange, HttpServerExchange> instrumenter;
 
   UndertowHelper(Instrumenter<HttpServerExchange, HttpServerExchange> instrumenter) {
@@ -66,23 +68,13 @@ public class UndertowHelper {
     }
   }
 
-  @SuppressWarnings("unchecked") // we lose type info with attachments
   @Nullable
   public Context getServerContext(HttpServerExchange exchange) {
-    AttachmentKey<Context> contextKey = (AttachmentKey<Context>) KeyHolder.get(AttachmentKey.class);
-    if (contextKey == null) {
-      return null;
-    }
-    return exchange.getAttachment(contextKey);
+    return SERVER_CONTEXT.get(exchange);
   }
 
-  @SuppressWarnings("unchecked") // we lose type info with attachments
   private static void attachServerContext(Context context, HttpServerExchange exchange) {
-    AttachmentKey<Context> contextKey =
-        (AttachmentKey<Context>)
-            KeyHolder.computeIfAbsent(
-                AttachmentKey.class, () -> AttachmentKey.create(Context.class));
-    exchange.putAttachment(contextKey, context);
+    SERVER_CONTEXT.set(exchange, context);
   }
 
   public boolean sameTrace(Context currentContext, Context attachedContext) {
