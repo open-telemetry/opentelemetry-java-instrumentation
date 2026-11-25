@@ -187,7 +187,7 @@ class ServletRequestBodyExtractorTest {
 
     assertThat(getRequestBodyValue(buffer, "text/plain"))
         .isEqualTo("a")
-        .doesNotContain("\uFFFD")
+        .doesNotContain(String.valueOf((char) 0xFFFD)) // unicode replacement character
         .doesNotContain("?");
   }
 
