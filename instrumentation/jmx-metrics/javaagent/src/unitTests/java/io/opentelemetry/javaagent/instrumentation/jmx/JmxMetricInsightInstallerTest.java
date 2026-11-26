@@ -9,6 +9,7 @@ import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.emptyMap;
+import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
@@ -22,12 +23,15 @@ import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import org.assertj.core.api.AbstractIterableAssert;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
@@ -165,6 +169,105 @@ class JmxMetricInsightInstallerTest {
                 .hasName("tomcat.test.unstable")
                 .hasLongGaugePointsSatisfying(point ->
                     point.hasAttributes(Attributes.of(stringKey("test.source"), "custom"))));
+  }
+
+  @Test
+  void validInlineJmxRulesFromDeclarativeConfig() throws IOException {
+    DeclarativeConfigProperties config;
+    try (InputStream input = getClass().getResourceAsStream("/jmx-declarative-config.yaml")) {
+      config =
+          DeclarativeConfiguration.toConfigProperties(DeclarativeConfiguration.parse(input))
+              .get("instrumentation/development")
+              .get("java")
+              .get("jmx");
+    }
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxMetricInsightInstaller.configure(builder, config);
+    cleanup.deferCleanup(builder.build().start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric -> metric.hasName("tomcat.test.unstable"),
+        metric ->
+            metric
+                .hasName("custom.test.embedded")
+                .hasUnit("{thread}")
+                .hasDescription("Current number of threads.")
+                .hasLongGaugePointsSatisfying(point ->
+                    point.hasAttributes(Attributes.of(stringKey("test.source"), "declarative"))));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "custom.test.excluded", metrics -> metrics.isEmpty());
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "other.test.not-included", metrics -> metrics.isEmpty());
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "tomcat.test.stable", metrics -> metrics.isEmpty());
+  }
+
+  @Test
+  void invalidInlineRuleDoesNotPreventOtherInlineRules() throws IOException {
+    DeclarativeConfigProperties config;
+    try (InputStream input = getClass().getResourceAsStream("/jmx-declarative-invalid-rule.yaml")) {
+      config =
+          DeclarativeConfiguration.toConfigProperties(DeclarativeConfiguration.parse(input))
+              .get("instrumentation/development")
+              .get("java")
+              .get("jmx");
+    }
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxMetricInsightInstaller.configure(builder, config);
+    cleanup.deferCleanup(builder.build().start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric -> metric.hasName("custom.test.first"),
+        metric -> metric.hasName("custom.test.second"),
+        metric -> metric.hasName("custom.test.after_invalid"));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "custom.test.invalid", AbstractIterableAssert::isEmpty);
+  }
+
+  @Test
+  void invalidInlineJmxRulesDoNotPreventNonInlineMetrics(@TempDir Path directory)
+      throws IOException {
+    Path rules = directory.resolve("custom-jmx.yaml");
+    Files.write(
+        rules,
+        ("rules:\n"
+                + "  - bean: java.lang:type=Threading\n"
+                + "    mapping:\n"
+                + "      ThreadCount:\n"
+                + "        metric: custom.test.from-file\n"
+                + "        type: gauge\n"
+                + "        unit: '{thread}'\n")
+            .getBytes(UTF_8));
+    // This is an invalid inline metric definition that will trigger error
+    Map<String, Object> inlineMetric = new HashMap<>();
+    inlineMetric.put("metric", "custom.test.invalid-inline");
+    inlineMetric.put("type", "invalid");
+    inlineMetric.put("unit", "{thread}");
+    Map<String, Object> inlineRule = new HashMap<>();
+    inlineRule.put("bean", "java.lang:type=Threading");
+    inlineRule.put("mapping", singletonMap("ThreadCount", inlineMetric));
+
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("config", singletonList(rules.toString()));
+    properties.put("rules", singletonList(inlineRule));
+    DeclarativeConfigProperties config = DeclarativeConfiguration.toConfigProperties(properties);
+
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxMetricInsightInstaller.configure(builder, config);
+    cleanup.deferCleanup(builder.build().start());
+
+    // Bundled and file-defined metrics must still be emitted when the inline rule is rejected.
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric -> metric.hasName("tomcat.test.stable"),
+        metric -> metric.hasName("custom.test.from-file").hasUnit("{thread}"));
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx", "custom.test.invalid-inline", AbstractIterableAssert::isEmpty);
   }
 
   @Test
