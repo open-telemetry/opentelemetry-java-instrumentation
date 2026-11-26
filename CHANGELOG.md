@@ -7,7 +7,6 @@
 - MongoDB spans capture query text only when opted in. Set
   `otel.instrumentation.mongo.capture-query-text=true` in the agent or Spring Boot starter,
   or call `MongoTelemetryBuilder.setCaptureQueryText(true)` in library instrumentation.
-
 - Empty selectors passed to `setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` now select nothing. Use
   `IncludeExclude.builder().setIncluded("*").build()` to select all.
