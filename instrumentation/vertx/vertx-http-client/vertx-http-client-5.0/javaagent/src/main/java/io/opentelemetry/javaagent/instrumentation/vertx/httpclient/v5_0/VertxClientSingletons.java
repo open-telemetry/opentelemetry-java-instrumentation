@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.Contexts;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.VertxClientInstrumenterFactory;
@@ -32,8 +31,8 @@ public class VertxClientSingletons {
   public static final VirtualField<HttpClientRequest, Contexts> CONTEXTS =
       VirtualField.find(HttpClientRequest.class, Contexts.class);
 
-  private static final VirtualField<HttpClientResponse, AddressAndPort> PEER_ADDRESS_FIELD =
-      VirtualField.find(HttpClientResponse.class, AddressAndPort.class);
+  private static final VirtualField<HttpClientResponse, SocketAddress> PEER_ADDRESS_FIELD =
+      VirtualField.find(HttpClientResponse.class, SocketAddress.class);
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
     return instrumenter;
@@ -50,17 +49,11 @@ public class VertxClientSingletons {
 
   public static void setPeerAddress(
       HttpClientResponse response, @Nullable SocketAddress socketAddress) {
-    AddressAndPort peerAddress = null;
-    if (socketAddress != null) {
-      peerAddress = new AddressAndPort();
-      peerAddress.setAddress(socketAddress.hostAddress());
-      peerAddress.setPort(socketAddress.port());
-    }
-    PEER_ADDRESS_FIELD.set(response, peerAddress);
+    PEER_ADDRESS_FIELD.set(response, socketAddress);
   }
 
   @Nullable
-  public static AddressAndPort getPeerAddress(HttpClientResponse response) {
+  public static SocketAddress getPeerAddress(HttpClientResponse response) {
     return PEER_ADDRESS_FIELD.get(response);
   }
 

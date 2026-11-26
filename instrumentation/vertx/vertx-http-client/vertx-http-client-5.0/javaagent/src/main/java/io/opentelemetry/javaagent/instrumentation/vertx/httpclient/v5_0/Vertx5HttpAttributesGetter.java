@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 
-import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.AbstractVertxHttpAttributesGetter;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
 import io.vertx.core.http.HttpVersion;
 import io.vertx.core.net.HostAndPort;
+import io.vertx.core.net.SocketAddress;
 import javax.annotation.Nullable;
 
 final class Vertx5HttpAttributesGetter extends AbstractVertxHttpAttributesGetter {
@@ -79,8 +79,8 @@ final class Vertx5HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
     if (response == null) {
       return null;
     }
-    AddressAndPort peerAddress = VertxClientSingletons.getPeerAddress(response);
-    return peerAddress == null ? null : peerAddress.getAddress();
+    SocketAddress peerAddress = VertxClientSingletons.getPeerAddress(response);
+    return peerAddress == null ? null : peerAddress.hostAddress();
   }
 
   @Nullable
@@ -90,7 +90,7 @@ final class Vertx5HttpAttributesGetter extends AbstractVertxHttpAttributesGetter
     if (response == null) {
       return null;
     }
-    AddressAndPort peerAddress = VertxClientSingletons.getPeerAddress(response);
-    return peerAddress == null ? null : peerAddress.getPort();
+    SocketAddress peerAddress = VertxClientSingletons.getPeerAddress(response);
+    return peerAddress == null ? null : peerAddress.port();
   }
 }
