@@ -14,9 +14,11 @@ user-facing instrumentation configuration.
   Flat-property segments use kebab-case and YAML keys use snake_case, subject to the published
   names below.
 - Experimental features use an `experimental` marker in the flat name and the
-  corresponding `/development` YAML form. Preview flat names use a `preview` marker and an
-  unstable YAML form, either `/development` or `preview` in the key. Stable feature names need
-  neither marker. An opt-in default does not make a feature experimental.
+  corresponding `/development` YAML form, as in
+  `otel.instrumentation.jdbc.experimental.capture-query-parameters` and
+  `java.jdbc.capture_query_parameters/development`. Preview flat names use a `preview` marker
+  and an unstable YAML form, either `/development` or `preview` in the key. Stable feature names
+  need neither marker. An opt-in default does not make a feature experimental.
 - Use [VERSIONING.md](../../VERSIONING.md) to determine which settings have a compatibility
   guarantee and when they can be removed. Apply the policy to the published artifact that exposes
   the setting to users, not the internal module that reads it. Settings exposed only through alpha
@@ -26,14 +28,16 @@ user-facing instrumentation configuration.
   lookup does not resolve the published mapping.
 - For a new boolean that controls whether specific data is included in telemetry, use
   `capture-<data>` in flat properties, `capture_<data>` in YAML, and
-  `setCapture<Data>(boolean)` for the corresponding Java builder method. Use the same data
-  name across forms and across instrumentations that offer the same option. Do not append
-  `.enabled`. For example, an option for `db.query.text` uses `capture-query-text`,
-  `capture_query_text`, and `setCaptureQueryText(boolean)`.
+  `setCapture<Data>(boolean)` for the corresponding Java builder method. Prefer semantic convention
+  terminology when it describes what the option captures. Use the same data name across forms and
+  across instrumentations that offer the same option. Do not append `.enabled`. For example, an
+  option for `db.query.text` uses `capture-query-text`, `capture_query_text`, and
+  `setCaptureQueryText(boolean)`.
 - Name value transformations separately from capture. For example, `capture-query-text` controls
   whether to include query text, while `query-sanitization.enabled` controls whether to mask values
   in it. Document any interaction, such as capturing JDBC parameters disabling query sanitization.
-- Choose capture defaults based on the applicable semantic conventions and privacy requirements.
+- Follow the applicable semantic convention's default collection guidance. If the convention
+  doesn't specify a default, require opt-in for capture that would export sensitive values.
 
 ## Reading settings
 
