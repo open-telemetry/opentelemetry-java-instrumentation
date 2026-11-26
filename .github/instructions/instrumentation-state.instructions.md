@@ -97,14 +97,15 @@ javaagent instrumentation, not library-only code.
   Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
 
   Trace strong references from the concrete values stored at runtime, including lambda captures
-  and outer instances of non-static inner classes. If a value references another carrier, check
-  whether the fallback entries can keep either carrier alive longer than intended. For example,
-  a fallback value keyed by B that strongly references both B and A keeps both carriers alive,
-  even if A's own value is detached.
+  and outer instances of non-static inner classes. Check every stored value, not just one
+  carrier's. Fallback storage leaks a carrier when a value stored for it can strongly reach it,
+  directly or through other carriers' stored values. For example, if A's value references B and
+  B's value references A, neither is collected. A one-way reference only ties lifetimes: if B's
+  value references A, A lives as long as B.
 
-  If the reference analysis rules out unintended retention, do not add a GC test or a separate
-  JVM run with field injection disabled just to confirm it. If safety depends on when state is
-  cleared or replaced, test the relevant lifecycle path.
+  If that analysis shows no stored value can reach its own carrier, do not add a GC test or a
+  separate JVM run with field injection disabled just to confirm it. If safety depends on when
+  state is cleared or replaced, test the relevant lifecycle path.
 
 - Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
   supported concurrent updates need an invariant before choosing synchronization or ownership.
