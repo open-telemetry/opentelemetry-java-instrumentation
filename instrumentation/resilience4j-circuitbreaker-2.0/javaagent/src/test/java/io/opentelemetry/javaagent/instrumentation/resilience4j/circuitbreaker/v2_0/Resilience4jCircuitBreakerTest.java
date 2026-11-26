@@ -40,6 +40,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.FutureTask;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -1311,6 +1312,15 @@ class Resilience4jCircuitBreakerTest {
     assertThat(classifications.get()).isEqualTo(1);
     assertThat(circuitBreaker.getMetrics().getNumberOfFailedCalls()).isEqualTo(failure ? 1 : 0);
     assertCircuitBreakerSpan("closed", failure ? "failure" : "success");
+  }
+
+  @Test
+  void decoratedFutureCancelEndsSpanWithoutGet() throws Exception {
+    Future<String> future = decoratedFuture(new FutureTask<>(() -> "ok"));
+
+    assertThat(future.cancel(false)).isTrue();
+    assertThat(future.isCancelled()).isTrue();
+    assertCircuitBreakerSpan("closed", "cancelled");
   }
 
   @ParameterizedTest
