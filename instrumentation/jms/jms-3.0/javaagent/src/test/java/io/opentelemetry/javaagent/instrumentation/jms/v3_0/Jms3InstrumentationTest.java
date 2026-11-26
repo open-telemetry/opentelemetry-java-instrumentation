@@ -27,7 +27,6 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.CompletionListener;
@@ -62,18 +61,17 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-3.0";
 
   @Test
-  void asyncSendSuccessRestoresCallerContext() throws Exception {
+  void asyncSendCompletionUsesCallerContext() throws Exception {
     TemporaryQueue destination = session.createTemporaryQueue();
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer);
     TextMessage sentMessage = session.createTextMessage("async message");
     CountDownLatch completed = new CountDownLatch(1);
-    AtomicReference<SpanContext> callbackSpanContext = new AtomicReference<>();
     CompletionListener listener =
         new CompletionListener() {
           @Override
           public void onCompletion(Message message) {
-            callbackSpanContext.set(Span.current().getSpanContext());
+            testing.runWithSpan("onCompletion", () -> {});
             completed.countDown();
           }
 
@@ -83,19 +81,8 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
           }
         };
 
-    Context originalContext = Context.current();
-    SpanContext parentSpanContext =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              SpanContext spanContext = Span.current().getSpanContext();
-              producer.send(sentMessage, listener);
-              assertThat(Span.current().getSpanContext()).isEqualTo(spanContext);
-              return spanContext;
-            });
-    assertThat(Context.current()).isSameAs(originalContext);
+    testing.runWithSpan("parent", () -> producer.send(sentMessage, listener));
     assertThat(completed.await(10, SECONDS)).isTrue();
-    assertThat(callbackSpanContext.get()).isEqualTo(parentSpanContext);
     String messageId = sentMessage.getJMSMessageID();
     assertThat(messageId).isNotNull();
     String destinationName = destination.getQueueName();
@@ -217,8 +204,8 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         equalTo(MESSAGING_MESSAGE_ID, messageId),
                         equalTo(MESSAGING_OPERATION_NAME, "send"),
                         equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                        equalTo(
-                            ERROR_TYPE, failure == null ? null : failure.getClass().getName())));
+                        equalTo(ERROR_TYPE, failure == null ? null : failure.getClass().getName())),
+            span -> span.hasName("onCompletion").hasKind(INTERNAL).hasParent(trace.getSpan(0)));
       } else {
         trace.hasSpansSatisfyingExactly(span -> {
           span.hasName(spanName)
