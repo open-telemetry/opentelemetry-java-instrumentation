@@ -158,8 +158,9 @@ class ServletBodyCaptureTest {
             })
         .when(noArgContext)
         .addListener(any());
-    when(request.startAsync()).thenReturn(noArgContext);
     when(request.getAsyncContext()).thenReturn(noArgContext);
+    // mock of startAsync() variants
+    when(request.startAsync()).thenReturn(noArgContext);
     when(request.startAsync(any(), any()))
         .thenAnswer(invocation -> {
           AsyncContext context = mock(AsyncContext.class);

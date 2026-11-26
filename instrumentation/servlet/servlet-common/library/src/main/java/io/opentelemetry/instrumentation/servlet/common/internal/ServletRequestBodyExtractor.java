@@ -115,7 +115,9 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   }
 
   /**
-   * Extract and removes the request body and marker stored in request attributes.
+   * Extract and removes the request body and marker stored in request attributes. When no body has
+   * been captured yet, the request attributes are left untouched so the body can be extracted
+   * later.
    *
    * @param <REQUEST> request type
    * @param <RESPONSE> response type
@@ -127,28 +129,27 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   public static <REQUEST, RESPONSE> String extractRequestBody(
       ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request) {
 
-    if (consumeRequestAttribute(accessor, request, REQUEST_BODY_MARKER_ATTRIBUTE) == null) {
+    if (accessor.getRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE) == null) {
       // only requests with marker should be processed
       return null;
     }
 
-    Object bodyAttribute =
-        consumeRequestAttribute(accessor, request, REQUEST_BODY_BUFFER_ATTRIBUTE);
-    if (!(bodyAttribute instanceof ByteBuffer)) {
+    Object bodyAttribute = accessor.getRequestAttribute(request, REQUEST_BODY_BUFFER_ATTRIBUTE);
+    if (!(bodyAttribute instanceof ByteBuffer) || ((ByteBuffer) bodyAttribute).position() == 0) {
+      // Nothing captured yet: the body might be read later, for example after the servlet
+      // service() method has returned, so the marker and buffer must be kept for a later call.
       return null;
     }
 
     String contentType = accessor.getRequestHeader(request, "Content-Type");
-    return getRequestBodyValue((ByteBuffer) bodyAttribute, contentType);
-  }
+    String bodyValue = getRequestBodyValue((ByteBuffer) bodyAttribute, contentType);
 
-  private static <REQUEST, RESPONSE> Object consumeRequestAttribute(
-      ServletAccessor<REQUEST, RESPONSE> accessor, REQUEST request, String key) {
-    Object value = accessor.getRequestAttribute(request, key);
-    if (value != null) {
-      accessor.setRequestAttribute(request, key, null);
-    }
-    return value;
+    // remove the attributes so the buffer is no longer accessible for writing and the body is
+    // only extracted once after successful capture.
+    accessor.setRequestAttribute(request, REQUEST_BODY_MARKER_ATTRIBUTE, null);
+    accessor.setRequestAttribute(request, REQUEST_BODY_BUFFER_ATTRIBUTE, null);
+
+    return bodyValue;
   }
 
   /**

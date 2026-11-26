@@ -93,12 +93,23 @@ class ServletRequestBodyExtractorTest {
 
     assertThat(extractRequestBody(accessor, request)).isNull();
 
-    assertThat(requestAttributes).doesNotContainKey(REQUEST_BODY_BUFFER_ATTRIBUTE);
+    // nothing captured yet, the body can still be read and extracted later
+    assertThat(requestAttributes)
+        .containsEntry(REQUEST_BODY_BUFFER_ATTRIBUTE, buffer)
+        .containsEntry(REQUEST_BODY_MARKER_ATTRIBUTE, true);
+  }
+
+  @Test
+  void bufferWithoutMarkerIsNotExtracted() {
+    requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, bufferOf("abc".getBytes(UTF_8)));
+    requestContentType = "text/plain; charset=UTF-8";
+
+    assertThat(extractRequestBody(accessor, request)).isNull();
   }
 
   @Test
   void bodyExtractedOnce() {
-
+    // body should be extracted only once
     ByteBuffer buffer = bufferOf("abc".getBytes(UTF_8));
     requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, buffer);
     requestAttributes.put(REQUEST_BODY_MARKER_ATTRIBUTE, true);
@@ -106,6 +117,7 @@ class ServletRequestBodyExtractorTest {
 
     assertThat(extractRequestBody(accessor, request)).isEqualTo("abc");
     assertThat(extractRequestBody(accessor, request)).isNull();
+    assertThat(requestAttributes).isEmpty();
   }
 
   @Test
