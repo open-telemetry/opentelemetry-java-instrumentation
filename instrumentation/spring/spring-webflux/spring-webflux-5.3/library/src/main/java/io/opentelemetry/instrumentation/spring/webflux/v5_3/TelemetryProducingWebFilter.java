@@ -87,19 +87,19 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
   private static class TelemetryWrappedSubscriber extends BaseSubscriber<Void> {
     private final CoreSubscriber<? super Void> actual;
     private final Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter;
-    private final Context currentOtelContext;
+    private final Context subscriptionContext;
     private final ServerWebExchange exchange;
     @Nullable private final HttpServerRouteGetter<ServerWebExchange> routeFallback;
 
     TelemetryWrappedSubscriber(
         CoreSubscriber<? super Void> actual,
-        Context currentOtelContext,
+        Context subscriptionContext,
         Instrumenter<ServerWebExchange, ServerWebExchange> instrumenter,
         ServerWebExchange exchange,
         @Nullable HttpServerRouteGetter<ServerWebExchange> routeFallback) {
       this.actual = actual;
       this.instrumenter = instrumenter;
-      this.currentOtelContext = currentOtelContext;
+      this.subscriptionContext = subscriptionContext;
       this.exchange = exchange;
       this.routeFallback = routeFallback;
     }
@@ -116,19 +116,19 @@ final class TelemetryProducingWebFilter implements WebFilter, Ordered {
 
     @Override
     protected void hookOnError(Throwable throwable) {
-      onTerminal(currentOtelContext, throwable);
+      onTerminal(subscriptionContext, throwable);
       actual.onError(throwable);
     }
 
     @Override
     protected void hookOnComplete() {
-      onTerminal(currentOtelContext, null);
+      onTerminal(subscriptionContext, null);
       actual.onComplete();
     }
 
     @Override
     protected void hookOnCancel() {
-      end(currentOtelContext, true, null);
+      end(subscriptionContext, true, null);
     }
 
     private void onTerminal(Context currentContext, @Nullable Throwable t) {

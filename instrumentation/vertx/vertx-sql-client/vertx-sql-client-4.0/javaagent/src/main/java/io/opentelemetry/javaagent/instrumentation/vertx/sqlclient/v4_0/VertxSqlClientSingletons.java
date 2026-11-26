@@ -23,7 +23,7 @@ public class VertxSqlClientSingletons {
   private static final Instrumenter<VertxSqlClientRequest, Void> instrumenter =
       VertxSqlInstrumenterFactory.createInstrumenter(INSTRUMENTATION_NAME);
 
-  private static final ThreadLocal<VertxSqlClientInfoReference> clientInfoReference =
+  private static final ThreadLocal<VertxSqlClientInfoReference> currentClientInfoReference =
       new ThreadLocal<>();
   private static final VirtualField<Pool, VertxSqlClientInfoReference> POOL_CLIENT_INFO_REFERENCE =
       VirtualField.find(Pool.class, VertxSqlClientInfoReference.class);
@@ -39,17 +39,17 @@ public class VertxSqlClientSingletons {
     return instrumenter;
   }
 
-  public static void setClientInfoReference(@Nullable VertxSqlClientInfoReference value) {
+  public static void setCurrentClientInfoReference(@Nullable VertxSqlClientInfoReference value) {
     if (value == null) {
-      clientInfoReference.remove();
+      currentClientInfoReference.remove();
     } else {
-      clientInfoReference.set(value);
+      currentClientInfoReference.set(value);
     }
   }
 
   @Nullable
-  public static VertxSqlClientInfoReference getClientInfoReference() {
-    return clientInfoReference.get();
+  public static VertxSqlClientInfoReference getCurrentClientInfoReference() {
+    return currentClientInfoReference.get();
   }
 
   @Nullable

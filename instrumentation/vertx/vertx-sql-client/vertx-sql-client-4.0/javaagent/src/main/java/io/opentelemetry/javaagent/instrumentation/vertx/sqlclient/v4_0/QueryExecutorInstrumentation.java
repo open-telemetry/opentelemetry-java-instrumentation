@@ -48,7 +48,7 @@ class QueryExecutorInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This Object queryExecutor) {
       VertxSqlClientSingletons.setQueryExecutorInfoReference(
-          queryExecutor, VertxSqlClientSingletons.getClientInfoReference());
+          queryExecutor, VertxSqlClientSingletons.getCurrentClientInfoReference());
     }
   }
 

@@ -10,34 +10,34 @@ import org.apache.hadoop.hbase.TableName;
 
 public class HbaseClientState {
 
-  private static final ThreadLocal<TableName> tableNameThreadLocal = new ThreadLocal<>();
-  private static final ThreadLocal<RequestAndContext> requestAndContextThreadLocal =
+  private static final ThreadLocal<TableName> currentTableName = new ThreadLocal<>();
+  private static final ThreadLocal<RequestAndContext> currentRequestAndContext =
       new ThreadLocal<>();
 
   public static void setTableName(TableName tableName) {
-    tableNameThreadLocal.set(tableName);
+    currentTableName.set(tableName);
   }
 
   @Nullable
   public static TableName getTableName() {
-    return tableNameThreadLocal.get();
+    return currentTableName.get();
   }
 
   public static void resetTableName() {
-    tableNameThreadLocal.remove();
+    currentTableName.remove();
   }
 
   public static void setRequestAndContext(RequestAndContext requestAndContext) {
-    requestAndContextThreadLocal.set(requestAndContext);
+    currentRequestAndContext.set(requestAndContext);
   }
 
   @Nullable
   public static RequestAndContext getRequestAndContext() {
-    return requestAndContextThreadLocal.get();
+    return currentRequestAndContext.get();
   }
 
   public static void resetRequestAndContext() {
-    requestAndContextThreadLocal.remove();
+    currentRequestAndContext.remove();
   }
 
   private HbaseClientState() {}

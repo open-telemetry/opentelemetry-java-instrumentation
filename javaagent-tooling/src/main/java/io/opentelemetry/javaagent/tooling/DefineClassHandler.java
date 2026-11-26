@@ -20,7 +20,7 @@ public class DefineClassHandler implements Handler {
   public static final DefineClassHandler INSTANCE = new DefineClassHandler();
 
   private final DefineClassContextImpl rootContext = new DefineClassContextImpl(null, null, null);
-  private final ThreadLocal<DefineClassContextImpl> defineClassContext =
+  private final ThreadLocal<DefineClassContextImpl> currentDefineClassContext =
       ThreadLocal.withInitial(() -> rootContext);
 
   private static Predicate<ClassLoader> ignoredClassLoaders = classLoader -> false;
@@ -121,12 +121,12 @@ public class DefineClassHandler implements Handler {
    * @return true if it is known that loading class with given name will fail
    */
   public static boolean isFailedClass(String dotClassName) {
-    DefineClassContextImpl context = INSTANCE.defineClassContext.get();
+    DefineClassContextImpl context = INSTANCE.currentDefineClassContext.get();
     return context.failedClassDotName != null && context.failedClassDotName.equals(dotClassName);
   }
 
   public static Set<String> getSuperTypes() {
-    Set<String> superNames = INSTANCE.defineClassContext.get().superDotNames;
+    Set<String> superNames = INSTANCE.currentDefineClassContext.get().superDotNames;
     return superNames == null ? emptySet() : superNames;
   }
 
@@ -136,15 +136,15 @@ public class DefineClassHandler implements Handler {
 
   private DefineClassContextImpl enter(
       @Nullable ClassLoader classLoader, @Nullable String className) {
-    DefineClassContextImpl previous = defineClassContext.get();
+    DefineClassContextImpl previous = currentDefineClassContext.get();
     DefineClassContextImpl context = new DefineClassContextImpl(previous, classLoader, className);
-    defineClassContext.set(context);
+    currentDefineClassContext.set(context);
     return context;
   }
 
   // visible for testing
   boolean isDefining(ClassLoader classLoader, String className) {
-    DefineClassContextImpl current = defineClassContext.get();
+    DefineClassContextImpl current = currentDefineClassContext.get();
     return current.classLoader == classLoader
         && current.className != null
         && current.className.equals(className);
@@ -170,7 +170,7 @@ public class DefineClassHandler implements Handler {
     public void exit() {
       // ROOT itself has no previous context but is never returned to callers. Every returned
       // context is created by enter(), which captures ROOT or an outer context as its predecessor.
-      defineClassContext.set(requireNonNull(previous));
+      currentDefineClassContext.set(requireNonNull(previous));
     }
   }
 }

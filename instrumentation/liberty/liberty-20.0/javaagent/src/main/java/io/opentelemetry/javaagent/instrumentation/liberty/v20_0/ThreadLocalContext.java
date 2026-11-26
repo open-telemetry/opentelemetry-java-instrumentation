@@ -14,7 +14,7 @@ import javax.servlet.http.HttpServletResponse;
 
 public class ThreadLocalContext {
 
-  private static final ThreadLocal<ThreadLocalContext> local = new ThreadLocal<>();
+  private static final ThreadLocal<ThreadLocalContext> currentRequestContext = new ThreadLocal<>();
 
   private final HttpServletResponse response;
   private final ServletRequestContext<HttpServletRequest> requestContext;
@@ -66,19 +66,19 @@ public class ThreadLocalContext {
 
   public static void startRequest(HttpServletRequest request, HttpServletResponse response) {
     ThreadLocalContext ctx = new ThreadLocalContext(request, response);
-    local.set(ctx);
+    currentRequestContext.set(ctx);
   }
 
   @Nullable
   public static ThreadLocalContext get() {
-    return local.get();
+    return currentRequestContext.get();
   }
 
   @Nullable
   public static ThreadLocalContext endRequest() {
-    ThreadLocalContext ctx = local.get();
+    ThreadLocalContext ctx = currentRequestContext.get();
     if (ctx != null) {
-      local.remove();
+      currentRequestContext.remove();
     }
     return ctx;
   }

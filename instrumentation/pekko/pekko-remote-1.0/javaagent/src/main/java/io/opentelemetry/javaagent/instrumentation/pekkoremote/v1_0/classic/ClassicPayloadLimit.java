@@ -20,23 +20,23 @@ import org.apache.pekko.remote.transport.PekkoProtocolTransport;
  */
 public final class ClassicPayloadLimit {
 
-  private static final ThreadLocal<Integer> payloadLimit = new ThreadLocal<>();
+  private static final ThreadLocal<Integer> currentPayloadLimit = new ThreadLocal<>();
 
   public static void set(EndpointActor writer) {
     // the declared type of the transport is deprecated along with the rest of classic remoting
     Object transport = writer.transport();
     if (transport instanceof PekkoProtocolTransport) {
-      payloadLimit.set(((PekkoProtocolTransport) transport).maximumPayloadBytes());
+      currentPayloadLimit.set(((PekkoProtocolTransport) transport).maximumPayloadBytes());
     }
   }
 
   public static void clear() {
-    payloadLimit.remove();
+    currentPayloadLimit.remove();
   }
 
   /** Whether a pdu of the given size may be written, true when no limit is known. */
   public static boolean fits(int size) {
-    @Nullable Integer limit = payloadLimit.get();
+    @Nullable Integer limit = currentPayloadLimit.get();
     return limit == null || size <= limit;
   }
 
