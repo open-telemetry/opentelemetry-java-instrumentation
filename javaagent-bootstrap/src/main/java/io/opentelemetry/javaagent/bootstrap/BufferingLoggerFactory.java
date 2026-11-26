@@ -97,14 +97,7 @@ final class BufferingLoggerFactory implements InternalLogger.Factory {
       if (droppedCount > 0) {
         factory
             .create(InternalLogger.class.getName())
-            .log(
-                InternalLogger.Level.WARN,
-                "Dropped "
-                    + droppedCount
-                    + " log records emitted before logging was initialized (buffer limit "
-                    + limit
-                    + ")",
-                null);
+            .log(InternalLogger.Level.WARN, droppedMessage(droppedCount), null);
       }
     } finally {
       if (!drained) {
@@ -124,12 +117,15 @@ final class BufferingLoggerFactory implements InternalLogger.Factory {
    */
   void dumpTo(PrintStream out) {
     List<BufferedLog> copy;
+    int droppedCount;
     synchronized (lock) {
       if (claimed) {
         return;
       }
       copy = new ArrayList<>(buffer);
       buffer.clear();
+      droppedCount = dropped;
+      dropped = 0;
     }
     for (BufferedLog log : copy) {
       if (log.level == InternalLogger.Level.ERROR || log.level == InternalLogger.Level.WARN) {
@@ -139,6 +135,22 @@ final class BufferingLoggerFactory implements InternalLogger.Factory {
         }
       }
     }
+    // dropped records may have included warnings or errors, so always say that some were lost
+    if (droppedCount > 0) {
+      out.println(
+          "[otel.javaagent] WARN "
+              + InternalLogger.class.getName()
+              + " - "
+              + droppedMessage(droppedCount));
+    }
+  }
+
+  private String droppedMessage(int droppedCount) {
+    return "Dropped "
+        + droppedCount
+        + " log records emitted before logging was initialized (buffer limit "
+        + limit
+        + ")";
   }
 
   /**

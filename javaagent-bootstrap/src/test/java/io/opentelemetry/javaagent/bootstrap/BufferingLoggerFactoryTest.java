@@ -176,6 +176,21 @@ class BufferingLoggerFactoryTest {
   }
 
   @Test
+  void dumpReportsDroppedRecords() {
+    BufferingLoggerFactory factory = new BufferingLoggerFactory(1);
+    InternalLogger logger = factory.create("a");
+    logger.log(Level.INFO, "fills the buffer", null);
+    logger.log(Level.ERROR, "dropped", null);
+
+    ByteArrayOutputStream out = new ByteArrayOutputStream();
+    factory.dumpTo(new PrintStream(out, true));
+
+    assertThat(new String(out.toByteArray(), UTF_8))
+        .contains("Dropped 1 log records emitted before logging was initialized (buffer limit 1)")
+        .doesNotContain("fills the buffer");
+  }
+
+  @Test
   void dumpDoesNothingAfterInitialization() {
     BufferingLoggerFactory factory = new BufferingLoggerFactory(100);
     factory.create("a").log(Level.ERROR, "error", null);
