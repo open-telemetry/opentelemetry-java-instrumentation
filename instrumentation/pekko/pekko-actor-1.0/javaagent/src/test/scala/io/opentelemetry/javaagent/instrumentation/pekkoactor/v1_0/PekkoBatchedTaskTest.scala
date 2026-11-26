@@ -13,7 +13,7 @@ import io.opentelemetry.instrumentation.testing.junit.{
 import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
 import io.opentelemetry.sdk.trace.data.SpanData
 import org.apache.pekko.actor.ActorSystem
-import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.{Test, TestInstance}
 import org.junit.jupiter.api.extension.RegisterExtension
 import io.opentelemetry.instrumentation.testing.util.ThrowingSupplier
 
@@ -28,6 +28,7 @@ import scala.concurrent.{Await, ExecutionContext, Future}
   * the one captured when the enclosing batch was submitted predates the span
   * that is current when the future is created.
   */
+@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoBatchedTaskTest {
 
   @RegisterExtension val testing: InstrumentationExtension =
