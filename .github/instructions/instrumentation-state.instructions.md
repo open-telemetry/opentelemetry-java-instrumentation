@@ -97,19 +97,21 @@ javaagent instrumentation, not library-only code.
 
 ## Observable metric callbacks
 
-- **Registration ownership.** The SDK bundled with the javaagent holds the callback strongly until
-  it is unregistered. Identify who owns the registration and when it ends. Verify that
-  every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
-  the returned handle and remove any long-lived registry entries for that registration.
-  Clearing a reference to the handle without closing it does not unregister the callback.
+- **Registration ownership.** The SDK bundled with the javaagent holds the registered callback
+  strongly. Identify who owns the registration and when it ends. Verify that every supported
+  shutdown or replacement path reaches the instrumentation's cleanup. Close the returned handle
+  and remove any long-lived registry entries for that registration. Dropping the handle does not
+  unregister the callback. If a shutdown path misses that cleanup, fix the hook rather than
+  weakening the reference.
 
-  After `close()`, the SDK handle still holds the callback. If the callback or the state it captures
-  should be collectible while the owner is still alive, clear the field that stores the closed handle.
+- **Retention after unregistration.** A closed SDK handle still holds the callback. Clear the
+  reference to the closed handle when its owner can stay reachable and the handle keeps the callback
+  or captured state alive past its intended lifetime. Trace other strong references to that state
+  before treating a retained handle as a leak.
 
-  A callback can strongly hold state that should live as long as the registration. For example,
-  the HikariCP callback may capture `PoolStats`, which references the pool. When HikariCP shuts down
-  the pool, the tracker must close the callback handle and clear the field that held it. If a
-  shutdown path misses that cleanup, fix the hook rather than weakening the reference.
+  For example, the HikariCP callback captures `PoolStats`, which references the pool. A retained
+  `HikariDataSource` already holds the pool directly, so clearing the tracker's closed handle does
+  not make the pool collectible.
 
 - **Collection without explicit shutdown.** If an object or class loader should be collectible
   while the registration is live, trace every strong reference to it from the SDK or other
