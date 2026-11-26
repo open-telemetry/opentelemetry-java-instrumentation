@@ -131,18 +131,22 @@ javaagent instrumentation, not library-only code.
 
 ## Temporary thread state
 
-- Trace what writes and reads the state and which calls can nest. When an invocation changes
-  temporary thread state, restore the previous value on every exit, including exceptions. An
-  invocation that did not install state must not clear an enclosing invocation's value. If an inner
-  operation must not inherit the outer value, hide it while the inner operation runs and restore it
-  afterward.
+- When an invocation changes temporary thread state, restore the previous value on every exit,
+  including exceptions. Trace what writes and reads the state and which calls can nest. Thread
+  confinement does not prevent a nested call from replacing outer state.
 
-- Keep acquisition and cleanup in the advice pair or helper that owns the state. Restore or release
-  before fallible completion work that does not need the temporary state. Use `try`/`finally` when
-  that work needs the state.
+- If an invocation skips changing temporary thread state, leave that state untouched on exit.
 
-- Prefer `ScopedThreadValue` for new scoped values when it makes saving and restoring state simpler.
-  In a simple advice pair, carry the previous value through `@Advice.Enter`:
+- If an inner operation must not inherit an enclosing value, hide it while the inner operation runs
+  and restore it afterward.
+
+- Keep acquisition and cleanup in the advice pair or helper that installs the state. Restore or
+  release before fallible completion work that does not need the temporary state. Use
+  `try`/`finally` when that work needs the state.
+
+- Prefer `ScopedThreadValue` for new scoped values when the previous value is enough for cleanup.
+  `set()` returns that value directly without allocating a separate restore token. In a simple
+  advice pair, carry it through `@Advice.Enter`:
 
   ```java
   @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -178,9 +182,9 @@ javaagent instrumentation, not library-only code.
 
   Use `isActive()` for read-only checks.
 
-- When auditing existing state lifetimes, name a supported call path that discards enclosing state,
-  leaves temporary state installed, or uses state that belongs to another operation. Do not flag
-  code solely because it uses another storage mechanism or keeps state changes in a helper.
+- For a correctness finding about temporary thread state in an audit or review, name a supported
+  call path that discards enclosing state, leaves temporary state installed, or uses state that
+  belongs to another operation.
 
 - Keep a holder private in the narrowest owner. If several classes in one module need direct access,
   use a private field in `*Singletons`, exposed by a same-named zero-argument accessor and
