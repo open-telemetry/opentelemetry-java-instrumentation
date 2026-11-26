@@ -179,6 +179,48 @@ public abstract class LogPatternTest {
   }
 
   @ParameterizedTest
+  @ValueSource(strings = {"Suffix", "_suffix"})
+  void injectsBeforeMessageConverterWithLiteralSuffix(String suffix) {
+    assertRenderedPattern(
+        "%msg" + suffix + "%n",
+        (layout, rendered) -> {
+          assertThat(rendered).endsWith("pattern message" + suffix + System.lineSeparator());
+          if (ENABLED) {
+            assertThat(rendered)
+                .startsWith(
+                    TRACE
+                        + "="
+                        + Span.current().getSpanContext().getTraceId()
+                        + " "
+                        + SPAN
+                        + "="
+                        + Span.current().getSpanContext().getSpanId()
+                        + " ");
+          }
+        });
+  }
+
+  @Test
+  void reusesKeyedMdcConverterWithLiteralSuffix() {
+    assertRenderedPattern(
+        "%Xtail{" + TRACE + "} %m%n",
+        (layout, rendered) -> {
+          String traceId = Span.current().getSpanContext().getTraceId();
+          assertThat(rendered).startsWith(traceId + "tail ").containsOnlyOnce(traceId);
+          if (ENABLED) {
+            assertThat(rendered)
+                .containsOnlyOnce(SPAN + "=" + Span.current().getSpanContext().getSpanId());
+          }
+        });
+  }
+
+  @Test
+  void leavesRegisteredNonMessageConverterUntouched() {
+    assertRenderedPattern(
+        "%marker%n", (layout, rendered) -> assertThat(rendered).isEqualTo(System.lineSeparator()));
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {" trace_id ", ",trace_id", ""})
   void preservesNativeSingleMdcKeys(String key) {
     ThreadContext.put(key, "application-value");

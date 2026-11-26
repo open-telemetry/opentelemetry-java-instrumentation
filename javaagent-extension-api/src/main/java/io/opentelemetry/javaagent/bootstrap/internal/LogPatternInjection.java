@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.internal;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
@@ -39,8 +40,15 @@ public final class LogPatternInjection {
     return currentInjection;
   }
 
-  public static Injection prepareLog4j2(@Nullable String pattern) {
-    return new Injection(pattern, enhance(pattern, Framework.LOG4J2));
+  public static Injection prepareLog4j2(@Nullable String pattern, Set<?> converterKeys) {
+    return new Injection(
+        pattern,
+        enhance(
+            pattern,
+            Framework.LOG4J2,
+            AgentCommonConfig.get().getTraceIdKey(),
+            AgentCommonConfig.get().getSpanIdKey(),
+            converterKeys));
   }
 
   @Nullable
@@ -65,16 +73,27 @@ public final class LogPatternInjection {
   @Nullable
   static String enhance(
       @Nullable String pattern, Framework framework, String traceKey, String spanKey) {
+    return enhance(pattern, framework, traceKey, spanKey, null);
+  }
+
+  @Nullable
+  private static String enhance(
+      @Nullable String pattern,
+      Framework framework,
+      String traceKey,
+      String spanKey,
+      @Nullable Set<?> converterKeys) {
     if (pattern == null || pattern.isEmpty()) {
       return pattern;
     }
-    int end = messageInsertion(pattern, framework);
+    int end = messageInsertion(pattern, framework, converterKeys);
     if (end < 0) {
       return pattern;
     }
     StringBuilder fields = new StringBuilder();
-    appendField(fields, pattern, framework, traceKey, "trace-id-key", traceKeyWarned);
-    appendField(fields, pattern, framework, spanKey, "span-id-key", spanKeyWarned);
+    appendField(
+        fields, pattern, framework, traceKey, "trace-id-key", traceKeyWarned, converterKeys);
+    appendField(fields, pattern, framework, spanKey, "span-id-key", spanKeyWarned, converterKeys);
     if (fields.length() == 0) {
       return pattern;
     }
@@ -91,8 +110,9 @@ public final class LogPatternInjection {
       Framework framework,
       String key,
       String property,
-      AtomicBoolean warned) {
-    if (contains(pattern, framework, key)) {
+      AtomicBoolean warned,
+      @Nullable Set<?> converterKeys) {
+    if (contains(pattern, framework, key, converterKeys)) {
       return;
     }
     if (!PORTABLE_KEY.matcher(key).matches()) {
@@ -112,7 +132,8 @@ public final class LogPatternInjection {
     fields.append(key).append("=%X{").append(key).append('}');
   }
 
-  private static boolean contains(String pattern, Framework framework, String key) {
+  private static boolean contains(
+      String pattern, Framework framework, String key, @Nullable Set<?> converterKeys) {
     for (int i = 0; i < pattern.length(); i++) {
       if (isLogback(framework) && pattern.charAt(i) == '\\') {
         i++;
@@ -129,14 +150,8 @@ public final class LogPatternInjection {
       while (name < pattern.length() && "-0123456789.".indexOf(pattern.charAt(name)) >= 0) {
         name++;
       }
-      int end = name;
-      while (end < pattern.length() && Character.isLetter(pattern.charAt(end))) {
-        end++;
-        if (framework == Framework.LOG4J1 || framework == Framework.LOG4J1_WITH_MDC_MAP) {
-          break;
-        }
-      }
-      String converter = pattern.substring(name, end);
+      int end = converterNameEnd(pattern, name, framework);
+      String converter = resolveConverter(pattern.substring(name, end), converterKeys);
       boolean mdc =
           converter.equals("X")
               || (isLogback(framework) && converter.equals("mdc"))
@@ -177,7 +192,8 @@ public final class LogPatternInjection {
       // Descend into presentation wrappers, but never interpret option text as converters.
       if (isLogback(framework) && end < pattern.length() && pattern.charAt(end) == '(') {
         int close = balancedEnd(pattern, end, '(', ')', framework);
-        if (close > end + 1 && contains(pattern.substring(end + 1, close - 1), framework, key)) {
+        if (close > end + 1
+            && contains(pattern.substring(end + 1, close - 1), framework, key, converterKeys)) {
           return true;
         }
         end = close;
@@ -186,7 +202,7 @@ public final class LogPatternInjection {
       if (end < pattern.length() && pattern.charAt(end) == '{') {
         int close = balancedEnd(pattern, end, '{', '}', framework);
         if (framework == Framework.LOG4J2 && hasLog4j2NestedPattern(converter)) {
-          if (contains(pattern.substring(end + 1, close - 1), framework, key)) {
+          if (contains(pattern.substring(end + 1, close - 1), framework, key, converterKeys)) {
             return true;
           }
         }
@@ -207,12 +223,7 @@ public final class LogPatternInjection {
     while (end < pattern.length() && "-0123456789.".indexOf(pattern.charAt(end)) >= 0) {
       end++;
     }
-    while (end < pattern.length() && Character.isLetter(pattern.charAt(end))) {
-      end++;
-      if (framework == Framework.LOG4J1 || framework == Framework.LOG4J1_WITH_MDC_MAP) {
-        break;
-      }
-    }
+    end = converterNameEnd(pattern, end, framework);
     if (isLogback(framework) && end < pattern.length() && pattern.charAt(end) == '(') {
       end = balancedEnd(pattern, end, '(', ')', framework);
     }
@@ -220,6 +231,41 @@ public final class LogPatternInjection {
       end = balancedEnd(pattern, end, '{', '}', framework);
     }
     return end;
+  }
+
+  private static int converterNameEnd(String pattern, int start, Framework framework) {
+    if (framework == Framework.LOG4J2) {
+      if (start == pattern.length() || !Character.isUnicodeIdentifierStart(pattern.charAt(start))) {
+        return start;
+      }
+      int end = start + 1;
+      while (end < pattern.length() && Character.isUnicodeIdentifierPart(pattern.charAt(end))) {
+        end++;
+      }
+      return end;
+    }
+    int end = start;
+    while (end < pattern.length() && Character.isLetter(pattern.charAt(end))) {
+      end++;
+      if (framework == Framework.LOG4J1 || framework == Framework.LOG4J1_WITH_MDC_MAP) {
+        break;
+      }
+    }
+    return end;
+  }
+
+  private static String resolveConverter(String token, @Nullable Set<?> converterKeys) {
+    if (converterKeys == null) {
+      return token;
+    }
+    // Log4j2 consumes options after the full token but resolves its longest registered prefix.
+    for (int end = token.length(); end > 0; end--) {
+      String prefix = token.substring(0, end);
+      if (converterKeys.contains(prefix)) {
+        return prefix;
+      }
+    }
+    return "";
   }
 
   private static String firstLogbackOption(String options) {
@@ -347,7 +393,8 @@ public final class LogPatternInjection {
 
   // Returns an insertion offset, -1 for literal-only text, or -2 for prefix fields without a
   // message.
-  private static int messageInsertion(String pattern, Framework framework) {
+  private static int messageInsertion(
+      String pattern, Framework framework, @Nullable Set<?> converterKeys) {
     boolean prefixSeen = false;
     int precedingEnd = 0;
     while (precedingEnd < pattern.length()
@@ -370,14 +417,8 @@ public final class LogPatternInjection {
       while (name < pattern.length() && "-0123456789.".indexOf(pattern.charAt(name)) >= 0) {
         name++;
       }
-      int end = name;
-      while (end < pattern.length() && Character.isLetter(pattern.charAt(end))) {
-        end++;
-        if (framework == Framework.LOG4J1 || framework == Framework.LOG4J1_WITH_MDC_MAP) {
-          break;
-        }
-      }
-      String converter = pattern.substring(name, end);
+      int end = converterNameEnd(pattern, name, framework);
+      String converter = resolveConverter(pattern.substring(name, end), converterKeys);
       if (converter.equals("m")
           || ((isLogback(framework) || framework == Framework.LOG4J2)
               && (converter.equals("msg") || converter.equals("message")))) {
@@ -390,7 +431,8 @@ public final class LogPatternInjection {
           && (isLogback(framework)
               || (framework == Framework.LOG4J2 && hasLog4j2NestedPattern(converter)))) {
         int wrapperEnd = balancedEnd(pattern, end, open, close, framework);
-        int nested = messageInsertion(pattern.substring(end + 1, wrapperEnd - 1), framework);
+        int nested =
+            messageInsertion(pattern.substring(end + 1, wrapperEnd - 1), framework, converterKeys);
         if (nested >= 0) {
           if (pattern.substring(i + 1, name).indexOf('.') >= 0
               || !allowsNestedInjection(converter, framework)) {
