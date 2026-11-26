@@ -96,16 +96,17 @@ javaagent instrumentation, not library-only code.
   can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
   Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
 
-  Trace strong references from the values actually stored at runtime, including references
-  captured by lambdas and non-static inner classes. Check other fallback values that may reference
-  the carrier, not just the value keyed by it. For example, if carrier A's fallback value strongly
-  references carrier B and B's fallback value strongly references A, fallback storage keeps both
-  carriers alive.
+  Start from each value stored for the carrier and follow strong references, including lambda
+  captures and outer instances of non-static inner classes. Check the concrete values stored at
+  runtime, not just the declared value type. When a path reaches another carrier, continue through
+  that carrier's virtual-field values, because fallback storage retains them while that carrier is
+  reachable. For example, if carrier A's value references carrier B and B's value references A,
+  fallback storage keeps both alive. If only B's value references A, A lives as long as B, as it
+  would with field-backed storage.
 
-  If none of those fallback values can reach the carrier through strong references, that analysis
-  is sufficient to verify fallback retention safety. Do not add a GC test or a separate JVM run
-  with field injection disabled just to confirm it. If safety depends on when state is cleared or
-  replaced, test the relevant lifecycle path.
+  If no path returns to the carrier, that analysis is sufficient to verify fallback retention
+  safety. Do not add a GC test or a separate JVM run with field injection disabled just to confirm
+  it. If safety depends on when state is cleared or replaced, test the relevant lifecycle path.
 
 - Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
   supported concurrent updates need an invariant before choosing synchronization or ownership.
