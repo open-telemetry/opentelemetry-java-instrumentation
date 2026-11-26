@@ -29,13 +29,12 @@ user-facing instrumentation configuration.
 - For a new boolean that controls capture of data defined by a semantic convention, use
   `capture-<data>` in flat properties, `capture_<data>` in YAML, and
   `setCapture<Data>(boolean)` for the corresponding Java builder method. Do not append `.enabled`.
-  This rule does not apply to
-  [experimental attributes](emitted-telemetry.instructions.md#stability-and-safety).
   For a single attribute, derive `<data>` from its key. Omit the first segment if the remainder
   still identifies the data. For a group of attributes, name the group the setting captures.
   Use the same words for `<data>` in all three names. For example, `query.text` from
   `db.query.text` gives `capture-query-text`, `capture_query_text`, and
-  `setCaptureQueryText(boolean)`.
+  `setCaptureQueryText(boolean)`. This rule does not apply to
+  [experimental attributes](emitted-telemetry.instructions.md#stability-and-safety).
 - Name value transformations separately from capture. For example, `capture-query-text` controls
   whether to include query text, while `query-sanitization.enabled` controls whether to mask values
   in it. Document any interaction, such as capturing JDBC parameters disabling query sanitization.

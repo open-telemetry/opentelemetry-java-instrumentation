@@ -74,11 +74,13 @@ SDK support, agent support, and extension modules.
 
 ## Stability and safety
 
-- Experimental attributes are attributes that no semantic convention defines. Do not gate
-  attributes defined by a semantic convention, including those marked `Development`, behind
-  generic switches such as `experimental-span-attributes`, `experimental-log-attributes`, or
-  `emit-experimental-telemetry`. Follow the convention's opt-in guidance. If capture needs a
-  separate switch, use a dedicated `capture-*` setting.
+- Experimental attributes are attributes that no semantic convention defines. Emit them only when
+  an experimental setting such as `otel.instrumentation.<name>.experimental-span-attributes` is
+  enabled. Do not gate attributes defined by a semantic convention, including those marked
+  `Development`, behind generic switches such as `experimental-span-attributes`,
+  `experimental-log-attributes`, or `emit-experimental-telemetry`. Follow the convention's opt-in
+  guidance. If capture needs a separate switch, use a dedicated
+  [`capture-*` setting](configuration.instructions.md#names-and-stability).
 
 - Stable instrumentation does not emit unstable convention fields by default where opt-in is
   required. Check both convention-group and individual-field stability. Do not force migration to
