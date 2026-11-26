@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateStore;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateStore.Reference;
 import jakarta.servlet.ServletOutputStream;
 import javax.annotation.Nullable;
@@ -17,11 +18,14 @@ public class ServletOutputStreamInjectionState {
 
   public static void initializeInjectionStateIfNeeded(
       ServletOutputStream servletOutputStream, Servlet5SnippetInjectingResponseWrapper wrapper) {
-    InjectionState state = getInjectionState(servletOutputStream);
-    if (state == null || state.getWrapper() != wrapper) {
-      state = new InjectionState(wrapper);
-      wrapper.retainInjectionState(state);
-      VIRTUAL_FIELD.set(servletOutputStream, new Reference(state));
+    InjectionStateStore store = wrapper.injectionStateStore();
+    synchronized (store) {
+      InjectionState previous = getInjectionState(servletOutputStream);
+      if (previous == null || previous.getWrapper() != wrapper) {
+        InjectionState state = new InjectionState(wrapper);
+        store.replace(previous, state);
+        VIRTUAL_FIELD.set(servletOutputStream, new Reference(state));
+      }
     }
   }
 

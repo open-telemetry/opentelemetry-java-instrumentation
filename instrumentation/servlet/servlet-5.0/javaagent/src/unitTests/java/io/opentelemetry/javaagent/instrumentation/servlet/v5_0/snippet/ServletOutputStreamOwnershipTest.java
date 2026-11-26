@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.OutputS
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.WriteListener;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequestWrapper;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -74,6 +75,58 @@ class ServletOutputStreamOwnershipTest {
     assertThat(ServletOutputStreamInjectionState.getInjectionState(first)).isNotSameAs(firstState);
     assertThat(ServletOutputStreamInjectionState.getInjectionState(first).getWrapper())
         .isSameAs(other);
+  }
+
+  @Test
+  void redispatchReusesStoreAndReleasesDisplacedState()
+      throws IOException, InterruptedException, TimeoutException {
+    HttpServletRequest request = request();
+    HttpServletRequest wrappedRequest =
+        new HttpServletRequestWrapper(request) {
+          @Override
+          public Object getAttribute(String name) {
+            assertThat(Thread.holdsLock(this)).isFalse();
+            return super.getAttribute(name);
+          }
+
+          @Override
+          public void setAttribute(String name, Object value) {
+            assertThat(Thread.holdsLock(this)).isFalse();
+            super.setAttribute(name, value);
+          }
+        };
+    TestStream first = new TestStream();
+    TestStream second = new TestStream();
+    WeakReference<?>[] displaced = initializeDisplacedState(wrappedRequest, first);
+    Object store = request.getAttribute(InjectionStateStore.REQUEST_ATTRIBUTE);
+    new Servlet5SnippetInjectingResponseWrapper(wrappedRequest, response(second), SNIPPET)
+        .getOutputStream();
+    WeakReference<InjectionState> secondState =
+        new WeakReference<>(ServletOutputStreamInjectionState.getInjectionState(second));
+    Servlet5SnippetInjectingResponseWrapper current =
+        new Servlet5SnippetInjectingResponseWrapper(wrappedRequest, response(first), SNIPPET);
+    assertThat(request.getAttribute(InjectionStateStore.REQUEST_ATTRIBUTE)).isSameAs(store);
+    current.getOutputStream();
+
+    GcUtils.awaitGc(displaced[0], Duration.ofSeconds(10));
+    GcUtils.awaitGc(displaced[1], Duration.ofSeconds(10));
+    assertThat(ServletOutputStreamInjectionState.getInjectionState(first).getWrapper())
+        .isSameAs(current);
+    assertThat(secondState.get()).isNotNull();
+    assertThat(ServletOutputStreamInjectionState.getInjectionState(second))
+        .isSameAs(secondState.get());
+    assertThat(request.getAttribute(InjectionStateStore.REQUEST_ATTRIBUTE)).isSameAs(store);
+  }
+
+  private static WeakReference<?>[] initializeDisplacedState(
+      HttpServletRequest request, TestStream stream) throws IOException {
+    Servlet5SnippetInjectingResponseWrapper wrapper =
+        new Servlet5SnippetInjectingResponseWrapper(request, response(stream), SNIPPET);
+    wrapper.getOutputStream();
+    return new WeakReference<?>[] {
+      new WeakReference<>(ServletOutputStreamInjectionState.getInjectionState(stream)),
+      new WeakReference<>(wrapper)
+    };
   }
 
   @Test
@@ -141,9 +194,11 @@ class ServletOutputStreamOwnershipTest {
             new Class<?>[] {HttpServletRequest.class},
             (proxy, method, args) -> {
               if (method.getName().equals("getAttribute")) {
+                assertThat(Thread.holdsLock(proxy)).isFalse();
                 return attribute.get();
               }
               if (method.getName().equals("setAttribute")) {
+                assertThat(Thread.holdsLock(proxy)).isFalse();
                 attribute.set(args[1]);
               }
               return null;

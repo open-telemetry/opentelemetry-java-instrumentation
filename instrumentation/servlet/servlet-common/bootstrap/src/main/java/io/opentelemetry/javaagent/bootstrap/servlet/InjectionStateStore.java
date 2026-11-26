@@ -8,6 +8,7 @@ package io.opentelemetry.javaagent.bootstrap.servlet;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 public final class InjectionStateStore {
   // The request owns stream states through async writes; the stream only holds a weak reference.
@@ -15,7 +16,8 @@ public final class InjectionStateStore {
 
   private final List<InjectionState> states = new ArrayList<>();
 
-  public synchronized void add(InjectionState state) {
+  public synchronized void replace(@Nullable InjectionState previous, InjectionState state) {
+    states.remove(previous);
     states.add(state);
   }
 

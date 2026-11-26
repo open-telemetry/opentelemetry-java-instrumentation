@@ -8,7 +8,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.ServletOutputStreamInjectionState.initializeInjectionStateIfNeeded;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateStore;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
@@ -42,7 +41,7 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   private static final int UNSET = -1;
   private final String snippet;
   private final int snippetLength;
-  private final HttpServletRequest request;
+  private final InjectionStateStore injectionStateStore;
 
   private long contentLength = UNSET;
 
@@ -51,7 +50,15 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   public Servlet5SnippetInjectingResponseWrapper(
       HttpServletRequest request, HttpServletResponse response, String snippet) {
     super(response);
-    this.request = request;
+    // Wrappers are created at dispatch entry, before application code can start async work.
+    // Redispatches reuse the request attributes, even through delegating request wrappers.
+    InjectionStateStore store =
+        (InjectionStateStore) request.getAttribute(InjectionStateStore.REQUEST_ATTRIBUTE);
+    if (store == null) {
+      store = new InjectionStateStore();
+      request.setAttribute(InjectionStateStore.REQUEST_ATTRIBUTE, store);
+    }
+    injectionStateStore = store;
     this.snippet = snippet;
     snippetLength = snippet.length();
   }
@@ -128,16 +135,8 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     return output;
   }
 
-  void retainInjectionState(InjectionState state) {
-    synchronized (request) {
-      InjectionStateStore store =
-          (InjectionStateStore) request.getAttribute(InjectionStateStore.REQUEST_ATTRIBUTE);
-      if (store == null) {
-        store = new InjectionStateStore();
-        request.setAttribute(InjectionStateStore.REQUEST_ATTRIBUTE, store);
-      }
-      store.add(state);
-    }
+  InjectionStateStore injectionStateStore() {
+    return injectionStateStore;
   }
 
   @Override
