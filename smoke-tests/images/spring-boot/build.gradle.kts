@@ -8,12 +8,12 @@ plugins {
   id("otel.java-conventions")
 
   id("com.google.cloud.tools.jib")
-  id("org.springframework.boot") version "4.2.0"
+  alias(libs.plugins.spring.boot4)
 }
 
 dependencies {
   implementation(platform("io.opentelemetry:opentelemetry-bom"))
-  implementation(platform("org.springframework.boot:spring-boot-dependencies:2.6.15"))
+  implementation(platform(libs.spring.boot2.bom))
 
   implementation("io.opentelemetry:opentelemetry-api")
   implementation(project(":instrumentation-annotations"))

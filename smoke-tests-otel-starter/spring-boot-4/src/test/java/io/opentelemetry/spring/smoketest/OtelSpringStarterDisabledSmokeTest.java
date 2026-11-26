@@ -32,7 +32,10 @@ import org.springframework.boot.test.context.SpringBootTest;
 // fail with org.h2.jdbc.JdbcSQLSyntaxErrorException: Table "CUSTOMER" already exists
 class OtelSpringStarterDisabledSmokeTest extends AbstractSpringStarterSmokeTest {
 
-  @Autowired private TestRestTemplate testRestTemplate;
+  @Autowired
+  @SuppressWarnings("deprecation")
+  private TestRestTemplate testRestTemplate;
+
   @Autowired private ConfigProvider configProvider;
 
   @Test

@@ -67,6 +67,7 @@ jobs:
           native+='|^smoke-tests-otel-starter/'
           native+='|^conventions/'
           native+='|^dependencyManagement/build\.gradle\.kts$'
+          native+='|^gradle/libs\.versions\.toml$'
           native+='|^settings\.gradle\.kts$'
           native+='|^\.github/workflows/reusable-native-tests\.yml$'
           native+='|^\.github/graal-native-docker-compose\.yaml$'

@@ -13,17 +13,8 @@ plugins {
   id("io.github.gradle-nexus.publish-plugin")
   id("otel.spotless-conventions")
   id("otel.resolve-latest-dep-versions")
-  /* workaround for
-  What went wrong:
-  Could not determine the dependencies of task ':smoke-tests-otel-starter:spring-boot-3.2:bootJar'.
-  > Could not create task ':smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata'.
-  > Cannot set the value of task ':smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata' property 'metadataService' of type org.graalvm.buildtools.gradle.internal.GraalVMReachabilityMetadataService using a provider of type org.graalvm.buildtools.gradle.internal.GraalVMReachabilityMetadataService.
-
-  See https://github.com/gradle/gradle/issues/17559#issuecomment-1327991512
-
-  The plugin is conditionally applied in smoke-tests-otel-starter subprojects only when
-  nativeTest is in the requested task names (see reusable-native-tests.yml).
-   */
+  // Keep the native build tools on a shared classpath so subprojects can use the same metadata service.
+  // See https://github.com/gradle/gradle/issues/17559#issuecomment-1327991512.
   id("org.graalvm.buildtools.native") apply false
 }
 
@@ -101,14 +92,19 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       }
 
       val partitionTasks = ArrayList<String>()
+      val testLatestDeps = providers.gradleProperty("testLatestDeps").orNull == "true"
+      val smokeTestProjects = listOf(":smoke-tests", ":smoke-tests-osgi", ":smoke-tests-otel-starter")
       var testPartitionCounter = 0
       subprojects {
         // relying on predictable ordering of subprojects
         // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
         // since we are splitting these tasks across different github action jobs
         val enabled = testPartitionCounter++ % 4 == testPartition
-        if (enabled) {
-          val projectPath = this.path
+        val projectPath = path
+        val skipSmokeTests = testLatestDeps && smokeTestProjects.any {
+          projectPath == it || projectPath.startsWith("$it:")
+        }
+        if (enabled && !skipSmokeTests) {
           tasks.withType<Test>().configureEach {
             val taskPath = projectPath + ":" + this.name
             partitionTasks.add(taskPath)
@@ -119,8 +115,7 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       doLast {
         File("test-tasks.txt").printWriter().use { writer ->
           partitionTasks.forEach { taskPath ->
-            // smoke tests are run separately
-            // :instrumentation:test runs all instrumentation tests
+            // :smoke-tests:test runs separately and :instrumentation:test runs all instrumentation tests.
             if (taskPath != ":smoke-tests:test" && taskPath != ":instrumentation:test") {
               writer.println(taskPath)
             }

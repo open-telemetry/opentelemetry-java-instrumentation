@@ -30,42 +30,6 @@ dependencyResolutionManagement {
     mavenCentral()
     mavenLocal()
   }
-
-  versionCatalogs {
-    val testLatestDeps = gradle.startParameter.projectProperties["testLatestDeps"] == "true"
-    val resolveLatestDeps = gradle.startParameter.projectProperties["resolveLatestDeps"] == "true"
-    val pinLatestDeps = testLatestDeps && !resolveLatestDeps
-
-    @Suppress("UNCHECKED_CAST")
-    val pinnedVersions: Map<String, String> = if (pinLatestDeps) {
-      val file = file(".github/config/latest-dep-versions.json")
-      if (!file.exists()) {
-        throw GradleException("Pinned latest-dep versions file is missing: $file.")
-      }
-      groovy.json.JsonSlurper().parse(file) as Map<String, String>
-    } else {
-      emptyMap()
-    }
-
-    fun addSpringBootCatalog(name: String, minVersion: String, maxVersion: String) {
-      create(name) {
-        val pinnedVersion = pinnedVersions["org.springframework.boot:spring-boot-dependencies#$maxVersion"]
-        if (pinLatestDeps && pinnedVersion == null) {
-          throw GradleException(
-            "No pinned latest-dep version found for spring-boot-dependencies#$maxVersion."
-          )
-        }
-        val version =
-          gradle.startParameter.projectProperties["${name}Version"]
-            ?: (if (testLatestDeps) (pinnedVersion ?: maxVersion) else minVersion)
-        plugin("versions", "org.springframework.boot").version(version)
-      }
-    }
-    // spring boot 3.0 is not compatible with graalvm native image
-    addSpringBootCatalog("springBoot31", "3.1.0", "3.+")
-    addSpringBootCatalog("springBoot32", "3.2.0", "3.+")
-    addSpringBootCatalog("springBoot40", "4.0.0", "4.+")
-  }
 }
 
 val develocityServer = "https://community.develocity.cloud"
@@ -187,7 +151,6 @@ include(":smoke-tests-osgi")
 include(":smoke-tests-otel-starter:spring-smoke-testing")
 include(":smoke-tests-otel-starter:spring-boot-2")
 include(":smoke-tests-otel-starter:spring-boot-3")
-include(":smoke-tests-otel-starter:spring-boot-3.2")
 include(":smoke-tests-otel-starter:spring-boot-4")
 include(":smoke-tests-otel-starter:spring-boot-common")
 include(":smoke-tests-otel-starter:spring-boot-reactive-2")

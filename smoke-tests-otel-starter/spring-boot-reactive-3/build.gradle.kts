@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  alias(springBoot31.plugins.versions)
+  alias(libs.plugins.spring.boot3)
   id("otel.spring-native-test-conventions")
 }
 
@@ -17,11 +17,7 @@ dependencies {
   implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-  if (otelProps.testLatestDeps) {
-    implementation("org.springframework.cloud:spring-cloud-starter-gateway-server-webflux:4.3.+")
-  } else {
-    implementation("org.springframework.cloud:spring-cloud-starter-gateway:4.0.9")
-  }
+  implementation(libs.spring.cloud.gateway.boot3)
 
   runtimeOnly("com.h2database:h2")
   runtimeOnly("io.r2dbc:r2dbc-h2")

@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  alias(springBoot31.plugins.versions)
+  alias(libs.plugins.spring.boot3)
   id("otel.spring-native-test-conventions")
   id("otel.testcontainers-testing")
 }
@@ -27,12 +27,6 @@ dependencies {
   testImplementation("org.testcontainers:testcontainers-mongodb")
   testImplementation("org.springframework.boot:spring-boot-starter-test")
   testImplementation(project(":instrumentation:spring:spring-boot-autoconfigure"))
-
-  if (otelProps.testLatestDeps) {
-    // with spring boot 3.5.0 versions of org.mongodb:mongodb-driver-sync and org.mongodb:mongodb-driver-core
-    // are not in sync
-    testImplementation("org.mongodb:mongodb-driver-sync:latest.release")
-  }
 }
 
 springBoot {

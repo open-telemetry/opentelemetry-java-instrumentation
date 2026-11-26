@@ -6,12 +6,12 @@ description = "smoke-tests-otel-starter-spring-boot-reactive-2"
 
 dependencies {
   implementation(project(":instrumentation:spring:starters:spring-boot-starter"))
-  implementation(platform("org.springframework.boot:spring-boot-dependencies:" + if (otelProps.testLatestDeps) "2.+" else "2.6.15"))
+  implementation(platform(libs.spring.boot2.bom))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-reactive-common"))
   implementation("org.springframework.boot:spring-boot-starter-webflux")
   implementation("org.springframework.boot:spring-boot-starter-data-r2dbc")
-  implementation("org.springframework.cloud:spring-cloud-starter-gateway:3.1.8")
+  implementation(libs.spring.cloud.gateway.boot2)
 
   runtimeOnly("com.h2database:h2")
   runtimeOnly("io.r2dbc:r2dbc-h2")

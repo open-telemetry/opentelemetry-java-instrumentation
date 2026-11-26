@@ -38,6 +38,7 @@ import org.springframework.web.client.RestTemplate;
       "logging.level.org.springframework.boot.autoconfigure=DEBUG",
     })
 @AutoConfigureTestRestTemplate
+@SuppressWarnings("deprecation") // exercises RestTemplate instrumentation
 class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
   @Autowired protected TestRestTemplate testRestTemplate;
