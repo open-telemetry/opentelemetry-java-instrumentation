@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.eventstream.EventStreamResponseHandler;
 import software.amazon.awssdk.core.SdkBytes;
@@ -1179,6 +1180,19 @@ public final class BedrockRuntimeImpl {
                 try (Scope ignored = wrapped.makeCurrent()) {
                   return invokeProxyMethod(method, asyncClient, args);
                 }
+              } else if (method.getName().equals("invokeModelWithResponseStream")
+                  && args.length >= 2
+                  && args[0] instanceof Consumer
+                  && args[1] instanceof InvokeModelWithResponseStreamResponseHandler) {
+                @SuppressWarnings(
+                    "unchecked") // The SDK overload fixes the consumer's builder type.
+                Consumer<InvokeModelWithResponseStreamRequest.Builder> consumer =
+                    (Consumer<InvokeModelWithResponseStreamRequest.Builder>) args[0];
+                InvokeModelWithResponseStreamRequest request =
+                    InvokeModelWithResponseStreamRequest.builder().applyMutation(consumer).build();
+                return ((BedrockRuntimeAsyncClient) proxy)
+                    .invokeModelWithResponseStream(
+                        request, (InvokeModelWithResponseStreamResponseHandler) args[1]);
               } else if (method.getName().equals("invokeModelWithResponseStream")
                   && args.length >= 2
                   && args[0] instanceof InvokeModelWithResponseStreamRequest

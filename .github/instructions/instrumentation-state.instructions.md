@@ -54,26 +54,28 @@ javaagent instrumentation, not library-only code.
   centralize associations in `Cache<Object, State>` or replace it with `VirtualField<Object, State>`.
   Broad interfaces are appropriate only when the state belongs to their whole abstraction, such as
   propagated task context on `Runnable`. If no narrower stable carrier exists, document why and
-  verify fallback and lifecycle behavior.
+  verify fallback safety and lifecycle behavior as described in
+  [Lifetime, fallback, and reuse](#lifetime-fallback-and-reuse).
 
-- The `(carrier class, value class)` pair identifies the field. The same pair intentionally shares
-  storage across instrumentations. Use a dedicated holder for unrelated state or several related
-  values rather than colliding on `Object`, `Boolean`, `String`, or `Map` value types. A common value
-  type is valid when sharing is deliberate or the pair is demonstrably unique.
+- The carrier class, value class, and optional field name identify the field. Lookups with the
+  same identity share storage across instrumentations. Use a dedicated holder for unrelated
+  state or several related values. A common value type such as `Object`, `Boolean`, `String`,
+  or `Map` is valid when sharing is deliberate or the field identity is demonstrably unique.
 
 ## Virtual-field lookup and registration
 
-- In normal instrumentation, call `VirtualField.find(Carrier.class, State.class)` with class
-  literals so Muzzle generation discovers and registers the pair.
-- Inside inlined advice, call `find(...)` at the point of use; transformation rewrites the call.
-  Do not extract it merely to cache the lookup.
-- Non-inlined advice cannot call `find(...)` directly. Cache the handle in a `static final`
-  `SCREAMING_SNAKE_CASE` field on a non-advice helper or singleton and reference it from advice.
-  Outside advice, cache lookup in the same way.
+- In normal instrumentation, use class literals for the carrier and value types in
+  `VirtualField.find(...)` and a string literal for a named field. Muzzle generation registers
+  these mappings so the agent can install the virtual field implementations.
+- Reuse the resolved handle on production paths that can run repeatedly. Runtime lookup uses
+  reflection. A `static final` `SCREAMING_SNAKE_CASE` field, including one on a non-inlined
+  advice class, or a holder that already retains the handle, such as a static
+  `MessagingTelemetryCarrier`, is sufficient.
+- Inlined advice is not exempt; do not rely on the deprecated inline rewrite. Reference the cached
+  handle through a helper whose class and member are accessible from the instrumented class.
 - A rare runtime lookup for alternative carrier names runs outside advice in an `@NoMuzzle`
   method. Its module implements `ExperimentalInstrumentationModule` and registers every possible
-  pair through `registerVirtualFields(...)`. Do not use this pattern when class literals suffice.
-- The containing module needs Muzzle generation to register mappings and rewrite inlined lookups.
+  mapping through `registerVirtualFields(...)`. Do not use this pattern when literals suffice.
 
 ## Lifetime, fallback, and reuse
 
@@ -83,13 +85,28 @@ javaagent instrumentation, not library-only code.
   STATE.set(carrier, null);
   ```
 
-- Clear per-operation state after consumption, on abandonment and failure, and before a pooled or
-  reused carrier represents another operation. Garbage collection does not prevent stale state on
-  reuse.
+- Clear per-operation state after its last consumer is done. On failure or abandonment, clear it
+  when no remaining consumer needs it. For example, a deferred Lettuce endpoint write still reads
+  the caller context stored on an `AsyncCommand` to parent its span after that command is
+  cancelled. If the last consumer may never run, leaving the state is acceptable only when the
+  carrier is not reused and the value does not strongly reference the carrier. Clear the state
+  before a pooled or reused carrier represents another operation. Garbage collection does not
+  prevent stale state on reuse.
 
 - Fallback storage has weak keys and strong values. A value that strongly references its carrier
   can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
   Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
+
+  Trace strong references from each concrete value that can be stored at runtime, including lambda
+  captures and any enclosing instances held by inner classes. Check for a path back to the value's
+  own carrier. If a value reaches another carrier, check that carrier's fallback values in turn
+  for cycles across entries. If A's value keeps B alive and B's value keeps A alive, neither weak
+  key can clear. A connection's value can retain a completed request in either storage mode, even
+  without a cycle. The clearing rules above still apply.
+
+  If the analysis rules out strong paths back to a value's own carrier and cycles across entries,
+  do not add a GC test or a separate JVM run with field injection disabled just to confirm that
+  result. If safety depends on when state is cleared or replaced, test the relevant lifecycle path.
 
 - Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
   supported concurrent updates need an invariant before choosing synchronization or ownership.
@@ -97,19 +114,19 @@ javaagent instrumentation, not library-only code.
 
 ## Observable metric callbacks
 
-- **Registration ownership.** The SDK bundled with the javaagent holds the callback strongly until
-  it is unregistered. Identify who owns the registration and when it ends. Verify that
-  every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
-  the returned handle and remove any long-lived registry entries for that registration.
-  Clearing a reference to the handle without closing it does not unregister the callback.
+- **Registration ownership.** The SDK bundled with the javaagent holds the registered callback
+  strongly. Identify who owns the registration and when it ends. Verify that every supported
+  shutdown or replacement path reaches the instrumentation's cleanup. Close the returned handle
+  and remove any long-lived registry entries for that registration. Dropping the handle does not
+  unregister the callback. If a shutdown path misses that cleanup, fix the hook rather than
+  weakening the reference.
 
-  After `close()`, the SDK handle still holds the callback. If the callback or the state it captures
-  should be collectible while the owner is still alive, clear the field that stores the closed handle.
-
-  A callback can strongly hold state that should live as long as the registration. For example,
-  the HikariCP callback may capture `PoolStats`, which references the pool. When HikariCP shuts down
-  the pool, the tracker must close the callback handle and clear the field that held it. If a
-  shutdown path misses that cleanup, fix the hook rather than weakening the reference.
+- **Retention after unregistration.** A closed SDK handle still holds the callback. Retaining it
+  is not a defect when an equivalent native implementation retains the same state after removal,
+  as native Micrometer meters and HikariCP's Micrometer tracker do. Clearing the handle is still
+  worthwhile when nothing else references the captured state: it frees `stats` captured by
+  `stats::completedFor` in a removed Micrometer `FunctionCounter` that the application still
+  holds, but not a HikariCP pool still referenced by a retained `HikariDataSource`.
 
 - **Collection without explicit shutdown.** If an object or class loader should be collectible
   while the registration is live, trace every strong reference to it from the SDK or other
@@ -127,12 +144,22 @@ javaagent instrumentation, not library-only code.
 
 ## Temporary thread state
 
-- Trace writers, readers, cleanup, and recursion. Thread confinement does not prevent nested calls
-  from replacing outer state.
+- When an invocation changes temporary thread state, restore the previous value on every exit,
+  including exceptions. Trace what writes and reads the state and which calls can nest. Thread
+  confinement does not prevent a nested call from replacing outer state.
 
-- For state installed on entry and cleaned on exit, prefer allocation-free `ScopedThreadValue`.
-  Carry the previous value through `@Advice.Enter` and restore it on every exit, even when no current
-  caller is known to reenter:
+- If an invocation skips changing temporary thread state, leave that state untouched on exit.
+
+- If an inner operation must not inherit an enclosing value, hide it while the inner operation runs
+  and restore it afterward.
+
+- Keep acquisition and cleanup in the advice pair or helper that installs the state. Restore or
+  release before fallible completion work that does not need the temporary state. Use
+  `try`/`finally` when that work needs the state.
+
+- Prefer `ScopedThreadValue` for new scoped values when the previous value is enough for cleanup.
+  `set()` returns that value directly without allocating a separate restore token. In a simple
+  advice pair, carry it through `@Advice.Enter`:
 
   ```java
   @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -147,8 +174,10 @@ javaagent instrumentation, not library-only code.
   ```
 
   Here `currentRequest()` returns a `ScopedThreadValue<Request>`. `restore(null)` removes the entry.
-  Use `ScopedThreadSuppression` for temporary suppression. Carry `tryAcquire()`'s result through
-  entry and release only when this invocation acquired it:
+
+- Release temporary suppression only when this invocation acquired it. Prefer
+  `ScopedThreadSuppression` for new suppression code. In a simple advice pair, carry
+  `tryAcquire()`'s result through `@Advice.Enter`:
 
   ```java
   @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -164,15 +193,15 @@ javaagent instrumentation, not library-only code.
   }
   ```
 
-  Use `isActive()` for read-only checks. Advice calls `set`/`restore` or `tryAcquire`/`release`
-  directly so ownership stays visible; do not hide these mutations behind semantic enter/exit wrappers.
-  Restore or release before fallible completion work that does not need the temporary state.
-  Use `try`/`finally` when the work intentionally requires that state to remain installed.
+  Use `isActive()` for read-only checks.
 
-- Keep a holder private in the narrowest owner. A single instrumentation class owns its holder;
-  several classes in one module use a private field in `*Singletons`, exposed by a same-named
-  zero-argument accessor and statically imported by callers. Cross-module state uses a focused
-  shared bootstrap owner.
+- For a correctness finding about temporary thread state in an audit or review, name a supported
+  call path that discards enclosing state, leaves temporary state installed, or uses state that
+  belongs to another operation.
+
+- Keep a holder private in the narrowest owner. If several classes in one module need direct access,
+  use a private field in `*Singletons`, exposed by a same-named zero-argument accessor and
+  statically imported by callers. Cross-module state uses a focused shared bootstrap owner.
 
 - Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
   as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;

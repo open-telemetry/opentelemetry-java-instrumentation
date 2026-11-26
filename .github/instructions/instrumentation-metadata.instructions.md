@@ -16,12 +16,16 @@ applyTo: "instrumentation/**/metadata.yaml,instrumentation-docs/src/main/resourc
   | `description` | User-facing behavior |
   | `default` | Value when unset; omit when absence falls back to another setting |
   | `deprecated` | `true` exactly when the description starts with `Deprecated` |
-  | `replaced_by` | Documented replacement flat name, or declarative path if it has no flat form |
+  | `replaced_by` | Documented replacement name in the same configuration form when possible |
   | `examples` | Optional module-specific non-obvious formats |
   | `declarative_type` | Different YAML shape: `structured_list` or scalar `string`, `boolean`, `int` |
   | `declarative_schema` | Per-item object schema for a structured list |
 
-- `replaced_by` belongs only on deprecated entries. Deprecated entries are excluded from generated
+- `replaced_by` belongs only on deprecated entries. Use the replacement's flat property name if
+  both settings have a flat form. Otherwise, use the replacement's YAML path if both have a
+  declarative form. If they share neither form, use the replacement's documented name. For
+  example, the YAML-only `general.semconv_stability.opt_in` points to `general.stability_opt_in_list`
+  even though the replacement also has a flat name. Deprecated entries are excluded from generated
   configuration examples.
 
 - Distinguish a real default from a nullable read that falls back to another setting. A module
