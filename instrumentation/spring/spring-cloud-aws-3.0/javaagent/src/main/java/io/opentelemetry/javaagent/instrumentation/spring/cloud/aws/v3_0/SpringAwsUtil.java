@@ -50,16 +50,11 @@ public class SpringAwsUtil {
   @Nullable
   public static Collection<?> initialize(
       AbstractMessageConvertingMessageSource<?, ?> messageSource, Collection<?> messages) {
-    Collection<?> receivedMessages = null;
-    if (messages instanceof TracingList tracingList) {
-      if (LISTENER_MODE.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
-        tracingList.markProcessingOwnedOutsideSqsSdk();
-      }
-      receivedMessages = tracingList;
-    } else if (messages instanceof CombinedMessages) {
-      receivedMessages = messages;
+    if (messages instanceof TracingList tracingList
+        && LISTENER_MODE.get(messageSource) == ListenerMode.SINGLE_MESSAGE) {
+      tracingList.markProcessingOwnedOutsideSqsSdk();
     }
-    return currentReceivedMessages.set(receivedMessages);
+    return currentReceivedMessages.set(messages);
   }
 
   public static void restore(@Nullable Collection<?> previous) {
