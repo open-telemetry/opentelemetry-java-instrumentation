@@ -12,12 +12,14 @@ import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
-import io.opentelemetry.semconv.incubating.RocketmqIncubatingAttributes.RocketmqMessageTypeIncubatingValues;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.java.impl.producer.SendReceiptImpl;
+import org.apache.rocketmq.client.java.message.MessageType;
 import org.apache.rocketmq.client.java.message.PublishingMessageImpl;
 
 class RocketMqProducerAttributeExtractor
@@ -36,6 +38,16 @@ class RocketMqProducerAttributeExtractor
   private static final AttributeKey<String> ROCKETMQ_NAMESPACE =
       AttributeKey.stringKey("rocketmq.namespace");
 
+  private static final Map<MessageType, String> MESSAGE_TYPE_NAMES = createMessageTypeNames();
+
+  private static Map<MessageType, String> createMessageTypeNames() {
+    Map<MessageType, String> names = new EnumMap<>(MessageType.class);
+    for (MessageType type : MessageType.values()) {
+      names.put(type, type.name().toLowerCase(Locale.ROOT));
+    }
+    return names;
+  }
+
   private final boolean captureExperimentalSpanAttributes;
 
   RocketMqProducerAttributeExtractor(boolean captureExperimentalSpanAttributes) {
@@ -52,29 +64,7 @@ class RocketMqProducerAttributeExtractor
         .getDeliveryTimestamp()
         .ifPresent(s -> attributes.put(ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP, s));
     attributes.put(ROCKETMQ_MESSAGE_KEYS, new ArrayList<>(message.getKeys()));
-    String messageType = message.getMessageType().name();
-    switch (messageType) {
-      case "NORMAL":
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.NORMAL);
-        break;
-      case "FIFO":
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.FIFO);
-        break;
-      case "DELAY":
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.DELAY);
-        break;
-      case "TRANSACTION":
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, RocketmqMessageTypeIncubatingValues.TRANSACTION);
-        break;
-      case "LITE":
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, "lite");
-        break;
-      case "PRIORITY":
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, "priority");
-        break;
-      default:
-        attributes.put(ROCKETMQ_MESSAGE_TYPE, messageType.toLowerCase(Locale.ROOT));
-    }
+    attributes.put(ROCKETMQ_MESSAGE_TYPE, MESSAGE_TYPE_NAMES.get(message.getMessageType()));
     if (captureExperimentalSpanAttributes) {
       attributes.put(ROCKETMQ_MESSAGE_LITE_TOPIC, RocketMqMessageAttributes.getLiteTopic(message));
       attributes.put(ROCKETMQ_MESSAGE_PRIORITY, RocketMqMessageAttributes.getPriority(message));
