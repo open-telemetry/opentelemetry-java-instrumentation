@@ -150,7 +150,7 @@ public final class KafkaTelemetry {
                 }
                 KafkaConsumerContext consumerContext =
                     KafkaConsumerContextUtil.create(receiveContext, consumer);
-                result = consumerTelemetry.addTracing(consumerRecords, consumerContext);
+                result = consumerTelemetry.instrument(consumerRecords, consumerContext);
               }
               return result;
             });

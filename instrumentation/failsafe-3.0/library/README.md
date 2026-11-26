@@ -34,6 +34,6 @@ OpenTelemetry-based metrics.
 ```java
 <R> CircuitBreaker<R> configure(OpenTelemetry openTelemetry, CircuitBreaker<R> circuitBreaker) {
   FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(openTelemetry);
-  return failsafeTelemetry.createCircuitBreaker(circuitBreaker, "my-circuit-breaker");
+  return failsafeTelemetry.instrument(circuitBreaker, "my-circuit-breaker");
 }
 ```

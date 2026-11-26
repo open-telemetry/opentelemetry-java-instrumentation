@@ -438,6 +438,7 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Rename `OkHttpTelemetry.createCallFactory(...)` to `instrument(...)`.
 - Remove the standalone Guava instrumentation library and its async operation end strategy APIs.
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
   resource, or baggage values.
@@ -580,6 +581,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `FailsafeTelemetry.createCircuitBreaker(...)`, `FailsafeTelemetry.createRetryPolicy(...)`,
+  and the delegate-taking `HikariTelemetry.createMetricsTrackerFactory(...)` overloads in favor of
+  their `instrument(...)` replacements.
 - Deprecate `JmxTelemetryBuilder.setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` in favor of `setBundledMetricsSystemFilter` and
   `setUnstableBundledMetricsFilter`, respectively.
