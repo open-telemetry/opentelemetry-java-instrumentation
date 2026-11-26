@@ -28,6 +28,8 @@ class Jetty12Singletons {
               builder.addContextCustomizer((context, request, attributes) ->
                   new AppServerBridge.Builder()
                       .captureServletAttributes()
+                      // the request body is added by Jetty12RequestBodyExtractor when the span ends
+                      .appServerCapturesRequestBody()
                       .recordException()
                       .init(context));
               BodyCaptureConfig requestBodyCaptureConfig =

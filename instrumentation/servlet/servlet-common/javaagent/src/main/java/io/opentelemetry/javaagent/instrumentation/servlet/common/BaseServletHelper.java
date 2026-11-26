@@ -145,7 +145,9 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     captureRequestParameters(serverSpan, request);
     captureUserName(serverSpan, request);
-    captureRequestBody(serverSpan, request);
+    if (AppServerBridge.captureRequestBodyOnServletExit(context)) {
+      captureRequestBody(serverSpan, request);
+    }
   }
 
   private void captureRequestBody(Span serverSpan, REQUEST request) {
