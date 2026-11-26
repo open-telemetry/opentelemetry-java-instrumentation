@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.mongo.v3_1.internal;
 
 import static io.opentelemetry.api.trace.SpanKind.CLIENT;
 import static io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory.DEFAULT_MAX_NORMALIZED_QUERY_LENGTH;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
@@ -15,7 +16,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DB_CONNECTION_STRING;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
-import static org.assertj.core.api.Assertions.assertThat;
 
 import com.mongodb.ServerAddress;
 import com.mongodb.connection.ClusterId;
@@ -32,7 +32,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttribu
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientSpanNameExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
-import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.testing.junit5.OpenTelemetryExtension;
 import org.bson.BsonDocument;
 import org.bson.BsonInt32;
 import org.bson.BsonString;
@@ -46,20 +46,25 @@ class MongoConfiguredTargetTest {
   private static final ServerAddress SELECTED_SERVER = new ServerAddress("db2.example", 27018);
 
   @RegisterExtension
-  private static final LibraryInstrumentationExtension testing =
-      LibraryInstrumentationExtension.create();
+  private static final OpenTelemetryExtension testing = OpenTelemetryExtension.create();
 
   private final MongoDbAttributesGetter getter =
       new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
 
-  @Test
-  void defaultListenerOmitsQueryText() {
-    runFind(MongoTelemetry.create(testing.getOpenTelemetry()));
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void listenerOmitsQueryTextUnlessEnabled(boolean sanitize) {
+    runFind(
+        MongoTelemetry.builder(testing.getOpenTelemetry())
+            .setQuerySanitizationEnabled(sanitize)
+            .build());
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasKind(CLIENT)
-                .satisfies(data -> assertThat(data.getAttributes().get(DB_QUERY_TEXT)).isNull())));
+    assertThat(testing.getSpans())
+        .singleElement()
+        .satisfies(span -> {
+          assertThat(span).hasKind(CLIENT);
+          assertThat(span.getAttributes().get(DB_QUERY_TEXT)).isNull();
+        });
   }
 
   @ParameterizedTest
@@ -71,23 +76,25 @@ class MongoConfiguredTargetTest {
             .setQuerySanitizationEnabled(sanitize)
             .build());
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasKind(CLIENT)
-                .satisfies(data -> {
-                  String text = data.getAttributes().get(DB_QUERY_TEXT);
-                  assertThat(text).isNotNull();
-                  assertThat(
-                          BsonDocument.parse(text)
-                              .getDocument("filter")
-                              .getString("item")
-                              .getValue())
-                      .isEqualTo(sanitize ? "?" : "example-value");
-                })));
+    assertThat(testing.getSpans())
+        .singleElement()
+        .satisfies(span -> {
+          assertThat(span).hasKind(CLIENT);
+          String text = span.getAttributes().get(DB_QUERY_TEXT);
+          assertThat(text).isNotNull();
+          assertThat(BsonDocument.parse(text))
+              .isEqualTo(
+                  new BsonDocument("find", new BsonString("items"))
+                      .append(
+                          "filter",
+                          new BsonDocument(
+                              "item", new BsonString(sanitize ? "?" : "example-value"))));
+        });
   }
 
   private static void runFind(MongoTelemetry telemetry) {
     CommandStartedEvent event = commandStartedEvent(new ClusterId(), "test_db", "find");
+    event.getCommand().put("find", new BsonString("items"));
     event.getCommand().put("filter", new BsonDocument("item", new BsonString("example-value")));
     CommandListener listener = telemetry.createCommandListener();
     listener.commandStarted(event);

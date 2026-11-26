@@ -41,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -182,7 +183,23 @@ public abstract class AbstractMongoClientTest<T> {
                       equalTo(DB_COLLECTION_NAME, collectionName),
                       equalTo(DB_OPERATION_NAME, operation),
                       capturesQueryText()
-                          ? satisfies(DB_QUERY_TEXT, val -> val.isNotNull())
+                          ? satisfies(
+                              DB_QUERY_TEXT,
+                              val ->
+                                  val.isNotNull()
+                                      .satisfies(v -> {
+                                        BsonDocument command = BsonDocument.parse(v);
+                                        assertThat(command.getString("insert").getValue())
+                                            .isEqualTo(collectionName);
+                                        assertThat(
+                                                command
+                                                    .getArray("documents")
+                                                    .get(0)
+                                                    .asDocument()
+                                                    .getString("password")
+                                                    .getValue())
+                                            .isEqualTo("?");
+                                      }))
                           : equalTo(DB_QUERY_TEXT, null),
                       equalTo(SERVER_ADDRESS, host),
                       equalTo(SERVER_PORT, port),
