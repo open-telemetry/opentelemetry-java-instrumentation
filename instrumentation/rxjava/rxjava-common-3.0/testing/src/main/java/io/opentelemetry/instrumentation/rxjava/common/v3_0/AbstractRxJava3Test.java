@@ -223,7 +223,7 @@ public abstract class AbstractRxJava3Test {
     latch.await();
     testing()
         .waitAndAssertTraces(trace ->
-            trace.hasSpansSatisfyingExactlyInAnyOrder(
+            trace.hasSpansSatisfyingExactly(
                 span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
                 span ->
                     span.hasName("callable").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
