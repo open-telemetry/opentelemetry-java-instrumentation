@@ -27,6 +27,7 @@ public final class WeblogicTestApplication {
 
   private static final MBeanServer server = ManagementFactory.getPlatformMBeanServer();
 
+  @SuppressWarnings("SystemOut")
   public static void main(String[] args) throws Exception {
     register(
         "com.bea:ServerRuntime=AdminServer,Name=ThreadPoolRuntime,Type=ThreadPoolRuntime",
