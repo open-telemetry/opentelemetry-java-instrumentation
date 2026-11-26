@@ -6,25 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.pekkoactor.v1_0
 
 import io.opentelemetry.api.GlobalOpenTelemetry
-import io.opentelemetry.instrumentation.testing.junit.{
-  AgentInstrumentationExtension,
-  InstrumentationExtension
-}
-import io.opentelemetry.sdk.testing.assertj.{SpanDataAssert, TraceAssert}
+import io.opentelemetry.api.trace.Span
 import org.apache.pekko.actor.ActorSystem
 import org.apache.pekko.pattern.after
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.TestInstance
-import org.junit.jupiter.api.extension.RegisterExtension
-import java.util.function.Consumer
 import scala.concurrent.{Await, Future}
 import scala.concurrent.duration.DurationInt
 
-@TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class PekkoSchedulerTest {
-  @RegisterExtension val testing: InstrumentationExtension =
-    AgentInstrumentationExtension.create()
 
   @Test
   def checkThatSpanWorksWithPekkoScheduledEvents(): Unit = {
@@ -36,12 +26,12 @@ class PekkoSchedulerTest {
     try {
       val futureResult = for {
         result1 <- Future {
-          tracer.spanBuilder("future").startSpan().end()
+          compareSpanContexts(Span.current(), initialSpan)
           1
         }
-        _ = tracer.spanBuilder("first continuation").startSpan().end()
+        _ = compareSpanContexts(Span.current(), initialSpan)
         result2 <- after(200.millis, system.scheduler)(Future.successful(2))
-        _ = tracer.spanBuilder("second continuation").startSpan().end()
+        _ = compareSpanContexts(Span.current(), initialSpan)
       } yield result1 + result2
       assertThat(Await.result(futureResult, 5.seconds)).isEqualTo(3)
     } finally {
@@ -49,36 +39,12 @@ class PekkoSchedulerTest {
       initialSpan.end()
       Await.result(system.terminate(), 5.seconds)
     }
-    testing.waitAndAssertTraces(new Consumer[TraceAssert] {
-      override def accept(trace: TraceAssert): Unit = {
-        trace.hasSpansSatisfyingExactly(
-          new Consumer[SpanDataAssert] {
-            override def accept(span: SpanDataAssert): Unit = {
-              span.hasName("test").hasNoParent()
-              ()
-            }
-          },
-          new Consumer[SpanDataAssert] {
-            override def accept(span: SpanDataAssert): Unit = {
-              span.hasName("future").hasParent(trace.getSpan(0))
-              ()
-            }
-          },
-          new Consumer[SpanDataAssert] {
-            override def accept(span: SpanDataAssert): Unit = {
-              span.hasName("first continuation").hasParent(trace.getSpan(0))
-              ()
-            }
-          },
-          new Consumer[SpanDataAssert] {
-            override def accept(span: SpanDataAssert): Unit = {
-              span.hasName("second continuation").hasParent(trace.getSpan(0))
-              ()
-            }
-          }
-        )
-        ()
-      }
-    })
+  }
+
+  private def compareSpanContexts(span1: Span, span2: Span): Unit = {
+    assertThat(span1.getSpanContext().getTraceId())
+      .isEqualTo(span2.getSpanContext().getTraceId())
+    assertThat(span1.getSpanContext().getSpanId())
+      .isEqualTo(span2.getSpanContext().getSpanId())
   }
 }

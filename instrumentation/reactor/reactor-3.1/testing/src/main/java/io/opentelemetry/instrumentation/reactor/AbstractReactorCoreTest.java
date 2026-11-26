@@ -6,7 +6,6 @@
 package io.opentelemetry.instrumentation.reactor;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -203,13 +202,14 @@ public abstract class AbstractReactorCoreTest {
   void propagatesContextValuesFromExternallyDrivenPublisher() {
     AtomicReference<FluxSink<String>> sink = new AtomicReference<>();
     AtomicReference<String> observedContextValue = new AtomicReference<>();
+    AtomicReference<Span> observedSpan = new AtomicReference<>();
     Flux<String> publisher = Flux.create(sink::set);
 
     try (Scope ignored =
         Context.root().with(TEST_CONTEXT_KEY, "test-context-value").makeCurrent()) {
       publisher.subscribe(unused -> {
         observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
-        testing.runWithSpan("subscriber", () -> {});
+        observedSpan.set(Span.current());
       });
     }
 
@@ -224,18 +224,18 @@ public abstract class AbstractReactorCoreTest {
     sink.get().complete();
 
     assertThat(observedContextValue.get()).isEqualTo("test-context-value");
+    assertThat(observedSpan.get().getSpanContext().isValid()).isFalse();
     assertThat(Context.current().get(TEST_CONTEXT_KEY)).isNull();
 
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("producer", "subscriber"),
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()),
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("subscriber").hasNoParent()));
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()));
   }
 
   @Test
   void preservesExplicitlyClearedSpanFromExternallyDrivenPublisher() {
     AtomicReference<FluxSink<String>> sink = new AtomicReference<>();
     AtomicReference<String> observedContextValue = new AtomicReference<>();
+    AtomicReference<Span> observedSpan = new AtomicReference<>();
     Flux<String> publisher = Flux.create(sink::set);
 
     Context context =
@@ -243,7 +243,7 @@ public abstract class AbstractReactorCoreTest {
     try (Scope ignored = context.makeCurrent()) {
       publisher.subscribe(unused -> {
         observedContextValue.set(Context.current().get(TEST_CONTEXT_KEY));
-        testing.runWithSpan("subscriber", () -> {});
+        observedSpan.set(Span.current());
       });
     }
 
@@ -257,10 +257,10 @@ public abstract class AbstractReactorCoreTest {
     sink.get().complete();
 
     assertThat(observedContextValue.get()).isEqualTo("test-context-value");
-    testing.waitAndAssertSortedTraces(
-        orderByRootSpanName("producer", "subscriber"),
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()),
-        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("subscriber").hasNoParent()));
+    assertThat(observedSpan.get().getSpanContext().isValid()).isFalse();
+
+    testing.waitAndAssertTraces(
+        trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("producer").hasNoParent()));
   }
 
   @Test

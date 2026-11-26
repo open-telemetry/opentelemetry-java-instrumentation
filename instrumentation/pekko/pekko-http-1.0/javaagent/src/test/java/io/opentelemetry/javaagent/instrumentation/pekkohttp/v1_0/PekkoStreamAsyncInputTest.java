@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0;
 
-import static io.opentelemetry.instrumentation.testing.util.TelemetryDataUtil.orderByRootSpanName;
 import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.concurrent.CompletableFuture;
@@ -31,6 +32,7 @@ class PekkoStreamAsyncInputTest {
   @Test
   void streamWakeupDoesNotInheritSubmittingSpan() throws Exception {
     CompletableFuture<AsyncCallback<String>> ready = new CompletableFuture<>();
+    CompletableFuture<Boolean> callbackHasSpan = new CompletableFuture<>();
     ActorSystem system = ActorSystem.create("async-input-test");
     try {
       Source.fromGraph(
@@ -59,7 +61,7 @@ class PekkoStreamAsyncInputTest {
                     public void preStart() {
                       ready.complete(
                           createAsyncCallback(ignored -> {
-                            testing.runWithSpan("wakeup", () -> {});
+                            callbackHasSpan.complete(Span.current().getSpanContext().isValid());
                             completeStage();
                           }));
                     }
@@ -71,10 +73,7 @@ class PekkoStreamAsyncInputTest {
       AsyncCallback<String> callback = ready.get(10, SECONDS);
       testing.runWithSpan("request", () -> callback.invoke("wake up"));
 
-      testing.waitAndAssertSortedTraces(
-          orderByRootSpanName("request", "wakeup"),
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("request").hasNoParent()),
-          trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("wakeup").hasNoParent()));
+      assertThat(callbackHasSpan.get(10, SECONDS)).isFalse();
     } finally {
       system.terminate();
     }

@@ -144,7 +144,6 @@ class GrpcTest extends AbstractGrpcTest {
           @Override
           public void onHeaders(Metadata headers) {
             headersContext.set(Context.current());
-            testing.runWithSpan("onHeaders", () -> {});
           }
 
           @Override
@@ -180,8 +179,7 @@ class GrpcTest extends AbstractGrpcTest {
             span ->
                 span.hasName("example.Greeter/SayHello")
                     .hasKind(SpanKind.SERVER)
-                    .hasParent(trace.getSpan(1)),
-            span -> span.hasName("onHeaders").hasParent(trace.getSpan(0))));
+                    .hasParent(trace.getSpan(1))));
   }
 
   @Test
