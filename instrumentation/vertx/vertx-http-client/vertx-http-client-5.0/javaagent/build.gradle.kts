@@ -1,5 +1,3 @@
-import io.opentelemetry.instrumentation.gradle.unitTests
-
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -28,14 +26,4 @@ dependencies {
   testInstrumentation(project(":instrumentation:netty:netty-4.1:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-4.0:javaagent"))
-}
-
-testing.suites {
-  unitTests {
-    dependencies {
-      implementation("io.vertx:vertx-core:5.0.0")
-      implementation(project(":javaagent-extension-api"))
-      implementation(project(":instrumentation:vertx:vertx-http-client:vertx-http-client-common-3.0:javaagent"))
-    }
-  }
 }
