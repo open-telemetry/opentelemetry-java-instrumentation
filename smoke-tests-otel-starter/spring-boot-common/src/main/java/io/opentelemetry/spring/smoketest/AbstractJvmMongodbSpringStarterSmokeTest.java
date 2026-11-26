@@ -8,7 +8,12 @@ package io.opentelemetry.spring.smoketest;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
+import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
+import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
+import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 
 import com.mongodb.client.MongoClient;
 import io.opentelemetry.api.OpenTelemetry;
@@ -99,7 +104,12 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
               trace.hasSpansSatisfyingExactly(span ->
                   span.hasKind(SpanKind.CLIENT)
                       .hasName("find items")
-                      .hasAttributesSatisfying(queryTextAssertion)));
+                      .hasAttributesSatisfyingExactly(
+                          equalTo(DB_SYSTEM_NAME, MONGODB),
+                          equalTo(DB_NAMESPACE, "test"),
+                          equalTo(DB_OPERATION_NAME, "find"),
+                          equalTo(DB_COLLECTION_NAME, "items"),
+                          queryTextAssertion)));
         });
   }
 
