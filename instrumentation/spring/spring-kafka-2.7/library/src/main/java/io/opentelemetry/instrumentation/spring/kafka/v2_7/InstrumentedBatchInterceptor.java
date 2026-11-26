@@ -17,7 +17,7 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.springframework.kafka.listener.BatchInterceptor;
 
-@SuppressWarnings("ThreadLocalUsage") // invocation state and retry tracking
+@SuppressWarnings("ThreadLocalUsage") // invocation state, poll state and retry tracking
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
 
   private static final ThreadLocal<WeakReference<ConsumerRecords<?, ?>>> lastProcessed =
@@ -27,6 +27,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @Nullable private final BatchInterceptor<K, V> decorated;
   private final ThreadLocal<ProcessingInvocation<KafkaReceiveRequest>> currentInvocation =
       new ThreadLocal<>();
+  private final ThreadLocal<ThreadState> currentThreadState = new ThreadLocal<>();
 
   InstrumentedBatchInterceptor(
       Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter,
@@ -127,6 +128,8 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void setupThreadState(Consumer<?, ?> consumer) {
+    ThreadState threadState = new ThreadState(currentThreadState.get(), currentInvocation.get());
+    currentThreadState.set(threadState);
     if (decorated != null) {
       decorated.setupThreadState(consumer);
     }
@@ -135,8 +138,35 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void clearThreadState(Consumer<?, ?> consumer) {
+    ThreadState threadState = currentThreadState.get();
+    if (threadState != null) {
+      // the container can return without calling success or failure, e.g. when an early
+      // interceptor returns empty records, so end the unfinished invocations of this poll
+      ProcessingInvocation<KafkaReceiveRequest> invocation;
+      while ((invocation = currentInvocation.get()) != null
+          && invocation != threadState.previousInvocation) {
+        end(invocation, invocation.error);
+      }
+      if (threadState.previous == null) {
+        currentThreadState.remove();
+      } else {
+        currentThreadState.set(threadState.previous);
+      }
+    }
     if (decorated != null) {
       decorated.clearThreadState(consumer);
+    }
+  }
+
+  private static class ThreadState {
+    @Nullable final ThreadState previous;
+    @Nullable final ProcessingInvocation<KafkaReceiveRequest> previousInvocation;
+
+    ThreadState(
+        @Nullable ThreadState previous,
+        @Nullable ProcessingInvocation<KafkaReceiveRequest> previousInvocation) {
+      this.previous = previous;
+      this.previousInvocation = previousInvocation;
     }
   }
 }
