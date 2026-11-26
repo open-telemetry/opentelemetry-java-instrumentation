@@ -1,0 +1,2 @@
+testFirst=io.opentelemetry.instrumentation.apachedubbo.v3_1.DubboManualDirectTest$FirstFilter
+testSecond=io.opentelemetry.instrumentation.apachedubbo.v3_1.DubboManualDirectTest$SecondFilter

@@ -372,8 +372,6 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- Apache Dubbo library instrumentation no longer activates filters automatically. Add the
-  `opentelemetry-apache-dubbo-2.7-autoconfigure` artifact to retain automatic filter activation.
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
   resource, or baggage values.
 - Logback library appenders and the Spring Boot starter capture only application-owned MDC values,

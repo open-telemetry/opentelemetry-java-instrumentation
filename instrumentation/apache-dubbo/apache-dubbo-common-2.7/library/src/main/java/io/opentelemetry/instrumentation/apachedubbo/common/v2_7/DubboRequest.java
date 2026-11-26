@@ -1,0 +1,65 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.apachedubbo.common.v2_7;
+
+import com.google.auto.value.AutoValue;
+import io.opentelemetry.instrumentation.apachedubbo.common.v2_7.internal.DubboRegistryUtil;
+import java.net.InetSocketAddress;
+import javax.annotation.Nullable;
+import org.apache.dubbo.common.URL;
+import org.apache.dubbo.rpc.RpcContext;
+import org.apache.dubbo.rpc.RpcInvocation;
+
+@AutoValue
+public abstract class DubboRequest {
+
+  @SuppressWarnings("deprecation") // RpcContext.getContext()
+  static DubboRequest create(RpcInvocation invocation, RpcContext context) {
+    // In dubbo 3 RpcContext delegates to a ThreadLocal context. We copy the url, remote address,
+    // and registry address here to ensure we can access them from the thread that ends the span.
+    return new AutoValue_DubboRequest(
+        invocation,
+        context,
+        context.getUrl(),
+        context.getRemoteAddress(),
+        context.getLocalAddress(),
+        DubboRegistryUtil.extractRegistryAddress(invocation),
+        null);
+  }
+
+  /** Creates a request for javaagent instrumentation when no service invoker is available. */
+  public static DubboRequest createForUnknownService(
+      RpcInvocation invocation,
+      String originalFullMethodName,
+      @Nullable InetSocketAddress remoteAddress) {
+    return new AutoValue_DubboRequest(
+        invocation, null, null, remoteAddress, null, null, originalFullMethodName);
+  }
+
+  abstract RpcInvocation invocation();
+
+  @Nullable
+  public abstract RpcContext context();
+
+  @Nullable
+  public abstract URL url();
+
+  @Nullable
+  public abstract InetSocketAddress remoteAddress();
+
+  @Nullable
+  public abstract InetSocketAddress localAddress();
+
+  @Nullable
+  public abstract String registryAddress();
+
+  @Nullable
+  abstract String originalFullMethodName();
+
+  boolean isUnknownService() {
+    return originalFullMethodName() != null;
+  }
+}

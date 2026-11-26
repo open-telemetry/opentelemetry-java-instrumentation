@@ -1,0 +1,2 @@
+otelManualClient=io.opentelemetry.instrumentation.apachedubbo.v3_1.internal.OpenTelemetryClientFilter
+otelManualServer=io.opentelemetry.instrumentation.apachedubbo.v3_1.internal.OpenTelemetryServerFilter
