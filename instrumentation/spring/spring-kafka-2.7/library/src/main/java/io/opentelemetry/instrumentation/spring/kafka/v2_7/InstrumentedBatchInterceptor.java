@@ -20,6 +20,8 @@ import org.springframework.kafka.listener.BatchInterceptor;
 @SuppressWarnings("ThreadLocalUsage") // invocation state, poll state and retry tracking
 final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V> {
 
+  private static final ThreadState IDLE_THREAD_STATE = new ThreadState(null, null);
+
   private static final ThreadLocal<WeakReference<ConsumerRecords<?, ?>>> lastProcessed =
       new ThreadLocal<>();
 
@@ -38,6 +40,10 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   @Override
   public ConsumerRecords<K, V> intercept(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
+    if (currentThreadState.get() == IDLE_THREAD_STATE) {
+      // Later partition sub-batches can arrive without another setupThreadState call.
+      currentThreadState.set(new ThreadState(null, currentInvocation.get()));
+    }
     Context parentContext = getParentContext(records);
 
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
@@ -142,7 +148,9 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void setupThreadState(Consumer<?, ?> consumer) {
-    ThreadState threadState = new ThreadState(currentThreadState.get(), currentInvocation.get());
+    ThreadState previous = currentThreadState.get();
+    ThreadState threadState =
+        new ThreadState(previous == IDLE_THREAD_STATE ? null : previous, currentInvocation.get());
     currentThreadState.set(threadState);
     if (decorated != null) {
       decorated.setupThreadState(consumer);
@@ -153,16 +161,17 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @Override
   public void clearThreadState(Consumer<?, ?> consumer) {
     ThreadState threadState = currentThreadState.get();
-    if (threadState != null) {
+    if (threadState != null && threadState != IDLE_THREAD_STATE) {
       // the container can return without calling success or failure, e.g. when an early
-      // interceptor returns empty records, so end the unfinished invocations of this poll
+      // interceptor returns empty records, so end the unfinished invocations of this iteration
       ProcessingInvocation<KafkaReceiveRequest> invocation;
       while ((invocation = currentInvocation.get()) != null
           && invocation != threadState.previousInvocation) {
         end(invocation, invocation.error, threadState.previousInvocation);
       }
       if (threadState.previous == null) {
-        currentThreadState.remove();
+        // Remember that poll hooks are available without retaining an invocation or its scope.
+        currentThreadState.set(IDLE_THREAD_STATE);
       } else {
         currentThreadState.set(threadState.previous);
       }

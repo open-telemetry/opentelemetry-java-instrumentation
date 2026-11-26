@@ -13,6 +13,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
+import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_CONSUMER_GROUP_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
@@ -20,6 +21,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
+import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -48,22 +50,34 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
+import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.BatchInterceptor;
+import org.springframework.kafka.listener.BatchMessageListener;
+import org.springframework.kafka.listener.ContainerProperties;
+import org.springframework.kafka.listener.KafkaMessageListenerContainer;
 import org.springframework.kafka.listener.RecordInterceptor;
+import org.springframework.kafka.support.TopicPartitionOffset;
+import org.springframework.transaction.PlatformTransactionManager;
 
 @SuppressWarnings({"deprecation", "unchecked"}) // deprecated semconv and generic interceptor mocks
 class SpringKafkaInterceptorTest {
@@ -379,6 +393,150 @@ class SpringKafkaInterceptorTest {
     assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "0", 2, null);
   }
 
+  @Test
+  void clearThreadStateWithoutSetupPreservesEnclosingBatch() {
+    ConsumerRecords<String, String> outer =
+        records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
+    ConsumerRecords<String, String> uncompleted =
+        records(new ConsumerRecord<>("orders", 1, 2, "uncompleted", "value"));
+    InstrumentedBatchInterceptor<String, String> interceptor =
+        (InstrumentedBatchInterceptor<String, String>)
+            telemetry.<String, String>createBatchInterceptor();
+    Context parentContext = Context.current();
+    KafkaConsumerContextUtil.set(
+        uncompleted, KafkaConsumerContextUtil.create(parentContext, null, null, null));
+
+    interceptor.intercept(outer, null);
+    interceptor.setupThreadState(null);
+    interceptor.clearThreadState(null);
+    Context outerContext = Context.current();
+    Span outerSpan = Span.current();
+    interceptor.intercept(uncompleted, null);
+    interceptor.clearThreadState(null);
+    assertThat(Context.current()).isSameAs(outerContext);
+    assertThat(outerSpan.isRecording()).isTrue();
+    interceptor.success(outer, null);
+    assertThat(Context.current()).isSameAs(parentContext);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", null).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "1", null).hasNoParent()));
+  }
+
+  @Test
+  @SuppressWarnings("removal") // compatible transaction setup for Spring Kafka 2.8+
+  void partitionSubBatchesCleanUpWithoutAnotherPoll() throws InterruptedException {
+    try {
+      BatchInterceptor.class.getMethod("setupThreadState", Consumer.class);
+    } catch (NoSuchMethodException ignored) {
+      assumeTrue(false, "Poll hooks require Spring Kafka 2.8+");
+    }
+    TopicPartition first = new TopicPartition("orders", 0);
+    TopicPartition second = new TopicPartition("orders", 1);
+    MockConsumer<String, String> consumer = new MockConsumer<>(OffsetResetStrategy.EARLIEST);
+    String consumerGroup = consumer.groupMetadata().groupId();
+    Map<TopicPartition, Long> offsets = new LinkedHashMap<>();
+    offsets.put(first, 0L);
+    offsets.put(second, 0L);
+    consumer.updateBeginningOffsets(offsets);
+    consumer.schedulePollTask(() -> {
+      consumer.addRecord(new ConsumerRecord<>("orders", 0, 0, "first", "value"));
+      consumer.addRecord(new ConsumerRecord<>("orders", 1, 0, "second", "value"));
+    });
+
+    AtomicInteger setups = new AtomicInteger();
+    AtomicInteger successes = new AtomicInteger();
+    AtomicInteger listenerCalls = new AtomicInteger();
+    AtomicReference<Context> parentContext = new AtomicReference<>();
+    List<Integer> setupCounts = new ArrayList<>();
+    List<Span> processSpans = new ArrayList<>();
+    List<Integer> partitions = new ArrayList<>();
+    List<Context> clearedContexts = new ArrayList<>();
+    List<ConsumerRecord<String, String>> delivered = new ArrayList<>();
+    CountDownLatch cleared = new CountDownLatch(2);
+    BatchInterceptor<String, String> decorated =
+        new BatchInterceptorWithThreadState<String, String>() {
+          @Override
+          public ConsumerRecords<String, String> intercept(
+              ConsumerRecords<String, String> records, Consumer<String, String> consumer) {
+            setupCounts.add(setups.get());
+            processSpans.add(Span.current());
+            partitions.add(records.partitions().iterator().next().partition());
+            return processSpans.size() == 1 ? records : ConsumerRecords.empty();
+          }
+
+          @Override
+          public void success(
+              ConsumerRecords<String, String> records, Consumer<String, String> consumer) {
+            successes.incrementAndGet();
+          }
+
+          @Override
+          public void setupThreadState(Consumer<?, ?> consumer) {
+            parentContext.compareAndSet(null, Context.current());
+            setups.incrementAndGet();
+          }
+
+          @Override
+          public void clearThreadState(Consumer<?, ?> consumer) {
+            if (!processSpans.isEmpty() && clearedContexts.size() < 2) {
+              clearedContexts.add(Context.current());
+              cleared.countDown();
+            }
+          }
+        };
+    ConsumerFactory<String, String> factory = mock();
+    when(factory.createConsumer(any(), any(), any(), any())).thenReturn(consumer);
+    ContainerProperties properties =
+        new ContainerProperties(
+            new TopicPartitionOffset("orders", 0), new TopicPartitionOffset("orders", 1));
+    properties.setGroupId("group");
+    properties.setPollTimeout(10);
+    properties.setSubBatchPerPartition(true);
+    // Newer Spring Kafka versions require a transaction manager for early interception.
+    properties.setTransactionManager(mock(PlatformTransactionManager.class));
+    properties.setMessageListener(
+        (BatchMessageListener<String, String>)
+            records -> {
+              listenerCalls.incrementAndGet();
+              delivered.addAll(records);
+            });
+    KafkaMessageListenerContainer<String, String> container =
+        new KafkaMessageListenerContainer<>(factory, properties);
+    container.setBatchInterceptor(telemetry.createBatchInterceptor(decorated));
+    container.setInterceptBeforeTx(true);
+    try {
+      container.start();
+      assertThat(cleared.await(10, SECONDS)).isTrue();
+    } finally {
+      container.stop();
+    }
+
+    assertThat(setupCounts).containsExactly(1, 1);
+    assertThat(delivered).hasSize(1);
+    assertThat(listenerCalls.get()).isEqualTo(1);
+    assertThat(partitions).containsExactlyInAnyOrder(0, 1);
+    assertThat(successes.get()).isEqualTo(1);
+    assertThat(clearedContexts).containsExactly(parentContext.get(), parentContext.get());
+    assertThat(processSpans)
+        .hasSize(2)
+        .allSatisfy(span -> assertThat(span.isRecording()).isFalse());
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                assertBatchSpan(span, 1, partitions.get(0).toString(), null, consumerGroup)
+                    .hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                assertBatchSpan(span, 1, partitions.get(1).toString(), null, consumerGroup)
+                    .hasNoParent()));
+    assertProcessMetricPointCounts(testing, INSTRUMENTATION_NAME, 2);
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"success", "successThrows", "failure"})
   @Timeout(value = 15, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
@@ -596,6 +754,11 @@ class SpringKafkaInterceptorTest {
 
   private static SpanDataAssert assertBatchSpan(
       SpanDataAssert span, int count, String partition, Throwable error) {
+    return assertBatchSpan(span, count, partition, error, null);
+  }
+
+  private static SpanDataAssert assertBatchSpan(
+      SpanDataAssert span, int count, String partition, Throwable error, String consumerGroup) {
     return span.hasName("process orders")
         .hasKind(SpanKind.CONSUMER)
         .hasStatus(error == null ? StatusData.unset() : StatusData.error())
@@ -603,6 +766,7 @@ class SpringKafkaInterceptorTest {
             equalTo(stringKey("messaging.system.name"), "kafka"),
             equalTo(MESSAGING_DESTINATION_NAME, "orders"),
             equalTo(MESSAGING_DESTINATION_PARTITION_ID, partition),
+            equalTo(MESSAGING_CONSUMER_GROUP_NAME, consumerGroup),
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, count),
@@ -654,5 +818,13 @@ class SpringKafkaInterceptorTest {
             record,
             (carrier, name, value) -> carrier.headers().add(name, value.getBytes(UTF_8)));
     return record;
+  }
+
+  // Declare the 2.8 poll hooks so the container fixture also compiles against Spring Kafka 2.7.
+  @SuppressWarnings({"UnusedMethod", "MissingOverride"}) // called/overridden only on 2.8+
+  private interface BatchInterceptorWithThreadState<K, V> extends BatchInterceptor<K, V> {
+    void setupThreadState(Consumer<?, ?> consumer);
+
+    void clearThreadState(Consumer<?, ?> consumer);
   }
 }
