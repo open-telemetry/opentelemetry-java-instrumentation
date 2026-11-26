@@ -8,14 +8,15 @@ package io.opentelemetry.javaagent.instrumentation.vertx.httpclient.v5_0;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.semconv.network.internal.AddressAndPort;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.Contexts;
 import io.opentelemetry.javaagent.instrumentation.vertx.httpclient.common.v3_0.VertxClientInstrumenterFactory;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpClientRequest;
 import io.vertx.core.http.HttpClientResponse;
-import io.vertx.core.http.HttpConnection;
 import io.vertx.core.net.HostAndPort;
+import io.vertx.core.net.SocketAddress;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 
@@ -31,8 +32,8 @@ public class VertxClientSingletons {
   public static final VirtualField<HttpClientRequest, Contexts> CONTEXTS =
       VirtualField.find(HttpClientRequest.class, Contexts.class);
 
-  private static final VirtualField<HttpClientResponse, HttpConnection> CONNECTION_FIELD =
-      VirtualField.find(HttpClientResponse.class, HttpConnection.class);
+  private static final VirtualField<HttpClientResponse, AddressAndPort> PEER_ADDRESS_FIELD =
+      VirtualField.find(HttpClientResponse.class, AddressAndPort.class);
 
   public static Instrumenter<HttpClientRequest, HttpClientResponse> instrumenter() {
     return instrumenter;
@@ -47,14 +48,20 @@ public class VertxClientSingletons {
     return AUTHORITY_FIELD.get(request);
   }
 
-  public static void setConnection(
-      HttpClientResponse response, @Nullable HttpConnection connection) {
-    CONNECTION_FIELD.set(response, connection);
+  public static void setPeerAddress(
+      HttpClientResponse response, @Nullable SocketAddress socketAddress) {
+    AddressAndPort peerAddress = null;
+    if (socketAddress != null) {
+      peerAddress = new AddressAndPort();
+      peerAddress.setAddress(socketAddress.hostAddress());
+      peerAddress.setPort(socketAddress.port());
+    }
+    PEER_ADDRESS_FIELD.set(response, peerAddress);
   }
 
   @Nullable
-  public static HttpConnection getConnection(HttpClientResponse response) {
-    return CONNECTION_FIELD.get(response);
+  public static AddressAndPort getPeerAddress(HttpClientResponse response) {
+    return PEER_ADDRESS_FIELD.get(response);
   }
 
   public static <T> Future<T> wrapFuture(Future<T> future) {
