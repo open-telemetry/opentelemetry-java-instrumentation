@@ -96,6 +96,7 @@ class AwsSqsTest {
 
   private static SQSRestServer sqs;
   private static String combinedBatchQueueUrl;
+  private static String combinedQueueUrl;
 
   @Autowired SqsTemplate sqsTemplate;
   @Autowired MessageListenerContainerRegistry containerRegistry;
@@ -106,8 +107,8 @@ class AwsSqsTest {
     Http.ServerBinding server = sqs.waitUntilStarted();
     AwsSqsTestApplication.sqsPort = server.localAddress().getPort();
 
-    // spring creates missing queues without attributes, so the fifo queue is created here, as is
-    // the queue that the listener refers to by url
+    // spring creates missing queues without attributes, so the fifo queue is created here, as are
+    // the queues that listeners refer to by url
     try (SqsClient client = sqsClient()) {
       client.createQueue(request ->
           request
@@ -115,9 +116,11 @@ class AwsSqsTest {
               .attributes(singletonMap(QueueAttributeName.FIFO_QUEUE, "true")));
       combinedBatchQueueUrl =
           client.createQueue(request -> request.queueName("combined-batch-queue")).queueUrl();
+      combinedQueueUrl =
+          client.createQueue(request -> request.queueName("combined-queue")).queueUrl();
     }
     // discard the telemetry of the queue creation
-    testing.waitForTraces(2);
+    testing.waitForTraces(3);
   }
 
   private static SqsClient sqsClient() {
@@ -132,6 +135,7 @@ class AwsSqsTest {
   @DynamicPropertySource
   static void queueUrls(DynamicPropertyRegistry registry) {
     registry.add("test.combined-batch-queue-url", () -> combinedBatchQueueUrl);
+    registry.add("test.combined-queue-url", () -> combinedQueueUrl);
   }
 
   @AfterAll
@@ -387,8 +391,8 @@ class AwsSqsTest {
     List<String> payloads = IntStream.range(0, 12).mapToObj(i -> "message-" + i).toList();
     try (SqsClient client = sqsClient()) {
       // a batch send takes at most 10 messages
-      sendMessages(client, payloads.subList(0, 10));
-      sendMessages(client, payloads.subList(10, 12));
+      sendMessages(client, combinedBatchQueueUrl, payloads.subList(0, 10));
+      sendMessages(client, combinedBatchQueueUrl, payloads.subList(10, 12));
     }
     container.start();
 
@@ -430,10 +434,75 @@ class AwsSqsTest {
         "io.opentelemetry.spring-cloud-aws-3.0", "process", "combined-batch-queue", 12);
   }
 
-  private static void sendMessages(SqsClient client, List<String> bodies) {
+  @Test
+  void sqsCombinedListener() {
+    List<String> received = new CopyOnWriteArrayList<>();
+    AwsSqsTestApplication.messageHandler =
+        message -> testing.runWithSpan("callback", () -> received.add(message.getPayload()));
+    MessageListenerContainer<?> container = containerRegistry.getContainerById("combined-listener");
+    container.stop();
+    // one poll receives all 12 messages from the combined responses of several receive calls
+    List<String> payloads = IntStream.range(0, 12).mapToObj(i -> "message-" + i).toList();
+    try (SqsClient client = sqsClient()) {
+      sendMessages(client, combinedQueueUrl, payloads.subList(0, 10));
+      sendMessages(client, combinedQueueUrl, payloads.subList(10, 12));
+    }
+    container.start();
+
+    // the acknowledgements can be split over a varying number of deletes, so the spans are
+    // filtered instead of asserting a fixed set of traces
+    await()
+        .untilAsserted(() -> {
+          assertThat(received).containsExactlyInAnyOrderElementsOf(payloads);
+          assertThat(findSpans("process combined-queue")).hasSize(12);
+          assertThat(sumBatchMessageCount("delete combined-queue")).isEqualTo(12);
+        });
+    List<String> createSpanIds =
+        findSpans("create combined-queue").stream().map(SpanData::getSpanId).toList();
+    assertThat(createSpanIds).hasSize(12);
+    // each message is processed in the trace of the span that created it
+    List<SpanData> processSpans = findSpans("process combined-queue");
+    assertThat(processSpans)
+        .extracting(SpanData::getParentSpanId)
+        .containsExactlyInAnyOrderElementsOf(createSpanIds);
+    for (SpanData process : processSpans) {
+      assertThat(process)
+          .hasKind(SpanKind.CONSUMER)
+          .hasAttributesSatisfyingExactly(
+              equalTo(RPC_SYSTEM, "aws-api"),
+              equalTo(RPC_METHOD, "ReceiveMessage"),
+              equalTo(RPC_SERVICE, "Sqs"),
+              equalTo(HTTP_REQUEST_METHOD, POST),
+              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+              equalTo(SERVER_ADDRESS, "localhost"),
+              equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+              satisfies(
+                  URL_FULL,
+                  val -> val.startsWith("http://localhost:" + AwsSqsTestApplication.sqsPort)),
+              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+              equalTo(MESSAGING_OPERATION_NAME, "process"),
+              equalTo(MESSAGING_OPERATION_TYPE, "process"),
+              equalTo(MESSAGING_DESTINATION_NAME, "combined-queue"))
+          .hasLinksSatisfying(links ->
+              assertThat(links)
+                  .singleElement()
+                  .satisfies(link ->
+                      assertThat(link.getSpanContext().getSpanId())
+                          .isEqualTo(process.getParentSpanId())));
+    }
+    assertThat(findSpans("callback"))
+        .extracting(SpanData::getParentSpanId)
+        .containsExactlyInAnyOrderElementsOf(
+            processSpans.stream().map(SpanData::getSpanId).toList());
+    assertThat(findSpans("delete combined-queue"))
+        .allSatisfy(delete -> assertThat(delete.getParentSpanId()).isIn(createSpanIds));
+  }
+
+  private static void sendMessages(SqsClient client, String queueUrl, List<String> bodies) {
     client.sendMessageBatch(request ->
         request
-            .queueUrl(combinedBatchQueueUrl)
+            .queueUrl(queueUrl)
             .entries(
                 bodies.stream()
                     .map(body ->

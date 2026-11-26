@@ -84,6 +84,17 @@ class AwsSqsTestApplication {
     receiveBatch(messages);
   }
 
+  // the single message variant of the combined batch listener
+  @SqsListener(
+      value = "${test.combined-queue-url}",
+      id = "combined-listener",
+      maxConcurrentMessages = "20",
+      maxMessagesPerPoll = "20",
+      pollTimeoutSeconds = "1")
+  void receiveCombinedMessage(Message<String> message) {
+    receiveStringMessage(message);
+  }
+
   // fifo queues acknowledge immediately by default
   @SqsListener("batch-queue.fifo")
   void receiveFifoBatch(List<String> messages) {
