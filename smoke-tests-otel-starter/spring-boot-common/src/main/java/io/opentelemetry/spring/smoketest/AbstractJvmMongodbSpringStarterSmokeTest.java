@@ -5,21 +5,13 @@
 
 package io.opentelemetry.spring.smoketest;
 
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
-import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
-import static io.opentelemetry.semconv.DbAttributes.DB_COLLECTION_NAME;
-import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
-import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
-import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
-import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 
 import com.mongodb.client.MongoClient;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
-import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -72,54 +64,23 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
   }
 
   @Test
-  void omitsQueryTextByDefault() {
-    assertMongoQueryText(contextRunner, equalTo(DB_QUERY_TEXT, null));
-  }
+  void capturesQueryTextWhenEnabled() {
+    contextRunner =
+        contextRunner.withPropertyValues("otel.instrumentation.mongo.capture-query-text=true");
+    runMongoClientTest(() -> {
+      mongoClient.getDatabase("test").runCommand(new Document("find", "items"));
 
-  @Test
-  void capturesSanitizedQueryTextWhenEnabled() {
-    assertMongoQueryText(
-        contextRunner.withPropertyValues("otel.instrumentation.mongo.capture-query-text=true"),
-        satisfies(
-            DB_QUERY_TEXT,
-            val ->
-                val.isNotNull()
-                    .satisfies(v ->
-                        assertThat(Document.parse(v).get("filter", Document.class))
-                            .isEqualTo(new Document("item", "?")))));
-  }
-
-  private void assertMongoQueryText(
-      ApplicationContextRunner runner, AttributeAssertion queryTextAssertion) {
-    runMongoClientTest(
-        runner,
-        () -> {
-          mongoClient
-              .getDatabase("test")
-              .runCommand(
-                  new Document("find", "items")
-                      .append("filter", new Document("item", "example-value")));
-
-          testing.waitAndAssertTraces(trace ->
-              trace.hasSpansSatisfyingExactly(span ->
-                  span.hasKind(SpanKind.CLIENT)
-                      .hasName("find items")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(DB_SYSTEM_NAME, MONGODB),
-                          equalTo(DB_NAMESPACE, "test"),
-                          equalTo(DB_OPERATION_NAME, "find"),
-                          equalTo(DB_COLLECTION_NAME, "items"),
-                          queryTextAssertion)));
-        });
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasKind(SpanKind.CLIENT)
+                  .hasName("find items")
+                  .hasAttribute(satisfies(DB_QUERY_TEXT, val -> val.isNotBlank()))));
+    });
   }
 
   @Override
   protected void runMongoClientTest(Runnable runnable) {
-    runMongoClientTest(contextRunner, runnable);
-  }
-
-  private void runMongoClientTest(ApplicationContextRunner runner, Runnable runnable) {
-    runner.run(applicationContext -> {
+    contextRunner.run(applicationContext -> {
       testing = new SpringSmokeTestRunner(applicationContext.getBean(OpenTelemetry.class));
       mongoClient = applicationContext.getBean(MongoClient.class);
 

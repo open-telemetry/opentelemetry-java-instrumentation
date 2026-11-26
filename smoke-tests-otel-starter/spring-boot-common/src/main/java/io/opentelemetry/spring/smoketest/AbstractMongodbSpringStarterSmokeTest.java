@@ -5,6 +5,8 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
 import static io.opentelemetry.semconv.DbAttributes.DB_SYSTEM_NAME;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.MONGODB;
 
@@ -33,7 +35,9 @@ abstract class AbstractMongodbSpringStarterSmokeTest extends AbstractSpringStart
               span ->
                   span.hasKind(SpanKind.CLIENT)
                       .hasName("listDatabases admin")
-                      .hasAttribute(DB_SYSTEM_NAME, MONGODB)));
+                      .hasAttribute(DB_SYSTEM_NAME, MONGODB)
+                      .satisfies(
+                          data -> assertThat(data.getAttributes().get(DB_QUERY_TEXT)).isNull())));
     });
   }
 
