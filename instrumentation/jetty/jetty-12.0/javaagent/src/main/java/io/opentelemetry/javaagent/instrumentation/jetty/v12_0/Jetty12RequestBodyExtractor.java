@@ -18,6 +18,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import java.nio.ByteBuffer;
 import javax.annotation.Nullable;
+import org.eclipse.jetty.http.MimeTypes;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Response;
 
@@ -64,7 +65,11 @@ class Jetty12RequestBodyExtractor implements AttributesExtractor<Request, Respon
     request.setAttribute(REQUEST_BODY_BUFFER_ATTRIBUTE, null);
 
     String contentType = request.getHeaders().get(CONTENT_TYPE);
-    String body = getRequestBodyValue(buffer, contentType);
+    String charset = null;
+    if (contentType != null) {
+      charset = MimeTypes.getCharsetFromContentType(contentType);
+    }
+    String body = getRequestBodyValue(buffer, contentType, charset);
     if (body != null) {
       attributes.put(SPAN_BODY_ATTRIBUTE, body);
     }

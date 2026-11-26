@@ -77,6 +77,12 @@ public abstract class JavaxServletAccessor<R> implements ServletAccessor<HttpSer
   }
 
   @Override
+  @Nullable
+  public String getRequestCharacterEncoding(HttpServletRequest request) {
+    return request.getCharacterEncoding();
+  }
+
+  @Override
   public List<String> getRequestHeaderValues(HttpServletRequest request, String name) {
     @SuppressWarnings("unchecked") // servlet api uses Enumeration without generic type
     Enumeration<String> values = request.getHeaders(name);

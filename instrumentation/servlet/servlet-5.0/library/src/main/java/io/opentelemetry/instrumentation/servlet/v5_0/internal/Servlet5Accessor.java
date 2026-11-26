@@ -102,6 +102,12 @@ public class Servlet5Accessor implements ServletAccessor<HttpServletRequest, Htt
   }
 
   @Override
+  @Nullable
+  public String getRequestCharacterEncoding(HttpServletRequest request) {
+    return request.getCharacterEncoding();
+  }
+
+  @Override
   public List<String> getRequestHeaderValues(HttpServletRequest request, String name) {
     Enumeration<String> values = request.getHeaders(name);
     return values == null ? emptyList() : Collections.list(values);

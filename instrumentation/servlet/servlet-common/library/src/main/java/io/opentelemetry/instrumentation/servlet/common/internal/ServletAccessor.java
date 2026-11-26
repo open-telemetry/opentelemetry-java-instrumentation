@@ -57,6 +57,13 @@ public interface ServletAccessor<REQUEST, RESPONSE> {
   @Nullable
   String getRequestHeader(REQUEST request, String name);
 
+  /**
+   * Returns the character encoding of the request body, which is the charset parameter of the
+   * Content-Type header unless the container or application has overridden it.
+   */
+  @Nullable
+  String getRequestCharacterEncoding(REQUEST request);
+
   List<String> getRequestHeaderValues(REQUEST request, String name);
 
   Iterable<String> getRequestHeaderNames(REQUEST request);

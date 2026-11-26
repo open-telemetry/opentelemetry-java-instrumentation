@@ -44,6 +44,7 @@ class ServletRequestBodyExtractorTest {
   private final Object request = new Object();
   private final Map<String, Object> requestAttributes = new HashMap<>();
   private String requestContentType = null;
+  private String requestCharacterEncoding = null;
 
   @SuppressWarnings("unchecked")
   private final ServletAccessor<Object, Object> accessor = mock(ServletAccessor.class);
@@ -69,6 +70,8 @@ class ServletRequestBodyExtractorTest {
 
     when(accessor.getRequestHeader(any(), eq("Content-Type")))
         .thenAnswer(invocation -> requestContentType);
+    when(accessor.getRequestCharacterEncoding(any()))
+        .thenAnswer(invocation -> requestCharacterEncoding);
   }
 
   @Test
@@ -197,6 +200,43 @@ class ServletRequestBodyExtractorTest {
             getRequestBodyValue(
                 bufferOf(utf8Body), "text/plain; foo=\"a; charset=ISO-8859-1\"; charset=UTF-8"))
         .isEqualTo("café");
+  }
+
+  @Test
+  void containerCharacterEncodingTakesPrecedenceOverHeader() {
+    // the container (or the application) overrides the charset of the header
+    assertThat(bodyWithEncoding("text/plain; charset=ISO-8859-1", "UTF-8")).isEqualTo("café");
+    // no charset in the header
+    assertThat(bodyWithEncoding("text/plain", "UTF-8")).isEqualTo("café");
+  }
+
+  @Test
+  void headerCharsetUsedWithoutContainerCharacterEncoding() {
+    assertThat(bodyWithEncoding("text/plain; charset=UTF-8", null)).isEqualTo("café");
+    // empty or unsupported encoding provided by the container
+    assertThat(bodyWithEncoding("text/plain; charset=UTF-8", "")).isEqualTo("café");
+    assertThat(bodyWithEncoding("text/plain; charset=UTF-8", "unknown-xyz")).isEqualTo("café");
+    assertThat(bodyWithEncoding("text/plain", "unknown-xyz")).isEqualTo("café");
+  }
+
+  @Test
+  void charsetNameProvidedByContainer() {
+    byte[] iso = "café".getBytes(ISO_8859_1);
+    // aliases are supported, the name is not normalized
+    assertThat(getRequestBodyValue(bufferOf(iso), "text/plain", "latin1")).isEqualTo("café");
+    assertThat(getRequestBodyValue(bufferOf("café".getBytes(UTF_8)), "text/plain", "utf8"))
+        .isEqualTo("café");
+    // a quoted name is not valid, the charset of the header is used
+    assertThat(getRequestBodyValue(bufferOf(iso), "text/plain; charset=ISO-8859-1", "\"UTF-8\""))
+        .isEqualTo("café");
+  }
+
+  private String bodyWithEncoding(String contentType, String characterEncoding) {
+    requestContentType = contentType;
+    requestCharacterEncoding = characterEncoding;
+    requestAttributes.put(REQUEST_BODY_MARKER_ATTRIBUTE, true);
+    requestAttributes.put(REQUEST_BODY_BUFFER_ATTRIBUTE, bufferOf("café".getBytes(UTF_8)));
+    return extractRequestBody(accessor, request);
   }
 
   @Test

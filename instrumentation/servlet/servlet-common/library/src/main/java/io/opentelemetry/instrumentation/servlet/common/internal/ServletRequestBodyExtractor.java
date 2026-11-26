@@ -137,7 +137,10 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     }
 
     String contentType = accessor.getRequestHeader(request, "Content-Type");
-    String bodyValue = getRequestBodyValue((ByteBuffer) bodyAttribute, contentType);
+    // the character encoding provided by the container is what the application is using to
+    // decode the request body, it takes precedence over the Content-Type header
+    String charset = accessor.getRequestCharacterEncoding(request);
+    String bodyValue = getRequestBodyValue((ByteBuffer) bodyAttribute, contentType, charset);
 
     // remove the attributes so the buffer is no longer accessible for writing and the body is
     // only extracted once after successful capture.
@@ -159,14 +162,39 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
    */
   @Nullable
   public static String getRequestBodyValue(ByteBuffer buffer, @Nullable String contentType) {
+    return getRequestBodyValue(buffer, contentType, null);
+  }
+
+  /**
+   * Extracts request body value, body capture pre-requisites must have been checked with {@link
+   * #shouldMarkRequestForBodyCapture(BodyCaptureConfig, String, String)} before calling this
+   * method.
+   *
+   * @param buffer request body buffer
+   * @param contentType value of the Content-Type header, which may contain a charset parameter
+   * @param charsetName charset name provided by the container for the request body, when {@code
+   *     null}, empty or unsupported, the charset of the Content-Type header is used
+   * @return extracted body value as string, or {@code null} if the body is empty, or the content
+   *     type is not supported, unknown, missing or excluded by configuration.
+   */
+  @Nullable
+  public static String getRequestBodyValue(
+      ByteBuffer buffer, @Nullable String contentType, @Nullable String charsetName) {
     if (buffer.position() == 0 || contentType == null) {
       // empty buffer or no content type header provided
       return null;
     }
 
     buffer.flip();
+
+    // using provided charset in priority, this is the same charset used by the application
+    // fallback to parse it from content-type header.
+    Charset charset = getCharsetFromName(charsetName);
+    if (charset == null) {
+      charset = getCharsetFromContentTypeHeader(contentType);
+    }
     CharsetDecoder decoder =
-        getCharsetFromContentTypeHeader(contentType)
+        charset
             .newDecoder()
             .onMalformedInput(CodingErrorAction.REPORT)
             .onUnmappableCharacter(CodingErrorAction.REPORT);
@@ -193,6 +221,23 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     }
     mediaType = mediaType.trim();
     return mediaType.isEmpty() ? null : mediaType;
+  }
+
+  /**
+   * Returns the charset with the given name, or {@code null} when the name is missing, illegal or
+   * unsupported.
+   */
+  @Nullable
+  private static Charset getCharsetFromName(@Nullable String name) {
+    if (name == null || name.isEmpty()) {
+      return null;
+    }
+    try {
+      return Charset.forName(name);
+    } catch (IllegalArgumentException e) {
+      // illegal or unsupported charset name
+      return null;
+    }
   }
 
   /**
