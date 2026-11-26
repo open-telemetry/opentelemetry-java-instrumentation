@@ -80,10 +80,6 @@ If you want to run a specific smoke test:
 Smoke tests for the [OpenTelemetry Spring starter](../../instrumentation/spring/starters/spring-boot-starter/README.md)
 can be executed in a JVM (`./gradlew smoke-tests-otel-starter:test`) or as Spring Native tests (`./gradlew smoke-tests-otel-starter:nativeTest`).
 
-Smoke tests use the same dependency versions in CI and locally, without `testLatestDeps`.
-The Spring Boot smoke tests use the latest stable release in each Spring Boot major line,
-pinned in the smoke-test build files and updated by Renovate.
-
 ## GraalVM native test
 
 To execute all the instrumentation tests runnable as GraalVM native executables:
