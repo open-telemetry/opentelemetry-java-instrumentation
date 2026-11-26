@@ -208,9 +208,11 @@ javaagent instrumentation, not library-only code.
   call path that discards enclosing state, leaves temporary state installed, or uses state that
   belongs to another operation.
 
-- Keep a holder private in the narrowest owner. If several classes in one module need direct access,
-  use a private field in `*Singletons`, exposed by a same-named zero-argument accessor and
-  statically imported by callers. Cross-module state uses a focused shared bootstrap owner.
+- Keep a holder private in the class that owns the state or its lifecycle. If no class is a natural
+  owner, use the narrowest helper the callers can share.
+
+- Use a focused bootstrap owner when a handoff crosses class-loader boundaries that prevent the
+  callers from sharing an ordinary helper.
 
 - Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
   as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
