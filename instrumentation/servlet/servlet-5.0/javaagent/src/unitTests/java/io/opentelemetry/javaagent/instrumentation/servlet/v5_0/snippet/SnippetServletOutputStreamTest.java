@@ -15,6 +15,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.OutputStreamSnippetInjectionHelper;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.WriteListener;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -189,7 +190,9 @@ class SnippetServletOutputStreamTest {
     when(response.isCommitted()).thenReturn(false);
     when(response.getCharacterEncoding()).thenReturn(charset.name());
 
-    return new InjectionState(new Servlet5SnippetInjectingResponseWrapper(response, snippet));
+    return new InjectionState(
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet));
   }
 
   private static class InMemoryServletOutputStream extends ServletOutputStream {

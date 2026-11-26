@@ -20,6 +20,7 @@ import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.OutputStreamSnippetInjectionHelper;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.WriteListener;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -221,7 +222,8 @@ class LateContentTypeTest {
   private static class Fixture {
     final HttpServletResponse response = mock(HttpServletResponse.class);
     final Servlet5SnippetInjectingResponseWrapper wrapper =
-        new Servlet5SnippetInjectingResponseWrapper(response, SNIPPET);
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, SNIPPET);
     final Output output;
     final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     final StringWriter chars = new StringWriter();

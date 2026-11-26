@@ -24,6 +24,7 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -220,7 +221,8 @@ class LateContentTypeTest {
   private static class Fixture {
     final HttpServletResponse response = mock(HttpServletResponse.class);
     final Servlet3SnippetInjectingResponseWrapper wrapper =
-        new Servlet3SnippetInjectingResponseWrapper(response, SNIPPET);
+        new Servlet3SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, SNIPPET);
     final Output output;
     final ByteArrayOutputStream bytes = new ByteArrayOutputStream();
     final StringWriter chars = new StringWriter();

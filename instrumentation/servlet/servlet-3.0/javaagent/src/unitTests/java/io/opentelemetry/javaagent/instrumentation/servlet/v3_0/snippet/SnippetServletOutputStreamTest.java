@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -168,7 +169,9 @@ class SnippetServletOutputStreamTest {
     when(response.getContentType()).thenReturn("text/html");
     when(response.isCommitted()).thenReturn(false);
     when(response.getCharacterEncoding()).thenReturn(charset.name());
-    return new InjectionState(new Servlet3SnippetInjectingResponseWrapper(response, snippet));
+    return new InjectionState(
+        new Servlet3SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet));
   }
 
   private static class InMemoryServletOutputStream extends ServletOutputStream {

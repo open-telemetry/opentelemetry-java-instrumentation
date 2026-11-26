@@ -8,6 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v3_0.snippet.ServletOutputStreamInjectionState.initializeInjectionStateIfNeeded;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateStore;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
 import java.io.IOException;
@@ -18,6 +20,7 @@ import java.lang.invoke.MethodType;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpServletResponseWrapper;
 
@@ -47,13 +50,16 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
 
   private final String snippet;
   private final int snippetLength;
+  private final HttpServletRequest request;
 
   private long contentLength = UNSET;
 
   @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
-  public Servlet3SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
+  public Servlet3SnippetInjectingResponseWrapper(
+      HttpServletRequest request, HttpServletResponse response, String snippet) {
     super(response);
+    this.request = request;
     this.snippet = snippet;
     snippetLength = snippet.length();
   }
@@ -156,6 +162,18 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
     ServletOutputStream output = super.getOutputStream();
     initializeInjectionStateIfNeeded(output, this);
     return output;
+  }
+
+  void retainInjectionState(InjectionState state) {
+    synchronized (request) {
+      InjectionStateStore store =
+          (InjectionStateStore) request.getAttribute(InjectionStateStore.REQUEST_ATTRIBUTE);
+      if (store == null) {
+        store = new InjectionStateStore();
+        request.setAttribute(InjectionStateStore.REQUEST_ATTRIBUTE, store);
+      }
+      store.add(state);
+    }
   }
 
   @Override

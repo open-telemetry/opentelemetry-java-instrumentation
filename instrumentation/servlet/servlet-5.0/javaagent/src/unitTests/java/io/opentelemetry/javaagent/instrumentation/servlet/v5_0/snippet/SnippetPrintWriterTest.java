@@ -10,6 +10,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
@@ -26,7 +27,8 @@ class SnippetPrintWriterTest {
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
     Servlet5SnippetInjectingResponseWrapper responseWrapper =
-        new Servlet5SnippetInjectingResponseWrapper(response, snippet);
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet);
 
     responseWrapper.getWriter().write(html);
     responseWrapper.getWriter().flush();
@@ -42,7 +44,8 @@ class SnippetPrintWriterTest {
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
     Servlet5SnippetInjectingResponseWrapper responseWrapper =
-        new Servlet5SnippetInjectingResponseWrapper(response, snippet);
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet);
 
     responseWrapper.getWriter().write(html);
     responseWrapper.getWriter().flush();
@@ -59,7 +62,8 @@ class SnippetPrintWriterTest {
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("not/text");
 
     Servlet5SnippetInjectingResponseWrapper responseWrapper =
-        new Servlet5SnippetInjectingResponseWrapper(response, snippet);
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet);
 
     responseWrapper.getWriter().write(html);
     responseWrapper.getWriter().flush();
@@ -74,7 +78,8 @@ class SnippetPrintWriterTest {
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
     Servlet5SnippetInjectingResponseWrapper responseWrapper =
-        new Servlet5SnippetInjectingResponseWrapper(response, snippet);
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet);
 
     byte[] originalBytes = html.getBytes(UTF_8);
     for (byte originalByte : originalBytes) {
@@ -93,7 +98,8 @@ class SnippetPrintWriterTest {
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
     Servlet5SnippetInjectingResponseWrapper responseWrapper =
-        new Servlet5SnippetInjectingResponseWrapper(response, snippet);
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet);
 
     char[] originalChars = html.toCharArray();
     responseWrapper.getWriter().write(originalChars, 0, originalChars.length);
@@ -112,7 +118,8 @@ class SnippetPrintWriterTest {
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
     Servlet5SnippetInjectingResponseWrapper responseWrapper =
-        new Servlet5SnippetInjectingResponseWrapper(response, snippet);
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet);
 
     responseWrapper
         .getWriter()
@@ -130,7 +137,8 @@ class SnippetPrintWriterTest {
 
     InMemoryHttpServletResponse response = createInMemoryHttpServletResponse("text/html");
     Servlet5SnippetInjectingResponseWrapper responseWrapper =
-        new Servlet5SnippetInjectingResponseWrapper(response, snippet);
+        new Servlet5SnippetInjectingResponseWrapper(
+            mock(HttpServletRequest.class), response, snippet);
 
     responseWrapper.getWriter().write(html);
     responseWrapper.getWriter().flush();
