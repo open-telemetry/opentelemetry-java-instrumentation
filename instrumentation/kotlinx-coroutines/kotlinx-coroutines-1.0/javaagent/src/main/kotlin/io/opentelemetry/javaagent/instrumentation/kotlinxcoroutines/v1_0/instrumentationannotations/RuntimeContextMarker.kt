@@ -22,8 +22,9 @@ fun currentRuntimeContextMarkerApplication(): RuntimeContextMarkerApplication? =
 
 // One application of a marker on a thread. Scopes deferred to it are closed when the runtime
 // restores it, most recent first.
-class RuntimeContextMarkerApplication internal constructor() {
+class RuntimeContextMarkerApplication internal constructor(private val previous: RuntimeContextMarkerApplication?) {
   private val deferred = ArrayDeque<Scope>()
+  private var restored = false
 
   fun defer(scope: Scope) {
     deferred.push(scope)
@@ -32,28 +33,33 @@ class RuntimeContextMarkerApplication internal constructor() {
   // Returns whether the scope was still deferred, that is, not closed by the runtime yet.
   fun undefer(scope: Scope): Boolean = deferred.remove(scope)
 
-  internal fun closeDeferred() {
+  internal fun restore() {
+    // UndispatchedCoroutine can replay the restore of a snapshot taken without a dispatcher.
+    if (restored) {
+      return
+    }
+    restored = true
     while (!deferred.isEmpty()) {
       deferred.pop().close()
     }
+    RuntimeContextMarkerKey.applied.set(previous)
   }
 }
 
 // Added to the callee's context, so the runtime applies it whenever it runs a coroutine with that
 // context, and, as the last element added, restores it just before the span's scope. A callback that
 // makes the span context current itself does not apply it.
-class RuntimeContextMarker : ThreadContextElement<RuntimeContextMarkerApplication?> {
+class RuntimeContextMarker : ThreadContextElement<RuntimeContextMarkerApplication> {
   override val key: CoroutineContext.Key<RuntimeContextMarker>
     get() = RuntimeContextMarkerKey
 
-  override fun updateThreadContext(context: CoroutineContext): RuntimeContextMarkerApplication? {
-    val previous = RuntimeContextMarkerKey.applied.get()
-    RuntimeContextMarkerKey.applied.set(RuntimeContextMarkerApplication())
-    return previous
+  override fun updateThreadContext(context: CoroutineContext): RuntimeContextMarkerApplication {
+    val application = RuntimeContextMarkerApplication(RuntimeContextMarkerKey.applied.get())
+    RuntimeContextMarkerKey.applied.set(application)
+    return application
   }
 
-  override fun restoreThreadContext(context: CoroutineContext, oldState: RuntimeContextMarkerApplication?) {
-    RuntimeContextMarkerKey.applied.get()?.closeDeferred()
-    RuntimeContextMarkerKey.applied.set(oldState)
+  override fun restoreThreadContext(context: CoroutineContext, oldState: RuntimeContextMarkerApplication) {
+    oldState.restore()
   }
 }
