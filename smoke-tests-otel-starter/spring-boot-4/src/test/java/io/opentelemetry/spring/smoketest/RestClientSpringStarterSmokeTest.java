@@ -1,0 +1,56 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.spring.smoketest;
+
+import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
+import static org.assertj.core.api.Assertions.assertThat;
+
+import io.opentelemetry.api.trace.SpanKind;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.client.RestClient;
+
+@SpringBootTest(
+    classes = {
+      OtelSpringStarterSmokeTestApplication.class,
+      AbstractOtelSpringStarterSmokeTest.TestConfiguration.class,
+      SpringSmokeOtelConfiguration.class
+    },
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("declarative")
+class RestClientSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
+
+  @Autowired private RestClient.Builder restClientBuilder;
+  @LocalServerPort private int port;
+
+  @Test
+  void restClient() {
+    testing.clearAllExportedData();
+
+    RestClient client = restClientBuilder.baseUrl("http://localhost:" + port).build();
+    assertThat(
+            client
+                .get()
+                .uri(OtelSpringStarterSmokeTestController.PING)
+                .retrieve()
+                .body(String.class))
+        .isEqualTo("pong");
+
+    testing.waitAndAssertTraces(traceAssert ->
+        traceAssert.hasSpansSatisfyingExactly(
+            span ->
+                HttpSpanDataAssert.create(span)
+                    .assertClientGetRequest("/ping")
+                    .hasResourceSatisfying(resource ->
+                        resource.hasAttribute(SERVICE_NAME, "declarative-config-spring-boot-4")),
+            span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
+            AbstractSpringStarterSmokeTest::withSpanAssert));
+  }
+}

@@ -29,6 +29,7 @@ import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.system.CapturedOutput;
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(
@@ -39,7 +40,8 @@ import org.springframework.web.client.RestTemplate;
     },
     webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @EnableAutoConfiguration(exclude = {MongoAutoConfiguration.class, MongoDataAutoConfiguration.class})
-class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
+@ActiveProfiles("declarative")
+class DeclarativeConfigSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired private RestTemplateBuilder restTemplateBuilder;
   @Autowired private ConfigProvider configProvider;
@@ -50,8 +52,8 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Test
   void debugLogsSpans(CapturedOutput output) {
-    // No console exporter is configured in application.yaml. Bootstrap discovery and conversion
-    // of spring_starter.debug must install it before the SDK is built.
+    // The declarative fixture has no console exporter. The debug setting must install it at
+    // startup.
     openTelemetry
         .getTracer("debug-smoke-test")
         .spanBuilder("declarative-debug-span")
@@ -62,8 +64,6 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Test
   void configProviderReflectsDeclarativeConfig() {
-    // otel.instrumentation/development.java.common.http.client.emit_experimental_telemetry
-    // in application.yaml
     DeclarativeConfigProperties httpClientConfig =
         configProvider
             .getInstrumentationConfig()
@@ -108,11 +108,8 @@ class OtelSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
             span ->
                 HttpSpanDataAssert.create(span)
                     .assertClientGetRequest("/ping")
-                    .hasResourceSatisfying(r ->
-                        r.hasAttribute(
-                            // to make sure the declarative config is picked up
-                            // in application.yaml
-                            SERVICE_NAME, "declarative-config-spring-boot-2")),
+                    .hasResourceSatisfying(
+                        r -> r.hasAttribute(SERVICE_NAME, "declarative-config-spring-boot-2")),
             span ->
                 span.hasKind(SpanKind.SERVER)
                     .hasResourceSatisfying(r ->

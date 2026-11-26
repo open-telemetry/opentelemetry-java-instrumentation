@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.web.client.RestClient;
 
 @SpringBootTest(
@@ -22,8 +23,8 @@ import org.springframework.web.client.RestClient;
       AbstractOtelSpringStarterSmokeTest.TestConfiguration.class,
       SpringSmokeOtelConfiguration.class
     },
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "spring.config.location=classpath:application-rest-client.yaml")
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("declarative")
 class RestClientSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired RestClient.Builder restClientBuilder;
