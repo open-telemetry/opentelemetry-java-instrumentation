@@ -149,15 +149,14 @@ public final class WeblogicTestApplication {
       this.attributes = Collections.unmodifiableMap(new HashMap<>(attributes));
       MBeanAttributeInfo[] attributeInfo =
           attributes.entrySet().stream()
-              .map(
-                  entry ->
-                      new MBeanAttributeInfo(
-                          entry.getKey(),
-                          entry.getValue().getClass().getName(),
-                          entry.getKey(),
-                          true,
-                          false,
-                          false))
+              .map(entry ->
+                  new MBeanAttributeInfo(
+                      entry.getKey(),
+                      entry.getValue().getClass().getName(),
+                      entry.getKey(),
+                      true,
+                      false,
+                      false))
               .toArray(MBeanAttributeInfo[]::new);
       info =
           new MBeanInfo(
