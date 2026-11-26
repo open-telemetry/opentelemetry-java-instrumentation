@@ -214,23 +214,28 @@ intentionally ad hoc or cross-trace filtering that the trace DSL cannot express.
   because it is more precise — the non-exact variant silently ignores unexpected attributes.
   Prefer `hasAttributesSatisfyingExactly` over `hasAttributes(...)` for consistency. For
   zero-attribute assertions, use `hasTotalAttributeCount(0)`.
+
 - `hasTotalAttributeCount(...)` is redundant when paired with
   `hasAttributesSatisfyingExactly(...)` in the same assertion chain, because the exact
   variant already validates the total attribute count. Remove the `hasTotalAttributeCount`
   call.
+
 - These rules apply to **span** attribute assertions only. Metric point assertions are
   different: metric point assertions do not have a `hasTotalAttributeCount(...)` method, so
   the span guidance about preferring `hasTotalAttributeCount(0)` for zero-attribute checks
   does not apply. For metric points, used `point.hasAttributes(Attributes.empty())` — it
   reads more clearly than the no-arg `hasAttributesSatisfyingExactly()` form.
+
 - For non-semconv attribute keys in `equalTo(...)`, use inline `AttributeKey` factory
   methods — `longKey("name")`, `stringKey("name")`, etc. — directly in the assertion.
   Do **not** extract them into class-level `private static final AttributeKey<T>` constants.
   Constants are reserved for semconv keys imported from the semconv library.
+
 - Do **not** introduce redundant `(long)` casts in `equalTo(longKey(...), value)` when `value`
   is already an `int` expression or variable. The assertion API already has an
   `equalTo(AttributeKey<Long>, int)` overload, so `equalTo(longKey("iteration"), iteration)` is
   preferred over `equalTo(longKey("iteration"), (long) iteration)`.
+
 - The previous rule does not apply when an `int` value is one branch of a conditional and the other
   branch is `null`. Cast the `int` branch to `long`:
 

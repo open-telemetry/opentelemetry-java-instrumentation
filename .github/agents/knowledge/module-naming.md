@@ -8,10 +8,12 @@ package naming patterns for versioned and shared modules.
 
 - Single-version library: `instrumentation/<library>-<minimum-version>/`
   e.g. `grpc-1.6/`
+
 - No-version module: `instrumentation/<library>/` — **only for JDK / Java standard-library
   instrumentations** where there is no external library version (e.g. `jdbc`, `executors`,
   `http-url-connection`, `java-util-logging`, `rmi`). Do NOT use this pattern for third-party
   libraries.
+
 - Multi-version library: a parent directory `instrumentation/<library>/` containing version
   subdirectories. Each subdir **must be prefixed with the parent dir name**:
 
