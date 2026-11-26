@@ -199,6 +199,11 @@ javaagent instrumentation, not library-only code.
   completion paths race. For same-thread reentrancy, consuming state before invoking reentrant code
   may suffice. Do not add locks, generations, reservations, or CAS loops for hypothetical races.
 
+  For example, Apache HttpAsyncClient marks its future done before invoking the terminal callback.
+  Cancelling that future concurrently or from inside a response getter cannot deliver a second
+  terminal callback. Calling the instrumentation wrapper directly in a test bypasses the future
+  and does not establish a supported path that needs a guard.
+
 - A complete old immutable snapshot of descriptive connection metadata may briefly be acceptable
   during client or pool reconfiguration. Refresh at a stable lifecycle boundary, publish safely,
   and converge on the latest snapshot once updates stop. Do not mix fields from different snapshots
