@@ -17,6 +17,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.entry;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -34,6 +35,8 @@ import java.util.Optional;
 import org.apache.rocketmq.client.apis.message.MessageId;
 import org.apache.rocketmq.client.apis.message.MessageView;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
@@ -51,6 +54,45 @@ class RocketMqReceiveSpanLinksExtractorTest {
     RocketMqReceiveRequest.create(receiveRequest, asList(first, second));
 
     verifyNoInteractions(receiveRequest, first, second);
+  }
+
+  @Test
+  void doesNotReadExperimentalAttributesWhenDisabled() {
+    MessageView first = message("topic", "message-1", "tag", null, null, "key", TRACEPARENT);
+    MessageView second = message("topic", "message-2", "tag", null, null, "key", TRACEPARENT);
+    RocketMqReceiveRequest request = request(first, second);
+
+    assertThat(request.getDestination()).isEqualTo("topic");
+    batchAttributes(request, false);
+    linkAttributes(request, 2, false);
+
+    for (MessageView message : asList(first, second)) {
+      verify(message, never()).getLiteTopic();
+      verify(message, never()).getPriority();
+    }
+  }
+
+  @ParameterizedTest
+  @CsvSource({"0,0,0", "0,7,", ",,"})
+  void cachesExperimentalBatchValues(
+      Integer firstPriority, Integer secondPriority, Long expectedPriority) {
+    MessageView first = message("topic", "message-1", "tag", null, null, "key", TRACEPARENT);
+    MessageView second = message("topic", "message-2", "tag", null, null, "key", TRACEPARENT);
+    when(first.getLiteTopic()).thenReturn(Optional.empty());
+    when(second.getLiteTopic()).thenReturn(Optional.empty());
+    when(first.getPriority()).thenReturn(Optional.ofNullable(firstPriority));
+    when(second.getPriority()).thenReturn(Optional.ofNullable(secondPriority));
+    RocketMqReceiveRequest request = request(first, second);
+
+    for (int i = 0; i < 2; i++) {
+      assertThat(request.getMessageLiteTopic()).isNull();
+      assertThat(request.getMessagePriority()).isEqualTo(expectedPriority);
+    }
+
+    for (MessageView message : asList(first, second)) {
+      verify(message, times(1)).getLiteTopic();
+      verify(message, times(1)).getPriority();
+    }
   }
 
   @Test
@@ -121,6 +163,66 @@ class RocketMqReceiveSpanLinksExtractorTest {
         .containsExactly(singletonMap(MESSAGING_MESSAGE_ID, "message-1"));
   }
 
+  @ParameterizedTest
+  @CsvSource({"true,true", "true,false", "false,true", "false,false"})
+  void liteTopicBatchAttributes(boolean captureExperimentalSpanAttributes, boolean common) {
+    MessageView first = message("topic", "message-1", "tag", null, null, "key", TRACEPARENT);
+    MessageView second = message("topic", "message-2", "tag", null, null, "key", TRACEPARENT);
+    String secondLiteTopic = common ? "lite-a" : "lite-b";
+    when(first.getLiteTopic()).thenReturn(Optional.of("lite-a"));
+    when(second.getLiteTopic()).thenReturn(Optional.of(secondLiteTopic));
+    RocketMqReceiveRequest request = request(first, second);
+
+    assertThat(
+            batchAttributes(request, captureExperimentalSpanAttributes)
+                .get(stringKey("rocketmq.message.lite_topic")))
+        .isEqualTo(captureExperimentalSpanAttributes && common ? "lite-a" : null);
+
+    boolean attributesOnLinks = captureExperimentalSpanAttributes && !common;
+    assertThat(linkAttributes(request, 2, captureExperimentalSpanAttributes))
+        .containsExactly(
+            Attributes.builder()
+                .put(MESSAGING_MESSAGE_ID, "message-1")
+                .put(stringKey("rocketmq.message.lite_topic"), attributesOnLinks ? "lite-a" : null)
+                .build(),
+            Attributes.builder()
+                .put(MESSAGING_MESSAGE_ID, "message-2")
+                .put(
+                    stringKey("rocketmq.message.lite_topic"),
+                    attributesOnLinks ? secondLiteTopic : null)
+                .build());
+  }
+
+  @ParameterizedTest
+  @CsvSource({"true,true", "true,false", "false,true", "false,false"})
+  void priorityBatchAttributes(boolean captureExperimentalSpanAttributes, boolean common) {
+    MessageView first = message("topic", "message-1", "tag", null, null, "key", TRACEPARENT);
+    MessageView second = message("topic", "message-2", "tag", null, null, "key", TRACEPARENT);
+    int secondPriority = common ? 0 : 7;
+    when(first.getPriority()).thenReturn(Optional.of(0));
+    when(second.getPriority()).thenReturn(Optional.of(secondPriority));
+    RocketMqReceiveRequest request = request(first, second);
+
+    assertThat(
+            batchAttributes(request, captureExperimentalSpanAttributes)
+                .get(longKey("rocketmq.message.priority")))
+        .isEqualTo(captureExperimentalSpanAttributes && common ? 0L : null);
+
+    boolean attributesOnLinks = captureExperimentalSpanAttributes && !common;
+    assertThat(linkAttributes(request, 2, captureExperimentalSpanAttributes))
+        .containsExactly(
+            Attributes.builder()
+                .put(MESSAGING_MESSAGE_ID, "message-1")
+                .put(longKey("rocketmq.message.priority"), attributesOnLinks ? 0L : null)
+                .build(),
+            Attributes.builder()
+                .put(MESSAGING_MESSAGE_ID, "message-2")
+                .put(
+                    longKey("rocketmq.message.priority"),
+                    attributesOnLinks ? (long) secondPriority : null)
+                .build());
+  }
+
   private static RocketMqReceiveRequest request(MessageView... messages) {
     return RocketMqReceiveRequest.create(mock(ReceiveMessageRequest.class), asList(messages));
   }
@@ -130,7 +232,7 @@ class RocketMqReceiveSpanLinksExtractorTest {
       String messageIdValue,
       String tag,
       String group,
-      long deliveryTimestamp,
+      Long deliveryTimestamp,
       String key,
       String traceparent) {
     MessageId messageId = mock(MessageId.class);
@@ -139,27 +241,38 @@ class RocketMqReceiveSpanLinksExtractorTest {
     when(message.getTopic()).thenReturn(topic);
     when(message.getMessageId()).thenReturn(messageId);
     when(message.getTag()).thenReturn(Optional.of(tag));
-    when(message.getMessageGroup()).thenReturn(Optional.of(group));
-    when(message.getDeliveryTimestamp()).thenReturn(Optional.of(deliveryTimestamp));
+    when(message.getMessageGroup()).thenReturn(Optional.ofNullable(group));
+    when(message.getDeliveryTimestamp()).thenReturn(Optional.ofNullable(deliveryTimestamp));
     when(message.getKeys()).thenReturn(singleton(key));
     when(message.getProperties()).thenReturn(singletonMap("traceparent", traceparent));
     return message;
   }
 
   private static Attributes batchAttributes(RocketMqReceiveRequest request) {
+    return batchAttributes(request, false);
+  }
+
+  private static Attributes batchAttributes(
+      RocketMqReceiveRequest request, boolean captureExperimentalSpanAttributes) {
     AttributesBuilder attributes = Attributes.builder();
-    new RocketMqReceiveBatchMessageAttributeExtractor()
+    new RocketMqReceiveBatchMessageAttributeExtractor(captureExperimentalSpanAttributes)
         .onStart(attributes, Context.root(), request);
     return attributes.build();
   }
 
   private static List<Attributes> linkAttributes(RocketMqReceiveRequest request) {
-    return linkAttributes(request, 2);
+    return linkAttributes(request, 2, false);
   }
 
   private static List<Attributes> linkAttributes(RocketMqReceiveRequest request, int linkCount) {
+    return linkAttributes(request, linkCount, false);
+  }
+
+  private static List<Attributes> linkAttributes(
+      RocketMqReceiveRequest request, int linkCount, boolean captureExperimentalSpanAttributes) {
     SpanLinksBuilder spanLinks = mock(SpanLinksBuilder.class);
-    new RocketMqReceiveSpanLinksExtractor(W3CTraceContextPropagator.getInstance())
+    new RocketMqReceiveSpanLinksExtractor(
+            W3CTraceContextPropagator.getInstance(), captureExperimentalSpanAttributes)
         .extract(spanLinks, Context.root(), request);
 
     ArgumentCaptor<Attributes> attributes = ArgumentCaptor.forClass(Attributes.class);
