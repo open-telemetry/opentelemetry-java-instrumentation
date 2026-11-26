@@ -96,16 +96,16 @@ javaagent instrumentation, not library-only code.
   can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
   Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
 
-  Trace strong references from the concrete values stored at runtime, including lambda captures
-  and outer instances of non-static inner classes. Check every stored value, not just one
-  carrier's. Fallback storage leaks a carrier when a value stored for it can strongly reach it,
-  directly or through other carriers' stored values. For example, if A's value references B and
-  B's value references A, neither is collected. A one-way reference only ties lifetimes: if B's
-  value references A, A lives as long as B.
+  Trace strong references from each concrete value that can be stored at runtime, including lambda
+  captures and any enclosing instances held by inner classes. Check for a path back to the value's
+  own carrier. If a value reaches another carrier, check that carrier's fallback values in turn
+  for cycles across entries. If A's value keeps B alive and B's value keeps A alive, neither weak
+  key can clear. A connection's value can retain a completed request in either storage mode, even
+  without a cycle. The clearing rules above still apply.
 
-  If that analysis shows no stored value can reach its own carrier, do not add a GC test or a
-  separate JVM run with field injection disabled just to confirm it. If safety depends on when
-  state is cleared or replaced, test the relevant lifecycle path.
+  If the analysis rules out strong paths back to a value's own carrier and cycles across entries,
+  do not add a GC test or a separate JVM run with field injection disabled just to confirm that
+  result. If safety depends on when state is cleared or replaced, test the relevant lifecycle path.
 
 - Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
   supported concurrent updates need an invariant before choosing synchronization or ownership.
