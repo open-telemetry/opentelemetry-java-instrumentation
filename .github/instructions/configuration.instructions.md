@@ -16,7 +16,7 @@ user-facing instrumentation configuration.
 - Experimental features use an `experimental` marker in the flat name and the
   corresponding `/development` YAML form. Preview flat names use a `preview` marker and an
   unstable YAML form, either `/development` or `preview` in the key. Stable feature names need
-  neither marker.
+  neither marker. An opt-in default does not make a feature experimental.
 - Use [VERSIONING.md](../../VERSIONING.md) to determine which settings have a compatibility
   guarantee and when they can be removed. Apply the policy to the published artifact that exposes
   the setting to users, not the internal module that reads it. Settings exposed only through alpha
@@ -24,6 +24,16 @@ user-facing instrumentation configuration.
 - Preserve already-published names rather than renaming them to match a mechanical conversion
   or naming convention. Use a `SPECIAL_MAPPINGS` bridge entry only when normalized flat-property
   lookup does not resolve the published mapping.
+- For a new boolean that controls whether specific data is included in telemetry, use
+  `capture-<data>` in flat properties, `capture_<data>` in YAML, and
+  `setCapture<Data>(boolean)` for the corresponding Java builder method. Use the same data
+  name across forms and across instrumentations that offer the same option. Do not append
+  `.enabled`. For example, an option for `db.query.text` uses `capture-query-text`,
+  `capture_query_text`, and `setCaptureQueryText(boolean)`.
+- Name value transformations separately from capture. For example, `capture-query-text` controls
+  whether to include query text, while `query-sanitization.enabled` controls whether to mask values
+  in it. Document any interaction, such as capturing JDBC parameters disabling query sanitization.
+- Choose capture defaults based on the applicable semantic conventions and privacy requirements.
 
 ## Reading settings
 
@@ -84,7 +94,6 @@ user-facing instrumentation configuration.
 
 - Use noun-based names for structured `included`/`excluded` selectors, such as `mdc_attributes`,
   `headers`, or `request_parameters`. A selector describes the selected resource, not a capture action.
-  Keep `capture_*` for action booleans such as `capture_query` or `capture_message_content`.
   Java setters likewise use names such as `setMdcAttributes(IncludeExclude)`, not
   `setCaptureMdcAttributes(...)`. Prefer one selector value to paired include/exclude setters; the
   shared `IncludeExclude` type is the intended shape.
