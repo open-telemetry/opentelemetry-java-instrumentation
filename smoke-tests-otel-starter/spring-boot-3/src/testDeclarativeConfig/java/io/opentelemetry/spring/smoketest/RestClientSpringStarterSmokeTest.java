@@ -6,6 +6,7 @@
 package io.opentelemetry.spring.smoketest;
 
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static io.opentelemetry.semconv.ServiceAttributes.SERVICE_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,8 +22,7 @@ import org.springframework.web.client.RestClient;
       AbstractOtelSpringStarterSmokeTest.TestConfiguration.class,
       SpringSmokeOtelConfiguration.class
     },
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
-    properties = "spring.config.location=classpath:application-rest-client.yaml")
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 class RestClientSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired RestClient.Builder restClientBuilder;
@@ -43,7 +43,11 @@ class RestClientSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
     testing.waitAndAssertTraces(traceAssert ->
         traceAssert.hasSpansSatisfyingExactly(
-            span -> HttpSpanDataAssert.create(span).assertClientGetRequest("/ping"),
+            span ->
+                HttpSpanDataAssert.create(span)
+                    .assertClientGetRequest("/ping")
+                    .hasResourceSatisfying(resource ->
+                        resource.hasAttribute(SERVICE_NAME, "declarative-config-spring-boot-3")),
             span -> span.hasKind(SpanKind.SERVER).hasAttribute(HTTP_ROUTE, "/ping"),
             span -> withSpanAssert(span)));
   }
