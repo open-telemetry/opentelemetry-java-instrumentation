@@ -26,3 +26,4 @@ mcp-java-sdk-0.14:javaagent	2026-11-04T07:33:12Z	agent artifact missing cleanup.
 logback:bootstrap	2026-11-09T10:32:52Z	agent artifact missing cleanup.patch/cleanup.noop
 spring-cloud-gateway-3.0:library	2026-11-25T15:34:22Z	agent artifact missing cleanup.patch/cleanup.noop
 spring-cloud-gateway-common:library	2026-11-25T15:40:15Z	agent artifact missing cleanup.patch/cleanup.noop
+pekko-http-1.0:compile-stub	2026-11-26T15:33:09Z	agent artifact missing cleanup.patch/cleanup.noop
