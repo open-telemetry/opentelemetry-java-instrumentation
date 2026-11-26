@@ -22,7 +22,8 @@ import org.springframework.web.client.RestClient;
       AbstractOtelSpringStarterSmokeTest.TestConfiguration.class,
       SpringSmokeOtelConfiguration.class
     },
-    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = "spring.config.location=classpath:application-rest-client.yaml")
 class RestClientSpringStarterSmokeTest extends AbstractSpringStarterSmokeTest {
 
   @Autowired RestClient.Builder restClientBuilder;
