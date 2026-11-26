@@ -26,18 +26,19 @@ user-facing instrumentation configuration.
 - Preserve already-published names rather than renaming them to match a mechanical conversion
   or naming convention. Use a `SPECIAL_MAPPINGS` bridge entry only when normalized flat-property
   lookup does not resolve the published mapping.
-- For a new boolean that controls whether specific data is included in telemetry, use
+- For a new boolean that controls capture of data defined by a semantic convention, use
   `capture-<data>` in flat properties, `capture_<data>` in YAML, and
-  `setCapture<Data>(boolean)` for the corresponding Java builder method. Prefer semantic convention
-  terminology when it describes what the option captures. Use the same data name across forms and
-  across instrumentations that offer the same option. Do not append `.enabled`. For example, an
-  option for `db.query.text` uses `capture-query-text`, `capture_query_text`, and
+  `setCapture<Data>(boolean)` for the corresponding Java builder method. Do not append `.enabled`.
+  This rule does not apply to
+  [experimental attributes](emitted-telemetry.instructions.md#stability-and-safety).
+  For a single attribute, derive `<data>` from its key. Omit the first segment if the remainder
+  still identifies the data. For a group of attributes, name the group the setting captures.
+  Use the same words for `<data>` in all three names. For example, `query.text` from
+  `db.query.text` gives `capture-query-text`, `capture_query_text`, and
   `setCaptureQueryText(boolean)`.
 - Name value transformations separately from capture. For example, `capture-query-text` controls
   whether to include query text, while `query-sanitization.enabled` controls whether to mask values
   in it. Document any interaction, such as capturing JDBC parameters disabling query sanitization.
-- Follow the applicable semantic convention's default collection guidance. If the convention
-  doesn't specify a default, require opt-in for capture that would export sensitive values.
 
 ## Reading settings
 
