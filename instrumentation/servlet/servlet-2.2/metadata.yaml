@@ -17,10 +17,9 @@ configurations:
     description: >
       A comma-separated list of case-sensitive request parameter name patterns to capture as span
       attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name
-      casing. `?` matches one character and `*` matches zero or more characters. Excluded patterns
-      take precedence over included patterns. No request parameters are captured unless an included
-      or excluded pattern is configured; configuring only excluded patterns captures all request
-      parameters that do not match them, which may expose sensitive information.
+      casing. `?` matches one character and `*` matches zero or more characters. No request
+      parameters are captured unless included or excluded patterns are configured. `*` captures all
+      request parameters.
     type: list
     default: ""
     examples:
@@ -32,9 +31,8 @@ configurations:
       A comma-separated list of case-sensitive request parameter name patterns to exclude from span
       attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name
       casing. `?` matches one character and `*` matches zero or more characters. Excluded patterns
-      take precedence over included patterns. No request parameters are captured unless an included
-      or excluded pattern is configured; configuring only excluded patterns captures all request
-      parameters that do not match them, which may expose sensitive information.
+      take precedence over included patterns. If only excluded patterns are configured, all other
+      request parameters are captured, which may expose sensitive information.
     type: list
     default: ""
     examples:

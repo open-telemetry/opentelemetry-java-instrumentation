@@ -39,7 +39,7 @@ class FailsafeTelemetryTest {
             .build();
     FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     CircuitBreaker<Object> instrumentedCircuitBreaker =
-        failsafeTelemetry.createCircuitBreaker(userCircuitBreaker, "testing");
+        failsafeTelemetry.instrument(userCircuitBreaker, "testing");
 
     // when
     for (int i = 0; i < 5; i++) {
@@ -85,7 +85,7 @@ class FailsafeTelemetryTest {
         RetryPolicy.builder().handleResultIf(Objects::isNull).withMaxAttempts(3).build();
     FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     RetryPolicy<Object> instrumentedRetryPolicy =
-        failsafeTelemetry.createRetryPolicy(userRetryPolicy, "testing");
+        failsafeTelemetry.instrument(userRetryPolicy, "testing");
 
     // when
     for (int i = 0; i <= 4; i++) {

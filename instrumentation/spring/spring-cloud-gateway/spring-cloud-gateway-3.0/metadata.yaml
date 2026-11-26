@@ -1,0 +1,7 @@
+display_name: Spring Cloud Gateway
+description: >
+  This instrumentation enriches HTTP server spans and metrics with route information for Spring
+  Cloud Gateway 3.0+.
+library_link: https://github.com/spring-cloud/spring-cloud-gateway
+features:
+  - HTTP_ROUTE

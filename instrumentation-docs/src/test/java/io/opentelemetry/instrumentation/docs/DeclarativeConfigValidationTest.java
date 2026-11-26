@@ -63,6 +63,9 @@ class DeclarativeConfigValidationTest {
   private static final String GLOBAL_CONFIGURATIONS_SOURCE =
       SHARED_DEFINITIONS + " (global_configurations)";
 
+  private static final String METHODS_INCLUDE_PATH = "java.methods.include";
+  private static final String SERVER_SERVICE_MAPPING_PATH = "java.common.server_service_mapping";
+
   @Test
   void validateDeclarativeNames() throws IOException {
     List<ValidationResult> results = new ArrayList<>();
@@ -317,15 +320,16 @@ class DeclarativeConfigValidationTest {
     String declarativePath = config.declarativeName();
     ConfigurationType type = config.type();
 
-    // The declarative form is a structured list when either the flat type is structured_list
-    // (legacy) or the dedicated declarative_type marks it as such. server_service_mapping uses
-    // type: map (the flat target=service_name form) + declarative_type: structured_list.
-    boolean structuredList =
-        type == ConfigurationType.STRUCTURED_LIST
-            || config.declarativeType() == ConfigurationType.STRUCTURED_LIST;
-
-    // Create test value appropriate for the type
-    TestValue testValue = structuredList ? structuredListTestValue() : createTestValue(type);
+    TestValue testValue =
+        switch (declarativePath) {
+          case METHODS_INCLUDE_PATH -> {
+            String include = "com.example.Foo[one,two];com.example.Bar[call]";
+            yield new TestValue(include, include);
+          }
+          case SERVER_SERVICE_MAPPING_PATH ->
+              new TestValue("host1=svc1,host2=svc2", Map.of("host1", "svc1", "host2", "svc2"));
+          default -> createTestValue(type);
+        };
 
     Map<String, String> properties = new HashMap<>();
     properties.put(flatProperty, testValue.propertyValue);
@@ -335,8 +339,7 @@ class DeclarativeConfigValidationTest {
         DeclarativeConfigBridge.createInstrumentationConfig(configProperties)
             .getInstrumentationConfig();
 
-    Object retrievedValue =
-        navigateAndGetValue(declarativeConfig, declarativePath, type, structuredList);
+    Object retrievedValue = navigateAndGetValue(declarativeConfig, declarativePath, type);
 
     boolean valid = Objects.equals(testValue.expectedValue, retrievedValue);
 
@@ -361,15 +364,6 @@ class DeclarativeConfigValidationTest {
     };
   }
 
-  // The only structured_list config with a flat property is the common server-service-mapping. Its
-  // flat form is a target=service_name map, which the bridge turns into {target, service_name}
-  // entries. readServiceMappingAsMap below rebuilds the target -> service_name map from those
-  // entries, so the comparison exercises getStructuredList (what the consumer uses) rather than a
-  // string lookup.
-  private static TestValue structuredListTestValue() {
-    return new TestValue("host1=svc1,host2=svc2", Map.of("host1", "svc1", "host2", "svc2"));
-  }
-
   private record TestValue(String propertyValue, Object expectedValue) {}
 
   /**
@@ -379,10 +373,7 @@ class DeclarativeConfigValidationTest {
    * "java.logback_appender.capture_code_attributes/development".
    */
   private static Object navigateAndGetValue(
-      DeclarativeConfigProperties config,
-      String path,
-      ConfigurationType type,
-      boolean structuredList) {
+      DeclarativeConfigProperties config, String path, ConfigurationType type) {
     String[] segments = path.split("\\.");
 
     DeclarativeConfigProperties current = config;
@@ -396,8 +387,12 @@ class DeclarativeConfigValidationTest {
     }
 
     String lastSegment = segments[segments.length - 1];
-    if (structuredList) {
+    if (SERVER_SERVICE_MAPPING_PATH.equals(path)) {
       return readServiceMappingAsMap(current, lastSegment);
+    }
+    if (METHODS_INCLUDE_PATH.equals(path)) {
+      // MethodConfiguration parses the entire flat string, including commas within brackets.
+      return current.getString(lastSegment);
     }
     return switch (type) {
       case BOOLEAN -> current.getBoolean(lastSegment);
@@ -412,8 +407,7 @@ class DeclarativeConfigValidationTest {
    * Reads the server-service-mapping structured list through the bridge (the same {@code
    * getStructuredList} call {@code ServiceMappingResolver} makes) and collapses its {@code {target,
    * service_name}} entries back into a {@code target -> service_name} map, so it can be compared
-   * against the flat-property value the test fed in. This is specific to server-service-mapping,
-   * which is currently the only {@code structured_list} config.
+   * against the flat-property value the test fed in. This is specific to server-service-mapping.
    */
   private static Object readServiceMappingAsMap(
       DeclarativeConfigProperties current, String lastSegment) {
