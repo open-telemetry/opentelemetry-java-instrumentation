@@ -48,7 +48,8 @@ public final class DeclarativeConfigDurationUtil {
     if (properties.isString(key)
         || properties.isBoolean(key)
         || properties.isDouble(key)
-        || properties.getStructured(key) != null
+        // A wrapped flat bridge returns structured views even for absent keys.
+        || (properties.getPropertyKeys().contains(key) && properties.getStructured(key) != null)
         || properties.getStructuredList(key) != null
         || hasScalarList(properties, key)) {
       throw new DeclarativeConfigException(

@@ -11,6 +11,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.ExtendedOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
+import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigDurationUtil;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -18,6 +19,18 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 class ExtendedOpenTelemetryTest {
   @RegisterExtension
   static final AgentInstrumentationExtension testing = AgentInstrumentationExtension.create();
+
+  @Test
+  void unsetDurationReturnsNull() {
+    DeclarativeConfigProperties instrumentationConfig =
+        ((ExtendedOpenTelemetry) GlobalOpenTelemetry.get())
+            .getConfigProvider()
+            .getInstrumentationConfig();
+    DeclarativeConfigProperties foo =
+        instrumentationConfig.getStructured("java").getStructured("foo");
+
+    assertThat(DeclarativeConfigDurationUtil.getDuration(foo, "min_duration")).isNull();
+  }
 
   @Test
   void configTypePredicates() {
