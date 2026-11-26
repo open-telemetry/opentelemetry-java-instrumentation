@@ -169,10 +169,11 @@ javaagent instrumentation, not library-only code.
   Restore or release before fallible completion work that does not need the temporary state.
   Use `try`/`finally` when the work intentionally requires that state to remain installed.
 
-- Keep a holder private in the narrowest owner. A single instrumentation class owns its holder;
-  several classes in one module use a private field in `*Singletons`, exposed by a same-named
-  zero-argument accessor and statically imported by callers. Cross-module state uses a focused
-  shared bootstrap owner.
+- Keep a holder private in the class that owns the state or its lifecycle. If no class is a natural
+  owner, use the narrowest helper the callers can share.
+
+- Use a focused bootstrap owner when a handoff crosses class-loader boundaries that prevent the
+  callers from sharing an ordinary helper. Separate Gradle modules alone don't require bootstrap.
 
 - Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
   as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
