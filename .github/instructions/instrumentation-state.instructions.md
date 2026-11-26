@@ -104,13 +104,12 @@ javaagent instrumentation, not library-only code.
   unregister the callback. If a shutdown path misses that cleanup, fix the hook rather than
   weakening the reference.
 
-- **Retention after unregistration.** A closed SDK handle still holds the callback. Keeping it is
-  a defect only if instrumentation retains callback state longer than the native library would;
-  native Micrometer meters and HikariCP's own tracker also keep theirs after removal. Clearing the
-  handle is optional and helps only when nothing else references the captured state. For example,
-  it frees `stats` captured by `stats::completedFor` in a removed Micrometer `FunctionCounter` that
-  the application still holds, but not the HikariCP pool, which a retained `HikariDataSource`
-  references directly.
+- **Retention after unregistration.** A closed SDK handle still holds the callback. Retaining it
+  is not a defect when an equivalent native implementation retains the same state after removal,
+  as native Micrometer meters and HikariCP's Micrometer tracker do. Clearing the handle is still
+  worthwhile when nothing else references the captured state: it frees `stats` captured by
+  `stats::completedFor` in a removed Micrometer `FunctionCounter` that the application still
+  holds, but not a HikariCP pool still referenced by a retained `HikariDataSource`.
 
 - **Collection without explicit shutdown.** If an object or class loader should be collectible
   while the registration is live, trace every strong reference to it from the SDK or other
