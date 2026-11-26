@@ -14,6 +14,8 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 public class KafkaStreamsSingletons {
 
+  private static final ThreadLocal<StateHolder> holder = new ThreadLocal<>();
+
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.kafka-streams-0.11";
 
   private static final Instrumenter<KafkaProcessRequest, Void> instrumenter =
@@ -28,6 +30,10 @@ public class KafkaStreamsSingletons {
 
   public static Instrumenter<KafkaProcessRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static ThreadLocal<StateHolder> holder() {
+    return holder;
   }
 
   private KafkaStreamsSingletons() {}

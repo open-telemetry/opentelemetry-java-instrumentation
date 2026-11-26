@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
+import static io.opentelemetry.javaagent.bootstrap.redisson.RedissonErrorState.currentServerErrorType;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static java.nio.charset.StandardCharsets.US_ASCII;
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -34,13 +35,12 @@ class RedissonDbAttributesGetterTest {
   void capturesUnknownServerPrefixFromRespReply() {
     ByteBuf response = Unpooled.copiedBuffer("-CUSTOM diagnostic details\r\n", US_ASCII);
     String previous =
-        RedissonErrorCapture.currentServerErrorType()
-            .set(RedissonErrorCapture.parseServerErrorType(response));
+        currentServerErrorType().set(RedissonErrorCapture.parseServerErrorType(response));
     RedisException error = new RedisException("CUSTOM diagnostic details. channel: redis");
     try {
       RedissonErrorCapture.captureServerError(error);
     } finally {
-      RedissonErrorCapture.currentServerErrorType().restore(previous);
+      currentServerErrorType().restore(previous);
       response.release();
     }
 
@@ -56,7 +56,7 @@ class RedissonDbAttributesGetterTest {
     assertThat(GETTER.getErrorType(REQUEST, null, uncapturedError))
         .isEqualTo(RedisException.class.getName());
     assertThat(extractedErrorType(uncapturedError)).isEqualTo(RedisException.class.getName());
-    assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
+    assertThat(currentServerErrorType().get()).isNull();
   }
 
   @Test
@@ -135,12 +135,11 @@ class RedissonDbAttributesGetterTest {
     RedisLoadingException error = new RedisLoadingException("LOADING Redis is loading");
     ByteBuf response = Unpooled.copiedBuffer("-LOADING Redis is loading\r\n", US_ASCII);
     String previous =
-        RedissonErrorCapture.currentServerErrorType()
-            .set(RedissonErrorCapture.parseServerErrorType(response));
+        currentServerErrorType().set(RedissonErrorCapture.parseServerErrorType(response));
     try {
       RedissonErrorCapture.captureServerError(error);
     } finally {
-      RedissonErrorCapture.currentServerErrorType().restore(previous);
+      currentServerErrorType().restore(previous);
       response.release();
     }
 
@@ -152,23 +151,23 @@ class RedissonDbAttributesGetterTest {
     assertThat(GETTER.getErrorType(REQUEST, null, error))
         .isEqualTo(RedisLoadingException.class.getName());
     assertThat(extractedErrorType(error)).isEqualTo(RedisLoadingException.class.getName());
-    assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
+    assertThat(currentServerErrorType().get()).isNull();
   }
 
   @Test
   void capturedPrefixIsConsumedBeforeCompletionCallbacks() {
     RedisException serverError = new RedisException("CUSTOM diagnostic details");
     RedisException clientError = new RedisException("client-side failure");
-    String previous = RedissonErrorCapture.currentServerErrorType().set("CUSTOM");
+    String previous = currentServerErrorType().set("CUSTOM");
     try {
       RedissonErrorCapture.captureServerError(serverError);
       // a callback issuing a new, client-side failing command within the decoder frame
       RedissonErrorCapture.captureServerError(clientError);
-      assertThat(RedissonErrorCapture.currentServerErrorType().get()).isNull();
+      assertThat(currentServerErrorType().get()).isNull();
       // a repeated capture, as with BatchCommandData calling super.tryFailure, keeps the prefix
       RedissonErrorCapture.captureServerError(serverError);
     } finally {
-      RedissonErrorCapture.currentServerErrorType().restore(previous);
+      currentServerErrorType().restore(previous);
     }
 
     assertThat(extractedErrorType(serverError)).isEqualTo("CUSTOM");

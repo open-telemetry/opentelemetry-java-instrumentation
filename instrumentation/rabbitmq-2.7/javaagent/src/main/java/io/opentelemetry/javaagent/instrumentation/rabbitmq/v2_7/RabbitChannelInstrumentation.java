@@ -7,10 +7,10 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitInstrumenterHelper.helper;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.PROCESSING_OWNED_OUTSIDE_RABBIT_CLIENT;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.channelInstrumenter;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.currentRabbitContext;
 import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.receiveInstrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.canThrow;
 import static net.bytebuddy.matcher.ElementMatchers.isGetter;
@@ -156,7 +156,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
-        CURRENT_RABBIT_CONTEXT.set(context);
+        currentRabbitContext().set(context);
         helper().setChannelAndMethod(context, request);
 
         return new ChannelMethodAdviceScope(callDepth, context, context.makeCurrent(), request);
@@ -172,7 +172,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
         scope.close();
 
-        CURRENT_RABBIT_CONTEXT.remove();
+        currentRabbitContext().remove();
         channelInstrumenter(request).end(context, request, null, throwable);
       }
     }
@@ -252,7 +252,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
         }
 
         Context context = channelInstrumenter(request).start(parentContext, request);
-        CURRENT_RABBIT_CONTEXT.set(context);
+        currentRabbitContext().set(context);
         helper().setChannelAndMethod(context, request);
 
         return new ChannelPublishAdviceScope(callDepth, context, context.makeCurrent(), request);
@@ -268,7 +268,7 @@ class RabbitChannelInstrumentation implements TypeInstrumentation {
 
         scope.close();
 
-        CURRENT_RABBIT_CONTEXT.remove();
+        currentRabbitContext().remove();
         channelInstrumenter(request).end(context, request, null, throwable);
       }
     }

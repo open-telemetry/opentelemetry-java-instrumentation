@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_1;
 
+import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_1.SpringRabbitSingletons.currentRequest;
 import static io.opentelemetry.javaagent.instrumentation.spring.rabbit.v1_1.SpringRabbitSingletons.instrumenter;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -12,7 +13,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 import com.rabbitmq.client.Channel;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.ArrayList;
@@ -49,13 +49,6 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
 
   @SuppressWarnings("unused")
   public static class ExecuteListenerAdvice {
-
-    private static final ScopedThreadValue<SpringRabbitRequest> currentRequest =
-        new ScopedThreadValue<>();
-
-    public static ScopedThreadValue<SpringRabbitRequest> currentRequest() {
-      return currentRequest;
-    }
 
     public static class AdviceScope {
       @Nullable private final Context context;
@@ -133,14 +126,14 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
         @Advice.Argument(0) Channel channel,
         @Advice.Argument(1) Object data) {
       AdviceScope adviceScope = AdviceScope.start(container, channel, data);
-      adviceScope.previousRequest = currentRequest.set(adviceScope.request);
+      adviceScope.previousRequest = currentRequest().set(adviceScope.request);
       return adviceScope;
     }
 
     @Advice.OnMethodExit(suppress = Throwable.class, onThrowable = Throwable.class, inline = false)
     public static void onExit(
         @Advice.Thrown @Nullable Throwable throwable, @Advice.Enter AdviceScope adviceScope) {
-      currentRequest.restore(adviceScope.previousRequest);
+      currentRequest().restore(adviceScope.previousRequest);
       adviceScope.end(throwable);
     }
   }
@@ -150,7 +143,7 @@ class AbstractMessageListenerContainerInstrumentation implements TypeInstrumenta
 
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static void onEnter(@Advice.Argument(1) Object data) {
-      SpringRabbitRequest request = ExecuteListenerAdvice.currentRequest().get();
+      SpringRabbitRequest request = currentRequest().get();
       if (request != null) {
         request.recordDelivery(data);
       }

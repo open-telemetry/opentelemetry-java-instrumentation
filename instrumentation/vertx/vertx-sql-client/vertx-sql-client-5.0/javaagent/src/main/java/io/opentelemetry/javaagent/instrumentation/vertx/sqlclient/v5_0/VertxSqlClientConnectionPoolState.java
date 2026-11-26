@@ -6,6 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0;
 
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientQueryState.QUERY_STATE;
+import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentConstructionState;
 import static io.opentelemetry.javaagent.instrumentation.vertx.sqlclient.v5_0.VertxSqlClientSingletons.currentSubmission;
 
 import io.opentelemetry.context.Context;
@@ -25,7 +26,7 @@ public final class VertxSqlClientConnectionPoolState {
 
   public static void attachSupplier(ConnectionPool<?> pool) {
     VertxSqlClientConstructionState constructionState =
-        VertxSqlClientSingletons.currentConstructionState().get();
+        currentConstructionState().get();
     VertxSqlClientState state = constructionState != null ? constructionState.getState() : null;
     if (state != null && state.isSupplier()) {
       POOL_SUPPLIER.set(pool, state.getInfo());

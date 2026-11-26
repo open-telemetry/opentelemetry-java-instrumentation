@@ -6,7 +6,6 @@
 package io.vertx.redis.client.impl;
 
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisServerTarget;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.vertx.core.net.SocketAddress;
 import java.util.ArrayList;
@@ -19,9 +18,6 @@ public class RedisConnectionManagerUtil {
       VirtualField.find(RedisConnectionManager.class, RedisServerTarget.class);
   private static final VirtualField<RedisURI, CapturedTarget> REDIS_URI_TARGET_FIELD =
       VirtualField.find(RedisURI.class, CapturedTarget.class);
-
-  private static final ScopedThreadValue<RedisServerTarget> currentServerTarget =
-      new ScopedThreadValue<>();
 
   public static void setServerTarget(Object manager, @Nullable RedisServerTarget target) {
     TARGET_FIELD.set((RedisConnectionManager) manager, target);
@@ -57,10 +53,6 @@ public class RedisConnectionManagerUtil {
   @Nullable
   public static CapturedTarget getRedisUriTarget(@Nullable RedisURI redisUri) {
     return redisUri == null ? null : REDIS_URI_TARGET_FIELD.get(redisUri);
-  }
-
-  public static ScopedThreadValue<RedisServerTarget> currentServerTarget() {
-    return currentServerTarget;
   }
 
   private RedisConnectionManagerUtil() {}

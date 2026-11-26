@@ -22,6 +22,7 @@ import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
 import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
@@ -34,6 +35,8 @@ public class SpringRabbitSingletons {
   private static final String PROCESS_OPERATION_NAME = "process";
 
   private static final Instrumenter<SpringRabbitRequest, Void> instrumenter;
+  private static final ScopedThreadValue<SpringRabbitRequest> currentRequest =
+      new ScopedThreadValue<>();
 
   static {
     OpenTelemetry openTelemetry = GlobalOpenTelemetry.get();
@@ -84,6 +87,10 @@ public class SpringRabbitSingletons {
 
   public static Instrumenter<SpringRabbitRequest, Void> instrumenter() {
     return instrumenter;
+  }
+
+  public static ScopedThreadValue<SpringRabbitRequest> currentRequest() {
+    return currentRequest;
   }
 
   private SpringRabbitSingletons() {}

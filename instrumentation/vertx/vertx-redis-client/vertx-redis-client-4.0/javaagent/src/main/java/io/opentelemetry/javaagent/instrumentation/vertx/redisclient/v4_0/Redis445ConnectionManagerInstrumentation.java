@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0;
 
+import static io.opentelemetry.javaagent.instrumentation.vertx.redisclient.v4_0.VertxRedisClientSingletons.currentServerTarget;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
@@ -66,13 +67,12 @@ class Redis445ConnectionManagerInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
     public static RedisServerTarget onEnter(@Advice.This Object manager) {
-      return RedisConnectionManagerUtil.currentServerTarget()
-          .set(RedisConnectionManagerUtil.getServerTarget(manager));
+      return currentServerTarget().set(RedisConnectionManagerUtil.getServerTarget(manager));
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.Enter @Nullable RedisServerTarget previous) {
-      RedisConnectionManagerUtil.currentServerTarget().restore(previous);
+      currentServerTarget().restore(previous);
     }
   }
 }

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
-import static io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonErrorCapture.currentServerErrorType;
+import static io.opentelemetry.javaagent.bootstrap.redisson.RedissonErrorState.currentServerErrorType;
 import static io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.RedissonErrorCapture.parseServerErrorType;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;

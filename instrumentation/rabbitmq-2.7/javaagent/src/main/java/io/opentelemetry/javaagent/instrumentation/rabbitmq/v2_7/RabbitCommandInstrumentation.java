@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
-import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitCommandInstrumentation.SpanHolder.CURRENT_RABBIT_CONTEXT;
+import static io.opentelemetry.javaagent.instrumentation.rabbitmq.v2_7.RabbitSingletons.currentRabbitContext;
 import static net.bytebuddy.matcher.ElementMatchers.isConstructor;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -38,20 +38,13 @@ class RabbitCommandInstrumentation implements TypeInstrumentation {
         isConstructor(), getClass().getName() + "$CommandConstructorAdvice");
   }
 
-  public static final class SpanHolder {
-
-    public static final ThreadLocal<Context> CURRENT_RABBIT_CONTEXT = new ThreadLocal<>();
-
-    private SpanHolder() {}
-  }
-
   @SuppressWarnings("unused")
   public static class CommandConstructorAdvice {
 
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void setSpanNameAddHeaders(@Advice.This Command command) {
 
-      Context context = CURRENT_RABBIT_CONTEXT.get();
+      Context context = currentRabbitContext().get();
       if (context != null && command.getMethod() != null) {
         RabbitInstrumenterHelper.onCommand(Span.fromContext(context), command);
       }

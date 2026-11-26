@@ -5,11 +5,11 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0;
 
+import static io.opentelemetry.javaagent.bootstrap.redisson.RedissonErrorState.currentServerErrorType;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 import io.netty.buffer.ByteBuf;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.RedisErrorPrefix;
-import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
 import org.redisson.client.RedisException;
@@ -31,14 +31,8 @@ import org.redisson.client.RedisException;
  */
 public final class RedissonErrorCapture {
 
-  private static final ScopedThreadValue<String> currentServerErrorType = new ScopedThreadValue<>();
-
   private static final VirtualField<RedisException, String> SERVER_ERROR =
       VirtualField.find(RedisException.class, String.class, "redissonServerErrorType");
-
-  public static ScopedThreadValue<String> currentServerErrorType() {
-    return currentServerErrorType;
-  }
 
   @Nullable
   public static String parseServerErrorType(ByteBuf input) {
@@ -76,11 +70,11 @@ public final class RedissonErrorCapture {
       return;
     }
 
-    String errorType = currentServerErrorType.get();
+    String errorType = currentServerErrorType().get();
     if (errorType != null) {
       SERVER_ERROR.set((RedisException) error, errorType);
       // consume so completion callbacks run by tryFailure cannot attribute it to another command
-      currentServerErrorType.set(null);
+      currentServerErrorType().set(null);
     }
   }
 
