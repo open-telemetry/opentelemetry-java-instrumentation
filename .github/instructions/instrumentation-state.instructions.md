@@ -173,7 +173,7 @@ javaagent instrumentation, not library-only code.
   owner, use the narrowest helper the callers can share.
 
 - Use a focused bootstrap owner when a handoff crosses class-loader boundaries that prevent the
-  callers from sharing an ordinary helper. Separate Gradle modules alone don't require bootstrap.
+  callers from sharing an ordinary helper.
 
 - Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
   as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
