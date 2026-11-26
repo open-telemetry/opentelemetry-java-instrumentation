@@ -333,12 +333,16 @@ public final class LogPatternInjection {
         || converter.equals("yellow");
   }
 
-  private static boolean allowsNestedInjection(String converter) {
+  private static boolean allowsNestedInjection(String converter, Framework framework) {
     return !converter.equals("replace")
         && !converter.equals("maxLen")
         && !converter.equals("maxLength")
         && !converter.equals("equals")
-        && !converter.equals("equalsIgnoreCase");
+        && !converter.equals("equalsIgnoreCase")
+        && !(framework == Framework.LOG4J2
+            && (converter.equals("notEmpty")
+                || converter.equals("varsNotEmpty")
+                || converter.equals("variablesNotEmpty")));
   }
 
   // Returns an insertion offset, -1 for literal-only text, or -2 for prefix fields without a
@@ -389,7 +393,7 @@ public final class LogPatternInjection {
         int nested = messageInsertion(pattern.substring(end + 1, wrapperEnd - 1), framework);
         if (nested >= 0) {
           if (pattern.substring(i + 1, name).indexOf('.') >= 0
-              || !allowsNestedInjection(converter)) {
+              || !allowsNestedInjection(converter, framework)) {
             return precedingEnd;
           }
           return nested == 0 ? precedingEnd : end + 1 + nested;

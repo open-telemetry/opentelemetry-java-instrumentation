@@ -284,6 +284,32 @@ public abstract class LogPatternTest {
   }
 
   @ParameterizedTest
+  @ValueSource(strings = {"notEmpty", "varsNotEmpty", "variablesNotEmpty"})
+  void keepsEmptyConditionalMessageSuppressed(String converter) {
+    String pattern = "%" + converter + "{%X{request_id} msg=%m}%n";
+    assertRenderedPattern(
+        PatternLayout.newBuilder().withPattern(pattern).build(),
+        "",
+        (layout, rendered) -> {
+          if (ENABLED) {
+            assertThat(rendered)
+                .isEqualTo(
+                    TRACE
+                        + "="
+                        + Span.current().getSpanContext().getTraceId()
+                        + " "
+                        + SPAN
+                        + "="
+                        + Span.current().getSpanContext().getSpanId()
+                        + " "
+                        + System.lineSeparator());
+          } else {
+            assertThat(rendered).isEqualTo(System.lineSeparator());
+          }
+        });
+  }
+
+  @ParameterizedTest
   @ValueSource(strings = {"%X{trace_id}", "%X"})
   void recognizesMdcInsideEquals(String mdc) {
     assertRenderedPattern(
@@ -324,6 +350,11 @@ public abstract class LogPatternTest {
 
   private void assertRenderedPattern(
       PatternLayout layout, BiConsumer<PatternLayout, String> assertion) {
+    assertRenderedPattern(layout, "pattern message", assertion);
+  }
+
+  private void assertRenderedPattern(
+      PatternLayout layout, String message, BiConsumer<PatternLayout, String> assertion) {
     Logger logger = (Logger) LogManager.getLogger("TestLogger");
     List<String> messages = new ArrayList<>();
     AbstractAppender appender =
@@ -340,7 +371,7 @@ public abstract class LogPatternTest {
           .runWithSpan(
               "log",
               () -> {
-                logger.info("pattern message");
+                logger.info(message);
                 assertion.accept(layout, messages.get(0));
               });
     } finally {

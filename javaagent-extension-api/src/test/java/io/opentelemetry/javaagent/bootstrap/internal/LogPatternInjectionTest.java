@@ -67,9 +67,6 @@ class LogPatternInjectionTest {
         "style",
         "enc",
         "encode",
-        "notEmpty",
-        "varsNotEmpty",
-        "variablesNotEmpty",
         "black",
         "blue",
         "green",
@@ -79,21 +76,30 @@ class LogPatternInjectionTest {
         "yellow"
       })
   void supportsLog4j2Wrappers(String converter) {
-    String options = converter.startsWith("max") ? "{100}" : "";
     assertPattern(
-        "%" + converter + "{%d %-5p prefix: %m%n}" + options,
-        "%" + converter + "{%d %-5p " + FIELDS + " prefix: %m%n}" + options,
+        "%" + converter + "{%d %-5p prefix: %m%n}",
+        "%" + converter + "{%d %-5p " + FIELDS + " prefix: %m%n}",
         Framework.LOG4J2);
     assertPattern(
-        "%d %" + converter + "{%X{trace_id}}" + options + " %m%n",
-        "%d %" + converter + "{%X{trace_id}}" + options + " span_id=%X{span_id} %m%n",
+        "%d %" + converter + "{%X{trace_id}} %m%n",
+        "%d %" + converter + "{%X{trace_id}} span_id=%X{span_id} %m%n",
         Framework.LOG4J2);
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {"maxLen", "maxLength", "equals", "equalsIgnoreCase"})
+  @ValueSource(
+      strings = {
+        "maxLen",
+        "maxLength",
+        "equals",
+        "equalsIgnoreCase",
+        "notEmpty",
+        "varsNotEmpty",
+        "variablesNotEmpty"
+      })
   void recognizesNestedPatternsWithoutChangingTheirInput(String converter) {
-    String options = converter.startsWith("max") ? "{20}" : "{ping}{pong}";
+    String options =
+        converter.startsWith("max") ? "{20}" : converter.startsWith("equals") ? "{ping}{pong}" : "";
     assertPattern(
         "%d %" + converter + "{%p %m}" + options + "%n",
         "%d " + FIELDS + " %" + converter + "{%p %m}" + options + "%n",
