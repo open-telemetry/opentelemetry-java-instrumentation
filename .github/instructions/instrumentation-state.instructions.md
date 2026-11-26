@@ -54,7 +54,7 @@ javaagent instrumentation, not library-only code.
   centralize associations in `Cache<Object, State>` or replace it with `VirtualField<Object, State>`.
   Broad interfaces are appropriate only when the state belongs to their whole abstraction, such as
   propagated task context on `Runnable`. If no narrower stable carrier exists, document why and
-  verify fallback and lifecycle behavior.
+  verify fallback safety and lifecycle behavior as described below.
 
 - The `(carrier class, value class)` pair identifies the field. The same pair intentionally shares
   storage across instrumentations. Use a dedicated holder for unrelated state or several related
@@ -94,6 +94,13 @@ javaagent instrumentation, not library-only code.
 - Fallback storage has weak keys and strong values. A value that strongly references its carrier
   can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
   Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
+
+  Trace direct and indirect strong references from the stored value to its carrier. Check the
+  concrete values stored at runtime, not just the declared value type. If there is no strong
+  reference path back to the carrier, that analysis is sufficient to verify fallback retention
+  safety. Do not add a GC test or a separate JVM run with field injection disabled just to
+  confirm it. If safety depends on when state is cleared or replaced, test the relevant lifecycle
+  path.
 
 - Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
   supported concurrent updates need an invariant before choosing synchronization or ownership.
