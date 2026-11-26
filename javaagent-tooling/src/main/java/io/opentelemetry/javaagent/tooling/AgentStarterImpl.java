@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.internal.cache.weaklockfree.WeakConc
 import io.opentelemetry.javaagent.bootstrap.AgentInitializer;
 import io.opentelemetry.javaagent.bootstrap.AgentStarter;
 import io.opentelemetry.javaagent.bootstrap.ApplicationSpanHolder;
+import io.opentelemetry.javaagent.bootstrap.InternalLogger;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
 import io.opentelemetry.javaagent.tooling.config.EarlyInitAgentConfig;
 import java.io.File;
@@ -98,8 +99,6 @@ public class AgentStarterImpl implements AgentStarter {
     Throwable startupError = null;
     try {
       loggingCustomizer.init();
-      EarlyInitAgentConfig.get().logEarlyConfigErrorsIfAny();
-      ExtensionClassLoader.logExtensionLoadingMessages();
 
       // start cleaner first so weak refs created during bytebuddy install get cleaned up
       WeakConcurrentMapCleaner.start();
@@ -111,8 +110,16 @@ public class AgentStarterImpl implements AgentStarter {
     if (startupError == null) {
       loggingCustomizer.onStartupSuccess();
     } else {
+      dumpLogsBufferedBeforeLoggingInit();
       loggingCustomizer.onStartupFailure(startupError);
     }
+  }
+
+  // if startup failed before a logging implementation was initialized, print what was logged so
+  // far instead of losing it; does nothing if logging was initialized
+  @SuppressWarnings("SystemOut")
+  private static void dumpLogsBufferedBeforeLoggingInit() {
+    InternalLogger.dumpBufferedLogs(System.err);
   }
 
   private void installTransformers() {

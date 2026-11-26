@@ -83,10 +83,6 @@ public final class EarlyInitAgentConfig {
     }
   }
 
-  public void logEarlyConfigErrorsIfAny() {
-    ConfigurationFile.logErrorIfAny();
-  }
-
   private static String toEnvVarName(String propertyName) {
     return propertyName.toUpperCase(Locale.ROOT).replace('-', '_').replace('.', '_');
   }

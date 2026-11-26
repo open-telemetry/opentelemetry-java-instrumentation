@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.tooling;
 
+import static java.util.logging.Level.ALL;
 import static java.util.logging.Level.FINE;
 import static java.util.logging.Level.WARNING;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -15,21 +16,49 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.jar.Attributes;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
+import java.util.logging.Handler;
 import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
 class ExtensionClassLoaderTest {
   private static final File AGENT_FILE = new File("/agent.jar");
+  private static final Logger logger = Logger.getLogger(ExtensionClassLoader.class.getName());
+
+  private final List<LogRecord> logs = new ArrayList<>();
+  private final Handler handler =
+      new Handler() {
+        @Override
+        public void publish(LogRecord record) {
+          logs.add(record);
+        }
+
+        @Override
+        public void flush() {}
+
+        @Override
+        public void close() {}
+      };
+  private Level previousLevel;
+
+  @BeforeEach
+  void captureLogs() {
+    previousLevel = logger.getLevel();
+    logger.setLevel(ALL);
+    logger.addHandler(handler);
+  }
 
   @AfterEach
-  void resetLogs() {
-    ExtensionClassLoader.getLogsForTest().clear();
+  void stopCapturingLogs() {
+    logger.removeHandler(handler);
+    logger.setLevel(previousLevel);
   }
 
   @Test
@@ -83,27 +112,27 @@ class ExtensionClassLoaderTest {
     ExtensionClassLoader.parseLocation(jarPath1, AGENT_FILE);
     assertThat(logsAtLevel(WARNING)).isEmpty();
     assertThat(logsAtLevel(FINE)).hasSize(1);
-    ExtensionClassLoader.getLogsForTest().clear();
+    logs.clear();
 
     ExtensionClassLoader.parseLocation(outputDir.toString(), AGENT_FILE);
     assertThat(logsAtLevel(WARNING)).isEmpty();
     assertThat(logsAtLevel(FINE)).hasSize(1);
-    ExtensionClassLoader.getLogsForTest().clear();
+    logs.clear();
 
     ExtensionClassLoader.parseLocation("/does/not/exist", AGENT_FILE);
     assertThat(logsAtLevel(WARNING)).hasSize(1);
     assertThat(logsAtLevel(FINE)).isEmpty();
-    ExtensionClassLoader.getLogsForTest().clear();
+    logs.clear();
 
     ExtensionClassLoader.parseLocation(emptyDir.toString(), AGENT_FILE);
     assertThat(logsAtLevel(WARNING)).hasSize(1);
     assertThat(logsAtLevel(FINE)).isEmpty();
-    ExtensionClassLoader.getLogsForTest().clear();
+    logs.clear();
 
     ExtensionClassLoader.parseLocation(jarPath1 + ",/does/not/exist", AGENT_FILE);
     assertThat(logsAtLevel(WARNING)).hasSize(1);
     assertThat(logsAtLevel(FINE)).hasSize(1);
-    ExtensionClassLoader.getLogsForTest().clear();
+    logs.clear();
 
     ExtensionClassLoader.parseLocation(null, AGENT_FILE);
     assertThat(logsAtLevel(WARNING)).isEmpty();
@@ -114,11 +143,11 @@ class ExtensionClassLoaderTest {
     assertThat(logsAtLevel(FINE)).isEmpty();
   }
 
-  private static List<String> logsAtLevel(Level level) {
+  private List<String> logsAtLevel(Level level) {
     List<String> result = new ArrayList<>();
-    for (Map.Entry<Level, String> entry : ExtensionClassLoader.getLogsForTest()) {
-      if (entry.getKey().equals(level)) {
-        result.add(entry.getValue());
+    for (LogRecord record : logs) {
+      if (record.getLevel().equals(level)) {
+        result.add(record.getMessage());
       }
     }
     return result;

@@ -22,12 +22,11 @@ import javax.annotation.Nullable;
 
 final class ConfigurationFile {
 
-  @Nullable private static Map<String, String> configFileContents;
+  // same logger name these errors were reported under before
+  private static final Logger logger =
+      Logger.getLogger(ConfigurationPropertiesSupplier.class.getName());
 
-  // this class is used early, and must not use logging in most of its methods
-  // in case any file loading/parsing error occurs, we save the error message and log it later, when
-  // the logging subsystem is initialized
-  @Nullable private static String fileLoadErrorMessage;
+  @Nullable private static Map<String, String> configFileContents;
 
   static Map<String, String> getProperties() {
     if (configFileContents == null) {
@@ -59,7 +58,7 @@ final class ConfigurationFile {
     // Configuration properties file is optional
     File configurationFile = new File(configurationFilePath);
     if (!configurationFile.exists()) {
-      fileLoadErrorMessage = "Configuration file \"" + configurationFilePath + "\" not found.";
+      logger.log(SEVERE, "Configuration file \"" + configurationFilePath + "\" not found.");
       return emptyMap();
     }
 
@@ -68,23 +67,17 @@ final class ConfigurationFile {
         new InputStreamReader(new FileInputStream(configurationFile), UTF_8)) {
       properties.load(reader);
     } catch (FileNotFoundException fnf) {
-      fileLoadErrorMessage = "Configuration file \"" + configurationFilePath + "\" not found.";
+      logger.log(SEVERE, "Configuration file \"" + configurationFilePath + "\" not found.");
     } catch (IOException ioe) {
-      fileLoadErrorMessage =
+      logger.log(
+          SEVERE,
           "Configuration file \""
               + configurationFilePath
-              + "\" cannot be accessed or correctly parsed.";
+              + "\" cannot be accessed or correctly parsed.");
     }
 
     return properties.entrySet().stream()
         .collect(toMap(e -> e.getKey().toString(), e -> e.getValue().toString()));
-  }
-
-  static void logErrorIfAny() {
-    if (fileLoadErrorMessage != null) {
-      Logger.getLogger(ConfigurationPropertiesSupplier.class.getName())
-          .log(SEVERE, fileLoadErrorMessage);
-    }
   }
 
   private ConfigurationFile() {}
