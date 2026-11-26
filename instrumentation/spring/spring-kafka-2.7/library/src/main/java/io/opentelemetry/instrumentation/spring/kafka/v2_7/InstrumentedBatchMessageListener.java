@@ -188,8 +188,7 @@ class InstrumentedBatchMessageListener<K, V>
 
   private static <K, V> ConsumerRecords<K, V> toConsumerRecords(List<ConsumerRecord<K, V>> data) {
     Map<TopicPartition, List<ConsumerRecord<K, V>>> recordsByPartition = new LinkedHashMap<>();
-    for (int i = 0; i < data.size(); i++) {
-      ConsumerRecord<K, V> record = data.get(i);
+    for (ConsumerRecord<K, V> record : new ArrayList<>(data)) {
       recordsByPartition
           .computeIfAbsent(
               new TopicPartition(record.topic(), record.partition()), tp -> new ArrayList<>())
