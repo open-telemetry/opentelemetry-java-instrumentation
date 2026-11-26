@@ -195,31 +195,48 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     return mediaType.isEmpty() ? null : mediaType;
   }
 
-  /** Returns the charset from the content type, or UTF-8 when it is missing or unknown. */
+  /**
+   * Returns the charset from the content type, or UTF-8 when it is missing or unknown.
+   *
+   * <p>Parameters are separated by {@code ;}, their names are case-insensitive and their values can
+   * be quoted, in which case a {@code ;} is part of the value (RFC 9110, section 5.6.6). A
+   * parameter can't be specified more than once (RFC 6838, section 4.3), so the first {@code
+   * charset} parameter is used.
+   */
   // package-protected for testing
   static Charset getCharsetFromContentTypeHeader(String contentType) {
-    // TODO: we should be able to optimize this
-    // - cache (bounded) for charset resolution from content type header
-    // - parser charset without regex
+    int length = contentType.length();
+    int start = contentType.indexOf(';');
+    while (start != -1 && start < length) {
+      // find the end of the parameter, ignoring any ';' in a quoted value
+      int end = start + 1;
+      boolean quoted = false;
+      while (end < length && (quoted || contentType.charAt(end) != ';')) {
+        char c = contentType.charAt(end);
+        if (c == '"') {
+          quoted = !quoted;
+        } else if (c == '\\' && quoted) {
+          end++; // skip the escaped character
+        }
+        end++;
+      }
 
-    String[] parts = contentType.split(";");
-    if (parts.length < 2) {
-      return UTF_8;
-    }
-    // start from end
-    Charset result = UTF_8;
-    for (int i = parts.length - 1; i > 0; i--) {
-      String part = parts[i].trim();
-      if (part.toLowerCase(Locale.ROOT).startsWith("charset=")) {
-        String charsetName = part.substring(8).trim();
+      String parameter = contentType.substring(start + 1, Math.min(end, length));
+      int separator = parameter.indexOf('=');
+      if (separator != -1 && "charset".equalsIgnoreCase(parameter.substring(0, separator).trim())) {
+        String name = parameter.substring(separator + 1).trim();
+        if (name.length() >= 2 && name.startsWith("\"") && name.endsWith("\"")) {
+          name = name.substring(1, name.length() - 1);
+        }
         try {
-          result = Charset.forName(charsetName);
+          return Charset.forName(name);
         } catch (IllegalArgumentException e) {
-          // illegal or unsupported charset name, silently ignore and use the default UTF-8 charset
+          // illegal or unsupported charset name, use the default
+          return UTF_8;
         }
       }
+      start = end;
     }
-
-    return result;
+    return UTF_8;
   }
 }

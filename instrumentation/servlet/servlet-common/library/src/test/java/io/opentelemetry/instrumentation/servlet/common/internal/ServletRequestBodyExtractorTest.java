@@ -172,6 +172,7 @@ class ServletRequestBodyExtractorTest {
         "text/plain; charsets=ISO-8859-1|UTF-8",
         // text that looks like a charset parameter inside a quoted value is not a parameter
         "text/plain; foo=\"a; charset=ISO-8859-1\"|UTF-8",
+        // duplicated parameter is undefined, so we pick the last
         "text/plain; foo=\"a; charset=ISO-8859-1\"; charset=UTF-8|UTF-8",
         "text/plain; foo=\"a; charset=UTF-8\"; charset=ISO-8859-1|ISO-8859-1",
         // the real charset parameter is still found next to other parameters
