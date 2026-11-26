@@ -23,13 +23,12 @@ final class InstrumentationContexts {
   private static final VirtualField<HttpClientRequest, Context> REQUEST_CONTEXT =
       VirtualField.find(HttpClientRequest.class, Context.class);
 
-  private static final AtomicReferenceFieldUpdater<InstrumentationContexts, Context>
-      parentContextUpdater =
+  private static final AtomicReferenceFieldUpdater<InstrumentationContexts, Initialization>
+      initializationUpdater =
           AtomicReferenceFieldUpdater.newUpdater(
-              InstrumentationContexts.class, Context.class, "parentContext");
+              InstrumentationContexts.class, Initialization.class, "initialization");
 
-  private volatile Context parentContext;
-  private volatile Timer timer;
+  private volatile Initialization initialization;
   // on retries, reactor-netty starts the next resend attempt before it ends the previous one (i.e.
   // it calls the callback functions in that order); thus for a short moment there can be multiple
   // coexisting HTTP client spans
@@ -38,13 +37,12 @@ final class InstrumentationContexts {
   void initialize(Context parentContext) {
     Context parentContextWithResends = HttpClientRequestResendCount.initialize(parentContext);
     // make sure initialization happens only once
-    if (parentContextUpdater.compareAndSet(this, null, parentContextWithResends)) {
-      timer = Timer.start();
-    }
+    initializationUpdater.compareAndSet(
+        this, null, new Initialization(parentContextWithResends, Timer.start()));
   }
 
   Context getParentContext() {
-    return parentContext;
+    return initialization.parentContext;
   }
 
   @Nullable
@@ -55,7 +53,7 @@ final class InstrumentationContexts {
 
   @Nullable
   Context startClientSpan(HttpClientRequest request) {
-    Context parentContext = this.parentContext;
+    Context parentContext = initialization.parentContext;
     Context context = null;
     if (instrumenter().shouldStart(parentContext, request)) {
       context = instrumenter().start(parentContext, request);
@@ -84,11 +82,22 @@ final class InstrumentationContexts {
   }
 
   void startAndEndConnectionErrorSpan(HttpClientRequest request, Throwable error) {
-    Context parentContext = this.parentContext;
+    Initialization initialization = this.initialization;
+    Context parentContext = initialization.parentContext;
     if (instrumenter().shouldStart(parentContext, request)) {
-      Timer timer = this.timer;
+      Timer timer = initialization.timer;
       InstrumenterUtil.startAndEnd(
           instrumenter(), parentContext, request, null, error, timer.startTime(), timer.now());
+    }
+  }
+
+  private static final class Initialization {
+    private final Context parentContext;
+    private final Timer timer;
+
+    private Initialization(Context parentContext, Timer timer) {
+      this.parentContext = parentContext;
+      this.timer = timer;
     }
   }
 

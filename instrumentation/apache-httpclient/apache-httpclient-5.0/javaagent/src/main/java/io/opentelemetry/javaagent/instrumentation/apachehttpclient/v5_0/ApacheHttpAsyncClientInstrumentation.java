@@ -16,6 +16,7 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -152,8 +153,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
       if (instrumenter().shouldStart(parentContext, request)) {
-        wrappedFutureCallback.context = instrumenter().start(parentContext, request);
-        wrappedFutureCallback.httpRequest = request;
+        wrappedFutureCallback.spanState.set(
+            new SpanState(instrumenter().start(parentContext, request), request));
       }
 
       delegate.sendRequest(request, entityDetails, context);
@@ -166,8 +167,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
-    @Nullable private volatile Context context;
-    @Nullable private volatile HttpRequest httpRequest;
+    private final AtomicReference<SpanState> spanState = new AtomicReference<>();
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
@@ -178,9 +178,10 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     private void endSpan(Exception exception) {
-      // context is null here when the span creation was suppressed
-      if (context != null) {
-        instrumenter().end(context, httpRequest, getResponseFromHttpContext(), exception);
+      // Claim the complete state before response getters or completion work can reenter.
+      SpanState state = spanState.getAndSet(null);
+      if (state != null) {
+        instrumenter().end(state.context, state.request, getResponseFromHttpContext(), exception);
       }
     }
 
@@ -237,6 +238,16 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return ((HttpCoreContext) httpContext).getResponse();
       }
       return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
+    }
+  }
+
+  private static final class SpanState {
+    private final Context context;
+    private final HttpRequest request;
+
+    private SpanState(Context context, HttpRequest request) {
+      this.context = context;
+      this.request = request;
     }
   }
 }
