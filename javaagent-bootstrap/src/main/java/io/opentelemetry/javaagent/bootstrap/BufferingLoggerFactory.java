@@ -95,9 +95,10 @@ final class BufferingLoggerFactory implements InternalLogger.Factory {
       }
       drained = true;
       if (droppedCount > 0) {
-        factory
-            .create(InternalLogger.class.getName())
-            .log(InternalLogger.Level.WARN, droppedMessage(droppedCount), null);
+        InternalLogger logger = factory.create(InternalLogger.class.getName());
+        if (logger.isLoggable(InternalLogger.Level.WARN)) {
+          logger.log(InternalLogger.Level.WARN, droppedMessage(droppedCount), null);
+        }
       }
     } finally {
       if (!drained) {

@@ -103,6 +103,20 @@ class BufferingLoggerFactoryTest {
   }
 
   @Test
+  void doesNotReportDroppedRecordsWhenWarnIsDisabled() {
+    BufferingLoggerFactory factory = new BufferingLoggerFactory(1);
+    InternalLogger logger = factory.create("a");
+    logger.log(Level.ERROR, "kept", null);
+    logger.log(Level.ERROR, "dropped", null);
+
+    RecordingFactory target = new RecordingFactory(Level.ERROR);
+    factory.claim();
+    factory.drainTo(target);
+
+    assertThat(target.messages()).containsExactly("a ERROR kept");
+  }
+
+  @Test
   void claimSucceedsOnce() {
     BufferingLoggerFactory factory = new BufferingLoggerFactory(100);
     assertThat(factory.claim()).isTrue();
