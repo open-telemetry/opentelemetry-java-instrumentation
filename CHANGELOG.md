@@ -509,6 +509,9 @@
   extractors from `opentelemetry-instrumentation-api-incubator`.
   `MessagingAttributesGetter` no longer requires or exposes `getMessageBodySize()` or
   `getMessageEnvelopeSize()`.
+- `DeclarativeConfigDurationUtil.getDuration` now throws `DeclarativeConfigException` for
+  non-integer duration values in declarative YAML (for example, `min_duration: 10ms`) instead of
+  returning `null` and silently falling back to the default.
 
 ### 🚫 Deprecations
 
