@@ -145,7 +145,10 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     captureRequestParameters(serverSpan, request);
     captureUserName(serverSpan, request);
-    if (AppServerBridge.captureRequestBodyOnServletExit(context)) {
+    // When the request is handled asynchronously, the body can still be read after the servlet has
+    // returned: it is added when the span ends, and not here. For other requests it is added now,
+    // as the request might be recycled before the span ends.
+    if (!ServletAsyncContext.isAsyncListenerAttached(context)) {
       captureRequestBody(serverSpan, request);
     }
   }

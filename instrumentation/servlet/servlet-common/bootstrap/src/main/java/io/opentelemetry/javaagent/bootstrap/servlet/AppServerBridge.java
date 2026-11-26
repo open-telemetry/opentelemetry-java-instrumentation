@@ -21,16 +21,11 @@ public final class AppServerBridge {
 
   private final boolean servletShouldRecordException;
   private boolean captureServletAttributes;
-
-  /** Indicates if the app server instrumentation adds the captured request body */
-  private final boolean appServerCapturesRequestBody;
-
   @Nullable private Throwable exception;
 
   private AppServerBridge(Builder builder) {
     servletShouldRecordException = builder.recordException;
     captureServletAttributes = builder.captureServletAttributes;
-    appServerCapturesRequestBody = builder.appServerCapturesRequestBody;
   }
 
   /**
@@ -88,20 +83,6 @@ public final class AppServerBridge {
   }
 
   /**
-   * Test whether the servlet instrumentation should add the captured request body to the server
-   * span when the servlet exits. This returns false when the app server instrumentation adds the
-   * request body itself when the server span ends, because the body can still be read after the
-   * servlet has returned.
-   *
-   * @param context server context
-   * @return true when the request body should be captured when the servlet exits
-   */
-  public static boolean captureRequestBodyOnServletExit(Context context) {
-    AppServerBridge appServerBridge = context.get(CONTEXT_KEY);
-    return appServerBridge == null || !appServerBridge.appServerCapturesRequestBody;
-  }
-
-  /**
    * Class used as key in CallDepthThreadLocalMap for counting servlet invocation depth in
    * Servlet3Advice and Servlet2Advice. We can not use helper classes like Servlet3Advice and
    * Servlet2Advice for determining call depth of server invocation because they can be injected
@@ -118,7 +99,6 @@ public final class AppServerBridge {
   public static final class Builder {
     private boolean recordException;
     private boolean captureServletAttributes;
-    private boolean appServerCapturesRequestBody;
 
     /**
      * Use on servers where exceptions thrown during servlet invocation are not propagated to the
@@ -143,18 +123,6 @@ public final class AppServerBridge {
     @CanIgnoreReturnValue
     public Builder captureServletAttributes() {
       captureServletAttributes = true;
-      return this;
-    }
-
-    /**
-     * Use on servers where the server instrumentation adds the captured request body to the server
-     * span when it ends, so the servlet instrumentation must not do it when the servlet exits.
-     *
-     * @return this builder.
-     */
-    @CanIgnoreReturnValue
-    public Builder appServerCapturesRequestBody() {
-      appServerCapturesRequestBody = true;
       return this;
     }
 
