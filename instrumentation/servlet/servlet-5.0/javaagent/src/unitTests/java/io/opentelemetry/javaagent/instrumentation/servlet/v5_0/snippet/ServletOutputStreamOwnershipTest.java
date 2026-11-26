@@ -7,12 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.clearInvocations;
-import static org.mockito.Mockito.doAnswer;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.test.utils.GcUtils;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
@@ -25,7 +19,9 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Proxy;
 import java.time.Duration;
+import java.util.concurrent.TimeoutException;
 import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 
@@ -33,7 +29,8 @@ class ServletOutputStreamOwnershipTest {
   private static final String SNIPPET = "<script>test</script>";
 
   @Test
-  void requestKeepsStateForRawAsyncStream() throws Exception {
+  void requestKeepsStateForRawAsyncStream()
+      throws IOException, InterruptedException, TimeoutException {
     HttpServletRequest request = request();
     TestStream stream = new TestStream();
     initializeAndWritePrefix(request, stream);
@@ -53,17 +50,18 @@ class ServletOutputStreamOwnershipTest {
     HttpServletRequest request = request();
     TestStream first = new TestStream();
     TestStream second = new TestStream();
-    HttpServletResponse response = response(first);
+    AtomicReference<TestStream> currentStream = new AtomicReference<>(first);
+    HttpServletResponse response = response(currentStream);
     Servlet5SnippetInjectingResponseWrapper wrapper =
         new Servlet5SnippetInjectingResponseWrapper(request, response, SNIPPET);
     assertThat(wrapper.getOutputStream()).isSameAs(first);
     InjectionState firstState = ServletOutputStreamInjectionState.getInjectionState(first);
     wrapper.getOutputStream();
     assertThat(ServletOutputStreamInjectionState.getInjectionState(first)).isSameAs(firstState);
-    when(response.getOutputStream()).thenReturn(second);
+    currentStream.set(second);
     wrapper.getOutputStream();
     assertThat(ServletOutputStreamInjectionState.getInjectionState(second)).isNotSameAs(firstState);
-    when(response.getOutputStream()).thenReturn(first);
+    currentStream.set(first);
     wrapper.getOutputStream();
     assertThat(ServletOutputStreamInjectionState.getInjectionState(first)).isSameAs(firstState);
 
@@ -76,19 +74,20 @@ class ServletOutputStreamOwnershipTest {
   }
 
   @Test
-  void fallbackDoesNotRetainStreamOrResponseAfterRequest() throws Exception {
+  void fallbackDoesNotRetainStreamOrResponseAfterRequest()
+      throws IOException, InterruptedException, TimeoutException {
     WeakReference<?>[] references = createUnreachableCycle();
     GcUtils.awaitGc(references[0], Duration.ofSeconds(10));
     GcUtils.awaitGc(references[1], Duration.ofSeconds(10));
   }
 
   @Test
-  void retainedStreamDoesNotOwnStateAfterRequest() throws Exception {
+  void retainedStreamDoesNotOwnStateAfterRequest()
+      throws IOException, InterruptedException, TimeoutException {
     HttpServletRequest request = request();
     TestStream stream = new TestStream();
     WeakReference<InjectionState> state = initializeState(request, stream);
     request.setAttribute(InjectionStateStore.REQUEST_ATTRIBUTE, null);
-    clearInvocations(request);
 
     GcUtils.awaitGc(state, Duration.ofSeconds(10));
     assertThat(ServletOutputStreamInjectionState.getInjectionState(stream)).isNull();
@@ -127,25 +126,43 @@ class ServletOutputStreamOwnershipTest {
   }
 
   private static HttpServletRequest request() {
-    HttpServletRequest request = mock(HttpServletRequest.class);
     AtomicReference<Object> attribute = new AtomicReference<>();
-    when(request.getAttribute(anyString())).thenAnswer(invocation -> attribute.get());
-    doAnswer(
-            invocation -> {
-              attribute.set(invocation.getArgument(1));
+    return (HttpServletRequest)
+        Proxy.newProxyInstance(
+            HttpServletRequest.class.getClassLoader(),
+            new Class<?>[] {HttpServletRequest.class},
+            (proxy, method, args) -> {
+              if (method.getName().equals("getAttribute")) {
+                return attribute.get();
+              }
+              if (method.getName().equals("setAttribute")) {
+                attribute.set(args[1]);
+              }
               return null;
-            })
-        .when(request)
-        .setAttribute(eq(InjectionStateStore.REQUEST_ATTRIBUTE), org.mockito.any());
-    return request;
+            });
   }
 
-  private static HttpServletResponse response(TestStream stream) throws IOException {
-    HttpServletResponse response = mock(HttpServletResponse.class);
-    when(response.getOutputStream()).thenReturn(stream);
-    when(response.getContentType()).thenReturn("text/html");
-    when(response.getCharacterEncoding()).thenReturn(UTF_8.name());
-    return response;
+  private static HttpServletResponse response(TestStream stream) {
+    return response(new AtomicReference<>(stream));
+  }
+
+  private static HttpServletResponse response(AtomicReference<TestStream> stream) {
+    return (HttpServletResponse)
+        Proxy.newProxyInstance(
+            HttpServletResponse.class.getClassLoader(),
+            new Class<?>[] {HttpServletResponse.class},
+            (proxy, method, args) -> {
+              switch (method.getName()) {
+                case "getOutputStream":
+                  return stream.get();
+                case "getContentType":
+                  return "text/html";
+                case "getCharacterEncoding":
+                  return UTF_8.name();
+                default:
+                  return null;
+              }
+            });
   }
 
   private static class TestStream extends ServletOutputStream {
