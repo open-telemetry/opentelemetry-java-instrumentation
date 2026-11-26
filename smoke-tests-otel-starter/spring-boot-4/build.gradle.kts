@@ -1,6 +1,6 @@
 plugins {
   id("otel.java-conventions")
-  alias(libs.plugins.spring.boot4)
+  id("org.springframework.boot") version "4.2.0"
   id("otel.spring-native-test-conventions")
   id("otel.testcontainers-testing")
 }

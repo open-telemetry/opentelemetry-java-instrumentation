@@ -228,26 +228,67 @@
       allowedVersions: '/^1\\.2\\./',
     },
     {
-      // The smoke tests cover the latest release within each Spring Boot major line.
+      // Keep the smoke-test BOMs and plugins aligned within each Spring Boot major line.
       matchFileNames: [
-        'gradle/libs.versions.toml',
+        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'smoke-tests-otel-starter/**/build.gradle.kts',
       ],
       matchDepNames: [
         'org.springframework.boot',
         'org.springframework.boot:spring-boot-dependencies',
       ],
-      allowedVersions: '/^{{major}}\\./',
+      matchCurrentVersion: '/^2\\./',
+      allowedVersions: '/^2\\./',
+      groupName: 'Spring Boot 2 smoke tests',
+    },
+    {
+      matchFileNames: [
+        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'smoke-tests-otel-starter/**/build.gradle.kts',
+      ],
+      matchDepNames: [
+        'org.springframework.boot',
+        'org.springframework.boot:spring-boot-dependencies',
+      ],
+      matchCurrentVersion: '/^3\\./',
+      allowedVersions: '/^3\\./',
+      groupName: 'Spring Boot 3 smoke tests',
+    },
+    {
+      matchFileNames: [
+        'smoke-tests/images/spring-boot/build.gradle.kts',
+        'smoke-tests-otel-starter/**/build.gradle.kts',
+      ],
+      matchDepNames: [
+        'org.springframework.boot',
+        'org.springframework.boot:spring-boot-dependencies',
+      ],
+      matchCurrentVersion: '/^4\\./',
+      allowedVersions: '/^4\\./',
+      groupName: 'Spring Boot 4 smoke tests',
     },
     {
       // Gateway 3.1 matches Boot 2.7; Gateway 4.3 matches Boot 3.5.
       matchFileNames: [
-        'gradle/libs.versions.toml',
+        'smoke-tests-otel-starter/**/build.gradle.kts',
       ],
       matchPackageNames: [
         'org.springframework.cloud:spring-cloud-starter-gateway',
+      ],
+      matchCurrentVersion: '/^3\\.1\\./',
+      allowedVersions: '/^3\\.1\\./',
+      groupName: 'Spring Cloud Gateway 3.1 smoke tests',
+    },
+    {
+      matchFileNames: [
+        'smoke-tests-otel-starter/**/build.gradle.kts',
+      ],
+      matchPackageNames: [
         'org.springframework.cloud:spring-cloud-starter-gateway-server-webflux',
       ],
-      allowedVersions: '/^{{major}}\\.{{minor}}\\./',
+      matchCurrentVersion: '/^4\\.3\\./',
+      allowedVersions: '/^4\\.3\\./',
+      groupName: 'Spring Cloud Gateway 4.3 smoke tests',
     },
     {
       // intentionally aligning netty 4.0 versions in this convention

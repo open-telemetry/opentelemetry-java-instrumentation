@@ -82,7 +82,7 @@ can be executed in a JVM (`./gradlew smoke-tests-otel-starter:test`) or as Sprin
 
 Smoke tests use the same dependency versions in CI and locally, without `testLatestDeps`.
 The Spring Boot smoke tests use the latest stable release in each Spring Boot major line,
-pinned in `gradle/libs.versions.toml` and updated by Renovate.
+pinned in the smoke-test build files and updated by Renovate.
 
 ## GraalVM native test
 

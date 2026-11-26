@@ -14,7 +14,7 @@ dependencies {
   implementation("org.springframework.kafka:spring-kafka")
   implementation("org.springframework.boot:spring-boot-starter-data-mongodb")
   implementation("org.springframework.boot:spring-boot-starter-aop")
-  implementation(platform(libs.spring.boot2.bom))
+  implementation(platform("org.springframework.boot:spring-boot-dependencies:2.7.18"))
 
   implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
 
@@ -38,7 +38,7 @@ testing.suites {
     dependencies {
       implementation(project())
       implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-      implementation(platform(libs.spring.boot2.bom))
+      implementation(platform("org.springframework.boot:spring-boot-dependencies:2.7.18"))
       implementation("org.springframework.boot:spring-boot-starter-web")
       implementation("org.springframework.boot:spring-boot-starter-test")
     }
