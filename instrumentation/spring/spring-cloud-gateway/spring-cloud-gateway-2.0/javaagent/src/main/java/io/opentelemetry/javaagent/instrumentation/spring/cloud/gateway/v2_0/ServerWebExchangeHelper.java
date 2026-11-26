@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.common.GatewayRouteHelper.ROUTE_FILTER_SIZE_ATTRIBUTE;
-import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.common.GatewayRouteHelper.ROUTE_ID_ATTRIBUTE;
-import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.common.GatewayRouteHelper.ROUTE_ORDER_ATTRIBUTE;
-import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.common.GatewayRouteHelper.ROUTE_URI_ATTRIBUTE;
+import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.GatewayRouteHelper.ROUTE_FILTER_SIZE_ATTRIBUTE;
+import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.GatewayRouteHelper.ROUTE_ID_ATTRIBUTE;
+import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.GatewayRouteHelper.ROUTE_ORDER_ATTRIBUTE;
+import static io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.GatewayRouteHelper.ROUTE_URI_ATTRIBUTE;
 import static org.springframework.cloud.gateway.support.ServerWebExchangeUtils.GATEWAY_ROUTE_ATTR;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.common.GatewayRouteHelper;
+import io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.GatewayRouteHelper;
 import javax.annotation.Nullable;
 import org.springframework.cloud.gateway.route.Route;
 import org.springframework.web.server.ServerWebExchange;

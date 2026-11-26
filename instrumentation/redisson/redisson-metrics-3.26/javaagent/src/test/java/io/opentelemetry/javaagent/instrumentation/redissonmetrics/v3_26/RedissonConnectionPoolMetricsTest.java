@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redissonmetrics.v3_26;
 
 import static io.opentelemetry.javaagent.instrumentation.redissonmetrics.v3_26.RedissonSingletons.INSTRUMENTATION_NAME;
 
-import io.opentelemetry.javaagent.instrumentation.redissonmetrics.AbstractRedissonConnectionPoolMetricsTest;
+import io.opentelemetry.javaagent.instrumentation.redissonmetrics.common.v2_3.AbstractRedissonConnectionPoolMetricsTest;
 import java.util.concurrent.CompletableFuture;
 import org.redisson.Redisson;
 import org.redisson.client.RedisConnection;

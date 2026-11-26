@@ -11,12 +11,12 @@ import static java.util.Arrays.asList;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncContextStartInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.async.AsyncStartInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletOutputStreamInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.async.AsyncContextInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.async.AsyncContextStartInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.async.AsyncStartInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.response.HttpServletResponseInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.service.ServletAndFilterInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.service.ServletOutputStreamInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 

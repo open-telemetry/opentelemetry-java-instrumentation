@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v1_0;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.AbstractOpenSearchRestTest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.AbstractOpenSearchRestTest;
 import java.util.ArrayList;
 import java.util.List;
 import javax.net.ssl.SSLContext;

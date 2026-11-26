@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.redisson.v3_17;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
-import io.opentelemetry.javaagent.instrumentation.redisson.AbstractRedissonClientTest;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.AbstractRedissonClientTest;
 
 class RedissonClientTest extends AbstractRedissonClientTest {
   @Override

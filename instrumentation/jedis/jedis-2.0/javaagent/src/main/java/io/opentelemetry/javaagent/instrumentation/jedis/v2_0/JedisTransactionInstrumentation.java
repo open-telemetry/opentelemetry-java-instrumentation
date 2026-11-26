@@ -13,7 +13,7 @@ import static net.bytebuddy.matcher.ElementMatchers.namedOneOf;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.TransactionFraming;
 import java.util.List;

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.axis2.v1_6;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-import io.opentelemetry.javaagent.instrumentation.jaxws.v2_0.AbstractJaxWs2Test;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v2_0.AbstractJaxWs2Test;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;

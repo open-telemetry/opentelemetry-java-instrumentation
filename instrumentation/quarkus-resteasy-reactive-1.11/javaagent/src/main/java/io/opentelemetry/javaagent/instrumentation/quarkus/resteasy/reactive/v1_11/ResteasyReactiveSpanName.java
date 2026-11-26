@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.quarkus.resteasy.reactive.v1_11;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsPathUtil.normalizePath;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsPathUtil.normalizePath;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;

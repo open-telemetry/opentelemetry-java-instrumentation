@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.cxf;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
-import io.opentelemetry.javaagent.instrumentation.jaxws.v3_0.hello.HelloServiceImpl;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v3_0.hello.HelloServiceImpl;
 import jakarta.servlet.ServletConfig;
 import org.apache.cxf.jaxws.EndpointImpl;
 import org.apache.cxf.message.Message;

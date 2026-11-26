@@ -13,10 +13,10 @@ import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseC
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5Accessor;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.AgentServletInstrumenterBuilder;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.ServletHelper;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.response.ResponseInstrumenterFactory;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.OutputStreamSnippetInjectionHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrumenterBuilder;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.response.ResponseInstrumenterFactory;
+import io.opentelemetry.javaagent.instrumentation.servlet.snippet.OutputStreamSnippetInjectionHelper;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
 import jakarta.servlet.http.HttpServletRequest;

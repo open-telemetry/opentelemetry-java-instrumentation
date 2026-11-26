@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.jsf.myfaces.v1_2;
 
-import io.opentelemetry.javaagent.instrumentation.jsf.common.javax.BaseJsfTest;
+import io.opentelemetry.javaagent.instrumentation.jsf.javax.BaseJsfTest;
 
 class Myfaces2Test extends BaseJsfTest {
   @Override

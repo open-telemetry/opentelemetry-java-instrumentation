@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testL
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.hbase.testing.AbstractHbaseTest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.testing.AbstractHbaseTest;
 import java.io.IOException;
 import org.apache.hadoop.hbase.CompareOperator;
 import org.apache.hadoop.hbase.client.Admin;

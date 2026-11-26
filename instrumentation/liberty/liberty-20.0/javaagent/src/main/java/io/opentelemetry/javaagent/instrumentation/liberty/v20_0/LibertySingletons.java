@@ -10,7 +10,7 @@ import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestCo
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import io.opentelemetry.instrumentation.servlet.v3_0.internal.Servlet3Accessor;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.AgentServletInstrumenterBuilder;
+import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrumenterBuilder;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 

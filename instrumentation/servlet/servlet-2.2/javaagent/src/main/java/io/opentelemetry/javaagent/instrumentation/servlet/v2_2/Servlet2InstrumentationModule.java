@@ -12,8 +12,8 @@ import static net.bytebuddy.matcher.ElementMatchers.not;
 import com.google.auto.service.AutoService;
 import io.opentelemetry.javaagent.extension.instrumentation.InstrumentationModule;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.response.HttpServletResponseInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.service.ServletAndFilterInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.response.HttpServletResponseInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.servlet.service.ServletAndFilterInstrumentation;
 import java.util.List;
 import net.bytebuddy.matcher.ElementMatcher;
 

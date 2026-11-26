@@ -5,16 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsServerSpanNaming.serverSpanName;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.annotations.JaxrsAnnotationsSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsConstants;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common.AbstractRequestContextInstrumentation;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common.Jaxrs3HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v3_0.AbstractRequestContextInstrumentation;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v3_0.Jaxrs3HandlerData;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;

@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.hbase.client.v1_4;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.hbase.testing.AbstractHbaseTest;
+import io.opentelemetry.javaagent.instrumentation.hbase.client.common.v1_0.testing.AbstractHbaseTest;
 import java.io.IOException;
 import org.apache.hadoop.hbase.HColumnDescriptor;
 import org.apache.hadoop.hbase.HTableDescriptor;

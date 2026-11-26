@@ -7,8 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.axis2;
 
 import static java.util.Arrays.asList;
 
-import io.opentelemetry.javaagent.instrumentation.jaxws.v3_0.hello.HelloService;
-import io.opentelemetry.javaagent.instrumentation.jaxws.v3_0.hello.HelloServiceImpl;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v3_0.hello.HelloService;
+import io.opentelemetry.javaagent.instrumentation.jaxws.common.v3_0.hello.HelloServiceImpl;
 import java.io.File;
 import java.util.ArrayList;
 import org.apache.axis2.jaxws.framework.JAXWSDeployer;

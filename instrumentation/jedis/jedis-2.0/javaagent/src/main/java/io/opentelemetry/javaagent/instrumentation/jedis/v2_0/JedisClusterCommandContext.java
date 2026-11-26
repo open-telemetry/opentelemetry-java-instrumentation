@@ -9,7 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSinglet
 import static io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisSingletons.instrumenter;
 
 import io.opentelemetry.context.Context;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisServerErrorContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.JedisServerErrorContext;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;

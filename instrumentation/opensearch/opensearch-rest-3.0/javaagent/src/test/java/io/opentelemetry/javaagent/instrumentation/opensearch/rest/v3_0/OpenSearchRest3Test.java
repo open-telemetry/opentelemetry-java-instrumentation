@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.opensearch.rest.v3_0;
 
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.AbstractOpenSearchRestTest;
+import io.opentelemetry.javaagent.instrumentation.opensearch.rest.common.v1_0.AbstractOpenSearchRestTest;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.List;

@@ -5,7 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.redisson.v3_0;
 
-import io.opentelemetry.javaagent.instrumentation.redisson.AbstractRedissonAsyncClientTest;
+import io.opentelemetry.javaagent.instrumentation.redisson.common.v3_0.AbstractRedissonAsyncClientTest;
 import org.redisson.api.RBatch;
 import org.redisson.api.RedissonClient;
 

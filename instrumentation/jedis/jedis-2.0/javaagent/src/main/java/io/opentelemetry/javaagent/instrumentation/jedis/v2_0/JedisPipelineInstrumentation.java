@@ -15,7 +15,7 @@ import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jedis.common.JedisRequestContext;
+import io.opentelemetry.javaagent.instrumentation.jedis.JedisRequestContext;
 import io.opentelemetry.javaagent.instrumentation.jedis.v2_0.JedisPipelineContext.BatchState;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
