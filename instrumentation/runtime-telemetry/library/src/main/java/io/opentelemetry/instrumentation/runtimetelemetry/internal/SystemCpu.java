@@ -55,13 +55,12 @@ public final class SystemCpu {
               .setDescription(
                   "Average CPU load of the whole system for the last minute as reported by the JVM.")
               .setUnit("{run_queue_item}")
-              .buildWithCallback(
-                  observableMeasurement -> {
-                    double loadAverage = osBean.getSystemLoadAverage();
-                    if (loadAverage >= 0) {
-                      observableMeasurement.record(loadAverage);
-                    }
-                  }));
+              .buildWithCallback(observableMeasurement -> {
+                double loadAverage = osBean.getSystemLoadAverage();
+                if (loadAverage >= 0) {
+                  observableMeasurement.record(loadAverage);
+                }
+              }));
     }
     if (systemCpuUtilization != null && metricNamePredicate.test("jvm.system.cpu.utilization")) {
       observables.add(
@@ -69,13 +68,12 @@ public final class SystemCpu {
               .gaugeBuilder("jvm.system.cpu.utilization")
               .setDescription("Recent CPU utilization for the whole system as reported by the JVM.")
               .setUnit("1")
-              .buildWithCallback(
-                  observableMeasurement -> {
-                    Double cpuUsage = systemCpuUtilization.get();
-                    if (cpuUsage != null && cpuUsage >= 0) {
-                      observableMeasurement.record(cpuUsage);
-                    }
-                  }));
+              .buildWithCallback(observableMeasurement -> {
+                Double cpuUsage = systemCpuUtilization.get();
+                if (cpuUsage != null && cpuUsage >= 0) {
+                  observableMeasurement.record(cpuUsage);
+                }
+              }));
     }
     return observables;
   }

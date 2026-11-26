@@ -28,7 +28,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.internal.Experimental;
 import io.opentelemetry.instrumentation.api.semconv.network.NetworkAttributesExtractor;
 import io.opentelemetry.instrumentation.api.semconv.network.ServerAttributesExtractor;
-import io.opentelemetry.instrumentation.grpc.v1_6.internal.GrpcClientNetworkAttributesGetter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.UnaryOperator;
@@ -152,9 +151,9 @@ public final class GrpcTelemetryBuilder {
    *
    * <p>Header keys and selector patterns are matched case-insensitively. {@code ?} matches any
    * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No headers are captured unless a selector is
-   * configured; a selector with only excluded patterns captures every ASCII header key that it does
-   * not exclude.
+   * patterns take precedence over included patterns. No request headers are captured unless
+   * included or excluded patterns are configured, and {@code *} captures all ASCII request headers.
+   * If only excluded patterns are configured, all other ASCII request headers are captured.
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientRequestHeaders(IncludeExclude clientRequestHeaders) {
@@ -167,9 +166,9 @@ public final class GrpcTelemetryBuilder {
    *
    * <p>Header keys and selector patterns are matched case-insensitively. {@code ?} matches any
    * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No headers are captured unless a selector is
-   * configured; a selector with only excluded patterns captures every ASCII header key that it does
-   * not exclude.
+   * patterns take precedence over included patterns. No request headers are captured unless
+   * included or excluded patterns are configured, and {@code *} captures all ASCII request headers.
+   * If only excluded patterns are configured, all other ASCII request headers are captured.
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerRequestHeaders(IncludeExclude serverRequestHeaders) {
@@ -190,10 +189,7 @@ public final class GrpcTelemetryBuilder {
     InstrumenterBuilder<GrpcRequest, Status> serverInstrumenterBuilder =
         Instrumenter.builder(openTelemetry, INSTRUMENTATION_NAME, serverSpanNameExtractor);
 
-    GrpcClientNetworkAttributesGetter netClientAttributesGetter =
-        new GrpcClientNetworkAttributesGetter();
-    GrpcServerNetworkAttributesGetter netServerAttributesGetter =
-        new GrpcServerNetworkAttributesGetter();
+    GrpcNetworkAttributesGetter networkAttributesGetter = new GrpcNetworkAttributesGetter();
     GrpcRpcAttributesGetter clientRpcAttributesGetter = new GrpcRpcAttributesGetter(true);
     GrpcRpcAttributesGetter serverRpcAttributesGetter = new GrpcRpcAttributesGetter(false);
 
@@ -202,8 +198,8 @@ public final class GrpcTelemetryBuilder {
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.CLIENT)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcClientAttributesExtractor.create(clientRpcAttributesGetter))
-        .addAttributesExtractor(ServerAttributesExtractor.create(netClientAttributesGetter))
-        .addAttributesExtractor(NetworkAttributesExtractor.create(netClientAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(networkAttributesGetter))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(networkAttributesGetter))
         .addAttributesExtractors(additionalClientExtractors)
         .addAttributesExtractor(
             new GrpcAttributesExtractor(clientRpcAttributesGetter, clientRequestHeaders))
@@ -216,8 +212,8 @@ public final class GrpcTelemetryBuilder {
         .setSpanStatusExtractor(GrpcSpanStatusExtractor.SERVER)
         .addAttributesExtractors(additionalExtractors)
         .addAttributesExtractor(RpcServerAttributesExtractor.create(serverRpcAttributesGetter))
-        .addAttributesExtractor(ServerAttributesExtractor.create(netServerAttributesGetter))
-        .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
+        .addAttributesExtractor(ServerAttributesExtractor.create(networkAttributesGetter))
+        .addAttributesExtractor(NetworkAttributesExtractor.create(networkAttributesGetter))
         .addAttributesExtractor(
             new GrpcAttributesExtractor(serverRpcAttributesGetter, serverRequestHeaders))
         .addAttributesExtractors(additionalServerExtractors)

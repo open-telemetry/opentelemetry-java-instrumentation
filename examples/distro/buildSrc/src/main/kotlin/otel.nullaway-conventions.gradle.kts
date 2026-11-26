@@ -8,8 +8,8 @@ plugins {
 }
 
 dependencies {
-  errorprone("com.google.errorprone:error_prone_core:2.52.0")
-  errorprone("com.uber.nullaway:nullaway:0.14.3")
+  errorprone("com.google.errorprone:error_prone_core:2.53.0")
+  errorprone("com.uber.nullaway:nullaway:0.14.4")
 }
 
 nullaway {

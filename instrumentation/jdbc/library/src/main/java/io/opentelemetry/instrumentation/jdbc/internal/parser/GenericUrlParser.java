@@ -9,7 +9,7 @@ import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUt
 import static io.opentelemetry.instrumentation.jdbc.internal.parser.UrlParsingUtils.parseServerTargetGroup;
 import static java.util.logging.Level.FINE;
 
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.logging.Logger;
@@ -100,7 +100,7 @@ public final class GenericUrlParser implements JdbcUrlParser {
     if (authority == null) {
       return;
     }
-    DbServerTarget target = parseServerTargetGroup(authority, defaultPort);
+    ServerTarget target = parseServerTargetGroup(authority, defaultPort);
     if (target != null || hasMultipleTargets(authority)) {
       ctx.resolveConfiguredServerTarget(target);
     }

@@ -23,35 +23,29 @@ final class McpToolCallMono {
 
   static Mono<?> wrap(
       McpClientSession session, McpSchema.CallToolRequest requestParameters, Mono<?> publisher) {
-    return Mono.deferContextual(
-        reactorContext -> {
-          try {
-            Context parentContext =
-                ContextPropagationOperator.getOpenTelemetryContextFromContextView(
-                    reactorContext, Context.current());
-            McpToolCallState state =
-                new McpToolCallState(session, requestParameters, parentContext);
-            McpToolCallRequest request = state.getRequest();
-            if (!instrumenter().shouldStart(parentContext, request)) {
-              return publisher;
-            }
-
-            Context context = state.storeInContext(instrumenter().start(parentContext, request));
-            Mono<?> traced =
-                (Mono<?>)
-                    endStrategy.end(
-                        instrumenter(),
-                        context,
-                        request,
-                        publisher,
-                        McpSchema.CallToolResult.class);
-            return new McpContextMono<>(traced, context, parentContext);
-          } catch (Throwable t) {
-            logger.log(FINE, "Failed to trace MCP tool call", t);
-            // Ignore instrumentation failures to preserve application behavior.
-          }
+    return Mono.deferContextual(reactorContext -> {
+      try {
+        Context parentContext =
+            ContextPropagationOperator.getOpenTelemetryContextFromContextView(
+                reactorContext, Context.current());
+        McpToolCallState state = new McpToolCallState(session, requestParameters, parentContext);
+        McpToolCallRequest request = state.getRequest();
+        if (!instrumenter().shouldStart(parentContext, request)) {
           return publisher;
-        });
+        }
+
+        Context context = state.storeInContext(instrumenter().start(parentContext, request));
+        Mono<?> traced =
+            (Mono<?>)
+                endStrategy.end(
+                    instrumenter(), context, request, publisher, McpSchema.CallToolResult.class);
+        return new McpContextMono<>(traced, context, parentContext);
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to trace MCP tool call", t);
+        // Ignore instrumentation failures to preserve application behavior.
+      }
+      return publisher;
+    });
   }
 
   private McpToolCallMono() {}

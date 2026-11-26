@@ -362,30 +362,39 @@ Prefer `VirtualField` over an external weak-key cache, `WeakHashMap`, or identit
 when:
 
 - the key is a third-party object instance such as a request, message, task, callback, or connection;
-- the value is instrumentation state associated with that exact instance; and
-- the state should live no longer than the carrier object.
+- the value is instrumentation state associated with that exact instance;
+- the state should live no longer than the carrier object; and
+- fallback storage is safe for the value, as described below.
 
 Weak references and caches still have other uses. For example, a cache of metadata derived from a
 `Class` or `ClassLoader` is memoization rather than state attached to an individual library object,
 and a weak interning pool can canonicalize equal value objects without retaining them.
 
-Outside an advice method, look up the virtual field once and store its handle in a field:
+On production paths that can run repeatedly, resolve the virtual field once and reuse the handle.
+Runtime lookup uses reflection. A `static final` field, including one on a non-inlined advice
+class, can retain the handle:
 
 ```java
 private static final VirtualField<Runnable, Context> RUNNABLE_CONTEXT =
     VirtualField.find(Runnable.class, Context.class);
 ```
 
-The first argument is the carrier type and the second is the attached value type. In normal
-javaagent instrumentation, both should be class literals so muzzle can discover and register the
-mapping. Bytecode transformation rewrites calls with class-literal arguments in inlined `@Advice`
-methods. Lookups made outside advice execute at runtime and should be cached.
-A rare lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle`
-method. The instrumentation module must implement `ExperimentalInstrumentationModule` and override
-`registerVirtualFields(...)` to register every possible carrier/value pair. The `(carrier class,
-value class)` pair identifies the virtual field across instrumentations, so use a dedicated holder
+An existing holder that retains the handle, such as a static `MessagingTelemetryCarrier`, does
+not need a second cache.
+
+Inlined advice is not exempt; do not rely on the deprecated inline rewrite of
+`VirtualField.find(...)`. Inlined advice runs in the instrumented class, so the helper that
+provides the cached handle and the member the advice references must be accessible from that class.
+
+In normal javaagent instrumentation, use class literals for the carrier and attached value types
+and a string literal for the optional field name so Muzzle can discover and register the mapping.
+Those three components identify the virtual field across instrumentations. Use a dedicated holder
 class when common value types such as `Object`, `Boolean`, `String`, or `Map` could give unrelated
-state the same pair.
+state the same field identity.
+
+A rare lookup that resolves carrier types at runtime must run outside advice in an `@NoMuzzle`
+method. The instrumentation module must implement `ExperimentalInstrumentationModule` and
+override `registerVirtualFields(...)` to register every possible mapping.
 
 When a shared bootstrap or common helper cannot name the library carrier type, keep the
 `VirtualField` lookup with the instrumentation-specific caller. Pass the typed handle, or a small
@@ -401,17 +410,17 @@ public static <T> void attachContext(
 Do not generalize this pattern with `VirtualField.find(Object.class, ...)`. The caller should select
 the narrow class or interface that identifies the library objects that can carry the state.
 
-Inside an inlined `@Advice` method, call `VirtualField.find(...)` directly where the virtual field
-is used. The call is rewritten during bytecode transformation and does not need to be cached. A
-non-inlined advice method (`inline = false`) must not call `VirtualField.find(...)` because the call
-is not rewritten. For non-inlined advice, put the handle in a `static final` field on a non-advice
-helper or singleton and reference that handle from the advice method. Use the same caching pattern
-for other lookups outside advice.
-
 The javaagent normally injects field-backed storage into eligible carrier implementations. It falls
-back to a weak-key, strong-value map when field injection is unavailable. Avoid storing a value that
-strongly references its carrier because that object graph can retain the weak key through the
-fallback value. If such a back-reference is required, make that reference weak.
+back to a weak-key, strong-value map when field injection is disabled or unavailable. A value that
+strongly references its carrier, directly or indirectly, keeps the weak key alive, so garbage
+collection cannot remove the entry. Store such a value only if every supported terminal path clears
+it with `field.set(carrier, null)` or breaks the reference path.
+
+Trace concrete paths from the value to its carrier, including mutable holders that other
+instrumentation writes to later. For example, with span suppression set to `none`, a stored
+`Context` can reach its Undertow exchange through a response saved in servlet async state. If
+cleanup cannot be guaranteed, store detached data, use a weak back-reference if the state remains
+valid after the reference is cleared, or keep the state in storage owned by the carrier.
 
 `VirtualField` follows object identity. Clear state with `field.set(carrier, null)` once it has been
 consumed or when an operation fails. Garbage collection is not enough for pooled or reused carriers:
@@ -423,7 +432,7 @@ read-modify-write operation. Attached state that can be updated concurrently mus
 required synchronization or atomic operations.
 
 Use of `VirtualField` requires the `muzzle-generation` Gradle plugin. Without it, the mapping is not
-registered and the javaagent cannot install or rewrite the field implementation.
+registered and the javaagent cannot install the virtual field implementation.
 
 ## Avoid using @Advice.Origin Method
 

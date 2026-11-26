@@ -14,6 +14,7 @@ import org.redisson.connection.ConnectionsHolder;
 
 public class RedissonSingletons {
 
+  // visible for testing
   static final String INSTRUMENTATION_NAME = "io.opentelemetry.redisson-metrics-3.26";
 
   public static void registerMetrics(

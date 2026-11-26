@@ -67,11 +67,10 @@ public class InternalMetricsDefinitions {
   public void loadInternalRules(IncludeExclude systemFilter, HandlerRegistry handlerRegistry) {
     getSupportedSystems().stream()
         .filter(systemFilter::matches)
-        .forEach(
-            s -> {
-              loadRules(s, false, handlerRegistry);
-              loadRules(s, true, handlerRegistry);
-            });
+        .forEach(s -> {
+          loadRules(s, false, handlerRegistry);
+          loadRules(s, true, handlerRegistry);
+        });
   }
 
   private void loadRules(String systemName, boolean stable, HandlerRegistry handlerRegistry) {
@@ -124,6 +123,7 @@ public class InternalMetricsDefinitions {
    * @param stable true to load stable rules, false for non-stable rules
    * @return path to rules resource, {@literal null} if there is none
    */
+  // visible for testing
   @Nullable
   public String getRulesPath(String system, boolean stable) {
     String path = String.format("jmx/rules/%s.yaml", system);

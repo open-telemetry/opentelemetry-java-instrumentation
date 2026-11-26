@@ -5,12 +5,10 @@
 
 package io.opentelemetry.instrumentation.jdbc.internal;
 
-import static io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlDialectUtil.fromDbSystemName;
-
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.SqlDialect;
-import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbServerTarget;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.SqlResponseStatusCodeUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerTarget;
 import io.opentelemetry.instrumentation.jdbc.internal.dbinfo.DbInfo;
 import java.sql.SQLException;
 import java.sql.SQLTimeoutException;
@@ -23,6 +21,8 @@ import javax.annotation.Nullable;
  * any time.
  */
 public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbRequest, Void> {
+
+  private static final String POLARDB = "polardb";
 
   @Override
   public String getDbSystemName(DbRequest request) {
@@ -37,7 +37,13 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
 
   @Override
   public SqlDialect getSqlDialect(DbRequest request) {
-    return fromDbSystemName(request.getDbInfo().getDbSystemName());
+    String dbSystemName = getDbSystemName(request);
+    if (POLARDB.equals(dbSystemName)) {
+      // The JDBC driver for PolarDB's Oracle-compatible edition uses PostgreSQL's wire protocol.
+      // https://www.alibabacloud.com/help/en/polardb/polardb-for-oracle/jdbc-o-1-0
+      return SqlDialect.forDbSystemName("postgresql");
+    }
+    return SqlDialect.forDbSystemName(dbSystemName);
   }
 
   @Override
@@ -101,7 +107,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public String getServerAddress(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
-    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    ServerTarget target = dbInfo.getConfiguredServerTarget();
     return target == null ? null : target.getAddress();
   }
 
@@ -109,7 +115,7 @@ public final class JdbcAttributesGetter implements SqlClientAttributesGetter<DbR
   @Override
   public Integer getServerPort(DbRequest request) {
     DbInfo dbInfo = request.getDbInfo();
-    DbServerTarget target = dbInfo.getConfiguredServerTarget();
+    ServerTarget target = dbInfo.getConfiguredServerTarget();
     return target == null ? null : target.getPort();
   }
 }

@@ -63,40 +63,42 @@ class DeclarativeConfigValidationTest {
   private static final String GLOBAL_CONFIGURATIONS_SOURCE =
       SHARED_DEFINITIONS + " (global_configurations)";
 
+  private static final String METHODS_INCLUDE_PATH = "java.methods.include";
+  private static final String SERVER_SERVICE_MAPPING_PATH = "java.common.server_service_mapping";
+
   @Test
   void validateDeclarativeNames() throws IOException {
     List<ValidationResult> results = new ArrayList<>();
     List<String> errors = new ArrayList<>();
 
     allConfigurations()
-        .forEach(
-            (source, configs) -> {
-              for (ConfigurationOption config : configs) {
-                // Structured-list schemas are validated structurally, even for declarative-only
-                // configs (those without a flat property name, such as url_template_rules).
-                validateStructuredListSchema(source, config, errors);
+        .forEach((source, configs) -> {
+          for (ConfigurationOption config : configs) {
+            // Structured-list schemas are validated structurally, even for declarative-only
+            // configs (those without a flat property name, such as url_template_rules).
+            validateStructuredListSchema(source, config, errors);
 
-                // Deprecated spellings stay resolvable at runtime, so they may be documented, but
-                // only as deprecated.
-                validateNotDeprecated(source, config, errors);
+            // Deprecated spellings stay resolvable at runtime, so they may be documented, but
+            // only as deprecated.
+            validateNotDeprecated(source, config, errors);
 
-                // The flat -> declarative round-trip needs a flat system property to drive the
-                // bridge. Declarative-only configs (no name) are skipped here, as are flat
-                // properties that are read directly from system properties rather than through
-                // the bridge.
-                if (config.name() != null
-                    && !config.name().isBlank()
-                    && !SYSTEM_PROPERTY_ONLY_NAMES.contains(config.name())
-                    && config.declarativeName() != null
-                    && !config.declarativeName().isBlank()) {
-                  ValidationResult result = validateConfig(source, config);
-                  results.add(result);
-                  if (!result.valid) {
-                    errors.add(result.toString());
-                  }
-                }
+            // The flat -> declarative round-trip needs a flat system property to drive the
+            // bridge. Declarative-only configs (no name) are skipped here, as are flat
+            // properties that are read directly from system properties rather than through
+            // the bridge.
+            if (config.name() != null
+                && !config.name().isBlank()
+                && !SYSTEM_PROPERTY_ONLY_NAMES.contains(config.name())
+                && config.declarativeName() != null
+                && !config.declarativeName().isBlank()) {
+              ValidationResult result = validateConfig(source, config);
+              results.add(result);
+              if (!result.valid) {
+                errors.add(result.toString());
               }
-            });
+            }
+          }
+        });
 
     long validCount = results.stream().filter(r -> r.valid).count();
     logger.info(
@@ -159,41 +161,39 @@ class DeclarativeConfigValidationTest {
     Set<String> documentedNames = new HashSet<>();
     configsBySource.values().stream()
         .flatMap(List::stream)
-        .forEach(
-            config -> {
-              if (config.name() != null) {
-                documentedNames.add(config.name());
-              }
-              if (config.declarativeName() != null) {
-                documentedNames.add(config.declarativeName());
-              }
-            });
-
-    List<String> errors = new ArrayList<>();
-    configsBySource.forEach(
-        (source, configs) -> {
-          for (ConfigurationOption config : configs) {
-            String id = config.name() != null ? config.name() : config.declarativeName();
-            boolean describedAsDeprecated = config.description().startsWith("Deprecated");
-            if (describedAsDeprecated != config.isDeprecated()) {
-              errors.add(
-                  source
-                      + ": '"
-                      + id
-                      + "' must set `deprecated: true` exactly when its description starts with"
-                      + " \"Deprecated\"");
-            }
-            if (config.replacedBy() != null && !documentedNames.contains(config.replacedBy())) {
-              errors.add(
-                  source
-                      + ": '"
-                      + id
-                      + "' is replaced_by '"
-                      + config.replacedBy()
-                      + "', which is not a documented name or declarative_name");
-            }
+        .forEach(config -> {
+          if (config.name() != null) {
+            documentedNames.add(config.name());
+          }
+          if (config.declarativeName() != null) {
+            documentedNames.add(config.declarativeName());
           }
         });
+
+    List<String> errors = new ArrayList<>();
+    configsBySource.forEach((source, configs) -> {
+      for (ConfigurationOption config : configs) {
+        String id = config.name() != null ? config.name() : config.declarativeName();
+        boolean describedAsDeprecated = config.description().startsWith("Deprecated");
+        if (describedAsDeprecated != config.isDeprecated()) {
+          errors.add(
+              source
+                  + ": '"
+                  + id
+                  + "' must set `deprecated: true` exactly when its description starts with"
+                  + " \"Deprecated\"");
+        }
+        if (config.replacedBy() != null && !documentedNames.contains(config.replacedBy())) {
+          errors.add(
+              source
+                  + ": '"
+                  + id
+                  + "' is replaced_by '"
+                  + config.replacedBy()
+                  + "', which is not a documented name or declarative_name");
+        }
+      }
+    });
 
     assertThat(errors).isEmpty();
   }
@@ -209,43 +209,40 @@ class DeclarativeConfigValidationTest {
     Map<String, String> sharedIdsByName = new HashMap<>();
     SharedConfigurationRegistry.getInstance()
         .definitions()
-        .forEach(
-            (id, config) -> {
-              if (config.name() != null) {
-                sharedIdsByName.put(config.name(), id);
-              }
-            });
+        .forEach((id, config) -> {
+          if (config.name() != null) {
+            sharedIdsByName.put(config.name(), id);
+          }
+        });
 
     List<String> errors = new ArrayList<>();
     metadataConfigurations()
-        .forEach(
-            (source, configs) -> {
-              Set<String> refs = new HashSet<>();
-              for (ConfigurationOption config : configs) {
-                if (config.id() != null) {
-                  refs.add(config.id());
-                }
-              }
-              for (ConfigurationOption config : configs) {
-                if (config.id() != null || config.defaultValue() != null) {
-                  continue;
-                }
-                sharedIdsByName.forEach(
-                    (name, id) -> {
-                      if (config.description().contains("`" + name + "`") && !refs.contains(id)) {
-                        errors.add(
-                            source
-                                + ": '"
-                                + config.name()
-                                + "' falls back to '"
-                                + name
-                                + "', so the module must also declare `- ref: "
-                                + id
-                                + "`");
-                      }
-                    });
+        .forEach((source, configs) -> {
+          Set<String> refs = new HashSet<>();
+          for (ConfigurationOption config : configs) {
+            if (config.id() != null) {
+              refs.add(config.id());
+            }
+          }
+          for (ConfigurationOption config : configs) {
+            if (config.id() != null || config.defaultValue() != null) {
+              continue;
+            }
+            sharedIdsByName.forEach((name, id) -> {
+              if (config.description().contains("`" + name + "`") && !refs.contains(id)) {
+                errors.add(
+                    source
+                        + ": '"
+                        + config.name()
+                        + "' falls back to '"
+                        + name
+                        + "', so the module must also declare `- ref: "
+                        + id
+                        + "`");
               }
             });
+          }
+        });
 
     assertThat(errors).isEmpty();
   }
@@ -323,15 +320,16 @@ class DeclarativeConfigValidationTest {
     String declarativePath = config.declarativeName();
     ConfigurationType type = config.type();
 
-    // The declarative form is a structured list when either the flat type is structured_list
-    // (legacy) or the dedicated declarative_type marks it as such. server_service_mapping uses
-    // type: map (the flat target=service_name form) + declarative_type: structured_list.
-    boolean structuredList =
-        type == ConfigurationType.STRUCTURED_LIST
-            || config.declarativeType() == ConfigurationType.STRUCTURED_LIST;
-
-    // Create test value appropriate for the type
-    TestValue testValue = structuredList ? structuredListTestValue() : createTestValue(type);
+    TestValue testValue =
+        switch (declarativePath) {
+          case METHODS_INCLUDE_PATH -> {
+            String include = "com.example.Foo[one,two];com.example.Bar[call]";
+            yield new TestValue(include, include);
+          }
+          case SERVER_SERVICE_MAPPING_PATH ->
+              new TestValue("host1=svc1,host2=svc2", Map.of("host1", "svc1", "host2", "svc2"));
+          default -> createTestValue(type);
+        };
 
     Map<String, String> properties = new HashMap<>();
     properties.put(flatProperty, testValue.propertyValue);
@@ -341,8 +339,7 @@ class DeclarativeConfigValidationTest {
         DeclarativeConfigBridge.createInstrumentationConfig(configProperties)
             .getInstrumentationConfig();
 
-    Object retrievedValue =
-        navigateAndGetValue(declarativeConfig, declarativePath, type, structuredList);
+    Object retrievedValue = navigateAndGetValue(declarativeConfig, declarativePath, type);
 
     boolean valid = Objects.equals(testValue.expectedValue, retrievedValue);
 
@@ -367,15 +364,6 @@ class DeclarativeConfigValidationTest {
     };
   }
 
-  // The only structured_list config with a flat property is the common server-service-mapping. Its
-  // flat form is a target=service_name map, which the bridge turns into {target, service_name}
-  // entries. readServiceMappingAsMap below rebuilds the target -> service_name map from those
-  // entries, so the comparison exercises getStructuredList (what the consumer uses) rather than a
-  // string lookup.
-  private static TestValue structuredListTestValue() {
-    return new TestValue("host1=svc1,host2=svc2", Map.of("host1", "svc1", "host2", "svc2"));
-  }
-
   private record TestValue(String propertyValue, Object expectedValue) {}
 
   /**
@@ -385,10 +373,7 @@ class DeclarativeConfigValidationTest {
    * "java.logback_appender.capture_code_attributes/development".
    */
   private static Object navigateAndGetValue(
-      DeclarativeConfigProperties config,
-      String path,
-      ConfigurationType type,
-      boolean structuredList) {
+      DeclarativeConfigProperties config, String path, ConfigurationType type) {
     String[] segments = path.split("\\.");
 
     DeclarativeConfigProperties current = config;
@@ -402,8 +387,12 @@ class DeclarativeConfigValidationTest {
     }
 
     String lastSegment = segments[segments.length - 1];
-    if (structuredList) {
+    if (SERVER_SERVICE_MAPPING_PATH.equals(path)) {
       return readServiceMappingAsMap(current, lastSegment);
+    }
+    if (METHODS_INCLUDE_PATH.equals(path)) {
+      // MethodConfiguration parses the entire flat string, including commas within brackets.
+      return current.getString(lastSegment);
     }
     return switch (type) {
       case BOOLEAN -> current.getBoolean(lastSegment);
@@ -418,8 +407,7 @@ class DeclarativeConfigValidationTest {
    * Reads the server-service-mapping structured list through the bridge (the same {@code
    * getStructuredList} call {@code ServiceMappingResolver} makes) and collapses its {@code {target,
    * service_name}} entries back into a {@code target -> service_name} map, so it can be compared
-   * against the flat-property value the test fed in. This is specific to server-service-mapping,
-   * which is currently the only {@code structured_list} config.
+   * against the flat-property value the test fed in. This is specific to server-service-mapping.
    */
   private static Object readServiceMappingAsMap(
       DeclarativeConfigProperties current, String lastSegment) {

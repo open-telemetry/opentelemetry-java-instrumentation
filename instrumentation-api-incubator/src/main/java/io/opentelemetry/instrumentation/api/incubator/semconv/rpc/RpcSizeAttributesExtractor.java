@@ -14,7 +14,9 @@ import javax.annotation.Nullable;
 public final class RpcSizeAttributesExtractor<REQUEST, RESPONSE>
     implements AttributesExtractor<REQUEST, RESPONSE> {
 
+  // visible for testing
   static final AttributeKey<Long> RPC_REQUEST_SIZE = AttributeKey.longKey("rpc.request.size");
+  // visible for testing
   static final AttributeKey<Long> RPC_RESPONSE_SIZE = AttributeKey.longKey("rpc.response.size");
 
   private final RpcAttributesGetter<REQUEST, RESPONSE> getter;

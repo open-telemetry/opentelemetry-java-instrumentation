@@ -168,25 +168,22 @@ public class TelemetryConverter {
                   .setAttributes(fromProto(span.getAttributesList()))
                   .setEvents(
                       span.getEventsList().stream()
-                          .map(
-                              event ->
-                                  EventData.create(
-                                      event.getTimeUnixNano(),
-                                      event.getName(),
-                                      fromProto(event.getAttributesList()),
-                                      event.getDroppedAttributesCount()
-                                          + event.getAttributesCount()))
+                          .map(event ->
+                              EventData.create(
+                                  event.getTimeUnixNano(),
+                                  event.getName(),
+                                  fromProto(event.getAttributesList()),
+                                  event.getDroppedAttributesCount() + event.getAttributesCount()))
                           .collect(toList()))
                   .setStatus(fromProto(span.getStatus()))
                   .setKind(fromProto(span.getKind()))
                   .setLinks(
                       span.getLinksList().stream()
-                          .map(
-                              link ->
-                                  LinkData.create(
-                                      createLinkContext(link),
-                                      fromProto(link.getAttributesList()),
-                                      link.getDroppedAttributesCount() + link.getAttributesCount()))
+                          .map(link ->
+                              LinkData.create(
+                                  createLinkContext(link),
+                                  fromProto(link.getAttributesList()),
+                                  link.getDroppedAttributesCount() + link.getAttributesCount()))
                           .collect(toList()))
                   // OTLP doesn't have hasRemoteParent
                   .setHasEnded(true)
@@ -519,88 +516,84 @@ public class TelemetryConverter {
 
   private static List<DoublePointData> getDoublePointDatas(List<NumberDataPoint> points) {
     return points.stream()
-        .map(
-            point -> {
-              double value;
-              switch (point.getValueCase()) {
-                case AS_INT:
-                  value = point.getAsInt();
-                  break;
-                case AS_DOUBLE:
-                default:
-                  value = point.getAsDouble();
-                  break;
-              }
-              return ImmutableDoublePointData.create(
-                  point.getStartTimeUnixNano(),
-                  point.getTimeUnixNano(),
-                  fromProto(point.getAttributesList()),
-                  value);
-            })
+        .map(point -> {
+          double value;
+          switch (point.getValueCase()) {
+            case AS_INT:
+              value = point.getAsInt();
+              break;
+            case AS_DOUBLE:
+            default:
+              value = point.getAsDouble();
+              break;
+          }
+          return ImmutableDoublePointData.create(
+              point.getStartTimeUnixNano(),
+              point.getTimeUnixNano(),
+              fromProto(point.getAttributesList()),
+              value);
+        })
         .collect(toList());
   }
 
   private static List<LongPointData> getLongPointDatas(List<NumberDataPoint> points) {
     return points.stream()
-        .map(
-            point -> {
-              long value;
-              switch (point.getValueCase()) {
-                case AS_INT:
-                  value = point.getAsInt();
-                  break;
-                case AS_DOUBLE:
-                default:
-                  value = (long) point.getAsDouble();
-                  break;
-              }
-              return ImmutableLongPointData.create(
-                  point.getStartTimeUnixNano(),
-                  point.getTimeUnixNano(),
-                  fromProto(point.getAttributesList()),
-                  value);
-            })
+        .map(point -> {
+          long value;
+          switch (point.getValueCase()) {
+            case AS_INT:
+              value = point.getAsInt();
+              break;
+            case AS_DOUBLE:
+            default:
+              value = (long) point.getAsDouble();
+              break;
+          }
+          return ImmutableLongPointData.create(
+              point.getStartTimeUnixNano(),
+              point.getTimeUnixNano(),
+              fromProto(point.getAttributesList()),
+              value);
+        })
         .collect(toList());
   }
 
   private static Collection<HistogramPointData> getDoubleHistogramDataPoints(
       List<HistogramDataPoint> dataPointsList) {
     return dataPointsList.stream()
-        .map(
-            point ->
-                ImmutableHistogramPointData.create(
-                    point.getStartTimeUnixNano(),
-                    point.getTimeUnixNano(),
-                    fromProto(point.getAttributesList()),
-                    point.getSum(),
-                    point.hasMin(),
-                    point.getMin(),
-                    point.hasMax(),
-                    point.getMax(),
-                    point.getExplicitBoundsList(),
-                    point.getBucketCountsList()))
+        .map(point ->
+            ImmutableHistogramPointData.create(
+                point.getStartTimeUnixNano(),
+                point.getTimeUnixNano(),
+                fromProto(point.getAttributesList()),
+                point.getSum(),
+                point.hasMin(),
+                point.getMin(),
+                point.hasMax(),
+                point.getMax(),
+                point.getExplicitBoundsList(),
+                point.getBucketCountsList()))
         .collect(toList());
   }
 
   private static Collection<ExponentialHistogramPointData> getExponentialHistogramDataPoints(
       List<ExponentialHistogramDataPoint> dataPointsList) {
     return dataPointsList.stream()
-        .map(
-            point ->
-                ImmutableExponentialHistogramPointData.create(
-                    point.getScale(),
-                    point.getSum(),
-                    point.getZeroCount(),
-                    point.hasMin(),
-                    point.getMin(),
-                    point.hasMax(),
-                    point.getMax(),
-                    getBuckets(point.getScale(), point.getPositive()),
-                    getBuckets(point.getScale(), point.getNegative()),
-                    point.getStartTimeUnixNano(),
-                    point.getTimeUnixNano(),
-                    fromProto(point.getAttributesList()),
-                    emptyList()))
+        .map(point ->
+            ImmutableExponentialHistogramPointData.create(
+                point.getScale(),
+                point.getSum(),
+                point.getZeroCount(),
+                point.hasMin(),
+                point.getMin(),
+                point.hasMax(),
+                point.getMax(),
+                getBuckets(point.getScale(), point.getPositive()),
+                getBuckets(point.getScale(), point.getNegative()),
+                point.getStartTimeUnixNano(),
+                point.getTimeUnixNano(),
+                fromProto(point.getAttributesList()),
+                emptyList()))
         .collect(toList());
   }
 
@@ -613,15 +606,14 @@ public class TelemetryConverter {
   private static Collection<SummaryPointData> getDoubleSummaryDataPoints(
       List<SummaryDataPoint> dataPointsList) {
     return dataPointsList.stream()
-        .map(
-            point ->
-                ImmutableSummaryPointData.create(
-                    point.getStartTimeUnixNano(),
-                    point.getTimeUnixNano(),
-                    fromProto(point.getAttributesList()),
-                    point.getCount(),
-                    point.getSum(),
-                    getValues(point)))
+        .map(point ->
+            ImmutableSummaryPointData.create(
+                point.getStartTimeUnixNano(),
+                point.getTimeUnixNano(),
+                fromProto(point.getAttributesList()),
+                point.getCount(),
+                point.getSum(),
+                getValues(point)))
         .collect(toList());
   }
 

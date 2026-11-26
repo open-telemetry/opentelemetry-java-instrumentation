@@ -19,16 +19,24 @@ public class CompletableFutureWrapper {
 
   public static <T> CompletableFuture<T> wrap(CompletableFuture<T> future, Context context) {
     CompletableFuture<T> result = new CompletableFuture<>();
-    future.whenComplete(
-        (T value, Throwable throwable) -> {
-          try (Scope ignored = context.makeCurrent()) {
-            if (throwable != null) {
-              result.completeExceptionally(throwable);
-            } else {
-              result.complete(value);
-            }
-          }
-        });
+    future.whenComplete((T value, Throwable throwable) -> {
+      try (Scope ignored = context.makeCurrent()) {
+        if (throwable != null) {
+          result.completeExceptionally(throwable);
+        } else {
+          result.complete(value);
+        }
+      }
+    });
+    // The generated async clients abort an in-flight request by completing the future returned
+    // from the client handler exceptionally, e.g. when the future returned to the caller is
+    // cancelled. Forward exceptional completion of the wrapper to the original future so that this
+    // still works with the wrapper in between.
+    result.whenComplete((T value, Throwable throwable) -> {
+      if (throwable != null) {
+        future.completeExceptionally(throwable);
+      }
+    });
 
     return result;
   }

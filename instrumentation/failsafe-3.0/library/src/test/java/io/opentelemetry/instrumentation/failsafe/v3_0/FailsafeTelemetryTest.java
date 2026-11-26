@@ -39,7 +39,7 @@ class FailsafeTelemetryTest {
             .build();
     FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     CircuitBreaker<Object> instrumentedCircuitBreaker =
-        failsafeTelemetry.createCircuitBreaker(userCircuitBreaker, "testing");
+        failsafeTelemetry.instrument(userCircuitBreaker, "testing");
 
     // when
     for (int i = 0; i < 5; i++) {
@@ -57,27 +57,25 @@ class FailsafeTelemetryTest {
         metricAssert ->
             metricAssert
                 .hasName("failsafe.circuit_breaker.execution.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                buildCircuitBreakerAssertion(
-                                    2, "failsafe.circuit_breaker.outcome", "failure"),
-                                buildCircuitBreakerAssertion(
-                                    3, "failsafe.circuit_breaker.outcome", "success"))),
+                .hasLongSumSatisfying(sum ->
+                    sum.isMonotonic()
+                        .hasPointsSatisfying(
+                            buildCircuitBreakerAssertion(
+                                2, "failsafe.circuit_breaker.outcome", "failure"),
+                            buildCircuitBreakerAssertion(
+                                3, "failsafe.circuit_breaker.outcome", "success"))),
         metricAssert ->
             metricAssert
                 .hasName("failsafe.circuit_breaker.state_change.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                buildCircuitBreakerAssertion(
-                                    1, "failsafe.circuit_breaker.state", "open"),
-                                buildCircuitBreakerAssertion(
-                                    1, "failsafe.circuit_breaker.state", "half_open"),
-                                buildCircuitBreakerAssertion(
-                                    1, "failsafe.circuit_breaker.state", "closed"))));
+                .hasLongSumSatisfying(sum ->
+                    sum.isMonotonic()
+                        .hasPointsSatisfying(
+                            buildCircuitBreakerAssertion(
+                                1, "failsafe.circuit_breaker.state", "open"),
+                            buildCircuitBreakerAssertion(
+                                1, "failsafe.circuit_breaker.state", "half_open"),
+                            buildCircuitBreakerAssertion(
+                                1, "failsafe.circuit_breaker.state", "closed"))));
   }
 
   @Test
@@ -87,22 +85,21 @@ class FailsafeTelemetryTest {
         RetryPolicy.builder().handleResultIf(Objects::isNull).withMaxAttempts(3).build();
     FailsafeTelemetry failsafeTelemetry = FailsafeTelemetry.create(testing.getOpenTelemetry());
     RetryPolicy<Object> instrumentedRetryPolicy =
-        failsafeTelemetry.createRetryPolicy(userRetryPolicy, "testing");
+        failsafeTelemetry.instrument(userRetryPolicy, "testing");
 
     // when
     for (int i = 0; i <= 4; i++) {
       int temp = i;
       AtomicInteger retry = new AtomicInteger(0);
       Failsafe.with(instrumentedRetryPolicy)
-          .get(
-              () -> {
-                if (retry.get() < temp) {
-                  retry.incrementAndGet();
-                  return null;
-                } else {
-                  return new Object();
-                }
-              });
+          .get(() -> {
+            if (retry.get() < temp) {
+              retry.incrementAndGet();
+              return null;
+            } else {
+              return new Object();
+            }
+          });
     }
 
     // then
@@ -111,38 +108,33 @@ class FailsafeTelemetryTest {
         metricAssert ->
             metricAssert
                 .hasName("failsafe.retry_policy.execution.count")
-                .hasLongSumSatisfying(
-                    sum ->
-                        sum.isMonotonic()
-                            .hasPointsSatisfying(
-                                buildRetryPolicyAssertion(2, "failure"),
-                                buildRetryPolicyAssertion(3, "success"))),
+                .hasLongSumSatisfying(sum ->
+                    sum.isMonotonic()
+                        .hasPointsSatisfying(
+                            buildRetryPolicyAssertion(2, "failure"),
+                            buildRetryPolicyAssertion(3, "success"))),
         metricAssert ->
             metricAssert
                 .hasName("failsafe.retry_policy.attempts")
-                .hasHistogramSatisfying(
-                    histogramAssert ->
-                        histogramAssert.hasPointsSatisfying(
-                            histogramPointAssert ->
-                                histogramPointAssert
-                                    .hasCount(3)
-                                    .hasMin(1)
-                                    .hasMax(3)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
-                                        equalTo(
-                                            stringKey("failsafe.retry_policy.outcome"), "success"))
-                                    .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
-                            histogramPointAssert ->
-                                histogramPointAssert
-                                    .hasCount(2)
-                                    .hasMin(3)
-                                    .hasMax(3)
-                                    .hasAttributesSatisfyingExactly(
-                                        equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
-                                        equalTo(
-                                            stringKey("failsafe.retry_policy.outcome"), "failure"))
-                                    .hasBucketCounts(0L, 0L, 2L, 0L, 0L))));
+                .hasHistogramPointsSatisfying(
+                    histogramPointAssert ->
+                        histogramPointAssert
+                            .hasCount(3)
+                            .hasMin(1)
+                            .hasMax(3)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                                equalTo(stringKey("failsafe.retry_policy.outcome"), "success"))
+                            .hasBucketCounts(1L, 1L, 1L, 0L, 0L),
+                    histogramPointAssert ->
+                        histogramPointAssert
+                            .hasCount(2)
+                            .hasMin(3)
+                            .hasMax(3)
+                            .hasAttributesSatisfyingExactly(
+                                equalTo(stringKey("failsafe.retry_policy.name"), "testing"),
+                                equalTo(stringKey("failsafe.retry_policy.outcome"), "failure"))
+                            .hasBucketCounts(0L, 0L, 2L, 0L, 0L)));
   }
 
   private static Consumer<LongPointAssert> buildCircuitBreakerAssertion(

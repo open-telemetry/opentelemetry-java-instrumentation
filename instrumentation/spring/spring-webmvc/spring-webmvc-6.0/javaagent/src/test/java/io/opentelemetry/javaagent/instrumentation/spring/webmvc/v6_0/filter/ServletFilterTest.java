@@ -67,16 +67,15 @@ class ServletFilterTest extends AbstractServletFilterTest {
       span.hasName(handlerSpanName)
           .hasKind(SpanKind.INTERNAL)
           .hasStatus(StatusData.error())
-          .hasEventsSatisfyingExactly(
-              event ->
-                  event
-                      .hasName("exception")
-                      .hasAttributesSatisfyingExactly(
-                          equalTo(
-                              EXCEPTION_TYPE,
-                              "org.springframework.web.servlet.resource.NoResourceFoundException"),
-                          satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
-                          satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
+          .hasEventsSatisfyingExactly(event ->
+              event
+                  .hasName("exception")
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(
+                          EXCEPTION_TYPE,
+                          "org.springframework.web.servlet.resource.NoResourceFoundException"),
+                      satisfies(EXCEPTION_MESSAGE, val -> val.isNotNull()),
+                      satisfies(EXCEPTION_STACKTRACE, val -> val.isInstanceOf(String.class))));
       return span;
     } else {
       return super.assertHandlerSpan(span, method, endpoint);

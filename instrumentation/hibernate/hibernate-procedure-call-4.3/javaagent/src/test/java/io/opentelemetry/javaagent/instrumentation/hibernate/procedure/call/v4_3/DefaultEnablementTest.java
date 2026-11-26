@@ -72,13 +72,12 @@ class DefaultEnablementTest {
         });
 
     if (INSTRUMENTATION_ENABLED) {
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span -> span.hasName("parent"),
-                  span -> span.hasName("ProcedureCall.getOutputs DEFAULT_ENABLEMENT_PROC"),
-                  span -> span.hasName("call DEFAULT_ENABLEMENT_PROC"),
-                  span -> span.hasName("Transaction.commit")));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> span.hasName("parent"),
+              span -> span.hasName("ProcedureCall.getOutputs DEFAULT_ENABLEMENT_PROC"),
+              span -> span.hasName("call DEFAULT_ENABLEMENT_PROC"),
+              span -> span.hasName("Transaction.commit")));
     } else {
       testing.waitAndAssertTraces(
           trace -> trace.hasSpansSatisfyingExactly(span -> span.hasName("parent")));

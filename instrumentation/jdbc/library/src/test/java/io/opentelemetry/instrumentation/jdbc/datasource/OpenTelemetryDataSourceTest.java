@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.jdbc.datasource;
 
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
@@ -46,20 +47,19 @@ class OpenTelemetryDataSourceTest {
 
     Connection connection = testing.runWithSpan("parent", () -> dataSource.getConnection());
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("TestDataSource.getConnection")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                TestDataSource.class.getName() + ".getConnection"),
-                            equalTo(DB_SYSTEM_NAME, dbSystemName),
-                            equalTo(DB_NAMESPACE, "dbname"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("TestDataSource.getConnection")
+                    .hasKind(SpanKind.INTERNAL)
+                    .satisfies(hasScopeSchemaUrl(null))
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME, TestDataSource.class.getName() + ".getConnection"),
+                        equalTo(DB_SYSTEM_NAME, dbSystemName),
+                        equalTo(DB_NAMESPACE, "dbname"))));
     assertThat(((OpenTelemetryConnection) connection).getDbInfo().getDbSystemName())
         .isEqualTo(dbSystemName);
   }
@@ -87,21 +87,19 @@ class OpenTelemetryDataSourceTest {
 
     Connection connection = testing.runWithSpan("parent", () -> getConnection.call(dataSource));
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("TestDataSource.getConnection")
-                        .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                TestDataSource.class.getName() + ".getConnection"),
-                            equalTo(DB_SYSTEM_NAME, POSTGRESQL),
-                            equalTo(DB_NAMESPACE, "dbname"),
-                            equalTo(DB_CONNECTION_STRING, null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("TestDataSource.getConnection")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(
+                            CODE_FUNCTION_NAME, TestDataSource.class.getName() + ".getConnection"),
+                        equalTo(DB_SYSTEM_NAME, POSTGRESQL),
+                        equalTo(DB_NAMESPACE, "dbname"),
+                        equalTo(DB_CONNECTION_STRING, null))));
 
     assertThat(connection).isInstanceOf(OpenTelemetryConnection.class);
     DbInfo dbInfo = ((OpenTelemetryConnection) connection).getDbInfo();

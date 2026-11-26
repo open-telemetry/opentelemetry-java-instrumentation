@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -24,6 +25,14 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":javaagent-extension-api"))
+      implementation("biz.paluch.redis:lettuce:4.0.Final")
+      implementation("io.netty:netty-transport-native-epoll:4.0.56.Final")
+    }
+  }
+
   executions("test") {
     configureEach {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)

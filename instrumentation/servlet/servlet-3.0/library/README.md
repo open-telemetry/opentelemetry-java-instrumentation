@@ -77,4 +77,4 @@ Experimental.setRequestParameters(
 Filter filter = builder.build().createFilter();
 ```
 
-Matching is case-sensitive, and excluded patterns take precedence over included patterns. An absent or empty selector captures nothing; an exclude-only selector captures all available parameters except those excluded.
+Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters. No request parameters are captured unless included or excluded patterns are configured, and `*` captures all request parameters. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other request parameters are captured, which may expose sensitive information.

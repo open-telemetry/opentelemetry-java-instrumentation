@@ -22,6 +22,8 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import example.GreeterGrpc;
 import example.Helloworld;
 import io.grpc.BindableService;
+import io.grpc.CallOptions;
+import io.grpc.ClientCall;
 import io.grpc.ClientInterceptor;
 import io.grpc.ManagedChannel;
 import io.grpc.ManagedChannelBuilder;
@@ -36,8 +38,11 @@ import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
 import io.opentelemetry.api.common.AttributesBuilder;
+import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.context.propagation.ContextPropagators;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
@@ -45,6 +50,8 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.grpc.v1_6.internal.Experimental;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.atomic.AtomicReference;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -95,6 +102,84 @@ class GrpcTest extends AbstractGrpcTest {
   @Override
   protected InstrumentationExtension testing() {
     return testing;
+  }
+
+  @Test
+  void responseHeadersPreserveCallerContext() throws Exception {
+    BindableService greeter =
+        new GreeterGrpc.GreeterImplBase() {
+          @Override
+          public void sayHello(
+              Helloworld.Request req, StreamObserver<Helloworld.Response> responseObserver) {
+            responseObserver.onNext(
+                Helloworld.Response.newBuilder().setMessage("Hello " + req.getName()).build());
+            responseObserver.onCompleted();
+          }
+        };
+    Server server = configureServer(ServerBuilder.forPort(0).addService(greeter)).build().start();
+    closer.add(() -> server.shutdownNow().awaitTermination());
+    ManagedChannel channel =
+        createChannel(
+            configureClient(ManagedChannelBuilder.forAddress("localhost", server.getPort())));
+    closer.add(() -> channel.shutdownNow().awaitTermination(10, SECONDS));
+
+    ContextKey<String> key = ContextKey.named("custom-value");
+    AtomicReference<Span> callerSpan = new AtomicReference<>();
+    ClientCall<Helloworld.Request, Helloworld.Response> call =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              callerSpan.set(Span.current());
+              try (Scope ignored = Context.current().with(key, "caller-value").makeCurrent()) {
+                return channel.newCall(GreeterGrpc.METHOD_SAY_HELLO, CallOptions.DEFAULT);
+              }
+            });
+
+    AtomicReference<Context> headersContext = new AtomicReference<>();
+    AtomicReference<Helloworld.Response> response = new AtomicReference<>();
+    AtomicReference<Status> status = new AtomicReference<>();
+    CountDownLatch closed = new CountDownLatch(1);
+    call.start(
+        new ClientCall.Listener<Helloworld.Response>() {
+          @Override
+          public void onHeaders(Metadata headers) {
+            headersContext.set(Context.current());
+          }
+
+          @Override
+          public void onMessage(Helloworld.Response message) {
+            response.set(message);
+          }
+
+          @Override
+          public void onClose(Status callStatus, Metadata trailers) {
+            status.set(callStatus);
+            closed.countDown();
+          }
+        },
+        new Metadata());
+    call.request(1);
+    call.sendMessage(Helloworld.Request.newBuilder().setName("test").build());
+    call.halfClose();
+
+    assertThat(closed.await(10, SECONDS)).isTrue();
+    assertThat(status.get().isOk()).isTrue();
+    assertThat(response.get().getMessage()).isEqualTo("Hello test");
+    assertThat(headersContext.get()).isNotNull();
+    assertThat(Span.fromContext(headersContext.get())).isSameAs(callerSpan.get());
+    assertThat(headersContext.get().get(key)).isEqualTo("caller-value");
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0)),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(1))));
   }
 
   @Test
@@ -188,21 +273,20 @@ class GrpcTest extends AbstractGrpcTest {
                     .sayHello(Helloworld.Request.newBuilder().setName("test").build()));
 
     assertThat(response.getMessage()).isEqualTo("Hello test");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasAttribute(
-                            SERVER_ADDRESS, targetPrefix == null ? "fallback.invalid" : "localhost")
-                        .hasAttribute(SERVER_PORT, targetPrefix == null ? 1234L : server.getPort()),
-                span ->
-                    span.hasName("example.Greeter/SayHello")
-                        .hasKind(SpanKind.SERVER)
-                        .hasParent(trace.getSpan(1))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasAttribute(
+                        SERVER_ADDRESS, targetPrefix == null ? "fallback.invalid" : "localhost")
+                    .hasAttribute(SERVER_PORT, targetPrefix == null ? 1234L : server.getPort()),
+            span ->
+                span.hasName("example.Greeter/SayHello")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(1))));
   }
 
   @Test
@@ -271,22 +355,21 @@ class GrpcTest extends AbstractGrpcTest {
     assertThat(response.getMessage()).isEqualTo("Hello test");
 
     testing()
-        .waitAndAssertTraces(
-            trace ->
-                trace.hasSpansSatisfyingExactly(
-                    span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.CLIENT)
-                            .hasParent(trace.getSpan(0))
-                            .hasAttribute(stringKey("customKey2"), "clientSideValue")
-                            .hasAttribute(stringKey("customKey"), "customValue"),
-                    span ->
-                        span.hasName("example.Greeter/SayHello")
-                            .hasKind(SpanKind.SERVER)
-                            .hasParent(trace.getSpan(1))
-                            .hasAttribute(stringKey("customKey2"), "serverSideValue")
-                            .hasAttribute(stringKey("customKey"), "customValue")));
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("example.Greeter/SayHello")
+                        .hasKind(SpanKind.CLIENT)
+                        .hasParent(trace.getSpan(0))
+                        .hasAttribute(stringKey("customKey2"), "clientSideValue")
+                        .hasAttribute(stringKey("customKey"), "customValue"),
+                span ->
+                    span.hasName("example.Greeter/SayHello")
+                        .hasKind(SpanKind.SERVER)
+                        .hasParent(trace.getSpan(1))
+                        .hasAttribute(stringKey("customKey2"), "serverSideValue")
+                        .hasAttribute(stringKey("customKey"), "customValue")));
   }
 
   private static class CustomAttributesExtractor

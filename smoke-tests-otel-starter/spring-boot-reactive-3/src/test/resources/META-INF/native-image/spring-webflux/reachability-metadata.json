@@ -1,0 +1,21 @@
+{
+  "reflection": [
+    {
+      "type": "org.springframework.cloud.gateway.config.GatewayProperties",
+      "fields": [
+        {
+          "name": "routes"
+        }
+      ]
+    },
+    {
+      "type": "reactor.core.Disposable",
+      "methods": [
+        {
+          "name": "dispose",
+          "parameterTypes": []
+        }
+      ]
+    }
+  ]
+}

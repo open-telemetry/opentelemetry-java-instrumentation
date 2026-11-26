@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
+import static java.util.Objects.requireNonNull;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -12,10 +14,12 @@ import io.opentelemetry.instrumentation.api.incubator.builder.internal.DefaultHt
 import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanNameExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.Experimental;
 import io.opentelemetry.instrumentation.spring.webflux.v5_3.internal.SpringWebfluxBuilderUtil;
 import java.util.Collection;
 import java.util.function.UnaryOperator;
+import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 
 /** Builder for {@link SpringWebfluxServerTelemetry}. */
@@ -23,6 +27,7 @@ public final class SpringWebfluxServerTelemetryBuilder {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.spring-webflux-5.3";
 
   private final DefaultHttpServerInstrumenterBuilder<ServerWebExchange, ServerWebExchange> builder;
+  @Nullable private HttpServerRouteGetter<ServerWebExchange> routeFallback;
 
   static {
     SpringWebfluxBuilderUtil.setServerBuilderExtractor(builder -> builder.builder);
@@ -90,8 +95,9 @@ public final class SpringWebfluxServerTelemetryBuilder {
    * Configures recognized HTTP request methods.
    *
    * <p>By default, recognizes methods from <a
-   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a> and PATCH from <a
-   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a>.
+   * href="https://www.rfc-editor.org/rfc/rfc9110.html#name-methods">RFC9110</a>, PATCH from <a
+   * href="https://www.rfc-editor.org/rfc/rfc5789.html">RFC5789</a> and QUERY from <a
+   * href="https://www.rfc-editor.org/rfc/rfc10008.html">RFC10008</a>.
    *
    * <p><b>Note:</b> This <b>overrides</b> defaults completely; it does not supplement them.
    *
@@ -112,8 +118,19 @@ public final class SpringWebfluxServerTelemetryBuilder {
     return this;
   }
 
+  /**
+   * Sets a fallback for {@code http.route} when WebFlux does not provide a route template. The
+   * getter runs at request completion, when routing information is available.
+   */
+  @CanIgnoreReturnValue
+  public SpringWebfluxServerTelemetryBuilder setRouteFallback(
+      HttpServerRouteGetter<ServerWebExchange> routeFallback) {
+    this.routeFallback = requireNonNull(routeFallback, "routeFallback");
+    return this;
+  }
+
   /** Returns a new instance with the configured settings. */
   public SpringWebfluxServerTelemetry build() {
-    return new SpringWebfluxServerTelemetry(builder.build());
+    return new SpringWebfluxServerTelemetry(builder.build(), routeFallback);
   }
 }

@@ -196,21 +196,19 @@ class GrailsTest extends AbstractHttpServerTest<ConfigurableApplicationContext> 
   public List<Consumer<SpanDataAssert>> errorPageSpanAssertions(
       String method, ServerEndpoint endpoint) {
     List<Consumer<SpanDataAssert>> spanAssertions = new ArrayList<>();
-    spanAssertions.add(
-        span -> {
-          String actionName = endpoint == NOT_FOUND ? "notFound" : "index";
-          span.hasName("ErrorController." + actionName)
+    spanAssertions.add(span -> {
+      String actionName = endpoint == NOT_FOUND ? "notFound" : "index";
+      span.hasName("ErrorController." + actionName)
+          .hasKind(SpanKind.INTERNAL)
+          .hasAttributesSatisfyingExactly(
+              equalTo(CODE_FUNCTION_NAME, "test.ErrorController." + actionName));
+    });
+    if (endpoint == NOT_FOUND) {
+      spanAssertions.add(span ->
+          span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
               .hasKind(SpanKind.INTERNAL)
               .hasAttributesSatisfyingExactly(
-                  equalTo(CODE_FUNCTION_NAME, "test.ErrorController." + actionName));
-        });
-    if (endpoint == NOT_FOUND) {
-      spanAssertions.add(
-          span ->
-              span.satisfies(spanData -> assertThat(spanData.getName()).endsWith(".sendError"))
-                  .hasKind(SpanKind.INTERNAL)
-                  .hasAttributesSatisfyingExactly(
-                      satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".sendError"))));
+                  satisfies(CODE_FUNCTION_NAME, val -> val.endsWith(".sendError"))));
     }
     return spanAssertions;
   }

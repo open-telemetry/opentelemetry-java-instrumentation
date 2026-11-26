@@ -162,6 +162,36 @@ class DeclarativeConfigYamlGeneratorTest {
   }
 
   @Test
+  void documentsNestedStructuredListExamples() throws Exception {
+    Map<String, DeclarativeSchema.Property> properties = new LinkedHashMap<>();
+    properties.put(
+        "class", new DeclarativeSchema.Property("string", null, null, "com.example.MyClass"));
+    properties.put(
+        "methods",
+        new DeclarativeSchema.Property("array", null, null, List.of(Map.of("name", "method1"))));
+    ConfigurationOption option =
+        new ConfigurationOption(
+            "otel.instrumentation.methods.include",
+            "java.methods.include",
+            "Methods to instrument.",
+            "",
+            ConfigurationType.LIST,
+            null,
+            ConfigurationType.STRUCTURED_LIST,
+            new DeclarativeSchema("object", List.of("class", "methods"), properties),
+            null,
+            null);
+
+    String output = generate(List.of(module("methods", option)));
+
+    assertThat(navigate(parse(output), "instrumentation/development", "java", "methods", "include"))
+        .isEqualTo(List.of());
+    assertThat(output)
+        .contains("#     - class: com.example.MyClass")
+        .contains("#       methods: [{name: method1}]");
+  }
+
+  @Test
   void fallsBackToDefaultAndPlaceholderForSchemaPropertiesWithoutExamples() throws Exception {
     Map<String, DeclarativeSchema.Property> properties = new LinkedHashMap<>();
     properties.put("pattern", new DeclarativeSchema.Property("string", null, null, null));

@@ -108,41 +108,35 @@ class AwsLambdaApiGatewayWrapperTest {
 
     assertThat(result.getBody()).isEqualTo(statusCode == 200 ? "world" : null);
     assertThat(result.getStatusCode()).isEqualTo(statusCode);
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /hello/{param}")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
-                        .hasEventsSatisfyingExactly()
-                        .hasTraceId("4fd0b6131f19f39af59518d127b0cafe")
-                        .hasParentSpanId("0000000000000456")
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(URL_PATH, "/hello/world"),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(HTTP_ROUTE, "/hello/{param}"),
-                            equalTo(USER_AGENT_ORIGINAL, "Test Client"),
-                            equalTo(URL_FULL, "http://localhost:123/hello/world?a=b&c=d"),
-                            equalTo(URL_QUERY, "a=b&c=d"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
-                            equalTo(
-                                ERROR_TYPE,
-                                statusCode >= 500 ? Integer.toString(statusCode) : null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /hello/{param}")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(statusCode >= 500 ? StatusData.error() : StatusData.unset())
+                .hasEventsSatisfyingExactly()
+                .hasTraceId("4fd0b6131f19f39af59518d127b0cafe")
+                .hasParentSpanId("0000000000000456")
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CLOUD_RESOURCE_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                            ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                            : null),
+                    equalTo(
+                        CLOUD_ACCOUNT_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"),
+                    equalTo(FAAS_TRIGGER, "http"),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(URL_PATH, "/hello/world"),
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(HTTP_ROUTE, "/hello/{param}"),
+                    equalTo(USER_AGENT_ORIGINAL, "Test Client"),
+                    equalTo(URL_FULL, "http://localhost:123/hello/world?a=b&c=d"),
+                    equalTo(URL_QUERY, "a=b&c=d"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, statusCode),
+                    equalTo(ERROR_TYPE, statusCode >= 500 ? Integer.toString(statusCode) : null))));
   }
 
   @Test
@@ -161,30 +155,26 @@ class AwsLambdaApiGatewayWrapperTest {
             wrapper.handleRequest(new APIGatewayProxyRequestEvent().withBody("empty"), context);
 
     assertThat(result.getBody()).isNull();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                        .hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.unset())
-                        .hasEventsSatisfyingExactly()
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, null),
-                            equalTo(ERROR_TYPE, null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+                .hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.unset())
+                .hasEventsSatisfyingExactly()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CLOUD_RESOURCE_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                            ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                            : null),
+                    equalTo(
+                        CLOUD_ACCOUNT_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"),
+                    equalTo(FAAS_TRIGGER, "http"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, null),
+                    equalTo(ERROR_TYPE, null))));
   }
 
   @Test
@@ -203,25 +193,21 @@ class AwsLambdaApiGatewayWrapperTest {
             wrapper.handleRequest(new APIGatewayProxyRequestEvent().withBody("\"hello\""), context);
 
     assertThat(result.getBody()).isEqualTo("\"world\"");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CLOUD_RESOURCE_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                            ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                            : null),
+                    equalTo(
+                        CLOUD_ACCOUNT_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"),
+                    equalTo(FAAS_TRIGGER, "http"))));
   }
 
   @Test
@@ -240,25 +226,21 @@ class AwsLambdaApiGatewayWrapperTest {
             wrapper.handleRequest(new APIGatewayProxyRequestEvent().withBody("1"), context);
 
     assertThat(result.getBody()).isEqualTo("\"world\"");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CLOUD_RESOURCE_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                            ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                            : null),
+                    equalTo(
+                        CLOUD_ACCOUNT_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"),
+                    equalTo(FAAS_TRIGGER, "http"))));
   }
 
   @Test
@@ -280,25 +262,21 @@ class AwsLambdaApiGatewayWrapperTest {
                 context);
 
     assertThat(result.getBody()).isEqualTo("\"General Kenobi\"");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("my_function")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("my_function")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CLOUD_RESOURCE_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                            ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                            : null),
+                    equalTo(
+                        CLOUD_ACCOUNT_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"),
+                    equalTo(FAAS_TRIGGER, "http"))));
   }
 
   @Test
@@ -313,41 +291,34 @@ class AwsLambdaApiGatewayWrapperTest {
             WrappedLambda.fromConfiguration(),
             TracingRequestApiGatewayWrapper::map);
     Throwable thrown =
-        catchThrowable(
-            () ->
-                wrapper.handleRequest(
-                    new APIGatewayProxyRequestEvent().withBody("error"), context));
+        catchThrowable(() ->
+            wrapper.handleRequest(new APIGatewayProxyRequestEvent().withBody("error"), context));
     assertThat(thrown).isInstanceOf(IllegalStateException.class);
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasKind(SpanKind.SERVER)
-                        .hasStatus(StatusData.error())
-                        .hasException(emitExceptionAsSpanEvents() ? thrown : null)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CLOUD_RESOURCE_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "arn:aws:lambda:us-east-1:123456789:function:test"
-                                    : null),
-                            equalTo(
-                                CLOUD_ACCOUNT_ID,
-                                AwsLambdaTestUtils.supportsInvokedFunctionArn()
-                                    ? "123456789"
-                                    : null),
-                            equalTo(stringKey("faas.invocation.id"), "1-22-333"),
-                            equalTo(FAAS_TRIGGER, "http"),
-                            equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasKind(SpanKind.SERVER)
+                .hasStatus(StatusData.error())
+                .hasException(emitExceptionAsSpanEvents() ? thrown : null)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(
+                        CLOUD_RESOURCE_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn()
+                            ? "arn:aws:lambda:us-east-1:123456789:function:test"
+                            : null),
+                    equalTo(
+                        CLOUD_ACCOUNT_ID,
+                        AwsLambdaTestUtils.supportsInvokedFunctionArn() ? "123456789" : null),
+                    equalTo(stringKey("faas.invocation.id"), "1-22-333"),
+                    equalTo(FAAS_TRIGGER, "http"),
+                    equalTo(ERROR_TYPE, IllegalStateException.class.getName()))));
     if (emitExceptionAsLogs()) {
-      testing.waitAndAssertLogRecords(
-          logRecord ->
-              logRecord
-                  .hasSeverity(Severity.ERROR)
-                  .hasEventName("faas.invocation.exception")
-                  .hasException(thrown)
-                  .hasTotalAttributeCount(3));
+      testing.waitAndAssertLogRecords(logRecord ->
+          logRecord
+              .hasSeverity(Severity.ERROR)
+              .hasEventName("faas.invocation.exception")
+              .hasException(thrown)
+              .hasTotalAttributeCount(3));
     }
   }
 

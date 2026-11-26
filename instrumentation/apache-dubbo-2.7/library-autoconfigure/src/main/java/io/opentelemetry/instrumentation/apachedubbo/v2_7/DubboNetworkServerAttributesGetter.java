@@ -15,14 +15,14 @@ final class DubboNetworkServerAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkLocalInetSocketAddress(
+  public InetSocketAddress getNetworkLocalSocketAddress(
       DubboRequest request, @Nullable Result result) {
     return request.localAddress();
   }
 
   @Override
   @Nullable
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public InetSocketAddress getNetworkPeerSocketAddress(
       DubboRequest request, @Nullable Result result) {
     return request.remoteAddress();
   }

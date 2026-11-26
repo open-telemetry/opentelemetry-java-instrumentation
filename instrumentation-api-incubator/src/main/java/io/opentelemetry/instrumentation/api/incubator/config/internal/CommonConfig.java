@@ -5,6 +5,10 @@
 
 package io.opentelemetry.instrumentation.api.incubator.config.internal;
 
+import static java.util.Collections.emptyList;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
+
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.incubator.log.LoggingContextConstants;
@@ -35,29 +39,30 @@ public final class CommonConfig {
   public CommonConfig(OpenTelemetry openTelemetry) {
     DeclarativeConfigProperties generalConfig =
         DeclarativeConfigUtil.getGeneralInstrumentationConfig(openTelemetry);
+    DeclarativeConfigProperties httpConfig = generalConfig.get("http");
+    DeclarativeConfigProperties clientConfig = httpConfig.get("client");
+    DeclarativeConfigProperties serverConfig = httpConfig.get("server");
     DeclarativeConfigProperties commonConfig =
         DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "common");
 
     clientRequestHeaders =
-        generalConfig
-            .get("http")
-            .get("client")
-            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
+        unmodifiableList(
+            new ArrayList<>(
+                clientConfig.getScalarList("request_captured_headers", String.class, emptyList())));
     clientResponseHeaders =
-        generalConfig
-            .get("http")
-            .get("client")
-            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
+        unmodifiableList(
+            new ArrayList<>(
+                clientConfig.getScalarList(
+                    "response_captured_headers", String.class, emptyList())));
     serverRequestHeaders =
-        generalConfig
-            .get("http")
-            .get("server")
-            .getScalarList("request_captured_headers", String.class, new ArrayList<>());
+        unmodifiableList(
+            new ArrayList<>(
+                serverConfig.getScalarList("request_captured_headers", String.class, emptyList())));
     serverResponseHeaders =
-        generalConfig
-            .get("http")
-            .get("server")
-            .getScalarList("response_captured_headers", String.class, new ArrayList<>());
+        unmodifiableList(
+            new ArrayList<>(
+                serverConfig.getScalarList(
+                    "response_captured_headers", String.class, emptyList())));
     knownHttpRequestMethods =
         new HashSet<>(
             commonConfig
@@ -77,7 +82,7 @@ public final class CommonConfig {
             .getScalarList("sensitive_query_parameters", String.class);
     sensitiveQueryParameters =
         sensitiveQueryParameterList != null
-            ? new HashSet<>(sensitiveQueryParameterList)
+            ? unmodifiableSet(new HashSet<>(sensitiveQueryParameterList))
             : HttpConstants.SENSITIVE_QUERY_PARAMETERS;
 
     emitExperimentalHttpServerTelemetry =

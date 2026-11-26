@@ -1,4 +1,5 @@
 import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -20,9 +21,8 @@ dependencies {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation(project(":instrumentation:thrift-0.13:testing"))
     }
   }
@@ -31,11 +31,5 @@ testing.suites {
     configureDefault {
       systemProperty("testLatestDeps", otelProps.testLatestDeps)
     }
-  }
-}
-
-tasks {
-  check {
-    dependsOn(testing.suites)
   }
 }

@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jedis.v4_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.db.DbClientMetricsTestUtil.assertDurationMetric;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.DbAttributes.DB_NAMESPACE;
 import static io.opentelemetry.semconv.DbAttributes.DB_OPERATION_BATCH_SIZE;
@@ -22,7 +23,6 @@ import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSyste
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
-import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
@@ -134,21 +134,19 @@ class Jedis40ClientTest {
   void setCommand() {
     jedis.set("foo", "bar");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
 
     assertDurationMetric(
         testing,
@@ -202,20 +200,18 @@ class Jedis40ClientTest {
         .hasSize(expectedTraces)
         .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
         .hasSize(initializationCommands)
-        .filteredOn(
-            span -> {
-              String queryText = span.getAttributes().get(DB_QUERY_TEXT);
-              return queryText != null && queryText.contains("SETINFO");
-            })
+        .filteredOn(span -> {
+          String queryText = span.getAttributes().get(DB_QUERY_TEXT);
+          return queryText != null && queryText.contains("SETINFO");
+        })
         .hasSize(jedis51OrLater ? 2 : 0)
         .allSatisfy(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo("ERR"));
     assertThat(testing.spans())
         .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
-        .filteredOn(
-            span -> {
-              String queryText = span.getAttributes().get(DB_QUERY_TEXT);
-              return queryText != null && queryText.contains("SETNAME");
-            })
+        .filteredOn(span -> {
+          String queryText = span.getAttributes().get(DB_QUERY_TEXT);
+          return queryText != null && queryText.contains("SETNAME");
+        })
         .singleElement()
         .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
     if (latestJedis) {
@@ -237,43 +233,36 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
-                      .hasSize(jedis51OrLater ? 1 : 0)
-                      .allSatisfy(point -> assertThat(point.getCount()).isEqualTo(2));
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
-                      .singleElement()
-                      .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .singleElement()
-                      .satisfies(
-                          point ->
-                              assertThat(point.getAttributes().get(ERROR_TYPE))
-                                  .isEqualTo("WRONGTYPE"));
-                  if (latestJedis) {
-                    assertThat(metric.getHistogramData().getPoints())
-                        .filteredOn(
-                            point -> "HELLO".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                        .singleElement()
-                        .satisfies(
-                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
-                  }
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .singleElement()
-                      .satisfies(
-                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
-                }));
+            metrics.anySatisfy(metric -> {
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(
+                      point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
+                  .hasSize(jedis51OrLater ? 1 : 0)
+                  .allSatisfy(point -> assertThat(point.getCount()).isEqualTo(2));
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(
+                      point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
+                  .singleElement()
+                  .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .singleElement()
+                  .satisfies(point ->
+                      assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo("WRONGTYPE"));
+              if (latestJedis) {
+                assertThat(metric.getHistogramData().getPoints())
+                    .filteredOn(
+                        point -> "HELLO".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                    .singleElement()
+                    .satisfies(point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+              }
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .singleElement()
+                  .satisfies(point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+            }));
   }
 
   @Test
@@ -333,30 +322,24 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point ->
-                              authenticationOperation.equals(
-                                  point.getAttributes().get(DB_OPERATION_NAME)))
-                      .singleElement()
-                      .satisfies(
-                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "SELECT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
-                      .singleElement()
-                      .satisfies(
-                          point -> assertThat(point.getCount()).isEqualTo(initializationAttempts));
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .singleElement()
-                      .satisfies(
-                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
-                }));
+            metrics.anySatisfy(metric -> {
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(point ->
+                      authenticationOperation.equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .singleElement()
+                  .satisfies(point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(
+                      point -> "SELECT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .filteredOn(point -> "ERR".equals(point.getAttributes().get(ERROR_TYPE)))
+                  .singleElement()
+                  .satisfies(
+                      point -> assertThat(point.getCount()).isEqualTo(initializationAttempts));
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .singleElement()
+                  .satisfies(point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+            }));
   }
 
   @Test
@@ -368,32 +351,31 @@ class Jedis40ClientTest {
     try {
       try (ServerSocket server = new ServerSocket(0)) {
         Future<?> serverTask =
-            executor.submit(
-                () -> {
-                  try {
-                    int connections = latestJedis ? 2 : 1;
-                    for (int i = 0; i < connections; i++) {
-                      try (Socket socket = server.accept()) {
-                        InputStream input = socket.getInputStream();
-                        List<String> firstCommand = readRedisCommand(input);
-                        OutputStream output = socket.getOutputStream();
-                        if ("HELLO".equals(firstCommand.get(0))) {
-                          writeHelloResponse(output, firstCommand.get(1));
-                          readRedisCommand(input);
-                          readRedisCommand(input);
-                          readRedisCommand(input);
-                        } else {
-                          readRedisCommand(input);
-                          readRedisCommand(input);
-                        }
-                        output.write("+OK\r\n".getBytes(UTF_8));
-                        output.flush();
-                      }
+            executor.submit(() -> {
+              try {
+                int connections = latestJedis ? 2 : 1;
+                for (int i = 0; i < connections; i++) {
+                  try (Socket socket = server.accept()) {
+                    InputStream input = socket.getInputStream();
+                    List<String> firstCommand = readRedisCommand(input);
+                    OutputStream output = socket.getOutputStream();
+                    if ("HELLO".equals(firstCommand.get(0))) {
+                      writeHelloResponse(output, firstCommand.get(1));
+                      readRedisCommand(input);
+                      readRedisCommand(input);
+                      readRedisCommand(input);
+                    } else {
+                      readRedisCommand(input);
+                      readRedisCommand(input);
                     }
-                  } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    output.write("+OK\r\n".getBytes(UTF_8));
+                    output.flush();
                   }
-                });
+                }
+              } catch (IOException e) {
+                throw new RuntimeException(e);
+              }
+            });
 
         JedisClientConfig clientConfig =
             DefaultJedisClientConfig.builder().clientName("otel-partial-drain-test").build();
@@ -423,24 +405,21 @@ class Jedis40ClientTest {
           .hasSize(3);
       assertThat(testing.spans())
           .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
-          .filteredOn(
-              span -> {
-                String queryText = span.getAttributes().get(DB_QUERY_TEXT);
-                return queryText != null && queryText.contains("SETNAME");
-              })
+          .filteredOn(span -> {
+            String queryText = span.getAttributes().get(DB_QUERY_TEXT);
+            return queryText != null && queryText.contains("SETNAME");
+          })
           .singleElement()
           .satisfies(span -> assertThat(span.getAttributes().get(ERROR_TYPE)).isNull());
       assertThat(testing.spans())
           .filteredOn(span -> "CLIENT".equals(span.getAttributes().get(DB_OPERATION_NAME)))
-          .filteredOn(
-              span -> {
-                String queryText = span.getAttributes().get(DB_QUERY_TEXT);
-                return queryText != null && queryText.contains("SETINFO");
-              })
+          .filteredOn(span -> {
+            String queryText = span.getAttributes().get(DB_QUERY_TEXT);
+            return queryText != null && queryText.contains("SETINFO");
+          })
           .hasSize(2)
-          .allSatisfy(
-              span ->
-                  assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(connectionErrorType));
+          .allSatisfy(span ->
+              assertThat(span.getAttributes().get(ERROR_TYPE)).isEqualTo(connectionErrorType));
       if (latestJedis) {
         assertThat(testing.spans())
             .filteredOn(span -> "HELLO".equals(span.getAttributes().get(DB_OPERATION_NAME)))
@@ -456,38 +435,34 @@ class Jedis40ClientTest {
           "io.opentelemetry.jedis-4.0",
           "db.client.operation.duration",
           metrics ->
-              metrics.anySatisfy(
-                  metric -> {
-                    assertThat(metric.getHistogramData().getPoints()).hasSize(latestJedis ? 4 : 3);
-                    assertThat(metric.getHistogramData().getPoints())
-                        .filteredOn(
-                            point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                        .filteredOn(
-                            point ->
-                                connectionErrorType.equals(point.getAttributes().get(ERROR_TYPE)))
-                        .singleElement()
-                        .satisfies(point -> assertThat(point.getCount()).isEqualTo(2));
-                    assertThat(metric.getHistogramData().getPoints())
-                        .filteredOn(
-                            point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                        .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
-                        .singleElement()
-                        .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
-                    if (latestJedis) {
-                      assertThat(metric.getHistogramData().getPoints())
-                          .filteredOn(
-                              point -> "HELLO".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                          .singleElement()
-                          .satisfies(
-                              point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
-                    }
-                    assertThat(metric.getHistogramData().getPoints())
-                        .filteredOn(
-                            point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                        .singleElement()
-                        .satisfies(
-                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
-                  }));
+              metrics.anySatisfy(metric -> {
+                assertThat(metric.getHistogramData().getPoints()).hasSize(latestJedis ? 4 : 3);
+                assertThat(metric.getHistogramData().getPoints())
+                    .filteredOn(
+                        point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                    .filteredOn(
+                        point -> connectionErrorType.equals(point.getAttributes().get(ERROR_TYPE)))
+                    .singleElement()
+                    .satisfies(point -> assertThat(point.getCount()).isEqualTo(2));
+                assertThat(metric.getHistogramData().getPoints())
+                    .filteredOn(
+                        point -> "CLIENT".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                    .filteredOn(point -> point.getAttributes().get(ERROR_TYPE) == null)
+                    .singleElement()
+                    .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
+                if (latestJedis) {
+                  assertThat(metric.getHistogramData().getPoints())
+                      .filteredOn(
+                          point -> "HELLO".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                      .singleElement()
+                      .satisfies(
+                          point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+                }
+                assertThat(metric.getHistogramData().getPoints())
+                    .filteredOn(point -> "SET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                    .singleElement()
+                    .satisfies(point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull());
+              }));
     } finally {
       executor.shutdownNow();
     }
@@ -496,12 +471,11 @@ class Jedis40ClientTest {
   @Test
   void dedicatedServerErrorUsesExceptionClass() {
     Throwable error =
-        catchThrowable(
-            () ->
-                jedis.eval(
-                    "return redis.error_reply(ARGV[1])".getBytes(UTF_8),
-                    0,
-                    "MOVED 42 127.0.0.1:6379".getBytes(UTF_8)));
+        catchThrowable(() ->
+            jedis.eval(
+                "return redis.error_reply(ARGV[1])".getBytes(UTF_8),
+                0,
+                "MOVED 42 127.0.0.1:6379".getBytes(UTF_8)));
 
     assertThat(error).isInstanceOf(JedisDataException.class);
     assertThat(error.getClass()).isNotEqualTo(JedisDataException.class);
@@ -520,17 +494,16 @@ class Jedis40ClientTest {
       testing.clearData();
 
       Throwable error =
-          catchThrowable(
-              () ->
-                  client.executeCommand(
-                      new CommandObject<>(
-                          new CommandArguments(Protocol.Command.PING),
-                          new Builder<String>() {
-                            @Override
-                            public String build(Object response) {
-                              throw localFailure;
-                            }
-                          })));
+          catchThrowable(() ->
+              client.executeCommand(
+                  new CommandObject<>(
+                      new CommandArguments(Protocol.Command.PING),
+                      new Builder<String>() {
+                        @Override
+                        public String build(Object response) {
+                          throw localFailure;
+                        }
+                      })));
 
       assertThat(error).isSameAs(localFailure);
       assertErrorType(JedisDataException.class.getName());
@@ -584,13 +557,12 @@ class Jedis40ClientTest {
                       }
                     });
             Throwable error =
-                catchThrowable(
-                    () ->
-                        assertThat(
-                                directConnection
-                                    ? connection.executeCommand(command)
-                                    : client.executeCommand(command))
-                            .isEqualTo("PONG"));
+                catchThrowable(() ->
+                    assertThat(
+                            directConnection
+                                ? connection.executeCommand(command)
+                                : client.executeCommand(command))
+                        .isEqualTo("PONG"));
             assertThat(nestedErrors).hasSize(1);
             assertThat(nestedErrors.get(0)).hasMessageStartingWith("WRONGTYPE");
             assertThat(error).isSameAs(catchFailure ? null : nestedErrors.get(0));
@@ -602,71 +574,62 @@ class Jedis40ClientTest {
       assertThat(Context.current().get(callerKey)).isEqualTo("value");
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasName("parent"),
-                span ->
-                    span.hasName("PING " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(catchFailure ? StatusData.unset() : StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "PING"),
-                            equalTo(DB_OPERATION_NAME, "PING"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(
-                                ERROR_TYPE,
-                                catchFailure ? null : JedisDataException.class.getName())),
-                span ->
-                    span.hasName("GET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasParent(trace.getSpan(0))
-                        .hasStatus(StatusData.error())
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "GET builder-wrong-type"),
-                            equalTo(DB_OPERATION_NAME, "GET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip),
-                            equalTo(ERROR_TYPE, "WRONGTYPE"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("parent"),
+            span ->
+                span.hasName("PING " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(catchFailure ? StatusData.unset() : StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "PING"),
+                        equalTo(DB_OPERATION_NAME, "PING"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(
+                            ERROR_TYPE, catchFailure ? null : JedisDataException.class.getName())),
+            span ->
+                span.hasName("GET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "GET builder-wrong-type"),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip),
+                        equalTo(ERROR_TYPE, "WRONGTYPE"))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric -> {
-                  assertThat(metric.getHistogramData().getPoints()).hasSize(2);
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .singleElement()
-                      .satisfies(
-                          point -> {
-                            assertThat(point.getCount()).isEqualTo(1);
-                            assertThat(point.getAttributes().get(ERROR_TYPE))
-                                .isEqualTo("WRONGTYPE");
-                          });
-                  assertThat(metric.getHistogramData().getPoints())
-                      .filteredOn(
-                          point -> "PING".equals(point.getAttributes().get(DB_OPERATION_NAME)))
-                      .singleElement()
-                      .satisfies(
-                          point -> {
-                            assertThat(point.getCount()).isEqualTo(1);
-                            assertThat(point.getAttributes().get(ERROR_TYPE))
-                                .isEqualTo(
-                                    catchFailure ? null : JedisDataException.class.getName());
-                          });
-                }));
+            metrics.anySatisfy(metric -> {
+              assertThat(metric.getHistogramData().getPoints()).hasSize(2);
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(point -> "GET".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .singleElement()
+                  .satisfies(point -> {
+                    assertThat(point.getCount()).isEqualTo(1);
+                    assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo("WRONGTYPE");
+                  });
+              assertThat(metric.getHistogramData().getPoints())
+                  .filteredOn(point -> "PING".equals(point.getAttributes().get(DB_OPERATION_NAME)))
+                  .singleElement()
+                  .satisfies(point -> {
+                    assertThat(point.getCount()).isEqualTo(1);
+                    assertThat(point.getAttributes().get(ERROR_TYPE))
+                        .isEqualTo(catchFailure ? null : JedisDataException.class.getName());
+                  });
+            }));
 
     testing.clearData();
     assertThatThrownBy(() -> jedis.get("builder-wrong-type")).hasMessageStartingWith("WRONGTYPE");
@@ -676,12 +639,11 @@ class Jedis40ClientTest {
   @Test
   void unreliableServerPrefixUsesExceptionClass() {
     Throwable error =
-        catchThrowable(
-            () ->
-                jedis.eval(
-                    "return redis.error_reply(ARGV[1])".getBytes(UTF_8),
-                    0,
-                    "échec details".getBytes(UTF_8)));
+        catchThrowable(() ->
+            jedis.eval(
+                "return redis.error_reply(ARGV[1])".getBytes(UTF_8),
+                0,
+                "échec details".getBytes(UTF_8)));
 
     assertThat(error).isInstanceOf(JedisDataException.class);
     assertErrorType(error.getClass().getName());
@@ -869,13 +831,11 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .anySatisfy(
-                            point ->
-                                assertThat(point.getAttributes().get(DB_OPERATION_NAME))
-                                    .isEqualTo("PING"))));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .anySatisfy(point ->
+                        assertThat(point.getAttributes().get(DB_OPERATION_NAME))
+                            .isEqualTo("PING"))));
     testing.clearData();
 
     List<JedisDataException> nestedErrors = new ArrayList<>();
@@ -1001,19 +961,17 @@ class Jedis40ClientTest {
     assertThat(nestedErrors).hasSize(1);
     assertThat(nestedErrors.get(0)).hasMessageStartingWith("WRONGTYPE");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, null))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, null))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .allSatisfy(
-                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .allSatisfy(
+                        point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
 
     testing.clearData();
     jedis.lpush("outer-wrong-type", "value");
@@ -1088,12 +1046,10 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .hasSize(1)
-                        .allSatisfy(
-                            point -> assertThat(point.getAttributes().get(ERROR_TYPE)).isNull())));
+            metrics.anySatisfy(metric ->
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(
+                        point -> point.hasAttributesSatisfying(equalTo(ERROR_TYPE, null)))));
   }
 
   @ParameterizedTest
@@ -1166,16 +1122,12 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .singleElement()
-                        .satisfies(
-                            point -> {
-                              assertThat(point.getCount()).isEqualTo(1);
-                              assertThat(point.getAttributes().get(ERROR_TYPE))
-                                  .isEqualTo(errorType);
-                            })));
+            metrics.anySatisfy(metric ->
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
   }
 
   @ParameterizedTest
@@ -1205,16 +1157,12 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .singleElement()
-                        .satisfies(
-                            point -> {
-                              assertThat(point.getCount()).isEqualTo(1);
-                              assertThat(point.getAttributes().get(ERROR_TYPE))
-                                  .isEqualTo("WRONGTYPE");
-                            })));
+            metrics.anySatisfy(metric ->
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, "WRONGTYPE")))));
   }
 
   @ParameterizedTest
@@ -1253,7 +1201,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
   }
 
   @Test
@@ -1282,7 +1230,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
   }
 
   @Test
@@ -1314,7 +1262,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
   }
 
   @Test
@@ -1344,7 +1292,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
   }
 
   @ParameterizedTest
@@ -1419,16 +1367,12 @@ class Jedis40ClientTest {
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .singleElement()
-                        .satisfies(
-                            point -> {
-                              assertThat(point.getCount()).isEqualTo(1);
-                              assertThat(point.getAttributes().get(ERROR_TYPE))
-                                  .isEqualTo(errorType);
-                            })));
+            metrics.anySatisfy(metric ->
+                assertThat(metric)
+                    .hasHistogramPointsSatisfying(point ->
+                        point
+                            .hasCount(1)
+                            .hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType)))));
     jedis.resetState();
     testing.clearData();
     assertThat(jedis.set("after-transaction", "value")).isEqualTo("OK");
@@ -1472,7 +1416,7 @@ class Jedis40ClientTest {
         .isInstanceOf(JedisDataException.class)
         .satisfies(error -> assertThat((Throwable) error).hasMessageStartingWith("WRONGTYPE"));
     assertThat(results.get(1)).isEqualTo("OK");
-    assertErrorType("WRONGTYPE");
+    assertErrorType(JedisDataException.class.getName());
 
     jedis.resetState();
     testing.clearData();
@@ -1524,21 +1468,17 @@ class Jedis40ClientTest {
   }
 
   private static void assertErrorType(String errorType) {
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasAttributesSatisfying(equalTo(ERROR_TYPE, errorType))));
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-4.0",
         "db.client.operation.duration",
         metrics ->
-            metrics.anySatisfy(
-                metric ->
-                    assertThat(metric.getHistogramData().getPoints())
-                        .anySatisfy(
-                            point ->
-                                assertThat(point.getAttributes().get(ERROR_TYPE))
-                                    .isEqualTo(errorType))));
+            metrics.anySatisfy(metric ->
+                assertThat(metric.getHistogramData().getPoints())
+                    .anySatisfy(point ->
+                        assertThat(point.getAttributes().get(ERROR_TYPE)).isEqualTo(errorType))));
   }
 
   @Test
@@ -1555,35 +1495,30 @@ class Jedis40ClientTest {
       mapped.set("mapped", "value");
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + configuredHost + ":" + configuredPort)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET mapped ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, configuredHost),
-                            equalTo(SERVER_PORT, configuredPort),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + configuredHost + ":" + configuredPort)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET mapped ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(SERVER_ADDRESS, configuredHost),
+                    equalTo(SERVER_PORT, configuredPort),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jedis-4.0",
         metric ->
             metric
                 .hasName("db.client.operation.duration")
-                .hasHistogramSatisfying(
-                    histogram ->
-                        histogram.hasPointsSatisfying(
-                            point ->
-                                point
-                                    .hasAttribute(DB_OPERATION_NAME, "SET")
-                                    .hasAttribute(SERVER_ADDRESS, configuredHost)
-                                    .hasAttribute(SERVER_PORT, (long) configuredPort))));
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasAttribute(DB_OPERATION_NAME, "SET")
+                        .hasAttribute(SERVER_ADDRESS, configuredHost)
+                        .hasAttribute(SERVER_PORT, (long) configuredPort)));
   }
 
   @Test
@@ -1621,20 +1556,18 @@ class Jedis40ClientTest {
       sharded.set("sharded", "value");
 
       // Assert before close() can add the pre-5.1 QUIT trace.
-      testing.waitAndAssertTraces(
-          trace ->
-              trace.hasSpansSatisfyingExactly(
-                  span ->
-                      span.hasName("SET " + configuredTargets)
-                          .hasKind(SpanKind.CLIENT)
-                          .hasAttributesSatisfyingExactly(
-                              equalTo(DB_SYSTEM_NAME, REDIS),
-                              equalTo(DB_QUERY_TEXT, "SET sharded ?"),
-                              equalTo(DB_OPERATION_NAME, "SET"),
-                              equalTo(DB_NAMESPACE, "0"),
-                              equalTo(SERVER_ADDRESS, configuredTargets),
-                              equalTo(NETWORK_PEER_PORT, port),
-                              equalTo(NETWORK_PEER_ADDRESS, ip))));
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName("SET " + configuredTargets)
+                  .hasKind(SpanKind.CLIENT)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(DB_SYSTEM_NAME, REDIS),
+                      equalTo(DB_QUERY_TEXT, "SET sharded ?"),
+                      equalTo(DB_OPERATION_NAME, "SET"),
+                      equalTo(DB_NAMESPACE, "0"),
+                      equalTo(SERVER_ADDRESS, configuredTargets),
+                      equalTo(NETWORK_PEER_PORT, port),
+                      equalTo(NETWORK_PEER_ADDRESS, ip))));
     }
     if (!jedis51OrLater) {
       // The asserted SET trace remains captured; close() adds a second trace for QUIT.
@@ -1746,20 +1679,18 @@ class Jedis40ClientTest {
       direct.set("default-factory", "value");
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET 127.0.0.1")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET default-factory ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET 127.0.0.1")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET default-factory ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -1773,20 +1704,18 @@ class Jedis40ClientTest {
       mapped.set("mapped-default", "value");
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET 127.0.0.1")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET mapped-default ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET 127.0.0.1")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET mapped-default ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(SERVER_ADDRESS, "127.0.0.1"),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -1812,19 +1741,17 @@ class Jedis40ClientTest {
       custom.set("custom", "value");
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET")
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET custom ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET")
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET custom ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -1836,21 +1763,19 @@ class Jedis40ClientTest {
       pooled.set("pooled", "value");
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET pooled ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET pooled ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -1862,33 +1787,31 @@ class Jedis40ClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "GET foo"),
-                            equalTo(DB_OPERATION_NAME, "GET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("GET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "GET foo"),
+                        equalTo(DB_OPERATION_NAME, "GET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -1900,33 +1823,31 @@ class Jedis40ClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("RANDOMKEY " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
-                            equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("RANDOMKEY " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "RANDOMKEY"),
+                        equalTo(DB_OPERATION_NAME, "RANDOMKEY"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -1936,33 +1857,31 @@ class Jedis40ClientTest {
 
     testing.waitAndAssertTraces(
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SELECT " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SELECT 1"),
-                            equalTo(DB_OPERATION_NAME, "SELECT"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))),
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SELECT " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SELECT 1"),
+                        equalTo(DB_OPERATION_NAME, "SELECT"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip))),
         trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("SET " + host + ":" + port)
+                    .hasKind(SpanKind.CLIENT)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, REDIS),
+                        equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                        equalTo(DB_OPERATION_NAME, "SET"),
+                        equalTo(DB_NAMESPACE, "0"),
+                        equalTo(SERVER_ADDRESS, host),
+                        equalTo(SERVER_PORT, port),
+                        equalTo(NETWORK_PEER_PORT, port),
+                        equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test
@@ -1974,21 +1893,19 @@ class Jedis40ClientTest {
       databaseOne.set("foo", "bar");
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("SET " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, "SET foo ?"),
-                            equalTo(DB_OPERATION_NAME, "SET"),
-                            equalTo(DB_NAMESPACE, "1"),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("SET " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, "SET foo ?"),
+                    equalTo(DB_OPERATION_NAME, "SET"),
+                    equalTo(DB_NAMESPACE, "1"),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @ParameterizedTest
@@ -2003,22 +1920,20 @@ class Jedis40ClientTest {
       return;
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(scenario.operationName + " " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, scenario.queryText),
-                            equalTo(DB_OPERATION_NAME, scenario.operationName),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(scenario.operationName + " " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, scenario.queryText),
+                    equalTo(DB_OPERATION_NAME, scenario.operationName),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   private static Stream<Arguments> batchScenarios() {
@@ -2067,22 +1982,20 @@ class Jedis40ClientTest {
       return;
     }
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName(scenario.operationName + " " + host + ":" + port)
-                        .hasKind(SpanKind.CLIENT)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(DB_SYSTEM_NAME, REDIS),
-                            equalTo(DB_QUERY_TEXT, scenario.queryText),
-                            equalTo(DB_OPERATION_NAME, scenario.operationName),
-                            equalTo(DB_NAMESPACE, "0"),
-                            equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
-                            equalTo(SERVER_ADDRESS, host),
-                            equalTo(SERVER_PORT, port),
-                            equalTo(NETWORK_PEER_PORT, port),
-                            equalTo(NETWORK_PEER_ADDRESS, ip))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName(scenario.operationName + " " + host + ":" + port)
+                .hasKind(SpanKind.CLIENT)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, REDIS),
+                    equalTo(DB_QUERY_TEXT, scenario.queryText),
+                    equalTo(DB_OPERATION_NAME, scenario.operationName),
+                    equalTo(DB_NAMESPACE, "0"),
+                    equalTo(DB_OPERATION_BATCH_SIZE, scenario.batchSize),
+                    equalTo(SERVER_ADDRESS, host),
+                    equalTo(SERVER_PORT, port),
+                    equalTo(NETWORK_PEER_PORT, port),
+                    equalTo(NETWORK_PEER_ADDRESS, ip))));
   }
 
   @Test

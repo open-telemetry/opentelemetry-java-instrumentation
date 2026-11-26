@@ -24,9 +24,9 @@ jobs:
           persist-credentials: false
       - id: read-java
         run: echo "version=$(cat .java-version)" >> "$GITHUB_OUTPUT"
-      - uses: graalvm/setup-graalvm@f70bc8032f90a104502824a54bcb94b6f01715bc # v1.6.8
+      - uses: graalvm/setup-graalvm@60e76998d25690099182b796e99b8804da582d90 # v1.6.10
         with:
-          version: "25.2.4"
+          java-version: ${{ steps.read-java.outputs.version }}
           distribution: "graalvm"
       - name: Increase gradle daemon heap size
         run: |

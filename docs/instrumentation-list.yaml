@@ -121,7 +121,7 @@ definitions:
       description: Configures the instrumentation to recognize an alternative set
         of HTTP request methods. All other methods will be treated as `_OTHER`.
       type: list
-      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE
+      default: CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE
     http.server.capture-request-headers:
       name: otel.instrumentation.http.server.capture-request-headers
       declarative_name: general.http.server.request_captured_headers
@@ -183,9 +183,8 @@ definitions:
         patterns to exclude from span attributes. Captured attribute keys preserve
         the header name's original spelling, including dashes. `?` matches one character
         and `*` matches zero or more characters. Excluded patterns take precedence
-        over included patterns. An absent or empty selector captures no headers; an
-        exclude-only selector captures every header not excluded, which may expose
-        sensitive information.
+        over included patterns. If only excluded patterns are configured, all other
+        headers are captured, which may expose sensitive information.
       type: list
       default: ''
     messaging.headers.included:
@@ -194,9 +193,8 @@ definitions:
       description: A comma-separated list of case-sensitive message header name glob
         patterns to capture as span attributes. Captured attribute keys preserve the
         header name's original spelling, including dashes. `?` matches one character
-        and `*` matches zero or more characters. Excluded patterns take precedence
-        over included patterns. An absent or empty selector captures no headers; an
-        exclude-only selector captures every header not excluded.
+        and `*` matches zero or more characters. No headers are captured unless included
+        or excluded patterns are configured. `*` captures all headers.
       type: list
       default: ''
     otel.experimental.javascript-snippet-ad834761:
@@ -298,14 +296,14 @@ definitions:
       name: otel.instrumentation.common.logging.structured-attributes.excluded
       declarative_name: java.common.logging.structured_attributes.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys not to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. Excluded patterns take precedence over included patterns. An exclude-only selector captures every key not excluded; "*" captures no structured attributes. This does not affect otel.event.name, MDC, or logger context.
+        Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys not to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other structured attributes are captured. "*" captures no structured attributes. This does not affect otel.event.name, MDC, or logger context.
       type: list
       default: ''
     otel.instrumentation.common.logging.structured-attributes.included:
       name: otel.instrumentation.common.logging.structured-attributes.included
       declarative_name: java.common.logging.structured_attributes.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence. An exclude-only selector captures every key not excluded. When the selector is absent or empty, all structured attributes are captured by default. MDC and logger-context attributes remain separate and opt-in.
+        Comma-separated list of case-sensitive glob patterns for event-local structured log attribute keys to capture. Applies to Log4j MapMessage entries, SLF4J key-value pairs, Logback Logstash markers, and Logstash structured arguments. "*" matches any number of characters and "?" matches one character. All structured attributes are captured unless included or excluded patterns are configured. MDC and logger-context attributes remain separate and opt-in.
       type: list
       default: ''
     otel.instrumentation.common.mdc.resource-attributes:
@@ -473,7 +471,7 @@ definitions:
       name: otel.instrumentation.grpc.client.request-headers.excluded
       declarative_name: java.grpc.client.request_headers.excluded
       description: |
-        A comma-separated list of ASCII request header key patterns to exclude from client spans. Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded ASCII headers are captured, which may expose sensitive information.
+        A comma-separated list of ASCII request header key patterns to exclude from client spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other ASCII request headers are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
@@ -482,7 +480,7 @@ definitions:
       name: otel.instrumentation.grpc.client.request-headers.included
       declarative_name: java.grpc.client.request_headers.included
       description: |
-        A comma-separated list of ASCII request header key patterns to capture on client spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters.
+        A comma-separated list of ASCII request header key patterns to capture on client spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. No request headers are captured unless included or excluded patterns are configured. `*` captures all ASCII request headers.
       type: list
       default: ''
       examples:
@@ -506,7 +504,7 @@ definitions:
       name: otel.instrumentation.grpc.server.request-headers.excluded
       declarative_name: java.grpc.server.request_headers.excluded
       description: |
-        A comma-separated list of ASCII request header key patterns to exclude from server spans. Excluded patterns take precedence over included patterns. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. If included is not configured, all non-excluded ASCII headers are captured, which may expose sensitive information.
+        A comma-separated list of ASCII request header key patterns to exclude from server spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other ASCII request headers are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
@@ -515,7 +513,7 @@ definitions:
       name: otel.instrumentation.grpc.server.request-headers.included
       declarative_name: java.grpc.server.request_headers.included
       description: |
-        A comma-separated list of ASCII request header key patterns to capture on server spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters.
+        A comma-separated list of ASCII request header key patterns to capture on server spans. Matching is case-insensitive. `?` matches one character and `*` matches zero or more characters. No request headers are captured unless included or excluded patterns are configured. `*` captures all ASCII request headers.
       type: list
       default: ''
       examples:
@@ -620,7 +618,7 @@ definitions:
       name: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.excluded
       declarative_name: java.jboss_logmanager.mdc_attributes/development.excluded
       description: |
-        A comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included or excluded pattern, or the deprecated setting, is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+        A comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other MDC attributes are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
@@ -629,7 +627,7 @@ definitions:
       name: otel.instrumentation.jboss-logmanager.experimental.mdc-attributes.included
       declarative_name: java.jboss_logmanager.mdc_attributes/development.included
       description: |
-        A comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. `*` matches any number of characters and `?` matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included or excluded pattern, or the deprecated setting, is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+        A comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. `*` matches any number of characters and `?` matches one character. No MDC attributes are captured unless included or excluded patterns, or the deprecated otel.instrumentation.jboss-logmanager.experimental.capture-mdc-attributes setting, are configured. `*` captures all MDC attributes.
       type: list
       default: ''
       examples:
@@ -797,45 +795,45 @@ definitions:
         Enables the capture of the log message template (if arguments are provided).
       type: boolean
       default: false
-    otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-44fd371d:
+    otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-06144506:
       name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded
       declarative_name: java.log4j_appender.mdc_attributes/development.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No context data attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all context data attributes that do not match them. Captured context data attributes may contain sensitive information.
+        Comma-separated list of case-sensitive glob patterns for context data keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other context data attributes are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
       - '*-secret'
       - password,token
-    otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-d9baaae0:
+    otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-7a3d1a24:
       name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded
       declarative_name: java.log4j_appender.mdc_attributes/development.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+        Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other MDC attributes are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
       - '*-secret'
       - password,token
-    otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-1e38a871:
+    otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-1df94481:
       name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
       declarative_name: java.log4j_appender.mdc_attributes/development.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
-      type: list
-      default: ''
-      examples:
-      - custom-mdc-key
-      - request-*,user-?
-    otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-7522b9e5:
-      name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
-      declarative_name: java.log4j_appender.mdc_attributes/development.included
-      description: |
-        Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No context data attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all context data attributes that do not match them. Captured context data attributes may contain sensitive information.
+        Comma-separated list of case-sensitive glob patterns for context data keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. No context data attributes are captured unless included or excluded patterns, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting, are configured. "*" captures all context data attributes.
       type: list
       default: ''
       examples:
       - custom-context-key
+      - request-*,user-?
+    otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-30c86cfd:
+      name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included
+      declarative_name: java.log4j_appender.mdc_attributes/development.included
+      description: |
+        Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. No MDC attributes are captured unless included or excluded patterns, or the deprecated otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting, are configured. "*" captures all MDC attributes.
+      type: list
+      default: ''
+      examples:
+      - custom-mdc-key
       - request-*,user-?
     otel.instrumentation.log4j-context-data.add-baggage:
       name: otel.instrumentation.log4j-context-data.add-baggage
@@ -904,7 +902,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.logger-context-attributes.excluded
       declarative_name: java.logback_appender.logger_context_attributes/development.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for Logback logger context property keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No logger context attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes setting is configured; configuring only excluded patterns captures all logger context attributes that do not match them. Captured logger context attributes may contain sensitive information.
+        Comma-separated list of case-sensitive glob patterns for Logback logger context property keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other logger context attributes are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
@@ -914,7 +912,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.logger-context-attributes.included
       declarative_name: java.logback_appender.logger_context_attributes/development.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for Logback logger context property keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all logger context attributes. Excluded patterns take precedence over included patterns. No logger context attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes setting is configured; configuring only excluded patterns captures all logger context attributes that do not match them. Captured logger context attributes may contain sensitive information.
+        Comma-separated list of case-sensitive glob patterns for Logback logger context property keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. No logger context attributes are captured unless included or excluded patterns, or the deprecated otel.instrumentation.logback-appender.experimental.capture-logger-context-attributes setting, are configured. "*" captures all logger context attributes.
       type: list
       default: ''
       examples:
@@ -924,7 +922,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.mdc-attributes.excluded
       declarative_name: java.logback_appender.mdc_attributes/development.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+        Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log attributes. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other MDC attributes are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
@@ -934,7 +932,7 @@ definitions:
       name: otel.instrumentation.logback-appender.experimental.mdc-attributes.included
       declarative_name: java.logback_appender.mdc_attributes/development.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. "*" matches any number of characters and "?" matches one character, so "*" captures all MDC attributes. Excluded patterns take precedence over included patterns. No MDC attributes are captured unless an included pattern, an excluded pattern, or the deprecated otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting is configured; configuring only excluded patterns captures all MDC attributes that do not match them. Captured MDC attributes may contain sensitive information.
+        Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log attributes. "*" matches any number of characters and "?" matches one character. No MDC attributes are captured unless included or excluded patterns, or the deprecated otel.instrumentation.logback-appender.experimental.capture-mdc-attributes setting, are configured. "*" captures all MDC attributes.
       type: list
       default: ''
       examples:
@@ -1107,9 +1105,8 @@ definitions:
       name: otel.instrumentation.rocketmq-client.message-create-spans.enabled
       declarative_name: java.rocketmq_client.message_create_spans.enabled
       description: |
-        Enables per-message Create spans for batch sends. Overrides the common messaging setting. Disabling this retains Send spans and context propagation and does not affect single-message sends.
+        Enables per-message Create spans for batch sends. Overrides `otel.instrumentation.common.messaging.message-create-spans.enabled` for this instrumentation; when unset, that setting applies. Disabling this retains Send spans and context propagation and does not affect single-message sends.
       type: boolean
-      default: true
     otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics:
       name: otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics
       declarative_name: java.runtime_telemetry.emit_experimental_jfr_metrics/development
@@ -1127,7 +1124,7 @@ definitions:
       name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.excluded
       declarative_name: java.runtime_telemetry.jfr_metrics/development.excluded
       description: |
-        Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with * and ?. Excluded patterns take precedence over included patterns, including over experimental JFR shorthand selections. Configuring this property without included selects all metrics except those excluded.
+        Excludes JVM runtime metrics from JFR on Java 17+ using exact names or glob patterns with * and ?. Excluded patterns take precedence over included patterns, including over experimental JFR shorthand selections. If only excluded patterns are configured, all other metrics that JFR supports are sourced from JFR.
       type: list
       default: ''
       examples:
@@ -1136,7 +1133,7 @@ definitions:
       name: otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included
       declarative_name: java.runtime_telemetry.jfr_metrics/development.included
       description: |
-        Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob patterns with * and ?. Configuring either JFR metric selector property activates JFR. Use * to select all metrics.
+        Selects JVM runtime metrics to source from JFR on Java 17+. Supports exact names and glob patterns with * and ?. No metrics are sourced from JFR by default. Configure a selector or enable otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics to select metrics. Use * to select all metrics.
       type: list
       default: ''
       examples:
@@ -1175,39 +1172,39 @@ definitions:
       default: ''
       deprecated: true
       replaced_by: otel.instrumentation.servlet.experimental.request-parameters.included
-    otel.instrumentation.servlet.experimental.request-parameters.excluded-7948572c:
+    otel.instrumentation.servlet.experimental.request-parameters.excluded-3246c2b5:
       name: otel.instrumentation.servlet.experimental.request-parameters.excluded
       declarative_name: java.servlet.request_parameters/development.excluded
       description: |
-        A comma-separated list of case-sensitive request parameter name patterns to exclude from span attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name casing. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+        A comma-separated list of case-sensitive request parameter name patterns to exclude from span attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name casing. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other request parameters are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
       - password,*-token
-    otel.instrumentation.servlet.experimental.request-parameters.excluded-9e7e430a:
+    otel.instrumentation.servlet.experimental.request-parameters.excluded-dfdd437e:
       name: otel.instrumentation.servlet.experimental.request-parameters.excluded
       declarative_name: java.servlet.request_parameters/development.excluded
       description: |
-        A comma-separated list of case-sensitive request parameter name patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+        A comma-separated list of case-sensitive request parameter name patterns to exclude from span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other request parameters are captured, which may expose sensitive information.
       type: list
       default: ''
       examples:
       - password,*-token
-    otel.instrumentation.servlet.experimental.request-parameters.included-e05d9cd5:
+    otel.instrumentation.servlet.experimental.request-parameters.included-7f020657:
       name: otel.instrumentation.servlet.experimental.request-parameters.included
       declarative_name: java.servlet.request_parameters/development.included
       description: |
-        A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+        A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name casing. `?` matches one character and `*` matches zero or more characters. No request parameters are captured unless included or excluded patterns are configured. `*` captures all request parameters.
       type: list
       default: ''
       examples:
       - request-id
       - user-*,search-?
-    otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de:
+    otel.instrumentation.servlet.experimental.request-parameters.included-f46546e2:
       name: otel.instrumentation.servlet.experimental.request-parameters.included
       declarative_name: java.servlet.request_parameters/development.included
       description: |
-        A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name casing. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. No request parameters are captured unless an included or excluded pattern is configured; configuring only excluded patterns captures all request parameters that do not match them, which may expose sensitive information.
+        A comma-separated list of case-sensitive request parameter name patterns to capture as span attributes. `?` matches one character and `*` matches zero or more characters. No request parameters are captured unless included or excluded patterns are configured. `*` captures all request parameters.
       type: list
       default: ''
       examples:
@@ -1330,7 +1327,7 @@ definitions:
       name: otel.jmx.metrics.excluded
       declarative_name: java.jmx.metrics.excluded
       description: |
-        Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. When no included patterns are configured, all metrics that are not excluded are collected. With neither selector property configured, all metrics are collected.
+        Comma-separated list of case-sensitive glob patterns for metric names not to collect. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other metrics are collected.
       type: list
       default: ''
       examples:
@@ -1339,7 +1336,7 @@ definitions:
       name: otel.jmx.metrics.experimental.included
       declarative_name: java.jmx.metrics.experimental.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for unstable (experimental) bundled metric names to opt in to. "*" matches any number of characters and "?" matches one character. Normal metric include and exclude filters also apply. Custom metric definitions do not require experimental opt-in.
+        Comma-separated list of case-sensitive glob patterns for unstable (experimental) bundled metric names to opt in to. "*" matches any number of characters and "?" matches one character. No unstable bundled metrics are collected unless included patterns are configured. "*" selects all unstable bundled metrics. Normal metric include and exclude filters also apply. Custom metric definitions do not require experimental opt-in.
       type: list
       default: ''
       examples:
@@ -1348,7 +1345,7 @@ definitions:
       name: otel.jmx.metrics.included
       declarative_name: java.jmx.metrics.included
       description: |
-        Comma-separated list of case-sensitive glob patterns for metric names to collect. "*" matches any number of characters and "?" matches one character. Excluded patterns take precedence over included patterns. When no included patterns are configured, all metrics that are not excluded are collected. With neither selector property configured, all metrics are collected.
+        Comma-separated list of case-sensitive glob patterns for metric names to collect. "*" matches any number of characters and "?" matches one character. All metrics are collected unless included or excluded patterns are configured.
       type: list
       default: ''
       examples:
@@ -3268,6 +3265,29 @@ definitions:
         type: STRING
       - name: kafka.cluster.id
         type: STRING
+    kafka.consumer.partition_revoked_latency_avg-bcaba41d:
+      name: kafka.consumer.partition_revoked_latency_avg
+      description: The average time taken for a partition-revoked rebalance listener
+        callback
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: kafka.cluster.id
+        type: STRING
+    kafka.consumer.partition_revoked_latency_max-1628f894:
+      name: kafka.consumer.partition_revoked_latency_max
+      description: The max time taken for a partition-revoked rebalance listener callback
+      instrument: gauge
+      data_type: DOUBLE_GAUGE
+      unit: ''
+      attributes:
+      - name: client-id
+        type: STRING
+      - name: kafka.cluster.id
+        type: STRING
     kafka.consumer.poll_idle_ratio_avg-67d771aa:
       name: kafka.consumer.poll_idle_ratio_avg
       description: The average fraction of time the consumer's poll() is idle as opposed
@@ -4967,6 +4987,26 @@ definitions:
         type: STRING
       - name: messaging.system.name
         type: STRING
+    messaging.client.operation.duration-17a258bf:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
     messaging.client.operation.duration-215161fc:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -5021,24 +5061,6 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
-    messaging.client.operation.duration-b7b278fe:
-      name: messaging.client.operation.duration
-      description: Duration of messaging operation initiated by a producer or consumer
-        client.
-      instrument: histogram
-      data_type: HISTOGRAM
-      unit: s
-      attributes:
-      - name: messaging.consumer.group.name
-        type: STRING
-      - name: messaging.destination.name
-        type: STRING
-      - name: messaging.operation.name
-        type: STRING
-      - name: messaging.operation.type
-        type: STRING
-      - name: messaging.system.name
-        type: STRING
     messaging.client.operation.duration-c10d75e0:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -6550,6 +6572,7 @@ libraries:
   semantic_conventions:
   - FAAS_SERVER_SPANS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
   source_path: instrumentation/aws-lambda/aws-lambda-events-2.2
   scope:
@@ -6610,6 +6633,7 @@ libraries:
   semantic_conventions:
   - FAAS_SERVER_SPANS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://docs.aws.amazon.com/lambda/latest/dg/java-handler.html
   source_path: instrumentation/aws-lambda/aws-lambda-events-3.11
   scope:
@@ -6677,6 +6701,7 @@ libraries:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   - GENAI_CLIENT_SPANS
   - GENAI_CLIENT_METRICS
   library_link: https://aws.amazon.com/sdk-for-java/
@@ -7374,6 +7399,7 @@ libraries:
   - DATABASE_CLIENT_SPANS
   - DATABASE_CLIENT_METRICS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   - GENAI_CLIENT_SPANS
   - GENAI_CLIENT_METRICS
   library_link: https://aws.amazon.com/sdk-for-java/
@@ -7817,6 +7843,8 @@ libraries:
         type: STRING
       - name: db.system.name
         type: STRING
+      - name: error.type
+        type: STRING
       - name: http.request.method
         type: STRING
       - name: http.response.status_code
@@ -8031,6 +8059,8 @@ libraries:
       - name: db.operation.name
         type: STRING
       - name: db.system.name
+        type: STRING
+      - name: error.type
         type: STRING
       - name: http.request.method
         type: STRING
@@ -8458,6 +8488,7 @@ libraries:
   - HTTP_SERVER_SPANS
   - DATABASE_CLIENT_SPANS
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://camel.apache.org/
   features:
   - HTTP_ROUTE
@@ -10150,7 +10181,6 @@ libraries:
   source_path: instrumentation/guava-10.0
   scope:
     name: io.opentelemetry.guava-10.0
-  has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
   - com.google.guava:guava:[10.0,]
@@ -11806,6 +11836,7 @@ libraries:
     This instrumentation enables messaging spans for JMS (Java Message Service) message producers and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://javaee.github.io/javaee-spec/javadocs/javax/jms/package-summary.html
   source_path: instrumentation/jms/jms-1.1
   scope:
@@ -11877,6 +11908,7 @@ libraries:
     This instrumentation enables messaging spans for Jakarta JMS (Java Message Service) message producers and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://jakarta.ee/specifications/messaging/3.0/
   source_path: instrumentation/jms/jms-3.0
   minimum_java_version: 11
@@ -12114,6 +12146,7 @@ libraries:
     This instrumentation enables messaging spans for Kafka producers and consumers. Native Kafka client metrics are collected only when the separate `kafka-clients-metrics` instrumentation is enabled.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://kafka.apache.org/
   source_path: instrumentation/kafka/kafka-clients/kafka-clients-0.11
   scope:
@@ -12131,168 +12164,6 @@ libraries:
   telemetry:
   - when: default
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_sync_time_ns_total-efd9677a
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.committed_time_ns_total-16877cb3
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_response_time_max-15ed35ff
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_time_ns_total-8ee82127
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_wait_time_ns_total-b75233cc
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2c8cdab4
-    - kafka.consumer.records_lag_avg-364be561
-    - kafka.consumer.records_lag_max-6f65fad6
-    - kafka.consumer.records_lead-1991cb14
-    - kafka.consumer.records_lead_avg-868a21eb
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_latency_avg-b493f642
-    - kafka.consumer.request_latency_max-88210cdf
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-bf475425
-    - kafka.consumer.time_between_poll_max-ff33c9d0
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_ns_total-78ba3e8a
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-7e6afd9e
-    - kafka.producer.compression_rate_avg-2297fa34
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.flush_time_ns_total-47bd28c0
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_time_ns_total-6893583a
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_wait_time_ns_total-d429fb29
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.metadata_wait_time_ns_total-f5e7d211
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.txn_abort_time_ns_total-e78813d3
-    - kafka.producer.txn_begin_time_ns_total-c5840e3b
-    - kafka.producer.txn_commit_time_ns_total-20044d9f
-    - kafka.producer.txn_init_time_ns_total-2e7b36eb
-    - kafka.producer.txn_prepare_time_ns_total-af2ea89b
-    - kafka.producer.txn_send_offsets_time_ns_total-4e40f91a
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-3a29924c
     - messaging.client.sent.messages-4c9e4d57
@@ -12346,168 +12217,6 @@ libraries:
         type: STRING
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_sync_time_ns_total-efd9677a
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.committed_time_ns_total-16877cb3
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_response_time_max-15ed35ff
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_time_ns_total-8ee82127
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_wait_time_ns_total-b75233cc
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2c8cdab4
-    - kafka.consumer.records_lag_avg-364be561
-    - kafka.consumer.records_lag_max-6f65fad6
-    - kafka.consumer.records_lead-1991cb14
-    - kafka.consumer.records_lead_avg-868a21eb
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_latency_avg-b493f642
-    - kafka.consumer.request_latency_max-88210cdf
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-bf475425
-    - kafka.consumer.time_between_poll_max-ff33c9d0
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_ns_total-78ba3e8a
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-7e6afd9e
-    - kafka.producer.compression_rate_avg-2297fa34
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.flush_time_ns_total-47bd28c0
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_time_ns_total-6893583a
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_wait_time_ns_total-d429fb29
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.metadata_wait_time_ns_total-f5e7d211
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.txn_abort_time_ns_total-e78813d3
-    - kafka.producer.txn_begin_time_ns_total-c5840e3b
-    - kafka.producer.txn_commit_time_ns_total-20044d9f
-    - kafka.producer.txn_init_time_ns_total-2e7b36eb
-    - kafka.producer.txn_prepare_time_ns_total-af2ea89b
-    - kafka.producer.txn_send_offsets_time_ns_total-4e40f91a
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-0ab6c2ce
     - messaging.client.sent.messages-4c9e4d57
@@ -12581,168 +12290,6 @@ libraries:
         type: STRING
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true,otel.instrumentation.kafka.experimental-span-attributes=true
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_sync_time_ns_total-efd9677a
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.committed_time_ns_total-16877cb3
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_response_time_max-15ed35ff
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_time_ns_total-8ee82127
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_wait_time_ns_total-b75233cc
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2c8cdab4
-    - kafka.consumer.records_lag_avg-364be561
-    - kafka.consumer.records_lag_max-6f65fad6
-    - kafka.consumer.records_lead-1991cb14
-    - kafka.consumer.records_lead_avg-868a21eb
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_latency_avg-b493f642
-    - kafka.consumer.request_latency_max-88210cdf
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-bf475425
-    - kafka.consumer.time_between_poll_max-ff33c9d0
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_ns_total-78ba3e8a
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-7e6afd9e
-    - kafka.producer.compression_rate_avg-2297fa34
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.flush_time_ns_total-47bd28c0
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_time_ns_total-6893583a
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_wait_time_ns_total-d429fb29
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.metadata_wait_time_ns_total-f5e7d211
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.txn_abort_time_ns_total-e78813d3
-    - kafka.producer.txn_begin_time_ns_total-c5840e3b
-    - kafka.producer.txn_commit_time_ns_total-20044d9f
-    - kafka.producer.txn_init_time_ns_total-2e7b36eb
-    - kafka.producer.txn_prepare_time_ns_total-af2ea89b
-    - kafka.producer.txn_send_offsets_time_ns_total-4e40f91a
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-0ab6c2ce
     - messaging.client.sent.messages-4c9e4d57
@@ -12818,12 +12365,200 @@ libraries:
         type: STRING
       - name: messaging.system.name
         type: STRING
+  - when: otel.instrumentation.kafka-clients-metrics.enabled=true
+    metric_refs:
+    - kafka.consumer.assigned_partitions-5f2d0714
+    - kafka.consumer.bytes_consumed_rate-677c9140
+    - kafka.consumer.bytes_consumed_total-12947b8d
+    - kafka.consumer.commit_latency_avg-010ecf40
+    - kafka.consumer.commit_latency_max-fc6a2be6
+    - kafka.consumer.commit_rate-0c3aae4b
+    - kafka.consumer.commit_sync_time_ns_total-efd9677a
+    - kafka.consumer.commit_total-d8205321
+    - kafka.consumer.committed_time_ns_total-16877cb3
+    - kafka.consumer.connection_close_rate-a9c91eeb
+    - kafka.consumer.connection_close_total-a7897234
+    - kafka.consumer.connection_count-b68f044c
+    - kafka.consumer.connection_creation_rate-ad21bcd0
+    - kafka.consumer.connection_creation_total-c0a7bf78
+    - kafka.consumer.failed_authentication_rate-b6bd2d7a
+    - kafka.consumer.failed_authentication_total-c7d24404
+    - kafka.consumer.failed_reauthentication_rate-ed22def6
+    - kafka.consumer.failed_reauthentication_total-c735df10
+    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
+    - kafka.consumer.failed_rebalance_total-c79a209f
+    - kafka.consumer.fetch_latency_avg-c32ee3a8
+    - kafka.consumer.fetch_latency_max-d9c78b75
+    - kafka.consumer.fetch_rate-b9250308
+    - kafka.consumer.fetch_size_avg-f52d877e
+    - kafka.consumer.fetch_size_max-5abcc685
+    - kafka.consumer.fetch_throttle_time_avg-11f87396
+    - kafka.consumer.fetch_throttle_time_max-a716c191
+    - kafka.consumer.fetch_total-9d09818d
+    - kafka.consumer.heartbeat_rate-8cb2af4e
+    - kafka.consumer.heartbeat_response_time_max-15ed35ff
+    - kafka.consumer.heartbeat_total-ffc8a49f
+    - kafka.consumer.incoming_byte_rate-aa366cac
+    - kafka.consumer.incoming_byte_total-40c552cf
+    - kafka.consumer.io_ratio-02ca9691
+    - kafka.consumer.io_time_ns_avg-6ae8ce45
+    - kafka.consumer.io_time_ns_total-8ee82127
+    - kafka.consumer.io_wait_ratio-da8005ed
+    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
+    - kafka.consumer.io_wait_time_ns_total-b75233cc
+    - kafka.consumer.join_rate-b5bf5c90
+    - kafka.consumer.join_time_avg-18db16c8
+    - kafka.consumer.join_time_max-cda17a1e
+    - kafka.consumer.join_total-37eca8e8
+    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
+    - kafka.consumer.last_poll_seconds_ago-407652c3
+    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
+    - kafka.consumer.network_io_rate-3735fe1b
+    - kafka.consumer.network_io_total-81bdf250
+    - kafka.consumer.outgoing_byte_rate-d7c41c4f
+    - kafka.consumer.outgoing_byte_total-605ebd43
+    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
+    - kafka.consumer.partition_assigned_latency_max-3c854413
+    - kafka.consumer.poll_idle_ratio_avg-67d771aa
+    - kafka.consumer.rebalance_latency_avg-c86d0e89
+    - kafka.consumer.rebalance_latency_max-4525c300
+    - kafka.consumer.rebalance_latency_total-55d2b07f
+    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
+    - kafka.consumer.rebalance_total-500afe22
+    - kafka.consumer.records_consumed_rate-d9b9d3d8
+    - kafka.consumer.records_consumed_total-22bc6ebc
+    - kafka.consumer.records_lag-2c8cdab4
+    - kafka.consumer.records_lag_avg-364be561
+    - kafka.consumer.records_lag_max-6f65fad6
+    - kafka.consumer.records_lead-1991cb14
+    - kafka.consumer.records_lead_avg-868a21eb
+    - kafka.consumer.records_lead_min-4e65ea74
+    - kafka.consumer.records_per_request_avg-f0d9f606
+    - kafka.consumer.request_latency_avg-b493f642
+    - kafka.consumer.request_latency_max-88210cdf
+    - kafka.consumer.request_rate-fd916ad7
+    - kafka.consumer.request_size_avg-0ffeb751
+    - kafka.consumer.request_size_max-f09b423b
+    - kafka.consumer.request_total-9732164f
+    - kafka.consumer.response_rate-495ac992
+    - kafka.consumer.response_total-bf9c900b
+    - kafka.consumer.select_rate-45db861b
+    - kafka.consumer.select_total-ab48483e
+    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
+    - kafka.consumer.successful_authentication_rate-2cb3879c
+    - kafka.consumer.successful_authentication_total-f9d49eea
+    - kafka.consumer.successful_reauthentication_rate-ce402806
+    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
+    - kafka.consumer.sync_rate-7e5afa4f
+    - kafka.consumer.sync_time_avg-11c52f55
+    - kafka.consumer.sync_time_max-60a6556a
+    - kafka.consumer.sync_total-0a15fb45
+    - kafka.consumer.time_between_poll_avg-bf475425
+    - kafka.consumer.time_between_poll_max-ff33c9d0
+    - kafka.producer.batch_size_avg-ca4755da
+    - kafka.producer.batch_size_max-7547e8de
+    - kafka.producer.batch_split_rate-bf8c23ec
+    - kafka.producer.batch_split_total-c71d8309
+    - kafka.producer.buffer_available_bytes-22d2cdf9
+    - kafka.producer.buffer_exhausted_rate-1d3fa684
+    - kafka.producer.buffer_exhausted_total-0d4824da
+    - kafka.producer.buffer_total_bytes-11fe6040
+    - kafka.producer.bufferpool_wait_ratio-9471500a
+    - kafka.producer.bufferpool_wait_time_ns_total-78ba3e8a
+    - kafka.producer.byte_rate-53fd5932
+    - kafka.producer.byte_total-5a12fda2
+    - kafka.producer.compression_rate-7e6afd9e
+    - kafka.producer.compression_rate_avg-2297fa34
+    - kafka.producer.connection_close_rate-c9c42487
+    - kafka.producer.connection_close_total-a0c23236
+    - kafka.producer.connection_count-0304143e
+    - kafka.producer.connection_creation_rate-d519c944
+    - kafka.producer.connection_creation_total-a48782e0
+    - kafka.producer.failed_authentication_rate-cfe9f736
+    - kafka.producer.failed_authentication_total-777d77e5
+    - kafka.producer.failed_reauthentication_rate-2a955487
+    - kafka.producer.failed_reauthentication_total-fe1a293a
+    - kafka.producer.flush_time_ns_total-47bd28c0
+    - kafka.producer.incoming_byte_rate-6b69f184
+    - kafka.producer.incoming_byte_total-bbf8921a
+    - kafka.producer.io_ratio-47f14080
+    - kafka.producer.io_time_ns_avg-5a47799e
+    - kafka.producer.io_time_ns_total-6893583a
+    - kafka.producer.io_wait_ratio-8b1262cb
+    - kafka.producer.io_wait_time_ns_avg-a7b4985b
+    - kafka.producer.io_wait_time_ns_total-d429fb29
+    - kafka.producer.metadata_age-ae019935
+    - kafka.producer.metadata_wait_time_ns_total-f5e7d211
+    - kafka.producer.network_io_rate-3b16cccb
+    - kafka.producer.network_io_total-59350ce8
+    - kafka.producer.outgoing_byte_rate-46144d24
+    - kafka.producer.outgoing_byte_total-20322fc5
+    - kafka.producer.produce_throttle_time_avg-977e45b3
+    - kafka.producer.produce_throttle_time_max-ccb20481
+    - kafka.producer.record_error_rate-d0772386
+    - kafka.producer.record_error_total-869fbc1b
+    - kafka.producer.record_queue_time_avg-05ee7c0f
+    - kafka.producer.record_queue_time_max-6544411e
+    - kafka.producer.record_retry_rate-a6668272
+    - kafka.producer.record_retry_total-41e21b5f
+    - kafka.producer.record_send_rate-550b2414
+    - kafka.producer.record_send_total-a145b861
+    - kafka.producer.record_size_avg-ccd5c8bf
+    - kafka.producer.record_size_max-5deb746f
+    - kafka.producer.records_per_request_avg-1fc965cd
+    - kafka.producer.request_latency_avg-0096430b
+    - kafka.producer.request_latency_max-efff28b0
+    - kafka.producer.request_rate-919077dd
+    - kafka.producer.request_size_avg-7648b6ea
+    - kafka.producer.request_size_max-e206b952
+    - kafka.producer.request_total-ec94813a
+    - kafka.producer.requests_in_flight-bfabefab
+    - kafka.producer.response_rate-fd0c5f38
+    - kafka.producer.response_total-bf9bb3a2
+    - kafka.producer.select_rate-a41644d4
+    - kafka.producer.select_total-48a9e108
+    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
+    - kafka.producer.successful_authentication_rate-f5f7041c
+    - kafka.producer.successful_authentication_total-b9c5f13a
+    - kafka.producer.successful_reauthentication_rate-7d372fac
+    - kafka.producer.successful_reauthentication_total-5ac1e446
+    - kafka.producer.txn_abort_time_ns_total-e78813d3
+    - kafka.producer.txn_begin_time_ns_total-c5840e3b
+    - kafka.producer.txn_commit_time_ns_total-20044d9f
+    - kafka.producer.txn_init_time_ns_total-2e7b36eb
+    - kafka.producer.txn_prepare_time_ns_total-af2ea89b
+    - kafka.producer.txn_send_offsets_time_ns_total-4e40f91a
+    - kafka.producer.waiting_threads-804fb397
+    - messaging.client.operation.duration-3a29924c
+    - messaging.client.sent.messages-4c9e4d57
+    spans:
+    - span_kind: PRODUCER
+      attributes:
+      - name: kafka.cluster.id
+        type: STRING
+      - name: kafka.message.key
+        type: STRING
+      - name: kafka.offset
+        type: LONG
+      - name: messaging.client.id
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.destination.partition.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
 - name: kafka-clients-2.6
   display_name: Apache Kafka Client
   description: This standalone instrumentation enables messaging spans for Kafka producers
     and consumers, and collects internal Kafka client metrics.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://kafka.apache.org/
   source_path: instrumentation/kafka/kafka-clients/kafka-clients-2.6
   scope:
@@ -12831,7 +12566,7 @@ libraries:
     schema_url: https://opentelemetry.io/schemas/1.45.0
   has_standalone_library: true
   telemetry:
-  - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)
+  - when: KafkaTelemetry.metricConfigProperties()
     metric_refs:
     - kafka.consumer.assigned_partitions-5f2d0714
     - kafka.consumer.bytes_consumed_rate-677c9140
@@ -12860,6 +12595,7 @@ libraries:
     - kafka.consumer.fetch_throttle_time_max-a716c191
     - kafka.consumer.fetch_total-9d09818d
     - kafka.consumer.heartbeat_rate-8cb2af4e
+    - kafka.consumer.heartbeat_response_time_max-15ed35ff
     - kafka.consumer.heartbeat_total-ffc8a49f
     - kafka.consumer.incoming_byte_rate-aa366cac
     - kafka.consumer.incoming_byte_total-40c552cf
@@ -12882,6 +12618,8 @@ libraries:
     - kafka.consumer.outgoing_byte_total-605ebd43
     - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
     - kafka.consumer.partition_assigned_latency_max-3c854413
+    - kafka.consumer.partition_revoked_latency_avg-bcaba41d
+    - kafka.consumer.partition_revoked_latency_max-1628f894
     - kafka.consumer.poll_idle_ratio_avg-67d771aa
     - kafka.consumer.rebalance_latency_avg-c86d0e89
     - kafka.consumer.rebalance_latency_max-4525c300
@@ -12982,6 +12720,8 @@ libraries:
     - kafka.producer.successful_reauthentication_rate-7d372fac
     - kafka.producer.successful_reauthentication_total-5ac1e446
     - kafka.producer.waiting_threads-804fb397
+  - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true)
+    metric_refs:
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-0ab6c2ce
     - messaging.client.sent.messages-4c9e4d57
@@ -13049,155 +12789,6 @@ libraries:
         type: STRING
   - when: KafkaTelemetryBuilder.setMessagingReceiveTelemetryEnabled(true),KafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_waittime_total-a453d0e2
-    - kafka.consumer.iotime_total-931ad8b4
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2eb7971a
-    - kafka.consumer.records_lag_avg-e945faee
-    - kafka.consumer.records_lag_max-15894c41
-    - kafka.consumer.records_lead-e96d4e05
-    - kafka.consumer.records_lead_avg-d109ff97
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-7c1f448a
-    - kafka.consumer.time_between_poll_max-9ddc422a
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_total-93c44b13
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-eeff64aa
-    - kafka.producer.compression_rate_avg-90e64bea
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_waittime_total-822a6d69
-    - kafka.producer.iotime_total-ef51b14d
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-0ab6c2ce
     - messaging.client.sent.messages-4c9e4d57
@@ -13283,155 +12874,6 @@ libraries:
     - messaging.receive.exception-da0a5a7e
   - when: default
     metric_refs:
-    - kafka.consumer.assigned_partitions-5f2d0714
-    - kafka.consumer.bytes_consumed_rate-677c9140
-    - kafka.consumer.bytes_consumed_total-12947b8d
-    - kafka.consumer.commit_latency_avg-010ecf40
-    - kafka.consumer.commit_latency_max-fc6a2be6
-    - kafka.consumer.commit_rate-0c3aae4b
-    - kafka.consumer.commit_total-d8205321
-    - kafka.consumer.connection_close_rate-a9c91eeb
-    - kafka.consumer.connection_close_total-a7897234
-    - kafka.consumer.connection_count-b68f044c
-    - kafka.consumer.connection_creation_rate-ad21bcd0
-    - kafka.consumer.connection_creation_total-c0a7bf78
-    - kafka.consumer.failed_authentication_rate-b6bd2d7a
-    - kafka.consumer.failed_authentication_total-c7d24404
-    - kafka.consumer.failed_reauthentication_rate-ed22def6
-    - kafka.consumer.failed_reauthentication_total-c735df10
-    - kafka.consumer.failed_rebalance_rate_per_hour-723e8b66
-    - kafka.consumer.failed_rebalance_total-c79a209f
-    - kafka.consumer.fetch_latency_avg-c32ee3a8
-    - kafka.consumer.fetch_latency_max-d9c78b75
-    - kafka.consumer.fetch_rate-b9250308
-    - kafka.consumer.fetch_size_avg-f52d877e
-    - kafka.consumer.fetch_size_max-5abcc685
-    - kafka.consumer.fetch_throttle_time_avg-11f87396
-    - kafka.consumer.fetch_throttle_time_max-a716c191
-    - kafka.consumer.fetch_total-9d09818d
-    - kafka.consumer.heartbeat_rate-8cb2af4e
-    - kafka.consumer.heartbeat_total-ffc8a49f
-    - kafka.consumer.incoming_byte_rate-aa366cac
-    - kafka.consumer.incoming_byte_total-40c552cf
-    - kafka.consumer.io_ratio-02ca9691
-    - kafka.consumer.io_time_ns_avg-6ae8ce45
-    - kafka.consumer.io_wait_ratio-da8005ed
-    - kafka.consumer.io_wait_time_ns_avg-204c0fdc
-    - kafka.consumer.io_waittime_total-a453d0e2
-    - kafka.consumer.iotime_total-931ad8b4
-    - kafka.consumer.join_rate-b5bf5c90
-    - kafka.consumer.join_time_avg-18db16c8
-    - kafka.consumer.join_time_max-cda17a1e
-    - kafka.consumer.join_total-37eca8e8
-    - kafka.consumer.last_heartbeat_seconds_ago-00d45f42
-    - kafka.consumer.last_poll_seconds_ago-407652c3
-    - kafka.consumer.last_rebalance_seconds_ago-aa8ecde2
-    - kafka.consumer.network_io_rate-3735fe1b
-    - kafka.consumer.network_io_total-81bdf250
-    - kafka.consumer.outgoing_byte_rate-d7c41c4f
-    - kafka.consumer.outgoing_byte_total-605ebd43
-    - kafka.consumer.partition_assigned_latency_avg-3ef9d4e1
-    - kafka.consumer.partition_assigned_latency_max-3c854413
-    - kafka.consumer.poll_idle_ratio_avg-67d771aa
-    - kafka.consumer.rebalance_latency_avg-c86d0e89
-    - kafka.consumer.rebalance_latency_max-4525c300
-    - kafka.consumer.rebalance_latency_total-55d2b07f
-    - kafka.consumer.rebalance_rate_per_hour-f5ff97fc
-    - kafka.consumer.rebalance_total-500afe22
-    - kafka.consumer.records_consumed_rate-d9b9d3d8
-    - kafka.consumer.records_consumed_total-22bc6ebc
-    - kafka.consumer.records_lag-2eb7971a
-    - kafka.consumer.records_lag_avg-e945faee
-    - kafka.consumer.records_lag_max-15894c41
-    - kafka.consumer.records_lead-e96d4e05
-    - kafka.consumer.records_lead_avg-d109ff97
-    - kafka.consumer.records_lead_min-4e65ea74
-    - kafka.consumer.records_per_request_avg-f0d9f606
-    - kafka.consumer.request_rate-fd916ad7
-    - kafka.consumer.request_size_avg-0ffeb751
-    - kafka.consumer.request_size_max-f09b423b
-    - kafka.consumer.request_total-9732164f
-    - kafka.consumer.response_rate-495ac992
-    - kafka.consumer.response_total-bf9c900b
-    - kafka.consumer.select_rate-45db861b
-    - kafka.consumer.select_total-ab48483e
-    - kafka.consumer.successful_authentication_no_reauth_total-ffdbd504
-    - kafka.consumer.successful_authentication_rate-2cb3879c
-    - kafka.consumer.successful_authentication_total-f9d49eea
-    - kafka.consumer.successful_reauthentication_rate-ce402806
-    - kafka.consumer.successful_reauthentication_total-e9fbfcc9
-    - kafka.consumer.sync_rate-7e5afa4f
-    - kafka.consumer.sync_time_avg-11c52f55
-    - kafka.consumer.sync_time_max-60a6556a
-    - kafka.consumer.sync_total-0a15fb45
-    - kafka.consumer.time_between_poll_avg-7c1f448a
-    - kafka.consumer.time_between_poll_max-9ddc422a
-    - kafka.producer.batch_size_avg-ca4755da
-    - kafka.producer.batch_size_max-7547e8de
-    - kafka.producer.batch_split_rate-bf8c23ec
-    - kafka.producer.batch_split_total-c71d8309
-    - kafka.producer.buffer_available_bytes-22d2cdf9
-    - kafka.producer.buffer_exhausted_rate-1d3fa684
-    - kafka.producer.buffer_exhausted_total-0d4824da
-    - kafka.producer.buffer_total_bytes-11fe6040
-    - kafka.producer.bufferpool_wait_ratio-9471500a
-    - kafka.producer.bufferpool_wait_time_total-93c44b13
-    - kafka.producer.byte_rate-53fd5932
-    - kafka.producer.byte_total-5a12fda2
-    - kafka.producer.compression_rate-eeff64aa
-    - kafka.producer.compression_rate_avg-90e64bea
-    - kafka.producer.connection_close_rate-c9c42487
-    - kafka.producer.connection_close_total-a0c23236
-    - kafka.producer.connection_count-0304143e
-    - kafka.producer.connection_creation_rate-d519c944
-    - kafka.producer.connection_creation_total-a48782e0
-    - kafka.producer.failed_authentication_rate-cfe9f736
-    - kafka.producer.failed_authentication_total-777d77e5
-    - kafka.producer.failed_reauthentication_rate-2a955487
-    - kafka.producer.failed_reauthentication_total-fe1a293a
-    - kafka.producer.incoming_byte_rate-6b69f184
-    - kafka.producer.incoming_byte_total-bbf8921a
-    - kafka.producer.io_ratio-47f14080
-    - kafka.producer.io_time_ns_avg-5a47799e
-    - kafka.producer.io_wait_ratio-8b1262cb
-    - kafka.producer.io_wait_time_ns_avg-a7b4985b
-    - kafka.producer.io_waittime_total-822a6d69
-    - kafka.producer.iotime_total-ef51b14d
-    - kafka.producer.metadata_age-ae019935
-    - kafka.producer.network_io_rate-3b16cccb
-    - kafka.producer.network_io_total-59350ce8
-    - kafka.producer.outgoing_byte_rate-46144d24
-    - kafka.producer.outgoing_byte_total-20322fc5
-    - kafka.producer.produce_throttle_time_avg-977e45b3
-    - kafka.producer.produce_throttle_time_max-ccb20481
-    - kafka.producer.record_error_rate-d0772386
-    - kafka.producer.record_error_total-869fbc1b
-    - kafka.producer.record_queue_time_avg-05ee7c0f
-    - kafka.producer.record_queue_time_max-6544411e
-    - kafka.producer.record_retry_rate-a6668272
-    - kafka.producer.record_retry_total-41e21b5f
-    - kafka.producer.record_send_rate-550b2414
-    - kafka.producer.record_send_total-a145b861
-    - kafka.producer.record_size_avg-ccd5c8bf
-    - kafka.producer.record_size_max-5deb746f
-    - kafka.producer.records_per_request_avg-1fc965cd
-    - kafka.producer.request_latency_avg-0096430b
-    - kafka.producer.request_latency_max-efff28b0
-    - kafka.producer.request_rate-919077dd
-    - kafka.producer.request_size_avg-7648b6ea
-    - kafka.producer.request_size_max-e206b952
-    - kafka.producer.request_total-ec94813a
-    - kafka.producer.requests_in_flight-bfabefab
-    - kafka.producer.response_rate-fd0c5f38
-    - kafka.producer.response_total-bf9bb3a2
-    - kafka.producer.select_rate-a41644d4
-    - kafka.producer.select_total-48a9e108
-    - kafka.producer.successful_authentication_no_reauth_total-901b48ec
-    - kafka.producer.successful_authentication_rate-f5f7041c
-    - kafka.producer.successful_authentication_total-b9c5f13a
-    - kafka.producer.successful_reauthentication_rate-7d372fac
-    - kafka.producer.successful_reauthentication_total-5ac1e446
-    - kafka.producer.waiting_threads-804fb397
     - messaging.client.consumed.messages-ddd13d28
     - messaging.client.operation.duration-3a29924c
     - messaging.client.sent.messages-4c9e4d57
@@ -13485,6 +12927,7 @@ libraries:
     tasks.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://kafka.apache.org/documentation/#connect
   source_path: instrumentation/kafka/kafka-connect-2.6
   scope:
@@ -13507,6 +12950,7 @@ libraries:
   description: This instrumentation enables messaging spans for Kafka Streams processing.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://kafka.apache.org/documentation/streams/
   source_path: instrumentation/kafka/kafka-streams-0.11
   scope:
@@ -14257,8 +13701,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded-9e7e430a
-  - otel.instrumentation.servlet.experimental.request-parameters.included-e05d9cd5
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-dfdd437e
+  - otel.instrumentation.servlet.experimental.request-parameters.included-f46546e2
 - name: liberty-dispatcher-20.0
   display_name: Liberty
   description: |
@@ -14293,8 +13737,8 @@ libraries:
   - otel.instrumentation.log4j-appender.experimental-log-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-code-attributes
   - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-e87180dc
-  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-d9baaae0
-  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-1e38a871
+  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-7a3d1a24
+  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-30c86cfd
 - name: log4j-appender-2.17
   display_name: Log4j
   description: |
@@ -14318,8 +13762,8 @@ libraries:
   - otel.instrumentation.log4j-appender.experimental.capture-marker-attribute
   - otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes-bb9cf4ea
   - otel.instrumentation.log4j-appender.experimental.capture-template
-  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-44fd371d
-  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-7522b9e5
+  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.excluded-06144506
+  - otel.instrumentation.log4j-appender.experimental.mdc-attributes.included-1df94481
 - name: log4j-context-data-2.7
   display_name: Log4j
   description: |
@@ -14632,6 +14076,7 @@ libraries:
     and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://nats.io/
   source_path: instrumentation/nats/nats-2.17
   scope:
@@ -15758,6 +15203,7 @@ libraries:
     This instrumentation enables messaging spans for Apache Pulsar message producers and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://pulsar.apache.org/
   source_path: instrumentation/pulsar/pulsar-2.8
   scope:
@@ -15998,6 +15444,7 @@ libraries:
     and consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://www.rabbitmq.com/client-libraries/java-api-guide
   source_path: instrumentation/rabbitmq-2.7
   scope:
@@ -16456,6 +15903,7 @@ libraries:
     This instrumentation enables messaging spans for Reactor Kafka message consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://projectreactor.io/docs/kafka/release/reference/
   source_path: instrumentation/reactor/reactor-kafka-1.0
   scope:
@@ -16961,6 +16409,7 @@ libraries:
     This instrumentation enables messaging spans for Apache RocketMQ message producers and consumers using the Remoting Protocol.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://rocketmq.apache.org/
   source_path: instrumentation/rocketmq/rocketmq-client-4.8
   scope:
@@ -17105,6 +16554,7 @@ libraries:
     This instrumentation enables messaging spans for Apache RocketMQ message producers and consumers using the gRPC/Protobuf Protocol.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://rocketmq.apache.org/
   source_path: instrumentation/rocketmq/rocketmq-client-5.0
   scope:
@@ -17121,8 +16571,8 @@ libraries:
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
     metric_refs:
     - messaging.client.consumed.messages-40b17dc4
-    - messaging.client.operation.duration-b7b278fe
-    - messaging.client.sent.messages-95b151d6
+    - messaging.client.operation.duration-17a258bf
+    - messaging.client.sent.messages-41bf563f
     - messaging.process.duration-3cf05733
     spans:
     - span_kind: CLIENT
@@ -17175,6 +16625,8 @@ libraries:
         type: STRING
     - span_kind: PRODUCER
       attributes:
+      - name: error.type
+        type: STRING
       - name: messaging.destination.name
         type: STRING
       - name: messaging.message.id
@@ -17338,8 +16790,8 @@ libraries:
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded-7948572c
-  - otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-3246c2b5
+  - otel.instrumentation.servlet.experimental.request-parameters.included-7f020657
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -17401,8 +16853,8 @@ libraries:
   - otel.experimental.javascript-snippet-cfa9f908
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded-7948572c
-  - otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-3246c2b5
+  - otel.instrumentation.servlet.experimental.request-parameters.included-7f020657
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -17528,7 +16980,6 @@ libraries:
   source_path: instrumentation/servlet/servlet-5.0
   scope:
     name: io.opentelemetry.servlet-5.0
-    schema_url: https://opentelemetry.io/schemas/1.37.0
   has_standalone_library: true
   has_javaagent: true
   javaagent_target_versions:
@@ -17538,8 +16989,8 @@ libraries:
   - otel.experimental.javascript-snippet-ad834761
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded-7948572c
-  - otel.instrumentation.servlet.experimental.request-parameters.included-ef49d5de
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-3246c2b5
+  - otel.instrumentation.servlet.experimental.request-parameters.included-7f020657
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -17919,6 +17370,17 @@ libraries:
   - org.springframework.cloud:spring-cloud-starter-gateway:[2.0.0.RELEASE,)
   configuration_refs:
   - otel.instrumentation.spring-cloud-gateway.experimental-span-attributes
+- name: spring-cloud-gateway-3.0
+  display_name: Spring Cloud Gateway
+  description: |
+    This instrumentation enriches HTTP server spans and metrics with route information for Spring Cloud Gateway 3.0+.
+  library_link: https://github.com/spring-cloud/spring-cloud-gateway
+  features:
+  - HTTP_ROUTE
+  source_path: instrumentation/spring/spring-cloud-gateway/spring-cloud-gateway-3.0
+  scope:
+    name: io.opentelemetry.spring-cloud-gateway-3.0
+  has_standalone_library: true
 - name: spring-cloud-gateway-webmvc-4.3
   display_name: Spring Cloud Gateway Server WebMVC
   description: |
@@ -17971,6 +17433,7 @@ libraries:
     for Spring Integration.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://spring.io/projects/spring-integration
   source_path: instrumentation/spring/spring-integration-4.1
   scope:
@@ -18035,6 +17498,7 @@ libraries:
     consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
   source_path: instrumentation/spring/spring-jms/spring-jms-2.0
   scope:
@@ -18073,6 +17537,7 @@ libraries:
     consumers.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://docs.spring.io/spring-framework/reference/integration/jms.html
   source_path: instrumentation/spring/spring-jms/spring-jms-6.0
   minimum_java_version: 17
@@ -18112,6 +17577,7 @@ libraries:
     listeners.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://spring.io/projects/spring-kafka
   source_path: instrumentation/spring/spring-kafka-2.7
   scope:
@@ -18195,6 +17661,7 @@ libraries:
     listeners.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://spring.io/projects/spring-pulsar
   source_path: instrumentation/spring/spring-pulsar-1.0
   minimum_java_version: 17
@@ -18233,6 +17700,7 @@ libraries:
     listeners.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://spring.io/projects/spring-amqp
   source_path: instrumentation/spring/spring-rabbit-1.1
   scope:
@@ -18921,8 +18389,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded-9e7e430a
-  - otel.instrumentation.servlet.experimental.request-parameters.included-e05d9cd5
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-dfdd437e
+  - otel.instrumentation.servlet.experimental.request-parameters.included-f46546e2
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -19022,8 +18490,8 @@ libraries:
   - http.server.emit-experimental-telemetry
   - otel.instrumentation.servlet.experimental-span-attributes
   - otel.instrumentation.servlet.experimental.capture-request-parameters
-  - otel.instrumentation.servlet.experimental.request-parameters.excluded-9e7e430a
-  - otel.instrumentation.servlet.experimental.request-parameters.included-e05d9cd5
+  - otel.instrumentation.servlet.experimental.request-parameters.excluded-dfdd437e
+  - otel.instrumentation.servlet.experimental.request-parameters.included-f46546e2
   - otel.instrumentation.servlet.experimental.trace-id-request-attribute.enabled
   telemetry:
   - when: default
@@ -19468,6 +18936,7 @@ libraries:
     This instrumentation enables messaging spans for Kafka consumers using the Vert.x Kafka Client library.
   semantic_conventions:
   - MESSAGING_SPANS
+  - MESSAGING_METRICS
   library_link: https://vertx.io/docs/vertx-kafka-client/java/
   disabled_by_default: true
   source_path: instrumentation/vertx/vertx-kafka-client-3.6

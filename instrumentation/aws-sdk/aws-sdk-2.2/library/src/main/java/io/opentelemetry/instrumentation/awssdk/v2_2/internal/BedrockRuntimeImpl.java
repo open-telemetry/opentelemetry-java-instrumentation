@@ -28,6 +28,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import javax.annotation.Nullable;
 import software.amazon.awssdk.awscore.eventstream.EventStreamResponseHandler;
 import software.amazon.awssdk.core.SdkBytes;
@@ -588,16 +589,7 @@ public final class BedrockRuntimeImpl {
           (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
     }
 
-    TokenUsage usage = null;
-    if (sdkResponse instanceof ConverseResponse) {
-      usage = ((ConverseResponse) sdkResponse).usage();
-    } else {
-      BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
-          BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
-      if (streamHandler != null) {
-        usage = streamHandler.usage;
-      }
-    }
+    TokenUsage usage = getConverseTokenUsage(response);
     if (usage != null) {
       return integerToLong(usage.inputTokens());
     }
@@ -662,6 +654,37 @@ public final class BedrockRuntimeImpl {
   }
 
   @Nullable
+  static Long getUsageCacheReadInputTokens(Response response) {
+    return getTokenUsageCount(response, "cacheReadInputTokens");
+  }
+
+  @Nullable
+  static Long getUsageCacheCreationInputTokens(Response response) {
+    return getTokenUsageCount(response, "cacheWriteInputTokens");
+  }
+
+  @Nullable
+  private static Long getTokenUsageCount(Response response, String fieldName) {
+    TokenUsage usage = getConverseTokenUsage(response);
+    if (usage == null) {
+      return null;
+    }
+    // The cache token fields were added in bedrockruntime 2.31.12, after the version this library
+    // compiles against, so they are read by name and are absent on older SDKs.
+    return usage.getValueForField(fieldName, Integer.class).map(Integer::longValue).orElse(null);
+  }
+
+  @Nullable
+  private static TokenUsage getConverseTokenUsage(Response response) {
+    if (response.getSdkResponse() instanceof ConverseResponse) {
+      return ((ConverseResponse) response.getSdkResponse()).usage();
+    }
+    BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
+        BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
+    return streamHandler != null ? streamHandler.usage : null;
+  }
+
+  @Nullable
   static Long getUsageOutputTokens(ExecutionAttributes executionAttributes, Response response) {
     SdkResponse sdkResponse = response.getSdkResponse();
     if (sdkResponse instanceof InvokeModelResponse) {
@@ -670,16 +693,7 @@ public final class BedrockRuntimeImpl {
           (InvokeModelRequest) executionAttributes.getAttribute(SDK_REQUEST_ATTRIBUTE));
     }
 
-    TokenUsage usage = null;
-    if (sdkResponse instanceof ConverseResponse) {
-      usage = ((ConverseResponse) sdkResponse).usage();
-    } else {
-      BedrockRuntimeStreamResponseHandler<?, ?> streamHandler =
-          BedrockRuntimeStreamResponseHandler.fromContext(response.otelContext());
-      if (streamHandler != null) {
-        usage = streamHandler.usage;
-      }
-    }
+    TokenUsage usage = getConverseTokenUsage(response);
     if (usage != null) {
       return integerToLong(usage.outputTokens());
     }
@@ -1066,16 +1080,15 @@ public final class BedrockRuntimeImpl {
         if (toolResultContent != null && toolResultContent.isList()) {
           List<ToolResultContentBlock> toolResultContentBlocks =
               toolResultContent.asList().stream()
-                  .map(
-                      toolResultContentBlockDoc -> {
-                        if (toolResultContentBlockDoc.isMap()) {
-                          Document json = toolResultContentBlockDoc.asMap().get("json");
-                          if (json != null) {
-                            return ToolResultContentBlock.builder().json(json).build();
-                          }
-                        }
-                        return null;
-                      })
+                  .map(toolResultContentBlockDoc -> {
+                    if (toolResultContentBlockDoc.isMap()) {
+                      Document json = toolResultContentBlockDoc.asMap().get("json");
+                      if (json != null) {
+                        return ToolResultContentBlock.builder().json(json).build();
+                      }
+                    }
+                    return null;
+                  })
                   .filter(Objects::nonNull)
                   .collect(toList());
           resultBlockBuilder.content(toolResultContentBlocks);
@@ -1169,6 +1182,19 @@ public final class BedrockRuntimeImpl {
                 }
               } else if (method.getName().equals("invokeModelWithResponseStream")
                   && args.length >= 2
+                  && args[0] instanceof Consumer
+                  && args[1] instanceof InvokeModelWithResponseStreamResponseHandler) {
+                @SuppressWarnings(
+                    "unchecked") // The SDK overload fixes the consumer's builder type.
+                Consumer<InvokeModelWithResponseStreamRequest.Builder> consumer =
+                    (Consumer<InvokeModelWithResponseStreamRequest.Builder>) args[0];
+                InvokeModelWithResponseStreamRequest request =
+                    InvokeModelWithResponseStreamRequest.builder().applyMutation(consumer).build();
+                return ((BedrockRuntimeAsyncClient) proxy)
+                    .invokeModelWithResponseStream(
+                        request, (InvokeModelWithResponseStreamResponseHandler) args[1]);
+              } else if (method.getName().equals("invokeModelWithResponseStream")
+                  && args.length >= 2
                   && args[0] instanceof InvokeModelWithResponseStreamRequest
                   && args[1] instanceof InvokeModelWithResponseStreamResponseHandler) {
                 InvokeModelWithResponseStreamRequest request =
@@ -1197,6 +1223,7 @@ public final class BedrockRuntimeImpl {
     }
   }
 
+  // visible for testing
   abstract static class BedrockRuntimeStreamResponseHandler<R, S>
       implements EventStreamResponseHandler<R, S>, ImplicitContextKeyed {
     @Nullable
@@ -1218,6 +1245,7 @@ public final class BedrockRuntimeImpl {
     List<String> stopReasons;
     TokenUsage usage;
 
+    // visible for testing
     BedrockRuntimeStreamResponseHandler(EventStreamResponseHandler<R, S> delegate) {
       this.delegate = delegate;
     }
@@ -1232,11 +1260,10 @@ public final class BedrockRuntimeImpl {
     @Override
     public final void onEventStream(SdkPublisher<S> sdkPublisher) {
       delegate.onEventStream(
-          sdkPublisher.map(
-              event -> {
-                handleEventSafely(event);
-                return event;
-              }));
+          sdkPublisher.map(event -> {
+            handleEventSafely(event);
+            return event;
+          }));
     }
 
     // Telemetry parsing must never change the behavior of the application's stream.

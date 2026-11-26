@@ -51,124 +51,113 @@ class RatpackServerTest {
   @Test
   void testAddSpanOnHandlers() throws Exception {
     EmbeddedApp app =
-        EmbeddedApp.of(
-            spec -> {
-              spec.registry(registry);
-              spec.handlers(chain -> chain.get("foo", ctx -> ctx.render("hi-foo")));
-            });
+        EmbeddedApp.of(spec -> {
+          spec.registry(registry);
+          spec.handlers(chain -> chain.get("foo", ctx -> ctx.render("hi-foo")));
+        });
     cleanup.deferCleanup(app);
 
     assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /foo")
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_ROUTE, "/foo"),
-                            equalTo(URL_PATH, "/foo"),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(SERVER_PORT, app.getServer().getBindPort()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(URL_QUERY, ""),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("GET /foo")
+                .hasNoParent()
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(HTTP_ROUTE, "/foo"),
+                    equalTo(URL_PATH, "/foo"),
+                    equalTo(URL_SCHEME, "http"),
+                    equalTo(SERVER_PORT, app.getServer().getBindPort()),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                    equalTo(URL_QUERY, ""),
+                    equalTo(HTTP_REQUEST_METHOD, "GET"),
+                    equalTo(HTTP_RESPONSE_STATUS_CODE, 200L))));
   }
 
   @Test
   void testPropagateTraceWithInstrumentedAsyncOperations() throws Exception {
     EmbeddedApp app =
-        EmbeddedApp.of(
-            spec -> {
-              spec.registry(registry);
-              spec.handlers(
-                  chain ->
-                      chain.get(
-                          "foo",
-                          ctx -> {
-                            ctx.render("hi-foo");
-                            Blocking.op(
-                                    () ->
-                                        testing.runWithSpan(
-                                            "a-span",
-                                            () -> {
-                                              Span span = Span.current();
-                                              span.addEvent("an-event");
-                                            }))
-                                .then();
-                          }));
-            });
+        EmbeddedApp.of(spec -> {
+          spec.registry(registry);
+          spec.handlers(chain ->
+              chain.get(
+                  "foo",
+                  ctx -> {
+                    ctx.render("hi-foo");
+                    Blocking.op(() ->
+                            testing.runWithSpan(
+                                "a-span",
+                                () -> {
+                                  Span span = Span.current();
+                                  span.addEvent("an-event");
+                                }))
+                        .then();
+                  }));
+        });
     cleanup.deferCleanup(app);
 
     assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");
 
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("GET /foo")
-                        .hasNoParent()
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(HTTP_ROUTE, "/foo"),
-                            equalTo(URL_PATH, "/foo"),
-                            equalTo(URL_SCHEME, "http"),
-                            equalTo(SERVER_PORT, app.getServer().getBindPort()),
-                            equalTo(SERVER_ADDRESS, "localhost"),
-                            equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
-                            equalTo(URL_QUERY, ""),
-                            equalTo(HTTP_REQUEST_METHOD, "GET"),
-                            equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
-                span ->
-                    span.hasName("a-span")
-                        .hasParent(trace.getSpan(0))
-                        .hasTotalAttributeCount(0)
-                        .hasEventsSatisfyingExactly(
-                            event -> event.hasName("an-event").hasAttributes(Attributes.empty()))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span ->
+                span.hasName("GET /foo")
+                    .hasNoParent()
+                    .hasKind(SpanKind.SERVER)
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(HTTP_ROUTE, "/foo"),
+                        equalTo(URL_PATH, "/foo"),
+                        equalTo(URL_SCHEME, "http"),
+                        equalTo(SERVER_PORT, app.getServer().getBindPort()),
+                        equalTo(SERVER_ADDRESS, "localhost"),
+                        equalTo(NETWORK_PROTOCOL_VERSION, "1.1"),
+                        equalTo(URL_QUERY, ""),
+                        equalTo(HTTP_REQUEST_METHOD, "GET"),
+                        equalTo(HTTP_RESPONSE_STATUS_CODE, 200L)),
+            span ->
+                span.hasName("a-span")
+                    .hasParent(trace.getSpan(0))
+                    .hasTotalAttributeCount(0)
+                    .hasEventsSatisfyingExactly(
+                        event -> event.hasName("an-event").hasAttributes(Attributes.empty()))));
   }
 
   @Test
   void testPropagateTraceWithInstrumentedAsyncConcurrentOperations() throws Exception {
     EmbeddedApp app =
-        EmbeddedApp.of(
-            spec -> {
-              spec.registry(registry);
-              spec.handlers(
-                  chain -> {
-                    chain.get(
-                        "bar",
-                        ctx -> {
-                          ctx.render("hi-bar");
-                          Blocking.op(
-                                  () ->
-                                      testing.runWithSpan(
-                                          "another-span",
-                                          () -> {
-                                            Span span = Span.current();
-                                            span.addEvent("an-event");
-                                          }))
-                              .then();
-                        });
-                    chain.get(
-                        "foo",
-                        ctx -> {
-                          ctx.render("hi-foo");
-                          Blocking.op(
-                                  () ->
-                                      testing.runWithSpan(
-                                          "a-span",
-                                          () -> {
-                                            Span span = Span.current();
-                                            span.addEvent("an-event");
-                                          }))
-                              .then();
-                        });
-                  });
-            });
+        EmbeddedApp.of(spec -> {
+          spec.registry(registry);
+          spec.handlers(chain -> {
+            chain.get(
+                "bar",
+                ctx -> {
+                  ctx.render("hi-bar");
+                  Blocking.op(() ->
+                          testing.runWithSpan(
+                              "another-span",
+                              () -> {
+                                Span span = Span.current();
+                                span.addEvent("an-event");
+                              }))
+                      .then();
+                });
+            chain.get(
+                "foo",
+                ctx -> {
+                  ctx.render("hi-foo");
+                  Blocking.op(() ->
+                          testing.runWithSpan(
+                              "a-span",
+                              () -> {
+                                Span span = Span.current();
+                                span.addEvent("an-event");
+                              }))
+                      .then();
+                });
+          });
+        });
     cleanup.deferCleanup(app);
 
     assertThat(app.getHttpClient().get("foo").getBody().getText()).isEqualTo("hi-foo");

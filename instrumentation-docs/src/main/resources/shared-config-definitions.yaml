@@ -18,7 +18,7 @@ configurations:
     declarative_name: java.common.http.known_methods
     description: "Configures the instrumentation to recognize an alternative set of HTTP request methods. All other methods will be treated as `_OTHER`."
     type: list
-    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,TRACE"
+    default: "CONNECT,DELETE,GET,HEAD,OPTIONS,PATCH,POST,PUT,QUERY,TRACE"
 
   common.server-service-mapping:
     name: otel.instrumentation.common.server-service-mapping
@@ -127,14 +127,14 @@ configurations:
   messaging.headers.included:
     name: otel.instrumentation.common.messaging.headers.included
     declarative_name: java.common.messaging.headers.included
-    description: "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded."
+    description: "A comma-separated list of case-sensitive message header name glob patterns to capture as span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. No headers are captured unless included or excluded patterns are configured. `*` captures all headers."
     type: list
     default: ""
 
   messaging.headers.excluded:
     name: otel.instrumentation.common.messaging.headers.excluded
     declarative_name: java.common.messaging.headers.excluded
-    description: "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. An absent or empty selector captures no headers; an exclude-only selector captures every header not excluded, which may expose sensitive information."
+    description: "A comma-separated list of case-sensitive message header name glob patterns to exclude from span attributes. Captured attribute keys preserve the header name's original spelling, including dashes. `?` matches one character and `*` matches zero or more characters. Excluded patterns take precedence over included patterns. If only excluded patterns are configured, all other headers are captured, which may expose sensitive information."
     type: list
     default: ""
 

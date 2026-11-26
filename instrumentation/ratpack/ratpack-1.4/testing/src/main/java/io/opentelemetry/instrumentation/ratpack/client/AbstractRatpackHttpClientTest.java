@@ -45,11 +45,10 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
 
   @BeforeAll
   protected void setUpClient() throws Exception {
-    exec.run(
-        unused -> {
-          client = buildHttpClient();
-          singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
-        });
+    exec.run(unused -> {
+      client = buildHttpClient();
+      singleConnectionClient = buildHttpClient(spec -> spec.poolSize(1));
+    });
     cleanup.deferAfterAll(exec);
     cleanup.deferAfterAll(client);
     cleanup.deferAfterAll(singleConnectionClient);
@@ -83,16 +82,12 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
       Map<String, String> headers,
       HttpClientResult httpClientResult)
       throws Exception {
-    exec.yield(
-            (e) ->
-                Operation.of(
-                        () ->
-                            internalSendRequest(client, method, uri, headers)
-                                .result(
-                                    result ->
-                                        httpClientResult.complete(
-                                            result::getValue, result.getThrowable())))
-                    .promise())
+    exec.yield(e ->
+            Operation.of(() ->
+                    internalSendRequest(client, method, uri, headers)
+                        .result(result ->
+                            httpClientResult.complete(result::getValue, result.getThrowable())))
+                .promise())
         .getValueOrThrow();
   }
 
@@ -118,14 +113,13 @@ public abstract class AbstractRatpackHttpClientTest extends AbstractHttpClientTe
 
   @Override
   protected void configure(HttpClientTestOptions.Builder optionsBuilder) {
-    optionsBuilder.setSingleConnectionFactory(
-        (host, port) ->
-            (path, headers) -> {
-              URI uri = resolveAddress(path);
-              return exec.yield(
-                      unused -> internalSendRequest(singleConnectionClient, "GET", uri, headers))
-                  .getValueOrThrow();
-            });
+    optionsBuilder.setSingleConnectionFactory((host, port) ->
+        (path, headers) -> {
+          URI uri = resolveAddress(path);
+          return exec.yield(
+                  unused -> internalSendRequest(singleConnectionClient, "GET", uri, headers))
+              .getValueOrThrow();
+        });
 
     if (useNettyClientAttributes()) {
       optionsBuilder.setExpectedClientSpanNameMapper(

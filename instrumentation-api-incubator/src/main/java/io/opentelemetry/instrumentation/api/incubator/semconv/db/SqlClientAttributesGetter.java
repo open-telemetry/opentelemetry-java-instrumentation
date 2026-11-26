@@ -83,8 +83,15 @@ public interface SqlClientAttributesGetter<REQUEST, RESPONSE>
         "SQL instrumentations derive db.collection.name from the raw query text");
   }
 
-  /** Returns the SQL dialect used by the database. */
-  SqlDialect getSqlDialect(REQUEST request);
+  /**
+   * Returns the SQL dialect used by the database.
+   *
+   * <p>By default, resolves the dialect from {@link #getDbSystemName(Object)} using {@link
+   * SqlDialect#forDbSystemName(String)}. Override this method to supply custom dialect options.
+   */
+  default SqlDialect getSqlDialect(REQUEST request) {
+    return SqlDialect.forDbSystemName(getDbSystemName(request));
+  }
 
   /**
    * Get the raw SQL query texts. The values returned by this method are later sanitized by the

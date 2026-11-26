@@ -45,9 +45,8 @@ public class VaadinSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinHandlerRequest::getSpanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             // add context for tracking nested request handler calls
-            .addContextCustomizer(
-                (context, vaadinHandlerRequest, startAttributes) ->
-                    context.with(REQUEST_HANDLER_CONTEXT_KEY, true))
+            .addContextCustomizer((context, vaadinHandlerRequest, startAttributes) ->
+                context.with(REQUEST_HANDLER_CONTEXT_KEY, true))
             .buildInstrumenter();
 
     RpcCodeAttributesGetter rpcCodeAttributesGetter = new RpcCodeAttributesGetter();
@@ -63,9 +62,8 @@ public class VaadinSingletons {
                 GlobalOpenTelemetry.get(), INSTRUMENTATION_NAME, VaadinServiceRequest::getSpanName)
             .setEnabled(ExperimentalConfig.get().controllerTelemetryEnabled())
             // add context for tracking whether any request handler handled the request
-            .addContextCustomizer(
-                (context, vaadinServiceRequest, startAttributes) ->
-                    context.with(SERVICE_CONTEXT_KEY, new VaadinServiceContext()))
+            .addContextCustomizer((context, vaadinServiceRequest, startAttributes) ->
+                context.with(SERVICE_CONTEXT_KEY, new VaadinServiceContext()))
             .buildInstrumenter();
 
     helper = new VaadinHelper(requestHandlerInstrumenter, serviceInstrumenter);

@@ -2,6 +2,10 @@ name: Reusable - Lint check
 
 on:
   workflow_call:
+    inputs:
+      links-only:
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -15,20 +19,24 @@ jobs:
           fetch-depth: 0 # needed for merge-base used in modified-files mode
           persist-credentials: false
 
-      - uses: jdx/mise-action@b44d12e7d0d8ee7461bb893e1b1993500433185b # v5.2.7
+      - uses: jdx/mise-action@924e7c586e33d7d4bae9c14e26c5d22e2beb6e78 # v5.3.0
 
       - name: Lint for pull requests
-        if: github.event_name == 'pull_request'
+        if: github.event_name == 'pull_request' && !inputs.links-only
+        run: mise exec -- flint run rumdl flint-setup
+
+      - name: Check links for pull requests
+        if: inputs.links-only
         env:
           GITHUB_TOKEN: ${{ github.token }}
           GITHUB_REPOSITORY: ${{ github.repository }}
           GITHUB_BASE_REF: ${{ github.base_ref }}
           GITHUB_HEAD_REF: ${{ github.head_ref }}
           PR_HEAD_REPO: ${{ github.event.pull_request.head.repo.full_name }}
-        run: mise run lint
+        run: mise exec -- flint run lychee
 
       - name: Lint for pushes and scheduled workflows
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && !inputs.links-only
         env:
           GITHUB_TOKEN: ${{ github.token }}
         run: mise run lint

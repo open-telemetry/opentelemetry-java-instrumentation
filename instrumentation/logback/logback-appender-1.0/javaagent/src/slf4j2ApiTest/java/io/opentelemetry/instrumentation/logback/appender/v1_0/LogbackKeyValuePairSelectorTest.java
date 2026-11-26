@@ -39,12 +39,11 @@ class LogbackKeyValuePairSelectorTest {
     }
     eventBuilder.log("selector test");
 
-    testing.waitAndAssertLogRecords(
-        logRecord -> {
-          Attributes attributes = logRecord.actual().getAttributes();
-          assertThat(capturedKeyValuePairAttributes(attributes))
-              .containsExactlyInAnyOrderEntriesOf(expectedKeyValuePairAttributes());
-        });
+    testing.waitAndAssertLogRecords(logRecord -> {
+      Attributes attributes = logRecord.actual().getAttributes();
+      assertThat(capturedKeyValuePairAttributes(attributes))
+          .containsExactlyInAnyOrderEntriesOf(expectedKeyValuePairAttributes());
+    });
   }
 
   private static Map<String, String> keyValuePairs() {
@@ -56,13 +55,12 @@ class LogbackKeyValuePairSelectorTest {
 
   private static Map<String, String> capturedKeyValuePairAttributes(Attributes attributes) {
     Map<String, String> captured = new HashMap<>();
-    KEY_VALUE_PAIRS.forEach(
-        (key, value) -> {
-          String attributeValue = attributes.get(stringKey(key));
-          if (attributeValue != null) {
-            captured.put(key, attributeValue);
-          }
-        });
+    KEY_VALUE_PAIRS.forEach((key, value) -> {
+      String attributeValue = attributes.get(stringKey(key));
+      if (attributeValue != null) {
+        captured.put(key, attributeValue);
+      }
+    });
     return captured;
   }
 

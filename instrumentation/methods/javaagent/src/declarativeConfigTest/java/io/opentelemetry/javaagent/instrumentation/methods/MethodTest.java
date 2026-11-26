@@ -25,16 +25,12 @@ class MethodTest {
   @Test
   void methodTraced() {
     assertThat(new ConfigTracedCallable().call()).isEqualTo("Hello!");
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("ConfigTracedCallable.call")
-                        .hasKind(SpanKind.SERVER)
-                        .hasAttributesSatisfyingExactly(
-                            equalTo(
-                                CODE_FUNCTION_NAME,
-                                ConfigTracedCallable.class.getName() + ".call"))));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            span.hasName("ConfigTracedCallable.call")
+                .hasKind(SpanKind.SERVER)
+                .hasAttributesSatisfyingExactly(
+                    equalTo(CODE_FUNCTION_NAME, ConfigTracedCallable.class.getName() + ".call"))));
   }
 
   static class ConfigTracedCallable implements Callable<String> {

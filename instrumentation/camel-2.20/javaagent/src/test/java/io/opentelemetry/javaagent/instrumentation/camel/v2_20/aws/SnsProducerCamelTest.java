@@ -75,28 +75,26 @@ class SnsProducerCamelTest {
         new CamelSpringApplication(
             awsConnector, SnsProducerConfig.class, ImmutableMap.of("topicName", topicName));
     camelApp.start();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> AwsSpanAssertions.sns(span, "SNS.ListTopics", null, null).hasNoParent()));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> AwsSpanAssertions.sns(span, "SNS.ListTopics", null, null).hasNoParent()));
     testing.clearData();
 
     camelApp.producerTemplate().sendBody("direct:input", "{\"type\": \"hello\"}");
 
     AtomicReference<SpanData> camelSend = new AtomicReference<>();
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> CamelSpanAssertions.direct(span, "input"),
-                span -> {
-                  camelSend.set(trace.getSpan(1));
-                  CamelSpanAssertions.snsPublish(span, topicName).hasParent(trace.getSpan(0));
-                  span.hasAttribute(MESSAGING_MESSAGE_ID, "message-id");
-                },
-                span -> {
-                  AwsSpanAssertions.sns(span, "SNS.Publish", topicArn, topicArn)
-                      .hasParent(trace.getSpan(1));
-                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> CamelSpanAssertions.direct(span, "input"),
+            span -> {
+              camelSend.set(trace.getSpan(1));
+              CamelSpanAssertions.snsPublish(span, topicName).hasParent(trace.getSpan(0));
+              span.hasAttribute(MESSAGING_MESSAGE_ID, "message-id");
+            },
+            span -> {
+              AwsSpanAssertions.sns(span, "SNS.Publish", topicArn, topicArn)
+                  .hasParent(trace.getSpan(1));
+            }));
 
     assertThat(publishRequest.get())
         .contains("Name=traceparent")

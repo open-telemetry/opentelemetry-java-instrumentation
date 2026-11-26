@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -41,9 +42,8 @@ val test29RuntimeClasspath = configurations.create("test29RuntimeClasspath") {
 }
 
 testing.suites {
-  register<JvmTestSuite>("unitTests") {
+  unitTests {
     dependencies {
-      implementation(project())
       implementation("org.influxdb:influxdb-java:2.4")
     }
   }

@@ -85,6 +85,7 @@ public class JfrConfig {
    * This class is internal and is hence not for public use. Its APIs are unstable and can change at
    * any time.
    */
+  // visible for testing
   public static class JfrRuntimeMetrics implements Closeable {
     private final List<RecordedEventHandler> recordedEventHandlers;
     private final Set<String> metricNames;
@@ -97,13 +98,12 @@ public class JfrConfig {
       this.recordedEventHandlers = recordedEventHandlers;
       this.metricNames = Collections.unmodifiableSet(new HashSet<>(metricNames));
       recordingStream = new RecordingStream();
-      recordedEventHandlers.forEach(
-          handler -> {
-            EventSettings eventSettings = recordingStream.enable(handler.getEventName());
-            handler.getPollingDuration().ifPresent(eventSettings::withPeriod);
-            handler.getThreshold().ifPresent(eventSettings::withThreshold);
-            recordingStream.onEvent(handler.getEventName(), handler);
-          });
+      recordedEventHandlers.forEach(handler -> {
+        EventSettings eventSettings = recordingStream.enable(handler.getEventName());
+        handler.getPollingDuration().ifPresent(eventSettings::withPeriod);
+        handler.getThreshold().ifPresent(eventSettings::withThreshold);
+        recordingStream.onEvent(handler.getEventName(), handler);
+      });
       recordingStream.onMetadata(event -> startUpLatch.countDown());
       Thread daemonRunner =
           new Thread(this::startRecordingStream, "OpenTelemetry JFR-Metrics-Runner");

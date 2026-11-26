@@ -44,8 +44,9 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class DbClientMetricsTest {
 
-  static final double[] DURATION_BUCKETS =
-      DbClientMetricsAdvice.DURATION_SECONDS_BUCKETS.stream().mapToDouble(d -> d).toArray();
+  static final double[] DURATION_BUCKETS = {
+    0.001, 0.0025, 0.005, 0.01, 0.025, 0.05, 0.1, 0.25, 0.5, 1.0, 2.5, 5.0, 10.0
+  };
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
@@ -104,26 +105,19 @@ class DbClientMetricsTest {
     instrumenter.end(context, request, null, error);
 
     assertThat(spanExporter.getFinishedSpanItems())
-        .satisfiesExactly(
-            span ->
-                assertThat(span)
-                    .hasStatusSatisfying(
-                        status ->
-                            status.hasCode(error == null ? StatusCode.UNSET : StatusCode.ERROR))
-                    .hasAttributesSatisfyingExactly(
-                        equalTo(DB_SYSTEM_NAME, "myDb"), equalTo(ERROR_TYPE, expectedErrorType)));
+        .satisfiesExactly(span ->
+            assertThat(span)
+                .hasStatusSatisfying(
+                    status -> status.hasCode(error == null ? StatusCode.UNSET : StatusCode.ERROR))
+                .hasAttributesSatisfyingExactly(
+                    equalTo(DB_SYSTEM_NAME, "myDb"), equalTo(ERROR_TYPE, expectedErrorType)));
     assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactly(
-            metric ->
-                assertThat(metric)
-                    .hasName("db.client.operation.duration")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point.hasAttributesSatisfyingExactly(
-                                        equalTo(DB_SYSTEM_NAME, "myDb"),
-                                        equalTo(ERROR_TYPE, expectedErrorType)))));
+        .satisfiesExactly(metric ->
+            assertThat(metric)
+                .hasName("db.client.operation.duration")
+                .hasHistogramPointsSatisfying(point ->
+                    point.hasAttributesSatisfyingExactly(
+                        equalTo(DB_SYSTEM_NAME, "myDb"), equalTo(ERROR_TYPE, expectedErrorType))));
   }
 
   @Test
@@ -171,37 +165,30 @@ class DbClientMetricsTest {
     listener.onEnd(context1, responseAttributes, nanos(250));
 
     assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactlyInAnyOrder(
-            metric ->
-                assertThat(metric)
-                    .hasName("db.client.operation.duration")
-                    .hasUnit("s")
-                    .hasDescription("Duration of database client operations.")
-                    .hasHistogramSatisfying(
-                        histogram ->
-                            histogram.hasPointsSatisfying(
-                                point ->
-                                    point
-                                        .hasSum(0.15 /* seconds */)
-                                        .hasAttributesSatisfyingExactly(
-                                            equalTo(DB_SYSTEM_NAME, "myDb"),
-                                            equalTo(DB_NAMESPACE, "potatoes"),
-                                            equalTo(DB_OPERATION_NAME, "SELECT"),
-                                            equalTo(DB_COLLECTION_NAME, "table"),
-                                            equalTo(DB_QUERY_SUMMARY, "SELECT table"),
-                                            equalTo(
-                                                SERVER_ADDRESS,
-                                                "db1.example:5432,db2.example:5432"),
-                                            equalTo(ERROR_TYPE, "400"),
-                                            equalTo(DB_RESPONSE_STATUS_CODE, "400"),
-                                            equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
-                                            equalTo(NETWORK_PEER_PORT, 8080))
-                                        .hasExemplarsSatisfying(
-                                            exemplar ->
-                                                exemplar
-                                                    .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
-                                                    .hasSpanId("090a0b0c0d0e0f00"))
-                                        .hasBucketBoundaries(DURATION_BUCKETS))));
+        .satisfiesExactlyInAnyOrder(metric ->
+            assertThat(metric)
+                .hasName("db.client.operation.duration")
+                .hasUnit("s")
+                .hasDescription("Duration of database client operations.")
+                .hasHistogramPointsSatisfying(point ->
+                    point
+                        .hasSum(0.15 /* seconds */)
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(DB_SYSTEM_NAME, "myDb"),
+                            equalTo(DB_NAMESPACE, "potatoes"),
+                            equalTo(DB_OPERATION_NAME, "SELECT"),
+                            equalTo(DB_COLLECTION_NAME, "table"),
+                            equalTo(DB_QUERY_SUMMARY, "SELECT table"),
+                            equalTo(SERVER_ADDRESS, "db1.example:5432,db2.example:5432"),
+                            equalTo(ERROR_TYPE, "400"),
+                            equalTo(DB_RESPONSE_STATUS_CODE, "400"),
+                            equalTo(NETWORK_PEER_ADDRESS, "1.2.3.4"),
+                            equalTo(NETWORK_PEER_PORT, 8080))
+                        .hasExemplarsSatisfying(exemplar ->
+                            exemplar
+                                .hasTraceId("ff01020304050600ff0a0b0c0d0e0f00")
+                                .hasSpanId("090a0b0c0d0e0f00"))
+                        .hasBucketBoundaries(DURATION_BUCKETS)));
   }
 
   @Test
@@ -222,48 +209,39 @@ class DbClientMetricsTest {
     record(listener, "successfulWithoutCode", Attributes.empty());
 
     assertThat(metricReader.collectAllMetrics())
-        .satisfiesExactly(
-            metric -> {
-              assertThat(metric).hasName("db.client.operation.duration");
-              assertThat(metric.getHistogramData().getPoints())
-                  .satisfiesExactlyInAnyOrder(
-                      point ->
-                          assertThat(point.getAttributes().asMap())
-                              .isEqualTo(
-                                  Attributes.builder()
-                                      .put(DB_SYSTEM_NAME, "myDb")
-                                      .put(DB_OPERATION_NAME, "failedWithCode")
-                                      .put(ERROR_TYPE, "400")
-                                      .put(DB_RESPONSE_STATUS_CODE, "400")
-                                      .build()
-                                      .asMap()),
-                      point ->
-                          assertThat(point.getAttributes().asMap())
-                              .isEqualTo(
-                                  Attributes.builder()
-                                      .put(DB_SYSTEM_NAME, "myDb")
-                                      .put(DB_OPERATION_NAME, "failedWithoutCode")
-                                      .put(ERROR_TYPE, "io.example.DbException")
-                                      .build()
-                                      .asMap()),
-                      point ->
-                          assertThat(point.getAttributes().asMap())
-                              .isEqualTo(
-                                  Attributes.builder()
-                                      .put(DB_SYSTEM_NAME, "myDb")
-                                      .put(DB_OPERATION_NAME, "successfulWithCode")
-                                      .put(DB_RESPONSE_STATUS_CODE, "200")
-                                      .build()
-                                      .asMap()),
-                      point ->
-                          assertThat(point.getAttributes().asMap())
-                              .isEqualTo(
-                                  Attributes.builder()
-                                      .put(DB_SYSTEM_NAME, "myDb")
-                                      .put(DB_OPERATION_NAME, "successfulWithoutCode")
-                                      .build()
-                                      .asMap()));
-            });
+        .satisfiesExactly(metric -> {
+          assertThat(metric).hasName("db.client.operation.duration");
+          assertThat(metric)
+              .hasHistogramPointsSatisfying(
+                  point ->
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "failedWithCode")
+                              .put(ERROR_TYPE, "400")
+                              .put(DB_RESPONSE_STATUS_CODE, "400")
+                              .build()),
+                  point ->
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "failedWithoutCode")
+                              .put(ERROR_TYPE, "io.example.DbException")
+                              .build()),
+                  point ->
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "successfulWithCode")
+                              .put(DB_RESPONSE_STATUS_CODE, "200")
+                              .build()),
+                  point ->
+                      point.hasAttributes(
+                          Attributes.builder()
+                              .put(DB_SYSTEM_NAME, "myDb")
+                              .put(DB_OPERATION_NAME, "successfulWithoutCode")
+                              .build()));
+        });
   }
 
   private static void record(

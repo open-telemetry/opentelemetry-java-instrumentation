@@ -50,10 +50,14 @@ jobs:
       cache-read-only: true
 
   lint:
-    # release branches are excluded because the README.md javaagent download link has to be updated
-    # on release branches before the release download has been published
-    if: "!startsWith(github.ref_name, 'release/') && !startsWith(github.base_ref, 'release/')"
     uses: $/.github/workflows/reusable-lint-check.yml
+
+  link-check:
+    # The README's javaagent download link can point to an unpublished release.
+    if: "!startsWith(github.base_ref, 'release/')"
+    uses: $/.github/workflows/reusable-lint-check.yml
+    with:
+      links-only: true
 
   build-servlet-images:
     if: "!inputs.skip-servlet-images"
@@ -74,6 +78,7 @@ jobs:
           needs.common.result != 'success' ||
           needs.test-latest-deps.result != 'success' ||
           needs.muzzle.result != 'success' ||
+          needs.lint.result != 'success' ||
           (
             needs.test-native.result != 'success' &&
             needs.test-native.result != 'skipped'
@@ -81,9 +86,5 @@ jobs:
           (
             needs.build-servlet-images.result != 'success' &&
             needs.build-servlet-images.result != 'skipped'
-          ) ||
-          (
-            !startsWith(github.base_ref, 'release/') &&
-            needs.lint.result != 'success'
           )
         run: exit 1 # fail

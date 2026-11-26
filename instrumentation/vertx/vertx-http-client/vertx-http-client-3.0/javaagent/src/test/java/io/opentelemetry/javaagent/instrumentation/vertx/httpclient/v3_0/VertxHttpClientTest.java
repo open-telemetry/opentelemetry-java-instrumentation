@@ -94,15 +94,14 @@ class VertxHttpClientTest extends AbstractHttpClientTest<HttpClientRequest> {
     optionsBuilder.disableTestReadTimeout();
     optionsBuilder.disableTestNonStandardHttpMethod();
 
-    optionsBuilder.setHttpAttributes(
-        uri -> {
-          Set<AttributeKey<?>> attributes =
-              new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
-          attributes.remove(NETWORK_PROTOCOL_VERSION);
-          attributes.remove(SERVER_ADDRESS);
-          attributes.remove(SERVER_PORT);
-          return attributes;
-        });
+    optionsBuilder.setHttpAttributes(uri -> {
+      Set<AttributeKey<?>> attributes =
+          new HashSet<>(HttpClientTestOptions.DEFAULT_HTTP_ATTRIBUTES);
+      attributes.remove(NETWORK_PROTOCOL_VERSION);
+      attributes.remove(SERVER_ADDRESS);
+      attributes.remove(SERVER_PORT);
+      return attributes;
+    });
 
     optionsBuilder.setSingleConnectionFactory(VertxHttpClientTest::createSingleConnection);
   }

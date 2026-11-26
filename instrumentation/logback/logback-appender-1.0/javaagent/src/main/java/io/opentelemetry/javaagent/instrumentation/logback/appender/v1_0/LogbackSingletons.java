@@ -43,18 +43,17 @@ public class LogbackSingletons {
         LoggingEventMapper.builder()
             .setCaptureExperimentalAttributes(captureExperimentalAttributes)
             .setMdcAttributes(mdcAttributes)
-            .setMdcReader(
-                event -> {
-                  // Read application-owned MDC without exporting agent-added values.
-                  // Suppress enrichment only for this event, so nested logs from a custom MDC
-                  // getter still receive enrichment.
-                  Object previous = suppressMdcEnrichment().set(event);
-                  try {
-                    return event.getMDCPropertyMap();
-                  } finally {
-                    suppressMdcEnrichment().restore(previous);
-                  }
-                })
+            .setMdcReader(event -> {
+              // Read application-owned MDC without exporting agent-added values.
+              // Suppress enrichment only for this event, so nested logs from a custom MDC
+              // getter still receive enrichment.
+              Object previous = suppressMdcEnrichment().set(event);
+              try {
+                return event.getMDCPropertyMap();
+              } finally {
+                suppressMdcEnrichment().restore(previous);
+              }
+            })
             .setCaptureCodeAttributes(captureCodeAttributes)
             .setCaptureMarkerAttribute(captureMarkerAttribute)
             .setStructuredAttributes(structuredAttributes)

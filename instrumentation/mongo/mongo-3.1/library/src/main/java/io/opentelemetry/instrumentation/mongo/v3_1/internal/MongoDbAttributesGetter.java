@@ -15,7 +15,7 @@ import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientAttributesGetter;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
-import java.net.InetSocketAddress;
+import java.net.SocketAddress;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Map;
@@ -71,6 +71,7 @@ class MongoDbAttributesGetter
   @Nullable private final MongoConnectionPeerResolver connectionPeerResolver;
   @Nullable private final JsonWriterSettings jsonWriterSettings;
 
+  // only used by tests
   MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
     this(querySanitizationEnabled, maxNormalizedQueryLength, null);
   }
@@ -158,10 +159,10 @@ class MongoDbAttributesGetter
 
   @Nullable
   @Override
-  public InetSocketAddress getNetworkPeerInetSocketAddress(
+  public SocketAddress getNetworkPeerSocketAddress(
       CommandStartedEvent event, @Nullable CommandSucceededEvent unused) {
     MongoNetworkPeer peer = getNetworkPeer(event);
-    return peer == null ? null : peer.getInetSocketAddress();
+    return peer == null ? null : peer.getSocketAddress();
   }
 
   @Nullable
@@ -271,6 +272,7 @@ class MongoDbAttributesGetter
     return value >= Integer.MIN_VALUE && value <= Integer.MAX_VALUE ? (int) value : null;
   }
 
+  // visible for testing
   String sanitizeQuery(BsonDocument command) {
     StringBuilderWriter stringWriter = new StringBuilderWriter(128);
     // jsonWriterSettings is generally not null but could be due to security manager or unknown

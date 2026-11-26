@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.annotation.Nullable;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -392,23 +393,22 @@ public class DeclarativeConfigYamlGenerator {
     lines.add("Each list entry is an object with the following properties:");
     schema
         .properties()
-        .forEach(
-            (name, property) -> {
-              StringBuilder line = new StringBuilder(name).append(" (").append(property.type());
-              if (required.contains(name)) {
-                line.append(", required");
-              }
-              line.append(")");
-              if (property.description() != null && !property.description().isBlank()) {
-                line.append(": ").append(property.description().trim());
-              }
-              // Indent the property under the introduction line, hanging-indenting any
-              // continuation lines so they don't read as separate properties.
-              List<String> wrapped = wrapText(line.toString(), indent + 2);
-              for (int i = 0; i < wrapped.size(); i++) {
-                lines.add((i == 0 ? "  " : "    ") + wrapped.get(i));
-              }
-            });
+        .forEach((name, property) -> {
+          StringBuilder line = new StringBuilder(name).append(" (").append(property.type());
+          if (required.contains(name)) {
+            line.append(", required");
+          }
+          line.append(")");
+          if (property.description() != null && !property.description().isBlank()) {
+            line.append(": ").append(property.description().trim());
+          }
+          // Indent the property under the introduction line, hanging-indenting any
+          // continuation lines so they don't read as separate properties.
+          List<String> wrapped = wrapText(line.toString(), indent + 2);
+          for (int i = 0; i < wrapped.size(); i++) {
+            lines.add((i == 0 ? "  " : "    ") + wrapped.get(i));
+          }
+        });
 
     lines.add("Example:");
     lines.add("  " + key + ":");
@@ -518,8 +518,14 @@ public class DeclarativeConfigYamlGenerator {
     if (value instanceof Boolean || value instanceof Number) {
       return value.toString();
     }
-    if (value instanceof Map && ((Map<?, ?>) value).isEmpty()) {
+    if (value instanceof Map<?, ?> map && map.isEmpty()) {
       return "{}";
+    }
+    if (value instanceof Map<?, ?> || value instanceof List<?>) {
+      DumperOptions options = new DumperOptions();
+      options.setDefaultFlowStyle(DumperOptions.FlowStyle.FLOW);
+      options.setSplitLines(false);
+      return new Yaml(options).dump(value).strip();
     }
     return String.valueOf(value);
   }

@@ -9,10 +9,13 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.reflect.Method;
 import javax.annotation.Nullable;
+import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
+import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.cluster.Cluster;
 import org.apache.dubbo.rpc.cluster.Directory;
+import org.apache.dubbo.rpc.cluster.support.wrapper.MockClusterInvoker;
 
 /**
  * Dubbo {@link Cluster} SPI wrapper that records the registry URL for each registry-backed {@link
@@ -99,6 +102,21 @@ public final class RegistryCapturingClusterWrapper implements Cluster {
     String registryAddress = DubboRegistryUtil.tryExtractRegistryAddressFromDirectory(directory);
     if (registryAddress == null) {
       return invoker;
+    }
+    // Dubbo's zone-aware routing can cast even a registry-backed invoker to MockClusterInvoker.
+    if (invoker instanceof MockClusterInvoker) {
+      if (invoker.getClass() != MockClusterInvoker.class) {
+        // A custom subclass can also override routing or lifecycle methods.
+        return invoker;
+      }
+      return new MockClusterInvoker<T>(directory, invoker) {
+        @Override
+        public Result invoke(Invocation invocation) {
+          // Let the original invoker apply the mock policy exactly once.
+          return RegistryCapturingInvoker.invokeWithRegistryAddress(
+              invoker, invocation, registryAddress);
+        }
+      };
     }
     return RegistryCapturingInvoker.wrap(invoker, registryAddress);
   }

@@ -116,7 +116,7 @@ class RestletAppTestBase {
           (Series<?>)
               responseAttributes.computeIfAbsent(
                   "org.restlet.http.headers",
-                  (key) -> {
+                  key -> {
                     try {
                       return constructor.newInstance(headerClass);
                     } catch (ReflectiveOperationException e) {
@@ -126,7 +126,7 @@ class RestletAppTestBase {
     } catch (ClassNotFoundException | NoClassDefFoundError | NoSuchMethodException ignored) {
       responseHeaders =
           (Series<?>)
-              responseAttributes.computeIfAbsent("org.restlet.http.headers", (key) -> new Form());
+              responseAttributes.computeIfAbsent("org.restlet.http.headers", key -> new Form());
     }
 
     responseHeaders.add("X-Test-Response", requestHeaders.getValues("X-Test-Request"));

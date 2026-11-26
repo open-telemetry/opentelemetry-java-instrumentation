@@ -5,22 +5,22 @@ applyTo: "instrumentation/**/javaagent/**/*.java,instrumentation/**/javaagent*/*
 # Javaagent modules and matching
 
 Apply these rules to javaagent modules, type/method matching, and collaborator holders.
-Inspect registration and the supported library lifecycle before choosing a pattern.
+
+- Inspect registration and the supported library lifecycle before choosing a pattern.
 
 ## Registration
 
-Register each `InstrumentationModule` through `@AutoService(InstrumentationModule.class)` and
-return its compatible `TypeInstrumentation` implementations from `typeInstrumentations()`.
-Module classes normally use `{Library}{Version}InstrumentationModule` names.
+- Register each `InstrumentationModule` through `@AutoService(InstrumentationModule.class)` and
+  return its compatible `TypeInstrumentation` implementations from `typeInstrumentations()`.
+  Module classes normally use `{Library}{Version}InstrumentationModule` names.
 
-Several `InstrumentationModule` classes may share a Gradle project and all public selectors.
-Public names describe independently selectable behavior, not compatibility implementation classes.
+- Several `InstrumentationModule` classes may share a Gradle project and all public selectors.
+  Public names describe independently selectable behavior, not compatibility implementation classes.
 
 ## Enablement names
 
-Apply these rules to names registered by an `InstrumentationModule`. Public enablement names
-describe selectable behavior, not Muzzle implementation identities.
-
+- Enablement names registered by an `InstrumentationModule` describe selectable behavior, not
+  Muzzle implementation identities.
 - The primary is the full module-directory name, including versions, except where a default-off
   feature needs a separate identity within that module. Example: `spring-webflux-5.0`.
   Names use kebab-case. Order selectors as primary, optional role/feature, version-stripped
@@ -53,9 +53,8 @@ describe selectable behavior, not Muzzle implementation identities.
   `spring-webflux-5.0` and secondaries `reactor-netty-server`, `spring-webflux-server`, and
   `spring-webflux`, without `reactor-netty` or `reactor`. This cross-family exception applies only
   to that registration.
-
-Selectors and emitted instrumentation scope names are independent contracts. Changing one does
-not require changing the other. Preserve existing controls and ordering when maintaining aliases.
+- Selectors and emitted instrumentation scope names are independent contracts. Changing one does
+  not require changing the other. Preserve existing controls and ordering when maintaining aliases.
 
 ## Type and method matching
 
@@ -117,73 +116,74 @@ not require changing the other. Preserve existing controls and ordering when mai
 - Use `isDeclaredBy` on a Byte Buddy method matcher only
   when a type matcher covers several types but advice targets a member declared by one
   specific type; a name and signature that already identify the method need no extra
-  restriction. `isMethod()` is redundant after a non-empty `named(...)` or
+  restriction.
+- `isMethod()` is redundant after a non-empty `named(...)` or
   `namedOneOf(...)` matcher. Keep it when the name can be empty, because `named("")`
   can match constructors and class initializers.
 
 ## Class-loader version boundaries
 
-Override `InstrumentationModule.classLoaderMatcher()` only for a real version or optional-artifact
-boundary Muzzle cannot establish from referenced symbols. It is not an absence optimization.
-Method/parameter changes, field removals, and package relocations Muzzle already sees do not need
-an override. Most modules use the default matcher.
+- Override `InstrumentationModule.classLoaderMatcher()` only for a real version or optional-artifact
+  boundary Muzzle cannot establish from referenced symbols. It is not an absence optimization.
+  Method/parameter changes, field removals, and package relocations Muzzle already sees do not need
+  an override. Most modules use the default matcher.
 
-Use cheap `hasClassesNamed(...)` checks, not hierarchy inspection. Multiple class arguments require
-all classes to be present; prefer one landmark when sufficient.
+- Use cheap `hasClassesNamed(...)` checks, not hierarchy inspection. Multiple class arguments require
+  all classes to be present; prefer one landmark when sufficient.
 
-Verify each landmark against concrete artifact versions, including backports and newer siblings.
-Do not infer a boundary from the module directory name.
+- Verify each landmark against concrete artifact versions, including backports and newer siblings.
+  Do not infer a boundary from the module directory name.
 
-| Landmark role | Comment |
-| --- | --- |
-| Positive lower bound | `// added in X.Y` |
-| Positive class that disappears at the upper bound | `// removed in Y.Z` |
-| Negated class excluding newer versions | `// added in Y.Z` |
-| One positive class establishes both bounds | `// added in X.Y, removed in Y.Z` |
+  | Landmark role | Comment |
+  | --- | --- |
+  | Positive lower bound | `// added in X.Y` |
+  | Positive class that disappears at the upper bound | `// removed in Y.Z` |
+  | Negated class excluding newer versions | `// added in Y.Z` |
+  | One positive class establishes both bounds | `// added in X.Y, removed in Y.Z` |
 
-A ceiling depends on disappearance, not the class's earlier introduction. For example:
+  A ceiling depends on disappearance, not the class's earlier introduction. For example:
 
-```java
-return hasClassesNamed(
-    // added in 3.7
-    "com.mongodb.MongoClientSettings$Builder",
-    // removed in 4.0
-    "com.mongodb.async.SingleResultCallback");
-```
+  ```java
+  return hasClassesNamed(
+      // added in 3.7
+      "com.mongodb.MongoClientSettings$Builder",
+      // removed in 4.0
+      "com.mongodb.async.SingleResultCallback");
+  ```
 
-For one inline class string, keep the call compact and put the role comment immediately above it,
-including on chained calls. For multiple strings, put each comment directly above its string.
-Keep brief backport, namespace, or native-instrumentation context only when useful.
+- For one inline class string, keep the call compact and put the role comment immediately above it,
+  including on chained calls. For multiple strings, put each comment directly above its string.
+  Keep brief backport, namespace, or native-instrumentation context only when useful.
 
-Bare versions refer to the module's main target artifact. When one Gradle project contains modules
-targeting different artifacts, identify the target at the start of each `classLoaderMatcher()`.
-For a landmark in another artifact, use `// added in group:artifact X.Y` when the boundary is that
-artifact's own, or `// added in X.Y (via group:artifact A.B)` when documenting the target's boundary
-through a required transitive artifact. The same qualification applies to removal comments.
-Use `Servlet` for servlet-api coordinates and omit the group for `io.opentelemetry*` artifacts.
+- Bare versions refer to the module's main target artifact. When one Gradle project contains modules
+  targeting different artifacts, identify the target at the start of each `classLoaderMatcher()`.
+  For a landmark in another artifact, use `// added in group:artifact X.Y` when the boundary is that
+  artifact's own, or `// added in X.Y (via group:artifact A.B)` when documenting the target's boundary
+  through a required transitive artifact. The same qualification applies to removal comments.
+  Use `Servlet` for servlet-api coordinates and omit the group for `io.opentelemetry*` artifacts.
 
-An independent opt-in artifact is a presence gate, not a target-version boundary. Use both lines:
+- An independent opt-in artifact is a presence gate, not a target-version boundary. Use both lines:
 
-```java
-// artifact presence gate (native OTel support)
-// added in co.elastic.clients:elasticsearch-java 8.10
-.and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
-```
+  ```java
+  // artifact presence gate (native OTel support)
+  // added in co.elastic.clients:elasticsearch-java 8.10
+  .and(not(hasClassesNamed("co.elastic.clients.transport.instrumentation.Instrumentation")));
+  ```
 
-Do not label target-artifact or required-transitive landmarks as artifact-presence gates.
+  Do not label target-artifact or required-transitive landmarks as artifact-presence gates.
 
 ## Call depth
 
-When supported instrumented calls recurse, use `CallDepth.forClass(TargetClass.class)`. Increment
-on entry and decrement on every applicable exit, including failure. Skip nested span completion
-while the remaining depth is positive; do not leave unmatched increments on suppressed paths.
+- When supported instrumented calls recurse, use `CallDepth.forClass(TargetClass.class)`. Increment
+  on entry and decrement on every applicable exit, including failure. Skip nested span completion
+  while the remaining depth is positive; do not leave unmatched increments on suppressed paths.
 
 ## Holder conventions
 
 - Initialize shared instrumenters and collaborators at class load, using `GlobalOpenTelemetry.get()`
-  where an OpenTelemetry instance is needed. A new instrumentation normally uses
-  `io.opentelemetry.<module-name>` as its scope name; preserve established telemetry identity during
-  module maintenance.
+  where an OpenTelemetry instance is needed. Instrumentation normally uses
+  `io.opentelemetry.<module-name>` as its scope name. Preserve established telemetry identities
+  that differ.
 - In `*Singletons`, `*SpanNaming`, and similar holders, a zero-argument accessor directly
   returning a stored collaborator has the same lower-camel name as its field, without `get`.
   Callers static-import that accessor. This does not apply to methods that compute values,
