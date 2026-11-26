@@ -11,6 +11,7 @@ import com.mongodb.event.CommandSucceededEvent;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoConfig;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
 
@@ -20,7 +21,7 @@ public class MongoInstrumentationSingletons {
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-async-3.3",
-          DbConfig.isQueryTextCaptureEnabled(GlobalOpenTelemetry.get(), "mongo"),
+          MongoConfig.isQueryTextCaptureEnabled(GlobalOpenTelemetry.get()),
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"));
 
   private static final CommandListener tracingListener = new TracingCommandListener(instrumenter);
