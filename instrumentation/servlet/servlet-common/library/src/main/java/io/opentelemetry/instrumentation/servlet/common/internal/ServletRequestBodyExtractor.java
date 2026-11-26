@@ -19,8 +19,6 @@ import java.nio.charset.Charset;
 import java.nio.charset.CharsetDecoder;
 import java.nio.charset.CodingErrorAction;
 import java.util.Locale;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -35,9 +33,6 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
   // TODO: replace this when available in semconv
   public static final AttributeKey<String> SPAN_BODY_ATTRIBUTE =
       AttributeKey.stringKey("http.request.body.content");
-
-  private static final Pattern CHARSET_PATTERN =
-      Pattern.compile("charset\\s*=\\s*\"?([^\\s\";]+)", Pattern.CASE_INSENSITIVE);
 
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final BodyCaptureConfig config;
@@ -207,14 +202,24 @@ public final class ServletRequestBodyExtractor<REQUEST, RESPONSE>
     // - cache (bounded) for charset resolution from content type header
     // - parser charset without regex
 
-    Matcher matcher = CHARSET_PATTERN.matcher(contentType);
-    if (matcher.find()) {
-      try {
-        return Charset.forName(matcher.group(1));
-      } catch (IllegalArgumentException e) {
-        // illegal or unsupported charset name, use the default
+    String[] parts = contentType.split(";");
+    if (parts.length < 2) {
+      return UTF_8;
+    }
+    // start from end
+    Charset result = UTF_8;
+    for (int i = parts.length - 1; i > 0; i--) {
+      String part = parts[i].trim();
+      if (part.toLowerCase(Locale.ROOT).startsWith("charset=")) {
+        String charsetName = part.substring(8).trim();
+        try {
+          result = Charset.forName(charsetName);
+        } catch (IllegalArgumentException e) {
+          // illegal or unsupported charset name, silently ignore and use the default UTF-8 charset
+        }
       }
     }
-    return UTF_8;
+
+    return result;
   }
 }

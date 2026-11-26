@@ -161,6 +161,43 @@ class ServletRequestBodyExtractorTest {
     assertThat(getCharsetFromContentTypeHeader(contentType)).isEqualTo(expected);
   }
 
+  @ParameterizedTest
+  @CsvSource(
+      delimiterString = "|",
+      value = {
+        // only the charset parameter selects the charset, not a parameter whose name ends with it
+        "text/plain; x-charset=ISO-8859-1; charset=UTF-8|UTF-8",
+        "text/plain; charset=UTF-8; x-charset=ISO-8859-1|UTF-8",
+        "text/plain; x-charset=ISO-8859-1|UTF-8",
+        "text/plain; charsets=ISO-8859-1|UTF-8",
+        // text that looks like a charset parameter inside a quoted value is not a parameter
+        "text/plain; foo=\"a; charset=ISO-8859-1\"|UTF-8",
+        "text/plain; foo=\"a; charset=ISO-8859-1\"; charset=UTF-8|UTF-8",
+        "text/plain; foo=\"a; charset=UTF-8\"; charset=ISO-8859-1|ISO-8859-1",
+        // the real charset parameter is still found next to other parameters
+        "text/plain; x-charset=UTF-8; charset=ISO-8859-1|ISO-8859-1",
+        "text/plain; foo=\"a;b\"; charset=ISO-8859-1|ISO-8859-1"
+      })
+  void charsetParameterParsing(String contentType, String expectedCharset) {
+    assertThat(getCharsetFromContentTypeHeader(contentType))
+        .isEqualTo(Charset.forName(expectedCharset));
+  }
+
+  @Test
+  void charsetLookalikeParameterDoesNotAffectDecoding() {
+    byte[] utf8Body = "café".getBytes(UTF_8);
+
+    // decoding with ISO-8859-1 would produce the mojibake "cafÃ©"
+    assertThat(
+            getRequestBodyValue(
+                bufferOf(utf8Body), "text/plain; x-charset=ISO-8859-1; charset=UTF-8"))
+        .isEqualTo("café");
+    assertThat(
+            getRequestBodyValue(
+                bufferOf(utf8Body), "text/plain; foo=\"a; charset=ISO-8859-1\"; charset=UTF-8"))
+        .isEqualTo("café");
+  }
+
   @Test
   void unknownCharsetAssumedUtf8() {
     assertThat(getCharsetFromContentTypeHeader("text/plain; charset=unknown")).isEqualTo(UTF_8);
