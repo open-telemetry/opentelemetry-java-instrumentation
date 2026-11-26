@@ -174,11 +174,13 @@ public class RedissonConnectionPoolMetrics {
     }
 
     @Override
-    public synchronized void close() {
-      if (closed) {
-        return;
+    public void close() {
+      synchronized (this) {
+        if (closed) {
+          return;
+        }
+        closed = true;
       }
-      closed = true;
       if (regularCallback != null) {
         regularCallback.close();
       }
