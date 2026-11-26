@@ -18,6 +18,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
@@ -49,6 +50,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
+import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
@@ -56,8 +58,11 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
+import org.springframework.kafka.listener.BatchConsumerAwareMessageListener;
 import org.springframework.kafka.listener.BatchInterceptor;
+import org.springframework.kafka.listener.BatchMessageListener;
 import org.springframework.kafka.listener.RecordInterceptor;
+import org.springframework.kafka.support.Acknowledgment;
 
 @SuppressWarnings({"deprecation", "unchecked"}) // deprecated semconv and generic interceptor mocks
 class SpringKafkaInterceptorTest {
@@ -410,6 +415,176 @@ class SpringKafkaInterceptorTest {
             trace.hasSpansSatisfyingExactly(
                 span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
     assertProcessMetricPointCounts(testing, INSTRUMENTATION_NAME, 2);
+  }
+
+  @Test
+  void batchThreadStateEndsBatchWithoutCompletionCallback() {
+    InstrumentedBatchInterceptor<String, String> interceptor =
+        (InstrumentedBatchInterceptor<String, String>)
+            telemetry.<String, String>createBatchInterceptor();
+    ConsumerRecords<String, String> outer =
+        records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
+    ConsumerRecords<String, String> skipped =
+        records(new ConsumerRecord<>("orders", 0, 2, "skipped", "value"));
+    ConsumerRecords<String, String> completed =
+        records(new ConsumerRecord<>("orders", 0, 3, "completed", "value"));
+    Context parentContext = Context.current();
+
+    interceptor.intercept(outer, null);
+    Span outerSpan = Span.current();
+
+    // e.g. the transaction could not be started after the batch was intercepted
+    interceptor.setupThreadState(null);
+    interceptor.intercept(skipped, null);
+    assertThat(Span.current()).isNotSameAs(outerSpan);
+    interceptor.clearThreadState(null);
+    assertThat(Span.current()).isSameAs(outerSpan);
+
+    interceptor.setupThreadState(null);
+    interceptor.intercept(completed, null);
+    Span completedSpan = Span.current();
+    assertThat(completedSpan).isNotSameAs(outerSpan);
+    interceptor.success(completed, null);
+    assertThat(Span.current()).isSameAs(outerSpan);
+    interceptor.clearThreadState(null);
+    assertThat(Span.current()).isSameAs(outerSpan);
+
+    interceptor.success(outer, null);
+    assertThat(Context.current()).isSameAs(parentContext);
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
+            span -> assertBatchSpan(span, 1, "0", null).hasParent(trace.getSpan(0)),
+            span -> assertBatchSpan(span, 1, "0", null).hasParent(trace.getSpan(0))));
+    assertProcessMetricPointCounts(testing, INSTRUMENTATION_NAME, 3);
+  }
+
+  @Test
+  void batchThreadStateWithoutSetupIsNoop() {
+    InstrumentedBatchInterceptor<String, String> interceptor =
+        (InstrumentedBatchInterceptor<String, String>)
+            telemetry.<String, String>createBatchInterceptor();
+    ConsumerRecords<String, String> records =
+        records(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
+    Context parentContext = Context.current();
+
+    interceptor.intercept(records, null);
+    Span span = Span.current();
+    // the container clears the thread state even if it stopped before polling
+    interceptor.clearThreadState(null);
+    assertThat(Span.current()).isSameAs(span);
+    interceptor.success(records, null);
+    assertThat(Context.current()).isSameAs(parentContext);
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()));
+  }
+
+  @Test
+  void batchMessageListenerTracesListenerInvocation() {
+    ConsumerRecord<String, String> first = new ConsumerRecord<>("orders", 0, 1, "first", "value");
+    ConsumerRecord<String, String> second = new ConsumerRecord<>("orders", 0, 2, "second", "value");
+    List<ConsumerRecord<String, String>> data = asList(first, second);
+    Consumer<String, String> consumer = mock();
+    AtomicReference<Span> listenerSpan = new AtomicReference<>();
+    AtomicReference<Consumer<?, ?>> listenerConsumer = new AtomicReference<>();
+    BatchMessageListener<String, String> listener =
+        telemetry.createBatchMessageListener(
+            (BatchConsumerAwareMessageListener<String, String>)
+                (records, c) -> {
+                  assertThat(records).isSameAs(data);
+                  listenerSpan.set(Span.current());
+                  listenerConsumer.set(c);
+                });
+    Context parentContext = Context.current();
+
+    listener.onMessage(data, null, consumer);
+    assertThat(Context.current()).isSameAs(parentContext);
+    assertThat(listenerSpan.get().getSpanContext().isValid()).isTrue();
+    assertThat(listenerConsumer.get()).isSameAs(consumer);
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span ->
+            assertBatchSpan(span, 2, "0", null)
+                .hasNoParent()
+                .hasSpanId(listenerSpan.get().getSpanContext().getSpanId())));
+  }
+
+  @Test
+  void batchMessageListenerEndsSpanWhenListenerThrowsAndSkipsRetry() {
+    List<ConsumerRecord<String, String>> data =
+        singletonList(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
+    List<ConsumerRecord<String, String>> next =
+        singletonList(new ConsumerRecord<>("orders", 0, 2, "key", "value"));
+    AssertionError error = new AssertionError("listener");
+    AtomicReference<Boolean> fail = new AtomicReference<>(true);
+    AtomicReference<Span> retrySpan = new AtomicReference<>();
+    BatchMessageListener<String, String> listener =
+        telemetry.createBatchMessageListener(
+            (BatchMessageListener<String, String>)
+                records -> {
+                  if (fail.get()) {
+                    throw error;
+                  }
+                  if (records == data) {
+                    retrySpan.set(Span.current());
+                  }
+                });
+    Context parentContext = Context.current();
+
+    assertThatThrownBy(() -> listener.onMessage(data, null, null)).isSameAs(error);
+    assertThat(Context.current()).isSameAs(parentContext);
+    fail.set(false);
+    // the container retries a failed batch with the same data
+    listener.onMessage(data, null, null);
+    assertThat(retrySpan.get().getSpanContext().isValid()).isFalse();
+    listener.onMessage(next, null, null);
+    assertThat(Context.current()).isSameAs(parentContext);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", error).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
+  }
+
+  @Test
+  void batchMessageListenerForwardsPollResult() {
+    ConsumerRecords<String, String> records =
+        records(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
+    AtomicReference<Span> listenerSpan = new AtomicReference<>();
+    BatchMessageListener<String, String> listener =
+        telemetry.createBatchMessageListener(
+            new BatchMessageListener<String, String>() {
+              @Override
+              public void onMessage(List<ConsumerRecord<String, String>> data) {
+                throw new UnsupportedOperationException();
+              }
+
+              @Override
+              public void onMessage(
+                  ConsumerRecords<String, String> data,
+                  Acknowledgment acknowledgment,
+                  Consumer<String, String> consumer) {
+                assertThat(data).isSameAs(records);
+                listenerSpan.set(Span.current());
+              }
+
+              @Override
+              public boolean wantsPollResult() {
+                return true;
+              }
+            });
+
+    assertThat(listener.wantsPollResult()).isTrue();
+    listener.onMessage(records, null, null);
+    assertThat(listenerSpan.get().getSpanContext().isValid()).isTrue();
+
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
   }
 
   @Test

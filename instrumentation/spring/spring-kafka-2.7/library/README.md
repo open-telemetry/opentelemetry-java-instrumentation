@@ -98,3 +98,43 @@ public class KafkaInstrumentationConfig {
   }
 }
 ```
+
+With Spring Kafka 2.7, the container does not notify the batch interceptor when a batch does not
+complete, for example when `interceptBeforeTx` is enabled and the transaction can't be started, or
+when the listener throws an `Error`. The batch span then stays open and its context stays current
+on the consumer thread. To avoid this, instrument batch listeners by wrapping the listener instead
+of setting the batch interceptor:
+
+```java
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.kafka.config.ContainerCustomizer;
+import org.springframework.kafka.listener.BatchMessageListener;
+import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+
+@Configuration
+public class KafkaInstrumentationConfig {
+
+  @Bean
+  public ContainerCustomizer<String, String, ConcurrentMessageListenerContainer<String, String>>
+      listenerCustomizer(OpenTelemetry openTelemetry) {
+    SpringKafkaTelemetry springKafkaTelemetry = SpringKafkaTelemetry.create(openTelemetry);
+    return container -> {
+      container.setRecordInterceptor(springKafkaTelemetry.createRecordInterceptor());
+      Object listener = container.getContainerProperties().getMessageListener();
+      if (listener instanceof BatchMessageListener) {
+        container.setupMessageListener(
+            springKafkaTelemetry.createBatchMessageListener(
+                (BatchMessageListener<String, String>) listener));
+      }
+    };
+  }
+}
+```
+
+The wrapped listener's span covers the listener invocation, so batches that never reach the
+listener are not traced. Don't combine it with the batch interceptor on the same container, because
+each creates a span for the batch. Spring Kafka 2.8 and later notify the batch interceptor after
+every poll, so the batch interceptor doesn't have this limitation there.

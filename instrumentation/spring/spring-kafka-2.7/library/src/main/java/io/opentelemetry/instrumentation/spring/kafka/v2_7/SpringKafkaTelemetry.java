@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.Kafka
 import javax.annotation.Nullable;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.BatchInterceptor;
+import org.springframework.kafka.listener.BatchMessageListener;
 import org.springframework.kafka.listener.RecordInterceptor;
 
 /** Entrypoint for instrumenting Spring Kafka listeners. */
@@ -80,5 +81,22 @@ public final class SpringKafkaTelemetry {
   public <K, V> BatchInterceptor<K, V> createBatchInterceptor(
       @Nullable BatchInterceptor<K, V> decoratedInterceptor) {
     return new InstrumentedBatchInterceptor<>(batchProcessInstrumenter, decoratedInterceptor);
+  }
+
+  /**
+   * Returns a new {@link BatchMessageListener} that wraps each invocation of the provided batch
+   * {@code listener} in a {@link SpanKind#CONSUMER CONSUMER} span. The span is ended when the
+   * listener returns or throws. Can be set on a {@link AbstractMessageListenerContainer} using the
+   * {@link AbstractMessageListenerContainer#setupMessageListener(Object)} method.
+   *
+   * <p>Use this instead of {@link #createBatchInterceptor()} with Spring Kafka 2.7, which does not
+   * notify the batch interceptor when a batch does not complete, for example when the transaction
+   * could not be started after the batch was intercepted. Do not use both for the same container,
+   * because each of them creates a span for the batch. With Spring Kafka 2.8 and later, prefer
+   * {@link #createBatchInterceptor()}.
+   */
+  public <K, V> BatchMessageListener<K, V> createBatchMessageListener(
+      BatchMessageListener<K, V> listener) {
+    return InstrumentedBatchMessageListener.create(batchProcessInstrumenter, listener);
   }
 }
