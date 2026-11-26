@@ -1574,6 +1574,31 @@ class Resilience4jCircuitBreakerTest {
     assertCircuitBreakerSpan("open", "rejected", thrown);
   }
 
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void createsRejectedSpanForAsyncDecorator(boolean completionStage) throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    circuitBreaker.transitionToOpenState();
+    Supplier<CompletableFuture<String>> supplier =
+        () -> {
+          throw new AssertionError("Rejected calls must not execute the supplier");
+        };
+    Supplier<Future<String>> decorated =
+        completionStage
+            ? () ->
+                CircuitBreaker.decorateCompletionStage(circuitBreaker, supplier::get)
+                    .get()
+                    .toCompletableFuture()
+            : CircuitBreaker.decorateFuture(circuitBreaker, supplier::get);
+
+    Future<String> rejected = testing.runWithSpan("parent", decorated::get);
+
+    assertCircuitBreakerSpan("open", "rejected");
+    assertThat(catchThrowable(() -> rejected.get(10, SECONDS)))
+        .isInstanceOf(ExecutionException.class)
+        .hasCauseInstanceOf(CallNotPermittedException.class);
+  }
+
   @Test
   void doesNotCreateSpanWhenDirectTryAcquirePermissionRejected() {
     CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
