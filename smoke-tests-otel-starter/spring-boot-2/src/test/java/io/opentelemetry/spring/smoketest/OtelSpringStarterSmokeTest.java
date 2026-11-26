@@ -7,6 +7,7 @@ package io.opentelemetry.spring.smoketest;
 
 import java.net.URI;
 import org.assertj.core.api.AbstractIterableAssert;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -46,9 +47,14 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
   }
 
   @Override
-  void restTemplateCall(String path) {
+  void makeRequest(String path) {
     RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
     restTemplate.getForObject(path, String.class);
+  }
+
+  @Test
+  void restTemplate() {
+    assertRestTemplate();
   }
 
   @Override

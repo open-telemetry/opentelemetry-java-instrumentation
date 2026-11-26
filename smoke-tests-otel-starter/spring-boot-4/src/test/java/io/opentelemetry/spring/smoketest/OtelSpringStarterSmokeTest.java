@@ -10,10 +10,8 @@ import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
 import io.opentelemetry.api.trace.SpanKind;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.restclient.RestTemplateBuilder;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.web.client.RestClient;
-import org.springframework.web.client.RestTemplate;
 
 @SpringBootTest(
     classes = {
@@ -33,10 +31,6 @@ import org.springframework.web.client.RestTemplate;
     })
 class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 
-  @Autowired
-  @SuppressWarnings({"deprecation", "removal"}) // exercises RestTemplate instrumentation
-  private RestTemplateBuilder restTemplateBuilder;
-
   @Autowired private RestClient.Builder restClientBuilder;
 
   @Override
@@ -52,10 +46,14 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
   }
 
   @Override
-  @SuppressWarnings({"deprecation", "removal"}) // exercises RestTemplate instrumentation
-  void restTemplateCall(String path) {
-    RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
-    restTemplate.getForObject(path, String.class);
+  void makeRequest(String path) {
+    restClientBuilder
+        .baseUrl("http://localhost:" + port)
+        .build()
+        .get()
+        .uri(path)
+        .retrieve()
+        .body(String.class);
   }
 
   @Test
