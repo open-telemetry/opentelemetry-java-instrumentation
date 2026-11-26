@@ -162,13 +162,12 @@ public class RedissonConnectionPoolMetrics {
     }
   }
 
-  // Visible for testing
-  static final class Registration implements AutoCloseable {
+  private static final class Registration implements AutoCloseable {
     @Nullable private final BatchCallback regularCallback;
     @Nullable private final BatchCallback subscriptionCallback;
     private boolean closed;
 
-    Registration(
+    private Registration(
         @Nullable BatchCallback regularCallback, @Nullable BatchCallback subscriptionCallback) {
       this.regularCallback = regularCallback;
       this.subscriptionCallback = subscriptionCallback;
