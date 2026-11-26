@@ -21,10 +21,12 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.doNothing;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
@@ -36,6 +38,8 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingIterator;
@@ -44,6 +48,7 @@ import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExte
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.util.Arrays;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +58,7 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -371,6 +377,86 @@ class SpringKafkaInterceptorTest {
             trace.hasSpansSatisfyingExactly(
                 span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
     assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "0", 2, null);
+  }
+
+  @ParameterizedTest
+  @ValueSource(strings = {"success", "successThrows", "failure"})
+  @Timeout(value = 15, threadMode = Timeout.ThreadMode.SEPARATE_THREAD)
+  void clearThreadStateUnwindsReentrantBatchCompletion(String completion) {
+    assumeTrue(
+        Arrays.stream(BatchInterceptor.class.getMethods())
+            .anyMatch(method -> method.getName().equals("setupThreadState")));
+    ConsumerRecords<String, String> outer =
+        records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
+    ConsumerRecords<String, String> inner =
+        records(new ConsumerRecord<>("orders", 0, 2, "inner", "value"));
+    BatchInterceptor<String, String> decorated = mock();
+    when(decorated.intercept(any(), isNull())).thenAnswer(invocation -> invocation.getArgument(0));
+    InstrumentedBatchInterceptor<String, String> interceptor =
+        (InstrumentedBatchInterceptor<String, String>) telemetry.createBatchInterceptor(decorated);
+    IllegalStateException error = new IllegalStateException("outer failure");
+
+    try (Scope ignored = Context.current().with(ContextKey.named("test"), "value").makeCurrent()) {
+      Context parentContext = Context.current();
+      KafkaConsumerContextUtil.set(
+          inner, KafkaConsumerContextUtil.create(parentContext, null, null, null));
+      if (completion.equals("failure")) {
+        doAnswer(
+                invocation -> {
+                  interceptor.intercept(inner, null);
+                  return null;
+                })
+            .when(decorated)
+            .failure(eq(outer), eq(error), isNull());
+      } else {
+        doAnswer(
+                invocation -> {
+                  interceptor.intercept(inner, null);
+                  if (completion.equals("successThrows")) {
+                    throw error;
+                  }
+                  return null;
+                })
+            .when(decorated)
+            .success(eq(outer), isNull());
+      }
+
+      interceptor.setupThreadState(null);
+      interceptor.intercept(outer, null);
+      if (completion.equals("failure")) {
+        interceptor.failure(outer, error, null);
+      } else if (completion.equals("successThrows")) {
+        assertThatThrownBy(() -> interceptor.success(outer, null)).isSameAs(error);
+      } else {
+        interceptor.success(outer, null);
+      }
+      assertThat(Context.current()).isNotSameAs(parentContext);
+      interceptor.clearThreadState(null);
+      assertThat(Context.current()).isSameAs(parentContext);
+      doNothing().when(decorated).success(eq(outer), isNull());
+      interceptor.intercept(outer, null);
+      interceptor.success(outer, null);
+      assertThat(Context.current()).isSameAs(parentContext);
+    }
+
+    Throwable outerError = completion.equals("success") ? null : error;
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", outerError).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
+    testing.waitAndAssertMetrics(
+        INSTRUMENTATION_NAME,
+        "messaging.process.duration",
+        metrics ->
+            metrics.satisfiesExactly(metric ->
+                assertThat(
+                        metric.getHistogramData().getPoints().stream()
+                            .mapToLong(point -> point.getCount())
+                            .sum())
+                    .isEqualTo(2)));
   }
 
   @SuppressWarnings("removal")

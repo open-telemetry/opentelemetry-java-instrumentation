@@ -105,23 +105,37 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   private void end(
       @Nullable ProcessingInvocation<KafkaReceiveRequest> invocation, @Nullable Throwable error) {
-    if (invocation == null || invocation.completed) {
+    end(invocation, error, null);
+  }
+
+  private void end(
+      @Nullable ProcessingInvocation<KafkaReceiveRequest> invocation,
+      @Nullable Throwable error,
+      @Nullable ProcessingInvocation<KafkaReceiveRequest> boundary) {
+    if (invocation == null) {
       return;
     }
-    invocation.completed = true;
-    if (currentInvocation.get() == invocation) {
+    if (!invocation.completed) {
+      invocation.completed = true;
+      invocation.error = error;
+    }
+    // Completion can reenter and leave a nested scope open; close scopes only in stack order.
+    while ((invocation = currentInvocation.get()) != null
+        && invocation != boundary
+        && invocation.completed) {
       if (invocation.previous == null) {
         currentInvocation.remove();
       } else {
         currentInvocation.set(invocation.previous);
       }
-    }
-    if (invocation.scope != null) {
-      invocation.scope.close();
-    }
-    if (invocation.context != null) {
-      batchProcessInstrumenter.end(invocation.context, invocation.request, null, error);
-      lastProcessed.set(new WeakReference<>(invocation.request.getRecords()));
+      if (invocation.scope != null) {
+        invocation.scope.close();
+      }
+      if (invocation.context != null) {
+        batchProcessInstrumenter.end(
+            invocation.context, invocation.request, null, invocation.error);
+        lastProcessed.set(new WeakReference<>(invocation.request.getRecords()));
+      }
     }
   }
 
@@ -145,7 +159,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
       ProcessingInvocation<KafkaReceiveRequest> invocation;
       while ((invocation = currentInvocation.get()) != null
           && invocation != threadState.previousInvocation) {
-        end(invocation, invocation.error);
+        end(invocation, invocation.error, threadState.previousInvocation);
       }
       if (threadState.previous == null) {
         currentThreadState.remove();
