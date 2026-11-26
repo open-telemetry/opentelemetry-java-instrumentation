@@ -24,6 +24,9 @@ import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
 import io.github.resilience4j.core.functions.OnceConsumer;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
@@ -607,7 +610,7 @@ class Resilience4jCircuitBreakerTest {
                 span ->
                     span.hasName("CircuitBreaker test-circuit-breaker")
                         .hasKind(SpanKind.INTERNAL)
-                        .hasParent(trace.getSpan(1))
+                        .hasParent(trace.getSpan(0))
                         .hasStatus(supplierFailure ? StatusData.error() : StatusData.unset())
                         .hasAttributesSatisfyingExactly(
                             equalTo(
@@ -658,7 +661,7 @@ class Resilience4jCircuitBreakerTest {
                         .hasStatus(StatusData.unset()),
                 span ->
                     span.hasName("CircuitBreaker test-circuit-breaker")
-                        .hasParent(trace.getSpan(1))
+                        .hasParent(trace.getSpan(0))
                         .hasStatus(StatusData.unset())));
   }
 
@@ -678,8 +681,6 @@ class Resilience4jCircuitBreakerTest {
           CompletionStage<Integer> continuation =
               stage.thenApply(
                   result -> {
-                    // Runs synchronously inside the completion callback while the attempt's
-                    // completion attachment is still installed; a direct call creates no capture.
                     circuitBreaker.acquirePermission();
                     circuitBreaker.onResult(1L, MILLISECONDS, 500);
                     return result;
@@ -921,6 +922,55 @@ class Resilience4jCircuitBreakerTest {
     }
 
     assertCircuitBreakerSpan("closed", "success");
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void endsDecoratedCompletionStageSpanBeforeRunningContinuation(boolean cancel) throws Exception {
+    CircuitBreaker circuitBreaker = CircuitBreaker.ofDefaults("test-circuit-breaker");
+    CompletableFuture<String> future = new CompletableFuture<>();
+    Supplier<CompletionStage<String>> decoratedSupplier =
+        CircuitBreaker.decorateCompletionStage(circuitBreaker, () -> future);
+    ContextKey<String> contextKey = ContextKey.named("test-circuit-breaker-context");
+    CompletionStage<String> stage =
+        testing.runWithSpan(
+            "parent",
+            () -> {
+              try (Scope ignored = Context.current().with(contextKey, "caller").makeCurrent()) {
+                return decoratedSupplier.get();
+              }
+            });
+    CompletableFuture<Void> continuationStarted = new CompletableFuture<>();
+    CompletableFuture<Void> releaseContinuation = new CompletableFuture<>();
+    CompletionStage<String> continuation =
+        stage.handle((value, throwable) -> {
+          continuationStarted.complete(null);
+          releaseContinuation.join();
+          assertThat(Context.current().get(contextKey)).isEqualTo("caller");
+          return value;
+        });
+
+    ExecutorService executor = Executors.newSingleThreadExecutor();
+    try {
+      Future<Boolean> completion =
+          executor.submit(() -> {
+            Context completingContext = Context.current().with(contextKey, "completer");
+            try (Scope ignored = completingContext.makeCurrent()) {
+              boolean completed = cancel ? future.cancel(false) : future.complete("ok");
+              assertThat(Context.current().get(contextKey)).isEqualTo("completer");
+              return completed;
+            }
+          });
+      continuationStarted.get(10, SECONDS);
+      assertCircuitBreakerSpan("closed", cancel ? "cancelled" : "success");
+      releaseContinuation.complete(null);
+      assertThat(completion.get(10, SECONDS)).isTrue();
+      assertThat(continuation.toCompletableFuture().get(10, SECONDS))
+          .isEqualTo(cancel ? null : "ok");
+    } finally {
+      releaseContinuation.complete(null);
+      executor.shutdownNow();
+    }
   }
 
   @Test

@@ -209,8 +209,7 @@ public class Resilience4jCircuitBreakerSpans {
       if (result.resultRecordedAsFailure) {
         result.pendingSpan.recordResultFailure();
       }
-      // The attempt's own result has been classified. Direct calls from stage continuations that
-      // run while the completion attachment is still installed must not reclassify it.
+      // Classify each attempt's result at most once.
       result.pendingSpan.markResultClassified();
     }
   }
@@ -328,8 +327,6 @@ public class Resilience4jCircuitBreakerSpans {
       }
       pendingSpan = attachment.pendingSpan;
       if (!pendingSpan.isFor(circuitBreaker) || pendingSpan.resultClassified) {
-        // Once the attempt's own result has been classified, direct calls made by stage
-        // continuations running under this attachment cannot reclassify it.
         return null;
       }
     } else if (capture != null

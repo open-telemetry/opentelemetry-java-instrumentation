@@ -5,13 +5,18 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;
+import static net.bytebuddy.matcher.ElementMatchers.isSynthetic;
+import static net.bytebuddy.matcher.ElementMatchers.nameStartsWith;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.Future;
 import java.util.function.Consumer;
@@ -41,6 +46,18 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
     transformer.applyAdviceToMethod(
         isStatic().and(named("decorateCompletionStage")),
         getClass().getName() + "$CompletionStageSupplierAdvice");
+    transformer.applyAdviceToMethod(
+        nameStartsWith("lambda$decorateCompletionStage$")
+            .and(isStatic())
+            .and(isSynthetic())
+            .and(
+                takesArguments(
+                    named("io.github.resilience4j.circuitbreaker.CircuitBreaker"),
+                    is(long.class),
+                    is(CompletableFuture.class),
+                    is(Object.class),
+                    is(Throwable.class))),
+        getClass().getName() + "$CompletionStagePromiseAdvice");
     transformer.applyAdviceToMethod(
         isStatic().and(named("decorateFuture")), getClass().getName() + "$FutureSupplierAdvice");
     transformer.applyAdviceToMethod(
@@ -132,6 +149,17 @@ class CircuitBreakerDecoratorsInstrumentation implements TypeInstrumentation {
         @Advice.Return Supplier<CompletionStage<T>> result) {
       return Resilience4jCircuitBreakerDecorators.wrapCompletionStageDecoratedSupplier(
           circuitBreaker, result);
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class CompletionStagePromiseAdvice {
+
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @AssignReturned.ToArguments(@ToArgument(2))
+    public static CompletableFuture<Object> onEnter(
+        @Advice.Argument(2) CompletableFuture<Object> promise) {
+      return Resilience4jCircuitBreakerDecorators.wrapCompletionStagePromise(promise);
     }
   }
 

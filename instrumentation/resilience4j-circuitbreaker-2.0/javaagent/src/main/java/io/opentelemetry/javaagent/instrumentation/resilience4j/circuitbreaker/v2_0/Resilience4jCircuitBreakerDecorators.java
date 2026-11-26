@@ -5,12 +5,16 @@
 
 package io.opentelemetry.javaagent.instrumentation.resilience4j.circuitbreaker.v2_0;
 
+import static java.util.Objects.requireNonNull;
+
 import io.github.resilience4j.circuitbreaker.CircuitBreaker;
 import io.github.resilience4j.core.functions.CheckedConsumer;
 import io.github.resilience4j.core.functions.CheckedFunction;
 import io.github.resilience4j.core.functions.CheckedRunnable;
 import io.github.resilience4j.core.functions.CheckedSupplier;
+import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
+import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -19,6 +23,7 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -31,6 +36,9 @@ import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 public class Resilience4jCircuitBreakerDecorators {
+
+  private static final ScopedThreadValue<CompletionStagePromise> currentStagePromise =
+      new ScopedThreadValue<>();
 
   public static <T> Supplier<T> wrapSupplier(CircuitBreaker circuitBreaker, Supplier<T> delegate) {
     return new SupplierWrapper<>(circuitBreaker, delegate);
@@ -90,6 +98,16 @@ public class Resilience4jCircuitBreakerDecorators {
   public static <T> Supplier<CompletionStage<T>> wrapCompletionStageDecoratedSupplier(
       CircuitBreaker circuitBreaker, Supplier<CompletionStage<T>> delegate) {
     return new CompletionStageDecoratedSupplierWrapper<>(circuitBreaker, delegate);
+  }
+
+  static CompletableFuture<Object> wrapCompletionStagePromise(CompletableFuture<Object> delegate) {
+    CompletionStagePromise promise = currentStagePromise.get();
+    if (promise == null || promise.delegate != null) {
+      return delegate;
+    }
+    // Bind only the callback's own promise, not one from reentrant breaker bookkeeping.
+    promise.delegate = delegate;
+    return promise;
   }
 
   public static <T> Supplier<Future<T>> wrapFutureSupplier(
@@ -211,12 +229,14 @@ public class Resilience4jCircuitBreakerDecorators {
 
   @SuppressWarnings("unchecked") // Dynamic proxy implements CompletionStage<T> at runtime.
   private static <T> CompletionStage<T> wrapCompletionStage(
-      CompletionStage<T> delegate, Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan) {
+      CompletionStage<T> delegate,
+      Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan,
+      Context callerContext) {
     return (CompletionStage<T>)
         Proxy.newProxyInstance(
             delegate.getClass().getClassLoader(),
             new Class<?>[] {CompletionStage.class},
-            new CompletionStageInvocationHandler(delegate, pendingSpan));
+            new CompletionStageInvocationHandler(delegate, pendingSpan, callerContext));
   }
 
   @SuppressWarnings("unchecked") // Callback argument types are erased by CompletionStage.
@@ -406,9 +426,9 @@ public class Resilience4jCircuitBreakerDecorators {
       if (pendingSpan == null) {
         return result;
       }
-      CompletionStage<T> wrapped = wrapCompletionStage(result, pendingSpan);
-      pendingSpan.markHandedOff();
       pendingSpan.closeOperationScope();
+      CompletionStage<T> wrapped = wrapCompletionStage(result, pendingSpan, Context.current());
+      pendingSpan.markHandedOff();
       return wrapped;
     }
   }
@@ -735,11 +755,15 @@ public class Resilience4jCircuitBreakerDecorators {
 
     private final CompletionStage<?> delegate;
     private final Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan;
+    private final Context callerContext;
 
     private CompletionStageInvocationHandler(
-        CompletionStage<?> delegate, Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan) {
+        CompletionStage<?> delegate,
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan,
+        Context callerContext) {
       this.delegate = delegate;
       this.pendingSpan = pendingSpan;
+      this.callerContext = callerContext;
     }
 
     @Override
@@ -778,40 +802,77 @@ public class Resilience4jCircuitBreakerDecorators {
 
     private BiConsumer<Object, Throwable> wrapWhenComplete(BiConsumer<?, ?> callback) {
       return (result, throwable) -> {
-        Throwable unwrapped =
+        Throwable failure =
             throwable == null
                 ? null
                 : Resilience4jCircuitBreakerSpans.unwrapCompletionException(throwable);
-        if (unwrapped instanceof CancellationException) {
-          try {
-            invokeWhenComplete(callback, result, throwable);
-            pendingSpan.end("cancelled", null);
-          } catch (Throwable t) {
-            pendingSpan.end("failure", t);
-            throw t;
-          }
-          return;
+        CompletionStagePromise promise =
+            new CompletionStagePromise(pendingSpan, callerContext, failure);
+        Resilience4jCircuitBreakerSpans.AttachedPendingSpan attachment = null;
+        if (!(throwable instanceof Error) && !(failure instanceof CancellationException)) {
+          attachment = Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
         }
-        if (throwable instanceof Error) {
-          // Do not make a span current while invoking application callbacks for Error results. If
-          // the callback also fails, the original Error should remain the circuit-breaker outcome
-          // and span ownership/bookkeeping should already be closed.
-          pendingSpan.end("failure", throwable);
-          invokeWhenComplete(callback, result, throwable);
-          return;
-        }
-        Resilience4jCircuitBreakerSpans.AttachedPendingSpan attachment =
-            Resilience4jCircuitBreakerSpans.attachPendingSpan(pendingSpan);
+        CompletionStagePromise previous = currentStagePromise.set(promise);
         try {
           invokeWhenComplete(callback, result, throwable);
-          pendingSpan.end(throwable == null ? "success" : "failure", unwrapped);
+          if (promise.delegate == null) {
+            promise.end();
+          }
         } catch (Throwable t) {
-          pendingSpan.end("failure", t);
+          pendingSpan.end("failure", throwable instanceof Error ? throwable : t);
           throw t;
         } finally {
-          Resilience4jCircuitBreakerSpans.detachPendingSpan(attachment);
+          currentStagePromise.restore(previous);
+          if (attachment != null) {
+            Resilience4jCircuitBreakerSpans.detachPendingSpan(attachment);
+          }
         }
       };
+    }
+  }
+
+  // Only the library callback sees this wrapper. Application code still receives the original
+  // promise, whose completion can run continuations inline.
+  private static final class CompletionStagePromise extends CompletableFuture<Object> {
+
+    private final Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan;
+    private final Context callerContext;
+    @Nullable private final Throwable failure;
+    @Nullable private CompletableFuture<Object> delegate;
+
+    private CompletionStagePromise(
+        Resilience4jCircuitBreakerSpans.PendingSpan pendingSpan,
+        Context callerContext,
+        @Nullable Throwable failure) {
+      this.pendingSpan = pendingSpan;
+      this.callerContext = callerContext;
+      this.failure = failure;
+    }
+
+    @Override
+    public boolean complete(@Nullable Object value) {
+      end();
+      try (Scope ignored = callerContext.makeCurrent()) {
+        return requireNonNull(delegate).complete(value);
+      }
+    }
+
+    @Override
+    public boolean completeExceptionally(Throwable throwable) {
+      end();
+      try (Scope ignored = callerContext.makeCurrent()) {
+        return requireNonNull(delegate).completeExceptionally(throwable);
+      }
+    }
+
+    private void end() {
+      if (failure == null) {
+        pendingSpan.end("success", null);
+      } else if (failure instanceof CancellationException) {
+        pendingSpan.end("cancelled", null);
+      } else {
+        pendingSpan.end("failure", failure);
+      }
     }
   }
 
