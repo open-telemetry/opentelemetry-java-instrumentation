@@ -362,8 +362,9 @@ Prefer `VirtualField` over an external weak-key cache, `WeakHashMap`, or identit
 when:
 
 - the key is a third-party object instance such as a request, message, task, callback, or connection;
-- the value is instrumentation state associated with that exact instance; and
-- the state should live no longer than the carrier object.
+- the value is instrumentation state associated with that exact instance;
+- the state should live no longer than the carrier object; and
+- fallback storage is safe for the value, as described below.
 
 Weak references and caches still have other uses. For example, a cache of metadata derived from a
 `Class` or `ClassLoader` is memoization rather than state attached to an individual library object,
@@ -410,9 +411,16 @@ Do not generalize this pattern with `VirtualField.find(Object.class, ...)`. The 
 the narrow class or interface that identifies the library objects that can carry the state.
 
 The javaagent normally injects field-backed storage into eligible carrier implementations. It falls
-back to a weak-key, strong-value map when field injection is unavailable. Avoid storing a value that
-strongly references its carrier because that object graph can retain the weak key through the
-fallback value. If such a back-reference is required, make that reference weak.
+back to a weak-key, strong-value map when field injection is disabled or unavailable. A value that
+strongly references its carrier, directly or indirectly, keeps the weak key alive, so garbage
+collection cannot remove the entry. Store such a value only if every supported terminal path clears
+it with `field.set(carrier, null)` or breaks the reference path.
+
+Trace concrete paths from the value to its carrier, including mutable holders that other
+instrumentation writes to later. For example, with span suppression set to `none`, a stored
+`Context` can reach its Undertow exchange through a response saved in servlet async state. If
+cleanup cannot be guaranteed, store detached data, use a weak back-reference if the state remains
+valid after the reference is cleared, or keep the state in storage owned by the carrier.
 
 `VirtualField` follows object identity. Clear state with `field.set(carrier, null)` once it has been
 consumed or when an operation fails. Garbage collection is not enough for pooled or reused carriers:
