@@ -16,7 +16,6 @@ import static org.mockito.Mockito.verify;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
-import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.config.bridge.DeclarativeConfigBridge;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
@@ -25,7 +24,6 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.autoconfigure.declarativeconfig.DeclarativeConfiguration;
-import io.opentelemetry.sdk.autoconfigure.declarativeconfig.YamlDeclarativeConfigProperties;
 import io.opentelemetry.sdk.autoconfigure.spi.internal.DefaultConfigProperties;
 import java.io.IOException;
 import java.io.InputStream;
@@ -195,10 +193,8 @@ class JmxMetricInsightInstallerTest {
                 .hasName("custom.test.embedded")
                 .hasUnit("{thread}")
                 .hasDescription("Current number of threads.")
-                .hasLongGaugeSatisfying(gauge ->
-                    gauge.hasPointsSatisfying(point ->
-                        point.hasAttributes(
-                            Attributes.of(stringKey("test.source"), "declarative")))));
+                .hasLongGaugePointsSatisfying(point ->
+                    point.hasAttributes(Attributes.of(stringKey("test.source"), "declarative"))));
 
     testing.waitAndAssertMetrics(
         "io.opentelemetry.jmx", "custom.test.excluded", metrics -> metrics.isEmpty());
@@ -258,9 +254,7 @@ class JmxMetricInsightInstallerTest {
     Map<String, Object> properties = new HashMap<>();
     properties.put("config", singletonList(rules.toString()));
     properties.put("rules", singletonList(inlineRule));
-    DeclarativeConfigProperties config =
-        YamlDeclarativeConfigProperties.create(
-            properties, ComponentLoader.forClassLoader(getClass().getClassLoader()));
+    DeclarativeConfigProperties config = DeclarativeConfiguration.toConfigProperties(properties);
 
     JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
     JmxMetricInsightInstaller.configure(builder, config);
