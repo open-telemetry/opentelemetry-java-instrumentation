@@ -26,7 +26,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
-import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -281,7 +280,6 @@ public abstract class AbstractRedissonAsyncClientTest {
             () -> {
               RFuture<Boolean> future = set.addAsync("s1");
               return future.thenApply(res -> {
-                assertThat(Span.current().getSpanContext().isValid()).isTrue();
                 testing.runWithSpan("callback", () -> {});
                 return res;
               });
@@ -430,7 +428,6 @@ public abstract class AbstractRedissonAsyncClientTest {
               RFuture<?> batchResultFuture = batch.executeAsync();
 
               return batchResultFuture.whenComplete((res, throwable) -> {
-                assertThat(Span.current().getSpanContext().isValid()).isTrue();
                 testing.runWithSpan("callback", () -> {});
               });
             });

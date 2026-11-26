@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
+  their name. Rejected requests can now be split across `http.server.request.duration` series
+  by method, protocol version, and URL scheme.
+
 - Empty selectors passed to `setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` now select nothing. Use
   `IncludeExclude.builder().setIncluded("*").build()` to select all.
@@ -438,6 +442,7 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Rename `OkHttpTelemetry.createCallFactory(...)` to `instrument(...)`.
 - Remove the standalone Guava instrumentation library and its async operation end strategy APIs.
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
   resource, or baggage values.
@@ -580,6 +585,9 @@
 
 ### 🚫 Deprecations
 
+- Deprecate `FailsafeTelemetry.createCircuitBreaker(...)`, `FailsafeTelemetry.createRetryPolicy(...)`,
+  and the delegate-taking `HikariTelemetry.createMetricsTrackerFactory(...)` overloads in favor of
+  their `instrument(...)` replacements.
 - Deprecate `JmxTelemetryBuilder.setInternalMetricsSystemFilter` and
   `setInternalMetricsUnstableMetricsFilter` in favor of `setBundledMetricsSystemFilter` and
   `setUnstableBundledMetricsFilter`, respectively.
