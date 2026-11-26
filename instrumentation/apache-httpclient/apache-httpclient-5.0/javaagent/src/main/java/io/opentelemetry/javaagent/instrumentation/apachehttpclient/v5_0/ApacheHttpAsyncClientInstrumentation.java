@@ -16,7 +16,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
-import java.util.concurrent.atomic.AtomicReference;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -153,8 +152,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
       if (instrumenter().shouldStart(parentContext, request)) {
-        wrappedFutureCallback.spanState.set(
-            new SpanState(instrumenter().start(parentContext, request), request));
+        wrappedFutureCallback.spanState =
+            new SpanState(instrumenter().start(parentContext, request), request);
       }
 
       delegate.sendRequest(request, entityDetails, context);
@@ -167,7 +166,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
-    private final AtomicReference<SpanState> spanState = new AtomicReference<>();
+    @Nullable private volatile SpanState spanState;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
@@ -178,9 +177,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     private void endSpan(Exception exception) {
-      // Claim the complete state before response getters or completion work can reenter.
-      SpanState state = spanState.getAndSet(null);
+      SpanState state = spanState;
       if (state != null) {
+        spanState = null;
         instrumenter().end(state.context, state.request, getResponseFromHttpContext(), exception);
       }
     }
