@@ -28,6 +28,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   private final ThreadLocal<ProcessingInvocation<KafkaReceiveRequest>> currentInvocation =
       new ThreadLocal<>();
   private final ThreadLocal<ThreadState> currentThreadState = new ThreadLocal<>();
+  private final ThreadLocal<Boolean> nextSubBatch = new ThreadLocal<>();
 
   InstrumentedBatchInterceptor(
       Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter,
@@ -38,6 +39,10 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   @Override
   public ConsumerRecords<K, V> intercept(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
+    if (Boolean.TRUE.equals(nextSubBatch.get())) {
+      nextSubBatch.remove();
+      currentThreadState.set(new ThreadState(currentThreadState.get(), currentInvocation.get()));
+    }
     Context parentContext = getParentContext(records);
 
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
@@ -133,6 +138,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void setupThreadState(Consumer<?, ?> consumer) {
+    nextSubBatch.remove();
     currentThreadState.set(new ThreadState(currentThreadState.get(), currentInvocation.get()));
     if (decorated != null) {
       decorated.setupThreadState(consumer);
@@ -162,6 +168,8 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
       } else {
         currentThreadState.set(threadState.previous);
       }
+      // A physical poll can produce multiple partition sub-batches without another setup call.
+      nextSubBatch.set(true);
     }
     if (decorated != null) {
       decorated.clearThreadState(consumer);

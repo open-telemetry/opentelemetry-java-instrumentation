@@ -91,6 +91,10 @@ class InstrumentedBatchMessageListener<K, V>
       List<ConsumerRecord<K, V>> data,
       @Nullable Acknowledgment acknowledgment,
       @Nullable Consumer<?, ?> consumer) {
+    if (isRetry(data)) {
+      invokeDelegate(data, acknowledgment, consumer);
+      return;
+    }
     process(
         data,
         toConsumerRecords(data),
@@ -103,6 +107,10 @@ class InstrumentedBatchMessageListener<K, V>
       ConsumerRecords<K, V> records,
       @Nullable Acknowledgment acknowledgment,
       Consumer<K, V> consumer) {
+    if (isRetry(records)) {
+      delegate.onMessage(records, acknowledgment, consumer);
+      return;
+    }
     process(
         records, records, consumer, () -> delegate.onMessage(records, acknowledgment, consumer));
   }
@@ -137,10 +145,6 @@ class InstrumentedBatchMessageListener<K, V>
       ConsumerRecords<?, ?> records,
       @Nullable Consumer<?, ?> consumer,
       Runnable invocation) {
-    if (isRetry(data)) {
-      invocation.run();
-      return;
-    }
     Context parentContext = getParentContext(records);
     KafkaReceiveRequest request = KafkaReceiveRequest.create(records, consumer);
     if (!batchProcessInstrumenter.shouldStart(parentContext, request)) {
@@ -169,9 +173,12 @@ class InstrumentedBatchMessageListener<K, V>
   private static Context getParentContext(ConsumerRecords<?, ?> records) {
     Context receiveContext = KafkaConsumerContextUtil.get(records).getContext();
     if (receiveContext == null) {
-      for (ConsumerRecord<?, ?> record : records) {
-        receiveContext = KafkaConsumerContextUtil.get(record).getContext();
-        break;
+      for (TopicPartition partition : records.partitions()) {
+        List<? extends ConsumerRecord<?, ?>> partitionRecords = records.records(partition);
+        if (!partitionRecords.isEmpty()) {
+          receiveContext = KafkaConsumerContextUtil.get(partitionRecords.get(0)).getContext();
+          break;
+        }
       }
     }
 
@@ -181,7 +188,8 @@ class InstrumentedBatchMessageListener<K, V>
 
   private static <K, V> ConsumerRecords<K, V> toConsumerRecords(List<ConsumerRecord<K, V>> data) {
     Map<TopicPartition, List<ConsumerRecord<K, V>>> recordsByPartition = new LinkedHashMap<>();
-    for (ConsumerRecord<K, V> record : data) {
+    for (int i = 0; i < data.size(); i++) {
+      ConsumerRecord<K, V> record = data.get(i);
       recordsByPartition
           .computeIfAbsent(
               new TopicPartition(record.topic(), record.partition()), tp -> new ArrayList<>())
