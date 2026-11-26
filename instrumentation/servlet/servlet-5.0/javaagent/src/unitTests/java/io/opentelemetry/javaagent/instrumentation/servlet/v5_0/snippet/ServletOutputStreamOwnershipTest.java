@@ -33,7 +33,8 @@ class ServletOutputStreamOwnershipTest {
       throws IOException, InterruptedException, TimeoutException {
     HttpServletRequest request = request();
     TestStream stream = new TestStream();
-    initializeAndWritePrefix(request, stream);
+    TestStream second = new TestStream();
+    initializeAndWritePrefix(request, stream, second);
 
     GcUtils.awaitGc(Duration.ofSeconds(10));
 
@@ -41,7 +42,9 @@ class ServletOutputStreamOwnershipTest {
     assertThat(state).isNotNull();
     assertThat(state.getHeadTagBytesSeen()).isEqualTo(3);
     write(stream, "ad><head>");
+    write(second, "ad>");
     assertThat(stream.bytes.toString(UTF_8.name())).isEqualTo("<head>" + SNIPPET + "<head>");
+    assertThat(second.bytes.toString(UTF_8.name())).isEqualTo("<head>" + SNIPPET);
     assertThat(request.getAttribute(InjectionStateStore.REQUEST_ATTRIBUTE)).isNotNull();
   }
 
@@ -109,11 +112,16 @@ class ServletOutputStreamOwnershipTest {
     return new WeakReference<?>[] {new WeakReference<>(stream), new WeakReference<>(response)};
   }
 
-  private static void initializeAndWritePrefix(HttpServletRequest request, TestStream stream)
-      throws IOException {
-    HttpServletResponse response = response(stream);
-    new Servlet5SnippetInjectingResponseWrapper(request, response, SNIPPET).getOutputStream();
-    write(stream, "<he");
+  private static void initializeAndWritePrefix(
+      HttpServletRequest request, TestStream first, TestStream second) throws IOException {
+    AtomicReference<TestStream> stream = new AtomicReference<>(first);
+    Servlet5SnippetInjectingResponseWrapper wrapper =
+        new Servlet5SnippetInjectingResponseWrapper(request, response(stream), SNIPPET);
+    wrapper.getOutputStream();
+    write(first, "<he");
+    stream.set(second);
+    wrapper.getOutputStream();
+    write(second, "<he");
   }
 
   private static void write(TestStream stream, String value) throws IOException {
