@@ -36,6 +36,10 @@ public class ServerEndpoint {
   // request body is read after the servlet has returned
   public static final ServerEndpoint CAPTURE_BODY_LATE_READ =
       new ServerEndpoint("CAPTURE_BODY_LATE_READ", "captureBodyLateRead", 200, "response body");
+  // request body is partially read before the servlet has returned, the remaining part is read
+  // after the servlet has returned
+  public static final ServerEndpoint CAPTURE_BODY_SPLIT_READ =
+      new ServerEndpoint("CAPTURE_BODY_SPLIT_READ", "captureBodySplitRead", 200, "response body");
   // request is dispatched, request body is read by the dispatched servlet
   public static final ServerEndpoint CAPTURE_BODY_DISPATCH_READ =
       new ServerEndpoint(

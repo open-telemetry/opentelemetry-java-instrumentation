@@ -9,6 +9,7 @@ import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_DISPATCH_READ;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_LATE_READ;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_SPLIT_READ;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -122,6 +123,7 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
     addServlet(context, CAPTURE_PARAMETERS.getPath(), servlet);
     addServlet(context, CAPTURE_BODY.getPath(), servlet);
     addServlet(context, CAPTURE_BODY_LATE_READ.getPath(), servlet);
+    addServlet(context, CAPTURE_BODY_SPLIT_READ.getPath(), servlet);
     addServlet(context, CAPTURE_BODY_DISPATCH_READ.getPath(), servlet);
     addServlet(context, HTML_PRINT_WRITER.getPath(), servlet);
     addServlet(context, HTML_SERVLET_OUTPUT_STREAM.getPath(), servlet);

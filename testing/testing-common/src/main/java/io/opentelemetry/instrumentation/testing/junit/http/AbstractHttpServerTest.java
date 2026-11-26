@@ -14,6 +14,7 @@ import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSign
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_DISPATCH_READ;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_LATE_READ;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_SPLIT_READ;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -649,6 +650,13 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   }
 
   @Test
+  void requestBodyCaptureSplitRead() {
+    assumeTrue(options.testRequestBodyCapture);
+    assumeTrue(options.testRequestBodyCaptureAfterService);
+    assertRequestBodyCapture(CAPTURE_BODY_SPLIT_READ);
+  }
+
+  @Test
   void requestBodyCaptureDispatchRead() {
     assumeTrue(options.testRequestBodyCapture);
     assumeTrue(options.testRequestBodyCaptureAfterService);
@@ -1089,6 +1097,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
 
         if (endpoint == CAPTURE_BODY
             || endpoint == CAPTURE_BODY_LATE_READ
+            || endpoint == CAPTURE_BODY_SPLIT_READ
             || endpoint == CAPTURE_BODY_DISPATCH_READ) {
           List<SpanData> serverSpans =
               trace.actual().stream()
