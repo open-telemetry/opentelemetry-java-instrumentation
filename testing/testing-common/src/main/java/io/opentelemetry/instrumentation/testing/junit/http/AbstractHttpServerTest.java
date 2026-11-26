@@ -659,7 +659,7 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
   @Test
   void requestBodyCaptureDispatchRead() {
     assumeTrue(options.testRequestBodyCapture);
-    assumeTrue(options.testRequestBodyCaptureAfterService);
+    assumeTrue(options.testRequestBodyCaptureDispatchRead);
     assertRequestBodyCapture(CAPTURE_BODY_DISPATCH_READ);
   }
 

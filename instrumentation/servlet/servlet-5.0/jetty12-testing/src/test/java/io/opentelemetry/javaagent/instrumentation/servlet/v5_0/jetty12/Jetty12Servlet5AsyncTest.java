@@ -23,6 +23,7 @@ class Jetty12Servlet5AsyncTest extends Jetty12Servlet5Test {
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestRequestBodyCaptureAfterService(true);
+    options.setTestRequestBodyCaptureDispatchRead(true);
   }
 
   @Override

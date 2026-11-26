@@ -24,9 +24,10 @@ class TomcatServlet5Test extends BaseTomcatServlet5Test {
   @Override
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
-    // the library filter instrumentation does not instrument async dispatch, thus testing this is
-    // not needed.
-    options.setTestRequestBodyCaptureAfterService(false);
+    // the library filter instrumentation does not instrument async dispatch, thus testing a body
+    // read after a dispatch is not needed. Reads after the filter has returned, without dispatch,
+    // are supported with the completion listener.
+    options.setTestRequestBodyCaptureDispatchRead(false);
   }
 
   @Override

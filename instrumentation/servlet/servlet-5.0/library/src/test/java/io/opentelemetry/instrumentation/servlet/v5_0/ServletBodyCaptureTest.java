@@ -95,8 +95,8 @@ class ServletBodyCaptureTest {
     String value =
         captureAsync((req, async) -> {
           AsyncContext context = req.startAsync();
-          readRequestBody(context.getRequest(), BODY);
           assertThat(context.hasOriginalRequestAndResponse()).isTrue();
+          return () -> readRequestBody(context.getRequest(), BODY);
         });
 
     assertThat(value).isEqualTo("request-body");
@@ -107,7 +107,8 @@ class ServletBodyCaptureTest {
     String value =
         captureAsync((req, async) -> {
           req.startAsync();
-          readRequestBody(req.getAsyncContext().getRequest(), BODY);
+          AsyncContext context = req.getAsyncContext();
+          return () -> readRequestBody(context.getRequest(), BODY);
         });
 
     assertThat(value).isEqualTo("request-body");
@@ -121,7 +122,7 @@ class ServletBodyCaptureTest {
           AsyncContext context = req.startAsync(req, mock(ServletResponse.class));
           sameRequest.set(context.getRequest() == req);
           assertThat(context.hasOriginalRequestAndResponse()).isFalse();
-          readRequestBody(context.getRequest(), BODY);
+          return () -> readRequestBody(context.getRequest(), BODY);
         });
 
     assertThat(sameRequest.get()).isTrue();
@@ -130,9 +131,16 @@ class ServletBodyCaptureTest {
 
   private static final byte[] BODY = "request-body".getBytes(UTF_8);
 
-  /** Application code that runs in the filter chain, with the container async context mock. */
+  /**
+   * Application code that runs in the filter chain, with the container async context mock. It
+   * returns the code that reads the request body after the filter has returned.
+   */
   private interface AsyncApplication {
-    void run(HttpServletRequest request, AsyncContext containerAsyncContext) throws IOException;
+    BodyRead run(HttpServletRequest request, AsyncContext containerAsyncContext) throws IOException;
+  }
+
+  private interface BodyRead {
+    void run() throws IOException;
   }
 
   @Nullable
@@ -176,8 +184,15 @@ class ServletBodyCaptureTest {
           return context;
         });
 
+    AtomicReference<BodyRead> bodyRead = new AtomicReference<>();
     filter.doFilter(
-        request, response, (req, res) -> application.run((HttpServletRequest) req, noArgContext));
+        request,
+        response,
+        (req, res) -> bodyRead.set(application.run((HttpServletRequest) req, noArgContext)));
+
+    // the request body is read after the filter has returned, and before the async processing
+    // completes
+    bodyRead.get().run();
 
     // the span ends when the async processing completes
     for (AsyncListener listener : listeners) {

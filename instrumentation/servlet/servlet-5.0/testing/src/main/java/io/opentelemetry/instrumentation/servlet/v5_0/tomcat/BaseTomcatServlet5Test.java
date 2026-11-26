@@ -47,6 +47,7 @@ public abstract class BaseTomcatServlet5Test extends AbstractTomcatServlet5Test 
   protected void configure(HttpServerTestOptions options) {
     super.configure(options);
     options.setTestRequestBodyCaptureAfterService(true);
+    options.setTestRequestBodyCaptureDispatchRead(true);
   }
 
   @Override
