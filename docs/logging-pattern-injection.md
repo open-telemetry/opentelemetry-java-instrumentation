@@ -20,4 +20,4 @@ Missing fields are inserted before the message and its preceding literal text, a
 
 Trace and span keys follow `otel.instrumentation.common.logging.trace-id-key` and `otel.instrumentation.common.logging.span-id-key`. Application-provided correlation values take precedence. Outside a valid span, missing trace/span values render empty.
 
-Automatic injection only adds keys made up of ASCII letters, digits, underscores, dots, and hyphens. When a missing field has any other key, the agent skips that field and logs a warning once. This does not restrict MDC keys or change converters already in the pattern.
+Automatic injection only adds keys made up of ASCII letters, digits, underscores, dots, and hyphens. If a configured key contains any other character, the agent doesn't inject that field and logs a warning once. MDC population and converters already in the pattern are unaffected.

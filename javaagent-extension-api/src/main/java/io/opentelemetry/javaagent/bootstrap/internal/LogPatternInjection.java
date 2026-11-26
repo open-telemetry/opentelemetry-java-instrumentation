@@ -100,7 +100,9 @@ public final class LogPatternInjection {
         logger.warning(
             "Skipping automatic log pattern injection for otel.instrumentation.common.logging."
                 + property
-                + ": the key must match [A-Za-z0-9_.-]+.");
+                + "=\""
+                + key
+                + "\": automatic injection only supports keys matching [A-Za-z0-9_.-]+.");
       }
       return;
     }

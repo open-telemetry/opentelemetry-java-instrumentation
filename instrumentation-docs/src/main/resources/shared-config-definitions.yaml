@@ -18,8 +18,8 @@ configurations:
     declarative_name: java.logging.pattern_injection.enabled
     description: >
       Automatically add missing configured trace/span ID MDC converters before the message in
-      text patterns in Logback and Log4j. Injected key names must match [A-Za-z0-9_.-]+.
-      JSON layouts and Log4j2 PatternSelector branches are excluded.
+      text patterns in Logback and Log4j. Keys that do not match [A-Za-z0-9_.-]+ are not
+      injected. JSON layouts and Log4j2 PatternSelector branches are excluded.
     type: boolean
     default: false
   http.known-methods:
