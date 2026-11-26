@@ -18,10 +18,10 @@ import org.apache.pekko.remote.artery.InboundEnvelope;
  * shared instance. Pekko calls the instrument from the same thread that (de)serializes the
  * envelope, so the envelope can be handed over in a thread local.
  *
- * <p>RemoteInstrumentsSerializationInstrumentation produces this state on serialize/deserialize
- * entry. OtelRemoteInstrument consumes it in remoteWriteMetadata/remoteReadMetadata. The producer's
- * exit advice calls endWrite/endRead on both normal and exceptional exits, removing the state even
- * when serialization fails before the metadata callback runs.
+ * <p>{@link RemoteInstrumentsSerializationInstrumentation} sets this state on entry to Pekko's
+ * metadata serialization and deserialization methods. {@link OtelRemoteInstrument} reads it in the
+ * metadata callbacks. The advice clears the state on normal and exceptional exits, even if the
+ * callback never runs.
  */
 public final class RemoteMessageState {
 

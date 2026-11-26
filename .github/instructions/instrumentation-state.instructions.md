@@ -184,8 +184,10 @@ javaagent instrumentation, not library-only code.
   not use `current*`.
 
 - These entry/exit rules do not apply to long-lived thread caches, reusable objects, counters,
-  persistent maps, or callback handoffs. Manage their actual lifetime. For a handoff, document its
-  producer, consumer, and failure cleanup.
+  persistent maps, or callback handoffs. Manage their actual lifetime.
+
+- If cleanup is not clear from the code at a callback handoff, document who clears the state and
+  what happens if the expected callback does not run.
 
 ## Supported concurrency and lock scope
 
