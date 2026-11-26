@@ -22,8 +22,10 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
   @Nullable private final RecordInterceptor<K, V> decorated;
   // intercept produces invocation state for the same-thread success/failure callbacks. Without
-  // thread state, those callbacks end it; with thread state, afterRecord ends it and clearThreadState
-  // drains unfinished invocations. A null result or an exception from intercept ends it immediately.
+  // thread state, those callbacks end it; with thread state, afterRecord ends it and
+  // clearThreadState
+  // drains unfinished invocations. A null result or an exception from intercept ends it
+  // immediately.
   // end restores the enclosing invocation before closing its scope and ending its span.
   private final ThreadLocal<ProcessingInvocation<KafkaProcessRequest>> currentInvocation =
       new ThreadLocal<>();
