@@ -18,7 +18,6 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
-import io.opentelemetry.javaagent.bootstrap.servlet.InjectionStateReference;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.OutputStreamSnippetInjectionHelper;
 import jakarta.servlet.ServletOutputStream;
 import jakarta.servlet.WriteListener;
@@ -28,6 +27,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
+import java.lang.ref.WeakReference;
 import java.util.HashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
@@ -35,8 +35,8 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class InjectionStateLifetimeTest {
-  private static final VirtualField<ServletOutputStream, InjectionStateReference> INJECTION_STATE =
-      VirtualField.find(ServletOutputStream.class, InjectionStateReference.class);
+  private static final VirtualField<ServletOutputStream, WeakReference<InjectionState>>
+      INJECTION_STATE = VirtualField.find(ServletOutputStream.class, WeakReference.class);
   private static final String SNIPPET = "<script>console.log(hi)</script>";
   private static final String HTML = "<head><title>complete</title></head><body>complete</body>";
   private static final String INJECTED =
@@ -98,7 +98,7 @@ class InjectionStateLifetimeTest {
     Servlet5SnippetInjectingResponseWrapper wrapper = fixture.wrap();
     ServletOutputStream stream = wrapper.getOutputStream();
     InjectionState state = ServletOutputStreamInjectionState.getInjectionState(stream);
-    InjectionStateReference reference = INJECTION_STATE.get(stream);
+    WeakReference<InjectionState> reference = INJECTION_STATE.get(stream);
 
     assertThat(wrapper.getOutputStream()).isSameAs(stream);
     assertThat(ServletOutputStreamInjectionState.getInjectionState(stream)).isSameAs(state);
@@ -135,7 +135,7 @@ class InjectionStateLifetimeTest {
     Fixture fixture = new Fixture();
     Servlet5SnippetInjectingResponseWrapper first = fixture.wrap();
     ServletOutputStream stream = first.getOutputStream();
-    InjectionStateReference firstReference = INJECTION_STATE.get(stream);
+    WeakReference<InjectionState> firstReference = INJECTION_STATE.get(stream);
 
     Servlet5SnippetInjectingResponseWrapper second = fixture.wrap();
     assertThat(second.getOutputStream()).isSameAs(stream);
