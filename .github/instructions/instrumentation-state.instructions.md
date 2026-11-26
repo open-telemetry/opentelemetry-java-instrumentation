@@ -54,7 +54,8 @@ javaagent instrumentation, not library-only code.
   centralize associations in `Cache<Object, State>` or replace it with `VirtualField<Object, State>`.
   Broad interfaces are appropriate only when the state belongs to their whole abstraction, such as
   propagated task context on `Runnable`. If no narrower stable carrier exists, document why and
-  verify fallback and lifecycle behavior.
+  verify fallback safety and lifecycle behavior as described in
+  [Lifetime, fallback, and reuse](#lifetime-fallback-and-reuse).
 
 - The `(carrier class, value class)` pair identifies the field. The same pair intentionally shares
   storage across instrumentations. Use a dedicated holder for unrelated state or several related
@@ -94,6 +95,17 @@ javaagent instrumentation, not library-only code.
 - Fallback storage has weak keys and strong values. A value that strongly references its carrier
   can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
   Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
+
+  Trace strong references from each concrete value that can be stored at runtime, including lambda
+  captures and any enclosing instances held by inner classes. Check for a path back to the value's
+  own carrier. If a value reaches another carrier, check that carrier's fallback values in turn
+  for cycles across entries. If A's value keeps B alive and B's value keeps A alive, neither weak
+  key can clear. A connection's value can retain a completed request in either storage mode, even
+  without a cycle. The clearing rules above still apply.
+
+  If the analysis rules out strong paths back to a value's own carrier and cycles across entries,
+  do not add a GC test or a separate JVM run with field injection disabled just to confirm that
+  result. If safety depends on when state is cleared or replaced, test the relevant lifecycle path.
 
 - Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
   supported concurrent updates need an invariant before choosing synchronization or ownership.
