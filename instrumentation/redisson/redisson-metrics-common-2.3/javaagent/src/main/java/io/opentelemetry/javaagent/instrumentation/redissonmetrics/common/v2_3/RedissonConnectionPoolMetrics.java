@@ -162,23 +162,26 @@ public class RedissonConnectionPoolMetrics {
     }
   }
 
-  private static final class Registration implements AutoCloseable {
+  // Visible for testing
+  static final class Registration implements AutoCloseable {
     @Nullable private final BatchCallback regularCallback;
     @Nullable private final BatchCallback subscriptionCallback;
     private boolean closed;
 
-    private Registration(
+    Registration(
         @Nullable BatchCallback regularCallback, @Nullable BatchCallback subscriptionCallback) {
       this.regularCallback = regularCallback;
       this.subscriptionCallback = subscriptionCallback;
     }
 
     @Override
-    public synchronized void close() {
-      if (closed) {
-        return;
+    public void close() {
+      synchronized (this) {
+        if (closed) {
+          return;
+        }
+        closed = true;
       }
-      closed = true;
       if (regularCallback != null) {
         regularCallback.close();
       }
