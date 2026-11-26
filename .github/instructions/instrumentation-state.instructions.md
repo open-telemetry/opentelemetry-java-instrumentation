@@ -101,19 +101,19 @@ javaagent instrumentation, not library-only code.
 
 ## Observable metric callbacks
 
-- **Registration ownership.** The SDK bundled with the javaagent holds the callback strongly until
-  it is unregistered. Identify who owns the registration and when it ends. Verify that
-  every supported shutdown or replacement path reaches the instrumentation's cleanup. Close
-  the returned handle and remove any long-lived registry entries for that registration.
-  Clearing a reference to the handle without closing it does not unregister the callback.
+- **Registration ownership.** The SDK bundled with the javaagent holds the registered callback
+  strongly. Identify who owns the registration and when it ends. Verify that every supported
+  shutdown or replacement path reaches the instrumentation's cleanup. Close the returned handle
+  and remove any long-lived registry entries for that registration. Dropping the handle does not
+  unregister the callback. If a shutdown path misses that cleanup, fix the hook rather than
+  weakening the reference.
 
-  After `close()`, the SDK handle still holds the callback. If the callback or the state it captures
-  should be collectible while the owner is still alive, clear the field that stores the closed handle.
-
-  A callback can strongly hold state that should live as long as the registration. For example,
-  the HikariCP callback may capture `PoolStats`, which references the pool. When HikariCP shuts down
-  the pool, the tracker must close the callback handle and clear the field that held it. If a
-  shutdown path misses that cleanup, fix the hook rather than weakening the reference.
+- **Retention after unregistration.** A closed SDK handle still holds the callback. Retaining it
+  is not a defect when an equivalent native implementation retains the same state after removal,
+  as native Micrometer meters and HikariCP's Micrometer tracker do. Clearing the handle is still
+  worthwhile when nothing else references the captured state: it frees `stats` captured by
+  `stats::completedFor` in a removed Micrometer `FunctionCounter` that the application still
+  holds, but not a HikariCP pool still referenced by a retained `HikariDataSource`.
 
 - **Collection without explicit shutdown.** If an object or class loader should be collectible
   while the registration is live, trace every strong reference to it from the SDK or other
