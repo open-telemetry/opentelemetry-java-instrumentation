@@ -6,7 +6,7 @@
 package io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11;
 
 import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.KafkaStreamsSingletons.instrumenter;
-import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.currentState;
+import static io.opentelemetry.javaagent.instrumentation.kafkastreams.v0_11.StateHolder.holder;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
@@ -39,7 +39,7 @@ class StreamTaskInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static StateHolder onEnter() {
       StateHolder holder = new StateHolder();
-      currentState().set(holder);
+      holder().set(holder);
       return holder;
     }
 
@@ -47,7 +47,7 @@ class StreamTaskInstrumentation implements TypeInstrumentation {
     public static void stopSpan(
         @Advice.Enter @Nullable StateHolder stateHolder,
         @Advice.Thrown @Nullable Throwable throwable) {
-      currentState().remove();
+      holder().remove();
       if (stateHolder == null) {
         return;
       }

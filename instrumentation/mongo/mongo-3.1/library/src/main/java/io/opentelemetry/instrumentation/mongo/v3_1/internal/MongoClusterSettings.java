@@ -37,8 +37,7 @@ public class MongoClusterSettings {
   // Mongo#createCluster advice produces this one-shot handoff for ClusterSettings.Builder#build
   // advice, which consumes it in built(). If the build does not complete,
   // LegacySrvTargetScope.close() removes it when createCluster exits.
-  private static final ThreadLocal<LegacySrvTargetScope> pendingLegacySrvTargetScope =
-      new ThreadLocal<>();
+  private static final ThreadLocal<LegacySrvTargetScope> legacySrvTargetScope = new ThreadLocal<>();
 
   public static void initialize(ClusterSettings.Builder builder) {
     BUILDER_CONFIGURATION.set(builder, DIRECT_CONFIGURATION);
@@ -81,9 +80,9 @@ public class MongoClusterSettings {
     if (SETTINGS_CONFIGURATION.get(settings) != null) {
       return;
     }
-    LegacySrvTargetScope scope = pendingLegacySrvTargetScope.get();
+    LegacySrvTargetScope scope = legacySrvTargetScope.get();
     if (scope != null) {
-      pendingLegacySrvTargetScope.remove();
+      legacySrvTargetScope.remove();
     }
     MongoServerTarget scopedSrvTarget = scope == null ? null : scope.target;
     Configuration configuration =
@@ -119,9 +118,8 @@ public class MongoClusterSettings {
 
   public static LegacySrvTargetScope openLegacySrvTargetScope(@Nullable String connectionString) {
     MongoServerTarget target = srvConnectionString(connectionString);
-    LegacySrvTargetScope scope =
-        new LegacySrvTargetScope(pendingLegacySrvTargetScope.get(), target);
-    pendingLegacySrvTargetScope.set(scope);
+    LegacySrvTargetScope scope = new LegacySrvTargetScope(legacySrvTargetScope.get(), target);
+    legacySrvTargetScope.set(scope);
     return scope;
   }
 
@@ -191,9 +189,9 @@ public class MongoClusterSettings {
 
     public void close() {
       if (previous == null) {
-        pendingLegacySrvTargetScope.remove();
+        legacySrvTargetScope.remove();
       } else {
-        pendingLegacySrvTargetScope.set(previous);
+        legacySrvTargetScope.set(previous);
       }
     }
   }

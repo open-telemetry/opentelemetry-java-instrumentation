@@ -178,11 +178,10 @@ javaagent instrumentation, not library-only code.
   zero-argument accessor and statically imported by callers. Cross-module state uses a focused
   shared bootstrap owner.
 
-- Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
-  as `receiveSpanSuppression` need no `current` prefix. A one-shot handoff, which one advice sets
-  and a later advice consumes and clears, is not ambient state; name it for its role, such as
-  `pendingParentContext`, so it is not mistaken for `Context.current()` or another active value.
-  Name the state, not its storage mechanism;
+- Use `current*` for ambient state that applies to the operation executing on the thread, such as
+  `currentRequest`. A one-shot handoff is a value left for a consumer to read and clear. Name it
+  by role, such as `pendingParentContext`, without `current*`. Suppression names such as
+  `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
   do not use `*ThreadLocal` for a wrapper accessor. Carrier-attached state may cross threads and does
   not use `current*`.
 
