@@ -28,7 +28,7 @@ public final class HikariTelemetry {
    * com.zaxxer.hikari.HikariConfig#setMetricsTrackerFactory(MetricsTrackerFactory)}.
    */
   public MetricsTrackerFactory createMetricsTrackerFactory() {
-    return createMetricsTrackerFactory(null, Attributes.empty());
+    return instrument(null, Attributes.empty());
   }
 
   /**
@@ -37,17 +37,43 @@ public final class HikariTelemetry {
    * com.zaxxer.hikari.metrics.IMetricsTracker} objects created by the returned factory will
    * delegate to trackers created by the {@code delegate} metrics tracker factory, if it is not
    * null.
+   *
+   * @deprecated Use {@link #instrument(MetricsTrackerFactory)} instead. May be removed in the next
+   *     minor release.
    */
+  @Deprecated
   public MetricsTrackerFactory createMetricsTrackerFactory(
       @Nullable MetricsTrackerFactory delegate) {
-    return createMetricsTrackerFactory(delegate, Attributes.empty());
+    return instrument(delegate);
   }
 
   /**
    * Returns a metrics tracker factory that adds the supplied configured database attributes to
    * database metrics.
+   *
+   * @deprecated Use {@link #instrument(MetricsTrackerFactory, Attributes)} instead. May be removed
+   *     in the next minor release.
    */
+  @Deprecated
   public MetricsTrackerFactory createMetricsTrackerFactory(
+      @Nullable MetricsTrackerFactory delegate, Attributes databaseAttributes) {
+    return instrument(delegate, databaseAttributes);
+  }
+
+  /**
+   * Returns an instrumented metrics tracker factory that delegates to the supplied factory, if
+   * non-null. Register it using {@link
+   * com.zaxxer.hikari.HikariConfig#setMetricsTrackerFactory(MetricsTrackerFactory)}.
+   */
+  public MetricsTrackerFactory instrument(@Nullable MetricsTrackerFactory delegate) {
+    return instrument(delegate, Attributes.empty());
+  }
+
+  /**
+   * Returns an instrumented metrics tracker factory with the supplied database attributes,
+   * delegating to the supplied factory if non-null.
+   */
+  public MetricsTrackerFactory instrument(
       @Nullable MetricsTrackerFactory delegate, Attributes databaseAttributes) {
     return new OpenTelemetryMetricsTrackerFactory(openTelemetry, delegate, databaseAttributes);
   }

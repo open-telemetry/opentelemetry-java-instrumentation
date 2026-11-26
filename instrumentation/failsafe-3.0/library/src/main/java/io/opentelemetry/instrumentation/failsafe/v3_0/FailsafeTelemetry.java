@@ -51,9 +51,35 @@ public final class FailsafeTelemetry {
    * @param circuitBreakerName identifier of given {@link CircuitBreaker}
    * @param <R> {@link CircuitBreaker}'s result type
    * @return instrumented {@link CircuitBreaker}
+   * @deprecated Use {@link #instrument(CircuitBreaker, String)} instead. May be removed in the next
+   *     minor release.
    */
+  @Deprecated
   public <R> CircuitBreaker<R> createCircuitBreaker(
       CircuitBreaker<R> delegate, String circuitBreakerName) {
+    return instrument(delegate, circuitBreakerName);
+  }
+
+  /**
+   * Returns an instrumented {@link RetryPolicy} by given values.
+   *
+   * @param delegate user configured {@link RetryPolicy} to be instrumented
+   * @param retryPolicyName identifier of given {@link RetryPolicy}
+   * @param <R> {@link RetryPolicy}'s result type
+   * @return instrumented {@link RetryPolicy}
+   * @deprecated Use {@link #instrument(RetryPolicy, String)} instead. May be removed in the next
+   *     minor release.
+   */
+  @Deprecated
+  public <R> RetryPolicy<R> createRetryPolicy(RetryPolicy<R> delegate, String retryPolicyName) {
+    return instrument(delegate, retryPolicyName);
+  }
+
+  /**
+   * Returns an instrumented copy of the supplied circuit breaker. The circuit breaker name is
+   * recorded as the {@code failsafe.circuit_breaker.name} metric attribute.
+   */
+  public <R> CircuitBreaker<R> instrument(CircuitBreaker<R> delegate, String circuitBreakerName) {
     CircuitBreakerConfig<R> userConfig = delegate.getConfig();
     Meter meter = getMeter();
     LongCounter executionCounter =
@@ -79,14 +105,10 @@ public final class FailsafeTelemetry {
   }
 
   /**
-   * Returns an instrumented {@link RetryPolicy} by given values.
-   *
-   * @param delegate user configured {@link RetryPolicy} to be instrumented
-   * @param retryPolicyName identifier of given {@link RetryPolicy}
-   * @param <R> {@link RetryPolicy}'s result type
-   * @return instrumented {@link RetryPolicy}
+   * Returns an instrumented copy of the supplied retry policy. The retry policy name is recorded as
+   * the {@code failsafe.retry_policy.name} metric attribute.
    */
-  public <R> RetryPolicy<R> createRetryPolicy(RetryPolicy<R> delegate, String retryPolicyName) {
+  public <R> RetryPolicy<R> instrument(RetryPolicy<R> delegate, String retryPolicyName) {
     RetryPolicyConfig<R> userConfig = delegate.getConfig();
     Meter meter = getMeter();
     LongCounter executionCounter =

@@ -61,7 +61,7 @@ class OkHttpHeaderSelectorTest {
             .setRequestHeaders(IncludeExclude.builder().setIncluded("x-test-*").build())
             .setResponseHeaders(IncludeExclude.builder().setExcluded("x-secret-*").build())
             .build()
-            .createCallFactory(new OkHttpClient.Builder().build());
+            .instrument(new OkHttpClient.Builder().build());
 
     send(callFactory);
 
@@ -89,7 +89,7 @@ class OkHttpHeaderSelectorTest {
             .setRequestHeaders(IncludeExclude.builder().setIncluded("X-Test-Request").build())
             .setResponseHeaders(IncludeExclude.builder().setIncluded("X-Test-Response").build())
             .build()
-            .createCallFactory(new OkHttpClient.Builder().build());
+            .instrument(new OkHttpClient.Builder().build());
 
     send(callFactory);
 
@@ -108,7 +108,7 @@ class OkHttpHeaderSelectorTest {
     Call.Factory callFactory =
         OkHttpTelemetry.builder(testing.getOpenTelemetry())
             .build()
-            .createCallFactory(new OkHttpClient.Builder().build());
+            .instrument(new OkHttpClient.Builder().build());
 
     send(callFactory);
 
