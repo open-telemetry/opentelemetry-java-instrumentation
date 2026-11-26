@@ -131,12 +131,18 @@ javaagent instrumentation, not library-only code.
 
 ## Temporary thread state
 
-- Trace writers, readers, cleanup, and recursion. Thread confinement does not prevent nested calls
-  from replacing outer state.
+- Trace what writes and reads the state and which calls can nest. When an invocation changes
+  temporary thread state, restore the previous value on every exit, including exceptions. An
+  invocation that did not install state must not clear an enclosing invocation's value. If an inner
+  operation must not inherit the outer value, hide it while the inner operation runs and restore it
+  afterward.
 
-- For state installed on entry and cleaned on exit, prefer allocation-free `ScopedThreadValue`.
-  Carry the previous value through `@Advice.Enter` and restore it on every exit, even when no current
-  caller is known to reenter:
+- Keep acquisition and cleanup in the advice pair or helper that owns the state. Restore or release
+  before fallible completion work that does not need the temporary state. Use `try`/`finally` when
+  that work needs the state.
+
+- Prefer `ScopedThreadValue` for new scoped values when it makes saving and restoring state simpler.
+  In a simple advice pair, carry the previous value through `@Advice.Enter`:
 
   ```java
   @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -151,8 +157,10 @@ javaagent instrumentation, not library-only code.
   ```
 
   Here `currentRequest()` returns a `ScopedThreadValue<Request>`. `restore(null)` removes the entry.
-  Use `ScopedThreadSuppression` for temporary suppression. Carry `tryAcquire()`'s result through
-  entry and release only when this invocation acquired it:
+
+- Release temporary suppression only when this invocation acquired it. Prefer
+  `ScopedThreadSuppression` for new suppression code. In a simple advice pair, carry
+  `tryAcquire()`'s result through `@Advice.Enter`:
 
   ```java
   @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
@@ -168,15 +176,15 @@ javaagent instrumentation, not library-only code.
   }
   ```
 
-  Use `isActive()` for read-only checks. Advice calls `set`/`restore` or `tryAcquire`/`release`
-  directly so ownership stays visible; do not hide these mutations behind semantic enter/exit wrappers.
-  Restore or release before fallible completion work that does not need the temporary state.
-  Use `try`/`finally` when the work intentionally requires that state to remain installed.
+  Use `isActive()` for read-only checks.
 
-- Keep a holder private in the narrowest owner. A single instrumentation class owns its holder;
-  several classes in one module use a private field in `*Singletons`, exposed by a same-named
-  zero-argument accessor and statically imported by callers. Cross-module state uses a focused
-  shared bootstrap owner.
+- When auditing existing state lifetimes, name a supported call path that discards enclosing state,
+  leaves temporary state installed, or uses state that belongs to another operation. Do not flag
+  code solely because it uses another storage mechanism or keeps state changes in a helper.
+
+- Keep a holder private in the narrowest owner. If several classes in one module need direct access,
+  use a private field in `*Singletons`, exposed by a same-named zero-argument accessor and
+  statically imported by callers. Cross-module state uses a focused shared bootstrap owner.
 
 - Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
   as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
