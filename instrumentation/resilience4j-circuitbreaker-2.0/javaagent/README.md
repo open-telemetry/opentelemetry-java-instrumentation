@@ -9,6 +9,11 @@ do not create spans; Reactor and RxJava operators use separate lifecycles and
 are not covered. The span name is `CircuitBreaker <name>`. Rejected and failed
 decorated calls are reported as error spans.
 
+A `CompletionStage` span ends when the supplied stage completes. A `Future`
+span ends on `get()`, including failed or timed-out calls, or on successful
+`cancel()`. The underlying task finishing or polling `isDone()` does not end the
+span, so its duration can include the delay before calling `get()`.
+
 This instrumentation is disabled by default. Enable it by setting
 `otel.instrumentation.resilience4j-circuitbreaker.enabled=true`.
 
