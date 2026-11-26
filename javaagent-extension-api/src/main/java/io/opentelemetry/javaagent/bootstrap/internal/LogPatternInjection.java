@@ -5,12 +5,12 @@
 
 package io.opentelemetry.javaagent.bootstrap.internal;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.internal.ScopedThreadValue;
-import java.util.Base64;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -20,13 +20,10 @@ import javax.annotation.Nullable;
  * at any time.
  */
 public final class LogPatternInjection {
-  private static final String LOGBACK_TRACE_PREFIX = "otel.pattern-injection.trace.";
-  private static final String LOGBACK_SPAN_PREFIX = "otel.pattern-injection.span.";
-  private static final String LOG4J2_TRACE_PREFIX = "otel.pattern-injection.log4j2.trace.";
-  private static final String LOG4J2_SPAN_PREFIX = "otel.pattern-injection.log4j2.span.";
-  private static final String LOG4J1_TRACE_PREFIX = "otel.pattern-injection.log4j1.trace.";
-  private static final String LOG4J1_SPAN_PREFIX = "otel.pattern-injection.log4j1.span.";
-  private static final Base64.Encoder mdcKeyEncoder = Base64.getUrlEncoder().withoutPadding();
+  private static final Logger logger = Logger.getLogger(LogPatternInjection.class.getName());
+  private static final Pattern PORTABLE_KEY = Pattern.compile("[A-Za-z0-9_.-]+");
+  private static final AtomicBoolean traceKeyWarned = new AtomicBoolean();
+  private static final AtomicBoolean spanKeyWarned = new AtomicBoolean();
   private static final boolean ENABLED =
       DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "logging")
           .get("pattern_injection")
@@ -42,135 +39,43 @@ public final class LogPatternInjection {
     return currentInjection;
   }
 
-  public static Injection prepare(@Nullable String pattern, Framework framework) {
-    return prepare(
-        pattern,
-        framework,
-        AgentCommonConfig.get().getTraceIdKey(),
-        AgentCommonConfig.get().getSpanIdKey(),
-        ENABLED);
-  }
-
-  // visible for testing
-  static Injection prepare(
-      @Nullable String pattern, Framework framework, String traceKey, String spanKey) {
-    return prepare(pattern, framework, traceKey, spanKey, true);
-  }
-
-  private static Injection prepare(
-      @Nullable String pattern,
-      Framework framework,
-      String traceKey,
-      String spanKey,
-      boolean enabled) {
-    String traceOption = availableOption(pattern, traceKey, true, framework);
-    String spanOption = availableOption(pattern, spanKey, false, framework);
-    String enhanced =
-        enabled ? enhance(pattern, framework, traceKey, spanKey, traceOption, spanOption) : pattern;
-    return new Injection(
-        pattern,
-        enhanced,
-        framework,
-        traceKey,
-        spanKey,
-        traceOption,
-        spanOption,
-        pattern != null && !pattern.equals(enhanced));
-  }
-
-  private static String availableOption(
-      @Nullable String pattern, String key, boolean trace, Framework framework) {
-    String option = mdcOption(key, trace, framework);
-    if (!option.equals(key) && pattern != null) {
-      // Existing application converters must never be mistaken for generated aliases.
-      while (pattern.contains(option)) {
-        option += "_";
-      }
-    }
-    return option;
+  public static Injection prepareLog4j2(@Nullable String pattern) {
+    return new Injection(pattern, enhance(pattern, Framework.LOG4J2));
   }
 
   @Nullable
-  public static String restoreOriginalPattern(@Nullable String pattern, Framework framework) {
+  public static String restoreOriginalPattern(@Nullable String pattern) {
     Injection injection = currentInjection.get();
-    if (pattern != null
-        && injection != null
-        && injection.matches(framework)
-        && pattern.equals(injection.pattern)) {
+    if (pattern != null && injection != null && pattern.equals(injection.pattern)) {
       return injection.originalPattern;
     }
     return pattern;
   }
 
   @Nullable
-  public static String resolveMdcKey(@Nullable String key, Framework framework) {
-    Injection injection = currentInjection.get();
-    if (key == null || injection == null || !injection.matches(framework)) {
-      return key;
-    }
-    if (key.equals(injection.traceOption)) {
-      return injection.traceKey;
-    }
-    if (key.equals(injection.spanOption)) {
-      return injection.spanKey;
-    }
-    return key;
-  }
-
-  @Nullable
-  static String enhance(
-      @Nullable String pattern, Framework framework, String traceKey, String spanKey) {
+  public static String enhance(@Nullable String pattern, Framework framework) {
     return enhance(
         pattern,
         framework,
-        traceKey,
-        spanKey,
-        mdcOption(traceKey, true, framework),
-        mdcOption(spanKey, false, framework));
+        AgentCommonConfig.get().getTraceIdKey(),
+        AgentCommonConfig.get().getSpanIdKey());
   }
 
+  // visible for testing
   @Nullable
-  private static String enhance(
-      @Nullable String pattern,
-      Framework framework,
-      String traceKey,
-      String spanKey,
-      String traceOption,
-      String spanOption) {
+  static String enhance(
+      @Nullable String pattern, Framework framework, String traceKey, String spanKey) {
     if (pattern == null || pattern.isEmpty()) {
       return pattern;
     }
-    StringBuilder fields = new StringBuilder();
-    String[] keys = {traceKey, spanKey};
-    for (int i = 0; i < keys.length; i++) {
-      String key = keys[i];
-      String option = i == 0 ? traceOption : spanOption;
-      if (!contains(pattern, framework, key, option)) {
-        if (fields.length() > 0) {
-          fields.append(' ');
-        }
-        String label = key;
-        if (isLogback(framework)) {
-          label = escapeLogbackLiteral(key);
-        } else {
-          label = key.replace("%", "%%");
-        }
-        fields.append(label).append("=%X{").append(option).append('}');
-      }
-    }
-    if (fields.length() == 0) {
+    int end = messageInsertion(pattern, framework);
+    if (end < 0) {
       return pattern;
     }
-    // Log4j2 does not support escaping literal braces inside wrapper options. Keep generated
-    // fields outside wrappers when their labels contain braces, preserving native styling.
-    boolean nestedInsertion =
-        framework != Framework.LOG4J2
-            || (traceKey.indexOf('{') < 0
-                && traceKey.indexOf('}') < 0
-                && spanKey.indexOf('{') < 0
-                && spanKey.indexOf('}') < 0);
-    int end = messageInsertion(pattern, framework, nestedInsertion);
-    if (end < 0) {
+    StringBuilder fields = new StringBuilder();
+    appendField(fields, pattern, framework, traceKey, "trace-id-key", traceKeyWarned);
+    appendField(fields, pattern, framework, spanKey, "span-id-key", spanKeyWarned);
+    if (fields.length() == 0) {
       return pattern;
     }
     return pattern.substring(0, end)
@@ -180,42 +85,32 @@ public final class LogPatternInjection {
         + pattern.substring(end);
   }
 
-  private static String mdcOption(String key, boolean trace, Framework framework) {
-    boolean simple = !key.isEmpty();
-    for (int i = 0; i < key.length(); i++) {
-      char c = key.charAt(i);
-      if (!Character.isLetterOrDigit(c) && c != '_' && c != '.' && c != '-') {
-        simple = false;
-        break;
+  private static void appendField(
+      StringBuilder fields,
+      String pattern,
+      Framework framework,
+      String key,
+      String property,
+      AtomicBoolean warned) {
+    if (contains(pattern, framework, key)) {
+      return;
+    }
+    if (!PORTABLE_KEY.matcher(key).matches()) {
+      if (warned.compareAndSet(false, true)) {
+        logger.warning(
+            "Skipping automatic log pattern injection for otel.instrumentation.common.logging."
+                + property
+                + ": the key must match [A-Za-z0-9_.-]+.");
       }
+      return;
     }
-    if (simple) {
-      return key;
+    if (fields.length() > 0) {
+      fields.append(' ');
     }
-    // Native option parsers cannot represent every MDC key. Restore generated options
-    // in the native converter after it has parsed them, without adding entries to the MDC map.
-    String prefix;
-    switch (framework) {
-      case LOGBACK:
-      case LOGBACK_LEGACY:
-        prefix = trace ? LOGBACK_TRACE_PREFIX : LOGBACK_SPAN_PREFIX;
-        break;
-      case LOG4J2:
-        prefix = trace ? LOG4J2_TRACE_PREFIX : LOG4J2_SPAN_PREFIX;
-        break;
-      default:
-        prefix = trace ? LOG4J1_TRACE_PREFIX : LOG4J1_SPAN_PREFIX;
-        break;
-    }
-    return prefix + mdcKeyEncoder.encodeToString(key.getBytes(UTF_8));
+    fields.append(key).append("=%X{").append(key).append('}');
   }
 
-  private static String escapeLogbackLiteral(String value) {
-    return value.replace("\\", "\\\\").replace("%", "\\%").replace("(", "\\(").replace(")", "\\)");
-  }
-
-  private static boolean contains(
-      String pattern, Framework framework, String key, String mdcOption) {
+  private static boolean contains(String pattern, Framework framework, String key) {
     for (int i = 0; i < pattern.length(); i++) {
       if (isLogback(framework) && pattern.charAt(i) == '\\') {
         i++;
@@ -253,9 +148,6 @@ public final class LogPatternInjection {
         } else {
           int close = balancedEnd(pattern, end, '{', '}', framework);
           String option = pattern.substring(end + 1, Math.max(end + 1, close - 1));
-          if (option.equals(mdcOption)) {
-            return true;
-          }
           if (isLogback(framework)) {
             option = firstLogbackOption(option);
             if (option.isEmpty()) {
@@ -267,9 +159,6 @@ public final class LogPatternInjection {
                 option = option.substring(0, delimiter);
               }
             }
-          }
-          if (option.equals(mdcOption)) {
-            return true;
           }
           if (option.equals(key) && (framework != Framework.LOG4J2 || option.indexOf(',') <= 0)) {
             return true;
@@ -286,8 +175,7 @@ public final class LogPatternInjection {
       // Descend into presentation wrappers, but never interpret option text as converters.
       if (isLogback(framework) && end < pattern.length() && pattern.charAt(end) == '(') {
         int close = balancedEnd(pattern, end, '(', ')', framework);
-        if (close > end + 1
-            && contains(pattern.substring(end + 1, close - 1), framework, key, mdcOption)) {
+        if (close > end + 1 && contains(pattern.substring(end + 1, close - 1), framework, key)) {
           return true;
         }
         end = close;
@@ -296,7 +184,7 @@ public final class LogPatternInjection {
       if (end < pattern.length() && pattern.charAt(end) == '{') {
         int close = balancedEnd(pattern, end, '{', '}', framework);
         if (framework == Framework.LOG4J2 && hasLog4j2NestedPattern(converter)) {
-          if (contains(pattern.substring(end + 1, close - 1), framework, key, mdcOption)) {
+          if (contains(pattern.substring(end + 1, close - 1), framework, key)) {
             return true;
           }
         }
@@ -453,8 +341,7 @@ public final class LogPatternInjection {
 
   // Returns an insertion offset, -1 for literal-only text, or -2 for prefix fields without a
   // message.
-  private static int messageInsertion(
-      String pattern, Framework framework, boolean nestedInsertion) {
+  private static int messageInsertion(String pattern, Framework framework) {
     boolean prefixSeen = false;
     int precedingEnd = 0;
     while (precedingEnd < pattern.length()
@@ -497,12 +384,9 @@ public final class LogPatternInjection {
           && (isLogback(framework)
               || (framework == Framework.LOG4J2 && hasLog4j2NestedPattern(converter)))) {
         int wrapperEnd = balancedEnd(pattern, end, open, close, framework);
-        int nested =
-            messageInsertion(
-                pattern.substring(end + 1, wrapperEnd - 1), framework, nestedInsertion);
+        int nested = messageInsertion(pattern.substring(end + 1, wrapperEnd - 1), framework);
         if (nested >= 0) {
-          if (!nestedInsertion
-              || pattern.substring(i + 1, name).indexOf('.') >= 0
+          if (pattern.substring(i + 1, name).indexOf('.') >= 0
               || !allowsNestedInjection(converter)) {
             return precedingEnd;
           }
@@ -540,42 +424,15 @@ public final class LogPatternInjection {
   public static final class Injection {
     @Nullable private final String originalPattern;
     @Nullable private final String pattern;
-    private final Framework framework;
-    private final String traceKey;
-    private final String spanKey;
-    private final String traceOption;
-    private final String spanOption;
-    private final boolean modified;
 
-    private Injection(
-        @Nullable String originalPattern,
-        @Nullable String pattern,
-        Framework framework,
-        String traceKey,
-        String spanKey,
-        String traceOption,
-        String spanOption,
-        boolean modified) {
+    private Injection(@Nullable String originalPattern, @Nullable String pattern) {
       this.originalPattern = originalPattern;
       this.pattern = pattern;
-      this.framework = framework;
-      this.traceKey = traceKey;
-      this.spanKey = spanKey;
-      this.traceOption = traceOption;
-      this.spanOption = spanOption;
-      this.modified = modified;
     }
 
     @Nullable
     public String getPattern() {
       return pattern;
-    }
-
-    private boolean matches(Framework other) {
-      return modified
-          && (framework == other
-              || (isLogback(framework) && isLogback(other))
-              || (framework == Framework.LOG4J1_WITH_MDC_MAP && other == Framework.LOG4J1));
     }
   }
 

@@ -6,7 +6,6 @@
 package io.opentelemetry.javaagent.instrumentation.logback.v1_0;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
@@ -19,8 +18,8 @@ import ch.qos.logback.core.read.ListAppender;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Base64;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -59,13 +58,13 @@ class LogPatternTest {
       quoted.setPattern("%d{HH:mm:ss} %X{'quoted,key'} %m%n");
       quoted.start();
       control.setContext(context);
-      control.setPattern("%X{otel.pattern-injection.trace.app} service.name=%X{service.name}");
+      control.setPattern("%X{'app,key'} service.name=%X{service.name}");
       control.start();
       assertThat(layout.isStarted()).isTrue();
       assertThat(quoted.isStarted()).isTrue();
       assertThat(control.isStarted()).isTrue();
       MDC.put("quoted,key", "quoted-value");
-      MDC.put("otel.pattern-injection.trace.app", "application-placeholder");
+      MDC.put("app,key", "application-value");
       String enhanced = layout.getPattern();
       layout.stop();
       layout.start();
@@ -78,8 +77,7 @@ class LogPatternTest {
       logger.info("outside");
       String outside = layout.doLayout(appender.list.get(0));
       assertThat(quoted.doLayout(appender.list.get(0))).containsOnlyOnce("quoted-value");
-      assertThat(control.doLayout(appender.list.get(0)))
-          .containsOnlyOnce("application-placeholder");
+      assertThat(control.doLayout(appender.list.get(0))).containsOnlyOnce("application-value");
       if (ENABLED) {
         assertThat(layout.getPattern())
             .startsWith("%d{yyyy-MM-dd HH:mm:ss} %-5p [%t] ")
@@ -158,53 +156,51 @@ class LogPatternTest {
     assertRenderedPattern(pattern, pattern.endsWith("%n"));
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void preservesExactAliasKeys(boolean withMessage) {
-    String traceAlias =
-        "otel.pattern-injection.trace."
-            + Base64.getUrlEncoder().withoutPadding().encodeToString(TRACE.getBytes(UTF_8));
-    String spanAlias =
-        "otel.pattern-injection.span."
-            + Base64.getUrlEncoder().withoutPadding().encodeToString(SPAN.getBytes(UTF_8));
-    String pattern = "%X{" + traceAlias + "} %X{" + spanAlias + "}" + (withMessage ? " %m%n" : "");
+  @Test
+  @EnabledIfSystemProperty(
+      named = "otel.instrumentation.common.logging.trace-id-key",
+      matches = "custom,trace")
+  void preservesExplicitConverterForNonPortableKey() {
     LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
-    Logger logger = context.getLogger("alias-regression");
+    Logger logger = context.getLogger("mixed-keys");
     boolean additive = logger.isAdditive();
     Level level = logger.getLevel();
     ListAppender<ILoggingEvent> appender = new ListAppender<>();
     PatternLayout layout = new PatternLayout();
+    PatternLayout explicit = new PatternLayout();
     try {
       layout.setContext(context);
-      layout.setPattern(pattern);
+      layout.setPattern("%m%n");
       layout.start();
-      layout.stop();
-      layout.start();
-      assertThat(layout.getPattern()).isEqualTo(pattern);
+      explicit.setContext(context);
+      explicit.setPattern("trace=%X{'custom,trace'} %m%n");
+      explicit.start();
       appender.setContext(context);
       appender.start();
       logger.setLevel(Level.INFO);
       logger.setAdditive(false);
       logger.addAppender(appender);
-      MDC.put(traceAlias, "application-trace-alias");
-      MDC.put(spanAlias, "application-span-alias");
       testing.runWithSpan(
-          "alias",
+          "mixed-keys",
           () -> {
             logger.info("message");
-            String rendered = layout.doLayout(appender.list.get(0));
-            assertThat(rendered)
-                .containsOnlyOnce("application-trace-alias")
-                .containsOnlyOnce("application-span-alias");
-            if (ENABLED && withMessage) {
-              assertThat(rendered)
-                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
-                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
-            }
+            ILoggingEvent event = appender.list.get(0);
+            String traceId = Span.current().getSpanContext().getTraceId();
+            String spanId = Span.current().getSpanContext().getSpanId();
+            assertThat(layout.doLayout(event))
+                .isEqualTo("otel.span-id_1=" + spanId + " message" + System.lineSeparator());
+            assertThat(explicit.doLayout(event))
+                .isEqualTo(
+                    "trace="
+                        + traceId
+                        + " otel.span-id_1="
+                        + spanId
+                        + " message"
+                        + System.lineSeparator());
           });
     } finally {
-      MDC.clear();
       layout.stop();
+      explicit.stop();
       logger.detachAppender(appender);
       logger.setAdditive(additive);
       logger.setLevel(level);

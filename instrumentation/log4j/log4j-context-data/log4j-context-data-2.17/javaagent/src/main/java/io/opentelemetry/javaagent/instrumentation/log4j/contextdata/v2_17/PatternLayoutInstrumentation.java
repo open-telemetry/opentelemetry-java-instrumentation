@@ -44,8 +44,7 @@ class PatternLayoutInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     @Nullable
     public static String onExit(@Advice.FieldValue("conversionPattern") @Nullable String pattern) {
-      return LogPatternInjection.restoreOriginalPattern(
-          pattern, LogPatternInjection.Framework.LOG4J2);
+      return LogPatternInjection.restoreOriginalPattern(pattern);
     }
   }
 
@@ -61,8 +60,7 @@ class PatternLayoutInstrumentation implements TypeInstrumentation {
         return null;
       }
       LogPatternInjection.Injection injection =
-          LogPatternInjection.prepare(
-              selector == null ? pattern : null, LogPatternInjection.Framework.LOG4J2);
+          LogPatternInjection.prepareLog4j2(selector == null ? pattern : null);
       String enhanced = selector == null ? injection.getPattern() : pattern;
       Object[] state = new Object[] {null, pattern, enhanced};
       state[0] = LogPatternInjection.currentInjection().set(injection);

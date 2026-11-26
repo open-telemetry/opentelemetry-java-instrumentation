@@ -6,80 +6,14 @@
 package io.opentelemetry.javaagent.bootstrap.internal;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.javaagent.bootstrap.internal.LogPatternInjection.Framework;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class LogPatternInjectionTest {
-  @Test
-  void scopesAliasRestorationAndRestoresNestedState() {
-    String alias = "otel.pattern-injection.trace.Y3VzdG9tLHRyYWNl";
-    LogPatternInjection.Injection injection =
-        LogPatternInjection.prepare(
-            "%X{" + alias + "} %m%n", Framework.LOGBACK, "custom,trace", "span_id");
-    assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
-        .isEqualTo(alias + "_");
-    LogPatternInjection.Injection previous = LogPatternInjection.currentInjection().set(injection);
-    try {
-      assertThat(LogPatternInjection.resolveMdcKey(alias, Framework.LOGBACK)).isEqualTo(alias);
-      assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
-          .isEqualTo("custom,trace");
-      LogPatternInjection.Injection nested =
-          LogPatternInjection.currentInjection()
-              .set(
-                  LogPatternInjection.prepare(
-                      "%X{" + alias + "_}", Framework.LOGBACK, "custom,trace", "span_id"));
-      try {
-        assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
-            .isEqualTo(alias + "_");
-      } finally {
-        LogPatternInjection.currentInjection().restore(nested);
-      }
-      assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
-          .isEqualTo("custom,trace");
-    } finally {
-      LogPatternInjection.currentInjection().restore(previous);
-    }
-    assertThat(LogPatternInjection.resolveMdcKey(alias + "_", Framework.LOGBACK))
-        .isEqualTo(alias + "_");
-  }
-
-  @Test
-  void doesNotRestoreAliasesWhenNothingWasInjected() {
-    String alias = "otel.pattern-injection.trace.Y3VzdG9tLHRyYWNl";
-    LogPatternInjection.Injection previous =
-        LogPatternInjection.currentInjection()
-            .set(LogPatternInjection.prepare(null, Framework.LOGBACK, "custom,trace", "span_id"));
-    try {
-      assertThat(LogPatternInjection.resolveMdcKey(alias, Framework.LOGBACK)).isEqualTo(alias);
-    } finally {
-      LogPatternInjection.currentInjection().restore(previous);
-    }
-  }
-
-  @Test
-  void avoidsApplicationAliasCollisions() {
-    String alias = "otel.pattern-injection.trace.Y3VzdG9tLHRyYWNl";
-    String pattern = "%X{" + alias + "} %X{" + alias + "_} %m%n";
-    LogPatternInjection.Injection injection =
-        LogPatternInjection.prepare(pattern, Framework.LOGBACK, "custom,trace", "span_id");
-    assertThat(injection.getPattern())
-        .contains(pattern.substring(0, pattern.indexOf("%m")))
-        .contains("custom,trace=%X{" + alias + "__}");
-    assertThat(
-            LogPatternInjection.prepare(
-                    "%X{" + alias + "}", Framework.LOGBACK, "custom,trace", "span_id")
-                .getPattern())
-        .isEqualTo("%X{" + alias + "}");
-  }
-
   private static final String FIELDS = "trace_id=%X{trace_id} span_id=%X{span_id}";
 
   @ParameterizedTest
@@ -239,25 +173,10 @@ class LogPatternInjectionTest {
           "%d %X{" + key + "} %m", "%d %X{" + key + "} " + FIELDS + " %m", Framework.LOG4J2);
     }
     assertPattern("%d %X{:-fallback} %m", "%d %X{:-fallback} " + FIELDS + " %m", Framework.LOGBACK);
-    String legacy =
-        LogPatternInjection.enhance(
-            "%d %X{custom:-trace} %m", Framework.LOGBACK_LEGACY, "custom:-trace", "span_id");
-    assertThat(legacy).isEqualTo("%d %X{custom:-trace} span_id=%X{span_id} %m");
     assertThat(
             LogPatternInjection.enhance(
-                "%d %X{custom:-trace} %m", Framework.LOGBACK, "custom:-trace", "span_id"))
-        .contains("custom:-trace=%X{otel.pattern-injection.trace.Y3VzdG9tOi10cmFjZQ}");
-    assertThat(
-            LogPatternInjection.enhance(
-                "%d %X{'custom,trace'} %m", Framework.LOGBACK, "custom,trace", "span_id"))
-        .isEqualTo("%d %X{'custom,trace'} span_id=%X{span_id} %m");
-    String escaped = "%d %X{'custom,\\'\"trace'} %m";
-    assertThat(
-            LogPatternInjection.enhance(escaped, Framework.LOGBACK, "custom,\\'\"trace", "span_id"))
-        .isEqualTo("%d %X{'custom,\\'\"trace'} span_id=%X{span_id} %m");
-    assertThat(
-            LogPatternInjection.enhance(escaped, Framework.LOGBACK, "custom,'\"trace", "span_id"))
-        .contains("custom,'\"trace=%X{otel.pattern-injection.trace.Y3VzdG9tLCcidHJhY2U}");
+                "%d %X{trace_id:-fallback} %m", Framework.LOGBACK_LEGACY, "trace_id", "span_id"))
+        .isEqualTo("%d %X{trace_id:-fallback} " + FIELDS + " %m");
   }
 
   @ParameterizedTest
@@ -289,19 +208,7 @@ class LogPatternInjectionTest {
     }
     for (Framework framework : new Framework[] {Framework.LOG4J1, Framework.LOG4J1_WITH_MDC_MAP}) {
       assertPattern("%d{yyyy-MM-dd '{'} %m", "%d{yyyy-MM-dd '{'} " + FIELDS + " %m", framework);
-      String enhanced =
-          LogPatternInjection.enhance("%d %m%n", framework, "custom}trace", "custom%span");
-      assertThat(enhanced)
-          .isEqualTo(
-              "%d custom}trace=%X{otel.pattern-injection.log4j1.trace.Y3VzdG9tfXRyYWNl} custom%%span=%X{otel.pattern-injection.log4j1.span.Y3VzdG9tJXNwYW4} %m%n");
-      assertThat(LogPatternInjection.enhance(enhanced, framework, "custom}trace", "custom%span"))
-          .isEqualTo(enhanced);
     }
-    assertThat(
-            LogPatternInjection.enhance(
-                "%d %X{custom,trace} %m", Framework.LOG4J2, "custom,trace", "span_id"))
-        .isEqualTo(
-            "%d %X{custom,trace} custom,trace=%X{otel.pattern-injection.log4j2.trace.Y3VzdG9tLHRyYWNl} span_id=%X{span_id} %m");
   }
 
   private static void assertPattern(String pattern, String expected, Framework framework) {
@@ -312,94 +219,17 @@ class LogPatternInjectionTest {
   }
 
   @ParameterizedTest
-  @MethodSource("complexLogbackKeys")
-  void preservesComplexLogbackKeys(String traceKey, String label, String option) {
-    String enhanced =
-        LogPatternInjection.enhance("%d %m%n", Framework.LOGBACK, traceKey, "span_id");
-    assertThat(enhanced).isEqualTo("%d " + label + "=%X{" + option + "} span_id=%X{span_id} %m%n");
-    assertThat(LogPatternInjection.enhance(enhanced, Framework.LOGBACK, traceKey, "span_id"))
-        .isEqualTo(enhanced);
+  @EnumSource(Framework.class)
+  void injectsOnlyPortableKeys(Framework framework) {
+    assertThat(LogPatternInjection.enhance("%m%n", framework, "custom,trace", "otel.span-id_1"))
+        .isEqualTo("otel.span-id_1=%X{otel.span-id_1} %m%n");
+    assertThat(LogPatternInjection.enhance("%m%n", framework, "traceId", "custom:-span"))
+        .isEqualTo("traceId=%X{traceId} %m%n");
   }
 
-  private static Stream<Arguments> complexLogbackKeys() {
-    return Stream.of(
-        argumentSet(
-            "comma",
-            "custom,trace",
-            "custom,trace",
-            "otel.pattern-injection.trace.Y3VzdG9tLHRyYWNl"),
-        argumentSet(
-            "single quote",
-            "custom,'trace",
-            "custom,'trace",
-            "otel.pattern-injection.trace.Y3VzdG9tLCd0cmFjZQ"),
-        argumentSet(
-            "double quote",
-            "custom,\"trace",
-            "custom,\"trace",
-            "otel.pattern-injection.trace.Y3VzdG9tLCJ0cmFjZQ"),
-        argumentSet(
-            "both quotes",
-            "custom,'\"trace",
-            "custom,'\"trace",
-            "otel.pattern-injection.trace.Y3VzdG9tLCcidHJhY2U"),
-        argumentSet(
-            "backslashes",
-            "custom,\\trace\\",
-            "custom,\\\\trace\\\\",
-            "otel.pattern-injection.trace.Y3VzdG9tLFx0cmFjZVw"),
-        argumentSet(
-            "literal pattern syntax",
-            "custom,%trace()",
-            "custom,\\%trace\\(\\)",
-            "otel.pattern-injection.trace.Y3VzdG9tLCV0cmFjZSgp"),
-        argumentSet(
-            "native default delimiter",
-            "custom:-trace",
-            "custom:-trace",
-            "otel.pattern-injection.trace.Y3VzdG9tOi10cmFjZQ"),
-        argumentSet(
-            "braces",
-            "custom{trace}",
-            "custom{trace}",
-            "otel.pattern-injection.trace.Y3VzdG9te3RyYWNlfQ"),
-        argumentSet(
-            "whitespace",
-            " custom trace ",
-            " custom trace ",
-            "otel.pattern-injection.trace.IGN1c3RvbSB0cmFjZSA"));
-  }
-
-  @ParameterizedTest
-  @MethodSource("complexLog4j2Keys")
-  void preservesComplexLog4j2Keys(String traceKey, String label, String option) {
-    String enhanced = LogPatternInjection.enhance("%d %m%n", Framework.LOG4J2, traceKey, "span_id");
-    assertThat(enhanced).isEqualTo("%d " + label + "=%X{" + option + "} span_id=%X{span_id} %m%n");
-    assertThat(LogPatternInjection.enhance(enhanced, Framework.LOG4J2, traceKey, "span_id"))
-        .isEqualTo(enhanced);
-  }
-
-  private static Stream<Arguments> complexLog4j2Keys() {
-    return Stream.of(
-        argumentSet(
-            "comma",
-            "custom,trace",
-            "custom,trace",
-            "otel.pattern-injection.log4j2.trace.Y3VzdG9tLHRyYWNl"),
-        argumentSet(
-            "literal pattern syntax",
-            "custom,%trace{}",
-            "custom,%%trace{}",
-            "otel.pattern-injection.log4j2.trace.Y3VzdG9tLCV0cmFjZXt9"),
-        argumentSet(
-            "quotes and backslash",
-            "custom,'\"trace\\",
-            "custom,'\"trace\\",
-            "otel.pattern-injection.log4j2.trace.Y3VzdG9tLCcidHJhY2Vc"),
-        argumentSet(
-            "whitespace",
-            " custom trace ",
-            " custom trace ",
-            "otel.pattern-injection.log4j2.trace.IGN1c3RvbSB0cmFjZSA"));
+  @Test
+  void leavesThePatternUnchangedWhenNeitherKeyIsPortable() {
+    assertThat(LogPatternInjection.enhance("%m%n", Framework.LOG4J2, "", "custom{span}"))
+        .isEqualTo("%m%n");
   }
 }

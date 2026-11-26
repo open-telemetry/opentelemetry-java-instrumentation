@@ -23,7 +23,6 @@ public class LogbackMdcInstrumentationModule extends InstrumentationModule {
     return asList(
         new LoggerInstrumentation(),
         new LoggingEventInstrumentation(),
-        new PatternLayoutInstrumentation(),
-        new MdcConverterInstrumentation());
+        new PatternLayoutInstrumentation());
   }
 }

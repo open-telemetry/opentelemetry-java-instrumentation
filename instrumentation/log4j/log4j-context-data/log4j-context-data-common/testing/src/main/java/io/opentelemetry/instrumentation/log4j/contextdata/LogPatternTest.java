@@ -5,13 +5,11 @@
 
 package io.opentelemetry.instrumentation.log4j.contextdata;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.util.ArrayList;
-import java.util.Base64;
 import java.util.List;
 import java.util.function.BiConsumer;
 import org.apache.logging.log4j.LogManager;
@@ -160,15 +158,15 @@ public abstract class LogPatternTest {
   void preservesNativeMdcKeyLists() {
     ThreadContext.put("first", "first-value");
     ThreadContext.put("second", "second-value");
-    ThreadContext.put("otel.pattern-injection.log4j2.trace.app", "application-placeholder");
+    ThreadContext.put("app.key", "application-value");
     try {
       assertRenderedPattern(
-          "%d %X{first,second} %X{otel.pattern-injection.log4j2.trace.app} %m%n",
+          "%d %X{first,second} %X{app.key} %m%n",
           (layout, rendered) -> {
             assertThat(rendered)
                 .containsOnlyOnce("first=first-value")
                 .containsOnlyOnce("second=second-value")
-                .containsOnlyOnce("application-placeholder");
+                .containsOnlyOnce("application-value");
             if (ENABLED) {
               assertThat(rendered)
                   .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
@@ -234,36 +232,6 @@ public abstract class LogPatternTest {
         });
   }
 
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void preservesExactAliasKeys(boolean withMessage) {
-    String traceAlias =
-        "otel.pattern-injection.log4j2.trace."
-            + Base64.getUrlEncoder().withoutPadding().encodeToString(TRACE.getBytes(UTF_8));
-    String spanAlias =
-        "otel.pattern-injection.log4j2.span."
-            + Base64.getUrlEncoder().withoutPadding().encodeToString(SPAN.getBytes(UTF_8));
-    String pattern = "%X{" + traceAlias + "} %X{" + spanAlias + "}" + (withMessage ? " %m%n" : "");
-    ThreadContext.put(traceAlias, "application-trace-alias");
-    ThreadContext.put(spanAlias, "application-span-alias");
-    try {
-      assertRenderedPattern(
-          pattern,
-          (layout, rendered) -> {
-            assertThat(rendered)
-                .containsOnlyOnce("application-trace-alias")
-                .containsOnlyOnce("application-span-alias");
-            if (ENABLED && withMessage) {
-              assertThat(rendered)
-                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
-                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
-            }
-          });
-    } finally {
-      ThreadContext.clearAll();
-    }
-  }
-
   @Test
   void rebuildsLayoutFromOriginalConversionPattern() {
     String pattern = "%d %-5p prefix: %m%n";
@@ -283,25 +251,6 @@ public abstract class LogPatternTest {
         });
     assertThat(first.getConversionPattern()).isEqualTo(pattern);
     assertThat(rebuilt.getConversionPattern()).isEqualTo(pattern);
-  }
-
-  @Test
-  void preservesStyleWithBraceContainingKeys() {
-    PatternLayout layout =
-        PatternLayout.newBuilder()
-            .withNoConsoleNoAnsi(false)
-            .withPattern("%style{%d %-5p %m%n}{red}")
-            .build();
-    assertRenderedPattern(
-        layout,
-        (ignored, rendered) -> {
-          assertThat(rendered).contains("\u001B[31m", "pattern message").endsWith("\u001B[m");
-          if (ENABLED) {
-            assertThat(rendered)
-                .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
-                .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
-          }
-        });
   }
 
   @ParameterizedTest

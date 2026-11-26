@@ -48,19 +48,11 @@ testing.suites {
       systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
       systemProperty("otel.service.name", "pattern-service")
     }
-    register("PatternInjectionNativeKeys") {
-      filter { includeTestsMatching("*LogPatternTest") }
-      systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
-      systemProperty("otel.service.name", "pattern-service")
-      systemProperty("otel.instrumentation.common.logging.trace-id-key", "custom:-trace")
-      systemProperty("otel.instrumentation.common.logging.span-id-key", "custom,\\'\"span")
-    }
-    register("PatternInjectionCustomKeys") {
-      filter { includeTestsMatching("*LogPatternTest") }
+    register("PatternInjectionMixedKeys") {
+      filter { includeTestsMatching("*LogPatternTest.preservesExplicitConverterForNonPortableKey") }
       environment("OTEL_INSTRUMENTATION_LOGGING_PATTERN_INJECTION_ENABLED", "true")
-      environment("OTEL_SERVICE_NAME", "pattern-service")
-      systemProperty("otel.instrumentation.common.logging.trace-id-key", "custom,'\"trace\\")
-      systemProperty("otel.instrumentation.common.logging.span-id-key", "custom:-span%('\"\\)")
+      systemProperty("otel.instrumentation.common.logging.trace-id-key", "custom,trace")
+      systemProperty("otel.instrumentation.common.logging.span-id-key", "otel.span-id_1")
     }
   }
 

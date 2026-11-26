@@ -34,25 +34,24 @@ class PatternLayoutInstrumentation implements TypeInstrumentation {
   public static class StartAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static Object[] onEnter(@Advice.This PatternLayoutBase<?> layout) {
+    public static String onEnter(@Advice.This PatternLayoutBase<?> layout) {
       if (!(layout instanceof PatternLayout) || !LogPatternInjection.isEnabled()) {
         return null;
       }
       String original = layout.getPattern();
-      LogPatternInjection.Injection injection =
-          LogPatternInjection.prepare(original, LogbackPatternInjection.FRAMEWORK);
-      layout.setPattern(injection.getPattern());
-      Object[] state = new Object[] {null, original};
-      state[0] = LogPatternInjection.currentInjection().set(injection);
-      return state;
+      String enhanced = LogPatternInjection.enhance(original, LogbackPatternInjection.FRAMEWORK);
+      if (original == null || enhanced == null || original.equals(enhanced)) {
+        return null;
+      }
+      layout.setPattern(enhanced);
+      return original;
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void onExit(
-        @Advice.This PatternLayoutBase<?> layout, @Advice.Enter @Nullable Object[] state) {
-      if (state != null) {
-        LogPatternInjection.currentInjection().restore((LogPatternInjection.Injection) state[0]);
-        layout.setPattern((String) state[1]);
+        @Advice.This PatternLayoutBase<?> layout, @Advice.Enter @Nullable String original) {
+      if (original != null) {
+        layout.setPattern(original);
       }
     }
   }

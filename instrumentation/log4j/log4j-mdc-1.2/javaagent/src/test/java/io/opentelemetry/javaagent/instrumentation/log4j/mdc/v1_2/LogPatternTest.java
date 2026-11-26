@@ -6,20 +6,16 @@
 package io.opentelemetry.javaagent.instrumentation.log4j.mdc.v1_2;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
-import static java.nio.charset.StandardCharsets.UTF_8;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
-import java.util.Base64;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 import org.apache.log4j.PatternLayout;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
 
 class LogPatternTest {
   @RegisterExtension
@@ -42,9 +38,7 @@ class LogPatternTest {
     if (ENABLED && testLatestDeps()) {
       assertThat(wholeMdc.getConversionPattern()).isEqualTo("%d{yyyy-MM-dd HH:mm:ss} %X %m%n");
     }
-    PatternLayout control =
-        new PatternLayout(
-            "%X{otel.pattern-injection.log4j1.trace.app} service.name=%X{service.name}");
+    PatternLayout control = new PatternLayout("%X{app.key} service.name=%X{service.name}");
     String pattern = layout.getConversionPattern();
     layout.setConversionPattern(pattern);
     layout.activateOptions();
@@ -83,12 +77,12 @@ class LogPatternTest {
                       SPAN + "=" + Span.current().getSpanContext().getSpanId());
             }
           });
-      MDC.put("otel.pattern-injection.log4j1.trace.app", "application-placeholder");
+      MDC.put("app.key", "application-value");
       MDC.put("service.name", "application-service");
       MDC.put(SPAN, "application-span");
       testing.runWithSpan("override", () -> logger.info("application"));
       assertThat(control.format(ListAppender.getEvents().get(2)))
-          .containsOnlyOnce("application-placeholder")
+          .containsOnlyOnce("application-value")
           .contains("service.name=application-service");
       if (ENABLED) {
         assertThat(layout.format(ListAppender.getEvents().get(2)))
@@ -96,55 +90,9 @@ class LogPatternTest {
             .doesNotContain("service.name=");
       }
     } finally {
-      MDC.remove("otel.pattern-injection.log4j1.trace.app");
+      MDC.remove("app.key");
       MDC.remove("service.name");
       MDC.remove(SPAN);
-      logger.removeAppender(appender);
-      logger.setAdditivity(additive);
-      ListAppender.clearEvents();
-    }
-  }
-
-  @ParameterizedTest
-  @ValueSource(booleans = {false, true})
-  void preservesExactAliasKeys(boolean withMessage) {
-    String traceAlias =
-        "otel.pattern-injection.log4j1.trace."
-            + Base64.getUrlEncoder().withoutPadding().encodeToString(TRACE.getBytes(UTF_8));
-    String spanAlias =
-        "otel.pattern-injection.log4j1.span."
-            + Base64.getUrlEncoder().withoutPadding().encodeToString(SPAN.getBytes(UTF_8));
-    String pattern = "%X{" + traceAlias + "} %X{" + spanAlias + "}" + (withMessage ? " %m%n" : "");
-    PatternLayout layout = new PatternLayout(pattern);
-    layout.setConversionPattern(layout.getConversionPattern());
-    assertThat(layout.getConversionPattern()).isEqualTo(pattern);
-    Logger logger = Logger.getLogger("alias-regression");
-    ListAppender appender = new ListAppender();
-    boolean additive = logger.getAdditivity();
-    logger.setAdditivity(false);
-    logger.addAppender(appender);
-    ListAppender.clearEvents();
-    try {
-      logger.info("initialize");
-      MDC.put(traceAlias, "application-trace-alias");
-      MDC.put(spanAlias, "application-span-alias");
-      testing.runWithSpan(
-          "alias",
-          () -> {
-            logger.info("message");
-            String rendered = layout.format(ListAppender.getEvents().get(1));
-            assertThat(rendered)
-                .containsOnlyOnce("application-trace-alias")
-                .containsOnlyOnce("application-span-alias");
-            if (ENABLED && withMessage) {
-              assertThat(rendered)
-                  .containsOnlyOnce(Span.current().getSpanContext().getTraceId())
-                  .containsOnlyOnce(Span.current().getSpanContext().getSpanId());
-            }
-          });
-    } finally {
-      MDC.remove(traceAlias);
-      MDC.remove(spanAlias);
       logger.removeAppender(appender);
       logger.setAdditivity(additive);
       ListAppender.clearEvents();

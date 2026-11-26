@@ -48,14 +48,10 @@ class PatternParserInstrumentation implements TypeInstrumentation {
       if (framework == null) {
         return null;
       }
-      LogPatternInjection.Injection injection = LogPatternInjection.prepare(pattern, framework);
-      String enhanced = injection.getPattern();
-      Object[] state =
-          new Object[] {
-            null, pattern, enhanced, enhanced == null ? length : enhanced.length(), length
-          };
-      state[0] = LogPatternInjection.currentInjection().set(injection);
-      return state;
+      String enhanced = LogPatternInjection.enhance(pattern, framework);
+      return enhanced == null || pattern.equals(enhanced)
+          ? null
+          : new Object[] {pattern, length, enhanced, enhanced.length()};
     }
 
     @AssignReturned.ToFields({
@@ -65,11 +61,7 @@ class PatternParserInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     @Nullable
     public static Object[] onExit(@Advice.Enter @Nullable Object[] state) {
-      if (state == null) {
-        return null;
-      }
-      LogPatternInjection.currentInjection().restore((LogPatternInjection.Injection) state[0]);
-      return new Object[] {state[1], state[4]};
+      return state;
     }
   }
 }
