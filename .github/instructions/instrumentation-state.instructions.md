@@ -104,21 +104,13 @@ javaagent instrumentation, not library-only code.
   unregister the callback. If a shutdown path misses that cleanup, fix the hook rather than
   weakening the reference.
 
-- **Retention after unregistration.** A closed SDK handle still holds the callback. A retained
-  closed handle is a defect only when the instrumentation keeps callback state alive longer than
-  the library or API it replaces would in the same scenario. Native Micrometer meters, HikariCP's
-  own metrics tracker, and closed SDK handles all keep their callback state after removal, so
-  instrumentation that matches them is not leaking.
-
-  Clearing the field that holds a closed handle is still a cheap improvement when its owner can
-  stay reachable after removal and the callback captures state that nothing else references.
-  For example, an application that keeps a removed Micrometer `FunctionCounter` in a field also
-  keeps the bridge's closed handle. If the counter's function is a bound method reference such as
-  `stats::completedFor`, clearing the handle lets `stats` be collected.
-
-  Trace other strong references before clearing. The HikariCP callback captures `PoolStats`, which
-  references the pool, but a retained `HikariDataSource` already holds the pool directly. Clearing
-  the tracker's closed handle does not make the pool collectible.
+- **Retention after unregistration.** A closed SDK handle still holds the callback. Keeping it is
+  a defect only if instrumentation retains callback state longer than the native library would;
+  native Micrometer meters and HikariCP's own tracker also keep theirs after removal. Clearing the
+  handle is optional and helps only when nothing else references the captured state. For example,
+  it frees `stats` captured by `stats::completedFor` in a removed Micrometer `FunctionCounter` that
+  the application still holds, but not the HikariCP pool, which a retained `HikariDataSource`
+  references directly.
 
 - **Collection without explicit shutdown.** If an object or class loader should be collectible
   while the registration is live, trace every strong reference to it from the SDK or other
