@@ -17,6 +17,11 @@ import org.apache.pekko.remote.artery.InboundEnvelope;
  * can not be used to look up the envelope, deserializing a scala {@code case object} returns a
  * shared instance. Pekko calls the instrument from the same thread that (de)serializes the
  * envelope, so the envelope can be handed over in a thread local.
+ *
+ * <p>RemoteInstrumentsSerializationInstrumentation produces this state on serialize/deserialize
+ * entry. OtelRemoteInstrument consumes it in remoteWriteMetadata/remoteReadMetadata. The producer's
+ * exit advice calls endWrite/endRead on both normal and exceptional exits, removing the state even
+ * when serialization fails before the metadata callback runs.
  */
 public final class RemoteMessageState {
 

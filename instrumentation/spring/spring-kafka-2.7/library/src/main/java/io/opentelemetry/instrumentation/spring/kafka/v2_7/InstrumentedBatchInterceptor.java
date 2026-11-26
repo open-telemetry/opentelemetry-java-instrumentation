@@ -25,6 +25,10 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
   @Nullable private final BatchInterceptor<K, V> decorated;
+  // intercept produces invocation state for the same-thread success/failure callbacks, which end
+  // it even if the decorated callback throws. A null result, suppressed span, or exception from
+  // intercept ends it immediately. end restores the enclosing invocation before closing its scope
+  // and ending its span; lastProcessed is separate weak retry tracking, not pending callback state.
   private final ThreadLocal<ProcessingInvocation<KafkaReceiveRequest>> currentInvocation =
       new ThreadLocal<>();
 

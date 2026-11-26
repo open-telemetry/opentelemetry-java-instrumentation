@@ -13,6 +13,12 @@ import org.springframework.messaging.Message;
 /**
  * Internal state for a message-producing endpoint's immediate channel handoff.
  *
+ * <p>AMQP listener advice supplies the lower processing context, and MessageProducerSupport send
+ * advice supplies the message identity. TracingChannelInterceptor reads both during the immediate
+ * channel callbacks; message-history advice forwards the identity when it replaces a message. The
+ * listener and send advice restore their previous state on every exit, including exceptions and
+ * sends that fail before a channel callback runs.
+ *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
