@@ -96,17 +96,15 @@ javaagent instrumentation, not library-only code.
   can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
   Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
 
-  Start from each value stored for the carrier and follow strong references, including lambda
-  captures and outer instances of non-static inner classes. Check the concrete values stored at
-  runtime, not just the declared value type. When a path reaches another carrier, continue through
-  that carrier's virtual-field values, because fallback storage retains them while that carrier is
-  reachable. For example, if carrier A's value references carrier B and B's value references A,
-  fallback storage keeps both alive. If only B's value references A, A lives as long as B, as it
-  would with field-backed storage.
+  Trace strong references from the concrete values stored at runtime, including lambda captures
+  and outer instances of non-static inner classes. If a value references another carrier, check
+  whether the fallback entries can keep either carrier alive longer than intended. For example,
+  a fallback value keyed by B that strongly references both B and A keeps both carriers alive,
+  even if A's own value is detached.
 
-  If no path returns to the carrier, that analysis is sufficient to verify fallback retention
-  safety. Do not add a GC test or a separate JVM run with field injection disabled just to confirm
-  it. If safety depends on when state is cleared or replaced, test the relevant lifecycle path.
+  If the reference analysis rules out unintended retention, do not add a GC test or a separate
+  JVM run with field injection disabled just to confirm it. If safety depends on when state is
+  cleared or replaced, test the relevant lifecycle path.
 
 - Individual `get` and `set` calls do not make a compound read-modify-write atomic. Establish whether
   supported concurrent updates need an invariant before choosing synchronization or ownership.
