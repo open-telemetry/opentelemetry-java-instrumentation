@@ -9,6 +9,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.aResponse;
 import static com.github.tomakehurst.wiremock.client.WireMock.post;
 import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
 import static com.github.tomakehurst.wiremock.core.WireMockConfiguration.options;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewGenAiSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.incubating.GenAiIncubatingAttributes.GEN_AI_OPERATION_NAME;
@@ -36,6 +37,7 @@ import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.embeddings.EmbeddingCreateParams;
 import com.openai.models.responses.ResponseCreateParams;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -280,7 +282,11 @@ class ServiceErrorTest {
         INSTRUMENTATION_NAME,
         metric ->
             metric
-                .hasName("gen_ai.client.operation.duration")
+                .hasName(
+                    operation != Operation.EMBEDDINGS
+                            && emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                        ? "gen_ai.client.inference.duration"
+                        : "gen_ai.client.operation.duration")
                 .hasUnit("s")
                 .hasHistogramPointsSatisfying(point ->
                     point

@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.openai.v1_1;
 
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewGenAiSemconv;
 import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeSchemaUrl;
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -49,6 +50,7 @@ import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseStreamEvent;
 import com.openai.services.async.ResponseServiceAsync;
 import com.openai.services.blocking.ResponseService;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -115,7 +117,10 @@ public abstract class AbstractResponsesTest extends AbstractOpenAiTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_37_0))
                     .hasHistogramPointsSatisfying(point ->
                         point

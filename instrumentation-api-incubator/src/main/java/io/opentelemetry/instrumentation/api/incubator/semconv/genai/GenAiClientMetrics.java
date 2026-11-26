@@ -6,12 +6,16 @@
 package io.opentelemetry.instrumentation.api.incubator.semconv.genai;
 
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_OPERATION_NAME;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_INPUT_TOKENS;
 import static io.opentelemetry.instrumentation.api.incubator.semconv.genai.GenAiAttributesExtractor.GEN_AI_USAGE_OUTPUT_TOKENS;
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewGenAiSemconv;
+import static java.util.Arrays.asList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.logging.Level.FINE;
 
 import com.google.auto.value.AutoValue;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.common.AttributesBuilder;
@@ -25,8 +29,12 @@ import io.opentelemetry.context.ContextKey;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.DbClientMetrics;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationListener;
 import io.opentelemetry.instrumentation.api.instrumenter.OperationMetrics;
+import io.opentelemetry.instrumentation.api.internal.OpenTelemetryConfigurable;
 import io.opentelemetry.instrumentation.api.internal.OperationMetricsUtil;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.logging.Logger;
+import javax.annotation.Nullable;
 
 /**
  * {@link OperationListener} which keeps track of <a
@@ -44,6 +52,9 @@ public final class GenAiClientMetrics implements OperationListener {
 
   static final AttributeKey<String> GEN_AI_TOKEN_TYPE = stringKey("gen_ai.token.type");
 
+  private static final Set<String> INFERENCE_OPERATIONS =
+      new HashSet<>(asList("chat", "generate_content", "text_completion"));
+
   /**
    * Returns an {@link OperationMetrics} instance which can be used to enable recording of {@link
    * GenAiClientMetrics}.
@@ -52,13 +63,15 @@ public final class GenAiClientMetrics implements OperationListener {
    *     io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder#addOperationMetrics(OperationMetrics)
    */
   public static OperationMetrics get() {
-    return OperationMetricsUtil.create("gen_ai client", GenAiClientMetrics::new);
+    return new Factory();
   }
 
   private final LongHistogram tokenUsage;
   private final DoubleHistogram operationDuration;
+  // set only when the gen_ai semconv preview is enabled
+  @Nullable private final DoubleHistogram inferenceDuration;
 
-  private GenAiClientMetrics(Meter meter) {
+  private GenAiClientMetrics(Meter meter, boolean emitPreviewGenAiSemconv) {
     LongHistogramBuilder tokenUsageBuilder =
         meter
             .histogramBuilder("gen_ai.client.token.usage")
@@ -77,6 +90,19 @@ public final class GenAiClientMetrics implements OperationListener {
                 GenAiMetricsAdvice.CLIENT_OPERATION_DURATION_BUCKETS);
     GenAiMetricsAdvice.applyClientOperationDurationAdvice(operationDurationBuilder);
     this.operationDuration = operationDurationBuilder.build();
+    if (emitPreviewGenAiSemconv) {
+      DoubleHistogramBuilder inferenceDurationBuilder =
+          meter
+              .histogramBuilder("gen_ai.client.inference.duration")
+              .setUnit("s")
+              .setDescription("GenAI client inference operation duration.")
+              .setExplicitBucketBoundariesAdvice(
+                  GenAiMetricsAdvice.CLIENT_OPERATION_DURATION_BUCKETS);
+      GenAiMetricsAdvice.applyClientOperationDurationAdvice(inferenceDurationBuilder);
+      this.inferenceDuration = inferenceDurationBuilder.build();
+    } else {
+      this.inferenceDuration = null;
+    }
   }
 
   @Override
@@ -99,8 +125,13 @@ public final class GenAiClientMetrics implements OperationListener {
 
     AttributesBuilder attributesBuilder = state.startAttributes().toBuilder().putAll(endAttributes);
 
-    operationDuration.record(
-        (endNanos - state.startTimeNanos()) / NANOS_PER_S, attributesBuilder.build(), context);
+    Attributes attributes = attributesBuilder.build();
+    DoubleHistogram duration =
+        inferenceDuration != null
+                && INFERENCE_OPERATIONS.contains(attributes.get(GEN_AI_OPERATION_NAME))
+            ? inferenceDuration
+            : operationDuration;
+    duration.record((endNanos - state.startTimeNanos()) / NANOS_PER_S, attributes, context);
 
     Long inputTokens = endAttributes.get(GEN_AI_USAGE_INPUT_TOKENS);
     if (inputTokens != null) {
@@ -111,6 +142,23 @@ public final class GenAiClientMetrics implements OperationListener {
     if (outputTokens != null) {
       tokenUsage.record(
           outputTokens, attributesBuilder.put(GEN_AI_TOKEN_TYPE, "output").build(), context);
+    }
+  }
+
+  private static final class Factory implements OperationMetrics, OpenTelemetryConfigurable {
+    private volatile boolean emitPreviewGenAiSemconv;
+
+    @Override
+    public void internalInitialize(OpenTelemetry openTelemetry) {
+      emitPreviewGenAiSemconv = emitPreviewGenAiSemconv(openTelemetry);
+    }
+
+    @Override
+    public OperationListener create(Meter meter) {
+      boolean preview = emitPreviewGenAiSemconv;
+      return OperationMetricsUtil.create(
+              "gen_ai client", ignored -> new GenAiClientMetrics(meter, preview))
+          .create(meter);
     }
   }
 
