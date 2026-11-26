@@ -23,15 +23,16 @@ fun currentRuntimeContextMarkerApplication(): RuntimeContextMarkerApplication? =
 // One application of a marker on a thread. Scopes deferred to it are closed when the runtime
 // restores it, most recent first.
 class RuntimeContextMarkerApplication internal constructor(private val previous: RuntimeContextMarkerApplication?) {
-  private val deferred = ArrayDeque<Scope>()
+  private var deferred: ArrayDeque<Scope>? = null
   private var restored = false
 
   fun defer(scope: Scope) {
-    deferred.push(scope)
+    val scopes = deferred ?: ArrayDeque<Scope>().also { deferred = it }
+    scopes.push(scope)
   }
 
   // Returns whether the scope was still deferred, that is, not closed by the runtime yet.
-  fun undefer(scope: Scope): Boolean = deferred.remove(scope)
+  fun undefer(scope: Scope): Boolean = deferred?.remove(scope) == true
 
   internal fun restore() {
     // UndispatchedCoroutine can replay the restore of a snapshot taken without a dispatcher.
@@ -39,8 +40,10 @@ class RuntimeContextMarkerApplication internal constructor(private val previous:
       return
     }
     restored = true
-    while (!deferred.isEmpty()) {
-      deferred.pop().close()
+    deferred?.let { scopes ->
+      while (!scopes.isEmpty()) {
+        scopes.pop().close()
+      }
     }
     RuntimeContextMarkerKey.applied.set(previous)
   }
