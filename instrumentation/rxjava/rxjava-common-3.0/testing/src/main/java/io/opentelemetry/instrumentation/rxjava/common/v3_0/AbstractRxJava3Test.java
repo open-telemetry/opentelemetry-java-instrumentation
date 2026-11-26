@@ -223,18 +223,14 @@ public abstract class AbstractRxJava3Test {
     latch.await();
     testing()
         .waitAndAssertTraces(trace ->
-            trace
-                .filteredOn(span -> span.getName().equals(PARENT))
-                .singleElement()
-                .satisfies(parent ->
-                    trace.hasSpansSatisfyingExactlyInAnyOrder(
-                        span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
-                        span ->
-                            span.hasName("callable").hasKind(SpanKind.INTERNAL).hasParent(parent),
-                        span ->
-                            span.hasName("subscriber")
-                                .hasKind(SpanKind.INTERNAL)
-                                .hasParent(parent))));
+            trace.hasSpansSatisfyingExactlyInAnyOrder(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("callable").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("subscriber")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test
