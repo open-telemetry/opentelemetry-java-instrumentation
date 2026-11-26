@@ -47,7 +47,7 @@ public abstract class AbstractServlet5Test<SERVER, CONTEXT> extends AbstractHttp
                   "otel.instrumentation.servlet.experimental.request-parameters.excluded")
               != null;
 
-  private static final boolean REQUEST_BODY_CAPTURE_ENABLED =
+  public static final boolean REQUEST_BODY_CAPTURE_ENABLED =
       Boolean.getBoolean("otel.instrumentation.servlet.experimental.capture-request-body.enabled");
 
   @RegisterExtension

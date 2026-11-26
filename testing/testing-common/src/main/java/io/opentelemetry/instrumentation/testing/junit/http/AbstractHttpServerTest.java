@@ -1112,6 +1112,14 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
           // request body content can be captured as string or byte buffer
           String expected = "{\"test\": \"value\"}";
           Value<?> bodyValue = serverSpan.getAttributes().get(valueKey(key));
+          if (bodyValue == null) {
+            // The body is a string attribute, but javaagent tests export spans through OTLP, which
+            // makes it readable as a Value. Library tests use the plain in-memory SDK, which keeps
+            // the attribute type as is, so a lookup with valueKey() finds nothing and the string
+            // key must be used instead.
+            String stringValue = serverSpan.getAttributes().get(stringKey(key));
+            bodyValue = stringValue != null ? Value.of(stringValue) : null;
+          }
           assertThat(bodyValue).isNotNull();
           Object value = bodyValue.getValue();
           switch (bodyValue.getType()) {

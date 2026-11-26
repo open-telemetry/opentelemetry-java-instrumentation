@@ -21,8 +21,10 @@ public final class AppServerBridge {
 
   private final boolean servletShouldRecordException;
   private boolean captureServletAttributes;
+
   /** Indicates if the app server instrumentation adds the captured request body */
   private final boolean appServerCapturesRequestBody;
+
   @Nullable private Throwable exception;
 
   private AppServerBridge(Builder builder) {

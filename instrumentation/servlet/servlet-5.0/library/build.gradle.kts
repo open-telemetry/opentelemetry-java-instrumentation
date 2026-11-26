@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
 }
@@ -10,4 +12,12 @@ dependencies {
 
   testLibrary("org.apache.tomcat.embed:tomcat-embed-core:10.0.0")
   testLibrary("org.apache.tomcat.embed:tomcat-embed-jasper:10.0.0")
+}
+
+testing.suites {
+  executions("test") {
+    register("Experimental") {
+      jvmArgs("-Dotel.instrumentation.servlet.experimental.capture-request-body.enabled=true")
+    }
+  }
 }
