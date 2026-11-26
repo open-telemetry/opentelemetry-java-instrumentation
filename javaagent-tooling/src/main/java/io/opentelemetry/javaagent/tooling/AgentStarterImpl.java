@@ -70,30 +70,20 @@ public class AgentStarterImpl implements AgentStarter {
 
   @Override
   public void start() {
-    installTransformers();
+    LoggingCustomizer loggingCustomizer;
+    try {
+      installTransformers();
 
-    extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader());
-    // allows loading instrumenter customizers from agent and extensions
-    ServiceLoaderUtil.setLoadFunction(clazz -> ServiceLoader.load(clazz, extensionClassLoader));
+      extensionClassLoader = createExtensionClassLoader(getClass().getClassLoader());
+      // allows loading instrumenter customizers from agent and extensions
+      ServiceLoaderUtil.setLoadFunction(clazz -> ServiceLoader.load(clazz, extensionClassLoader));
 
-    String loggerImplementationName = EarlyInitAgentConfig.get().getLogging();
-    // default to the built-in stderr slf4j-simple logger
-    if (loggerImplementationName == null) {
-      loggerImplementationName = "simple";
-    }
-
-    LoggingCustomizer loggingCustomizer = null;
-    for (LoggingCustomizer customizer :
-        ServiceLoader.load(LoggingCustomizer.class, extensionClassLoader)) {
-      if (customizer.name().equalsIgnoreCase(loggerImplementationName)) {
-        loggingCustomizer = customizer;
-        break;
-      }
-    }
-    // unsupported logger implementation; defaulting to noop
-    if (loggingCustomizer == null) {
-      logUnrecognizedLoggerImplWarning(loggerImplementationName);
-      loggingCustomizer = new NoopLoggingCustomizer();
+      loggingCustomizer = selectLoggingCustomizer();
+    } catch (Throwable t) {
+      // no logging implementation was selected, so the caller reports this failure; print what was
+      // logged before it first so it isn't lost
+      dumpLogsBufferedBeforeLoggingInit();
+      throw t;
     }
 
     Throwable startupError = null;
@@ -113,6 +103,24 @@ public class AgentStarterImpl implements AgentStarter {
       dumpLogsBufferedBeforeLoggingInit();
       loggingCustomizer.onStartupFailure(startupError);
     }
+  }
+
+  private LoggingCustomizer selectLoggingCustomizer() {
+    String loggerImplementationName = EarlyInitAgentConfig.get().getLogging();
+    // default to the built-in stderr slf4j-simple logger
+    if (loggerImplementationName == null) {
+      loggerImplementationName = "simple";
+    }
+
+    for (LoggingCustomizer customizer :
+        ServiceLoader.load(LoggingCustomizer.class, extensionClassLoader)) {
+      if (customizer.name().equalsIgnoreCase(loggerImplementationName)) {
+        return customizer;
+      }
+    }
+    // unsupported logger implementation; defaulting to noop
+    logUnrecognizedLoggerImplWarning(loggerImplementationName);
+    return new NoopLoggingCustomizer();
   }
 
   // if startup failed before a logging implementation was initialized, print what was logged so
