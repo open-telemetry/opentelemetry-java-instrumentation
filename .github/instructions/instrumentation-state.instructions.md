@@ -179,7 +179,10 @@ javaagent instrumentation, not library-only code.
   shared bootstrap owner.
 
 - Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
-  as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
+  as `receiveSpanSuppression` need no `current` prefix. A one-shot handoff, which one advice sets
+  and a later advice consumes and clears, is not ambient state; name it for its role, such as
+  `pendingParentContext`, so it is not mistaken for `Context.current()` or another active value.
+  Name the state, not its storage mechanism;
   do not use `*ThreadLocal` for a wrapper accessor. Carrier-attached state may cross threads and does
   not use `current*`.
 
