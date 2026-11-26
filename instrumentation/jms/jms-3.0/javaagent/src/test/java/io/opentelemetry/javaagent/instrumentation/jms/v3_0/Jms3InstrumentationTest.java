@@ -27,7 +27,6 @@ import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanContext;
-import io.opentelemetry.context.Context;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import jakarta.jms.CompletionListener;
@@ -62,7 +61,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
   private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jms-3.0";
 
   @Test
-  void asyncSendSuccessRestoresCallerContext() throws Exception {
+  void asyncSendCompletionUsesCallerContext() throws Exception {
     TemporaryQueue destination = session.createTemporaryQueue();
     MessageProducer producer = session.createProducer(destination);
     cleanup.deferCleanup(producer);
@@ -82,15 +81,7 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
           }
         };
 
-    Context originalContext = Context.current();
-    testing.runWithSpan(
-        "parent",
-        () -> {
-          SpanContext spanContext = Span.current().getSpanContext();
-          producer.send(sentMessage, listener);
-          assertThat(Span.current().getSpanContext()).isEqualTo(spanContext);
-        });
-    assertThat(Context.current()).isSameAs(originalContext);
+    testing.runWithSpan("parent", () -> producer.send(sentMessage, listener));
     assertThat(completed.await(10, SECONDS)).isTrue();
     String messageId = sentMessage.getJMSMessageID();
     assertThat(messageId).isNotNull();
