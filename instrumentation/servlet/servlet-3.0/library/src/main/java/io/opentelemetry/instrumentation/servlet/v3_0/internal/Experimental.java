@@ -77,9 +77,9 @@ public final class Experimental {
    *
    * <p>Parameter names and selector patterns are matched case-sensitively. {@code ?} matches any
    * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. An absent or empty selector captures no
-   * parameters; a selector with only excluded patterns captures every parameter that it does not
-   * exclude.
+   * patterns take precedence over included patterns. No request parameters are captured unless
+   * included or excluded patterns are configured, and {@code *} captures all request parameters. If
+   * only excluded patterns are configured, all other request parameters are captured.
    *
    * @param builder the telemetry builder
    * @param requestParameters request parameter selector

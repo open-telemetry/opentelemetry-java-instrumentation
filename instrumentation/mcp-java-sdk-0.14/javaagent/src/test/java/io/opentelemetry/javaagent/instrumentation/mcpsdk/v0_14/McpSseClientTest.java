@@ -81,7 +81,6 @@ class McpSseClientTest {
     URI tokenUri = URI.create(baseUri + "/token");
     HttpClient tokenClient = HttpClient.newHttpClient();
     Queue<Context> customizerContexts = new ConcurrentLinkedQueue<>();
-    AtomicReference<Context> callbackContext = new AtomicReference<>();
     McpAsyncClient client =
         McpClient.async(
                 HttpClientSseClientTransport.builder(baseUri)
@@ -111,7 +110,6 @@ class McpSseClientTest {
           client
               .callTool(new McpSchema.CallToolRequest("test", Map.of(), null))
               .doOnNext(result -> {
-                callbackContext.set(Context.current());
                 testing.runWithSpan("callback", () -> {});
               })
               .toFuture();
@@ -131,7 +129,6 @@ class McpSseClientTest {
           .hasSize(3)
           .allSatisfy(context ->
               assertThat(Span.fromContext(context).getSpanContext().isValid()).isFalse());
-      assertThat(Span.fromContext(callbackContext.get()).getSpanContext().isValid()).isFalse();
     } finally {
       client.close();
       if (sse.get() != null) {

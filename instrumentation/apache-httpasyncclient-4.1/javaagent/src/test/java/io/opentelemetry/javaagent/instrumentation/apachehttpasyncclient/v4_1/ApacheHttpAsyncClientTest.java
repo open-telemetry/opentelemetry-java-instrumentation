@@ -5,9 +5,13 @@
 
 package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
+import static io.opentelemetry.api.impl.InstrumentationUtil.suppressInstrumentation;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.AbstractHttpClientTest;
@@ -22,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.net.URI;
 import java.util.Map;
 import java.util.concurrent.CancellationException;
+import java.util.concurrent.atomic.AtomicReference;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.config.RequestConfig;
@@ -82,6 +87,24 @@ class ApacheHttpAsyncClientTest {
 
   @Nested
   class ApacheClientUriRequestTest extends AbstractTest {
+
+    @Test
+    void suppressedRequestPreservesCallbackContextWithoutCallerSpan() throws Throwable {
+      ContextKey<String> key = ContextKey.named("callback-context");
+      AtomicReference<String> callbackValue = new AtomicReference<>();
+      HttpClientResult result =
+          new HttpClientResult(() -> callbackValue.set(Context.current().get(key)));
+      HttpUriRequest request = new HttpUriRequest("GET", resolveAddress("/success"));
+
+      try (Scope ignored = Context.root().with(key, "caller").makeCurrent()) {
+        suppressInstrumentation(() -> client.execute(request, responseCallback(result)));
+      }
+
+      assertThat(result.get()).isEqualTo(200);
+      assertThat(callbackValue.get()).isEqualTo("caller");
+      testing.waitAndAssertTraces(
+          trace -> trace.hasSpansSatisfyingExactly(span -> assertServerSpan(span).hasNoParent()));
+    }
 
     @Override
     public HttpUriRequest buildRequest(String method, URI uri, Map<String, String> headers) {

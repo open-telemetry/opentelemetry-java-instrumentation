@@ -238,8 +238,9 @@ Each configuration should include:
   back to (see below).
 - `deprecated` (optional): Set to `true` for a deprecated configuration. It is required exactly when
   the description starts with "Deprecated".
-- `replaced_by` (optional): For a deprecated configuration, the name of the configuration that
-  replaces it.
+- `replaced_by` (optional): For a deprecated configuration, the documented replacement name.
+  Use the flat property name if both settings have one, or the YAML path if both have a
+  declarative form. If they share neither form, use the replacement's documented name.
 
 Configurations that many modules share are defined once in
 `instrumentation-docs/src/main/resources/shared-config-definitions.yaml` and referenced by id:

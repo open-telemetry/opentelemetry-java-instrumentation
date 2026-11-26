@@ -8,7 +8,7 @@ package io.opentelemetry.javaagent.instrumentation.spring.cloud.gateway.common;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
-import java.util.regex.Pattern;
+import io.opentelemetry.instrumentation.spring.cloud.gateway.common.internal.GatewayRouteIdConverger;
 import javax.annotation.Nullable;
 
 /**
@@ -42,14 +42,6 @@ public class GatewayRouteHelper {
             .getBoolean("experimental_span_attributes/development", false);
   }
 
-  /* Regex for UUID */
-  private static final Pattern UUID_REGEX =
-      Pattern.compile(
-          "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$");
-
-  private static final String INVALID_RANDOM_ROUTE_ID =
-      "org.springframework.util.AlternativeJdkIdGenerator@";
-
   private GatewayRouteHelper() {}
 
   /** Returns whether experimental span attributes should be captured. */
@@ -67,15 +59,6 @@ public class GatewayRouteHelper {
    */
   @Nullable
   public static String convergeRouteId(@Nullable String routeId) {
-    if (routeId == null || routeId.isEmpty()) {
-      return null;
-    }
-    if (UUID_REGEX.matcher(routeId).matches()) {
-      return null;
-    }
-    if (routeId.startsWith(INVALID_RANDOM_ROUTE_ID)) {
-      return null;
-    }
-    return routeId;
+    return GatewayRouteIdConverger.converge(routeId);
   }
 }

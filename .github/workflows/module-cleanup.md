@@ -217,10 +217,12 @@ instructions imported into this prompt are yours; execute them yourself.
 
 1. Confirm the module directory exists:
    `test -d "$MODULE_DIR" || { echo "Module directory missing: $MODULE_DIR"; exit 1; }`
+
 2. Apply the imported `module-cleanup` persona's full checklist to
    `$MODULE_DIR`. Leave any changes uncommitted. If the persona reports it
    had to revert all of its changes (no substantive diff remained), proceed
    to step 3 anyway — "no changes" is a valid outcome and finalize handles it.
+
 3. **Final mandatory action** (do not skip even on no-op):
 
    ```

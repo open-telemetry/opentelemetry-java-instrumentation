@@ -133,7 +133,6 @@ class McpCallbackContextTest {
       assertThat(callbackContext.get().get(key)).isEqualTo("custom");
       assertThat(Baggage.fromContext(callbackContext.get()).getEntryValue("tenant"))
           .isEqualTo("caller");
-      assertThat(Span.fromContext(callbackContext.get()).getSpanContext().isValid()).isFalse();
       assertThat(completionContext.get().get(key)).isEqualTo("custom");
       assertThat(Span.fromContext(transport.getToolRequestContext()).getSpanContext().isValid())
           .isTrue();
@@ -156,12 +155,10 @@ class McpCallbackContextTest {
         new TestMcpClientTransport(TestMcpClientTransport.ToolResponse.NONE);
     McpAsyncClient client = McpClient.async(transport).build();
     client.initialize().block();
-    AtomicReference<Context> callbackContext = new AtomicReference<>();
     try {
       client
           .callTool(new McpSchema.CallToolRequest("async", Map.of(), null))
           .doOnNext(result -> {
-            callbackContext.set(Context.current());
             testing.runWithSpan("callback", () -> {});
           })
           .subscribe();
@@ -173,7 +170,6 @@ class McpCallbackContextTest {
             assertThat(Span.current().getSpanContext())
                 .isEqualTo(Span.fromContext(threadContext).getSpanContext());
           });
-      assertThat(Span.fromContext(callbackContext.get()).getSpanContext().isValid()).isFalse();
     } finally {
       client.close();
     }

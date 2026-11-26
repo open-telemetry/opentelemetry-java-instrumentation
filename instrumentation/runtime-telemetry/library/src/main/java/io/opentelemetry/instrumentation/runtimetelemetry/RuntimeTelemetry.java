@@ -31,7 +31,7 @@ public final class RuntimeTelemetry implements AutoCloseable {
    * @param openTelemetry the {@link OpenTelemetry} instance used to record telemetry
    */
   public static RuntimeTelemetry create(OpenTelemetry openTelemetry) {
-    return new RuntimeTelemetryBuilder(openTelemetry).build();
+    return builder(openTelemetry).build();
   }
 
   /**
