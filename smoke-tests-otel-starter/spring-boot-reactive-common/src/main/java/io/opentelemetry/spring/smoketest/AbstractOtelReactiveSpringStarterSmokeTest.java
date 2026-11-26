@@ -103,9 +103,8 @@ public class AbstractOtelReactiveSpringStarterSmokeTest extends AbstractSpringSt
         metric ->
             metric
                 .hasName("http.server.request.duration")
-                .satisfies(data ->
-                    assertThat(data.getHistogramData().getPoints())
-                        .extracting(point -> point.getAttributes().get(HTTP_ROUTE))
-                        .contains(routeId)));
+                .hasHistogramSatisfying(histogram ->
+                    histogram.containsPointsSatisfying(
+                        point -> point.hasAttribute(HTTP_ROUTE, routeId))));
   }
 }
