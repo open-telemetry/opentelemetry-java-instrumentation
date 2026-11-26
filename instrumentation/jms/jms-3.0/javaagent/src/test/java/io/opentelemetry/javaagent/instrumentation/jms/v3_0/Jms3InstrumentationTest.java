@@ -68,12 +68,11 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
     cleanup.deferCleanup(producer);
     TextMessage sentMessage = session.createTextMessage("async message");
     CountDownLatch completed = new CountDownLatch(1);
-    AtomicReference<SpanContext> callbackSpanContext = new AtomicReference<>();
     CompletionListener listener =
         new CompletionListener() {
           @Override
           public void onCompletion(Message message) {
-            callbackSpanContext.set(Span.current().getSpanContext());
+            testing.runWithSpan("onCompletion", () -> {});
             completed.countDown();
           }
 
@@ -84,18 +83,15 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
         };
 
     Context originalContext = Context.current();
-    SpanContext parentSpanContext =
-        testing.runWithSpan(
-            "parent",
-            () -> {
-              SpanContext spanContext = Span.current().getSpanContext();
-              producer.send(sentMessage, listener);
-              assertThat(Span.current().getSpanContext()).isEqualTo(spanContext);
-              return spanContext;
-            });
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          SpanContext spanContext = Span.current().getSpanContext();
+          producer.send(sentMessage, listener);
+          assertThat(Span.current().getSpanContext()).isEqualTo(spanContext);
+        });
     assertThat(Context.current()).isSameAs(originalContext);
     assertThat(completed.await(10, SECONDS)).isTrue();
-    assertThat(callbackSpanContext.get()).isEqualTo(parentSpanContext);
     String messageId = sentMessage.getJMSMessageID();
     assertThat(messageId).isNotNull();
     String destinationName = destination.getQueueName();
@@ -217,8 +213,8 @@ class Jms3InstrumentationTest extends AbstractJms3Test {
                         equalTo(MESSAGING_MESSAGE_ID, messageId),
                         equalTo(MESSAGING_OPERATION_NAME, "send"),
                         equalTo(MESSAGING_OPERATION_TYPE, "send"),
-                        equalTo(
-                            ERROR_TYPE, failure == null ? null : failure.getClass().getName())));
+                        equalTo(ERROR_TYPE, failure == null ? null : failure.getClass().getName())),
+            span -> span.hasName("onCompletion").hasKind(INTERNAL).hasParent(trace.getSpan(0)));
       } else {
         trace.hasSpansSatisfyingExactly(span -> {
           span.hasName(spanName)
