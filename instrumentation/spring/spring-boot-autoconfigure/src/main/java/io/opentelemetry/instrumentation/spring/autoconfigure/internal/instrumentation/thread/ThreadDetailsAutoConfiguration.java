@@ -21,7 +21,10 @@ import org.springframework.core.type.AnnotatedTypeMetadata;
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@Conditional({OtelEnabled.class, ThreadDetailsAutoConfiguration.CaptureThreadAttributesEnabled.class})
+@Conditional({
+  OtelEnabled.class,
+  ThreadDetailsAutoConfiguration.CaptureThreadAttributesEnabled.class
+})
 @ConditionalOnBean(OpenTelemetry.class)
 @Configuration
 public class ThreadDetailsAutoConfiguration {
