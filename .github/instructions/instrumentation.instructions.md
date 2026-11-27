@@ -39,7 +39,7 @@ Apply these rules to instrumentation modules and packages.
 - Encode version segments as one identifier such as `v4_0`, not dotted package segments such as
   `v4.0`.
 - In library and javaagent common modules, keep `common` in the package prefix and follow the
-  module's token order. For example, `couchbase-common-2.0` uses `couchbase.common.v2_0`,
-  `jaxrs-2.0-common` uses `jaxrs.v2_0.common`, and `jsf-common-jakarta` uses `jsf.common.jakarta`.
+  module's token order. For example, `couchbase-common-2.0` uses `couchbase.common.v2_0`, and
+  `jsf-common-jakarta` uses `jsf.common.jakarta`.
   See the [package-name checker](../scripts/check-package-names.sh) for the layouts CI checks and
   their exceptions.
