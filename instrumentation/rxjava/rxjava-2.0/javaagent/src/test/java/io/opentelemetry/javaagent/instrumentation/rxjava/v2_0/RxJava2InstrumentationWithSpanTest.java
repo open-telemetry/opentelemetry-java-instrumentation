@@ -5,9 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.rxjava.v2_0;
 
-import io.opentelemetry.javaagent.instrumentation.rxjava.v2_0.instrumentationannotation.TracedWithSpan;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.javaagent.instrumentation.rxjava.v2_0.instrumentationannotation.TracedWithSpan;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class RxJava2InstrumentationWithSpanTest extends BaseRxJava2WithSpanTest {
