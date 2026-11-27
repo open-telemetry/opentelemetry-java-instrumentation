@@ -8,9 +8,15 @@ package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaReceiveRequest;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Proxy;
 import javax.annotation.Nullable;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.springframework.kafka.listener.AbstractMessageListenerContainer;
 import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.BatchMessageListener;
@@ -98,5 +104,37 @@ public final class SpringKafkaTelemetry {
   public <K, V> BatchMessageListener<K, V> createBatchMessageListener(
       BatchMessageListener<K, V> listener) {
     return InstrumentedBatchMessageListener.create(batchProcessInstrumenter, listener);
+  }
+
+  /**
+   * Returns a consumer wrapper that marks records returned by {@code poll} as owned by Spring
+   * Kafka.
+   *
+   * <p>Use this as a consumer-factory post-processor when the consumer is instrumented with {@code
+   * KafkaTelemetry}. It prevents Kafka's record iterator from emitting process spans before Spring
+   * invokes the batch listener. Spring's batch listener instrumentation remains responsible for
+   * those spans.
+   */
+  @SuppressWarnings("unchecked") // casting Proxy.newProxyInstance result
+  public <K, V> Consumer<K, V> instrument(Consumer<K, V> consumer) {
+    return (Consumer<K, V>)
+        Proxy.newProxyInstance(
+            SpringKafkaTelemetry.class.getClassLoader(),
+            new Class<?>[] {Consumer.class},
+            (proxy, method, args) -> {
+              Object result;
+              try {
+                result = method.invoke(consumer, args);
+              } catch (InvocationTargetException e) {
+                throw e.getCause();
+              }
+              if ("poll".equals(method.getName()) && result instanceof ConsumerRecords) {
+                for (ConsumerRecord<?, ?> record :
+                    KafkaConsumerContextUtil.getRecords((ConsumerRecords<?, ?>) result)) {
+                  KafkaConsumerContextUtil.setRawProcessingEligibility(record, () -> false);
+                }
+              }
+              return result;
+            });
   }
 }

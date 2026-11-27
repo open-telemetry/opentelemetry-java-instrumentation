@@ -134,6 +134,15 @@ public class KafkaInstrumentationConfig {
 }
 ```
 
+When consumers are also wrapped with `KafkaTelemetry.instrument(...)`, wrapping the batch listener
+alone does not prevent Kafka process spans during Spring's pre-listener batch conversion. Add the
+Spring wrapper after the Kafka wrapper to the `DefaultKafkaConsumerFactory` used by the container:
+
+```java
+consumerFactory.addPostProcessor(
+    consumer -> springKafkaTelemetry.instrument(kafkaTelemetry.instrument(consumer)));
+```
+
 The wrapped listener's span covers the listener invocation, so batches that never reach the
 listener are not traced. Don't combine it with the batch interceptor on the same container, because
 each creates a span for the batch. Spring Kafka 2.8 and later notify the batch interceptor after

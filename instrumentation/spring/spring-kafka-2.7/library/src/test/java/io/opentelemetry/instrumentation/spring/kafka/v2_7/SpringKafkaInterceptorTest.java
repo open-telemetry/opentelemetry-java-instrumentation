@@ -47,10 +47,12 @@ import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -586,22 +588,40 @@ class SpringKafkaInterceptorTest {
 
   @Test
   void batchMessageListenerEndsSpanWhenListenerThrowsAndSkipsRetry() {
+    AtomicInteger conversions = new AtomicInteger();
     List<ConsumerRecord<String, String>> data =
-        singletonList(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
+        new ArrayList<ConsumerRecord<String, String>>(
+            singletonList(new ConsumerRecord<>("orders", 0, 1, "key", "value"))) {
+          @Override
+          public Object[] toArray() {
+            conversions.incrementAndGet();
+            return super.toArray();
+          }
+        };
     List<ConsumerRecord<String, String>> next =
-        singletonList(new ConsumerRecord<>("orders", 0, 2, "key", "value"));
+        new ArrayList<ConsumerRecord<String, String>>(
+            singletonList(new ConsumerRecord<>("orders", 0, 2, "key", "value"))) {
+          @Override
+          public Object[] toArray() {
+            conversions.incrementAndGet();
+            return super.toArray();
+          }
+        };
     AssertionError error = new AssertionError("listener");
     AtomicReference<Boolean> fail = new AtomicReference<>(true);
-    AtomicReference<Span> retrySpan = new AtomicReference<>();
     BatchMessageListener<String, String> listener =
         telemetry.createBatchMessageListener(
             (BatchMessageListener<String, String>)
                 records -> {
                   if (fail.get()) {
-                    throw error;
-                  }
-                  if (records == data) {
-                    retrySpan.set(Span.current());
+                    testing.runWithSpan(
+                        "first listener",
+                        () -> {
+                          throw error;
+                        });
+                  } else {
+                    testing.runWithSpan(
+                        records == data ? "retry listener" : "next listener", () -> {});
                   }
                 });
     Context parentContext = Context.current();
@@ -611,17 +631,52 @@ class SpringKafkaInterceptorTest {
     fail.set(false);
     // the container retries a failed batch with the same data
     listener.onMessage(data, null, null);
-    assertThat(retrySpan.get().getSpanContext().isValid()).isFalse();
+    assertThat(conversions).hasValue(1);
     listener.onMessage(next, null, null);
+    assertThat(conversions).hasValue(2);
     assertThat(Context.current()).isSameAs(parentContext);
 
     testing.waitAndAssertTraces(
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", error).hasNoParent()),
+                span -> assertBatchSpan(span, 1, "0", error).hasNoParent(),
+                span -> span.hasName("first listener").hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("retry listener").hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
+                span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
+                span -> span.hasName("next listener").hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void distinctBatchMessageListenersDoNotShareRetryState() {
+    List<ConsumerRecord<String, String>> data =
+        singletonList(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
+    BatchMessageListener<String, String> first =
+        telemetry.createBatchMessageListener(
+            (BatchMessageListener<String, String>)
+                records -> testing.runWithSpan("first listener", () -> {}));
+    BatchMessageListener<String, String> second =
+        telemetry.createBatchMessageListener(
+            (BatchMessageListener<String, String>)
+                records -> testing.runWithSpan("second listener", () -> {}));
+    Context parentContext = Context.current();
+
+    first.onMessage(data);
+    assertThat(Context.current()).isSameAs(parentContext);
+    second.onMessage(data);
+    assertThat(Context.current()).isSameAs(parentContext);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
+                span -> span.hasName("first listener").hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
+                span -> span.hasName("second listener").hasParent(trace.getSpan(0))));
   }
 
   @Test

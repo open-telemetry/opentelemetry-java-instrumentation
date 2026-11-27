@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.time.Duration;
@@ -41,6 +42,7 @@ import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.BatchMessageListener;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
+import org.springframework.kafka.support.Acknowledgment;
 import org.springframework.kafka.support.TopicPartitionOffset;
 import org.springframework.transaction.CannotCreateTransactionException;
 import org.springframework.transaction.PlatformTransactionManager;
@@ -95,6 +97,16 @@ class SpringKafkaBatchCompletionSkippedTest {
                     .hasNoParent()
                     .hasAttributesSatisfying(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)),
             span -> span.hasName("listener").hasParent(trace.getSpan(0))));
+  }
+
+  @Test
+  void instrumentedConsumerIsMarkedBeforeListConversion() throws InterruptedException {
+    runInstrumentedContainer(false);
+  }
+
+  @Test
+  void instrumentedConsumerIsMarkedBeforePollResultListener() throws InterruptedException {
+    runInstrumentedContainer(true);
   }
 
   @Test
@@ -226,6 +238,21 @@ class SpringKafkaBatchCompletionSkippedTest {
           listenerWrapper,
       Consumer<KafkaMessageListenerContainer<String, String>> customizer)
       throws InterruptedException {
+    runContainer(listenerWrapper, customizer, Function.identity(), false, false);
+  }
+
+  @SuppressWarnings({"deprecation", "removal", "unchecked"}) // setTransactionManager, generic mock
+  private static void runContainer(
+      Function<BatchMessageListener<String, String>, BatchMessageListener<String, String>>
+          listenerWrapper,
+      Consumer<KafkaMessageListenerContainer<String, String>> customizer,
+      Function<
+              org.apache.kafka.clients.consumer.Consumer<String, String>,
+              org.apache.kafka.clients.consumer.Consumer<String, String>>
+          consumerWrapper,
+      boolean pollResult,
+      boolean instrumentedConsumer)
+      throws InterruptedException {
     TopicPartition partition = new TopicPartition("orders", 0);
     List<Context> pollContexts = new CopyOnWriteArrayList<>();
     MockConsumer<String, String> consumer =
@@ -243,7 +270,8 @@ class SpringKafkaBatchCompletionSkippedTest {
         () -> consumer.addRecord(new ConsumerRecord<>("orders", 0, 1, "key", "second")));
 
     ConsumerFactory<String, String> factory = mock();
-    when(factory.createConsumer(any(), any(), any(), any())).thenReturn(consumer);
+    when(factory.createConsumer(any(), any(), any(), any()))
+        .thenReturn(consumerWrapper.apply(consumer));
 
     // the transaction can't be started for the first batch
     PlatformTransactionManager transactionManager = mock();
@@ -257,12 +285,44 @@ class SpringKafkaBatchCompletionSkippedTest {
     properties.setTransactionManager(transactionManager);
     CountDownLatch processed = new CountDownLatch(1);
     AtomicReference<Integer> pollsBeforeListener = new AtomicReference<>();
-    BatchMessageListener<String, String> listener =
-        records -> {
+    Runnable listenerInvocation =
+        () -> {
           testing.runWithSpan("listener", () -> {});
           pollsBeforeListener.set(pollContexts.size());
           processed.countDown();
         };
+    BatchMessageListener<String, String> listener;
+    if (pollResult) {
+      listener =
+          new BatchMessageListener<String, String>() {
+            @Override
+            public void onMessage(List<ConsumerRecord<String, String>> records) {
+              throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void onMessage(
+                ConsumerRecords<String, String> records,
+                Acknowledgment acknowledgment,
+                org.apache.kafka.clients.consumer.Consumer<String, String> consumer) {
+              assertThat(records.count()).isEqualTo(1);
+              for (ConsumerRecord<String, String> record : records) {
+                assertThat(record.value()).isNotNull();
+              }
+              listenerInvocation.run();
+            }
+
+            @Override
+            public boolean wantsPollResult() {
+              return true;
+            }
+          };
+    } else {
+      listener =
+          records -> {
+            listenerInvocation.run();
+          };
+    }
     properties.setMessageListener(listenerWrapper.apply(listener));
     KafkaMessageListenerContainer<String, String> container =
         new KafkaMessageListenerContainer<>(factory, properties);
@@ -278,6 +338,37 @@ class SpringKafkaBatchCompletionSkippedTest {
     // the span of the skipped batch is not current on the consumer thread during later polls
     assertThat(pollsBeforeListener.get()).isGreaterThanOrEqualTo(2);
     assertThat(pollContexts).allSatisfy(context -> assertThat(context).isSameAs(Context.root()));
+
+    if (instrumentedConsumer) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("poll orders").hasKind(SpanKind.CLIENT)),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> span.hasName("poll orders").hasKind(SpanKind.CLIENT)),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span ->
+                      span.hasName("process orders")
+                          .hasKind(SpanKind.CONSUMER)
+                          .hasNoParent()
+                          .hasAttributesSatisfying(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)),
+                  span -> span.hasName("listener").hasParent(trace.getSpan(0))));
+    }
+  }
+
+  private void runInstrumentedContainer(boolean pollResult) throws InterruptedException {
+    KafkaTelemetry kafkaTelemetry =
+        KafkaTelemetry.builder(testing.getOpenTelemetry())
+            .setMessagingReceiveTelemetryEnabled(true)
+            .build();
+    runContainer(
+        telemetry::createBatchMessageListener,
+        container -> {},
+        consumer -> telemetry.instrument(kafkaTelemetry.instrument(consumer)),
+        pollResult,
+        true);
   }
 
   private static boolean hasPollThreadStateHooks() {

@@ -39,11 +39,10 @@ import org.springframework.kafka.support.Acknowledgment;
 class InstrumentedBatchMessageListener<K, V>
     implements BatchAcknowledgingConsumerAwareMessageListener<K, V> {
 
-  private static final ThreadLocal<WeakReference<Object>> lastProcessed = new ThreadLocal<>();
-
   private final Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter;
   private final BatchMessageListener<K, V> delegate;
   private final ListenerType delegateType;
+  private final ThreadLocal<WeakReference<Object>> lastProcessed = new ThreadLocal<>();
 
   static <K, V> BatchMessageListener<K, V> create(
       Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter,
@@ -165,7 +164,7 @@ class InstrumentedBatchMessageListener<K, V>
     }
   }
 
-  private static boolean isRetry(Object data) {
+  private boolean isRetry(Object data) {
     WeakReference<Object> reference = lastProcessed.get();
     return reference != null && reference.get() == data;
   }
