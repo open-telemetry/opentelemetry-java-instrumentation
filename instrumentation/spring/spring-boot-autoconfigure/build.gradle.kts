@@ -65,7 +65,7 @@ dependencies {
       ":instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-3.0:library"
     )
   )
-  implementation(project(":instrumentation:spring:spring-kafka-2.7:library"))
+  implementation(project(":instrumentation:spring:spring-kafka:spring-kafka-2.8:library"))
   implementation(project(":instrumentation:spring:spring-web:spring-web-3.1:library"))
   implementation(project(":instrumentation:spring:spring-webmvc:spring-webmvc-5.3:library"))
   compileOnly("javax.servlet:javax.servlet-api:3.1.0")
@@ -160,7 +160,7 @@ dependencies {
     "javaSpring4CompileOnly",
     project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library")
   )
-  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka-2.7:library"))
+  add("javaSpring4CompileOnly", project(":instrumentation:spring:spring-kafka:spring-kafka-2.8:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:mongo:mongo-3.1:library"))
   add("javaSpring4CompileOnly", project(":instrumentation:micrometer:micrometer-1.5:library"))
   add(

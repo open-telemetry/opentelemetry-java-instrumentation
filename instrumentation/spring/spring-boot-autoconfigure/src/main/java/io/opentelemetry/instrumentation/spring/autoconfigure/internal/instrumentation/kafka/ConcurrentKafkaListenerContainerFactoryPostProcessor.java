@@ -5,7 +5,7 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.kafka;
 
-import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
+import io.opentelemetry.instrumentation.spring.kafka.v2_8.SpringKafkaTelemetry;
 import java.lang.reflect.Field;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;

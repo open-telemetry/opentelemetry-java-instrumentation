@@ -442,8 +442,10 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
-- The Spring Kafka standalone library now requires Spring Kafka 2.8.0 or later. Upgrade Spring Kafka
-  or use the Java agent.
+- Rename the Spring Kafka standalone artifact to `opentelemetry-spring-kafka-2.8`, with package
+  `io.opentelemetry.instrumentation.spring.kafka.v2_8` and scope
+  `io.opentelemetry.spring-kafka-2.8`. It now requires Spring Kafka 2.8.0 or later; upgrade Spring
+  Kafka or use the Java agent.
 - Rename `OkHttpTelemetry.createCallFactory(...)` to `instrument(...)`.
 - Remove the standalone Guava instrumentation library and its async operation end strategy APIs.
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
