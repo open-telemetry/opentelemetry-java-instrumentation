@@ -47,6 +47,13 @@ testing.suites {
     }
   }
 
+  register<JvmTestSuite>("version27Test") {
+    dependencies {
+      // covers behavior specific to versions before 2.8
+      implementation("org.springframework.kafka:spring-kafka:2.7.0")
+    }
+  }
+
   register<JvmTestSuite>("testNoReceiveTelemetry") {
     dependencies {
       implementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))

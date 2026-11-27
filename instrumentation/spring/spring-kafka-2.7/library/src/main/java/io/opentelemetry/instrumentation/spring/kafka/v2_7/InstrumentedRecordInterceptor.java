@@ -10,6 +10,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContext;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaProcessRequest;
+import io.opentelemetry.instrumentation.spring.kafka.v2_7.internal.EarlyInterceptionCleanup;
 import io.opentelemetry.javaagent.tooling.muzzle.NoMuzzle;
 import javax.annotation.Nullable;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -17,7 +18,8 @@ import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.kafka.listener.RecordInterceptor;
 
 @SuppressWarnings("ThreadLocalUsage") // callback state belongs to this interceptor instance
-final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, V> {
+final class InstrumentedRecordInterceptor<K, V>
+    implements RecordInterceptor<K, V>, EarlyInterceptionCleanup {
 
   private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
   @Nullable private final RecordInterceptor<K, V> decorated;
@@ -148,6 +150,24 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
     }
     if (invocation.context != null) {
       processInstrumenter.end(invocation.context, invocation.request, null, error);
+    }
+  }
+
+  @Override
+  @Nullable
+  public Object getActiveInvocation() {
+    // if thread state is present span is ended in afterRecord or clearThreadState
+    if (currentThreadState.get() != null) {
+      return null;
+    }
+    return currentInvocation.get();
+  }
+
+  @Override
+  public void endActiveInvocation(Object invocation, Throwable error) {
+    ProcessingInvocation<KafkaProcessRequest> activeInvocation = currentInvocation.get();
+    if (activeInvocation == invocation) {
+      end(activeInvocation, error);
     }
   }
 

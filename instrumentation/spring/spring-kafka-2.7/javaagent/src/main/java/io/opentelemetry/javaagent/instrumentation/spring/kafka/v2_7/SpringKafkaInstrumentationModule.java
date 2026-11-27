@@ -30,6 +30,7 @@ public class SpringKafkaInstrumentationModule extends InstrumentationModule {
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AbstractMessageListenerContainerInstrumentation(),
-        new ListenerConsumerInstrumentation());
+        new ListenerConsumerInstrumentation(),
+        new ListenerConsumerTransactionInstrumentation());
   }
 }
