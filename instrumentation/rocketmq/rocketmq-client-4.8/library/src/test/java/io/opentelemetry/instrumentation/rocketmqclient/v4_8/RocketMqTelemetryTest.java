@@ -24,9 +24,6 @@ import static org.mockito.Mockito.when;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.HashMap;
 import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
@@ -106,7 +103,7 @@ class RocketMqTelemetryTest {
   }
 
   @Test
-  void isolatesConsumerConfigurationSnapshots() throws UnknownHostException {
+  void isolatesConsumerConfigurationSnapshots() {
     RocketMqTelemetry telemetry = RocketMqTelemetry.create(testing.getOpenTelemetry());
     ClientConfig first = new ClientConfig();
     first.setNamesrvAddr("ns-a:9876");
@@ -126,7 +123,7 @@ class RocketMqTelemetryTest {
   }
 
   @Test
-  void consumeHookWithoutClientConfigOmitsServerAttributes() throws UnknownHostException {
+  void consumeHookWithoutClientConfigOmitsServerAttributes() {
     ConsumeMessageHook hook =
         RocketMqTelemetry.create(testing.getOpenTelemetry()).createConsumeMessageHook();
 
@@ -136,12 +133,10 @@ class RocketMqTelemetryTest {
         trace -> trace.hasSpansSatisfyingExactly(span -> assertProcess(span, "topic", null)));
   }
 
-  private static void consume(ConsumeMessageHook hook, String topic) throws UnknownHostException {
+  private static void consume(ConsumeMessageHook hook, String topic) {
     MessageExt message = new MessageExt();
     message.setTopic(topic);
     MessageAccessor.setProperties(message, new HashMap<>());
-    message.setStoreHost(
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 10911));
     ConsumeMessageContext request = new ConsumeMessageContext();
     request.setMsgList(singletonList(message));
     request.setConsumerGroup("consumer-group");
@@ -159,8 +154,6 @@ class RocketMqTelemetryTest {
             equalTo(MESSAGING_OPERATION_NAME, "process"),
             equalTo(MESSAGING_OPERATION_TYPE, "process"),
             equalTo(MESSAGING_CONSUMER_GROUP_NAME, "consumer-group"),
-            equalTo(SERVER_ADDRESS, server),
-            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-            equalTo(NETWORK_PEER_PORT, 10911));
+            equalTo(SERVER_ADDRESS, server));
   }
 }

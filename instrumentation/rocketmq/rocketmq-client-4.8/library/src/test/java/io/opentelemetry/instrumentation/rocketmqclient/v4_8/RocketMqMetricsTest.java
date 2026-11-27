@@ -26,9 +26,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.metrics.data.MetricData;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
@@ -168,7 +165,7 @@ class RocketMqMetricsTest {
             "messaging.client.consumed.messages", "messaging.process.duration");
   }
 
-  private static Stream<Arguments> consumerCases() throws UnknownHostException {
+  private static Stream<Arguments> consumerCases() {
     return Stream.of(
         argumentSet("single success", singletonList(messageExt("single-success")), null, 1),
         argumentSet(
@@ -192,12 +189,10 @@ class RocketMqMetricsTest {
     return new Message(topic, new byte[0]);
   }
 
-  private static MessageExt messageExt(String topic) throws UnknownHostException {
+  private static MessageExt messageExt(String topic) {
     MessageExt message = new MessageExt();
     message.setTopic(topic);
     message.setMsgId("message-id");
-    message.setStoreHost(
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 10911));
     message.setBody(new byte[0]);
     message.putUserProperty("test", "value");
     return message;

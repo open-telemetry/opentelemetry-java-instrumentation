@@ -37,9 +37,6 @@ import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.ReadableSpan;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.net.InetAddress;
-import java.net.InetSocketAddress;
-import java.net.UnknownHostException;
 import java.util.List;
 import java.util.stream.Stream;
 import org.apache.rocketmq.client.consumer.listener.ConsumeReturnType;
@@ -184,8 +181,7 @@ class RocketMqInstrumenterFactoryTest {
 
   @ParameterizedTest
   @MethodSource("consumerCases")
-  void capturesConsumerServerAndPeer(
-      List<MessageExt> messages, String expectedAddress, Long expectedPort) {
+  void capturesConsumerServer(List<MessageExt> messages) {
     RocketMqConsumerInstrumenter instrumenter =
         RocketMqInstrumenterFactory.createConsumerInstrumenter(
             testing.getOpenTelemetry(), IncludeExclude.builder().build(), false);
@@ -213,41 +209,19 @@ class RocketMqInstrumenterFactoryTest {
                     equalTo(
                         MESSAGING_BATCH_MESSAGE_COUNT,
                         messages.size() > 1 ? (long) messages.size() : null),
-                    equalTo(SERVER_ADDRESS, "ns.example:9876"),
-                    equalTo(NETWORK_PEER_ADDRESS, expectedAddress),
-                    equalTo(NETWORK_PEER_PORT, expectedPort))));
+                    equalTo(SERVER_ADDRESS, "ns.example:9876"))));
   }
 
-  private static Stream<Arguments> consumerCases() throws UnknownHostException {
-    InetSocketAddress ipv4 =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 1}), 10911);
-    InetSocketAddress otherAddress =
-        new InetSocketAddress(InetAddress.getByAddress(new byte[] {127, 0, 0, 2}), 10911);
-    InetSocketAddress otherPort = new InetSocketAddress(ipv4.getAddress(), 10912);
-    InetSocketAddress ipv6 =
-        new InetSocketAddress(
-            InetAddress.getByAddress(new byte[] {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1}),
-            10911);
+  private static Stream<Arguments> consumerCases() {
     return Stream.of(
-        argumentSet("single", singletonList(message(ipv4)), "127.0.0.1", 10911L),
-        argumentSet("IPv6", singletonList(message(ipv6)), "0:0:0:0:0:0:0:1", 10911L),
-        argumentSet(
-            "same endpoint",
-            asList(message(ipv4), message(new InetSocketAddress(ipv4.getAddress(), 10911))),
-            "127.0.0.1",
-            10911L),
-        argumentSet(
-            "different addresses", asList(message(ipv4), message(otherAddress)), null, null),
-        argumentSet("different ports", asList(message(ipv4), message(otherPort)), null, null),
-        argumentSet("missing address", singletonList(message(null)), null, null),
-        argumentSet("one missing address", asList(message(ipv4), message(null)), null, null));
+        argumentSet("single", singletonList(message())),
+        argumentSet("batch", asList(message(), message())));
   }
 
-  private static MessageExt message(InetSocketAddress address) {
+  private static MessageExt message() {
     MessageExt message = new MessageExt();
     message.setTopic("topic");
     message.putUserProperty("test", "value");
-    message.setStoreHost(address);
     return message;
   }
 

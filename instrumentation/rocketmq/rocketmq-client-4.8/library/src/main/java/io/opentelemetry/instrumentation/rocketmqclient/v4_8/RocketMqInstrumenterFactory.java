@@ -32,12 +32,9 @@ import io.opentelemetry.instrumentation.api.instrumenter.InstrumenterBuilder;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanKindExtractor;
 import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.internal.InstrumenterUtil;
-import java.net.InetSocketAddress;
-import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.rocketmq.client.hook.ConsumeMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageContext;
-import org.apache.rocketmq.common.message.MessageExt;
 
 class RocketMqInstrumenterFactory {
 
@@ -264,7 +261,6 @@ class RocketMqInstrumenterFactory {
         attributes.put(MESSAGING_CONSUMER_GROUP_NAME, request.getConsumerGroup());
         attributes.put(ROCKETMQ_NAMESPACE, request.getNamespace());
         attributes.putAll(request.getServerAttributes());
-        captureConsumerNetworkPeerAttributes(attributes, request);
       }
 
       @Override
@@ -275,27 +271,6 @@ class RocketMqInstrumenterFactory {
           @Nullable ConsumeMessageContext response,
           @Nullable Throwable error) {}
     };
-  }
-
-  private static void captureConsumerNetworkPeerAttributes(
-      AttributesBuilder attributes, RocketMqConsumerRequest request) {
-    // MessageDecoder constructs storeHost as an InetSocketAddress. This is storage metadata,
-    // not an observed connection peer.
-    InetSocketAddress storeHost = (InetSocketAddress) request.getMessage().getStoreHost();
-    if (storeHost == null) {
-      return;
-    }
-
-    // A queue can contain messages stored before and after a broker endpoint change.
-    List<MessageExt> messages = request.getMessages();
-    for (int i = 1; i < messages.size(); i++) {
-      if (!storeHost.equals(messages.get(i).getStoreHost())) {
-        return;
-      }
-    }
-
-    attributes.put(NETWORK_PEER_ADDRESS, storeHost.getHostString());
-    attributes.put(NETWORK_PEER_PORT, storeHost.getPort());
   }
 
   private static SpanStatusExtractor<RocketMqConsumerRequest, ConsumeMessageContext>

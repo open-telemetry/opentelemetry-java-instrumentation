@@ -221,8 +221,6 @@ abstract class AbstractRocketMqClientTest {
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                             equalTo(SERVER_ADDRESS, BaseConf.nsAddr),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                             satisfies(longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                             satisfies(
                                 longKey("rocketmq.queue_offset"), val -> experimentalLong(val))),
@@ -369,8 +367,6 @@ abstract class AbstractRocketMqClientTest {
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                             equalTo(SERVER_ADDRESS, BaseConf.nsAddr),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                             satisfies(longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                             satisfies(
                                 longKey("rocketmq.queue_offset"), val -> experimentalLong(val))),
@@ -560,8 +556,6 @@ abstract class AbstractRocketMqClientTest {
                             equalTo(MESSAGING_DESTINATION_NAME, sharedTopic),
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
                             equalTo(SERVER_ADDRESS, BaseConf.nsAddr),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                             equalTo(MESSAGING_OPERATION_NAME, "process"),
                             equalTo(MESSAGING_OPERATION_TYPE, "process"),
                             equalTo(
@@ -635,8 +629,6 @@ abstract class AbstractRocketMqClientTest {
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                             equalTo(SERVER_ADDRESS, BaseConf.nsAddr),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                             satisfies(longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                             satisfies(
                                 longKey("rocketmq.queue_offset"), val -> experimentalLong(val)),
@@ -687,8 +679,6 @@ abstract class AbstractRocketMqClientTest {
                             satisfies(MESSAGING_MESSAGE_ID, val -> val.isInstanceOf(String.class)),
                             equalTo(stringKey("rocketmq.message.tag"), experimental("TagA")),
                             equalTo(SERVER_ADDRESS, BaseConf.nsAddr),
-                            equalTo(NETWORK_PEER_ADDRESS, "127.0.0.1"),
-                            equalTo(NETWORK_PEER_PORT, BaseConf.getBrokerPort()),
                             satisfies(longKey("rocketmq.queue_id"), val -> experimentalLong(val)),
                             satisfies(
                                 longKey("rocketmq.queue_offset"), val -> experimentalLong(val))),
