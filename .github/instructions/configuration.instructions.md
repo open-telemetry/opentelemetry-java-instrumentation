@@ -10,16 +10,16 @@ user-facing instrumentation configuration.
 
 ## Names and stability
 
-- Use `otel.javaagent.*` for Java-agent runtime and SDK wiring settings, and
-  `otel.spring-starter.*` for Spring Boot starter runtime and SDK wiring settings.
-  For example, enabling a distribution's SDK span processor that adds thread attributes belongs
-  in that distribution's namespace.
-- Use `otel.instrumentation.*` for per-module selection and instrumentation behavior, including
-  shared instrumentation settings, regardless of which code reads them. For example, per-appender
-  log thread-attribute capture belongs in this namespace. `otel.instrumentation.common.default-enabled`
-  controls the shared module-selection default; it is not a precedent for SDK-wide behavior.
-- Keep shared SDK and resource configuration and upstream-defined names in their own namespaces,
-  rather than moving them into a distribution or instrumentation namespace.
+- Use `otel.javaagent.*` for flat runtime or SDK wiring settings owned by the Java agent,
+  and `otel.spring-starter.*` for those owned by the Spring Boot starter. For example,
+  `otel.javaagent.add-thread-details` enables the agent's thread-attribute span processor.
+  Keep shared SDK and resource settings and upstream-defined names in their own namespaces,
+  even when a distribution reads them.
+- Use `otel.instrumentation.*` for flat settings owned by instrumentation, whether they
+  select modules or control instrumentation behavior. This includes shared settings, regardless
+  of which code reads them. For example, per-appender log thread-attribute capture belongs here.
+  `otel.instrumentation.common.default-enabled` sets the default for module selection, not for
+  SDK-wide behavior.
 - Check both the flat property and declarative YAML form of an `otel.instrumentation.*` setting.
   Flat-property segments use kebab-case and YAML keys use snake_case, subject to the published
   names below.
@@ -31,9 +31,9 @@ user-facing instrumentation configuration.
   guarantee and when they can be removed. Apply the policy to the published artifact that exposes
   the setting to users, not the internal module that reads it. Settings exposed only through alpha
   artifacts have no compatibility guarantee.
-- Preserve already-published names, including namespace exceptions, rather than renaming them to
-  match a mechanical conversion or naming convention. Use a `SPECIAL_MAPPINGS` bridge entry only
-  when normalized flat-property lookup does not resolve the published mapping.
+- Preserve already-published names rather than renaming them to match a mechanical conversion
+  or naming convention. Use a `SPECIAL_MAPPINGS` bridge entry only when normalized flat-property
+  lookup does not resolve the published mapping.
 
 ## Reading settings
 
