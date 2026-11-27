@@ -105,8 +105,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       ApacheHttpClientRequest otelRequest = new ApacheHttpClientRequest(target, request);
 
       if (instrumenter().shouldStart(parentContext, otelRequest)) {
-        wrappedFutureCallback.spanState =
-            new SpanState(instrumenter().start(parentContext, otelRequest), otelRequest);
+        wrappedFutureCallback.otelRequest = otelRequest;
+        wrappedFutureCallback.context = instrumenter().start(parentContext, otelRequest);
       }
 
       return request;
@@ -149,7 +149,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     @Nullable private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
-    @Nullable private volatile SpanState spanState;
+    @Nullable private volatile Context context;
+    @Nullable private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
         Context parentContext,
@@ -161,10 +162,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     private void endSpan(Exception exception) {
-      SpanState state = spanState;
-      if (state != null) {
-        spanState = null;
-        instrumenter().end(state.context, state.request, getResponseFromHttpContext(), exception);
+      // context is null here when the span creation was suppressed
+      if (context != null) {
+        instrumenter().end(context, otelRequest, getResponseFromHttpContext(), exception);
       }
     }
 
@@ -221,16 +221,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return null;
       }
       return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
-    }
-  }
-
-  private static final class SpanState {
-    private final Context context;
-    private final ApacheHttpClientRequest request;
-
-    private SpanState(Context context, ApacheHttpClientRequest request) {
-      this.context = context;
-      this.request = request;
     }
   }
 }

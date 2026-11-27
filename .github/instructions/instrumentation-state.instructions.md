@@ -194,10 +194,15 @@ javaagent instrumentation, not library-only code.
   storage, and skipped advice. Prefer library ordering or an existing operation context over a
   separate handoff protocol.
 
-- Publish related mutable state as a unit. One immutable value can use a safely published reference;
-  several fields may need one short private lock. Use a once-claim CAS when supported cross-thread
-  completion paths race. For same-thread reentrancy, consuming state before invoking reentrant code
-  may suffice. Do not add locks, generations, reservations, or CAS loops for hypothetical races.
+- Publish related mutable state as a unit. If one writer publishes the state once, an existing
+  volatile field can signal publication without a holder allocation. Write the other fields first,
+  then write the volatile field. Readers must read the volatile field first and only use the other
+  fields after it signals publication. If writers can replace state while readers access it, use a
+  safely published immutable snapshot or protect the fields with one short private lock.
+
+- Use a once-claim CAS when supported cross-thread completion paths race. For same-thread reentrancy,
+  consuming state before invoking reentrant code may suffice. Do not add locks, generations,
+  reservations, or CAS loops for hypothetical races.
 
   For example, Apache HttpAsyncClient marks its future done before invoking the terminal callback.
   Cancelling that future concurrently or from inside a response getter cannot deliver a second

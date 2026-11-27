@@ -152,8 +152,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
       if (instrumenter().shouldStart(parentContext, request)) {
-        wrappedFutureCallback.spanState =
-            new SpanState(instrumenter().start(parentContext, request), request);
+        wrappedFutureCallback.httpRequest = request;
+        wrappedFutureCallback.context = instrumenter().start(parentContext, request);
       }
 
       delegate.sendRequest(request, entityDetails, context);
@@ -166,7 +166,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
-    @Nullable private volatile SpanState spanState;
+    // The volatile context publishes the request, which is set once per callback.
+    @Nullable private HttpRequest httpRequest;
+    @Nullable private volatile Context context;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
@@ -177,10 +179,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     private void endSpan(Exception exception) {
-      SpanState state = spanState;
-      if (state != null) {
-        spanState = null;
-        instrumenter().end(state.context, state.request, getResponseFromHttpContext(), exception);
+      Context startedContext = context;
+      if (startedContext != null) {
+        instrumenter().end(startedContext, httpRequest, getResponseFromHttpContext(), exception);
       }
     }
 
@@ -237,16 +238,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
         return ((HttpCoreContext) httpContext).getResponse();
       }
       return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
-    }
-  }
-
-  private static final class SpanState {
-    private final Context context;
-    private final HttpRequest request;
-
-    private SpanState(Context context, HttpRequest request) {
-      this.context = context;
-      this.request = request;
     }
   }
 }
