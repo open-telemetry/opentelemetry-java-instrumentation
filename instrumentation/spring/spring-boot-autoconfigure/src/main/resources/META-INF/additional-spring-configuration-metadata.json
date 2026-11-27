@@ -412,7 +412,7 @@
     {
       "name": "otel.instrumentation.mongo.capture-query-text",
       "type": "java.lang.Boolean",
-      "description": "Capture MongoDB query text in the db.query.text span attribute.",
+      "description": "Enables capturing MongoDB query text in the <code>db.query.text</code> span attribute.",
       "defaultValue": false
     },
     {
