@@ -4,9 +4,10 @@ applyTo: "CHANGELOG.md"
 
 # Changelog entries
 
-- Add a hand-written entry in `Unreleased` for deprecations and breaking changes only, as
-  specified in [CONTRIBUTING.md](../../CONTRIBUTING.md). This includes deprecations of settings
-  and instrumentation enablement aliases. Leave other changes to the generated changelog.
+- Outside release preparation, add a hand-written entry in `Unreleased` for deprecations and
+  breaking changes only, as specified in [CONTRIBUTING.md](../../CONTRIBUTING.md). This includes
+  deprecations of settings and instrumentation enablement aliases. Leave other changes to the
+  generated changelog.
 - Put breaking changes under the appropriate stable or non-stable heading in `Unreleased`.
 - Keep entries short. For deprecations, name the deprecated interface and its replacement without
   repeating removal timing or obvious migration steps.
