@@ -40,6 +40,11 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
     return true;
   }
 
+  @Override
+  protected boolean captureExperimentalSpanAttributes() {
+    return Boolean.getBoolean("test.captureExperimentalSpanAttributes");
+  }
+
   @Configuration
   static class KafkaInstrumentationConfig {
 
@@ -56,7 +61,10 @@ class SpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaNoReceiveTele
     ContainerCustomizer<String, String, ConcurrentMessageListenerContainer<String, String>>
         listenerCustomizer() {
       SpringKafkaTelemetry springKafkaTelemetry =
-          SpringKafkaTelemetry.create(testing.getOpenTelemetry());
+          SpringKafkaTelemetry.builder(testing.getOpenTelemetry())
+              .setCaptureExperimentalSpanAttributes(
+                  Boolean.getBoolean("test.captureExperimentalSpanAttributes"))
+              .build();
       return container -> {
         container.setRecordInterceptor(springKafkaTelemetry.createRecordInterceptor());
         container.setBatchInterceptor(springKafkaTelemetry.createBatchInterceptor());

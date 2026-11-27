@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
@@ -27,8 +30,41 @@ dependencies {
   }
 }
 
-tasks.test {
-  systemProperty("testLatestDeps", otelProps.testLatestDeps)
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+
+    configureDefault {
+      filter {
+        excludeTestsMatching("*.SpringKafkaInterceptorTest")
+        excludeTestsMatching("*.SpringKafkaBatchCompletionSkippedTest")
+      }
+    }
+
+    register("Regression") {
+      filter {
+        includeTestsMatching("*.SpringKafkaInterceptorTest")
+        includeTestsMatching("*.SpringKafkaBatchCompletionSkippedTest")
+      }
+    }
+
+    register("Experimental") {
+      filter {
+        includeTestsMatching("*.SpringKafkaNoReceiveTelemetryTest.shouldCreateSpansForSingleRecordProcess")
+      }
+      systemProperty("test.captureExperimentalSpanAttributes", "true")
+      systemProperty("metadataConfig", "SpringKafkaTelemetryBuilder.setCaptureExperimentalSpanAttributes(true)")
+    }
+
+    register("ExceptionSignalLogs") {
+      filter {
+        includeTestsMatching("*.SpringKafkaNoReceiveTelemetryTest.shouldHandleFailureInKafkaListener")
+      }
+      telemetryConfig("otel.semconv.exception.signal.preview", "logs")
+    }
+  }
 }
 
 // spring 6 (which spring-kafka 3.+ uses) requires java 17

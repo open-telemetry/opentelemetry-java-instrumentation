@@ -7,6 +7,8 @@ package io.opentelemetry.testing;
 
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
+import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessDurationMetrics;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertProcessMetricsWithConsumedMessages;
 import static io.opentelemetry.instrumentation.testing.junit.messaging.KafkaMessagingMetricsAssertions.assertTotalConsumedMessages;
@@ -27,6 +29,7 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static java.util.Arrays.asList;
 
+import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.sdk.testing.assertj.AttributeAssertion;
@@ -47,6 +50,10 @@ import org.junit.jupiter.api.Test;
 public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends AbstractSpringKafkaTest {
 
   protected abstract boolean isLibraryInstrumentationTest();
+
+  protected boolean captureExperimentalSpanAttributes() {
+    return false;
+  }
 
   private String instrumentationName() {
     return isLibraryInstrumentationTest()
@@ -123,7 +130,10 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasKind(SpanKind.CONSUMER)
                             .hasParent(trace.getSpan(1))
                             .hasStatus(StatusData.error())
-                            .hasException(new IllegalArgumentException("boom"))
+                            .hasException(
+                                emitExceptionAsSpanEvents()
+                                    ? new IllegalArgumentException("boom")
+                                    : null)
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes));
                         span.hasLinks(LinkData.create(asRemote(producerContext)));
                       },
@@ -138,7 +148,10 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                         .hasKind(SpanKind.CONSUMER)
                         .hasParent(trace.getSpan(1))
                         .hasStatus(StatusData.error())
-                        .hasException(new IllegalArgumentException("boom"))
+                        .hasException(
+                            emitExceptionAsSpanEvents()
+                                ? new IllegalArgumentException("boom")
+                                : null)
                         .hasAttributesSatisfyingExactly(withErrorType(processAttributes));
                     span.hasLinks(LinkData.create(asRemote(producerContext)));
                   },
@@ -172,6 +185,18 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         IllegalArgumentException.class.getName());
     assertProcessDurationMetrics(
         testing(), instrumentationName(), "testSingleTopic", "testSingleListener", "0", 1, null);
+    if (emitExceptionAsLogs()) {
+      testing()
+          .waitAndAssertLogRecords(
+              log ->
+                  log.hasSeverity(Severity.ERROR)
+                      .hasEventName("messaging.process.exception")
+                      .hasException(new IllegalArgumentException("boom")),
+              log ->
+                  log.hasSeverity(Severity.ERROR)
+                      .hasEventName("messaging.process.exception")
+                      .hasException(new IllegalArgumentException("boom")));
+    }
     assertInstrumentationScope();
   }
 
@@ -328,7 +353,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     return assertions;
   }
 
-  private static List<AttributeAssertion> singleProcessAttributes(
+  private List<AttributeAssertion> singleProcessAttributes(
       String topic, String group, String messageKey) {
     List<AttributeAssertion> assertions =
         messagingAttributes(topic, "process", "process", "consumer");
@@ -338,6 +363,10 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
     assertions.add(equalTo(stringKey("kafka.message.key"), messageKey));
     assertions.add(equalTo(MESSAGING_CONSUMER_GROUP_NAME, group));
     assertions.add(satisfies(stringKey("kafka.cluster.id"), AbstractStringAssert::isNotEmpty));
+    if (captureExperimentalSpanAttributes()) {
+      assertions.add(
+          satisfies(longKey("kafka.record.queue_time_ms"), AbstractLongAssert::isNotNegative));
+    }
     return assertions;
   }
 
