@@ -11,5 +11,9 @@ dependencies {
 }
 
 testing.suites {
-  unitTests()
+  unitTests {
+    dependencies {
+      implementation("com.couchbase.client:java-client:2.5.0")
+    }
+  }
 }
