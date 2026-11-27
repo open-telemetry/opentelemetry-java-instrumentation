@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta;
+package io.opentelemetry.javaagent.instrumentation.jsf.jakarta;
 
 public class GreetingForm {
 

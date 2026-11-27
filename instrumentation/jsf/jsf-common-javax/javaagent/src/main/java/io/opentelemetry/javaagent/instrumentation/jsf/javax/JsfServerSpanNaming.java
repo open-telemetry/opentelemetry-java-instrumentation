@@ -3,14 +3,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.jsf.common.jakarta;
+package io.opentelemetry.javaagent.instrumentation.jsf.javax;
 
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.javaagent.bootstrap.servlet.ServletContextPath;
-import jakarta.faces.component.UIViewRoot;
-import jakarta.faces.context.FacesContext;
+import javax.faces.component.UIViewRoot;
+import javax.faces.context.FacesContext;
 
 public class JsfServerSpanNaming {
 
