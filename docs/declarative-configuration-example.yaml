@@ -71,11 +71,9 @@ instrumentation/development:
       # `camel.kafka.key` and `camel.kafka.offset` span attributes.
       experimental_span_attributes/development: false
     common:
-      # Enables capturing the `user.name` identity attribute. Identity attributes are not
-      # captured by default.
+      # Capture the authenticated user name as `user.name`.
       capture_user_name: false
-      # Enables capturing the `user.roles` identity attribute. Identity attributes are not
-      # captured by default.
+      # Capture the authenticated user's roles as `user.roles`.
       capture_user_roles: false
       controller_telemetry:
         # Enables the creation of experimental controller spans.

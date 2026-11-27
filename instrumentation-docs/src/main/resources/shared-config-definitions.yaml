@@ -155,14 +155,14 @@ configurations:
   common.capture-user-name:
     name: otel.instrumentation.common.capture-user-name
     declarative_name: java.common.capture_user_name
-    description: "Enables capturing the `user.name` identity attribute. Identity attributes are not captured by default."
+    description: "Capture the authenticated user name as `user.name`."
     type: boolean
     default: false
 
   common.capture-user-roles:
     name: otel.instrumentation.common.capture-user-roles
     declarative_name: java.common.capture_user_roles
-    description: "Enables capturing the `user.roles` identity attribute. Identity attributes are not captured by default."
+    description: "Capture the authenticated user's roles as `user.roles`."
     type: boolean
     default: false
 
