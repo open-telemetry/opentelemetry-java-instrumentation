@@ -12,6 +12,9 @@ import javax.annotation.Nullable;
 import javax.servlet.ServletOutputStream;
 
 public class ServletOutputStreamInjectionState {
+  // The fallback map has weak stream keys and strong values, so a strong InjectionState could
+  // reach its stream through the response wrapper and keep the key alive. The request attribute
+  // strongly owns the state for the request lifetime, including async writes.
   private static final VirtualField<ServletOutputStream, WeakReference<InjectionState>>
       INJECTION_STATE = VirtualField.find(ServletOutputStream.class, WeakReference.class);
 
