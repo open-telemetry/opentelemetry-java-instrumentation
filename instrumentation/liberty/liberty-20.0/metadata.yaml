@@ -20,7 +20,8 @@ configurations:
     declarative_name: java.servlet.request_parameters/development.included
     description: >
       A comma-separated list of case-sensitive request parameter name patterns to capture as span
-      attributes. `?` matches one character and `*` matches zero or more characters. No request
+      attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name
+      casing. `?` matches one character and `*` matches zero or more characters. No request
       parameters are captured unless included or excluded patterns are configured. `*` captures all
       request parameters.
     type: list
@@ -32,9 +33,10 @@ configurations:
     declarative_name: java.servlet.request_parameters/development.excluded
     description: >
       A comma-separated list of case-sensitive request parameter name patterns to exclude from span
-      attributes. `?` matches one character and `*` matches zero or more characters. Excluded
-      patterns take precedence over included patterns. If only excluded patterns are configured, all
-      other request parameters are captured, which may expose sensitive information.
+      attributes under `servlet.request.parameter.<name>`, preserving the original parameter-name
+      casing. `?` matches one character and `*` matches zero or more characters. Excluded patterns
+      take precedence over included patterns. If only excluded patterns are configured, all other
+      request parameters are captured, which may expose sensitive information.
     type: list
     default: ""
     examples:

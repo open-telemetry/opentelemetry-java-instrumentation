@@ -15,7 +15,9 @@ configurations:
     default: true
   - name: otel.instrumentation.kafka.experimental-span-attributes
     declarative_name: java.kafka.experimental_span_attributes/development
-    description: Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and `kafka.bootstrap.servers`.
+    description: >
+      Enables the experimental attributes `kafka.record.queue_time_ms` on consumer Process spans
+      and `kafka.bootstrap.servers` on producer spans.
     type: boolean
     default: false
   - ref: messaging.headers.included
