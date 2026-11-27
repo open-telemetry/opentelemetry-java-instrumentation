@@ -17,7 +17,6 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.javaagent.bootstrap.InstrumentationHolder;
 import io.opentelemetry.javaagent.bootstrap.field.VirtualFieldDetector;
 import io.opentelemetry.javaagent.tooling.HelperInjector;
-import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.instrumentation.InstrumentationModuleInstaller;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings.Mapping;
@@ -30,6 +29,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.agent.builder.AgentBuilder;
@@ -64,8 +64,8 @@ import net.bytebuddy.utility.JavaModule;
  */
 final class FieldBackedImplementationInstaller implements VirtualFieldImplementationInstaller {
 
-  private static final TransformSafeLogger logger =
-      TransformSafeLogger.getLogger(FieldBackedImplementationInstaller.class);
+  private static final Logger logger =
+      Logger.getLogger(FieldBackedImplementationInstaller.class.getName());
 
   private final Class<?> instrumenterClass;
   private final VirtualFieldMappings virtualFieldMappings;

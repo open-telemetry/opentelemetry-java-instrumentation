@@ -12,9 +12,9 @@ import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.instrumentation.api.internal.RuntimeVirtualFieldSupplier;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AsmApi;
-import io.opentelemetry.javaagent.tooling.TransformSafeLogger;
 import io.opentelemetry.javaagent.tooling.muzzle.VirtualFieldMappings;
 import java.lang.reflect.Method;
+import java.util.logging.Logger;
 import net.bytebuddy.asm.AsmVisitorWrapper;
 import net.bytebuddy.description.field.FieldDescription;
 import net.bytebuddy.description.field.FieldList;
@@ -31,8 +31,7 @@ import org.objectweb.asm.Type;
 
 final class VirtualFieldFindRewriter implements AsmVisitorWrapper {
 
-  private static final TransformSafeLogger logger =
-      TransformSafeLogger.getLogger(VirtualFieldFindRewriter.class);
+  private static final Logger logger = Logger.getLogger(VirtualFieldFindRewriter.class.getName());
 
   private static final Method FIND_VIRTUAL_FIELD_METHOD;
   private static final Method FIND_VIRTUAL_FIELD_WITH_NAME_METHOD;

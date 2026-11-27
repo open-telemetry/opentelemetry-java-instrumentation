@@ -450,6 +450,5 @@ class JavaagentProvider(
 ) : CommandLineArgumentProvider {
   override fun asArguments(): Iterable<String> = listOf(
     "-javaagent:${agentJarPath.get()}",
-    "-Dotel.javaagent.testing.transform-safe-logging.enabled=true"
   )
 }
