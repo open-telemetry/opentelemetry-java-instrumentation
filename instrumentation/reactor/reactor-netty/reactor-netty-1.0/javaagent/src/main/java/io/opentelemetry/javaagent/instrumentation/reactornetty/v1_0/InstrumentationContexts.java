@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResend
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import javax.annotation.Nullable;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
@@ -23,23 +22,26 @@ final class InstrumentationContexts {
   private static final VirtualField<HttpClientRequest, Context> REQUEST_CONTEXT =
       VirtualField.find(HttpClientRequest.class, Context.class);
 
-  private static final AtomicReferenceFieldUpdater<InstrumentationContexts, Context>
-      parentContextUpdater =
-          AtomicReferenceFieldUpdater.newUpdater(
-              InstrumentationContexts.class, Context.class, "parentContext");
-
+  // The volatile parent context publishes the timer.
+  private Timer timer;
   private volatile Context parentContext;
-  private volatile Timer timer;
+
   // on retries, reactor-netty starts the next resend attempt before it ends the previous one (i.e.
   // it calls the callback functions in that order); thus for a short moment there can be multiple
   // coexisting HTTP client spans
   private final Queue<RequestAndContext> clientContexts = new LinkedBlockingQueue<>();
 
   void initialize(Context parentContext) {
+    if (this.parentContext != null) {
+      return;
+    }
+
     Context parentContextWithResends = HttpClientRequestResendCount.initialize(parentContext);
-    // make sure initialization happens only once
-    if (parentContextUpdater.compareAndSet(this, null, parentContextWithResends)) {
-      timer = Timer.start();
+    synchronized (this) {
+      if (this.parentContext == null) {
+        timer = Timer.start();
+        this.parentContext = parentContextWithResends;
+      }
     }
   }
 

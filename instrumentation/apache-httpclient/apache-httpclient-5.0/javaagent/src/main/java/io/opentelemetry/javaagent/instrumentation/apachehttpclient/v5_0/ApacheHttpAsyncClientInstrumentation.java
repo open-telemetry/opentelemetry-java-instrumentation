@@ -152,8 +152,8 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
       if (instrumenter().shouldStart(parentContext, request)) {
-        wrappedFutureCallback.context = instrumenter().start(parentContext, request);
         wrappedFutureCallback.httpRequest = request;
+        wrappedFutureCallback.context = instrumenter().start(parentContext, request);
       }
 
       delegate.sendRequest(request, entityDetails, context);
@@ -166,8 +166,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
+    // The volatile context publishes the request, which is set once per callback.
+    @Nullable private HttpRequest httpRequest;
     @Nullable private volatile Context context;
-    @Nullable private volatile HttpRequest httpRequest;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
@@ -178,9 +179,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     }
 
     private void endSpan(Exception exception) {
-      // context is null here when the span creation was suppressed
-      if (context != null) {
-        instrumenter().end(context, httpRequest, getResponseFromHttpContext(), exception);
+      Context startedContext = context;
+      if (startedContext != null) {
+        instrumenter().end(startedContext, httpRequest, getResponseFromHttpContext(), exception);
       }
     }
 
