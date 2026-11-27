@@ -14,6 +14,7 @@ import java.util.Map;
 
 /** Handles conversion of InstrumentationPath objects to InstrumentationModule objects. */
 public class ModuleParser {
+
   /**
    * Converts a list of {@link InstrumentationPath} into a list of {@link InstrumentationModule}.
    *
