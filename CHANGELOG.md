@@ -5,9 +5,8 @@
 ### ⚠️ Breaking changes
 
 - Rename GraphQL `otel.instrumentation.graphql.capture-query` to
-  `otel.instrumentation.graphql.capture-document` and `java.graphql.capture_query` to
-  `java.graphql.capture_document`. The GraphQL library builders' `setCaptureQuery` is now
-  `setCaptureDocument`.
+  `otel.instrumentation.graphql.capture-document` and the GraphQL library builders'
+  `setCaptureQuery` to `setCaptureDocument`.
 
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
