@@ -46,3 +46,44 @@ public class ReactorExample {
   }
 }
 ```
+
+### Explicit context and subscription capture
+
+An explicitly stored OpenTelemetry context is authoritative, including `Context.root()`, which
+clears the active context during signals. Without an explicit context, the hooks capture the
+subscription context; capturing root leaves contexts activated by application code during signals
+visible. To leave signal-time contexts untouched even when subscribing under an active context,
+disable subscription capture:
+
+```java
+// Clear the active OpenTelemetry context during signals.
+flux.subscriberContext(reactorContext ->
+    ContextPropagationOperator.storeOpenTelemetryContext(
+        reactorContext, io.opentelemetry.context.Context.root()));
+
+// Keep the context active when each signal is processed, without capturing subscription context.
+flux.subscriberContext(ContextPropagationOperator::withoutSubscriptionContextCapture);
+```
+
+On Reactor 3.4 and later, use `contextWrite` instead of `subscriberContext`. Storing an explicit
+context after disabling capture replaces the no-capture choice.
+
+### Operation/application boundary
+
+Use the three-argument overload to isolate an operation's context from application callbacks:
+
+```java
+Mono<Response> response = ContextPropagationOperator.runWithContext(
+    Mono.defer(() -> client.exchange(request)), operationContext, applicationContext);
+```
+
+Source subscription, upstream demand and cancellation run under `operationContext`. Callbacks to
+the immediate downstream subscriber run under `applicationContext`, including root. Downstream
+tracing subscribers retain their own context policy; the helper does not carry an inner
+application context with values across fan-in operators. Unrelated Reactor context entries are
+preserved. The helper neither starts nor ends spans.
+
+These overloads do not register global hooks. Their direct subscription, demand, cancellation and
+callback scopes work without hooks; propagation through arbitrary asynchronous upstream operators
+still requires `registerOnEachOperator()`. The two-argument overloads retain their hook-dependent
+propagation behavior and do not establish an application callback boundary.

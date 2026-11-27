@@ -67,6 +67,7 @@ testing.suites {
   register<JvmTestSuite>("version34Test") {
     dependencies {
       implementation(project(":instrumentation:reactor:reactor-3.1:library"))
+      implementation(project(":instrumentation:reactor:reactor-3.1:testing"))
       val version = baseVersion("3.4.0").orLatest()
       implementation("io.projectreactor:reactor-core:$version")
     }
