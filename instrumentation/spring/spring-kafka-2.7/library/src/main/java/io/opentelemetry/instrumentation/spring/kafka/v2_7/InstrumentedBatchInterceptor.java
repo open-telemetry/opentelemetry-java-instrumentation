@@ -151,29 +151,38 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void clearThreadState(Consumer<?, ?> consumer) {
+    // clean up the decorated interceptor first, it may close scopes made current after ours
+    try {
+      if (decorated != null) {
+        decorated.clearThreadState(consumer);
+      }
+    } finally {
+      endUnfinishedInvocations();
+    }
+  }
+
+  private void endUnfinishedInvocations() {
     ThreadState threadState = currentThreadState.get();
-    if (threadState != null) {
-      ProcessingInvocation<KafkaReceiveRequest> invocation;
-      while ((invocation = currentInvocation.get()) != null
-          && invocation != threadState.previousInvocation) {
-        if (invocation.completed) {
-          // ended out of order, only remove it from the invocation chain
-          pop(invocation);
-        } else {
-          end(invocation, invocation.error);
-        }
-      }
-      if (threadState.previous == null) {
-        currentThreadState.remove();
+    if (threadState == null) {
+      return;
+    }
+    ProcessingInvocation<KafkaReceiveRequest> invocation;
+    while ((invocation = currentInvocation.get()) != null
+        && invocation != threadState.previousInvocation) {
+      if (invocation.completed) {
+        // ended out of order, only remove it from the invocation chain
+        pop(invocation);
       } else {
-        currentThreadState.set(threadState.previous);
+        end(invocation, invocation.error);
       }
-      // A physical poll can produce multiple partition sub-batches without another setup call.
-      nextSubBatch.set(true);
     }
-    if (decorated != null) {
-      decorated.clearThreadState(consumer);
+    if (threadState.previous == null) {
+      currentThreadState.remove();
+    } else {
+      currentThreadState.set(threadState.previous);
     }
+    // A physical poll can produce multiple partition sub-batches without another setup call.
+    nextSubBatch.set(true);
   }
 
   private static class ThreadState {

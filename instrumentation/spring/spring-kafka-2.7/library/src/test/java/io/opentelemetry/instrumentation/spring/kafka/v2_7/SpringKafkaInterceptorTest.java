@@ -22,6 +22,7 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -41,6 +42,8 @@ import io.opentelemetry.api.trace.TraceFlags;
 import io.opentelemetry.api.trace.TraceState;
 import io.opentelemetry.api.trace.propagation.W3CTraceContextPropagator;
 import io.opentelemetry.context.Context;
+import io.opentelemetry.context.ContextKey;
+import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingIterator;
@@ -820,6 +823,100 @@ class SpringKafkaInterceptorTest {
                         equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2),
                         equalTo(MESSAGING_DESTINATION_PARTITION_ID, "0")),
             span -> span.hasName("listener").hasParent(trace.getSpan(2))));
+  }
+
+  @Test
+  void clearThreadStateCleansUpDecoratedInterceptorBeforeEndingBatch() {
+    assumeHasThreadStateHooks();
+    NestedScopeInterceptor decorated = new NestedScopeInterceptor(null);
+    InstrumentedBatchInterceptor<String, String> interceptor =
+        (InstrumentedBatchInterceptor<String, String>)
+            telemetry.<String, String>createBatchInterceptor(decorated);
+    ConsumerRecords<String, String> records =
+        records(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
+    Context enclosing = Context.current();
+
+    interceptor.setupThreadState(null);
+    interceptor.intercept(records, null);
+    assertThat(Context.current().get(NestedScopeInterceptor.KEY)).isEqualTo("nested");
+    interceptor.clearThreadState(null);
+
+    assertThat(Context.current()).isSameAs(enclosing);
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()));
+  }
+
+  @Test
+  void clearThreadStateEndsBatchWhenDecoratedInterceptorThrows() {
+    assumeHasThreadStateHooks();
+    IllegalStateException failure = new IllegalStateException("clear failed");
+    NestedScopeInterceptor decorated = new NestedScopeInterceptor(failure);
+    InstrumentedBatchInterceptor<String, String> interceptor =
+        (InstrumentedBatchInterceptor<String, String>)
+            telemetry.<String, String>createBatchInterceptor(decorated);
+    ConsumerRecords<String, String> records =
+        records(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
+    Context enclosing = Context.current();
+
+    interceptor.setupThreadState(null);
+    interceptor.intercept(records, null);
+    assertThatThrownBy(() -> interceptor.clearThreadState(null)).isSameAs(failure);
+
+    assertThat(Context.current()).isSameAs(enclosing);
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()));
+  }
+
+  // clearThreadState is not declared in Spring Kafka 2.7, so it is not annotated with @Override
+  private static class NestedScopeInterceptor implements BatchInterceptor<String, String> {
+    static final ContextKey<String> KEY = ContextKey.named("nested");
+
+    private final RuntimeException clearFailure;
+    private Scope scope;
+
+    NestedScopeInterceptor(RuntimeException clearFailure) {
+      this.clearFailure = clearFailure;
+    }
+
+    @Override
+    public ConsumerRecords<String, String> intercept(
+        ConsumerRecords<String, String> records, Consumer<String, String> consumer) {
+      scope = Context.current().with(KEY, "nested").makeCurrent();
+      return records;
+    }
+
+    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod", "UnusedVariable"}) // 2.8+ interface method
+    public void clearThreadState(Consumer<?, ?> consumer) {
+      scope.close();
+      if (clearFailure != null) {
+        throw clearFailure;
+      }
+    }
+  }
+
+  private static void assumeHasThreadStateHooks() {
+    boolean present = true;
+    try {
+      BatchInterceptor.class.getMethod("clearThreadState", Consumer.class);
+    } catch (NoSuchMethodException e) {
+      present = false;
+    }
+    assumeTrue(present, "requires Spring Kafka 2.8+");
+  }
+
+  @Test
+  void instrumentedConsumerHasIdentityEquality() {
+    MockConsumer<String, String> mockConsumer = new MockConsumer<>(OffsetResetStrategy.EARLIEST);
+    Consumer<String, String> first = telemetry.instrument(mockConsumer);
+    Consumer<String, String> second = telemetry.instrument(mockConsumer);
+    List<Consumer<String, String>> consumers = new ArrayList<>();
+    consumers.add(first);
+
+    assertThat(first.equals(first)).isTrue();
+    assertThat(first.hashCode()).isEqualTo(System.identityHashCode(first));
+    assertThat(consumers).contains(first).doesNotContain(second);
+    assertThat(first.equals(second)).isFalse();
+    assertThat(consumers.remove(first)).isTrue();
   }
 
   @Test

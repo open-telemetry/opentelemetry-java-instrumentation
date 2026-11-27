@@ -128,6 +128,16 @@ public final class SpringKafkaTelemetry {
             SpringKafkaTelemetry.class.getClassLoader(),
             new Class<?>[] {Consumer.class},
             (proxy, method, args) -> {
+              if (method.getDeclaringClass() == Object.class) {
+                switch (method.getName()) {
+                  case "equals":
+                    return proxy == args[0];
+                  case "hashCode":
+                    return System.identityHashCode(proxy);
+                  default:
+                    break;
+                }
+              }
               Object result;
               try {
                 result = method.invoke(consumer, args);
