@@ -194,9 +194,9 @@ javaagent instrumentation, not library-only code.
   storage, and skipped advice. Prefer library ordering or an existing operation context over a
   separate handoff protocol.
 
-- Publish related state as a unit. When state is initialized once, prefer reusing an existing
-  volatile field that can signal readiness over allocating a holder solely for publication. If
-  several callers can initialize the state, choose the writer before writing any of its fields.
+- Publish related state as a unit. When state is initialized once, prefer publishing it through a
+  volatile readiness field over allocating a holder solely for publication. If several callers can
+  initialize the state, choose the writer before writing any of its fields.
   Write the other fields first, then set the volatile field to its ready value. Readers must
   observe that value before reading the other fields. Do not overwrite the published fields. If
   state can be replaced while readers access it, safely publish immutable snapshots and have each
