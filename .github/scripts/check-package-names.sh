@@ -103,6 +103,7 @@ check_source_set() {
         library:resources) ;;
         library:runtime-telemetry) ;;
         # javaagent:
+        javaagent:executor-metrics) ;;
         javaagent:executors) ;;
         javaagent:external-annotations) ;;
         javaagent:http-url-connection) ;;
