@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.spring.kafka.v2_7;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
+import static java.util.Collections.singleton;
 import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,11 +35,15 @@ import java.util.function.Function;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.MockConsumer;
+import org.apache.kafka.clients.consumer.OffsetAndMetadata;
 import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.kafka.core.ConsumerFactory;
+import org.springframework.kafka.listener.BatchAcknowledgingConsumerAwareMessageListener;
 import org.springframework.kafka.listener.BatchMessageListener;
 import org.springframework.kafka.listener.ContainerProperties;
 import org.springframework.kafka.listener.KafkaMessageListenerContainer;
@@ -107,6 +112,104 @@ class SpringKafkaBatchCompletionSkippedTest {
   @Test
   void instrumentedConsumerIsMarkedBeforePollResultListener() throws InterruptedException {
     runInstrumentedContainer(true);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  @SuppressWarnings("unchecked") // generic ConsumerFactory mock
+  void manualAcknowledgmentCommitsBatchOffsetsAfterListenerAcknowledges(boolean pollResult)
+      throws InterruptedException {
+    TopicPartition partition = new TopicPartition("orders", 0);
+    CountDownLatch listenerCompleted = new CountDownLatch(1);
+    CountDownLatch commitCompleted = new CountDownLatch(1);
+    AtomicReference<OffsetAndMetadata> committedBeforeAcknowledgment = new AtomicReference<>();
+    AtomicReference<OffsetAndMetadata> committedAfterAcknowledgment = new AtomicReference<>();
+    AtomicReference<Acknowledgment> receivedAcknowledgment = new AtomicReference<>();
+    AtomicInteger deliveredRecordCount = new AtomicInteger();
+    MockConsumer<String, String> consumer =
+        new MockConsumer<String, String>(OffsetResetStrategy.EARLIEST) {
+          @Override
+          public synchronized void commitSync(Map<TopicPartition, OffsetAndMetadata> offsets) {
+            super.commitSync(offsets);
+            committedAfterAcknowledgment.set(super.committed(singleton(partition)).get(partition));
+            commitCompleted.countDown();
+          }
+        };
+    consumer.updateBeginningOffsets(singletonMap(partition, 0L));
+    consumer.schedulePollTask(() -> {
+      consumer.addRecord(new ConsumerRecord<>("orders", 0, 0, "key", "first"));
+      consumer.addRecord(new ConsumerRecord<>("orders", 0, 1, "key", "second"));
+    });
+
+    ConsumerFactory<String, String> factory = mock();
+    when(factory.isAutoCommit()).thenReturn(false);
+    when(factory.createConsumer(any(), any(), any(), any()))
+        .thenReturn(telemetry.instrument(consumer));
+
+    BatchMessageListener<String, String> listener;
+    if (pollResult) {
+      listener =
+          new BatchMessageListener<String, String>() {
+            @Override
+            public void onMessage(List<ConsumerRecord<String, String>> records) {
+              throw new UnsupportedOperationException();
+            }
+
+            @Override
+            public void onMessage(
+                ConsumerRecords<String, String> records,
+                Acknowledgment acknowledgment,
+                org.apache.kafka.clients.consumer.Consumer<String, String> listenerConsumer) {
+              acknowledgeBatch(
+                  records.count(),
+                  acknowledgment,
+                  consumer,
+                  partition,
+                  committedBeforeAcknowledgment,
+                  receivedAcknowledgment,
+                  deliveredRecordCount,
+                  listenerCompleted);
+            }
+
+            @Override
+            public boolean wantsPollResult() {
+              return true;
+            }
+          };
+    } else {
+      listener =
+          (BatchAcknowledgingConsumerAwareMessageListener<String, String>)
+              (records, acknowledgment, listenerConsumer) ->
+                  acknowledgeBatch(
+                      records.size(),
+                      acknowledgment,
+                      consumer,
+                      partition,
+                      committedBeforeAcknowledgment,
+                      receivedAcknowledgment,
+                      deliveredRecordCount,
+                      listenerCompleted);
+    }
+
+    ContainerProperties properties = new ContainerProperties(new TopicPartitionOffset("orders", 0));
+    properties.setGroupId("group");
+    properties.setPollTimeout(10);
+    properties.setAckMode(ContainerProperties.AckMode.MANUAL);
+    properties.setMessageListener(telemetry.createBatchMessageListener(listener));
+    KafkaMessageListenerContainer<String, String> container =
+        new KafkaMessageListenerContainer<>(factory, properties);
+    try {
+      container.start();
+      assertThat(listenerCompleted.await(10, SECONDS)).isTrue();
+      assertThat(receivedAcknowledgment.get()).isNotNull();
+      assertThat(commitCompleted.await(10, SECONDS)).isTrue();
+    } finally {
+      container.stop();
+    }
+
+    assertThat(deliveredRecordCount).hasValue(2);
+    assertThat(committedBeforeAcknowledgment.get()).isNull();
+    assertThat(committedAfterAcknowledgment.get().offset()).isEqualTo(2L);
   }
 
   @Test
@@ -369,6 +472,24 @@ class SpringKafkaBatchCompletionSkippedTest {
         consumer -> telemetry.instrument(kafkaTelemetry.instrument(consumer)),
         pollResult,
         true);
+  }
+
+  private static void acknowledgeBatch(
+      int recordCount,
+      Acknowledgment acknowledgment,
+      MockConsumer<String, String> consumer,
+      TopicPartition partition,
+      AtomicReference<OffsetAndMetadata> committedBeforeAcknowledgment,
+      AtomicReference<Acknowledgment> receivedAcknowledgment,
+      AtomicInteger deliveredRecordCount,
+      CountDownLatch listenerCompleted) {
+    receivedAcknowledgment.set(acknowledgment);
+    deliveredRecordCount.set(recordCount);
+    committedBeforeAcknowledgment.set(consumer.committed(singleton(partition)).get(partition));
+    if (acknowledgment != null) {
+      acknowledgment.acknowledge();
+    }
+    listenerCompleted.countDown();
   }
 
   private static boolean hasPollThreadStateHooks() {
