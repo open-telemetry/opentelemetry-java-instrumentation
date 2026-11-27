@@ -42,14 +42,14 @@ public class HikariSingletons {
     DbInfo dbInfo = getDbInfo(config);
     Attributes databaseAttributes = JdbcConnectionPoolMetricsUtil.databaseAttributes(dbInfo);
     if (!Boolean.TRUE.equals(GENERATED_POOL_NAME_FIELD.get(config))) {
-      return hikariTelemetry.createMetricsTrackerFactory(delegate, databaseAttributes);
+      return hikariTelemetry.instrument(delegate, databaseAttributes);
     }
 
     String poolName =
         JdbcConnectionPoolMetricsUtil.poolName(dbInfo, null, DEFAULT_DATA_SOURCE_NAME);
     return (hikariPoolName, poolStats) ->
         hikariTelemetry
-            .createMetricsTrackerFactory(
+            .instrument(
                 delegate == null
                     ? null
                     : (ignored, stats) -> delegate.create(hikariPoolName, stats),

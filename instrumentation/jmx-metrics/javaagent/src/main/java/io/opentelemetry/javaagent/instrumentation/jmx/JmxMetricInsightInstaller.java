@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetry;
 import io.opentelemetry.instrumentation.jmx.JmxTelemetryBuilder;
+import io.opentelemetry.instrumentation.jmx.internal.Internal;
 import io.opentelemetry.javaagent.extension.AgentListener;
 import io.opentelemetry.javaagent.extension.instrumentation.internal.AgentDistributionConfig;
 import io.opentelemetry.sdk.autoconfigure.AutoConfiguredOpenTelemetrySdk;
@@ -59,6 +60,8 @@ public class JmxMetricInsightInstaller implements AgentListener {
         .map(Paths::get)
         .forEach(path -> addFileRules(path, jmx));
 
+    addInlineRules(config, jmx);
+
     List<String> unstableInclude =
         config
             .get("metrics")
@@ -76,6 +79,16 @@ public class JmxMetricInsightInstaller implements AgentListener {
         SelectorConfig.resolve(config, INSTRUMENTATION_NAME, "metrics", STABLE);
     if (metrics != null) {
       jmx.setMetrics(metrics);
+    }
+  }
+
+  private static void addInlineRules(DeclarativeConfigProperties config, JmxTelemetryBuilder jmx) {
+    for (DeclarativeConfigProperties rule : config.getStructuredList("rules", emptyList())) {
+      try {
+        Internal.addRule(jmx, DeclarativeConfigProperties.toMap(rule));
+      } catch (RuntimeException e) {
+        logger.log(SEVERE, "Error while loading an inline JMX rule", e);
+      }
     }
   }
 

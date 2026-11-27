@@ -291,30 +291,34 @@ public abstract class AbstractRxJava2Test {
   @Test
   void observableFromCallableContextPropagation() throws InterruptedException {
     CountDownLatch latch = new CountDownLatch(1);
-    AtomicReference<String> traceId = new AtomicReference<>();
-    AtomicReference<String> innerObservableTraceId = new AtomicReference<>();
-    AtomicReference<String> endObservableTraceId = new AtomicReference<>();
 
     createParentSpan(() -> {
-      traceId.set(Span.current().getSpanContext().getTraceId());
       Disposable unused =
           Observable.fromCallable(
                   () -> {
-                    innerObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                    testing().runWithSpan("callable", () -> {});
                     return "success";
                   })
               .subscribeOn(Schedulers.io())
               .observeOn(Schedulers.single())
               .subscribe(data -> {
-                endObservableTraceId.set(Span.current().getSpanContext().getTraceId());
+                testing().runWithSpan("subscriber", () -> {});
                 latch.countDown();
               });
       assertThat(unused).isNotNull();
     });
 
     assertThat(latch.await(10, SECONDS)).isTrue();
-    assertThat(innerObservableTraceId.get()).isEqualTo(traceId.get());
-    assertThat(endObservableTraceId.get()).isEqualTo(traceId.get());
+    testing()
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName(PARENT).hasKind(SpanKind.INTERNAL).hasNoParent(),
+                span ->
+                    span.hasName("callable").hasKind(SpanKind.INTERNAL).hasParent(trace.getSpan(0)),
+                span ->
+                    span.hasName("subscriber")
+                        .hasKind(SpanKind.INTERNAL)
+                        .hasParent(trace.getSpan(0))));
   }
 
   @Test

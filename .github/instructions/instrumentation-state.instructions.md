@@ -14,7 +14,7 @@ javaagent instrumentation, not library-only code.
 
   | Requirement | Storage |
   | --- | --- |
-  | Javaagent state belongs to a third-party object instance | Typed `VirtualField<Carrier, State>` |
+  | Javaagent state belongs to a third-party object instance | Typed `VirtualField<Carrier, State>` when [fallback is safe](#lifetime-fallback-and-reuse); otherwise see that section |
   | A shared helper supports callers with different carrier types | Caller-selected virtual field or typed accessor |
   | State is ambient for the current operation or scope | OpenTelemetry `Context`, `Scope`, or scoped thread state |
   | State belongs to an instrumentation-owned wrapper | An ordinary field |
@@ -24,11 +24,10 @@ javaagent instrumentation, not library-only code.
   | A wrapper must not strongly retain its delegate | An explicit `WeakReference`, possibly in a virtual field |
   | Library instrumentation runs without agent transformation | Storage supported by the library API and lifecycle |
 
-- Use `VirtualField` for instrumentation-owned context, span, suppression, or ownership state
-  attached to requests, messages, futures, callbacks, connections, or other third-party instances.
-  It normally injects storage into the carrier and falls back to weak-key storage when injection is
-  unavailable. Do not replace real memoization, bounded caches, weak delegate links, or value
-  interning mechanically.
+- Prefer `VirtualField` for instrumentation-owned context, span, suppression, or ownership state
+  attached to requests, messages, futures, callbacks, connections, or other third-party instances
+  when [fallback storage is safe](#lifetime-fallback-and-reuse). Do not replace real memoization,
+  bounded caches, weak delegate links, or value interning mechanically.
 
 ## Typed virtual fields
 
@@ -93,9 +92,19 @@ javaagent instrumentation, not library-only code.
   before a pooled or reused carrier represents another operation. Garbage collection does not
   prevent stale state on reuse.
 
-- Fallback storage has weak keys and strong values. A value that strongly references its carrier
-  can keep the carrier alive. Avoid that graph, or use a weak back-reference when genuinely needed.
-  Field-backed storage can collect a carrier/value cycle, but fallback storage must remain safe.
+- A `VirtualField` value must not strongly reference its own carrier, directly or indirectly,
+  unless every supported terminal path removes the entry with `set(carrier, null)` or breaks the
+  reference path. When field injection is disabled or unavailable, the fallback map holds the value
+  strongly. A back-reference keeps the weak key alive, so garbage collection cannot remove the
+  entry.
+
+  Trace concrete paths from the value to its carrier, including mutable holders that other
+  instrumentation writes to later, possibly only under non-default settings. A value type that
+  could reach arbitrary objects, such as `Context`, is not a problem by itself. For example, with
+  span suppression set to `none`, a stored `Context` can reach its Undertow exchange through a
+  response saved in servlet async state. If cleanup cannot be guaranteed, store detached data, use
+  a weak back-reference if the state remains valid after the reference is cleared, or keep the
+  state in storage owned by the carrier.
 
   Trace strong references from each concrete value that can be stored at runtime, including lambda
   captures and any enclosing instances held by inner classes. Check for a path back to the value's
@@ -199,9 +208,11 @@ javaagent instrumentation, not library-only code.
   call path that discards enclosing state, leaves temporary state installed, or uses state that
   belongs to another operation.
 
-- Keep a holder private in the narrowest owner. If several classes in one module need direct access,
-  use a private field in `*Singletons`, exposed by a same-named zero-argument accessor and
-  statically imported by callers. Cross-module state uses a focused shared bootstrap owner.
+- Keep a holder private in the class that owns the state or its lifecycle. If no class is a natural
+  owner, use the narrowest helper the callers can share.
+
+- Use a focused bootstrap owner when a handoff crosses class-loader boundaries that prevent the
+  callers from sharing an ordinary helper.
 
 - Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
   as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
