@@ -25,9 +25,11 @@ user-facing instrumentation configuration.
   Flat-property segments use kebab-case and YAML keys use snake_case, subject to the published
   names below.
 - Experimental features use an `experimental` marker in the flat name and the
-  corresponding `/development` YAML form. Preview flat names use a `preview` marker and an
-  unstable YAML form, either `/development` or `preview` in the key. Stable feature names need
-  neither marker.
+  corresponding `/development` YAML form, as in
+  `otel.instrumentation.jdbc.experimental.capture-query-parameters` and
+  `java.jdbc.capture_query_parameters/development`. Preview flat names use a `preview` marker
+  and an unstable YAML form, either `/development` or `preview` in the key. Stable feature names
+  need neither marker. An opt-in default does not make a feature experimental.
 - Use [VERSIONING.md](../../VERSIONING.md) to determine which settings have a compatibility
   guarantee and when they can be removed. Apply the policy to the published artifact that exposes
   the setting to users, not the internal module that reads it. Settings exposed only through alpha
@@ -35,6 +37,18 @@ user-facing instrumentation configuration.
 - Preserve already-published names rather than renaming them to match a mechanical conversion
   or naming convention. Use a `SPECIAL_MAPPINGS` bridge entry only when normalized flat-property
   lookup does not resolve the published mapping.
+- For a new boolean that controls capture of data defined by a semantic convention, use
+  `capture-<data>` in flat properties, `capture_<data>` in YAML, and
+  `setCapture<Data>(boolean)` for the corresponding Java builder method. Do not append `.enabled`.
+  For a single attribute, derive `<data>` from its key. Omit the first segment if the remainder
+  still identifies the data. For a group of attributes, name the group the setting captures.
+  Use the same words for `<data>` in all three names. For example, `query.text` from
+  `db.query.text` gives `capture-query-text`, `capture_query_text`, and
+  `setCaptureQueryText(boolean)`. This rule does not apply to
+  [experimental attributes](emitted-telemetry.instructions.md#stability-and-safety).
+- Name value transformations separately from capture. For example, `capture-query-text` controls
+  whether to include query text, while `query-sanitization.enabled` controls whether to mask values
+  in it. Document any interaction, such as capturing JDBC parameters disabling query sanitization.
 
 ## Reading settings
 
@@ -95,7 +109,6 @@ user-facing instrumentation configuration.
 
 - Use noun-based names for structured `included`/`excluded` selectors, such as `mdc_attributes`,
   `headers`, or `request_parameters`. A selector describes the selected resource, not a capture action.
-  Keep `capture_*` for action booleans such as `capture_query` or `capture_message_content`.
   Java setters likewise use names such as `setMdcAttributes(IncludeExclude)`, not
   `setCaptureMdcAttributes(...)`. Prefer one selector value to paired include/exclude setters; the
   shared `IncludeExclude` type is the intended shape.
