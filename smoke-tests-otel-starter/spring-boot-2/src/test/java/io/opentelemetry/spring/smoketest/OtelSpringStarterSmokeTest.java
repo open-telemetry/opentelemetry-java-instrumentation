@@ -46,7 +46,7 @@ class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
   }
 
   @Override
-  void restTemplateCall(String path) {
+  void httpClientCall(String path) {
     RestTemplate restTemplate = restTemplateBuilder.rootUri("http://localhost:" + port).build();
     restTemplate.getForObject(path, String.class);
   }

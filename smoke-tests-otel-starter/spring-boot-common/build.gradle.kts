@@ -6,7 +6,7 @@ description = "smoke-tests-otel-starter-spring-boot-common"
 
 dependencies {
   // spring dependencies are compile only to enable testing against different versions of spring
-  compileOnly(platform("org.springframework.boot:spring-boot-dependencies:2.6.15"))
+  compileOnly(platform("org.springframework.boot:spring-boot-dependencies:2.7.18"))
   compileOnly("org.springframework.boot:spring-boot-starter-web")
   compileOnly("org.springframework.boot:spring-boot-starter-test")
   compileOnly("org.springframework.boot:spring-boot-starter-data-jdbc")

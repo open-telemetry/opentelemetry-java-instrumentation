@@ -82,7 +82,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   abstract void makeClientCall();
 
-  abstract void restTemplateCall(String path);
+  abstract void httpClientCall(String path);
 
   // can't use @LocalServerPort annotation since it moved packages between Spring Boot 2 and 3
   @Value("${local.server.port}")
@@ -316,8 +316,8 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
   }
 
   @Test
-  void restTemplate() {
-    restTemplateCall(OtelSpringStarterSmokeTestController.PING);
+  void httpClient() {
+    httpClientCall(OtelSpringStarterSmokeTestController.PING);
 
     testing.waitAndAssertTraces(traceAssert ->
         traceAssert.hasSpansSatisfyingExactly(
@@ -328,7 +328,7 @@ abstract class AbstractOtelSpringStarterSmokeTest extends AbstractSpringStarterS
 
   @Test
   void shouldRedactSomeUrlParameters() {
-    restTemplateCall("/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0");
+    httpClientCall("/test?X-Goog-Signature=39Up9jzHkxhuIhFE9594DJxe7w6cIRCg0V6ICGS0");
 
     testing.waitAndAssertTraces(traceAssert ->
         traceAssert.hasSpansSatisfyingExactly(

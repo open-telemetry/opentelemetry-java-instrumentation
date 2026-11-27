@@ -11,6 +11,7 @@ plugins {
   id("idea")
 
   id("io.github.gradle-nexus.publish-plugin")
+  id("otel.dsl-conventions")
   id("otel.spotless-conventions")
   id("otel.resolve-latest-dep-versions")
   /* workaround for
@@ -116,12 +117,16 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
         }
       }
 
+      val testLatestDeps = otelProps.testLatestDeps
+      val smokeTestProjects = setOf("smoke-tests", "smoke-tests-osgi", "smoke-tests-otel-starter")
       doLast {
         File("test-tasks.txt").printWriter().use { writer ->
           partitionTasks.forEach { taskPath ->
-            // smoke tests are run separately
+            val skipSmokeTest = testLatestDeps &&
+              taskPath.removePrefix(":").substringBefore(':') in smokeTestProjects
+            // :smoke-tests:test runs separately
             // :instrumentation:test runs all instrumentation tests
-            if (taskPath != ":smoke-tests:test" && taskPath != ":instrumentation:test") {
+            if (taskPath != ":smoke-tests:test" && taskPath != ":instrumentation:test" && !skipSmokeTest) {
               writer.println(taskPath)
             }
           }
