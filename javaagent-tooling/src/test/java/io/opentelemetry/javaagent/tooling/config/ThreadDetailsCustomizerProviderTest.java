@@ -40,7 +40,7 @@ class ThreadDetailsCustomizerProviderTest {
     properties.put("otel.metrics.exporter", "none");
     properties.put("otel.logs.exporter", "none");
     if (value != null) {
-      properties.put("otel.javaagent.capture-thread-attributes", value);
+      properties.put("otel.javaagent.add-thread-details", value);
     }
 
     InMemorySpanExporter exporter = InMemorySpanExporter.create();

@@ -12,17 +12,6 @@
 - Rename `otel.instrumentation.resources.experimental.process-command-attributes.enabled` to
   `otel.instrumentation.resources.experimental.capture-process-command-attributes`.
 
-- Rename `otel.javaagent.add-thread-details` to `otel.javaagent.capture-thread-attributes` and
-  `otel.instrumentation.common.thread-details.enabled` to
-  `otel.instrumentation.common.capture-thread-attributes`. The declarative distribution setting is
-  now `capture_thread_attributes` for both `javaagent` and `spring_starter`.
-
-- Rename `otel.instrumentation.{java-util-logging,jboss-logmanager,log4j-appender,logback-appender}.experimental-log-attributes`
-  to `otel.instrumentation.<name>.capture-thread-attributes`; their declarative setting is now
-  `capture_thread_attributes`. The Log4j and Logback appender XML option
-  `captureExperimentalAttributes` and setter `setCaptureExperimentalAttributes` are now
-  `captureThreadAttributes` and `setCaptureThreadAttributes`.
-
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
   by method, protocol version, and URL scheme.
@@ -117,7 +106,7 @@
   `opentelemetry-instrumentation-annotations` selectors to control suspend function annotations.
 
 - The Java agent no longer captures thread details by default. Set
-  `otel.javaagent.capture-thread-attributes=true` to capture `thread.id` and `thread.name` on spans.
+  `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
 
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
   remain, instead of emitting an empty object.

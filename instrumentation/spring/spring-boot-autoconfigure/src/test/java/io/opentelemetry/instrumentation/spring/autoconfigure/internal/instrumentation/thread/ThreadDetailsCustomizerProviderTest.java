@@ -23,7 +23,7 @@ class ThreadDetailsCustomizerProviderTest {
         "true, true",
         "false, false",
         "NULL, false", // distribution node not set
-        ", false", // capture_thread_attributes key present with no value
+        ", false", // thread_details_enabled key present with no value
         "invalid, false",
       })
   @SuppressWarnings("StringConcatToTextBlock") // latest dep allows text blocks
@@ -33,7 +33,7 @@ class ThreadDetailsCustomizerProviderTest {
             ? ""
             : "distribution:\n"
                 + "  spring_starter:\n"
-                + "    capture_thread_attributes: "
+                + "    thread_details_enabled: "
                 + propertyValue
                 + "\n";
 

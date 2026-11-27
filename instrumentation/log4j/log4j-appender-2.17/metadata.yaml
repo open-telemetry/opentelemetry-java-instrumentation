@@ -26,10 +26,10 @@ configurations:
       MDC, or logger context.
     type: list
     default: ''
-  - name: otel.instrumentation.log4j-appender.capture-thread-attributes
-    declarative_name: java.log4j_appender.capture_thread_attributes
+  - name: otel.instrumentation.log4j-appender.experimental-log-attributes
+    declarative_name: java.log4j_appender.experimental_log_attributes/development
     description: >
-      Enables the capture of thread name and thread ID log attributes.
+      Enables the capture of experimental log attributes, including thread name and thread ID.
     type: boolean
     default: false
   - name: otel.instrumentation.log4j-appender.experimental.capture-code-attributes

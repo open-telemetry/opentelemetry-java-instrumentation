@@ -30,9 +30,9 @@ if (otelProps.testLatestDeps) {
 testing.suites {
   executions("test") {
     configureEach {
-      // TODO run tests both with and without thread attributes
-      jvmArgs("-Dotel.instrumentation.jboss-logmanager.capture-thread-attributes=true")
-      jvmArgs("-Dotel.instrumentation.java-util-logging.capture-thread-attributes=true")
+      // TODO run tests both with and without experimental log attributes
+      jvmArgs("-Dotel.instrumentation.jboss-logmanager.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
     }
     configureDefault {
       jvmArgs(

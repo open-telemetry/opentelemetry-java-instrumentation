@@ -105,7 +105,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
   public static class Builder<B extends Builder<B>> extends AbstractAppender.Builder<B>
       implements org.apache.logging.log4j.core.util.Builder<OpenTelemetryAppender> {
 
-    @PluginBuilderAttribute private boolean captureThreadAttributes;
+    @PluginBuilderAttribute private boolean captureExperimentalAttributes;
     @PluginBuilderAttribute private boolean captureCodeAttributes;
     @Nullable @PluginBuilderAttribute private String structuredAttributesIncluded;
     @Nullable @PluginBuilderAttribute private String structuredAttributesExcluded;
@@ -121,10 +121,14 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Nullable private OpenTelemetry openTelemetry;
 
-    /** Sets whether thread name and thread ID should be set on logs. */
+    /**
+     * Sets whether experimental attributes should be set to logs. These attributes may be changed
+     * or removed in the future, so only enable this if you know you do not require attributes
+     * filled by this instrumentation to be stable across versions.
+     */
     @CanIgnoreReturnValue
-    public B setCaptureThreadAttributes(boolean captureThreadAttributes) {
-      this.captureThreadAttributes = captureThreadAttributes;
+    public B setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
+      this.captureExperimentalAttributes = captureExperimentalAttributes;
       return asBuilder();
     }
 
@@ -344,7 +348,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
           getFilter(),
           isIgnoreExceptions(),
           getPropertyArray(),
-          captureThreadAttributes,
+          captureExperimentalAttributes,
           captureCodeAttributes,
           getEffectiveStructuredAttributes(),
           captureMarkerAttribute,

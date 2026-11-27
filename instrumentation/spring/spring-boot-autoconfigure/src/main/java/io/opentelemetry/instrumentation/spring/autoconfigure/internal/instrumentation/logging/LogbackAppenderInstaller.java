@@ -133,9 +133,9 @@ class LogbackAppenderInstaller {
     Boolean logAttributes =
         evaluateBooleanProperty(
             applicationEnvironmentPreparedEvent,
-            "otel.instrumentation.logback-appender.capture-thread-attributes");
+            "otel.instrumentation.logback-appender.experimental-log-attributes");
     if (logAttributes != null) {
-      openTelemetryAppender.setCaptureThreadAttributes(logAttributes);
+      openTelemetryAppender.setCaptureExperimentalAttributes(logAttributes);
     }
 
     Boolean captureTemplate =

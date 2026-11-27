@@ -311,8 +311,8 @@ instrumentation/development:
       # Enables the capture of the log message template (if arguments are provided).
       capture_template/development: false
 
-      # Enables capturing the `thread.name` and `thread.id` log attributes.
-      capture_thread_attributes: false
+      # Enables capturing the experimental `thread.name` and `thread.id` log attributes.
+      experimental_log_attributes/development: false
     jaxrs:
       # Enables the experimental `jaxrs.canceled` span attribute.
       experimental_span_attributes/development: false
@@ -323,8 +323,8 @@ instrumentation/development:
       # Enables the capture of the log message template (if arguments are provided).
       capture_template/development: false
 
-      # Enables the capture of thread name and thread ID log attributes.
-      capture_thread_attributes: false
+      # Enables the capture of experimental log attributes, including thread name and thread ID.
+      experimental_log_attributes/development: false
       mdc_attributes/development:
         # A comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log
         # attributes. `*` matches any number of characters and `?` matches one character. Excluded
@@ -411,8 +411,8 @@ instrumentation/development:
       # Enables the capture of the log message template (if arguments are provided).
       capture_template/development: false
 
-      # Enables the capture of thread name and thread ID log attributes.
-      capture_thread_attributes: false
+      # Enables the capture of experimental log attributes, including thread name and thread ID.
+      experimental_log_attributes/development: false
       mdc_attributes/development:
         # Comma-separated list of case-sensitive glob patterns for context data keys not to capture
         # as log attributes. "*" matches any number of characters and "?" matches one character.
@@ -444,8 +444,8 @@ instrumentation/development:
       # Enables the capture of the log message template before parameter substitution.
       capture_template/development: false
 
-      # Enables the capture of thread name and thread ID log attributes.
-      capture_thread_attributes: false
+      # Enables the capture of experimental log attributes, including thread name and thread ID.
+      experimental_log_attributes/development: false
       logger_context_attributes/development:
         # Comma-separated list of case-sensitive glob patterns for Logback logger context property
         # keys not to capture as log attributes. "*" matches any number of characters and "?"
