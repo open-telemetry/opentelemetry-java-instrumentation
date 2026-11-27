@@ -13,7 +13,7 @@ import io.opentelemetry.javaagent.bootstrap.internal.ExperimentalConfig;
 
 class JaxrsSingletons {
 
-  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxrs-1.0-annotations";
+  private static final String INSTRUMENTATION_NAME = "io.opentelemetry.jaxrs-annotations-1.0";
 
   private static final Instrumenter<HandlerData, Void> instrumenter;
 

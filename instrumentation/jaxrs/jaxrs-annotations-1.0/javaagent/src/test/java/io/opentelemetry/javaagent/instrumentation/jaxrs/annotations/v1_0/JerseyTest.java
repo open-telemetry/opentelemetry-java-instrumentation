@@ -151,7 +151,7 @@ class JerseyTest extends AbstractHttpServerUsingTest<Server> {
               serverSpan,
               span ->
                   span.hasName(controllerName)
-                      .satisfies(hasScopeName("io.opentelemetry.jaxrs-1.0-annotations"))
+                      .satisfies(hasScopeName("io.opentelemetry.jaxrs-annotations-1.0"))
                       .hasParent(trace.getSpan(0))
                       .hasAttributesSatisfyingExactly(
                           equalTo(

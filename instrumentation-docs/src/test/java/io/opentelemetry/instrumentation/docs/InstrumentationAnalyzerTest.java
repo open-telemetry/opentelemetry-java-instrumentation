@@ -163,16 +163,15 @@ class InstrumentationAnalyzerTest {
   }
 
   @Test
-  void testAnalyzePreservesRenamedJaxrsAnnotationScopesAndControllerSpans(@TempDir Path tempDir)
-      throws IOException {
+  void testAnalyzeJaxrsAnnotationControllerSpans(@TempDir Path tempDir) throws IOException {
     Map<String, String> nameBySourcePath =
         Map.of(
             "instrumentation/jaxrs/jaxrs-annotations-1.0",
-            "jaxrs-1.0-annotations",
+            "jaxrs-annotations-1.0",
             "instrumentation/jaxrs/jaxrs-2.0/jaxrs-annotations-2.0",
-            "jaxrs-2.0-annotations",
+            "jaxrs-annotations-2.0",
             "instrumentation/jaxrs/jaxrs-3.0/jaxrs-annotations-3.0",
-            "jaxrs-3.0-annotations");
+            "jaxrs-annotations-3.0");
 
     for (Map.Entry<String, String> entry : nameBySourcePath.entrySet()) {
       Path telemetryDir =

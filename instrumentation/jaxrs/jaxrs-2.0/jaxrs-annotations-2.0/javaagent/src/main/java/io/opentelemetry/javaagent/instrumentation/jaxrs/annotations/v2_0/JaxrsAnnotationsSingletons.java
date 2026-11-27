@@ -15,7 +15,7 @@ import javax.ws.rs.container.AsyncResponse;
 public class JaxrsAnnotationsSingletons {
 
   private static final Instrumenter<HandlerData, Void> instrumenter =
-      JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-2.0-annotations");
+      JaxrsInstrumenterFactory.createInstrumenter("io.opentelemetry.jaxrs-annotations-2.0");
 
   public static final VirtualField<AsyncResponse, AsyncResponseData> ASYNC_RESPONSE_DATA =
       VirtualField.find(AsyncResponse.class, AsyncResponseData.class);

@@ -14,15 +14,6 @@ import java.util.Map;
 
 /** Handles conversion of InstrumentationPath objects to InstrumentationModule objects. */
 public class ModuleParser {
-  private static final Map<String, String> PUBLISHED_NAME_OVERRIDES_BY_SOURCE_PATH =
-      Map.of(
-          "instrumentation/jaxrs/jaxrs-annotations-1.0",
-          "jaxrs-1.0-annotations",
-          "instrumentation/jaxrs/jaxrs-2.0/jaxrs-annotations-2.0",
-          "jaxrs-2.0-annotations",
-          "instrumentation/jaxrs/jaxrs-3.0/jaxrs-annotations-3.0",
-          "jaxrs-3.0-annotations");
-
   /**
    * Converts a list of {@link InstrumentationPath} into a list of {@link InstrumentationModule}.
    *
@@ -41,21 +32,16 @@ public class ModuleParser {
   }
 
   private static String createModuleKey(InstrumentationPath path) {
-    return String.join(":", path.group(), path.namespace(), getPublishedName(path));
+    return String.join(":", path.group(), path.namespace(), path.instrumentationName());
   }
 
   private static InstrumentationModule createModule(InstrumentationPath path) {
     return new InstrumentationModule.Builder()
         .srcPath(path.srcPath())
-        .instrumentationName(getPublishedName(path))
+        .instrumentationName(path.instrumentationName())
         .namespace(path.namespace())
         .group(path.group())
         .build();
-  }
-
-  private static String getPublishedName(InstrumentationPath path) {
-    return PUBLISHED_NAME_OVERRIDES_BY_SOURCE_PATH.getOrDefault(
-        path.srcPath(), path.instrumentationName());
   }
 
   private ModuleParser() {}

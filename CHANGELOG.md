@@ -116,7 +116,9 @@
 
   | Previous scope | Current scope |
   | --- | --- |
-  | `io.opentelemetry.jaxrs-1.0` | `io.opentelemetry.jaxrs-1.0-annotations` |
+  | `io.opentelemetry.jaxrs-1.0` | `io.opentelemetry.jaxrs-annotations-1.0` |
+  | `io.opentelemetry.jaxrs-2.0-annotations` | `io.opentelemetry.jaxrs-annotations-2.0` |
+  | `io.opentelemetry.jaxrs-3.0-annotations` | `io.opentelemetry.jaxrs-annotations-3.0` |
   | `io.opentelemetry.jaxws-cxf-3.0` | `io.opentelemetry.jaxws-2.0-cxf-3.0` |
   | `io.opentelemetry.jaxws-metro-2.2` | `io.opentelemetry.jaxws-2.0-metro-2.2` |
   | `io.opentelemetry.mongo-3.7` | `io.opentelemetry.mongo-3.1` |

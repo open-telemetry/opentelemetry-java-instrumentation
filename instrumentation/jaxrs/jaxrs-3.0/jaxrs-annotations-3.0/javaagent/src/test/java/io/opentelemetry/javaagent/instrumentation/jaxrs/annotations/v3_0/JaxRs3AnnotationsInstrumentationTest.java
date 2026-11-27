@@ -6,12 +6,14 @@
 package io.opentelemetry.javaagent.instrumentation.jaxrs.annotations.v3_0;
 
 import static io.opentelemetry.instrumentation.test.utils.ClassUtils.getClassName;
+import static io.opentelemetry.instrumentation.testing.util.InstrumentationScopeAssertions.hasScopeName;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.CodeAttributes.CODE_FUNCTION_NAME;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
 import static io.opentelemetry.semconv.ErrorAttributes.ErrorTypeValues.OTHER;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_REQUEST_METHOD;
 import static io.opentelemetry.semconv.HttpAttributes.HTTP_ROUTE;
+import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
@@ -129,6 +131,10 @@ class JaxRs3AnnotationsInstrumentationTest {
                         equalTo(ERROR_TYPE, OTHER)),
             span ->
                 span.hasName(className + ".call")
+                    .satisfies(hasScopeName("io.opentelemetry.jaxrs-annotations-3.0"))
+                    .satisfies(spanData ->
+                        assertThat(spanData.getInstrumentationScopeInfo().getVersion())
+                            .isNotEmpty())
                     .hasParent(trace.getSpan(0))
                     .hasAttributesSatisfyingExactly(
                         equalTo(CODE_FUNCTION_NAME, action.getClass().getName() + ".call")));

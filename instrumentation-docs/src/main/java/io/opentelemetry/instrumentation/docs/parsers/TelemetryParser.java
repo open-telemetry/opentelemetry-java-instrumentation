@@ -43,25 +43,25 @@ class TelemetryParser {
             entry(
                 "io.opentelemetry.elasticsearch-api-client-7.16",
                 singleton("io.opentelemetry.elasticsearch-rest-7.0")),
-            // jaxrs instrumentations add attributes to the jaxrs-2.0-annotations scope.
+            // jaxrs instrumentations add attributes to the annotation scopes.
             entry(
                 "io.opentelemetry.jaxrs-2.0-cxf-3.2",
-                singleton("io.opentelemetry.jaxrs-2.0-annotations")),
+                singleton("io.opentelemetry.jaxrs-annotations-2.0")),
             entry(
                 "io.opentelemetry.jaxrs-2.0-jersey-2.0",
-                singleton("io.opentelemetry.jaxrs-2.0-annotations")),
+                singleton("io.opentelemetry.jaxrs-annotations-2.0")),
             entry(
                 "io.opentelemetry.jaxrs-2.0-resteasy-3.0",
-                singleton("io.opentelemetry.jaxrs-2.0-annotations")),
+                singleton("io.opentelemetry.jaxrs-annotations-2.0")),
             entry(
                 "io.opentelemetry.jaxrs-2.0-resteasy-3.1",
-                singleton("io.opentelemetry.jaxrs-2.0-annotations")),
+                singleton("io.opentelemetry.jaxrs-annotations-2.0")),
             entry(
                 "io.opentelemetry.jaxrs-3.0-jersey-3.0",
-                singleton("io.opentelemetry.jaxrs-3.0-annotations")),
+                singleton("io.opentelemetry.jaxrs-annotations-3.0")),
             entry(
                 "io.opentelemetry.jaxrs-3.0-resteasy-6.0",
-                singleton("io.opentelemetry.jaxrs-3.0-annotations")),
+                singleton("io.opentelemetry.jaxrs-annotations-3.0")),
             entry(
                 "io.opentelemetry.couchbase-3.0",
                 singleton("io.opentelemetry.javaagent.couchbase-3.0")),
