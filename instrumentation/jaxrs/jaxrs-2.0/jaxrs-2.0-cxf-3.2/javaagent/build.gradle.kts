@@ -33,7 +33,7 @@ dependencies {
 
   implementation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:javaagent"))
 
-  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-annotations-2.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:jetty:jetty-8.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent"))

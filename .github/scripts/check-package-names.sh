@@ -89,11 +89,9 @@ check_source_set() {
       esac
     fi
 
-    # JAX-RS annotations may follow a major.minor version. Unversioned common modules may
-    # have a javax/jakarta variant, but no numeric version token in their prefix.
-    # These rules allow module names; package layout is still checked below.
+    # Unversioned common modules may have a javax/jakarta variant, but no numeric version token in
+    # their prefix.
     if [[ ! "$module_name" =~ [0-9]$
-      && ! "$module_name" =~ ^jaxrs-[0-9]+\.[0-9]+-annotations$
       && ! "$module_name" =~ ^[a-z][a-z0-9]*(-[a-z][a-z0-9]*)*-common(-(javax|jakarta))?$ ]]; then
       case "$source_set:$module_name" in
         # library:

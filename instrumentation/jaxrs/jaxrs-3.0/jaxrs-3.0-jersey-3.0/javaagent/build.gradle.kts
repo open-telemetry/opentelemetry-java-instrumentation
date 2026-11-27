@@ -29,7 +29,7 @@ dependencies {
   library("org.glassfish.jersey.inject:jersey-hk2:3.0.0")
   implementation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-common-3.0:javaagent"))
 
-  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent"))
+  testInstrumentation(project(":instrumentation:jaxrs:jaxrs-3.0:jaxrs-annotations-3.0:javaagent"))
   testInstrumentation(project(":instrumentation:servlet:servlet-5.0:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent"))
   testInstrumentation(project(":instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-jersey-2.0:javaagent"))
