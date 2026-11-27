@@ -12,8 +12,10 @@ audits of existing code, and pull request reviews.
 - Preserve lifecycle ownership, reentrancy, concurrency, error handling, and telemetry under
   supported library usage. Verify these contracts by tracing relevant callers, configuration,
   initialization, registration, and tests. Do not add defenses for unsupported hypothetical failures.
+
 - Verify library and framework assumptions against the supported dependency versions and concrete
   implementations. Check comments and copied code against the behavior they describe.
+
 - Determine whether a Java symbol is supported public API from its *publishing artifact*,
   published contract, and intended external use, not source path or visibility alone.
   Symbols explicitly documented as internal, unsupported, and subject to change are not supported
@@ -42,14 +44,17 @@ audits of existing code, and pull request reviews.
   ```
 
   For a stable API, the Javadoc states removal in the next major version instead.
+
 - A deprecation scheduled for a major-version behavior change keeps that timing even in an alpha
   artifact. Examples include semconv migrations, interface overrides following an upstream removal,
   and the flat `ConfigProperties` bridge.
+
 - User-facing configuration names and outgoing telemetry identities have separate compatibility
   contracts. Check supported `otel.instrumentation.<name>.enabled` aliases independently of emitted
   `otel.scope.name`, including for modules that have been renamed. Keep scope-version lookup aligned
   with the name passed to `Instrumenter.builder(...)`. Assess telemetry compatibility under
   `VERSIONING.md` and the adopted semantic conventions; not every telemetry difference is breaking.
+
 - Instrumentation configuration metadata, including each module's `metadata.yaml` and shared
   configuration definitions, matches supported setting names, types, and defaults in the actual
   readers, including readers in dependent common modules. General module enablement
