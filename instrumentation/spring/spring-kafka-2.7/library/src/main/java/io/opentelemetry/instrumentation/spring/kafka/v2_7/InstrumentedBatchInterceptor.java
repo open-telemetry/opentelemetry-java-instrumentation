@@ -117,7 +117,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     if (currentInvocation.get() == invocation) {
       pop(invocation);
     }
-    if (invocation.scope != null) {
+    if (invocation.scope != null && invocation.context == Context.current()) {
       invocation.scope.close();
     }
     if (invocation.context != null) {
@@ -180,8 +180,13 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     while ((invocation = currentInvocation.get()) != null
         && invocation != threadState.previousInvocation) {
       if (invocation.completed) {
-        // ended out of order, only remove it from the invocation chain
+        if (invocation.scope != null && invocation.context != Context.current()) {
+          break;
+        }
         pop(invocation);
+        if (invocation.scope != null) {
+          invocation.scope.close();
+        }
       } else {
         if (onlyCurrentScopes
             && invocation.scope != null
