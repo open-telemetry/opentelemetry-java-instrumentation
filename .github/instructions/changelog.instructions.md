@@ -12,6 +12,8 @@ applyTo: "CHANGELOG.md"
   repeating removal timing or obvious migration steps.
 - Describe the released behavior. Omit preview flags used to stage the change and mention
   unchanged behavior only when it clarifies the change's scope.
-- For a flat property rename, use `Rename <old flat property> to <new flat property>.`
+- For a breaking flat property rename, where the old name is no longer supported, use
+  `Rename <old flat property> to <new flat property>.` When the old name remains supported as a
+  deprecated alias, use `Deprecate <old flat property> in favor of <new flat property>.`
 - Omit YAML key renames that only repeat a flat property rename. Include YAML details when they
   describe different behavior, a distinct migration, or configuration with no flat equivalent.
