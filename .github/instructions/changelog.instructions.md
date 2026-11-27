@@ -10,8 +10,8 @@ applyTo: "CHANGELOG.md"
 - Put breaking changes under the appropriate stable or non-stable heading in `Unreleased`.
 - Keep entries short. For deprecations, name the deprecated interface and its replacement without
   repeating removal timing or obvious migration steps.
-- Describe the released behavior. Omit preview flags used to stage the change and mention
-  unchanged behavior only when it clarifies the change's scope.
+- Describe the released behavior without mentioning preview flags used to stage the change.
+- Mention unchanged behavior only when it clarifies the change's scope.
 - For a breaking flat property rename, where the old name is no longer supported, use
   `Rename <old flat property> to <new flat property>.` When the old name remains supported as a
   deprecated alias, use `Deprecate <old flat property> in favor of <new flat property>.`
