@@ -19,6 +19,8 @@ public final class GraphQLTelemetryBuilder {
   private boolean dataFetcherInstrumentationEnabled = false;
   private boolean trivialDataFetcherInstrumentationEnabled = false;
   private boolean addOperationNameToSpanName = false;
+  private boolean operationSpanEnabled = true;
+  private boolean spanEnrichmentEnabled = false;
 
   GraphQLTelemetryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -74,6 +76,53 @@ public final class GraphQLTelemetryBuilder {
   }
 
   /**
+   * Sets whether the GraphQL operation span is created. Default is {@code true}.
+   *
+   * <p>When disabled, no {@code GraphQL Operation} span is created; spans for data fetchers, if
+   * enabled, are unaffected and continue to nest under the current span. If disabled while {@link
+   * #setSpanEnrichmentEnabled(boolean)} is enabled but there is no recording current span to stamp
+   * onto, the operation span is created anyway so that telemetry is not lost.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setOperationSpanEnabled(boolean operationSpanEnabled) {
+    this.operationSpanEnabled = operationSpanEnabled;
+    return this;
+  }
+
+  /**
+   * Sets whether the current span is enriched with GraphQL attributes ({@code
+   * graphql.operation.name}, {@code graphql.operation.type} and, when {@link
+   * #setCaptureQuery(boolean) enabled}, {@code graphql.document}). Default is {@code false}.
+   *
+   * <p>The current span is the span that is active when GraphQL execution begins, which in an HTTP
+   * context is typically the server span (e.g. {@code POST /graphql}). This lets GraphQL telemetry
+   * be recorded on that span in addition to, or instead of (see {@link
+   * #setOperationSpanEnabled(boolean)}), the dedicated GraphQL operation span.
+   *
+   * <p>GraphQL errors are recorded once, as {@code exception} events: on the operation span when it
+   * is created, otherwise on the current span. An execution that fails with an exception rather
+   * than returning errors is recorded only on the operation span, so when that is disabled the
+   * failure is left to whatever instrumentation owns the current span.
+   *
+   * <p>Intended for requests that run a single GraphQL operation. If several operations run under
+   * the same span, later executions overwrite earlier attributes, and an earlier operation name can
+   * remain when a later operation is anonymous. Use the operation span for per-operation telemetry.
+   *
+   * <p>WARNING: when this is enabled and the GraphQL result contains errors, the current span's
+   * status is set to {@code ERROR}. This can mark an otherwise successful (e.g. HTTP 200) server
+   * span as errored, including for partial or expected GraphQL errors.
+   *
+   * <p>When there is no recording current span (for example a non-recording remote parent),
+   * attributes are instead recorded on a GraphQL operation span (created even if {@link
+   * #setOperationSpanEnabled(boolean)} is disabled) so that telemetry is not lost.
+   */
+  @CanIgnoreReturnValue
+  public GraphQLTelemetryBuilder setSpanEnrichmentEnabled(boolean spanEnrichmentEnabled) {
+    this.spanEnrichmentEnabled = spanEnrichmentEnabled;
+    return this;
+  }
+
+  /**
    * Returns a new {@link GraphQLTelemetry} with the settings of this {@link
    * GraphQLTelemetryBuilder}.
    */
@@ -85,6 +134,8 @@ public final class GraphQLTelemetryBuilder {
         GraphqlInstrumenterFactory.createDataFetcherInstrumenter(
             openTelemetry, dataFetcherInstrumentationEnabled),
         trivialDataFetcherInstrumentationEnabled,
-        addOperationNameToSpanName);
+        addOperationNameToSpanName,
+        operationSpanEnabled,
+        spanEnrichmentEnabled);
   }
 }
