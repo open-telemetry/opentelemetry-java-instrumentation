@@ -63,10 +63,8 @@ audits of existing code, and pull request reviews.
 - Document flat properties without repeating equivalent declarative configuration.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
-- Hand-written changelog entries cover only deprecations and breaking changes, as specified in
-  CONTRIBUTING.md. Other changes appear in the generated changelog. Deprecations of settings and
-  instrumentation enablement aliases have entries. Follow the
-  [changelog instructions](instructions/changelog.instructions.md) for entry placement and wording.
+- Use the [changelog instructions](instructions/changelog.instructions.md) to check whether a
+  change needs an entry.
 - When a change is breaking, add the `breaking change` label to its pull request, as described in
   CONTRIBUTING.md.
 - README and usage documentation should meet a concrete reader need: setup,
