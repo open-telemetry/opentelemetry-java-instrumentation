@@ -24,15 +24,12 @@ import java.security.AllPermission;
 import java.security.CodeSource;
 import java.security.PermissionCollection;
 import java.security.Permissions;
-import java.util.AbstractMap.SimpleImmutableEntry;
 import java.util.ArrayList;
 import java.util.Enumeration;
 import java.util.List;
-import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
-import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
@@ -45,13 +42,9 @@ import net.bytebuddy.dynamic.loading.MultipleParentClassLoader;
  * jar gets a separate class loader and all of them are aggregated with the help of {@link
  * MultipleParentClassLoader}.
  */
-// TODO find a way to initialize logging before using this class
 public class ExtensionClassLoader extends URLClassLoader {
 
-  // this class is used early, and must not use logging in most of its methods
-  // instead we save the messages here and log them later, when the logging subsystem is
-  // initialized
-  private static final List<Map.Entry<Level, String>> deferredLogs = new ArrayList<>();
+  private static final Logger logger = Logger.getLogger(ExtensionClassLoader.class.getName());
 
   static {
     ClassLoader.registerAsParallelCapable();
@@ -78,21 +71,6 @@ public class ExtensionClassLoader extends URLClassLoader {
       delegates.add(getDelegate(parent, url, isSecurityManagerSupportEnabled));
     }
     return new MultipleParentClassLoader(parent, delegates);
-  }
-
-  static void logExtensionLoadingMessages() {
-    if (deferredLogs.isEmpty()) {
-      return;
-    }
-    Logger logger = Logger.getLogger(ExtensionClassLoader.class.getName());
-    for (Map.Entry<Level, String> entry : deferredLogs) {
-      logger.log(entry.getKey(), entry.getValue());
-    }
-    deferredLogs.clear();
-  }
-
-  private static void addLog(Level level, String message) {
-    deferredLogs.add(new SimpleImmutableEntry<>(level, message));
   }
 
   @SuppressWarnings("SystemOut")
@@ -180,18 +158,13 @@ public class ExtensionClassLoader extends URLClassLoader {
       }
     }
     if (!found) {
-      addLog(
+      logger.log(
           WARNING,
           "Configured extensions location \""
               + locationName
               + "\" does not exist, is not a jar file or directory, or contains no extension jar"
               + " files; ignoring it");
     }
-  }
-
-  // visible for testing
-  static List<Map.Entry<Level, String>> getLogsForTest() {
-    return deferredLogs;
   }
 
   private static boolean isJar(File f) {
@@ -208,9 +181,9 @@ public class ExtensionClassLoader extends URLClassLoader {
       } else {
         result.add(file.toURI().toURL());
       }
-      addLog(FINE, "Loaded extension jar file \"" + file + "\"");
+      logger.log(FINE, "Loaded extension jar file \"" + file + "\"");
     } catch (IOException e) {
-      addLog(WARNING, "Failed to load extension jar file \"" + file + "\": " + e.getMessage());
+      logger.log(WARNING, "Failed to load extension jar file \"" + file + "\": " + e.getMessage());
     }
   }
 

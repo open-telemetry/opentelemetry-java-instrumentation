@@ -6,6 +6,8 @@
 package io.opentelemetry.javaagent.tooling;
 
 import com.google.auto.service.AutoService;
+import io.opentelemetry.javaagent.bootstrap.InternalLogger;
+import javax.annotation.Nullable;
 
 @AutoService(LoggingCustomizer.class)
 public final class NoopLoggingCustomizer implements LoggingCustomizer {
@@ -16,7 +18,10 @@ public final class NoopLoggingCustomizer implements LoggingCustomizer {
   }
 
   @Override
-  public void init() {}
+  public void init() {
+    // discards anything logged before this point
+    InternalLogger.initialize(NoopLogger::new);
+  }
 
   @Override
   @SuppressWarnings("SystemOut")
@@ -28,4 +33,26 @@ public final class NoopLoggingCustomizer implements LoggingCustomizer {
 
   @Override
   public void onStartupSuccess() {}
+
+  private static final class NoopLogger implements InternalLogger {
+
+    private final String name;
+
+    private NoopLogger(String name) {
+      this.name = name;
+    }
+
+    @Override
+    public boolean isLoggable(Level level) {
+      return false;
+    }
+
+    @Override
+    public void log(Level level, String message, @Nullable Throwable error) {}
+
+    @Override
+    public String name() {
+      return name;
+    }
+  }
 }
