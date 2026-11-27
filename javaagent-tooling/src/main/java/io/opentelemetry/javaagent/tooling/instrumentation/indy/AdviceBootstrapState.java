@@ -14,7 +14,7 @@ import javax.annotation.Nullable;
 
 class AdviceBootstrapState implements AutoCloseable {
 
-  private static final ThreadLocal<Map<Key, AdviceBootstrapState>> stateForCurrentThread =
+  private static final ThreadLocal<Map<Key, AdviceBootstrapState>> currentBootstrapStates =
       ThreadLocal.withInitial(HashMap::new);
 
   private final Key key;
@@ -36,8 +36,8 @@ class AdviceBootstrapState implements AutoCloseable {
   static void initialize() {
     // Eager initialize everything because we could run into recursions doing this during advice
     // bootstrapping
-    stateForCurrentThread.get();
-    stateForCurrentThread.remove();
+    currentBootstrapStates.get();
+    currentBootstrapStates.remove();
     try {
       Class.forName(Key.class.getName());
     } catch (ClassNotFoundException e) {
@@ -58,7 +58,7 @@ class AdviceBootstrapState implements AutoCloseable {
             adviceClassName,
             adviceMethodName,
             adviceMethodDescriptor);
-    AdviceBootstrapState state = stateForCurrentThread.get().computeIfAbsent(key, CONSTRUCTOR);
+    AdviceBootstrapState state = currentBootstrapStates.get().computeIfAbsent(key, CONSTRUCTOR);
     state.recursionDepth++;
     return state;
   }
@@ -89,11 +89,11 @@ class AdviceBootstrapState implements AutoCloseable {
   @Override
   public void close() {
     if (recursionDepth == 0) {
-      Map<Key, AdviceBootstrapState> stateMap = stateForCurrentThread.get();
+      Map<Key, AdviceBootstrapState> stateMap = currentBootstrapStates.get();
       stateMap.remove(key);
       if (stateMap.isEmpty()) {
         // Do not leave an empty map dangling as thread local
-        stateForCurrentThread.remove();
+        currentBootstrapStates.remove();
       }
     } else {
       recursionDepth--;

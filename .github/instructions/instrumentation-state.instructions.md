@@ -214,8 +214,10 @@ javaagent instrumentation, not library-only code.
 - Use a focused bootstrap owner when a handoff crosses class-loader boundaries that prevent the
   callers from sharing an ordinary helper.
 
-- Name ambient executing-thread state `current*`, such as `currentRequest`. Suppression names such
-  as `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
+- Use `current*` for ambient state that applies to the operation executing on the thread, such as
+  `currentRequest`. A one-shot handoff is a value left for a consumer to read and clear. Name it
+  by role, such as `pendingParentContext`, without `current*`. Suppression names such as
+  `receiveSpanSuppression` need no `current` prefix. Name the state, not its storage mechanism;
   do not use `*ThreadLocal` for a wrapper accessor. Carrier-attached state may cross threads and does
   not use `current*`.
 

@@ -110,7 +110,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       VertxSqlClientInfoReference infoReference =
           new VertxSqlClientInfoReference(
               VertxSqlClientInfo.create(sqlConnectOptions, dbSystemName));
-      VertxSqlClientSingletons.setClientInfoReference(infoReference);
+      VertxSqlClientSingletons.setCurrentClientInfoReference(infoReference);
       return new PoolConstructionState(callDepth, infoReference);
     }
 
@@ -135,7 +135,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       if (pool != null) {
         VertxSqlClientSingletons.setPoolClientInfoReference(pool, infoReference);
       }
-      VertxSqlClientSingletons.setClientInfoReference(null);
+      VertxSqlClientSingletons.setCurrentClientInfoReference(null);
     }
   }
 
@@ -154,7 +154,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       String dbSystemName = resolveDbSystemName(first, declaringTypeName);
       VertxSqlClientInfoReference infoReference =
           new VertxSqlClientInfoReference(VertxSqlClientInfo.create(databases, dbSystemName));
-      VertxSqlClientSingletons.setClientInfoReference(infoReference);
+      VertxSqlClientSingletons.setCurrentClientInfoReference(infoReference);
       return new PoolConstructionState(callDepth, infoReference);
     }
 
@@ -179,7 +179,7 @@ class PoolInstrumentation implements TypeInstrumentation {
       if (client instanceof Pool) {
         VertxSqlClientSingletons.setPoolClientInfoReference((Pool) client, infoReference);
       }
-      VertxSqlClientSingletons.setClientInfoReference(null);
+      VertxSqlClientSingletons.setCurrentClientInfoReference(null);
     }
   }
 

@@ -38,13 +38,13 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
       implements CoreSubscriber<ConsumerRecord<?, ?>>, Subscription, Scannable {
 
     private final CoreSubscriber<ConsumerRecord<?, ?>> actual;
-    private final Context currentContext;
+    private final Context subscriptionContext;
     private Subscription subscription;
 
     // visible for testing
     InstrumentedSubscriber(CoreSubscriber<ConsumerRecord<?, ?>> actual) {
       this.actual = actual;
-      currentContext =
+      subscriptionContext =
           ContextPropagationOperator.getOpenTelemetryContext(
               actual.currentContext(), Context.current());
     }
@@ -68,7 +68,7 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
       KafkaConsumerContext consumerContext = KafkaConsumerContextUtil.get(record);
       Context receiveContext = consumerContext.getContext();
       // use the receive CONSUMER span as parent if it's available
-      Context parentContext = receiveContext != null ? receiveContext : currentContext;
+      Context parentContext = receiveContext != null ? receiveContext : subscriptionContext;
 
       KafkaProcessRequest request = KafkaProcessRequest.create(consumerContext, record);
       if (!processInstrumenter().shouldStart(parentContext, request)) {
@@ -88,14 +88,14 @@ final class InstrumentedKafkaFlux<R extends ConsumerRecord<?, ?>> extends FluxOp
 
     @Override
     public void onError(Throwable throwable) {
-      try (Scope ignored = currentContext.makeCurrent()) {
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
         actual.onError(throwable);
       }
     }
 
     @Override
     public void onComplete() {
-      try (Scope ignored = currentContext.makeCurrent()) {
+      try (Scope ignored = subscriptionContext.makeCurrent()) {
         actual.onComplete();
       }
     }

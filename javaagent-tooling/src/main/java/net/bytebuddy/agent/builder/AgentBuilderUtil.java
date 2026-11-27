@@ -364,11 +364,11 @@ public class AgentBuilderUtil {
   }
 
   private static class TransformContext extends AgentBuilder.Listener.Adapter {
-    private static final ThreadLocal<String> transformedName = new ThreadLocal<>();
+    private static final ThreadLocal<String> currentTransformedName = new ThreadLocal<>();
 
     @Nullable
     static String getTransformedClassName() {
-      return transformedName.get();
+      return currentTransformedName.get();
     }
 
     @Override
@@ -378,7 +378,7 @@ public class AgentBuilderUtil {
         @Nullable JavaModule module,
         boolean loaded) {
       if (classLoader != null) {
-        transformedName.set(typeName);
+        currentTransformedName.set(typeName);
       }
     }
 
@@ -389,7 +389,7 @@ public class AgentBuilderUtil {
         @Nullable JavaModule module,
         boolean loaded,
         Throwable throwable) {
-      transformedName.remove();
+      currentTransformedName.remove();
     }
 
     @Override
@@ -398,7 +398,7 @@ public class AgentBuilderUtil {
         @Nullable ClassLoader classLoader,
         @Nullable JavaModule module,
         boolean loaded) {
-      transformedName.remove();
+      currentTransformedName.remove();
     }
   }
 }

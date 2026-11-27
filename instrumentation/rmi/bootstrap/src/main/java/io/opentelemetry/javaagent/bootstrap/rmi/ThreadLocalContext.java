@@ -10,24 +10,24 @@ import javax.annotation.Nullable;
 
 public final class ThreadLocalContext {
   public static final ThreadLocalContext INSTANCE = new ThreadLocalContext();
-  private final ThreadLocal<Context> local;
+  private final ThreadLocal<Context> pendingParentContext;
 
   private ThreadLocalContext() {
-    local = new ThreadLocal<>();
+    pendingParentContext = new ThreadLocal<>();
   }
 
   public void set(@Nullable Context context) {
     if (context == null) {
-      local.remove();
+      pendingParentContext.remove();
     } else {
-      local.set(context);
+      pendingParentContext.set(context);
     }
   }
 
   @Nullable
   public Context getAndResetContext() {
-    Context context = local.get();
-    local.remove();
+    Context context = pendingParentContext.get();
+    pendingParentContext.remove();
     return context;
   }
 }

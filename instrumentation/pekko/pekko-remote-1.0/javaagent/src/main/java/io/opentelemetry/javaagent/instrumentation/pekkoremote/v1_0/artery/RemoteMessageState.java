@@ -20,37 +20,37 @@ import org.apache.pekko.remote.artery.InboundEnvelope;
  */
 public final class RemoteMessageState {
 
-  private static final ThreadLocal<Context> OUTBOUND_CONTEXT = new ThreadLocal<>();
-  private static final ThreadLocal<InboundEnvelope> INBOUND_ENVELOPE = new ThreadLocal<>();
+  private static final ThreadLocal<Context> currentOutboundContext = new ThreadLocal<>();
+  private static final ThreadLocal<InboundEnvelope> currentInboundEnvelope = new ThreadLocal<>();
 
   public static void startWrite(@Nullable Context context) {
     if (context != null) {
-      OUTBOUND_CONTEXT.set(context);
+      currentOutboundContext.set(context);
     }
   }
 
   public static void endWrite() {
-    OUTBOUND_CONTEXT.remove();
+    currentOutboundContext.remove();
   }
 
   @Nullable
   static Context contextToWrite() {
-    return OUTBOUND_CONTEXT.get();
+    return currentOutboundContext.get();
   }
 
   public static void startRead(@Nullable InboundEnvelope envelope) {
     if (envelope != null) {
-      INBOUND_ENVELOPE.set(envelope);
+      currentInboundEnvelope.set(envelope);
     }
   }
 
   public static void endRead() {
-    INBOUND_ENVELOPE.remove();
+    currentInboundEnvelope.remove();
   }
 
   @Nullable
   static InboundEnvelope envelopeToRead() {
-    return INBOUND_ENVELOPE.get();
+    return currentInboundEnvelope.get();
   }
 
   private RemoteMessageState() {}

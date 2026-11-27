@@ -36,7 +36,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
     public static void onExit(@Advice.This SqlClientBase<?> sqlClientBase) {
       VertxSqlClientSingletons.attachClientInfoReference(
-          sqlClientBase, VertxSqlClientSingletons.getClientInfoReference());
+          sqlClientBase, VertxSqlClientSingletons.getCurrentClientInfoReference());
     }
   }
 
@@ -49,7 +49,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return callDepth;
       }
 
-      VertxSqlClientSingletons.setClientInfoReference(
+      VertxSqlClientSingletons.setCurrentClientInfoReference(
           VertxSqlClientSingletons.getClientInfoReference(sqlClientBase));
       return callDepth;
     }
@@ -60,7 +60,7 @@ class SqlClientBaseInstrumentation implements TypeInstrumentation {
         return;
       }
 
-      VertxSqlClientSingletons.setClientInfoReference(null);
+      VertxSqlClientSingletons.setCurrentClientInfoReference(null);
     }
   }
 }

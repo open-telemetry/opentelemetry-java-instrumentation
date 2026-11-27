@@ -20,7 +20,8 @@ import java.util.function.Function;
  * at any time.
  */
 public final class InstrumenterContext {
-  private static final ThreadLocal<InstrumenterContext> instrumenterContext = new ThreadLocal<>();
+  private static final ThreadLocal<InstrumenterContext> currentInstrumenterContext =
+      new ThreadLocal<>();
 
   private final Map<String, Object> map = new HashMap<>();
 
@@ -33,15 +34,15 @@ public final class InstrumenterContext {
 
   // visible for testing
   static Map<String, Object> get() {
-    InstrumenterContext context = instrumenterContext.get();
+    InstrumenterContext context = currentInstrumenterContext.get();
     if (context == null) {
       context = new InstrumenterContext();
-      instrumenterContext.set(context);
+      currentInstrumenterContext.set(context);
     }
     return context.map;
   }
 
   public static void reset() {
-    instrumenterContext.remove();
+    currentInstrumenterContext.remove();
   }
 }

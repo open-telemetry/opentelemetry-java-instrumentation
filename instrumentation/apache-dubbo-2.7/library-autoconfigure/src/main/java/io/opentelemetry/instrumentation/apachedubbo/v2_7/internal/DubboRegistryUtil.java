@@ -29,7 +29,7 @@ public final class DubboRegistryUtil {
       createAccessor("getRegistry", "registry");
   private static final ClassValue<MethodHandle> URL_ACCESSOR = createAccessor("getUrl", null);
 
-  private static final ThreadLocal<String> CAPTURED_REGISTRY_ADDRESS = new ThreadLocal<>();
+  private static final ThreadLocal<String> currentRegistryAddress = new ThreadLocal<>();
 
   /**
    * Used by {@link RegistryCapturingInvoker} while the cluster delegate runs (including into
@@ -37,22 +37,22 @@ public final class DubboRegistryUtil {
    */
   @Nullable
   static String pushCapturedRegistryAddress(String address) {
-    String previous = CAPTURED_REGISTRY_ADDRESS.get();
-    CAPTURED_REGISTRY_ADDRESS.set(address);
+    String previous = currentRegistryAddress.get();
+    currentRegistryAddress.set(address);
     return previous;
   }
 
   static void restoreCapturedRegistryAddress(@Nullable String previous) {
     if (previous == null) {
-      CAPTURED_REGISTRY_ADDRESS.remove();
+      currentRegistryAddress.remove();
     } else {
-      CAPTURED_REGISTRY_ADDRESS.set(previous);
+      currentRegistryAddress.set(previous);
     }
   }
 
   @Nullable
   public static String extractRegistryAddress(RpcInvocation invocation) {
-    String captured = CAPTURED_REGISTRY_ADDRESS.get();
+    String captured = currentRegistryAddress.get();
     if (captured != null) {
       return captured;
     }
