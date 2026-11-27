@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.runtimetelemetry.internal.cpu.ContextSwi
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.cpu.LongLockHandler;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.cpu.OverallCpuLoadHandler;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection.G1GarbageCollectionHandler;
+import io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection.GarbageCollectionHandler;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection.OldGarbageCollectionHandler;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.garbagecollection.YoungGarbageCollectionHandler;
 import io.opentelemetry.instrumentation.runtimetelemetry.internal.memory.CodeCacheConfigurationHandler;
@@ -63,12 +64,17 @@ final class HandlerRegistry {
     for (EventType eventType : FlightRecorder.getFlightRecorder().getEventTypes()) {
       availableEventNames.add(eventType.getName());
     }
+    List<String> garbageCollectorNames = new ArrayList<>();
+    for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
+      garbageCollectorNames.add(bean.getName());
+    }
     return getHandlers(
         meter,
         metricNamePredicate,
         requireCompleteJmxReplacement,
         emitExperimentalJmxMetrics,
-        availableEventNames);
+        availableEventNames,
+        garbageCollectorNames);
   }
 
   // visible for testing
@@ -77,7 +83,8 @@ final class HandlerRegistry {
       Predicate<String> metricNamePredicate,
       boolean requireCompleteJmxReplacement,
       boolean emitExperimentalJmxMetrics,
-      Set<String> availableEventNames) {
+      Set<String> availableEventNames,
+      List<String> garbageCollectorNames) {
 
     List<RecordedEventHandler> handlers = new ArrayList<>();
     Predicate<String> effectiveMetricNamePredicate =
@@ -87,8 +94,7 @@ final class HandlerRegistry {
                     && !(emitExperimentalJmxMetrics
                         && INCOMPLETE_EXPERIMENTAL_JMX_REPLACEMENTS.contains(name)))
             : metricNamePredicate;
-    for (GarbageCollectorMXBean bean : ManagementFactory.getGarbageCollectorMXBeans()) {
-      String name = bean.getName();
+    for (String name : garbageCollectorNames) {
       switch (name) {
         case "G1 Young Generation" -> {
           addIfAvailable(
@@ -136,6 +142,16 @@ final class HandlerRegistry {
 
         default -> {}
       }
+    }
+    // Native Image Serial GC can list collector-specific JFR events without emitting them.
+    // Register the generic handler once, even when both Serial GC MXBeans are present.
+    if (garbageCollectorNames.contains("young generation scavenger")
+        || garbageCollectorNames.contains("complete scavenger")) {
+      addIfAvailable(
+          handlers,
+          availableEventNames,
+          "jdk.GarbageCollection",
+          () -> GarbageCollectionHandler.create(meter, effectiveMetricNamePredicate));
     }
 
     addIfAvailable(

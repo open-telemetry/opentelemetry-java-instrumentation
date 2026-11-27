@@ -18,7 +18,7 @@ To control the time interval between MBean detection attempts, one can use the `
 JMX is a popular metrics technology used throughout the JVM (see [runtime metrics](../runtime-telemetry/library/README.md)), application servers, third-party libraries, and applications.
 JMX Metric Insight comes with a number of predefined configurations containing curated sets of JMX metrics for frequently used application servers or frameworks.
 
-Stable predefined metrics are enabled by default, except for the JMX-based `jvm` definitions, which overlap with `runtime-telemetry`. Unstable bundled metrics require opt-in by name using `otel.jmx.metrics.experimental.included`. For example:
+Stable predefined metrics are enabled by default, except for the JMX-based `jvm` definitions, which overlap with `runtime-telemetry`. Unstable bundled metrics require opt-in by name using `otel.jmx.metrics.experimental.included`; no unstable bundled metrics are collected unless included patterns are configured, and `*` selects all of them. For example:
 
 ```bash
 $ java -javaagent:path/to/opentelemetry-javaagent.jar \
@@ -59,8 +59,9 @@ otel.jmx.metrics.excluded=jvm.memory.limit
 ```
 
 Matching is case-sensitive. `?` matches one character and `*` matches zero or more characters.
-Excluded patterns take precedence over included patterns. If included is not configured, all
-non-excluded metrics are collected. With neither property configured, all metrics are collected.
+All metrics are collected unless included or excluded patterns are configured. Excluded patterns
+take precedence over included patterns. If only excluded patterns are configured, all other metrics
+are collected.
 
 The equivalent declarative configuration is:
 
@@ -86,6 +87,26 @@ $ java -javaagent:path/to/opentelemetry-javaagent.jar \
      ... \
      -jar myapp.jar
 ```
+
+With declarative configuration, you can also embed metric definitions directly under `java.jmx.rules`:
+
+```yaml
+file_format: "1.2"
+instrumentation/development:
+  java:
+    jmx:
+      rules:
+        - bean: java.lang:type=Threading
+          mapping:
+            ThreadCount:
+              metric: app.thread.count
+              type: updowncounter
+              desc: The current number of threads
+              unit: "1"
+```
+
+Inline rules use the same syntax as rules in configuration files and are added to any rules loaded from files.
+Invalid inline rules are logged and skipped individually, so other valid inline rules are still loaded.
 
 ### Basic Syntax
 

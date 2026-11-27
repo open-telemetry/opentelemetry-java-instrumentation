@@ -17,6 +17,7 @@ The first source of truth is always the deterministic CI bundle produced by [.gi
 ## Workflow
 
 1. Confirm the worktree is clean. If it is dirty, stop and ask the user how to handle the existing changes.
+
 2. Download the failing CI logs with the deterministic script, which checks out the PR, discovers failed non-aggregate checks, downloads one representative log for each failed job family into `build/pr-triage/otel-ci-fix-<pr-number>/logs/`, writes `summary.json`, and restores the original branch:
 
    ```bash
@@ -24,6 +25,7 @@ The first source of truth is always the deterministic CI bundle produced by [.gi
    ```
 
 3. Read `build/pr-triage/otel-ci-fix-<pr-number>/summary.json` and the referenced log files. Treat them as the source of truth for what failed.
+
 4. Check out the PR branch again if the script restored you to another branch:
 
    ```bash
@@ -31,6 +33,7 @@ The first source of truth is always the deterministic CI bundle produced by [.gi
    ```
 
 5. Diagnose the root cause from the downloaded logs and make the smallest appropriate fix on the PR branch.
+
 6. For deterministic generated-file or formatting failures, run the repository task instead of editing generated output by hand. Common examples:
 
    ```bash
@@ -39,6 +42,7 @@ The first source of truth is always the deterministic CI bundle produced by [.gi
    ```
 
 7. Validate with the narrowest command that covers the failure. For Gradle, follow repository rules: do not use `--rerun-tasks`, and do not pipe Gradle output through `tail`, `head`, or `grep`.
+
 8. Show the changed files, validation run, and the remaining status to the user. Commit or push only when the user has asked for that.
 
 ## Boundaries

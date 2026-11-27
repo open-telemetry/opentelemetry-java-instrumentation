@@ -46,7 +46,7 @@ public final class OkHttpTelemetry {
    * @param baseClient the OkHttpClient to wrap
    * @return an instrumented Call.Factory
    */
-  public Call.Factory createCallFactory(OkHttpClient baseClient) {
+  public Call.Factory instrument(OkHttpClient baseClient) {
     OkHttpClient.Builder builder = baseClient.newBuilder();
     // add our interceptors before other interceptors
     builder.interceptors().add(0, new ContextInterceptor());

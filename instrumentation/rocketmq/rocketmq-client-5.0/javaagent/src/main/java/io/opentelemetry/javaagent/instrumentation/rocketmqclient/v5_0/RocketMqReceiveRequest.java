@@ -26,6 +26,7 @@ class RocketMqReceiveRequest {
   @Nullable private final String consumerGroup;
   private final List<MessageView> messages;
   @Nullable private BatchMessageAttributes batchMessageAttributes;
+  @Nullable private ExperimentalBatchMessageAttributes experimentalBatchMessageAttributes;
 
   private RocketMqReceiveRequest(ReceiveMessageRequest request, List<MessageView> messages) {
     this.request = request;
@@ -111,12 +112,31 @@ class RocketMqReceiveRequest {
     return getBatchMessageAttributes().messageKeys;
   }
 
+  @Nullable
+  String getMessageLiteTopic() {
+    return getExperimentalBatchMessageAttributes().messageLiteTopic;
+  }
+
+  @Nullable
+  Long getMessagePriority() {
+    return getExperimentalBatchMessageAttributes().messagePriority;
+  }
+
   private BatchMessageAttributes getBatchMessageAttributes() {
     BatchMessageAttributes attributes = batchMessageAttributes;
     if (attributes == null) {
       attributes =
           new BatchMessageAttributes(messages.isEmpty() ? getRequestDestination() : null, messages);
       batchMessageAttributes = attributes;
+    }
+    return attributes;
+  }
+
+  private ExperimentalBatchMessageAttributes getExperimentalBatchMessageAttributes() {
+    ExperimentalBatchMessageAttributes attributes = experimentalBatchMessageAttributes;
+    if (attributes == null) {
+      attributes = new ExperimentalBatchMessageAttributes(messages);
+      experimentalBatchMessageAttributes = attributes;
     }
     return attributes;
   }
@@ -167,6 +187,16 @@ class RocketMqReceiveRequest {
       messageDeliveryTimestamp =
           commonValue(messages, message -> message.getDeliveryTimestamp().orElse(null));
       messageKeys = commonKeys(messages);
+    }
+  }
+
+  private static class ExperimentalBatchMessageAttributes {
+    @Nullable private final String messageLiteTopic;
+    @Nullable private final Long messagePriority;
+
+    private ExperimentalBatchMessageAttributes(List<MessageView> messages) {
+      messageLiteTopic = commonValue(messages, RocketMqMessageAttributes::getLiteTopic);
+      messagePriority = commonValue(messages, RocketMqMessageAttributes::getPriority);
     }
   }
 }

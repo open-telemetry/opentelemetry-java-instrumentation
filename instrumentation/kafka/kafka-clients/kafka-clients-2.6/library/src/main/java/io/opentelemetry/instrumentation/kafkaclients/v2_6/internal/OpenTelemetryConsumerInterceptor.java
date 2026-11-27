@@ -51,7 +51,7 @@ public class OpenTelemetryConsumerInterceptor<K, V>
     }
     KafkaConsumerContext consumerContext =
         KafkaConsumerContextUtil.create(receiveContext, consumerGroup, clientId, clusterId);
-    return consumerTelemetry.addTracing(records, consumerContext);
+    return consumerTelemetry.instrument(records, consumerContext);
   }
 
   @Override

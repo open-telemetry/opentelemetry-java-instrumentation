@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
 import javax.annotation.Nullable;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -517,8 +518,14 @@ public class DeclarativeConfigYamlGenerator {
     if (value instanceof Boolean || value instanceof Number) {
       return value.toString();
     }
-    if (value instanceof Map && ((Map<?, ?>) value).isEmpty()) {
+    if (value instanceof Map<?, ?> map && map.isEmpty()) {
       return "{}";
+    }
+    if (value instanceof Map<?, ?> || value instanceof List<?>) {
+      DumperOptions options = new DumperOptions();
+      options.setDefaultFlowStyle(DumperOptions.FlowStyle.FLOW);
+      options.setSplitLines(false);
+      return new Yaml(options).dump(value).strip();
     }
     return String.valueOf(value);
   }

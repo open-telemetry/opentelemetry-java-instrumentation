@@ -10,11 +10,15 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.jmx.internal.Internal;
 import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -26,11 +30,16 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class JmxTelemetryTest {
@@ -52,6 +61,8 @@ class JmxTelemetryTest {
     assertThatThrownBy(() -> builder.addRules((InputStream) null))
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> builder.addRules((Path) null))
+        .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> Internal.addRule(builder, null))
         .isInstanceOf(IllegalArgumentException.class);
   }
 
@@ -82,6 +93,39 @@ class JmxTelemetryTest {
 
     assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
         .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void ruleFromMapCanBeReused(boolean immutable) {
+    Map<String, Object> metricDefinition = new HashMap<>();
+    metricDefinition.put("metric", "custom.map.thread.count");
+    metricDefinition.put("type", "gauge");
+    metricDefinition.put("unit", "{thread}");
+    metricDefinition.put("desc", "Current number of threads.");
+
+    Map<String, Object> rule = new HashMap<>();
+    rule.put("bean", "java.lang:type=Threading");
+    rule.put(
+        "mapping",
+        singletonMap(
+            "ThreadCount", immutable ? unmodifiableMap(metricDefinition) : metricDefinition));
+    Map<String, Object> input = immutable ? unmodifiableMap(rule) : rule;
+
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxTelemetryBuilder anotherBuilder = JmxTelemetry.builder(OpenTelemetry.noop());
+    Internal.addRule(builder, input);
+    Internal.addRule(anotherBuilder, input);
+    assertThat(anotherBuilder.getRegisteredMetrics()).containsExactly("custom.map.thread.count");
+    cleanup.deferCleanup(builder.build().start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric ->
+            metric
+                .hasName("custom.map.thread.count")
+                .hasUnit("{thread}")
+                .hasDescription("Current number of threads."));
   }
 
   private static Collection<String> getFilteredMetrics(
@@ -142,10 +186,9 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // only load explicitly listed systems
-            .setInternalMetricsSystemFilter(
-                IncludeExclude.builder().setIncluded("jvm-test").build())
+            .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm-test").build())
             // include all unstable metrics (stable ones already included)
-            .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+            .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -169,7 +212,7 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // enable stable metrics for every system
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().build());
+            .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build());
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
     assertThat(builder.getRegisteredMetrics())
@@ -191,9 +234,9 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(OpenTelemetry.noop())
             // enable stable metrics for every system
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().build())
-            // every system included by default, we just enable all unstable metrics
-            .setInternalMetricsUnstableMetricsFilter(IncludeExclude.builder().build());
+            .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
+            // include all unstable metrics
+            .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("*").build());
 
     JmxTelemetry telemetry = builder.build(testDefinitions());
 
@@ -212,11 +255,144 @@ class JmxTelemetryTest {
         .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
   }
 
-  @Test
-  void includeNothingByDefault() {
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void includeNothingByDefault(boolean emptySelectors) {
     JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    if (emptySelectors) {
+      builder
+          .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("*").build())
+          .setUnstableBundledMetricsFilter(IncludeExclude.builder().setIncluded("*").build())
+          .setBundledMetricsSystemFilter(IncludeExclude.builder().build())
+          .setUnstableBundledMetricsFilter(IncludeExclude.builder().build());
+    }
     builder.build(testDefinitions());
     assertThat(builder.getRegisteredMetrics()).isEmpty();
+  }
+
+  @SuppressWarnings("deprecation")
+  @ParameterizedTest
+  @MethodSource("bundledFilterCases")
+  void bundledFilterAliases(
+      boolean deprecated, IncludeExclude systems, IncludeExclude unstable, boolean bundledExpected)
+      throws Exception {
+    String customRules =
+        "rules:\n"
+            + "  - bean: java.lang:type=Threading\n"
+            + "    metricAttribute:\n"
+            + "      test.source: const(custom)\n"
+            + "    mapping:\n"
+            + "      ThreadCount:\n"
+            + "        metric: test.collision.count\n"
+            + "        type: gauge\n"
+            + "        unit: '{thread}'\n"
+            + "        desc: Current number of threads.\n";
+    JmxTelemetryBuilder builder =
+        JmxTelemetry.builder(testing.getOpenTelemetry())
+            .addRules(new ByteArrayInputStream(customRules.getBytes(UTF_8)));
+    if (systems != null) {
+      assertThat(
+              deprecated
+                  ? builder.setInternalMetricsSystemFilter(systems)
+                  : builder.setBundledMetricsSystemFilter(systems))
+          .isSameAs(builder);
+    }
+    if (unstable != null) {
+      assertThat(
+              deprecated
+                  ? builder.setInternalMetricsUnstableMetricsFilter(unstable)
+                  : builder.setUnstableBundledMetricsFilter(unstable))
+          .isSameAs(builder);
+    }
+
+    try (AutoCloseable ignored = builder.build(collisionDefinitions()).start()) {
+      testing.waitAndAssertMetrics(
+          "io.opentelemetry.jmx",
+          metric ->
+              metric
+                  .hasName("test.collision.count")
+                  .satisfies(data ->
+                      assertThat(data.getInstrumentationScopeInfo().getSchemaUrl()).isNull()));
+      Collection<String> sources =
+          testing.metrics().stream()
+              .filter(metric -> metric.getName().equals("test.collision.count"))
+              .flatMap(metric -> metric.getLongGaugeData().getPoints().stream())
+              .map(point -> point.getAttributes().get(stringKey("test.source")))
+              .collect(toSet());
+      assertThat(sources).contains("custom");
+      if (bundledExpected) {
+        assertThat(sources).contains("embedded");
+      } else {
+        assertThat(sources).doesNotContain("embedded");
+      }
+    }
+  }
+
+  private static Stream<Arguments> bundledFilterCases() {
+    IncludeExclude empty = IncludeExclude.builder().build();
+    IncludeExclude systems = IncludeExclude.builder().setIncluded("test-*").build();
+    IncludeExclude unstable = IncludeExclude.builder().setIncluded("test.collision.*").build();
+    return Stream.of(false, true)
+        .flatMap(deprecated ->
+            Stream.of(
+                argumentSet("omitted " + deprecated, deprecated, null, null, false),
+                argumentSet("omitted systems " + deprecated, deprecated, null, unstable, false),
+                argumentSet("omitted unstable " + deprecated, deprecated, systems, null, false),
+                argumentSet("empty " + deprecated, deprecated, empty, empty, false),
+                argumentSet("empty systems " + deprecated, deprecated, empty, unstable, false),
+                argumentSet("empty unstable " + deprecated, deprecated, systems, empty, false),
+                argumentSet("wildcards " + deprecated, deprecated, systems, unstable, true),
+                argumentSet(
+                    "non-matching exclusions " + deprecated,
+                    deprecated,
+                    IncludeExclude.builder().setExcluded("other*").build(),
+                    IncludeExclude.builder().setExcluded("other*").build(),
+                    true),
+                argumentSet(
+                    "excluded system " + deprecated,
+                    deprecated,
+                    IncludeExclude.builder().setExcluded("test-*").build(),
+                    unstable,
+                    false),
+                argumentSet(
+                    "excluded unstable " + deprecated,
+                    deprecated,
+                    systems,
+                    IncludeExclude.builder().setExcluded("test.collision.*").build(),
+                    false),
+                argumentSet(
+                    "unstable exclusion takes precedence " + deprecated,
+                    deprecated,
+                    systems,
+                    IncludeExclude.builder()
+                        .setIncluded("test.*")
+                        .setExcluded("test.collision.*")
+                        .build(),
+                    false),
+                argumentSet(
+                    "system exclusion takes precedence " + deprecated,
+                    deprecated,
+                    IncludeExclude.builder().setIncluded("test-*").setExcluded("test-*").build(),
+                    unstable,
+                    false)));
+  }
+
+  @SuppressWarnings("deprecation")
+  @Test
+  void bundledFilterAliasesRejectNull() {
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(OpenTelemetry.noop());
+    assertThatThrownBy(() -> builder.setBundledMetricsSystemFilter(null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("systemFilter");
+    assertThatThrownBy(() -> builder.setInternalMetricsSystemFilter(null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("systemFilter");
+    assertThatThrownBy(() -> builder.setUnstableBundledMetricsFilter(null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("metricsFilter");
+    assertThatThrownBy(() -> builder.setInternalMetricsUnstableMetricsFilter(null))
+        .isInstanceOf(NullPointerException.class)
+        .hasMessage("metricsFilter");
   }
 
   @ParameterizedTest
@@ -240,15 +416,16 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(testing.getOpenTelemetry())
             .addRules(new ByteArrayInputStream(customRules.getBytes(UTF_8)))
-            .setInternalMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm").build())
+            .setBundledMetricsSystemFilter(IncludeExclude.builder().setIncluded("jvm").build())
             .setMetrics(
                 IncludeExclude.builder()
                     .setIncluded("jvm.memory.used", "jvm.memory.init", "jvm.thread.count")
                     .setExcluded("jvm.thread.count")
                     .build());
-    if (includeUnstable) {
-      builder.setInternalMetricsUnstableMetricsFilter(
-          IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    builder.setUnstableBundledMetricsFilter(
+        IncludeExclude.builder().setIncluded("jvm.memory.init").build());
+    if (!includeUnstable) {
+      builder.setUnstableBundledMetricsFilter(IncludeExclude.builder().build());
     }
     AutoCloseable collection = builder.build().start();
     cleanup.deferCleanup(collection);
@@ -318,10 +495,10 @@ class JmxTelemetryTest {
     JmxTelemetryBuilder builder =
         JmxTelemetry.builder(testing.getOpenTelemetry())
             .addRules(new ByteArrayInputStream(customRules.getBytes(UTF_8)))
-            .setInternalMetricsSystemFilter(
+            .setBundledMetricsSystemFilter(
                 IncludeExclude.builder().setIncluded("test-collision").build());
     if (includeUnstable) {
-      builder.setInternalMetricsUnstableMetricsFilter(
+      builder.setUnstableBundledMetricsFilter(
           IncludeExclude.builder().setIncluded("test.collision.count").build());
     }
 

@@ -13,6 +13,7 @@ import io.opentelemetry.instrumentation.api.internal.CauseUnwrapper;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -78,6 +79,7 @@ public class RuleParser {
 
   @SuppressWarnings("unchecked") // for casting yaml parsed objects
   private static JmxRule parseJmxRule(Map<String, Object> ruleYaml) {
+    ruleYaml = new HashMap<>(ruleYaml);
     JmxRule jmxRule = new JmxRule();
 
     String bean = (String) ruleYaml.remove("bean");
@@ -127,6 +129,7 @@ public class RuleParser {
   }
 
   private static Metric parseMetric(Map<String, Object> metricYaml) {
+    metricYaml = new HashMap<>(metricYaml);
     Metric metric = new Metric();
 
     String metricName = (String) metricYaml.remove("metric");
@@ -196,6 +199,25 @@ public class RuleParser {
       // It contains contextual information about any syntax issues found by the parser.
       String msg =
           String.format("Failed to parse YAML rules : %s %s", rootCause(e), e.getMessage());
+      throw new IllegalArgumentException(msg, e);
+    }
+  }
+
+  /**
+   * Creates a metric definition from a map using the YAML rule syntax.
+   *
+   * @param rule JMX rule definition
+   * @return parsed metric definition
+   * @throws IllegalArgumentException when unable to parse the rule
+   */
+  public MetricDef createMetricDef(Map<String, Object> rule) {
+    try {
+      JmxRule jmxRule = RuleParser.parseJmxRule(rule);
+      return jmxRule.buildMetricDef();
+    } catch (Exception e) {
+      // It is essential that the parser exception is made visible to the user.
+      // It contains contextual information about any syntax issues found by the parser.
+      String msg = String.format("Failed to parse YAML rule : %s %s", rootCause(e), e.getMessage());
       throw new IllegalArgumentException(msg, e);
     }
   }

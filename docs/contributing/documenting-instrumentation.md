@@ -220,7 +220,9 @@ main website or documentation, or if those don't exist, the GitHub repository.
 ### Configurations
 
 If an instrumentation module has configuration options, they should be documented in the
-`configurations` section of the `metadata.yaml` file.
+`configurations` section of the `metadata.yaml` file. Follow the
+[configuration naming rules](../../.github/instructions/configuration.instructions.md#names-and-stability)
+when adding a setting.
 
 Each configuration should include:
 
@@ -238,8 +240,9 @@ Each configuration should include:
   back to (see below).
 - `deprecated` (optional): Set to `true` for a deprecated configuration. It is required exactly when
   the description starts with "Deprecated".
-- `replaced_by` (optional): For a deprecated configuration, the name of the configuration that
-  replaces it.
+- `replaced_by` (optional): For a deprecated configuration, the documented replacement name.
+  Use the flat property name if both settings have one, or the YAML path if both have a
+  declarative form. If they share neither form, use the replacement's documented name.
 
 Configurations that many modules share are defined once in
 `instrumentation-docs/src/main/resources/shared-config-definitions.yaml` and referenced by id:
