@@ -14,9 +14,11 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.extension.kotlin.ContextExtensionsKt;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import javax.annotation.Nullable;
+import kotlin.ResultKt;
 import kotlin.coroutines.Continuation;
 import kotlin.coroutines.CoroutineContext;
 import kotlin.coroutines.intrinsics.IntrinsicsKt;
+import kotlin.coroutines.jvm.internal.ContinuationImpl;
 import kotlin.coroutines.jvm.internal.CoroutineStackFrame;
 import kotlinx.coroutines.ThreadContextElement;
 import org.jetbrains.annotations.NotNull;
@@ -72,9 +74,11 @@ public class AnnotationInstrumentationHelper {
     return Context.current();
   }
 
+  @SuppressWarnings("unchecked") // the frame passes the callee's result through unchanged
   public static <T> Continuation<T> wrapContinuation(
       Continuation<T> continuation, Context context, Context parentContext, Object request) {
-    return new ContextContinuation<>(continuation, context, parentContext, request);
+    return (Continuation<T>)
+        new SuspendFrame(new ContextContinuation<>(continuation, context, parentContext, request));
   }
 
   @Nullable
@@ -107,6 +111,11 @@ public class AnnotationInstrumentationHelper {
     // final state (returns anything else besides COROUTINE_SUSPENDED)
     if (continuation == null || result != IntrinsicsKt.getCOROUTINE_SUSPENDED()) {
       instrumenter().end(context, (MethodRequest) request, null, error);
+      if (continuation != null && continuation instanceof SuspendFrame) {
+        // The frame doesn't resume when the callee returns synchronously, so release any
+        // interception the callee requested before returning.
+        ((SuspendFrame) continuation).release();
+      }
     }
   }
 
@@ -195,6 +204,8 @@ public class AnnotationInstrumentationHelper {
     private final Continuation<T> delegate;
     private final CoroutineContext coroutineContext;
     private final ThreadContextElement<Scope> delegateContextElement;
+    private final RuntimeContextMarker runtimeContextMarker = new RuntimeContextMarker();
+    private final Context parentContext;
     private final Context spanContext;
     private final Object request;
 
@@ -202,10 +213,15 @@ public class AnnotationInstrumentationHelper {
     ContextContinuation(
         Continuation<T> delegate, Context spanContext, Context parentContext, Object request) {
       this.delegate = delegate;
+      // the marker must be added last, so that the runtime restores it before the span's scope
       this.coroutineContext =
-          delegate.getContext().plus(ContextExtensionsKt.asContextElement(spanContext));
+          delegate
+              .getContext()
+              .plus(ContextExtensionsKt.asContextElement(spanContext))
+              .plus(runtimeContextMarker);
       this.delegateContextElement =
           (ThreadContextElement<Scope>) ContextExtensionsKt.asContextElement(parentContext);
+      this.parentContext = parentContext;
       this.spanContext = spanContext;
       this.request = request;
     }
@@ -233,12 +249,49 @@ public class AnnotationInstrumentationHelper {
       Throwable error = KotlinResultUtilKt.exceptionOrNull(result);
       instrumenter().end(spanContext, (MethodRequest) request, null, error);
 
+      // When the runtime runs this with the callee's context applied, it may restore that context,
+      // including the span's scope, before this method returns, when the caller completes an
+      // undispatched withContext. The runtime restores thread context elements in reverse order
+      // (Kotlin/kotlinx.coroutines#2195) and the marker is added last, so the marker closes the
+      // caller's scope right before the span's scope and the scopes stay in order.
       Scope scope = delegateContextElement.updateThreadContext(delegate.getContext());
+      RuntimeContextMarkerApplication application =
+          RuntimeContextMarkerKt.currentRuntimeContextMarkerApplication();
+      if (application != null) {
+        application.defer(scope);
+      }
       try {
         delegate.resumeWith(result);
       } finally {
-        delegateContextElement.restoreThreadContext(delegate.getContext(), scope);
+        if (application == null || application.undefer(scope)) {
+          delegateContextElement.restoreThreadContext(delegate.getContext(), scope);
+        }
       }
+    }
+  }
+
+  /**
+   * Stands in for the frame the compiler omits when the annotated method tail calls another suspend
+   * function. Coroutine runtimes intercept only {@link ContinuationImpl} frames, so without it a
+   * callee completing on another dispatcher would resume the caller on the callee's thread.
+   * Interception uses the callee's context so suspension callbacks see its span.
+   */
+  public static final class SuspendFrame extends ContinuationImpl {
+
+    @SuppressWarnings("unchecked") // ContinuationImpl takes Continuation<Object>
+    SuspendFrame(Continuation<?> completion) {
+      super((Continuation<Object>) completion);
+    }
+
+    void release() {
+      releaseIntercepted();
+    }
+
+    @Override
+    @SuppressWarnings("OtelCanIgnoreReturnValueSuggester") // returns the callee's result
+    protected Object invokeSuspend(@NotNull Object result) {
+      ResultKt.throwOnFailure(result);
+      return result;
     }
   }
 
