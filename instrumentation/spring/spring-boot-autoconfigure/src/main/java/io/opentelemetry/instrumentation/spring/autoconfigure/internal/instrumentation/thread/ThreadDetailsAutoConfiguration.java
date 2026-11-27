@@ -5,17 +5,23 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.thread.internal.ThreadDetailsSpanProcessor;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@ConditionalOnEnabledInstrumentation(module = "common.thread-details", enabledByDefault = false)
+@Conditional(OtelEnabled.class)
+@ConditionalOnBean(OpenTelemetry.class)
+@ConditionalOnProperty(name = "otel.spring-starter.capture-thread-attributes", havingValue = "true")
 @Configuration
 public class ThreadDetailsAutoConfiguration {
 
