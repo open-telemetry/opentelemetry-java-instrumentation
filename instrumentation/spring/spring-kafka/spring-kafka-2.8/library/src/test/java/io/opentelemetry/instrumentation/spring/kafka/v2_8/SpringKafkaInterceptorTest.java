@@ -613,6 +613,54 @@ class SpringKafkaInterceptorTest {
   }
 
   @Test
+  void clearThreadStateClosesSkippedBatchScopeAfterDecoratedScope() {
+    ConsumerRecords<String, String> outer =
+        records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
+    ConsumerRecords<String, String> skipped =
+        records(new ConsumerRecord<>("orders", 1, 2, "skipped", "value"));
+    Context parent = Context.current();
+    KafkaConsumerContextUtil.set(
+        skipped, KafkaConsumerContextUtil.create(parent, null, null, null));
+    AtomicReference<Scope> childScope = new AtomicReference<>();
+    BatchInterceptor<String, String> decorated = mock();
+    when(decorated.intercept(outer, null)).thenReturn(outer);
+    when(decorated.intercept(skipped, null))
+        .thenAnswer(invocation -> {
+          childScope.set(
+              Context.current().with(NestedScopeInterceptor.KEY, "nested").makeCurrent());
+          return null;
+        });
+    doAnswer(
+            invocation -> {
+              childScope.get().close();
+              return null;
+            })
+        .when(decorated)
+        .clearThreadState(null);
+    InstrumentedBatchInterceptor<String, String> interceptor =
+        (InstrumentedBatchInterceptor<String, String>)
+            telemetry.<String, String>createBatchInterceptor(decorated);
+
+    interceptor.intercept(outer, null);
+    Context enclosing = Context.current();
+    interceptor.setupThreadState(null);
+    assertThat(interceptor.intercept(skipped, null)).isNull();
+    assertThat(Context.current().get(NestedScopeInterceptor.KEY)).isEqualTo("nested");
+    interceptor.clearThreadState(null);
+    assertThat(Context.current()).isSameAs(enclosing);
+    interceptor.success(outer, null);
+    assertThat(Context.current()).isSameAs(parent);
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "1", null).hasNoParent()));
+    assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "0", 1, null);
+    assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "1", 1, null);
+  }
+
+  @Test
   void clearThreadStateEndsBatchWhenDecoratedInterceptorThrows() {
     IllegalStateException failure = new IllegalStateException("clear failed");
     NestedScopeInterceptor decorated = new NestedScopeInterceptor(false, failure);

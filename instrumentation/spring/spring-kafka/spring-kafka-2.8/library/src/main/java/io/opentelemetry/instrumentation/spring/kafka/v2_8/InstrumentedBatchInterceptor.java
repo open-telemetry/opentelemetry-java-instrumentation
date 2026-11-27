@@ -114,7 +114,8 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
       return;
     }
     invocation.completed = true;
-    if (currentInvocation.get() == invocation) {
+    if (currentInvocation.get() == invocation
+        && (invocation.scope == null || invocation.context == Context.current())) {
       pop(invocation);
     }
     if (invocation.scope != null && invocation.context == Context.current()) {
