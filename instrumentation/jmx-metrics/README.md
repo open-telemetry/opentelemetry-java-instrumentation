@@ -40,6 +40,7 @@ The supported target systems are listed below.
 - [jetty](library/jetty.md)
 - [kafka-broker](library/kafka-broker.md)
 - [kafka-connect](library/kafka-connect.md)
+- [kafka-producer](library/kafka-producer.md)
 - [tomcat](library/tomcat.md)
 - [wildfly](library/wildfly.md)
 - [hadoop](library/hadoop.md)
