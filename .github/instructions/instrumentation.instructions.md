@@ -38,8 +38,8 @@ Apply these rules to instrumentation modules and packages.
   `io.opentelemetry.javaagent.instrumentation.<library>...`.
 - Encode version segments as one identifier such as `v4_0`, not dotted package segments such as
   `v4.0`.
-- In versioned common modules, put `common` before the version in both javaagent and library
-  packages (`io.opentelemetry.javaagent.instrumentation.<library>.common.v4_0` and
-  `io.opentelemetry.instrumentation.<library>.common.v4_0`). A non-versioned javaagent common
-  module uses the ordinary javaagent package without a trailing `common` segment; a non-versioned
-  library common package may retain one.
+- In library and javaagent common modules, keep `common` in the package prefix and follow the
+  module's token order. For example, `couchbase-common-2.0` uses `couchbase.common.v2_0`, and
+  `jsf-common-jakarta` uses `jsf.common.jakarta`.
+  See the [package-name checker](../scripts/check-package-names.sh) for the layouts CI checks and
+  their exceptions.
