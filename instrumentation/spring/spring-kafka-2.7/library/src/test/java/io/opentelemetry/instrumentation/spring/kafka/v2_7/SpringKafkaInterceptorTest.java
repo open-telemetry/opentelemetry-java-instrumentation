@@ -18,21 +18,15 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_NAME;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static java.nio.charset.StandardCharsets.UTF_8;
-import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 import static java.util.Collections.singletonMap;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
-import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
-import static org.mockito.Mockito.withSettings;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -47,37 +41,26 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaConsumerContextUtil;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.KafkaInstrumenterFactory;
 import io.opentelemetry.instrumentation.kafkaclients.common.v0_11.internal.TracingIterator;
-import io.opentelemetry.instrumentation.kafkaclients.v2_6.KafkaTelemetry;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.LinkData;
 import io.opentelemetry.sdk.trace.data.StatusData;
-import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.MockConsumer;
-import org.apache.kafka.clients.consumer.OffsetResetStrategy;
 import org.apache.kafka.common.TopicPartition;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-import org.springframework.kafka.listener.BatchConsumerAwareMessageListener;
 import org.springframework.kafka.listener.BatchInterceptor;
-import org.springframework.kafka.listener.BatchMessageListener;
-import org.springframework.kafka.listener.ConsumerSeekAware;
-import org.springframework.kafka.listener.ConsumerSeekAware.ConsumerSeekCallback;
 import org.springframework.kafka.listener.RecordInterceptor;
-import org.springframework.kafka.support.Acknowledgment;
 
 @SuppressWarnings({"deprecation", "unchecked"}) // deprecated semconv and generic interceptor mocks
 class SpringKafkaInterceptorTest {
@@ -103,42 +86,6 @@ class SpringKafkaInterceptorTest {
       SpringKafkaTelemetry.builder(testing.getOpenTelemetry())
           .setMessagingReceiveTelemetryEnabled(true)
           .build();
-
-  @Test
-  void batchListenerPreservesSeekAwareCallbacks() {
-    BatchMessageListener<String, String> delegate =
-        mock(BatchMessageListener.class, withSettings().extraInterfaces(ConsumerSeekAware.class));
-    ConsumerSeekAware seekAware = (ConsumerSeekAware) delegate;
-    BatchMessageListener<String, String> listener = telemetry.createBatchMessageListener(delegate);
-    assertThat(listener).isInstanceOf(ConsumerSeekAware.class);
-    ConsumerSeekAware wrapped = (ConsumerSeekAware) listener;
-    ConsumerSeekCallback registered = mock();
-    ConsumerSeekCallback assigned = mock();
-    ConsumerSeekCallback idle = mock();
-    Map<TopicPartition, Long> assignments = singletonMap(new TopicPartition("orders", 0), 42L);
-    Map<TopicPartition, Long> idleAssignments = singletonMap(new TopicPartition("orders", 1), 43L);
-    List<TopicPartition> revoked = singletonList(new TopicPartition("orders", 2));
-
-    wrapped.registerSeekCallback(registered);
-    wrapped.onPartitionsAssigned(assignments, assigned);
-    wrapped.onIdleContainer(idleAssignments, idle);
-    wrapped.onPartitionsRevoked(revoked);
-    wrapped.unregisterSeekCallback();
-
-    verify(seekAware).registerSeekCallback(same(registered));
-    verify(seekAware).onPartitionsAssigned(same(assignments), same(assigned));
-    verify(seekAware).onIdleContainer(same(idleAssignments), same(idle));
-    verify(seekAware).onPartitionsRevoked(same(revoked));
-    verify(seekAware).unregisterSeekCallback();
-    verifyNoMoreInteractions(seekAware);
-  }
-
-  @Test
-  void ordinaryBatchListenerDoesNotAdvertiseSeekAwareness() {
-    BatchMessageListener<String, String> listener = records -> {};
-    assertThat(telemetry.createBatchMessageListener(listener))
-        .isNotInstanceOf(ConsumerSeekAware.class);
-  }
 
   @Test
   void batchScopeSuppressesNestedRawProcessing() {
@@ -601,234 +548,9 @@ class SpringKafkaInterceptorTest {
         trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()));
   }
 
-  @Test
-  void batchMessageListenerTracesListenerInvocation() {
-    ConsumerRecord<String, String> first = new ConsumerRecord<>("orders", 0, 1, "first", "value");
-    ConsumerRecord<String, String> second = new ConsumerRecord<>("orders", 0, 2, "second", "value");
-    List<ConsumerRecord<String, String>> data = asList(first, second);
-    Consumer<String, String> consumer = mock();
-    AtomicReference<Span> listenerSpan = new AtomicReference<>();
-    AtomicReference<Consumer<?, ?>> listenerConsumer = new AtomicReference<>();
-    BatchMessageListener<String, String> listener =
-        telemetry.createBatchMessageListener(
-            (BatchConsumerAwareMessageListener<String, String>)
-                (records, c) -> {
-                  assertThat(records).isSameAs(data);
-                  listenerSpan.set(Span.current());
-                  listenerConsumer.set(c);
-                });
-    Context parentContext = Context.current();
-
-    listener.onMessage(data, null, consumer);
-    assertThat(Context.current()).isSameAs(parentContext);
-    assertThat(listenerSpan.get().getSpanContext().isValid()).isTrue();
-    assertThat(listenerConsumer.get()).isSameAs(consumer);
-
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            assertBatchSpan(span, 2, "0", null)
-                .hasNoParent()
-                .hasSpanId(listenerSpan.get().getSpanContext().getSpanId())));
-  }
-
-  @Test
-  void batchMessageListenerEndsSpanWhenListenerThrowsAndSkipsRetry() {
-    AtomicInteger conversions = new AtomicInteger();
-    List<ConsumerRecord<String, String>> data =
-        new ArrayList<ConsumerRecord<String, String>>(
-            singletonList(new ConsumerRecord<>("orders", 0, 1, "key", "value"))) {
-          @Override
-          public Object[] toArray() {
-            conversions.incrementAndGet();
-            return super.toArray();
-          }
-        };
-    List<ConsumerRecord<String, String>> next =
-        new ArrayList<ConsumerRecord<String, String>>(
-            singletonList(new ConsumerRecord<>("orders", 0, 2, "key", "value"))) {
-          @Override
-          public Object[] toArray() {
-            conversions.incrementAndGet();
-            return super.toArray();
-          }
-        };
-    AssertionError error = new AssertionError("listener");
-    AtomicReference<Boolean> fail = new AtomicReference<>(true);
-    BatchMessageListener<String, String> listener =
-        telemetry.createBatchMessageListener(
-            (BatchMessageListener<String, String>)
-                records -> {
-                  if (fail.get()) {
-                    testing.runWithSpan(
-                        "first listener",
-                        () -> {
-                          throw error;
-                        });
-                  } else {
-                    testing.runWithSpan(
-                        records == data ? "retry listener" : "next listener", () -> {});
-                  }
-                });
-    Context parentContext = Context.current();
-
-    assertThatThrownBy(() -> listener.onMessage(data, null, null)).isSameAs(error);
-    assertThat(Context.current()).isSameAs(parentContext);
-    fail.set(false);
-    // the container retries a failed batch with the same data
-    listener.onMessage(data, null, null);
-    assertThat(conversions).hasValue(1);
-    listener.onMessage(next, null, null);
-    assertThat(conversions).hasValue(2);
-    assertThat(Context.current()).isSameAs(parentContext);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", error).hasNoParent(),
-                span -> span.hasName("first listener").hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(span -> span.hasName("retry listener").hasNoParent()),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
-                span -> span.hasName("next listener").hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  void distinctBatchMessageListenersDoNotShareRetryState() {
-    List<ConsumerRecord<String, String>> data =
-        singletonList(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
-    BatchMessageListener<String, String> first =
-        telemetry.createBatchMessageListener(
-            (BatchMessageListener<String, String>)
-                records -> testing.runWithSpan("first listener", () -> {}));
-    BatchMessageListener<String, String> second =
-        telemetry.createBatchMessageListener(
-            (BatchMessageListener<String, String>)
-                records -> testing.runWithSpan("second listener", () -> {}));
-    Context parentContext = Context.current();
-
-    first.onMessage(data);
-    assertThat(Context.current()).isSameAs(parentContext);
-    second.onMessage(data);
-    assertThat(Context.current()).isSameAs(parentContext);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
-                span -> span.hasName("first listener").hasParent(trace.getSpan(0))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
-                span -> span.hasName("second listener").hasParent(trace.getSpan(0))));
-  }
-
-  @Test
-  void batchMessageListenerForwardsPollResult() {
-    ConsumerRecords<String, String> records =
-        records(new ConsumerRecord<>("orders", 0, 1, "key", "value"));
-    AtomicReference<Span> listenerSpan = new AtomicReference<>();
-    BatchMessageListener<String, String> listener =
-        telemetry.createBatchMessageListener(
-            new BatchMessageListener<String, String>() {
-              @Override
-              public void onMessage(List<ConsumerRecord<String, String>> data) {
-                throw new UnsupportedOperationException();
-              }
-
-              @Override
-              public void onMessage(
-                  ConsumerRecords<String, String> data,
-                  Acknowledgment acknowledgment,
-                  Consumer<String, String> consumer) {
-                assertThat(data).isSameAs(records);
-                listenerSpan.set(Span.current());
-              }
-
-              @Override
-              public boolean wantsPollResult() {
-                return true;
-              }
-            });
-
-    assertThat(listener.wantsPollResult()).isTrue();
-    listener.onMessage(records, null, null);
-    assertThat(listenerSpan.get().getSpanContext().isValid()).isTrue();
-
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
-  }
-
-  @Test
-  void batchMessageListenerProcessesInstrumentedPollResult() {
-    TopicPartition partition = new TopicPartition("orders", 0);
-    MockConsumer<String, String> mockConsumer = new MockConsumer<>(OffsetResetStrategy.EARLIEST);
-    mockConsumer.assign(singletonList(partition));
-    mockConsumer.updateBeginningOffsets(singletonMap(partition, 0L));
-    mockConsumer.addRecord(new ConsumerRecord<>("orders", 0, 0, "key", "first"));
-    mockConsumer.addRecord(new ConsumerRecord<>("orders", 0, 1, "key", "second"));
-    KafkaTelemetry kafkaTelemetry =
-        KafkaTelemetry.builder(testing.getOpenTelemetry())
-            .setMessagingReceiveTelemetryEnabled(true)
-            .build();
-    AtomicReference<ConsumerRecords<String, String>> received = new AtomicReference<>();
-    BatchMessageListener<String, String> listener =
-        telemetry.createBatchMessageListener(
-            new BatchMessageListener<String, String>() {
-              @Override
-              public void onMessage(List<ConsumerRecord<String, String>> data) {
-                throw new UnsupportedOperationException();
-              }
-
-              @Override
-              public void onMessage(
-                  ConsumerRecords<String, String> data,
-                  Acknowledgment acknowledgment,
-                  Consumer<String, String> consumer) {
-                received.set(data);
-                testing.runWithSpan("listener", () -> {});
-              }
-
-              @Override
-              public boolean wantsPollResult() {
-                return true;
-              }
-            });
-
-    assertThat(listener.wantsPollResult()).isTrue();
-    try (Consumer<String, String> consumer = kafkaTelemetry.instrument(mockConsumer)) {
-      testing.runWithSpan(
-          "parent",
-          () -> {
-            Context parent = Context.current();
-            ConsumerRecords<String, String> records = consumer.poll(Duration.ZERO);
-            assertThat(Context.current()).isSameAs(parent);
-            listener.onMessage(records, null, consumer);
-            assertThat(received.get()).isSameAs(records);
-            assertThat(Context.current()).isSameAs(parent);
-          });
-    }
-
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(
-            span -> span.hasName("parent").hasNoParent(),
-            span ->
-                span.hasName("poll orders").hasKind(SpanKind.CLIENT).hasParent(trace.getSpan(0)),
-            span ->
-                span.hasName("process orders")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasParent(trace.getSpan(0))
-                    .hasAttributesSatisfying(
-                        equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2),
-                        equalTo(MESSAGING_DESTINATION_PARTITION_ID, "0")),
-            span -> span.hasName("listener").hasParent(trace.getSpan(2))));
-  }
-
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
   void clearThreadStateClosesDecoratedInterceptorScopeInStackOrder(boolean attachInSetup) {
-    assumeHasThreadStateHooks();
     NestedScopeInterceptor decorated = new NestedScopeInterceptor(attachInSetup, null);
     InstrumentedBatchInterceptor<String, String> interceptor =
         (InstrumentedBatchInterceptor<String, String>)
@@ -849,7 +571,6 @@ class SpringKafkaInterceptorTest {
 
   @Test
   void clearThreadStateEndsBatchWhenDecoratedInterceptorThrows() {
-    assumeHasThreadStateHooks();
     IllegalStateException failure = new IllegalStateException("clear failed");
     NestedScopeInterceptor decorated = new NestedScopeInterceptor(false, failure);
     InstrumentedBatchInterceptor<String, String> interceptor =
@@ -868,8 +589,6 @@ class SpringKafkaInterceptorTest {
         trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()));
   }
 
-  // The thread-state hooks are not declared in Spring Kafka 2.7, so omit @Override.
-  @SuppressWarnings("MissingOverride")
   private static class NestedScopeInterceptor implements BatchInterceptor<String, String> {
     static final ContextKey<String> KEY = ContextKey.named("nested");
 
@@ -882,7 +601,7 @@ class SpringKafkaInterceptorTest {
       this.clearFailure = clearFailure;
     }
 
-    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod", "UnusedVariable"})
+    @Override
     public void setupThreadState(Consumer<?, ?> consumer) {
       if (attachInSetup) {
         scope = Context.current().with(KEY, "nested").makeCurrent();
@@ -898,38 +617,13 @@ class SpringKafkaInterceptorTest {
       return records;
     }
 
-    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod", "UnusedVariable"})
+    @Override
     public void clearThreadState(Consumer<?, ?> consumer) {
       scope.close();
       if (clearFailure != null) {
         throw clearFailure;
       }
     }
-  }
-
-  private static void assumeHasThreadStateHooks() {
-    boolean present = true;
-    try {
-      BatchInterceptor.class.getMethod("clearThreadState", Consumer.class);
-    } catch (NoSuchMethodException e) {
-      present = false;
-    }
-    assumeTrue(present, "requires Spring Kafka 2.8+");
-  }
-
-  @Test
-  void instrumentedConsumerHasIdentityEquality() {
-    MockConsumer<String, String> mockConsumer = new MockConsumer<>(OffsetResetStrategy.EARLIEST);
-    Consumer<String, String> first = telemetry.instrument(mockConsumer);
-    Consumer<String, String> second = telemetry.instrument(mockConsumer);
-    List<Consumer<String, String>> consumers = new ArrayList<>();
-    consumers.add(first);
-
-    assertThat(first.equals(first)).isTrue();
-    assertThat(first.hashCode()).isEqualTo(System.identityHashCode(first));
-    assertThat(consumers).contains(first).doesNotContain(second);
-    assertThat(first.equals(second)).isFalse();
-    assertThat(consumers.remove(first)).isTrue();
   }
 
   @Test

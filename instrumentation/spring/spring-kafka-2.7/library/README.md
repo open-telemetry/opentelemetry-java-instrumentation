@@ -1,4 +1,4 @@
-# Library Instrumentation for Spring Kafka version 2.7 and higher
+# Library Instrumentation for Spring Kafka version 2.8 and higher
 
 Provides OpenTelemetry instrumentation for [Spring Kafka](https://spring.io/projects/spring-kafka),
 enabling consumer and producer messaging spans.
@@ -98,60 +98,3 @@ public class KafkaInstrumentationConfig {
   }
 }
 ```
-
-With Spring Kafka 2.7, the container does not notify the batch interceptor when a batch does not
-complete, for example when `interceptBeforeTx` is enabled and the transaction can't be started, or
-when the listener throws an `Error`. The batch span then stays open and its context stays current
-on the consumer thread. To avoid this, instrument batch listeners by wrapping the listener instead
-of setting the batch interceptor:
-
-```java
-import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.kafka.config.ContainerCustomizer;
-import org.springframework.kafka.listener.BatchMessageListener;
-import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
-
-@Configuration
-public class KafkaInstrumentationConfig {
-
-  @Bean
-  public ContainerCustomizer<String, String, ConcurrentMessageListenerContainer<String, String>>
-      listenerCustomizer(OpenTelemetry openTelemetry) {
-    SpringKafkaTelemetry springKafkaTelemetry = SpringKafkaTelemetry.create(openTelemetry);
-    return container -> {
-      container.setRecordInterceptor(springKafkaTelemetry.createRecordInterceptor());
-      Object listener = container.getContainerProperties().getMessageListener();
-      if (listener instanceof BatchMessageListener) {
-        container.setupMessageListener(
-            springKafkaTelemetry.createBatchMessageListener(
-                (BatchMessageListener<String, String>) listener));
-      }
-    };
-  }
-}
-```
-
-When consumers are also wrapped with `KafkaTelemetry.instrument(...)`, wrapping the batch listener
-alone does not prevent Kafka process spans during Spring's pre-listener batch conversion. Add the
-Spring wrapper after the Kafka wrapper to the `DefaultKafkaConsumerFactory` used by the container:
-
-```java
-consumerFactory.addPostProcessor(
-    consumer -> springKafkaTelemetry.instrument(kafkaTelemetry.instrument(consumer)));
-```
-
-The Spring wrapper suppresses raw Kafka processing spans for every record from that consumer.
-Use it only for consumers whose processing is traced by Spring instrumentation; do not apply it to
-unrelated consumers through a shared factory.
-
-The wrapped listener's span covers the listener invocation, so batches that never reach the
-listener are not traced. A retry that reuses the most recently traced list or `ConsumerRecords`
-object on the same thread and wrapper does not get another processing span; redelivery with a
-different batch object can be traced separately. The wrapper preserves the Spring Kafka 2.7
-`ConsumerSeekAware` callbacks, but not every optional listener interface or later-only callbacks
-such as `onFirstPoll`. Don't combine it with the batch interceptor on the same container, because
-each creates a span for the batch. Prefer the batch interceptor with Spring Kafka 2.8 and later,
-which notify it after every poll.

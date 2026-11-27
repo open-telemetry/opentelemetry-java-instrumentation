@@ -12,14 +12,12 @@ dependencies {
 
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
 
-  // compiling against 2.8.0 to use methods that are not present in 2.7
   compileOnly("org.springframework.kafka:spring-kafka:2.8.0")
 
   testImplementation(project(":instrumentation:spring:spring-kafka-2.7:testing"))
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
 
-  // 2.7.0 has a bug that makes decorating a Kafka Producer impossible
-  testLibrary("org.springframework.kafka:spring-kafka:2.7.1")
+  testLibrary("org.springframework.kafka:spring-kafka:2.8.0")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   if (otelProps.testLatestDeps) {
