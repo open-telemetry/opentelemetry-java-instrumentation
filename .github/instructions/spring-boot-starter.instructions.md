@@ -23,10 +23,11 @@ and `OpenTelemetryAutoConfiguration`.
 
 ## Declarative mode
 
-- Both starter test layers use a separate `testDeclarativeConfig` source set with its own
-  `resources/application.yaml` containing `otel.file_format: "1.0"`. Mode selection follows
-  `EarlyConfig.isDeclarativeConfig`, not an in-test flag.
-
-- Cover mode-specific wiring that needs both modes in the normal and declarative source sets
-  rather than parameterizing one class over a mode selected during initialization.
-  This does not require duplicate behavior matrices for equivalent flat/YAML settings.
+- Run flat and declarative starter smoke tests in the default `test` source set. Use
+  `@ActiveProfiles("declarative")` to load `application-declarative.yaml` and deactivate the
+  shared flat settings. Spring can then discover both contexts during native test AOT
+  processing. Use a separate fixture for startup cases that need different configuration.
+- Keep declarative autoconfigure tests in `testDeclarativeConfig` with their own `application.yaml`.
+- `EarlyConfig.isDeclarativeConfig` selects the mode at startup based on `otel.file_format`.
+  Assert that the declarative configuration took effect, for example by checking a service name
+  set in YAML. Equivalent flat and declarative settings do not need duplicate behavior matrices.

@@ -32,21 +32,3 @@ configurations.configureEach {
     force("org.slf4j:slf4j-api:1.7.36")
   }
 }
-
-testing.suites {
-  register<JvmTestSuite>("testDeclarativeConfig") {
-    dependencies {
-      implementation(project())
-      implementation(project(":smoke-tests-otel-starter:spring-boot-common"))
-      implementation(platform("org.springframework.boot:spring-boot-dependencies:2.7.18"))
-      implementation("org.springframework.boot:spring-boot-starter-web")
-      implementation("org.springframework.boot:spring-boot-starter-test")
-    }
-  }
-}
-
-tasks {
-  check {
-    dependsOn(testing.suites)
-  }
-}

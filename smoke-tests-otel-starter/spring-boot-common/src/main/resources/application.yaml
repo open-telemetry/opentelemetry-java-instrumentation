@@ -28,6 +28,9 @@ application:
   prop-with-dash: provWithDashValue
 
 spring:
+  config:
+    activate:
+      on-profile: "!declarative"
   kafka:
     bootstrap-servers: localhost:9094
     consumer:
