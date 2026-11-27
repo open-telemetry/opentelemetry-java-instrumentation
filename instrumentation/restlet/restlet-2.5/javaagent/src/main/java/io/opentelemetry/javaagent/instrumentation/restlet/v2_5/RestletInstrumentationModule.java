@@ -31,7 +31,7 @@ public class RestletInstrumentationModule extends InstrumentationModule {
 
   private static final Pattern SUPPORTED_VERSION =
       Pattern.compile("2\\.(?:[5-9]|[1-9][0-9]+)\\.[0-9]+(?:-.*)?");
-  private static final Cache<ClassLoader, Boolean> supportedLoaders = Cache.weak();
+  private static final Cache<ClassLoader, SupportedVersion> supportedLoaders = Cache.weak();
 
   static {
     ClassLoaderMatcherCacheHolder.addCache(supportedLoaders);
@@ -45,8 +45,9 @@ public class RestletInstrumentationModule extends InstrumentationModule {
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed("org.restlet.Request")
         .and(loader ->
-            supportedLoaders.computeIfAbsent(
-                loader, RestletInstrumentationModule::hasSupportedVersion));
+            supportedLoaders
+                .computeIfAbsent(loader, unused -> new SupportedVersion())
+                .isSupported(loader));
   }
 
   private static boolean hasSupportedVersion(ClassLoader loader) {
@@ -96,6 +97,20 @@ public class RestletInstrumentationModule extends InstrumentationModule {
     return version != null
         && SUPPORTED_VERSION.matcher(version).matches()
         && !version.startsWith("2.5.0-");
+  }
+
+  private static final class SupportedVersion {
+    private volatile int supported;
+
+    private boolean isSupported(ClassLoader loader) {
+      int result = supported;
+      if (result == 0) {
+        boolean isSupported = hasSupportedVersion(loader);
+        result = isSupported ? 1 : -1;
+        supported = result;
+      }
+      return result > 0;
+    }
   }
 
   @Override
