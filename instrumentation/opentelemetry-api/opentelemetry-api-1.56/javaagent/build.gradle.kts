@@ -31,6 +31,7 @@ testing.suites {
   register<JvmTestSuite>("incubatorTest") {
     dependencies {
       implementation("io.opentelemetry:opentelemetry-api-incubator:1.67.0-alpha")
+      implementation(project(":declarative-config-bridge"))
     }
   }
 
@@ -40,8 +41,13 @@ testing.suites {
     }
   }
   executions("incubatorTest") {
-    configureEach {
+    configureDefault {
       jvmArgs("-Dotel.config.file=$projectDir/src/incubatorTest/resources/declarative-config.yaml")
+    }
+    register("FlatConfig") {
+      filter {
+        includeTestsMatching("*.ExtendedOpenTelemetryTest.unsetDurationReturnsNull")
+      }
     }
   }
 }
