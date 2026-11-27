@@ -5,8 +5,8 @@
 
 package io.opentelemetry.instrumentation.spring.webflux.v5_3.internal;
 
+import io.opentelemetry.instrumentation.api.incubator.semconv.http.HttpClientExperimentalAttributesGetter;
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
-import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpErrorType;
 import java.net.URI;
 import java.util.Collection;
@@ -20,7 +20,21 @@ import org.springframework.web.reactive.function.client.ClientResponse;
  * any time.
  */
 public class WebClientHttpAttributesGetter
-    implements HttpClientAttributesGetter<ClientRequest, ClientResponse> {
+    implements HttpClientExperimentalAttributesGetter<ClientRequest, ClientResponse> {
+  @Nullable
+  @Override
+  public String getUrlTemplate(ClientRequest request) {
+    // Populated by Spring's string-template URI overloads since 5.0.5.
+    Object template =
+        request
+            .attributes()
+            .get("org.springframework.web.reactive.function.client.WebClient.uriTemplate");
+    if (!(template instanceof String)) {
+      return null;
+    }
+    return WebClientUriTemplateParser.extractPathTemplate((String) template);
+  }
+
   @Override
   public String getUrlFull(ClientRequest request) {
     return request.url().toString();
