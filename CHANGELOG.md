@@ -440,6 +440,10 @@
   `os.arch` value: `aarch64` becomes `arm64`, `x86_64` becomes `amd64`, `i386` becomes `x86`,
   `arm` becomes `arm32`, `ppc` becomes `ppc32`, and `ppc64le` becomes `ppc64`.
 
+- MongoDB spans capture query text only when opted in. Set
+  `otel.instrumentation.mongo.capture-query-text=true` in the agent or Spring Boot starter,
+  or call `MongoTelemetryBuilder.setCaptureQueryText(true)` in library instrumentation.
+
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Rename `OkHttpTelemetry.createCallFactory(...)` to `instrument(...)`.

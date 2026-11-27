@@ -231,7 +231,8 @@ class MongoDbAttributesGetterTest {
     MongoDbAttributesGetter libraryGetter =
         new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH);
     MongoDbAttributesGetter agentGetter =
-        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+        new MongoDbAttributesGetter(
+            true, true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
     assertThat(libraryGetter.getNetworkPeerAddress(event, null)).isNull();
     assertThat(libraryGetter.getNetworkPeerPort(event, null)).isNull();
@@ -250,7 +251,8 @@ class MongoDbAttributesGetterTest {
     MongoNetworkPeer peer =
         MongoNetworkPeer.fromSocketAddress(new InetSocketAddress(ipv6Address, 27018));
     MongoDbAttributesGetter getter =
-        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+        new MongoDbAttributesGetter(
+            true, true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
     assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null))
         .isEqualTo("0:0:0:0:0:0:0:1");
@@ -267,7 +269,8 @@ class MongoDbAttributesGetterTest {
             unixDomainSocketAddress.getMethod("of", String.class).invoke(null, socketPath);
     MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(socketAddress);
     MongoDbAttributesGetter getter =
-        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+        new MongoDbAttributesGetter(
+            true, true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
     assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();
@@ -281,7 +284,8 @@ class MongoDbAttributesGetterTest {
     SocketAddress socketAddress = new UnixSocketAddress(socketPath);
     MongoNetworkPeer peer = MongoNetworkPeer.fromSocketAddress(socketAddress);
     MongoDbAttributesGetter getter =
-        new MongoDbAttributesGetter(true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
+        new MongoDbAttributesGetter(
+            true, true, DEFAULT_MAX_NORMALIZED_QUERY_LENGTH, ignored -> peer);
 
     assertThat(getter.getNetworkPeerAddress(commandStartedEvent(), null)).isEqualTo(socketPath);
     assertThat(getter.getNetworkPeerPort(commandStartedEvent(), null)).isNull();

@@ -66,6 +66,7 @@ class MongoDbAttributesGetter
             .orElse(null);
   }
 
+  private final boolean captureQueryText;
   private final boolean querySanitizationEnabled;
   private final int maxNormalizedQueryLength;
   @Nullable private final MongoConnectionPeerResolver connectionPeerResolver;
@@ -73,13 +74,15 @@ class MongoDbAttributesGetter
 
   // only used by tests
   MongoDbAttributesGetter(boolean querySanitizationEnabled, int maxNormalizedQueryLength) {
-    this(querySanitizationEnabled, maxNormalizedQueryLength, null);
+    this(true, querySanitizationEnabled, maxNormalizedQueryLength, null);
   }
 
   MongoDbAttributesGetter(
+      boolean captureQueryText,
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength,
       @Nullable MongoConnectionPeerResolver connectionPeerResolver) {
+    this.captureQueryText = captureQueryText;
     this.querySanitizationEnabled = querySanitizationEnabled;
     this.maxNormalizedQueryLength = maxNormalizedQueryLength;
     this.connectionPeerResolver = connectionPeerResolver;
@@ -117,8 +120,9 @@ class MongoDbAttributesGetter
   }
 
   @Override
+  @Nullable
   public String getDbQueryText(CommandStartedEvent event) {
-    return sanitizeQuery(event.getCommand());
+    return captureQueryText ? sanitizeQuery(event.getCommand()) : null;
   }
 
   @Override

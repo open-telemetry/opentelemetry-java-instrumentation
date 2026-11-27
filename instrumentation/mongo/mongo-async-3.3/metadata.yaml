@@ -7,6 +7,11 @@ semantic_conventions:
   - DATABASE_CLIENT_METRICS
 library_link: https://www.mongodb.com/docs/drivers/java-drivers/
 configurations:
+  - name: otel.instrumentation.mongo.capture-query-text
+    declarative_name: java.mongo.capture_query_text
+    description: Enables capturing MongoDB query text in the `db.query.text` span attribute.
+    type: boolean
+    default: false
   - name: otel.instrumentation.mongo.query-sanitization.enabled
     declarative_name: java.mongo.query_sanitization.enabled
     description: >

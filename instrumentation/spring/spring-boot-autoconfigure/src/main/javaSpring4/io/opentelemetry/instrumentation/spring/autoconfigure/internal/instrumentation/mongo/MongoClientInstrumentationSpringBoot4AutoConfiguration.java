@@ -9,6 +9,7 @@ import com.mongodb.MongoClientSettings;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.mongo.v3_1.MongoTelemetry;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.mongodb.autoconfigure.MongoClientSettingsBuilderCustomizer;
@@ -29,6 +30,7 @@ public class MongoClientInstrumentationSpringBoot4AutoConfiguration {
     return builder ->
         builder.addCommandListener(
             MongoTelemetry.builder(openTelemetry)
+                .setCaptureQueryText(MongoConfig.isQueryTextCaptureEnabled(openTelemetry))
                 .setQuerySanitizationEnabled(
                     DbConfig.isQuerySanitizationEnabled(openTelemetry, "mongo"))
                 .build()

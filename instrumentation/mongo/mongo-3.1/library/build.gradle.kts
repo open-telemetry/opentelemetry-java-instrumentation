@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.library-instrumentation")
   id("otel.nullaway-conventions")
@@ -14,4 +16,14 @@ dependencies {
 
   testImplementation(project(":instrumentation:mongo:mongo-3.1:testing"))
   testImplementation("com.github.jnr:jnr-unixsocket:0.18")
+}
+
+testing.suites {
+  executions("test") {
+    register("QueryText") {
+      filter.includeTestsMatching("*MongoClientTest")
+      systemProperty("test.captureQueryText", "true")
+      systemProperty("metadataConfig", "MongoTelemetryBuilder.setCaptureQueryText(true)")
+    }
+  }
 }

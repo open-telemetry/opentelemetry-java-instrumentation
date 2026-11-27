@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
 import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
@@ -37,6 +39,14 @@ testing.suites {
     dependencies {
       implementation(project(":instrumentation:mongo:mongo-3.1:library"))
       implementation("org.mongodb:mongodb-driver-core:4.0.1")
+    }
+  }
+
+  executions("test") {
+    register("QueryText") {
+      filter.includeTestsMatching("*MongoClientTest")
+      filter.includeTestsMatching("*Mongo4ReactiveClientTest")
+      telemetryConfig("otel.instrumentation.mongo.capture-query-text", "true")
     }
   }
 }

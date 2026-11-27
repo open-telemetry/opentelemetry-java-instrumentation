@@ -30,10 +30,14 @@ public final class MongoInstrumenterFactory {
   static final int DEFAULT_MAX_NORMALIZED_QUERY_LENGTH = 32 * 1024;
 
   public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
-      OpenTelemetry openTelemetry, String instrumentationName, boolean querySanitizationEnabled) {
+      OpenTelemetry openTelemetry,
+      String instrumentationName,
+      boolean captureQueryText,
+      boolean querySanitizationEnabled) {
     return createInstrumenter(
         openTelemetry,
         instrumentationName,
+        captureQueryText,
         querySanitizationEnabled,
         DEFAULT_MAX_NORMALIZED_QUERY_LENGTH,
         null);
@@ -42,11 +46,13 @@ public final class MongoInstrumenterFactory {
   public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
+      boolean captureQueryText,
       boolean querySanitizationEnabled,
       MongoConnectionPeerResolver connectionPeerResolver) {
     return createInstrumenter(
         openTelemetry,
         instrumentationName,
+        captureQueryText,
         querySanitizationEnabled,
         DEFAULT_MAX_NORMALIZED_QUERY_LENGTH,
         connectionPeerResolver);
@@ -55,11 +61,13 @@ public final class MongoInstrumenterFactory {
   public static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
+      boolean captureQueryText,
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength) {
     return createInstrumenter(
         openTelemetry,
         instrumentationName,
+        captureQueryText,
         querySanitizationEnabled,
         maxNormalizedQueryLength,
         null);
@@ -68,13 +76,17 @@ public final class MongoInstrumenterFactory {
   private static Instrumenter<CommandStartedEvent, CommandSucceededEvent> createInstrumenter(
       OpenTelemetry openTelemetry,
       String instrumentationName,
+      boolean captureQueryText,
       boolean querySanitizationEnabled,
       int maxNormalizedQueryLength,
       @Nullable MongoConnectionPeerResolver connectionPeerResolver) {
 
     MongoDbAttributesGetter dbAttributesGetter =
         new MongoDbAttributesGetter(
-            querySanitizationEnabled, maxNormalizedQueryLength, connectionPeerResolver);
+            captureQueryText,
+            querySanitizationEnabled,
+            maxNormalizedQueryLength,
+            connectionPeerResolver);
     InstrumenterBuilder<CommandStartedEvent, CommandSucceededEvent> builder =
         Instrumenter.<CommandStartedEvent, CommandSucceededEvent>builder(
                 openTelemetry,

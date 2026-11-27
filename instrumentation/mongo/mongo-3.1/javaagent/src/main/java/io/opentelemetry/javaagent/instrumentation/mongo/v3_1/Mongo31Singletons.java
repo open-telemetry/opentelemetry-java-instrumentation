@@ -13,6 +13,7 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DbConfig;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoConfig;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoInstrumenterFactory;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.MongoNetworkPeer;
 import io.opentelemetry.instrumentation.mongo.v3_1.internal.TracingCommandListener;
@@ -26,6 +27,7 @@ public class Mongo31Singletons {
       MongoInstrumenterFactory.createInstrumenter(
           GlobalOpenTelemetry.get(),
           "io.opentelemetry.mongo-3.1",
+          MongoConfig.isQueryTextCaptureEnabled(GlobalOpenTelemetry.get()),
           DbConfig.isQuerySanitizationEnabled(GlobalOpenTelemetry.get(), "mongo"),
           CONNECTION_PEER::get);
 

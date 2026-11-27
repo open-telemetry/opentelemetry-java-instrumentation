@@ -5,12 +5,18 @@
 
 package io.opentelemetry.spring.smoketest;
 
+import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.DbAttributes.DB_QUERY_TEXT;
+
 import com.mongodb.client.MongoClient;
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.spring.autoconfigure.OpenTelemetryAutoConfiguration;
+import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.testcontainers.junit.jupiter.Container;
@@ -43,6 +49,8 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
 
   @BeforeEach
   void setUpContext() {
+    // Closing an application context shuts down its exporters.
+    SpringSmokeTestRunner.resetExporters();
     contextRunner =
         new ApplicationContextRunner()
             .withAllowBeanDefinitionOverriding(true)
@@ -53,6 +61,21 @@ public abstract class AbstractJvmMongodbSpringStarterSmokeTest
                     mongoAutoConfigurationClass(),
                     mongoInstrumentationAutoConfigurationClass()))
             .withPropertyValues(getMongoUriProperty() + "=" + container.getReplicaSetUrl());
+  }
+
+  @Test
+  void capturesQueryTextWhenEnabled() {
+    contextRunner =
+        contextRunner.withPropertyValues("otel.instrumentation.mongo.capture-query-text=true");
+    runMongoClientTest(() -> {
+      mongoClient.getDatabase("test").runCommand(new Document("find", "items"));
+
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasKind(SpanKind.CLIENT)
+                  .hasName("find items")
+                  .hasAttribute(satisfies(DB_QUERY_TEXT, val -> val.isNotBlank()))));
+    });
   }
 
   @Override

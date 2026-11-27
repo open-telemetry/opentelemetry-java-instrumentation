@@ -29,6 +29,7 @@ import static org.junit.jupiter.api.TestInstance.Lifecycle.PER_CLASS;
 
 import io.opentelemetry.api.common.AttributeKey;
 import io.opentelemetry.api.trace.SpanKind;
+import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
@@ -40,6 +41,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
+import org.bson.BsonDocument;
 import org.bson.Document;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -85,6 +87,13 @@ public abstract class AbstractMongoClientTest<T> {
   }
 
   protected abstract InstrumentationExtension testing();
+
+  protected boolean capturesQueryText() {
+    return Boolean.getBoolean(
+        testing() instanceof AgentInstrumentationExtension
+            ? "otel.instrumentation.mongo.capture-query-text"
+            : "test.captureQueryText");
+  }
 
   protected boolean supportsNetworkPeer() {
     return false;
@@ -173,7 +182,25 @@ public abstract class AbstractMongoClientTest<T> {
                       equalTo(DB_NAMESPACE, "test_db"),
                       equalTo(DB_COLLECTION_NAME, collectionName),
                       equalTo(DB_OPERATION_NAME, operation),
-                      satisfies(DB_QUERY_TEXT, val -> val.isNotNull()),
+                      capturesQueryText()
+                          ? satisfies(
+                              DB_QUERY_TEXT,
+                              val ->
+                                  val.isNotNull()
+                                      .satisfies(v -> {
+                                        BsonDocument command = BsonDocument.parse(v);
+                                        assertThat(command.getString("insert").getValue())
+                                            .isEqualTo(collectionName);
+                                        assertThat(
+                                                command
+                                                    .getArray("documents")
+                                                    .get(0)
+                                                    .asDocument()
+                                                    .getString("password")
+                                                    .getValue())
+                                            .isEqualTo("?");
+                                      }))
+                          : equalTo(DB_QUERY_TEXT, null),
                       equalTo(SERVER_ADDRESS, host),
                       equalTo(SERVER_PORT, port),
                       equalTo(
@@ -676,9 +703,11 @@ public abstract class AbstractMongoClientTest<T> {
         equalTo(SERVER_PORT, port),
         equalTo(NETWORK_PEER_ADDRESS, supportsNetworkPeer() ? networkPeerAddress : null),
         equalTo(NETWORK_PEER_PORT, supportsNetworkPeer() ? Long.valueOf(port) : null),
-        satisfies(
-            DB_QUERY_TEXT,
-            val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", "")))),
+        capturesQueryText()
+            ? satisfies(
+                DB_QUERY_TEXT,
+                val -> val.satisfies(v -> assertThat(statements).contains(v.replaceAll(" ", ""))))
+            : equalTo(DB_QUERY_TEXT, null),
         equalTo(DB_SYSTEM_NAME, MONGODB),
         equalTo(DB_NAMESPACE, dbName),
         equalTo(DB_OPERATION_NAME, operation),
