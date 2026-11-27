@@ -186,8 +186,10 @@ javaagent instrumentation, not library-only code.
 - These entry/exit rules do not apply to long-lived thread caches, reusable objects, counters,
   persistent maps, or callback handoffs. Manage their actual lifetime.
 
-- If cleanup is not clear from the code at a callback handoff, document who clears the state and
-  what happens if the expected callback does not run.
+- If cleanup at a callback handoff is not clear from the code, put the comment next to the field
+  that holds the state, such as a `ThreadLocal` or `ScopedThreadValue`. Name who clears or restores
+  the state and what happens if the expected callback does not run. One comment can cover fields
+  that share a lifecycle.
 
 ## Supported concurrency and lock scope
 

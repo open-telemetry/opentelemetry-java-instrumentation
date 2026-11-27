@@ -13,12 +13,6 @@ import org.springframework.messaging.Message;
 /**
  * Internal state for a message-producing endpoint's immediate channel handoff.
  *
- * <p>AMQP listener advice supplies the lower processing context, and MessageProducerSupport send
- * advice supplies the message identity. TracingChannelInterceptor reads both during the immediate
- * channel callbacks; message-history advice forwards the identity when it replaces a message. The
- * listener and send advice restore their previous state on every exit, including exceptions and
- * sends that fail before a channel callback runs.
- *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
@@ -28,8 +22,14 @@ public final class SpringIntegrationHandoff {
   private static final Class<?> AMQP_INBOUND_CHANNEL_ADAPTER_CLASS =
       getAmqpInboundChannelAdapterClass();
 
+  // AMQP listener advice supplies the processing context for the channel callbacks. The advice
+  // restores the previous context on listener exit, even if no channel callback runs.
   private static final ScopedThreadValue<Context> currentLowerProcessing =
       new ScopedThreadValue<>();
+
+  // MessageProducerSupport send advice supplies the message identity for the channel callbacks.
+  // Message-history advice forwards the identity if it replaces the message. The send advice
+  // restores the previous identity on exit, even if no channel callback runs.
   private static final ScopedThreadValue<Message<?>> currentMessage = new ScopedThreadValue<>();
 
   @Nullable
