@@ -20,6 +20,7 @@ import jakarta.ws.rs.GET;
 import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response.Status;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -61,7 +62,7 @@ class CxfRouteTest {
         address,
         requestPath,
         route,
-        abort ? 403 : 200,
+        abort ? Status.FORBIDDEN : Status.OK,
         factory -> {
           factory.setModelBeans(
               resource(ItemResource.class, resourcePath, "item", "GET", operationPath));
@@ -77,7 +78,7 @@ class CxfRouteTest {
         "/api",
         "/api/items/123/parts/456/detail",
         "/app/restcall/api/items/{id}/parts/{partId}/detail",
-        abort ? 403 : 200,
+        abort ? Status.FORBIDDEN : Status.OK,
         factory -> {
           factory.setModelBeansWithServiceClass(
               asList(
@@ -98,7 +99,7 @@ class CxfRouteTest {
         "/api",
         "/api/items/123/detail",
         "/app/restcall/api/items/{id}/detail",
-        abort ? 403 : 200,
+        abort ? Status.FORBIDDEN : Status.OK,
         factory -> {
           factory.setStaticSubresourceResolution(true);
           factory.setServiceBean(new ReusedRoot());
@@ -114,7 +115,7 @@ class CxfRouteTest {
         "/api",
         (nested ? "/api/items/123/detail" : "/api/items/detail") + "?limit=invalid",
         nested ? "/app/restcall/api/items/{id}/detail" : "/app/restcall/api/items/detail",
-        404,
+        Status.NOT_FOUND,
         factory -> {
           factory.setStaticSubresourceResolution(true);
           factory.setServiceBean(new ReusedRoot());
@@ -139,7 +140,7 @@ class CxfRouteTest {
       String address,
       String requestPath,
       String route,
-      int status,
+      Status status,
       Consumer<JAXRSServerFactoryBean> configureResource)
       throws Exception {
     Tomcat tomcat = new Tomcat();
@@ -159,10 +160,11 @@ class CxfRouteTest {
     factory.setBus(servlet.getBus());
     factory.setAddress(address);
     configureResource.accept(factory);
-    if (status == 403) {
+    if (status == Status.FORBIDDEN) {
       factory.setProvider(
           (ContainerRequestFilter)
-              request -> request.abortWith(Response.status(403).entity("blocked").build()));
+              request ->
+                  request.abortWith(Response.status(Status.FORBIDDEN).entity("blocked").build()));
     }
     var server = factory.create();
     cleanup.deferCleanup(server::destroy);
@@ -172,9 +174,9 @@ class CxfRouteTest {
     var response =
         HttpClient.newHttpClient()
             .send(HttpRequest.newBuilder(uri).build(), HttpResponse.BodyHandlers.ofString());
-    assertThat(response.statusCode()).isEqualTo(status);
-    if (status == 200 || status == 403) {
-      assertThat(response.body()).isEqualTo(status == 403 ? "blocked" : "item");
+    assertThat(response.statusCode()).isEqualTo(status.getStatusCode());
+    if (status == Status.OK || status == Status.FORBIDDEN) {
+      assertThat(response.body()).isEqualTo(status == Status.FORBIDDEN ? "blocked" : "item");
     }
 
     testing.waitAndAssertTraces(trace ->
@@ -188,7 +190,7 @@ class CxfRouteTest {
                 .hasHistogramPointsSatisfying(point ->
                     point
                         .hasAttribute(HTTP_ROUTE, route)
-                        .hasAttribute(HTTP_RESPONSE_STATUS_CODE, (long) status)
+                        .hasAttribute(HTTP_RESPONSE_STATUS_CODE, (long) status.getStatusCode())
                         .hasCount(1)));
   }
 
