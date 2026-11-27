@@ -56,12 +56,13 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
       return staticContextData.isEmpty() ? contextData : newContextData(contextData);
     }
 
-    StringMap newContextData = newContextData(contextData);
+    StringMap newContextData = new SortedArrayStringMap(staticContextData);
     if (currentContext.isValid()) {
       newContextData.putValue(TRACE_ID_KEY, currentContext.getTraceId());
       newContextData.putValue(SPAN_ID_KEY, currentContext.getSpanId());
       newContextData.putValue(TRACE_FLAGS_KEY, currentContext.getTraceFlags().asHex());
     }
+    newContextData.putAll(contextData);
 
     if (addBaggage) {
       for (Map.Entry<String, BaggageEntry> entry : baggage.asMap().entrySet()) {
@@ -79,8 +80,8 @@ public class SpanDecoratingContextDataInjector implements ContextDataInjector {
   }
 
   private static StringMap newContextData(StringMap contextData) {
-    StringMap newContextData = new SortedArrayStringMap(contextData);
-    newContextData.putAll(staticContextData);
+    StringMap newContextData = new SortedArrayStringMap(staticContextData);
+    newContextData.putAll(contextData);
     return newContextData;
   }
 

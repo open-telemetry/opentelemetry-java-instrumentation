@@ -1,3 +1,5 @@
+import io.opentelemetry.instrumentation.gradle.executions
+
 plugins {
   id("otel.javaagent-instrumentation")
 }
@@ -30,8 +32,25 @@ configurations {
   }
 }
 
-tasks {
-  test {
-    jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+testing.suites {
+  executions("test") {
+    configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    configureDefault {
+      jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+    }
+
+    register("PatternInjection") {
+      filter { includeTestsMatching("*LogPatternTest") }
+      systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
+      systemProperty("otel.service.name", "pattern-service")
+    }
+    register("PatternInjectionResourceCollisions") {
+      filter { includeTestsMatching("*ResourceCollisionTest") }
+      systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
+      systemProperty("otel.instrumentation.common.mdc.resource-attributes", "trace_id,span_id,trace_flags,service.name")
+      systemProperty("otel.resource.attributes", "trace_id=resource-trace,span_id=resource-span,trace_flags=resource-flags,service.name=resource-service")
+    }
   }
 }

@@ -235,6 +235,7 @@ public class AdditionalLibraryIgnoredTypesConfigurer implements IgnoredTypesConf
         .ignoreClass("ch.qos.logback.")
         // We instrument this Runnable
         .allowClass("ch.qos.logback.core.AsyncAppenderBase$Worker")
+        .allowClass("ch.qos.logback.core.pattern.PatternLayoutBase")
         // Allow instrumenting loggers & events
         .allowClass("ch.qos.logback.classic.Logger")
         .allowClass("ch.qos.logback.classic.spi.LoggingEvent")

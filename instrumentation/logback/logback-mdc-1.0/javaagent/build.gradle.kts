@@ -38,7 +38,21 @@ testing.suites {
 
   executions("test") {
     configureEach {
+      systemProperty("testLatestDeps", otelProps.testLatestDeps)
+    }
+    configureDefault {
       jvmArgs("-Dotel.instrumentation.common.mdc.resource-attributes=service.name,telemetry.sdk.language")
+    }
+    register("PatternInjection") {
+      filter { includeTestsMatching("*LogPatternTest") }
+      systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
+      systemProperty("otel.service.name", "pattern-service")
+    }
+    register("PatternInjectionMixedKeys") {
+      filter { includeTestsMatching("*LogPatternTest.preservesExplicitConverterForNonPortableKey") }
+      environment("OTEL_INSTRUMENTATION_LOGGING_PATTERN_INJECTION_ENABLED", "true")
+      systemProperty("otel.instrumentation.common.logging.trace-id-key", "custom,trace")
+      systemProperty("otel.instrumentation.common.logging.span-id-key", "otel.span-id_1")
     }
   }
 
@@ -77,5 +91,16 @@ dependencies {
 tasks {
   named("check") {
     dependsOn(testing.suites)
+  }
+}
+
+// Append after the javaagent-testing convention's default argument provider.
+afterEvaluate {
+  tasks.withType<Test>().configureEach {
+    if (name.startsWith("testPatternInjection")) {
+      jvmArgumentProviders.add(CommandLineArgumentProvider {
+        listOf("-Dotel.javaagent.testing.additional-library-ignores.enabled=true")
+      })
+    }
   }
 }
