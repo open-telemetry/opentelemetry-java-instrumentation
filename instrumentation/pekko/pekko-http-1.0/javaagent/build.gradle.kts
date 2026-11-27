@@ -9,6 +9,7 @@ plugins {
 // 2.12 artifacts, so it is checked in passes of its own
 muzzle {
   pass {
+    // instrumentation-docs:ignore - verification only, the directives below are the ranges we document
     group.set("org.apache.pekko")
     module.set("pekko-http_2.13")
     name.set("pekko-http 2.x parsing error request context")
@@ -21,6 +22,7 @@ muzzle {
     excludeInstrumentationModule("io.opentelemetry.javaagent.instrumentation.pekkohttp.v1_0.server.tapir.TapirPekkoHttpServerRouteInstrumentationModule")
   }
   pass {
+    // instrumentation-docs:ignore - verification only, the directives below are the ranges we document
     group.set("org.apache.pekko")
     module.set("pekko-http_3")
     name.set("pekko-http 2.x parsing error request context")
