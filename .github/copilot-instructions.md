@@ -12,8 +12,10 @@ audits of existing code, and pull request reviews.
 - Preserve lifecycle ownership, reentrancy, concurrency, error handling, and telemetry under
   supported library usage. Verify these contracts by tracing relevant callers, configuration,
   initialization, registration, and tests. Do not add defenses for unsupported hypothetical failures.
+
 - Verify library and framework assumptions against the supported dependency versions and concrete
   implementations. Check comments and copied code against the behavior they describe.
+
 - Determine whether a Java symbol is supported public API from its *publishing artifact*,
   published contract, and intended external use, not source path or visibility alone.
   Symbols explicitly documented as internal, unsupported, and subject to change are not supported
@@ -42,14 +44,17 @@ audits of existing code, and pull request reviews.
   ```
 
   For a stable API, the Javadoc states removal in the next major version instead.
+
 - A deprecation scheduled for a major-version behavior change keeps that timing even in an alpha
   artifact. Examples include semconv migrations, interface overrides following an upstream removal,
   and the flat `ConfigProperties` bridge.
+
 - User-facing configuration names and outgoing telemetry identities have separate compatibility
   contracts. Check supported `otel.instrumentation.<name>.enabled` aliases independently of emitted
   `otel.scope.name`, including for modules that have been renamed. Keep scope-version lookup aligned
   with the name passed to `Instrumenter.builder(...)`. Assess telemetry compatibility under
   `VERSIONING.md` and the adopted semantic conventions; not every telemetry difference is breaking.
+
 - Instrumentation configuration metadata, including each module's `metadata.yaml` and shared
   configuration definitions, matches supported setting names, types, and defaults in the actual
   readers, including readers in dependent common modules. General module enablement
@@ -63,13 +68,9 @@ audits of existing code, and pull request reviews.
 - Document flat properties without repeating equivalent declarative configuration.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
-- Hand-written changelog entries cover only deprecations and breaking changes, as specified in
-  CONTRIBUTING.md. Other changes appear in the generated changelog. Deprecations of settings and
-  instrumentation enablement aliases have entries. Breaking changes use the appropriate stable or
-  non-stable heading. Entries are short and name a deprecated interface and its replacement
-  without repeating removal timing or obvious migration steps. They describe the released behavior
-  without referring to preview flags used to stage the change or mentioning unchanged behavior
-  unless it clarifies the change's scope.
+- Deprecations and breaking changes, including deprecations of settings and instrumentation
+  enablement aliases, need an entry in the `Unreleased` section of `CHANGELOG.md`. Use the
+  [changelog instructions](instructions/changelog.instructions.md) to check those entries.
 - When a change is breaking, add the `breaking change` label to its pull request, as described in
   CONTRIBUTING.md.
 - README and usage documentation should meet a concrete reader need: setup,
