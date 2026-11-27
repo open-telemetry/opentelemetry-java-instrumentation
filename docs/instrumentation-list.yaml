@@ -10861,7 +10861,7 @@ libraries:
   features:
   - HTTP_ROUTE
   - CONTROLLER_SPANS
-  source_path: instrumentation/jaxrs/jaxrs-annotations-1.0
+  source_path: instrumentation/jaxrs/jaxrs-1.0-annotations
   scope:
     name: io.opentelemetry.jaxrs-1.0-annotations
   has_javaagent: true
@@ -10885,7 +10885,7 @@ libraries:
   features:
   - HTTP_ROUTE
   - CONTROLLER_SPANS
-  source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-annotations-2.0
+  source_path: instrumentation/jaxrs/jaxrs-2.0/jaxrs-2.0-annotations
   scope:
     name: io.opentelemetry.jaxrs-2.0-annotations
   has_javaagent: true
@@ -11042,7 +11042,7 @@ libraries:
   features:
   - HTTP_ROUTE
   - CONTROLLER_SPANS
-  source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-annotations-3.0
+  source_path: instrumentation/jaxrs/jaxrs-3.0/jaxrs-3.0-annotations
   scope:
     name: io.opentelemetry.jaxrs-3.0-annotations
   has_javaagent: true
