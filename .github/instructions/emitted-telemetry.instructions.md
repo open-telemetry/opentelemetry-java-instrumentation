@@ -74,6 +74,23 @@ SDK support, agent support, and extension modules.
 
 ## Stability and safety
 
+- Spans an instrumentation defines outside semantic conventions are experimental. Require an
+  experimental opt-in for those spans. For example, a setting such as
+  `otel.instrumentation.graphql.emit-experimental-telemetry` can enable GraphQL data-fetcher spans
+  without affecting the GraphQL operation span.
+
+- Attributes an instrumentation defines outside semantic conventions are experimental. Require
+  opt-in through an experimental setting such as
+  `otel.instrumentation.<name>.experimental-span-attributes`. If an experimental setting already
+  gates the telemetry carrying those attributes, no separate opt-in is needed. This rule does not
+  apply to application-supplied keys, such as those passed through `@SpanAttribute`.
+
+- On telemetry that is already enabled, do not use generic switches such as
+  `experimental-span-attributes`, `experimental-log-attributes`, or `emit-experimental-telemetry`
+  to control capture of attributes defined by a semantic convention, including those marked
+  `Development`. Follow the convention's opt-in guidance. If capture needs a separate switch, use a
+  dedicated [`capture-*` setting](configuration.instructions.md#names-and-stability).
+
 - Stable instrumentation does not emit unstable convention fields by default where opt-in is
   required. Check both convention-group and individual-field stability. Do not force migration to
   newer conventions or remove deprecated telemetry without checking supported compatibility modes

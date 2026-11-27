@@ -220,7 +220,9 @@ main website or documentation, or if those don't exist, the GitHub repository.
 ### Configurations
 
 If an instrumentation module has configuration options, they should be documented in the
-`configurations` section of the `metadata.yaml` file.
+`configurations` section of the `metadata.yaml` file. Follow the
+[configuration naming rules](../../.github/instructions/configuration.instructions.md#names-and-stability)
+when adding a setting.
 
 Each configuration should include:
 
