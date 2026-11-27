@@ -5,7 +5,8 @@
 ### ⚠️ Breaking changes
 
 - Rename the Spring Boot starter setting `otel.instrumentation.common.thread-details.enabled` to
-  `otel.spring-starter.capture-thread-attributes`.
+  `otel.spring-starter.capture-thread-attributes`. Use `true` to enable it; `on`, `yes`, and `1`
+  no longer enable capture.
 
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
