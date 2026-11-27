@@ -11,7 +11,6 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.awspring.cloud.sqs.listener.ContainerOptions;
 import io.awspring.cloud.sqs.listener.source.AbstractMessageConvertingMessageSource;
-import io.opentelemetry.instrumentation.awssdk.v2_2.internal.TracingList;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.util.Collection;
@@ -60,14 +59,14 @@ class AbstractMessageConvertingMessageSourceInstrumentation implements TypeInstr
   public static class ConvertMessagesAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static TracingList methodEnter(
+    public static Collection<?> methodEnter(
         @Advice.This AbstractMessageConvertingMessageSource<?, ?> messageSource,
         @Advice.Argument(0) Collection<?> messages) {
       return SpringAwsUtil.initialize(messageSource, messages);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
-    public static void methodExit(@Advice.Enter @Nullable TracingList previous) {
+    public static void methodExit(@Advice.Enter @Nullable Collection<?> previous) {
       SpringAwsUtil.restore(previous);
     }
   }

@@ -1,3 +1,6 @@
+import io.opentelemetry.instrumentation.gradle.executions
+import io.opentelemetry.instrumentation.gradle.telemetryConfig
+
 plugins {
   id("otel.javaagent-instrumentation")
   id("otel.nullaway-conventions")
@@ -22,6 +25,24 @@ dependencies {
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:3.0.0")
   testLibrary("org.springframework.boot:spring-boot-starter-web:3.0.0")
+}
+
+testing.suites {
+  executions("test") {
+    configureDefault {
+      filter.excludeTestsMatching("*AwsSqsTest.sqsBatchListenerHeaders")
+    }
+    register("CaptureHeaders") {
+      filter.includeTestsMatching("*AwsSqsTest.sqsBatchListenerHeaders")
+      telemetryConfig("otel.instrumentation.common.messaging.headers.included", "*")
+      telemetryConfig("otel.instrumentation.common.messaging.headers.excluded", "Test-Message-Excluded-Header")
+    }
+    // receive telemetry changes which operation counts consumed messages
+    register("ReceiveTelemetry") {
+      filter.includeTestsMatching("*AwsSqsTest.sqsBatchListener")
+      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+    }
+  }
 }
 
 otelJava {

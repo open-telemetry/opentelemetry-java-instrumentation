@@ -11,6 +11,7 @@ import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
@@ -32,20 +33,45 @@ class MessageListenerExecutionStageInstrumentation implements TypeInstrumentatio
             .and(takesArgument(0, named("org.springframework.messaging.Message")))
             .and(returns(CompletableFuture.class)),
         getClass().getName() + "$ProcessAdvice");
+    transformer.applyAdviceToMethod(
+        named("process")
+            .and(takesArgument(0, Collection.class))
+            .and(returns(CompletableFuture.class)),
+        getClass().getName() + "$ProcessBatchAdvice");
   }
 
   @SuppressWarnings("unused")
   public static class ProcessAdvice {
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     @Nullable
-    public static SpringAwsUtil.ProcessingInvocation methodEnter(
+    public static SpringAwsUtil.ProcessingInvocation<?, ?> methodEnter(
         @Advice.Argument(0) Message<?> message) {
       return SpringAwsUtil.handleMessage(message);
     }
 
     @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
     public static void methodExit(
-        @Advice.Enter @Nullable SpringAwsUtil.ProcessingInvocation invocation,
+        @Advice.Enter @Nullable SpringAwsUtil.ProcessingInvocation<?, ?> invocation,
+        @Advice.Return @Nullable CompletableFuture<?> future,
+        @Advice.Thrown @Nullable Throwable throwable) {
+      if (invocation != null) {
+        invocation.endWhenComplete(future, throwable);
+      }
+    }
+  }
+
+  @SuppressWarnings("unused")
+  public static class ProcessBatchAdvice {
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    @Nullable
+    public static SpringAwsUtil.ProcessingInvocation<?, ?> methodEnter(
+        @Advice.Argument(0) Collection<Message<?>> messages) {
+      return SpringAwsUtil.handleBatchProcess(messages);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void methodExit(
+        @Advice.Enter @Nullable SpringAwsUtil.ProcessingInvocation<?, ?> invocation,
         @Advice.Return @Nullable CompletableFuture<?> future,
         @Advice.Thrown @Nullable Throwable throwable) {
       if (invocation != null) {

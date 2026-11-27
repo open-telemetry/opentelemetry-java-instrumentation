@@ -18,12 +18,12 @@ import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.springframework.messaging.Message;
 
-class AcknowledgementExecutionContextInstrumentation implements TypeInstrumentation {
+class SqsAcknowledgementExecutorInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named(
-        "io.awspring.cloud.sqs.listener.acknowledgement.BatchingAcknowledgementProcessor$AcknowledgementExecutionContext");
+    // deletes acknowledged messages for both immediate and batching acknowledgement processors
+    return named("io.awspring.cloud.sqs.listener.acknowledgement.SqsAcknowledgementExecutor");
   }
 
   @Override

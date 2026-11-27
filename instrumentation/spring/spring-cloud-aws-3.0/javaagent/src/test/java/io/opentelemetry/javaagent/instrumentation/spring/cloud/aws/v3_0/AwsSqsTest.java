@@ -5,6 +5,7 @@
 
 package io.opentelemetry.javaagent.instrumentation.spring.cloud.aws.v3_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
@@ -26,7 +27,9 @@ import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_OPERATION_TYPE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SERVICE;
 import static io.opentelemetry.semconv.incubating.RpcIncubatingAttributes.RPC_SYSTEM;
+import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.singletonMap;
 import static java.util.concurrent.CompletableFuture.completedFuture;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -34,6 +37,8 @@ import static org.awaitility.Awaitility.await;
 
 import io.awspring.cloud.sqs.MessageHeaderUtils;
 import io.awspring.cloud.sqs.listener.AsyncMessageListener;
+import io.awspring.cloud.sqs.listener.MessageListenerContainer;
+import io.awspring.cloud.sqs.listener.MessageListenerContainerRegistry;
 import io.awspring.cloud.sqs.listener.MessageProcessingContext;
 import io.awspring.cloud.sqs.listener.acknowledgement.handler.AcknowledgementHandler;
 import io.awspring.cloud.sqs.listener.pipeline.MessageListenerExecutionStage;
@@ -42,9 +47,18 @@ import io.awspring.cloud.sqs.operations.SqsTemplate;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.LinkData;
+import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.net.URI;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Function;
+import java.util.stream.IntStream;
 import org.apache.pekko.http.scaladsl.Http;
 import org.assertj.core.api.AbstractStringAssert;
 import org.elasticmq.rest.sqs.SQSRestServer;
@@ -57,24 +71,71 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
+import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
+import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.regions.Region;
+import software.amazon.awssdk.services.sqs.SqsClient;
+import software.amazon.awssdk.services.sqs.model.MessageAttributeValue;
+import software.amazon.awssdk.services.sqs.model.QueueAttributeName;
+import software.amazon.awssdk.services.sqs.model.SendMessageBatchRequestEntry;
 
 @SuppressWarnings("deprecation") // using deprecated semconv
 @SpringBootTest(
     webEnvironment = SpringBootTest.WebEnvironment.NONE,
     classes = AwsSqsTestApplication.class)
 class AwsSqsTest {
+  private static final boolean RECEIVE_TELEMETRY =
+      Boolean.getBoolean(
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled");
+
   @RegisterExtension
   static final InstrumentationExtension testing = AgentInstrumentationExtension.create();
 
   private static SQSRestServer sqs;
+  private static String combinedBatchQueueUrl;
+  private static String combinedQueueUrl;
 
   @Autowired SqsTemplate sqsTemplate;
+  @Autowired MessageListenerContainerRegistry containerRegistry;
 
   @BeforeAll
   static void setUp() {
     sqs = SQSRestServerBuilder.withPort(0).withInterface("localhost").start();
     Http.ServerBinding server = sqs.waitUntilStarted();
     AwsSqsTestApplication.sqsPort = server.localAddress().getPort();
+
+    // spring creates missing queues without attributes, so the fifo queue is created here, as are
+    // the queues that listeners refer to by url
+    try (SqsClient client = sqsClient()) {
+      client.createQueue(request ->
+          request
+              .queueName("batch-queue.fifo")
+              .attributes(singletonMap(QueueAttributeName.FIFO_QUEUE, "true")));
+      combinedBatchQueueUrl =
+          client.createQueue(request -> request.queueName("combined-batch-queue")).queueUrl();
+      combinedQueueUrl =
+          client.createQueue(request -> request.queueName("combined-queue")).queueUrl();
+    }
+    // discard the telemetry of the queue creation
+    testing.waitForTraces(3);
+  }
+
+  private static SqsClient sqsClient() {
+    return SqsClient.builder()
+        .endpointOverride(URI.create("http://localhost:" + AwsSqsTestApplication.sqsPort))
+        .credentialsProvider(
+            StaticCredentialsProvider.create(AwsBasicCredentials.create("accessKey", "secretKey")))
+        .region(Region.AP_NORTHEAST_1)
+        .build();
+  }
+
+  @DynamicPropertySource
+  static void queueUrls(DynamicPropertyRegistry registry) {
+    registry.add("test.combined-batch-queue-url", () -> combinedBatchQueueUrl);
+    registry.add("test.combined-queue-url", () -> combinedQueueUrl);
   }
 
   @AfterAll
@@ -88,6 +149,7 @@ class AwsSqsTest {
   void resetHandlers() {
     AwsSqsTestApplication.messageHandler = null;
     AwsSqsTestApplication.batchMessageHandler = null;
+    AwsSqsTestApplication.batchInterceptor = null;
   }
 
   @Test
@@ -261,28 +323,425 @@ class AwsSqsTest {
   }
 
   @Test
-  void batchListenerConversionDoesNotStartSdkProcessing() throws Exception {
-    CompletableFuture<List<String>> messageFuture = new CompletableFuture<>();
-    AwsSqsTestApplication.batchMessageHandler = messageFuture::complete;
+  void sqsBatchListener() {
+    List<Message<Object>> messages = new CopyOnWriteArrayList<>();
+    AwsSqsTestApplication.batchInterceptor = messages::addAll;
+    List<String> createSpanIds = assertBatchesProcessed("batch-queue", "batch-queue");
 
-    sqsTemplate.send("batch-queue", "hello");
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-cloud-aws-3.0",
+        "messaging.process.duration",
+        metrics -> metrics.hasSize(1));
+    // each delivery is counted once, by the receive operation when receive telemetry is enabled
+    // and by the batch process operation otherwise
+    if (RECEIVE_TELEMETRY) {
+      assertThat(sumBatchMessageCount("receive batch-queue")).isEqualTo(2);
+      assertBatchConsumedMessages("io.opentelemetry.aws-sdk-2.2", "receive", "batch-queue", 2);
+      assertNoConsumedMessages("io.opentelemetry.spring-cloud-aws-3.0");
+    } else {
+      assertNoConsumedMessages("io.opentelemetry.aws-sdk-2.2");
+      assertBatchConsumedMessages(
+          "io.opentelemetry.spring-cloud-aws-3.0", "process", "batch-queue", 2);
+    }
 
-    assertThat(messageFuture.get(10, SECONDS)).containsExactly("hello");
+    AwsSqsTestApplication.batchMessageHandler = null;
+    AwsSqsTestApplication.batchInterceptor = null;
+
+    // a listener that is not invoked through the @SqsListener adapter and completes asynchronously
+    assertBatchAsyncCompletion(messages, createSpanIds, /* success= */ true);
+    assertBatchAsyncCompletion(messages, createSpanIds, /* success= */ false);
+    // processing the same deliveries again does not count them again
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.spring-cloud-aws-3.0",
+        "messaging.process.duration",
+        metrics -> metrics.hasSize(1));
+    assertNoConsumedMessages("io.opentelemetry.spring-cloud-aws-3.0");
+
+    // a listener that empties the batch before completing does not change the reported batch size
+    testing.clearData();
+    testing.runWithSpan(
+        "ambient",
+        () ->
+            processMessages(
+                new ArrayList<>(messages),
+                batch -> {
+                  batch.clear();
+                  return completedFuture(null);
+                }));
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("ambient").hasNoParent(),
+            span ->
+                span.hasName("process batch-queue")
+                    .hasParent(trace.getSpan(0))
+                    .hasAttribute(MESSAGING_BATCH_MESSAGE_COUNT, 2L)
+                    .hasLinksSatisfying(links -> assertLinksToCreate(links, createSpanIds, 2))));
+  }
+
+  @Test
+  void sqsCombinedBatchListener() {
+    List<List<String>> batches = new CopyOnWriteArrayList<>();
+    AwsSqsTestApplication.batchMessageHandler =
+        batch -> testing.runWithSpan("callback", () -> batches.add(new ArrayList<>(batch)));
+    MessageListenerContainer<?> container =
+        containerRegistry.getContainerById("combined-batch-listener");
+    container.stop();
+    // a receive call returns at most 10 messages, so a single listener invocation with all 12
+    // messages needs the combined responses of several receive calls
+    List<String> payloads = IntStream.range(0, 12).mapToObj(i -> "message-" + i).toList();
+    try (SqsClient client = sqsClient()) {
+      // a batch send takes at most 10 messages
+      sendMessages(client, combinedBatchQueueUrl, payloads.subList(0, 10));
+      sendMessages(client, combinedBatchQueueUrl, payloads.subList(10, 12));
+    }
+    container.start();
+
+    // the acknowledgements can be split over a varying number of deletes, so the spans are
+    // filtered instead of asserting a fixed set of traces
     await()
-        .untilAsserted(() ->
-            assertThat(testing.spans())
-                .filteredOn(span -> span.getName().equals("delete batch-queue"))
-                .hasSize(1));
+        .untilAsserted(() -> {
+          assertThat(batches)
+              .singleElement()
+              .satisfies(batch -> assertThat(batch).containsExactlyInAnyOrderElementsOf(payloads));
+          assertThat(sumBatchMessageCount("delete combined-batch-queue")).isEqualTo(12);
+        });
+    List<String> createSpanIds =
+        findSpans("create combined-batch-queue").stream().map(SpanData::getSpanId).toList();
+    assertThat(createSpanIds).hasSize(12);
+    List<SpanData> processSpans = findSpans("process combined-batch-queue");
+    assertThat(processSpans)
+        .singleElement()
+        .satisfies(process ->
+            assertThat(process)
+                .hasKind(SpanKind.CONSUMER)
+                .hasNoParent()
+                .hasAttributesSatisfyingExactly(
+                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                    equalTo(MESSAGING_DESTINATION_NAME, "combined-batch-queue"),
+                    equalTo(MESSAGING_OPERATION_NAME, "process"),
+                    equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                    equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 12L),
+                    equalTo(SERVER_ADDRESS, "localhost"),
+                    equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort))
+                .hasLinksSatisfying(links -> assertLinksToCreate(links, createSpanIds, 12)));
+    String processSpanId = processSpans.get(0).getSpanId();
+    assertThat(findSpans("callback"))
+        .singleElement()
+        .satisfies(callback -> assertThat(callback.getParentSpanId()).isEqualTo(processSpanId));
+    assertThat(findSpans("delete combined-batch-queue"))
+        .allSatisfy(delete -> assertThat(delete.getParentSpanId()).isEqualTo(processSpanId));
+    assertBatchConsumedMessages(
+        "io.opentelemetry.spring-cloud-aws-3.0", "process", "combined-batch-queue", 12);
+  }
+
+  @Test
+  void sqsCombinedListener() {
+    List<String> received = new CopyOnWriteArrayList<>();
+    AwsSqsTestApplication.messageHandler =
+        message -> testing.runWithSpan("callback", () -> received.add(message.getPayload()));
+    MessageListenerContainer<?> container = containerRegistry.getContainerById("combined-listener");
+    container.stop();
+    // one poll receives all 12 messages from the combined responses of several receive calls
+    List<String> payloads = IntStream.range(0, 12).mapToObj(i -> "message-" + i).toList();
+    try (SqsClient client = sqsClient()) {
+      sendMessages(client, combinedQueueUrl, payloads.subList(0, 10));
+      sendMessages(client, combinedQueueUrl, payloads.subList(10, 12));
+    }
+    container.start();
+
+    // the acknowledgements can be split over a varying number of deletes, so the spans are
+    // filtered instead of asserting a fixed set of traces
+    await()
+        .untilAsserted(() -> {
+          assertThat(received).containsExactlyInAnyOrderElementsOf(payloads);
+          assertThat(findSpans("process combined-queue")).hasSize(12);
+          assertThat(sumBatchMessageCount("delete combined-queue")).isEqualTo(12);
+        });
+    List<String> createSpanIds =
+        findSpans("create combined-queue").stream().map(SpanData::getSpanId).toList();
+    assertThat(createSpanIds).hasSize(12);
+    // each message is processed in the trace of the span that created it
+    List<SpanData> processSpans = findSpans("process combined-queue");
+    assertThat(processSpans)
+        .extracting(SpanData::getParentSpanId)
+        .containsExactlyInAnyOrderElementsOf(createSpanIds);
+    for (SpanData process : processSpans) {
+      assertThat(process)
+          .hasKind(SpanKind.CONSUMER)
+          .hasAttributesSatisfyingExactly(
+              equalTo(RPC_SYSTEM, "aws-api"),
+              equalTo(RPC_METHOD, "ReceiveMessage"),
+              equalTo(RPC_SERVICE, "Sqs"),
+              equalTo(HTTP_REQUEST_METHOD, POST),
+              equalTo(HTTP_RESPONSE_STATUS_CODE, 200),
+              equalTo(SERVER_ADDRESS, "localhost"),
+              equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+              satisfies(
+                  URL_FULL,
+                  val -> val.startsWith("http://localhost:" + AwsSqsTestApplication.sqsPort)),
+              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+              satisfies(MESSAGING_MESSAGE_ID, AbstractStringAssert::isNotBlank),
+              equalTo(MESSAGING_OPERATION_NAME, "process"),
+              equalTo(MESSAGING_OPERATION_TYPE, "process"),
+              equalTo(MESSAGING_DESTINATION_NAME, "combined-queue"))
+          .hasLinksSatisfying(links ->
+              assertThat(links)
+                  .singleElement()
+                  .satisfies(link ->
+                      assertThat(link.getSpanContext().getSpanId())
+                          .isEqualTo(process.getParentSpanId())));
+    }
+    assertThat(findSpans("callback"))
+        .extracting(SpanData::getParentSpanId)
+        .containsExactlyInAnyOrderElementsOf(
+            processSpans.stream().map(SpanData::getSpanId).toList());
+    assertThat(findSpans("delete combined-queue"))
+        .allSatisfy(delete -> assertThat(delete.getParentSpanId()).isIn(createSpanIds));
+  }
+
+  private static void sendMessages(SqsClient client, String queueUrl, List<String> bodies) {
+    client.sendMessageBatch(request ->
+        request
+            .queueUrl(queueUrl)
+            .entries(
+                bodies.stream()
+                    .map(body ->
+                        SendMessageBatchRequestEntry.builder().id(body).messageBody(body).build())
+                    .toList()));
+  }
+
+  @Test
+  void sqsFifoBatchListener() {
+    assertBatchesProcessed("batch-queue.fifo", "batch-queue.fifo");
+  }
+
+  // runs with headers.included=* and headers.excluded=Test-Message-Excluded-Header
+  @Test
+  void sqsBatchListenerHeaders() {
+    List<List<String>> batches = new CopyOnWriteArrayList<>();
+    AwsSqsTestApplication.batchMessageHandler = batches::add;
+    MessageListenerContainer<?> container =
+        containerRegistry.getContainerById("header-batch-listener");
+    container.stop();
+    testing.runWithSpan(
+        "parent",
+        () -> {
+          try (SqsClient client = sqsClient()) {
+            String queueUrl =
+                client.getQueueUrl(request -> request.queueName("header-batch-queue")).queueUrl();
+            client.sendMessageBatch(request ->
+                request
+                    .queueUrl(queueUrl)
+                    .entries(
+                        headerMessage("1", "hello", "first"),
+                        headerMessage("2", "world", "second")));
+          }
+        });
+    container.start();
+
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span -> span.hasName("parent").hasNoParent(),
+                span -> span.hasName("Sqs.GetQueueUrl").hasParent(trace.getSpan(0)),
+                span -> span.hasName("send header-batch-queue").hasParent(trace.getSpan(0))),
+        // the sdk starts the creation span of each message of a batch send as a new trace
+        trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("create header-batch-queue").hasKind(SpanKind.PRODUCER).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("create header-batch-queue").hasKind(SpanKind.PRODUCER).hasNoParent()),
+        // the listener container looks up the queue url when it is started
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("Sqs.GetQueueUrl").hasNoParent()),
+        // the exact attributes leave no room for the excluded attribute, the spring headers, the
+        // receipt handles or the message bodies
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("process header-batch-queue")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfyingExactly(
+                            equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                            equalTo(MESSAGING_DESTINATION_NAME, "header-batch-queue"),
+                            equalTo(MESSAGING_OPERATION_NAME, "process"),
+                            equalTo(MESSAGING_OPERATION_TYPE, "process"),
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 2L),
+                            equalTo(SERVER_ADDRESS, "localhost"),
+                            equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort),
+                            satisfies(
+                                stringArrayKey("messaging.header.Test-Message-Header"),
+                                val -> val.containsExactlyInAnyOrder("first", "second"))),
+                span -> span.hasName("delete header-batch-queue").hasParent(trace.getSpan(0))));
+    // both messages were delivered to a single listener invocation
+    assertThat(batches)
+        .singleElement()
+        .satisfies(batch -> assertThat(batch).containsExactlyInAnyOrder("hello", "world"));
+  }
+
+  private static SendMessageBatchRequestEntry headerMessage(String id, String body, String value) {
+    return SendMessageBatchRequestEntry.builder()
+        .id(id)
+        .messageBody(body)
+        .messageAttributes(
+            Map.of(
+                "Test-Message-Header", stringAttribute(value),
+                "Test-Message-Excluded-Header", stringAttribute("excluded-" + value)))
+        .build();
+  }
+
+  private static MessageAttributeValue stringAttribute(String value) {
+    return MessageAttributeValue.builder().dataType("String").stringValue(value).build();
+  }
+
+  // sends two messages and asserts that the batches they are delivered in are traced
+  private List<String> assertBatchesProcessed(String endpoint, String queueName) {
+    List<String> payloads = new CopyOnWriteArrayList<>();
+    AwsSqsTestApplication.batchMessageHandler =
+        batch -> testing.runWithSpan("callback", () -> payloads.addAll(batch));
+
+    testing.runWithSpan(
+        "parent",
+        () ->
+            sqsTemplate.sendMany(
+                endpoint,
+                asList(
+                    MessageBuilder.withPayload("hello").build(),
+                    MessageBuilder.withPayload("world").build())));
+
+    // the queue may hand out the messages in one or more polls, each is a separate batch
+    await()
+        .untilAsserted(() -> {
+          assertThat(payloads).containsExactlyInAnyOrder("hello", "world");
+          assertThat(sumBatchMessageCount("delete " + queueName)).isEqualTo(2);
+        });
+
+    // each message of the batch was created by its own span
+    List<String> createSpanIds =
+        findSpans("create " + queueName).stream().map(SpanData::getSpanId).toList();
+    assertThat(createSpanIds).hasSize(2);
+    List<SpanData> processSpans = findSpans("process " + queueName);
+    assertThat(sumBatchMessageCount("process " + queueName)).isEqualTo(2);
+    for (SpanData process : processSpans) {
+      long messageCount = process.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT);
+      assertThat(process.getInstrumentationScopeInfo().getName())
+          .isEqualTo("io.opentelemetry.spring-cloud-aws-3.0");
+      assertThat(process)
+          .hasKind(SpanKind.CONSUMER)
+          .hasNoParent()
+          .hasAttributesSatisfyingExactly(
+              equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+              equalTo(MESSAGING_DESTINATION_NAME, queueName),
+              equalTo(MESSAGING_OPERATION_NAME, "process"),
+              equalTo(MESSAGING_OPERATION_TYPE, "process"),
+              equalTo(MESSAGING_BATCH_MESSAGE_COUNT, messageCount),
+              equalTo(SERVER_ADDRESS, "localhost"),
+              equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort))
+          .hasLinksSatisfying(links -> assertLinksToCreate(links, createSpanIds, messageCount));
+    }
+    List<String> processSpanIds = processSpans.stream().map(SpanData::getSpanId).toList();
+    assertThat(findSpans("callback"))
+        .allSatisfy(span -> assertThat(span.getParentSpanId()).isIn(processSpanIds));
+    // a delete is a child of the batch process span only when all its messages are from that
+    // batch; acknowledgements of several batches can be combined into one delete
+    long largestBatch =
+        processSpans.stream()
+            .mapToLong(span -> span.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+            .max()
+            .orElse(0);
+    for (SpanData delete : findSpans("delete " + queueName)) {
+      if (delete.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT) > largestBatch) {
+        assertThat(delete.getParentSpanId()).isNotIn(processSpanIds);
+      } else {
+        assertThat(delete.getParentSpanId()).isIn(processSpanIds);
+      }
+    }
+
+    // conversion of the batch does not start per-message SDK process spans
     assertThat(testing.spans())
         .filteredOn(span ->
             span.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.aws-sdk-2.2")
-                && span.getName().equals("process batch-queue"))
+                && span.getName().equals("process " + queueName))
         .isEmpty();
+    return createSpanIds;
+  }
+
+  private static void assertBatchConsumedMessages(
+      String scope, String operationName, String queueName, long count) {
+    testing.waitAndAssertMetrics(
+        scope,
+        "messaging.client.consumed.messages",
+        metrics ->
+            metrics.anySatisfy(metric ->
+                assertThat(metric)
+                    .hasLongSumSatisfying(sum ->
+                        sum.hasPointsSatisfying(point ->
+                            point
+                                .hasValue(count)
+                                .hasAttributesSatisfyingExactly(
+                                    equalTo(MESSAGING_OPERATION_NAME, operationName),
+                                    equalTo(stringKey("messaging.system.name"), "aws.sqs"),
+                                    equalTo(MESSAGING_DESTINATION_NAME, queueName),
+                                    equalTo(SERVER_ADDRESS, "localhost"),
+                                    equalTo(SERVER_PORT, AwsSqsTestApplication.sqsPort))))));
+  }
+
+  private static void assertNoConsumedMessages(String scope) {
     assertThat(testing.metrics())
         .filteredOn(metric ->
-            metric.getInstrumentationScopeInfo().getName().equals("io.opentelemetry.aws-sdk-2.2")
+            metric.getInstrumentationScopeInfo().getName().equals(scope)
                 && metric.getName().equals("messaging.client.consumed.messages"))
         .isEmpty();
+  }
+
+  private static List<SpanData> findSpans(String name) {
+    return testing.spans().stream().filter(span -> span.getName().equals(name)).toList();
+  }
+
+  private static long sumBatchMessageCount(String spanName) {
+    return findSpans(spanName).stream()
+        .mapToLong(span -> span.getAttributes().get(MESSAGING_BATCH_MESSAGE_COUNT))
+        .sum();
+  }
+
+  private static void assertLinksToCreate(
+      List<? extends LinkData> links, List<String> createSpanIds, long messageCount) {
+    assertThat(links)
+        .hasSize((int) messageCount)
+        .allSatisfy(link -> {
+          assertThat(link.getSpanContext().getSpanId()).isIn(createSpanIds);
+          assertThat(link.getAttributes().get(MESSAGING_MESSAGE_ID)).isNotBlank();
+        });
+  }
+
+  private static void assertBatchAsyncCompletion(
+      List<Message<Object>> messages, List<String> createSpanIds, boolean success) {
+    testing.clearData();
+    CompletableFuture<Void> result = new CompletableFuture<>();
+    testing.runWithSpan("ambient", () -> processMessages(messages, unused -> result));
+
+    assertThat(testing.spans())
+        .filteredOn(span -> span.getName().equals("process batch-queue"))
+        .isEmpty();
+    if (success) {
+      result.complete(null);
+    } else {
+      result.completeExceptionally(new IllegalStateException("listener failed"));
+    }
+
+    StatusData expectedStatus = success ? StatusData.unset() : StatusData.error();
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasName("ambient").hasNoParent(),
+            span ->
+                span.hasName("process batch-queue")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(expectedStatus)
+                    .hasAttribute(MESSAGING_BATCH_MESSAGE_COUNT, 2L)
+                    .hasLinksSatisfying(links -> assertLinksToCreate(links, createSpanIds, 2))));
   }
 
   private static void assertConsumedMessages() {
@@ -346,6 +805,30 @@ class AwsSqsTest {
             .build();
     return new MessageListenerExecutionStage<>(configuration)
         .process(message, MessageProcessingContext.create());
+  }
+
+  private static CompletableFuture<Collection<Message<Object>>> processMessages(
+      Collection<Message<Object>> messages,
+      Function<Collection<Message<Object>>, CompletableFuture<Void>> listener) {
+    MessageProcessingConfiguration<Object> configuration =
+        MessageProcessingConfiguration.<Object>builder()
+            .messageListener(
+                new AsyncMessageListener<Object>() {
+                  @Override
+                  public CompletableFuture<Void> onMessage(Message<Object> message) {
+                    throw new UnsupportedOperationException();
+                  }
+
+                  @Override
+                  public CompletableFuture<Void> onMessage(Collection<Message<Object>> messages) {
+                    return listener.apply(messages);
+                  }
+                })
+            .ackHandler(new AcknowledgementHandler<Object>() {})
+            .interceptors(emptyList())
+            .build();
+    return new MessageListenerExecutionStage<>(configuration)
+        .process(messages, MessageProcessingContext.create());
   }
 
   private static class RetriedMessageHandler {
