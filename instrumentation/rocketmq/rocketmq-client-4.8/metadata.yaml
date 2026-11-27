@@ -21,8 +21,10 @@ configurations:
   - name: otel.instrumentation.rocketmq-client.experimental-span-attributes
     declarative_name: java.rocketmq_client.experimental_span_attributes/development
     description: >
-      Enables capturing experimental span attributes `rocketmq.message.tag`,
-      `rocketmq.broker_address`, `rocketmq.send_result`,
-      `rocketmq.queue_id`, and `rocketmq.queue_offset`.
+      For Remoting clients 4.8 and later, captures the experimental span attributes `rocketmq.message.tag`,
+      `rocketmq.broker_address`, `rocketmq.send_result`, `rocketmq.queue_id`, and
+      `rocketmq.queue_offset`. For gRPC clients, captures `rocketmq.message.lite_topic` starting in
+      client version 5.1 and `rocketmq.message.priority` starting in client version 5.2. These
+      experimental attributes appear on messaging spans and receive-span links when available.
     type: boolean
     default: false
