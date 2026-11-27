@@ -14,9 +14,9 @@ user-facing instrumentation configuration.
   starter when a flat setting configures the distribution itself, the SDK components it installs,
   or which instrumentation modules it enables. For example, `otel.javaagent.add-thread-details=true`
   installs an SDK span processor that can add thread attributes even to spans created by the
-  application. The flat keys for whole-module enablement are exceptions to these prefixes:
-  `otel.instrumentation.common.default-enabled` for the default and
-  `otel.instrumentation.<name>.enabled` for individual modules.
+  application. The flat keys for whole-module enablement are exceptions to these prefixes
+  (for backwards compatibility): `otel.instrumentation.common.default-enabled` for the default
+  and `otel.instrumentation.<name>.enabled` for individual modules.
   Keep shared SDK and resource settings and upstream-defined names in their own namespaces,
   even when a distribution reads them.
 - Use `otel.instrumentation.*` for flat settings that configure how one or more instrumentation
