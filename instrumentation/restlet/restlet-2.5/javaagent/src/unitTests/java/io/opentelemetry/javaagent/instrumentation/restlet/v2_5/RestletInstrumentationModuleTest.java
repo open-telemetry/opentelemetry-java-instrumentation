@@ -17,7 +17,6 @@ import java.nio.file.Path;
 import java.util.jar.JarEntry;
 import java.util.jar.JarOutputStream;
 import java.util.stream.Stream;
-import javax.annotation.Nullable;
 import org.junit.jupiter.api.io.TempDir;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.Arguments;
@@ -27,7 +26,7 @@ class RestletInstrumentationModuleTest {
 
   @ParameterizedTest
   @MethodSource("manifests")
-  void matchesManifestFallback(@Nullable String manifest, boolean expected, @TempDir Path tempDir)
+  void matchesManifestFallback(String manifest, boolean expected, @TempDir Path tempDir)
       throws IOException {
     Path jar = tempDir.resolve("restlet.jar");
     try (JarOutputStream output = new JarOutputStream(Files.newOutputStream(jar))) {
