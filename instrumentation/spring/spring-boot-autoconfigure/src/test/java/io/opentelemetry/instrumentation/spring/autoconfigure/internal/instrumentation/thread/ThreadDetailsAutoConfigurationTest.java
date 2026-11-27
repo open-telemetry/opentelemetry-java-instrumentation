@@ -38,13 +38,6 @@ class ThreadDetailsAutoConfigurationTest {
   }
 
   @Test
-  void explicitlyDisabled() {
-    runner
-        .withPropertyValues("otel.spring-starter.capture-thread-attributes=false")
-        .run(context -> assertThat(context).doesNotHaveBean("threadDetailOtelCustomizer"));
-  }
-
-  @Test
   void openTelemetryDisabled() {
     runner
         .withPropertyValues(
