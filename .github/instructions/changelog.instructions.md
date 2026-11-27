@@ -12,7 +12,8 @@ applyTo: "CHANGELOG.md"
   repeating removal timing or obvious migration steps.
 - Don't mention preview flags. They stage changes internally and aren't intended for end users.
   Describe the behavior users get in the release.
-- Mention unchanged behavior only when it clarifies the change's scope.
+- Describe only what changes. Don't add statements about unchanged behavior, such as "`X` is
+  still supported" or "`Y` continues to work".
 - For a breaking flat property rename, where the old name is no longer supported, use
   `Rename <old flat property> to <new flat property>.` When the old name remains supported as a
   deprecated alias, use `Deprecate <old flat property> in favor of <new flat property>.`
