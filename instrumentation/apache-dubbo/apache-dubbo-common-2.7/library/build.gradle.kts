@@ -8,7 +8,10 @@ dependencies {
 
   library("org.apache.dubbo:dubbo:2.7.0")
 
-  testImplementation(project(":instrumentation:apache-dubbo:testing"))
+  testImplementation(project(":instrumentation:apache-dubbo:testing")) {
+    exclude(group = "org.apache.dubbo")
+  }
+  testLibrary("org.apache.dubbo:dubbo:2.7.5")
 }
 
 testing.suites {
@@ -30,6 +33,7 @@ testing.suites {
 }
 
 tasks.withType<Test>().configureEach {
+  systemProperty("testLatestDeps", otelProps.testLatestDeps)
   jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
   jvmArgs("--add-opens=java.base/java.math=ALL-UNNAMED")
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
