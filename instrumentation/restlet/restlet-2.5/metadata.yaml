@@ -1,0 +1,13 @@
+display_name: Restlet
+description: This instrumentation enables HTTP server spans and HTTP server metrics for Restlet 2.5.0 and later 2.x releases.
+semantic_conventions:
+  - HTTP_SERVER_SPANS
+  - HTTP_SERVER_METRICS
+features:
+  - HTTP_ROUTE
+library_link: https://restlet.github.io/
+configurations:
+  - ref: http.server.capture-request-headers
+  - ref: http.server.capture-response-headers
+  - ref: http.server.emit-experimental-telemetry
+  - ref: http.known-methods

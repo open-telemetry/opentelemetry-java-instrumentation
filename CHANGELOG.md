@@ -4,6 +4,11 @@
 
 ### ⚠️ Breaking changes
 
+- Restlet versions before 2.5.0 are no longer supported. Use `opentelemetry-restlet-2.5`
+  and imports under `io.opentelemetry.instrumentation.restlet.v2_5`. Update telemetry filters
+  to the `io.opentelemetry.restlet-2.5` scope. The `restlet-1.1` agent selector is removed;
+  `restlet` and `restlet-2.0` remain enablement names for the supported instrumentation.
+
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
   by method, protocol version, and URL scheme.
