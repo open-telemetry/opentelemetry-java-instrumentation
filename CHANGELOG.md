@@ -6,8 +6,7 @@
 
 - Rename `otel.instrumentation.common.user.name.enabled` and
   `otel.instrumentation.common.user.roles.enabled` to `otel.instrumentation.common.capture-user-name`
-  and `otel.instrumentation.common.capture-user-roles`, respectively. In YAML, use
-  `java.common.capture_user_name` and `java.common.capture_user_roles`.
+  and `otel.instrumentation.common.capture-user-roles`, respectively.
 
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
