@@ -15,7 +15,7 @@ import io.opentelemetry.sdk.resources.Resource;
 public final class ProcessResourceProvider implements ResourceProvider {
 
   private static final String CAPTURE_COMMAND_ATTRIBUTES_CONFIG =
-      "otel.instrumentation.resources.experimental.capture-process-command-attributes";
+      "otel.instrumentation.resources.experimental.process-command-attributes.enabled";
 
   @Override
   public Resource createResource(ConfigProperties config) {

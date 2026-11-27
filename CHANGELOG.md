@@ -9,9 +9,6 @@
   `java.graphql.capture_document`. The GraphQL library builders' `setCaptureQuery` is now
   `setCaptureDocument`.
 
-- Rename `otel.instrumentation.resources.experimental.process-command-attributes.enabled` to
-  `otel.instrumentation.resources.experimental.capture-process-command-attributes`.
-
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
   by method, protocol version, and URL scheme.
@@ -112,7 +109,7 @@
   remain, instead of emitting an empty object.
 
 - Process command resource attributes are now disabled by default. Set
-  `otel.instrumentation.resources.experimental.capture-process-command-attributes=true` to capture
+  `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
   `process.command_args` and `process.command_line`.
 
 - Declarative Java agent instrumentation selectors no longer accept dotted-version compatibility
