@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2.CxfSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.context.Context;
@@ -19,6 +21,7 @@ import java.lang.reflect.Method;
 import javax.annotation.Nullable;
 import javax.ws.rs.container.ContainerRequestContext;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 import org.apache.cxf.jaxrs.impl.AbstractRequestContextImpl;
@@ -38,15 +41,19 @@ import org.apache.cxf.message.Message;
  */
 class CxfRequestContextInstrumentation implements TypeInstrumentation {
 
+  private static final ElementMatcher.Junction<MethodDescription> ABORT_WITH =
+      named("abortWith").and(takesArguments(named("javax.ws.rs.core.Response")));
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.cxf.jaxrs.impl.AbstractRequestContextImpl");
+    return named("org.apache.cxf.jaxrs.impl.AbstractRequestContextImpl")
+        .and(declaresMethod(ABORT_WITH));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("abortWith"), getClass().getName() + "$ContainerRequestContextAdvice");
+        ABORT_WITH, getClass().getName() + "$ContainerRequestContextAdvice");
   }
 
   @SuppressWarnings("unused")

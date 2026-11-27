@@ -1128,6 +1128,9 @@ targets:
       target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-cxf-4.0:javaagent'
+    - type: gradle
+      path: ./
       target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent'
     - type: gradle
       path: ./

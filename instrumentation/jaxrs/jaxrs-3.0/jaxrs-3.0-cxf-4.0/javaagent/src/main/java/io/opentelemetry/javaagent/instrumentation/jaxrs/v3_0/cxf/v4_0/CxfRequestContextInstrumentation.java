@@ -1,0 +1,126 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.cxf.v4_0;
+
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.cxf.v4_0.CxfSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
+import static net.bytebuddy.matcher.ElementMatchers.named;
+
+import io.opentelemetry.context.Context;
+import io.opentelemetry.context.Scope;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
+import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsConstants;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common.Jaxrs3HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.v3_0.common.Jaxrs3RequestContextHelper;
+import jakarta.ws.rs.container.ContainerRequestContext;
+import java.lang.reflect.Method;
+import javax.annotation.Nullable;
+import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.type.TypeDescription;
+import net.bytebuddy.matcher.ElementMatcher;
+import org.apache.cxf.jaxrs.impl.AbstractRequestContextImpl;
+import org.apache.cxf.jaxrs.model.MethodInvocationInfo;
+import org.apache.cxf.jaxrs.model.OperationResourceInfo;
+import org.apache.cxf.jaxrs.model.OperationResourceInfoStack;
+import org.apache.cxf.message.Message;
+
+/**
+ * CXF specific context instrumentation.
+ *
+ * <p>JAX-RS does not define a way to get the matched resource method from the <code>
+ * ContainerRequestContext</code>
+ *
+ * <p>In the CXF implementation, <code>Message</code> contains <code>OperationResourceInfoStack
+ * </code> which contains <code>MethodInvocationInfo</code>. The matched resource method can be
+ * retrieved from that object
+ */
+class CxfRequestContextInstrumentation implements TypeInstrumentation {
+
+  private static final ElementMatcher.Junction<MethodDescription> ABORT_WITH =
+      named("abortWith").and(takesArguments(named("jakarta.ws.rs.core.Response")));
+
+  @Override
+  public ElementMatcher<TypeDescription> typeMatcher() {
+    return named("org.apache.cxf.jaxrs.impl.AbstractRequestContextImpl")
+        .and(declaresMethod(ABORT_WITH));
+  }
+
+  @Override
+  public void transform(TypeTransformer transformer) {
+    transformer.applyAdviceToMethod(
+        ABORT_WITH, getClass().getName() + "$ContainerRequestContextAdvice");
+  }
+
+  @SuppressWarnings("unused")
+  public static class ContainerRequestContextAdvice {
+
+    @Nullable
+    @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
+    public static AdviceScope decorateAbortSpan(
+        @Advice.This AbstractRequestContextImpl requestContext) {
+
+      if (requestContext.getProperty(JaxrsConstants.ABORT_HANDLED) != null
+          || !(requestContext instanceof ContainerRequestContext)) {
+        return null;
+      }
+
+      Message message = requestContext.getMessage();
+      OperationResourceInfoStack resourceInfoStack = message.get(OperationResourceInfoStack.class);
+      if (resourceInfoStack == null || resourceInfoStack.isEmpty()) {
+        return null;
+      }
+
+      MethodInvocationInfo invocationInfo = resourceInfoStack.peek();
+      OperationResourceInfo operation = invocationInfo.getMethodInfo();
+      CxfSpanName.updateServerRoute(message, resourceInfoStack);
+      Method method = operation.getMethodToInvoke();
+      Class<?> resourceClass = invocationInfo.getRealClass();
+      return AdviceScope.start(resourceClass, method, requestContext);
+    }
+
+    @Advice.OnMethodExit(onThrowable = Throwable.class, suppress = Throwable.class, inline = false)
+    public static void stopSpan(
+        @Advice.Thrown @Nullable Throwable throwable,
+        @Advice.Enter @Nullable AdviceScope adviceScope) {
+      if (adviceScope != null) {
+        adviceScope.end(throwable);
+      }
+    }
+
+    public static final class AdviceScope {
+      private final Jaxrs3HandlerData handlerData;
+      private final Context context;
+      private final Scope scope;
+
+      private AdviceScope(Jaxrs3HandlerData handlerData, Context context) {
+        this.handlerData = handlerData;
+        this.context = context;
+        scope = context.makeCurrent();
+      }
+
+      @Nullable
+      public static AdviceScope start(
+          Class<?> resourceClass, Method method, AbstractRequestContextImpl requestContext) {
+        Jaxrs3HandlerData handlerData = new Jaxrs3HandlerData(resourceClass, method);
+        Context context =
+            Jaxrs3RequestContextHelper.createOrUpdateAbortSpan(
+                instrumenter(), (ContainerRequestContext) requestContext, handlerData);
+        if (context == null) {
+          return null;
+        }
+        return new AdviceScope(handlerData, context);
+      }
+
+      public void end(@Nullable Throwable throwable) {
+        scope.close();
+        instrumenter().end(context, handlerData, null, throwable);
+      }
+    }
+  }
+}
