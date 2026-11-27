@@ -34,6 +34,19 @@ testing.suites {
     configureEach {
       jvmArgs("-Dotel.instrumentation.graphql.operation-name-in-span-name.enabled=true")
     }
+    register("CaptureDocumentDisabled") {
+      systemProperty("otel.instrumentation.graphql.capture-document", "false")
+      systemProperty("test.captureDocumentDisabled", "true")
+      filter {
+        includeTestsMatching("*.GraphqlTest.captureDocument")
+      }
+    }
+    register("CaptureQueryIgnored") {
+      systemProperty("otel.instrumentation.graphql.capture-query", "false")
+      filter {
+        includeTestsMatching("*.GraphqlTest.captureDocument")
+      }
+    }
     register("ExceptionLogs") {
       telemetryConfig("otel.instrumentation.graphql.operation-name-in-span-name.enabled", "true")
       telemetryConfig("otel.semconv.exception.signal.preview", "logs")

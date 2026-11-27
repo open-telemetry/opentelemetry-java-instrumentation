@@ -4,6 +4,31 @@
 
 ### ⚠️ Breaking changes
 
+- Rename GraphQL `otel.instrumentation.graphql.capture-query` to
+  `otel.instrumentation.graphql.capture-document` and `java.graphql.capture_query` to
+  `java.graphql.capture_document`. The GraphQL library builders' `setCaptureQuery` is now
+  `setCaptureDocument`.
+
+- Rename `otel.instrumentation.common.user.name.enabled` and
+  `otel.instrumentation.common.user.roles.enabled` to
+  `otel.instrumentation.common.capture-user-name` and
+  `otel.instrumentation.common.capture-user-roles`. Their declarative equivalents are now
+  `java.common.capture_user_name` and `java.common.capture_user_roles`.
+
+- Rename `otel.instrumentation.resources.experimental.process-command-attributes.enabled` to
+  `otel.instrumentation.resources.experimental.capture-process-command-attributes`.
+
+- Rename `otel.javaagent.add-thread-details` to `otel.javaagent.capture-thread-attributes` and
+  `otel.instrumentation.common.thread-details.enabled` to
+  `otel.instrumentation.common.capture-thread-attributes`. The declarative distribution setting is
+  now `capture_thread_attributes` for both `javaagent` and `spring_starter`.
+
+- Rename `otel.instrumentation.{java-util-logging,jboss-logmanager,log4j-appender,logback-appender}.experimental-log-attributes`
+  to `otel.instrumentation.<name>.capture-thread-attributes`; their declarative setting is now
+  `capture_thread_attributes`. The Log4j and Logback appender XML option
+  `captureExperimentalAttributes` and setter `setCaptureExperimentalAttributes` are now
+  `captureThreadAttributes` and `setCaptureThreadAttributes`.
+
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
   by method, protocol version, and URL scheme.
@@ -98,13 +123,13 @@
   `opentelemetry-instrumentation-annotations` selectors to control suspend function annotations.
 
 - The Java agent no longer captures thread details by default. Set
-  `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
+  `otel.javaagent.capture-thread-attributes=true` to capture `thread.id` and `thread.name` on spans.
 
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
   remain, instead of emitting an empty object.
 
 - Process command resource attributes are now disabled by default. Set
-  `otel.instrumentation.resources.experimental.process-command-attributes.enabled=true` to capture
+  `otel.instrumentation.resources.experimental.capture-process-command-attributes=true` to capture
   `process.command_args` and `process.command_line`.
 
 - Declarative Java agent instrumentation selectors no longer accept dotted-version compatibility
@@ -310,8 +335,8 @@
   `user.roles` instead of `enduser.id` and comma-separated `enduser.role`. Replace
   `otel.instrumentation.common.enduser.id.enabled` and
   `otel.instrumentation.common.enduser.role.enabled` with
-  `otel.instrumentation.common.user.name.enabled` and
-  `otel.instrumentation.common.user.roles.enabled`. Replace
+  `otel.instrumentation.common.capture-user-name` and
+  `otel.instrumentation.common.capture-user-roles`. Replace
   `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix` with
   `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`.
   The `otel.instrumentation.common.enduser.scope.enabled` setting and `enduser.scope` capture are

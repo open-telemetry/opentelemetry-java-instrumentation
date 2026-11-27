@@ -20,6 +20,29 @@ class GraphqlConfigTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {true, false})
+  void captureDocumentSetting(boolean enabled) {
+    DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
+    when(config.getBoolean("capture_document", true)).thenReturn(enabled);
+
+    assertThat(GraphqlConfig.getCaptureDocument(config)).isEqualTo(enabled);
+  }
+
+  @Test
+  void captureDocumentIsEnabledByDefault() {
+    assertThat(GraphqlConfig.getCaptureDocument(empty())).isTrue();
+  }
+
+  @Test
+  void captureQueryIsIgnored() {
+    DeclarativeConfigProperties config = mock(DeclarativeConfigProperties.class);
+    when(config.getBoolean("capture_query", true)).thenReturn(false);
+    when(config.getBoolean("capture_document", true)).thenReturn(true);
+
+    assertThat(GraphqlConfig.getCaptureDocument(config)).isTrue();
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
   void operationNameInSpanNameSetting(boolean enabled) {
     DeclarativeConfigProperties config =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);

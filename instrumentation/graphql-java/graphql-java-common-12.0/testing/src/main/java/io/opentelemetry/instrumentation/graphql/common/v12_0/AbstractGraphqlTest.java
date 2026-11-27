@@ -177,6 +177,24 @@ public abstract class AbstractGraphqlTest {
   }
 
   @Test
+  void captureDocument() {
+    ExecutionResult result = graphql.execute("query { __typename }");
+    assertThat(result.getErrors()).isEmpty();
+
+    getTesting()
+        .waitAndAssertTraces(trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("query")
+                    .hasKind(SpanKind.INTERNAL)
+                    .hasNoParent()
+                    .hasAttributesSatisfyingExactly(
+                        equalTo(GRAPHQL_OPERATION_TYPE, "query"),
+                        Boolean.getBoolean("test.captureDocumentDisabled")
+                            ? equalTo(GRAPHQL_DOCUMENT, null)
+                            : normalizedQueryEqualsTo(GRAPHQL_DOCUMENT, "query { __typename }"))));
+  }
+
+  @Test
   void successfulQuery() {
     ExecutionResult result =
         graphql.execute(

@@ -48,7 +48,7 @@ otel:
 
   distribution:
     spring_starter:
-      thread_details_enabled: true
+      capture_thread_attributes: true
 
   instrumentation/development:
     java:

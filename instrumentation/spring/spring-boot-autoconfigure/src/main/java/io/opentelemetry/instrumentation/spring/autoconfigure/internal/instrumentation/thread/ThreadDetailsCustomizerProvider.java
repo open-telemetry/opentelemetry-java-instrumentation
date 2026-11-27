@@ -29,11 +29,12 @@ public final class ThreadDetailsCustomizerProvider extends AbstractThreadDetails
     if (!(springStarter instanceof Map)) {
       return false;
     }
-    Object enabled = ((Map<?, ?>) springStarter).get("thread_details_enabled");
+    Object enabled = ((Map<?, ?>) springStarter).get("capture_thread_attributes");
     if (enabled instanceof Boolean) {
       return (Boolean) enabled;
     }
-    // a String when set via environment variable substitution (thread_details_enabled: ${OTEL_...})
+    // a String when set via environment variable substitution (capture_thread_attributes:
+    // ${OTEL_...})
     return enabled instanceof String && Boolean.parseBoolean((String) enabled);
   }
 }

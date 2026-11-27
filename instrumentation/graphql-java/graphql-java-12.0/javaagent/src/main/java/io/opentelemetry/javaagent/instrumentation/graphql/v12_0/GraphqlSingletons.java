@@ -24,7 +24,7 @@ public class GraphqlSingletons {
 
     telemetry =
         GraphQLTelemetry.builder(openTelemetry)
-            .setCaptureQuery(config.captureQuery)
+            .setCaptureDocument(config.captureDocument)
             .setQuerySanitizationEnabled(config.querySanitizationEnabled)
             .setOperationNameInSpanNameEnabled(config.operationNameInSpanNameEnabled)
             .build();
@@ -38,14 +38,14 @@ public class GraphqlSingletons {
   // instrumentation/development:
   //   java:
   //     graphql:
-  //       capture_query: true
+  //       capture_document: true
   //       query_sanitization:
   //         enabled: true
   //       operation_name_in_span_name:
   //         enabled: false
   private static final class Configuration {
 
-    private final boolean captureQuery;
+    private final boolean captureDocument;
     private final boolean querySanitizationEnabled;
     private final boolean operationNameInSpanNameEnabled;
 
@@ -53,7 +53,7 @@ public class GraphqlSingletons {
       DeclarativeConfigProperties config =
           DeclarativeConfigUtil.getInstrumentationConfig(openTelemetry, "graphql");
 
-      this.captureQuery = config.getBoolean("capture_query", true);
+      this.captureDocument = GraphqlConfig.getCaptureDocument(config);
       this.querySanitizationEnabled = GraphqlConfig.getQuerySanitizationEnabled(config);
       this.operationNameInSpanNameEnabled = GraphqlConfig.getOperationNameInSpanNameEnabled(config);
     }

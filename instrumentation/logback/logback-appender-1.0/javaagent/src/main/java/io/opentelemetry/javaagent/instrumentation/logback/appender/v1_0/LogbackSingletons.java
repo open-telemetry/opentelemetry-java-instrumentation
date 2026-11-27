@@ -25,7 +25,7 @@ public class LogbackSingletons {
             GlobalOpenTelemetry.get(), "logback_appender");
 
     boolean captureExperimentalAttributes =
-        config.getBoolean("experimental_log_attributes/development", false);
+        config.getBoolean("capture_thread_attributes", false);
     boolean captureCodeAttributes = config.getBoolean("capture_code_attributes/development", false);
     boolean captureMarkerAttribute =
         config.getBoolean("capture_marker_attribute/development", false);

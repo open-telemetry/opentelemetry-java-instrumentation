@@ -25,8 +25,8 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
  * the following properties:
  *
  * <pre>
- * otel.instrumentation.common.user.name.enabled=true
- * otel.instrumentation.common.user.roles.enabled=true
+ * otel.instrumentation.common.capture-user-name=true
+ * otel.instrumentation.common.capture-user-roles=true
  * </pre>
  *
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
@@ -47,8 +47,8 @@ public class UserConfig {
      *
      * https://github.com/open-telemetry/semantic-conventions/blob/main/docs/general/attributes.md#general-identity-attributes
      */
-    this.nameEnabled = commonConfig.get("user").get("name").getBoolean("enabled", false);
-    this.rolesEnabled = commonConfig.get("user").get("roles").getBoolean("enabled", false);
+    this.nameEnabled = commonConfig.getBoolean("capture_user_name", false);
+    this.rolesEnabled = commonConfig.getBoolean("capture_user_roles", false);
   }
 
   /**

@@ -34,7 +34,7 @@ class ProcessResourceProviderTest {
   void emitsCommandAttributesWithOptInOnly() {
     Map<String, String> config = new HashMap<>();
     config.put(
-        "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "true");
+        "otel.instrumentation.resources.experimental.capture-process-command-attributes", "true");
 
     Resource resource = createProcessResource(config);
 
@@ -45,11 +45,20 @@ class ProcessResourceProviderTest {
   void suppressesCommandAttributesWithOptOut() {
     Map<String, String> config = new HashMap<>();
     config.put(
-        "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "false");
+        "otel.instrumentation.resources.experimental.capture-process-command-attributes", "false");
 
     Resource resource = createProcessResource(config);
 
     assertNoCommandAttributes(resource.getAttributes());
+  }
+
+  @Test
+  void ignoresOldName() {
+    Map<String, String> config = new HashMap<>();
+    config.put(
+        "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "true");
+
+    assertNoCommandAttributes(createProcessResource(config).getAttributes());
   }
 
   private static void assertNoCommandAttributes(Attributes attributes) {

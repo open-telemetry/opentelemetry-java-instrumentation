@@ -13,6 +13,10 @@ import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
  */
 public final class GraphqlConfig {
 
+  public static boolean getCaptureDocument(DeclarativeConfigProperties config) {
+    return config.getBoolean("capture_document", true);
+  }
+
   public static boolean getOperationNameInSpanNameEnabled(DeclarativeConfigProperties config) {
     return config.get("operation_name_in_span_name").getBoolean("enabled", false);
   }

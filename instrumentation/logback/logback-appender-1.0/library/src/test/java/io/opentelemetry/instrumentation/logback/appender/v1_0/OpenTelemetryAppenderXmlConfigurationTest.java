@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.logback.appender.v1_0;
 
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.stream.Collectors.toList;
 import static org.assertj.core.api.Assertions.assertThat;
@@ -13,11 +14,57 @@ import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
 import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.status.Status;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import java.io.ByteArrayInputStream;
 import java.util.List;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class OpenTelemetryAppenderXmlConfigurationTest {
+
+  @RegisterExtension
+  static final LibraryInstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @ParameterizedTest
+  @CsvSource({
+    "none, false",
+    "captureExperimentalAttributes, false",
+    "captureThreadAttributes, true"
+  })
+  void threadAttributesUseOnlyCurrentXmlElement(String element, boolean expected)
+      throws JoranException {
+    String setting = element.equals("none") ? "" : "<" + element + ">true</" + element + ">";
+    String configuration =
+        "<configuration><appender name='OTEL' class='"
+            + OpenTelemetryAppender.class.getName()
+            + "'>"
+            + setting
+            + "</appender><root level='INFO'><appender-ref ref='OTEL'/></root></configuration>";
+    LoggerContext context = new LoggerContext();
+    try {
+      JoranConfigurator configurator = new JoranConfigurator();
+      configurator.setContext(context);
+      configurator.doConfigure(new ByteArrayInputStream(configuration.getBytes(UTF_8)));
+      OpenTelemetryAppender appender =
+          (OpenTelemetryAppender) context.getLogger("ROOT").getAppender("OTEL");
+      appender.setOpenTelemetry(testing.getOpenTelemetry());
+      context.getLogger("test").info("test");
+
+      assertThat(testing.logRecords())
+          .satisfiesOnlyOnce(record -> {
+            if (expected) {
+              assertThat(record.getAttributes().get(stringKey("thread.name")))
+                  .isEqualTo(Thread.currentThread().getName());
+            } else {
+              assertThat(record.getAttributes().get(stringKey("thread.name"))).isNull();
+            }
+          });
+    } finally {
+      context.stop();
+    }
+  }
 
   @Test
   void deprecatedLoggerContextSettingIsAppliedFromXml() throws JoranException {

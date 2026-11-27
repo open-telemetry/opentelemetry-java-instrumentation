@@ -212,6 +212,37 @@ class LogbackAppenderTest {
 
   @ParameterizedTest
   @CsvSource({
+    "none, false",
+    "otel.instrumentation.logback-appender.experimental-log-attributes, false",
+    "otel.instrumentation.logback-appender.capture-thread-attributes, true",
+    "otel.instrumentation/development.java.logback_appender.experimental_log_attributes/development, false",
+    "otel.instrumentation/development.java.logback_appender.capture_thread_attributes, true"
+  })
+  void threadAttributesUseOnlyCurrentProperty(String property, boolean expected) {
+    Map<String, Object> properties = new HashMap<>();
+    properties.put("logging.config", "classpath:logback-no-otel-appenders.xml");
+    if (property.startsWith("otel.instrumentation/development")) {
+      properties.put("otel.file_format", "1.1");
+    }
+    if (!property.equals("none")) {
+      properties.put(property, true);
+    }
+    SpringApplication app =
+        new SpringApplication(
+            TestingOpenTelemetryConfiguration.class, OpenTelemetryAppenderAutoConfiguration.class);
+    app.setDefaultProperties(properties);
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    testing.clearData();
+
+    LoggerFactory.getLogger("test").info("thread attributes");
+    testing.waitAndAssertLogRecords(logRecord ->
+        logRecord.hasAttributesSatisfyingExactly(
+            equalTo(stringKey("thread.name"), expected ? Thread.currentThread().getName() : null)));
+  }
+
+  @ParameterizedTest
+  @CsvSource({
     "logback-test.xml, false",
     "logback-test-no-mdc.xml, false",
     "logback-test.xml, true",

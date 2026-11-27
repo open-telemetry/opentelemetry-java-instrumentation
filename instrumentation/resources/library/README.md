@@ -113,7 +113,7 @@ Implemented attributes:
 
 `process.command_args` and `process.command_line` are not collected by default because they may
 contain sensitive information. Enable collection by setting
-`otel.instrumentation.resources.experimental.process-command-attributes.enabled=true`.
+`otel.instrumentation.resources.experimental.capture-process-command-attributes=true`.
 This setting applies only to property-based configuration. With declarative configuration, the
 `process` resource detector does not collect `process.command_args` or `process.command_line`, and
 there is currently no option to enable them.

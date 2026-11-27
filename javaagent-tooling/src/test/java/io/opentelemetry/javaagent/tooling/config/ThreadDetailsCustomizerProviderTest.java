@@ -32,15 +32,20 @@ class ThreadDetailsCustomizerProviderTest {
 
   @ParameterizedTest
   @CsvSource(
-      value = {"NULL, false", "true, true", "false, false"},
+      value = {
+        "otel.javaagent.capture-thread-attributes, NULL, false",
+        "otel.javaagent.capture-thread-attributes, true, true",
+        "otel.javaagent.capture-thread-attributes, false, false",
+        "otel.javaagent.add-thread-details, true, false"
+      },
       nullValues = "NULL")
-  void flatConfig(String value, boolean expected) {
+  void flatConfig(String name, String value, boolean expected) {
     Map<String, String> properties = new HashMap<>();
     properties.put("otel.traces.exporter", "none");
     properties.put("otel.metrics.exporter", "none");
     properties.put("otel.logs.exporter", "none");
     if (value != null) {
-      properties.put("otel.javaagent.add-thread-details", value);
+      properties.put(name, value);
     }
 
     InMemorySpanExporter exporter = InMemorySpanExporter.create();

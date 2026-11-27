@@ -26,6 +26,62 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 class ConfigPropertiesBackedDeclarativeConfigPropertiesTest {
 
+  @ParameterizedTest
+  @MethodSource("captureSettingNames")
+  void testCaptureSettingNames(String module, String key, String newName, String oldName) {
+    DeclarativeConfigProperties newConfig = createConfig(newName, "true");
+    DeclarativeConfigProperties oldConfig = createConfig(oldName, "true");
+
+    assertThat(newConfig.getStructured("java").getStructured(module).getBoolean(key)).isTrue();
+    assertThat(oldConfig.getStructured("java").getStructured(module).getBoolean(key)).isNull();
+  }
+
+  private static Stream<Arguments> captureSettingNames() {
+    return Stream.of(
+        argumentSet(
+            "GraphQL document",
+            "graphql",
+            "capture_document",
+            "otel.instrumentation.graphql.capture-document",
+            "otel.instrumentation.graphql.capture-query"),
+        argumentSet(
+            "user name",
+            "common",
+            "capture_user_name",
+            "otel.instrumentation.common.capture-user-name",
+            "otel.instrumentation.common.user.name.enabled"),
+        argumentSet(
+            "user roles",
+            "common",
+            "capture_user_roles",
+            "otel.instrumentation.common.capture-user-roles",
+            "otel.instrumentation.common.user.roles.enabled"),
+        argumentSet(
+            "java.util.logging thread attributes",
+            "java_util_logging",
+            "capture_thread_attributes",
+            "otel.instrumentation.java-util-logging.capture-thread-attributes",
+            "otel.instrumentation.java-util-logging.experimental-log-attributes"),
+        argumentSet(
+            "JBoss thread attributes",
+            "jboss_logmanager",
+            "capture_thread_attributes",
+            "otel.instrumentation.jboss-logmanager.capture-thread-attributes",
+            "otel.instrumentation.jboss-logmanager.experimental-log-attributes"),
+        argumentSet(
+            "Log4j thread attributes",
+            "log4j_appender",
+            "capture_thread_attributes",
+            "otel.instrumentation.log4j-appender.capture-thread-attributes",
+            "otel.instrumentation.log4j-appender.experimental-log-attributes"),
+        argumentSet(
+            "Logback thread attributes",
+            "logback_appender",
+            "capture_thread_attributes",
+            "otel.instrumentation.logback-appender.capture-thread-attributes",
+            "otel.instrumentation.logback-appender.experimental-log-attributes"));
+  }
+
   @Test
   void testTranslateName_regularName() {
     DeclarativeConfigProperties config =

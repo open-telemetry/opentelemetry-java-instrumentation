@@ -56,4 +56,4 @@ configurations:
     description: Enables adding the trace ID and span ID as request attributes for downstream servlet access.
     type: boolean
     default: false
-  - ref: common.user.name.enabled
+  - ref: common.capture-user-name

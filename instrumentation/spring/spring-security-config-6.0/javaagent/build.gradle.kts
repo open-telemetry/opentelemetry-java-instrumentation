@@ -43,7 +43,7 @@ otelJava {
 
 tasks {
   test {
-    systemProperty("otel.instrumentation.common.user.name.enabled", "true")
-    systemProperty("otel.instrumentation.common.user.roles.enabled", "true")
+    systemProperty("otel.instrumentation.common.capture-user-name", "true")
+    systemProperty("otel.instrumentation.common.capture-user-roles", "true")
   }
 }

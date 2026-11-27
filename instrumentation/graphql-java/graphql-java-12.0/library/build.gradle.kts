@@ -15,6 +15,12 @@ dependencies {
 
 testing.suites {
   executions("test") {
+    register("CaptureDocumentDisabled") {
+      systemProperty("test.captureDocumentDisabled", "true")
+      filter {
+        includeTestsMatching("*.GraphqlTest.captureDocument")
+      }
+    }
     register("ExceptionLogs") {
       jvmArgs("-Dotel.semconv.exception.signal.preview=logs")
       systemProperty(

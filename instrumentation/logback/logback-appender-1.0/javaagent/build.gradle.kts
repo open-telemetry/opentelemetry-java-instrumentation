@@ -132,7 +132,7 @@ testing.suites {
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.logger-context-attributes.included=key?")
     }
     configureEach {
-      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.capture-thread-attributes=true")
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
     }
 
@@ -177,7 +177,7 @@ testing.suites {
       )
     }
     configureEach {
-      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.capture-thread-attributes=true")
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
     }
 
@@ -193,7 +193,7 @@ testing.suites {
       jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
     }
     configureEach {
-      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.capture-thread-attributes=true")
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
     }
 
@@ -215,7 +215,7 @@ testing.suites {
       jvmArgs("-Dotel.instrumentation.common.logging.structured-attributes.included=key?")
     }
     configureEach {
-      jvmArgs("-Dotel.instrumentation.logback-appender.experimental-log-attributes=true")
+      jvmArgs("-Dotel.instrumentation.logback-appender.capture-thread-attributes=true")
       jvmArgs("-Dotel.instrumentation.logback-appender.experimental.capture-code-attributes=true")
     }
 

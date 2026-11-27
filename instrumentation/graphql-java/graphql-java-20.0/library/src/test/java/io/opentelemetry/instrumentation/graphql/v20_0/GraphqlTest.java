@@ -36,12 +36,14 @@ class GraphqlTest extends AbstractGraphqlTest {
 
   @Override
   protected void configure(GraphQL.Builder builder) {
-    GraphQLTelemetry telemetry =
+    GraphQLTelemetryBuilder telemetryBuilder =
         GraphQLTelemetry.builder(testing.getOpenTelemetry())
             .setDataFetcherInstrumentationEnabled(true)
-            .setOperationNameInSpanNameEnabled(true)
-            .build();
-    builder.instrumentation(telemetry.createInstrumentation());
+            .setOperationNameInSpanNameEnabled(true);
+    if (Boolean.getBoolean("test.captureDocumentDisabled")) {
+      telemetryBuilder.setCaptureDocument(false);
+    }
+    builder.instrumentation(telemetryBuilder.build().createInstrumentation());
   }
 
   @Override

@@ -117,7 +117,7 @@ Settings can be configured in `logback.xml`, for example:
 
 ```xml
 <appender name="OpenTelemetry" class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
-  <captureExperimentalAttributes>true</captureExperimentalAttributes>
+  <captureThreadAttributes>true</captureThreadAttributes>
   <mdcAttributesIncluded>request-*,user-?</mdcAttributesIncluded>
   <mdcAttributesExcluded>*-secret</mdcAttributesExcluded>
   <structuredAttributesExcluded>*-secret</structuredAttributesExcluded>
@@ -128,7 +128,7 @@ The available settings are:
 
 | XML Element                        | Type    | Default | Description                                                                                                                                                                                                                                                                       |
 | ---------------------------------- | ------- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `captureExperimentalAttributes`    | Boolean | `false` | Enable the capture of experimental log attributes `thread.name` and `thread.id`.                                                                                                                                                                                                  |
+| `captureThreadAttributes`          | Boolean | `false` | Enable the capture of the `thread.name` log attribute. Thread ID is not captured. |
 | `captureCodeAttributes`            | Boolean | `false` | Enable the capture of [source code attributes]. Note that capturing source code attributes at logging sites might add a performance overhead.                                                                                                                                     |
 | `captureMarkerAttribute`           | Boolean | `false` | Enable the capture of Logback markers as attributes.                                                                                                                                                                                                                              |
 | `captureLoggerContext`             | Boolean | `false` | **Deprecated.** Enable the capture of all Logback logger context properties as attributes. It may be removed in the next minor release; use `loggerContextAttributesIncluded` instead.                                                                                            |

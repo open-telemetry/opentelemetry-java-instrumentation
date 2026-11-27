@@ -85,7 +85,7 @@ public class AgentDistributionConfig {
           Boolean forceSynchronousAgentListeners,
       @Nullable @JsonProperty("exclude_classes") List<String> excludeClasses,
       @Nullable @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
-      @Nullable @JsonProperty("thread_details_enabled") Boolean threadDetailsEnabled,
+      @Nullable @JsonProperty("capture_thread_attributes") Boolean threadDetailsEnabled,
       @Nullable @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
     this.forceSynchronousAgentListeners =
         forceSynchronousAgentListeners != null ? forceSynchronousAgentListeners : false;
@@ -227,7 +227,7 @@ public class AgentDistributionConfig {
               "otel.javaagent.experimental.force-synchronous-agent-listeners", false),
           configProperties.getList("otel.javaagent.exclude-classes"),
           configProperties.getList("otel.javaagent.exclude-class-loaders"),
-          configProperties.getBoolean("otel.javaagent.add-thread-details", false),
+          configProperties.getBoolean("otel.javaagent.capture-thread-attributes", false),
           null);
       this.configProperties = configProperties;
     }

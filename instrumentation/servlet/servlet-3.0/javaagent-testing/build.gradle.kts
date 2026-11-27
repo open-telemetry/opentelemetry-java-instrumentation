@@ -42,7 +42,7 @@ testing.suites {
       filter {
         includeTestsMatching("*Servlet3UserNameTest.capturesUserNameFromPrincipal")
       }
-      telemetryConfig("otel.instrumentation.common.user.name.enabled", "true")
+      telemetryConfig("otel.instrumentation.common.capture-user-name", "true")
     }
   }
 }
