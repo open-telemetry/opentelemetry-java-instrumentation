@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.tomcat.v7_0;
 
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_ERROR;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.AUTH_REQUIRED;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -50,6 +51,9 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
                   "otel.instrumentation.servlet.experimental.request-parameters.excluded")
               != null;
 
+  private static final boolean REQUEST_BODY_CAPTURE_ENABLED =
+      Boolean.getBoolean("otel.instrumentation.servlet.experimental.capture-request-body.enabled");
+
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
 
@@ -62,6 +66,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
           NOT_FOUND,
           CAPTURE_HEADERS,
           CAPTURE_PARAMETERS,
+          CAPTURE_BODY,
           QUERY_PARAM,
           PATH_PARAM,
           AUTH_REQUIRED,
@@ -109,6 +114,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
     options.setHasResponseCustomizer(serverEndpoint -> true);
     options.setTestCaptureRequestParameters(true);
     options.setExpectCapturedRequestParameters(REQUEST_PARAMETER_CAPTURE_ENABLED);
+    options.setTestRequestBodyCapture(REQUEST_BODY_CAPTURE_ENABLED);
     options.setTestHttpBodyPipelining(true);
     options.setTestErrorBody(false);
 

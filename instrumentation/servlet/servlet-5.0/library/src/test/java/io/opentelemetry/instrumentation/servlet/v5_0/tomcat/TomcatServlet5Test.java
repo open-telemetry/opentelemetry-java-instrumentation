@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.servlet.v5_0.tomcat;
 
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;
 import org.apache.catalina.Context;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
@@ -18,6 +19,15 @@ class TomcatServlet5Test extends BaseTomcatServlet5Test {
   @Override
   protected void configureServer(Context servletContext) {
     ServletTestUtil.configureTomcat(testing.getOpenTelemetry(), servletContext);
+  }
+
+  @Override
+  protected void configure(HttpServerTestOptions options) {
+    super.configure(options);
+    // the library filter instrumentation does not instrument async dispatch, thus testing a body
+    // read after a dispatch is not needed. Reads after the filter has returned, without dispatch,
+    // are supported with the completion listener.
+    options.setTestRequestBodyCaptureDispatchRead(false);
   }
 
   @Override

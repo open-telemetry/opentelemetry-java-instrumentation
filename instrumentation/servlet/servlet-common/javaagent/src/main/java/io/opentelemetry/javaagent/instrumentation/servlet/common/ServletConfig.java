@@ -6,21 +6,25 @@
 package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
 import static io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig.Stability.EXPERIMENTAL;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.fromDeclarativeConfig;
 
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.incubator.config.DeclarativeConfigProperties;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.SelectorConfig;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import javax.annotation.Nullable;
 
-class ServletConfig {
+public class ServletConfig {
 
   @Nullable private final IncludeExclude requestParameters;
   private final boolean captureExperimentalAttributes;
   private final boolean traceIdRequestAttributeEnabled;
 
-  static ServletConfig get() {
+  private final BodyCaptureConfig bodyCaptureConfig;
+
+  public static ServletConfig get() {
     return SingletonHolder.INSTANCE;
   }
 
@@ -31,6 +35,8 @@ class ServletConfig {
         config.getBoolean("experimental_span_attributes/development", false);
     traceIdRequestAttributeEnabled =
         config.get("trace_id_request_attribute/development").getBoolean("enabled", false);
+
+    bodyCaptureConfig = fromDeclarativeConfig(config.get("capture_request_body/development"));
   }
 
   @Nullable
@@ -44,6 +50,10 @@ class ServletConfig {
 
   boolean getTraceIdRequestAttributeEnabled() {
     return traceIdRequestAttributeEnabled;
+  }
+
+  public BodyCaptureConfig getRequestBodyCaptureConfig() {
+    return bodyCaptureConfig;
   }
 
   private static final class SingletonHolder {

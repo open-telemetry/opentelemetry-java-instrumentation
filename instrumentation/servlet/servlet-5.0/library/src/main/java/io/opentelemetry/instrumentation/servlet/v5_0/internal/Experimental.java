@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.servlet.v5_0.internal;
 
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.v5_0.ServletTelemetryBuilder;
 import java.util.function.BiConsumer;
 import javax.annotation.Nullable;
@@ -28,6 +29,10 @@ public final class Experimental {
 
   @Nullable
   private static volatile BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters;
+
+  @Nullable
+  private static volatile BiConsumer<ServletTelemetryBuilder, BodyCaptureConfig>
+      setCaptureRequestBody;
 
   /**
    * Sets whether experimental HTTP telemetry should be emitted.
@@ -93,6 +98,19 @@ public final class Experimental {
     }
   }
 
+  /**
+   * Sets capture request body configuration
+   *
+   * @param builder the telemetry builder
+   * @param captureConfig the request body capture configuration
+   */
+  public static void setCaptureRequestBody(
+      ServletTelemetryBuilder builder, BodyCaptureConfig captureConfig) {
+    if (setCaptureRequestBody != null) {
+      setCaptureRequestBody.accept(builder, captureConfig);
+    }
+  }
+
   public static void internalSetEmitExperimentalTelemetry(
       BiConsumer<ServletTelemetryBuilder, Boolean> setEmitExperimentalTelemetry) {
     Experimental.setEmitExperimentalTelemetry = setEmitExperimentalTelemetry;
@@ -111,6 +129,11 @@ public final class Experimental {
   public static void internalSetRequestParameters(
       BiConsumer<ServletTelemetryBuilder, IncludeExclude> setRequestParameters) {
     Experimental.setRequestParameters = setRequestParameters;
+  }
+
+  public static void internalSetCaptureRequestBody(
+      BiConsumer<ServletTelemetryBuilder, BodyCaptureConfig> setCaptureRequestBody) {
+    Experimental.setCaptureRequestBody = setCaptureRequestBody;
   }
 
   private Experimental() {}

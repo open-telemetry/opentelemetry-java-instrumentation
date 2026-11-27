@@ -8,8 +8,13 @@ package io.opentelemetry.instrumentation.testing.junit.http;
 import static io.opentelemetry.api.common.AttributeKey.longKey;
 import static io.opentelemetry.api.common.AttributeKey.stringArrayKey;
 import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.api.common.AttributeKey.valueKey;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsLogs;
 import static io.opentelemetry.instrumentation.api.internal.SemconvExceptionSignal.emitExceptionAsSpanEvents;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_DISPATCH_READ;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_LATE_READ;
+import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_BODY_SPLIT_READ;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_HEADERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.CAPTURE_PARAMETERS;
 import static io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint.ERROR;
@@ -46,7 +51,10 @@ import static io.opentelemetry.semconv.UrlAttributes.URL_PATH;
 import static io.opentelemetry.semconv.UrlAttributes.URL_QUERY;
 import static io.opentelemetry.semconv.UrlAttributes.URL_SCHEME;
 import static io.opentelemetry.semconv.UserAgentAttributes.USER_AGENT_ORIGINAL;
+import static io.opentelemetry.testing.internal.armeria.common.HttpMethod.POST;
+import static io.opentelemetry.testing.internal.armeria.common.MediaType.JSON;
 import static java.nio.charset.StandardCharsets.US_ASCII;
+import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singletonList;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static java.util.stream.Collectors.toList;
@@ -56,6 +64,7 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.logs.Severity;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.api.trace.SpanKind;
@@ -110,6 +119,7 @@ import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.URI;
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -626,6 +636,46 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
     assertHighConcurrencyWithRequestBody(count);
   }
 
+  @Test
+  void requestBodyCapture() {
+    assumeTrue(options.testRequestBodyCapture);
+    assertRequestBodyCapture(CAPTURE_BODY);
+  }
+
+  @Test
+  void requestBodyCaptureLateRead() {
+    assumeTrue(options.testRequestBodyCapture);
+    assumeTrue(options.testRequestBodyCaptureAfterService);
+    assertRequestBodyCapture(CAPTURE_BODY_LATE_READ);
+  }
+
+  @Test
+  void requestBodyCaptureSplitRead() {
+    assumeTrue(options.testRequestBodyCapture);
+    assumeTrue(options.testRequestBodyCaptureAfterService);
+    assertRequestBodyCapture(CAPTURE_BODY_SPLIT_READ);
+  }
+
+  @Test
+  void requestBodyCaptureDispatchRead() {
+    assumeTrue(options.testRequestBodyCapture);
+    assumeTrue(options.testRequestBodyCaptureDispatchRead);
+    assertRequestBodyCapture(CAPTURE_BODY_DISPATCH_READ);
+  }
+
+  private void assertRequestBodyCapture(ServerEndpoint endpoint) {
+    String body = "{\"test\": \"value\"}";
+    AggregatedHttpRequest request =
+        AggregatedHttpRequest.of(POST, resolveAddress(endpoint, getProtocolPrefix()), JSON, body);
+    AggregatedHttpResponse response = client.execute(request).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(endpoint.getStatus());
+    assertThat(response.contentUtf8()).isEqualTo(endpoint.getBody());
+
+    String spanId = assertResponseHasCustomizedHeaders(response, endpoint, null);
+    assertTheTraces(1, null, null, spanId, "POST", endpoint);
+  }
+
   private void writeChunkedRequest(
       OutputStream outputStream,
       TextMapPropagator propagator,
@@ -1042,6 +1092,47 @@ public abstract class AbstractHttpServerTest<SERVER> extends AbstractHttpServerU
               assertThat(rootSpan.getEndEpochNanos())
                   .isGreaterThanOrEqualTo(spanData.get(j).getEndEpochNanos());
             }
+          }
+        }
+
+        if (endpoint == CAPTURE_BODY
+            || endpoint == CAPTURE_BODY_LATE_READ
+            || endpoint == CAPTURE_BODY_SPLIT_READ
+            || endpoint == CAPTURE_BODY_DISPATCH_READ) {
+          List<SpanData> serverSpans =
+              trace.actual().stream()
+                  .filter(span -> span.getKind() == SpanKind.SERVER)
+                  .collect(toList());
+          assertThat(serverSpans).hasSize(1);
+          SpanData serverSpan = serverSpans.get(0);
+
+          String key = "http.request.body.content";
+          assertThat(serverSpan.getAttributes()).containsKey(key);
+
+          // request body content can be captured as string or byte buffer
+          String expected = "{\"test\": \"value\"}";
+          Value<?> bodyValue = serverSpan.getAttributes().get(valueKey(key));
+          if (bodyValue == null) {
+            // The body is a string attribute, but javaagent tests export spans through OTLP, which
+            // makes it readable as a Value. Library tests use the plain in-memory SDK, which keeps
+            // the attribute type as is, so a lookup with valueKey() finds nothing and the string
+            // key must be used instead.
+            String stringValue = serverSpan.getAttributes().get(stringKey(key));
+            bodyValue = stringValue != null ? Value.of(stringValue) : null;
+          }
+          assertThat(bodyValue).isNotNull();
+          Object value = bodyValue.getValue();
+          switch (bodyValue.getType()) {
+            case STRING:
+              assertThat(value).isEqualTo(expected);
+              break;
+            case BYTES:
+              assertThat(value)
+                  .isInstanceOf(ByteBuffer.class)
+                  .isEqualTo(ByteBuffer.wrap(expected.getBytes(UTF_8)));
+              break;
+            default:
+              throw new AssertionError("Unexpected value type: " + bodyValue.getType());
           }
         }
       });

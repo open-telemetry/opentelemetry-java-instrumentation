@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.servlet.v5_0;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertAttributesExtractor;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertSpanNameExtractor;
 import static io.opentelemetry.instrumentation.api.internal.InstrumenterUtil.convertSpanStatusExtractor;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
 
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
@@ -19,6 +20,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesExtractorBuilder;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerAttributesGetter;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpSpanNameExtractor;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletHttpAttributesGetter;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletInstrumenterBuilder;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
@@ -42,6 +44,7 @@ public final class ServletTelemetryBuilder {
       builder;
   private final ServletInstrumenterBuilder<HttpServletRequest, HttpServletResponse> servletBuilder;
   private boolean addTraceIdRequestAttribute = false;
+  private BodyCaptureConfig requestBodyCaptureConfig = createDefault();
 
   static {
     Experimental.internalSetEmitExperimentalTelemetry(
@@ -52,6 +55,11 @@ public final class ServletTelemetryBuilder {
         builder.servletBuilder.setRequestParameters(requestParameters));
     Experimental.internalSetCaptureUserName(
         (builder, value) -> builder.servletBuilder.setCaptureUserName(value));
+
+    Experimental.internalSetCaptureRequestBody((builder, value) -> {
+      builder.servletBuilder.setCaptureRequestBody(value);
+      builder.requestBodyCaptureConfig = value;
+    });
   }
 
   ServletTelemetryBuilder(OpenTelemetry openTelemetry) {
@@ -160,6 +168,7 @@ public final class ServletTelemetryBuilder {
   public ServletTelemetry build() {
     return new ServletTelemetry(
         servletBuilder.build(HttpSpanNameExtractor.create(httpAttributesGetter)),
-        addTraceIdRequestAttribute);
+        addTraceIdRequestAttribute,
+        requestBodyCaptureConfig);
   }
 }

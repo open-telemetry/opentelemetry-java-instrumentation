@@ -8,9 +8,11 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0;
 import io.opentelemetry.instrumentation.api.incubator.semconv.util.ClassAndMethod;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5Accessor;
+import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5BodyCaptureRequestWrapper;
 import io.opentelemetry.javaagent.bootstrap.servlet.ExperimentalSnippetHolder;
 import io.opentelemetry.javaagent.bootstrap.servlet.MappingResolver;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.AgentServletInstrumenterBuilder;
@@ -75,6 +77,15 @@ public class Servlet5Singletons {
     } else {
       return FILTER_MAPPING_RESOLVER.get((Filter) servletOrFilter);
     }
+  }
+
+  public static HttpServletRequest wrapForBodyCaptureIfNeeded(HttpServletRequest request) {
+    if (request.getAttribute(BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE) == null) {
+      // no marker, no need to wrap
+      return request;
+    }
+    return Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(
+        request, helper().captureRequestBodyMaxSize());
   }
 
   private Servlet5Singletons() {}

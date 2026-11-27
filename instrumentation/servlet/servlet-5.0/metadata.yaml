@@ -54,6 +54,47 @@ configurations:
     description: Enables adding the trace ID and span ID as request attributes for downstream servlet access.
     type: boolean
     default: false
+  - name: otel.instrumentation.servlet.experimental.capture-request-body.enabled
+    declarative_name: java.servlet.capture_request_body/development.enabled
+    description: >
+      Enables capturing the request body, as read by the application from the request input
+      stream, in the `http.request.body.content` span attribute. The request body may contain
+      sensitive information.
+    type: boolean
+    default: false
+  - name: otel.instrumentation.servlet.experimental.capture-request-body.max-size
+    declarative_name: java.servlet.capture_request_body/development.max_size
+    description: >
+      The maximum number of request body bytes to capture when request body capture is enabled.
+      A value less than or equal to 0 is invalid: a warning is logged and the default is used.
+    type: int
+    default: 1024
+  - name: otel.instrumentation.servlet.experimental.capture-request-body.media-types.included
+    declarative_name: java.servlet.capture_request_body/development.media_types.included
+    description: >
+      A comma-separated list of patterns for the media types of the request bodies to capture when
+      request body capture is enabled. The media type is the part of the `Content-Type` header
+      before the first `;`, and matching is case-insensitive. `?` matches one character and `*`
+      matches zero or more characters. Excluded patterns take precedence over included patterns.
+      Requests without a valid `Content-Type` header are not captured. The default applies only
+      when neither this list nor the excluded list is configured. Configuring only the excluded
+      list captures every media type except the excluded ones, which may include binary content.
+      Request bodies with a `multipart/*` media type are never captured, whatever the
+      configuration. Form data (`application/x-www-form-urlencoded`) is not captured by default.
+    type: list
+    default: "text/*,*/json,*+json,*/xml,*+xml,*/yaml,*+yaml"
+    examples:
+      - "text/*,application/json"
+  - name: otel.instrumentation.servlet.experimental.capture-request-body.media-types.excluded
+    declarative_name: java.servlet.capture_request_body/development.media_types.excluded
+    description: >
+      A comma-separated list of patterns for the media types of the request bodies to never
+      capture, even if they match an included pattern. Matching rules are the same as for
+      `otel.instrumentation.servlet.experimental.capture-request-body.media-types.included`.
+    type: list
+    default: ""
+    examples:
+      - "text/csv,application/octet-stream"
   - name: otel.experimental.javascript-snippet
     declarative_name: java.servlet.javascript_snippet/development
     description: Experimental setting to inject a JavaScript snippet into HTML responses after the opening `<head>` tag.

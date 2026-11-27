@@ -7,6 +7,8 @@ package io.opentelemetry.javaagent.instrumentation.servlet.common;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.SPAN_BODY_ATTRIBUTE;
+import static io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor.extractRequestBody;
 import static io.opentelemetry.semconv.incubating.UserIncubatingAttributes.USER_NAME;
 
 import io.opentelemetry.api.trace.Span;
@@ -16,8 +18,11 @@ import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.api.instrumenter.LocalRootSpan;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRoute;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureHelper;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAdditionalAttributesExtractor;
+import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestBodyExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestParametersExtractor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
@@ -73,13 +78,19 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
   }
 
   private void addRequestAttributes(REQUEST request, Context context) {
-    if (!servletConfig.getTraceIdRequestAttributeEnabled()) {
-      return;
+    if (servletConfig.getTraceIdRequestAttributeEnabled()) {
+      SpanContext spanContext = Span.fromContext(context).getSpanContext();
+      accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
+      accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
     }
 
-    SpanContext spanContext = Span.fromContext(context).getSpanContext();
-    accessor.setRequestAttribute(request, "trace_id", spanContext.getTraceId());
-    accessor.setRequestAttribute(request, "span_id", spanContext.getSpanId());
+    BodyCaptureConfig bodyCaptureConfig = servletConfig.getRequestBodyCaptureConfig();
+    String contentType = accessor.getRequestHeader(request, "Content-Type");
+    String contentEncoding = accessor.getRequestHeader(request, "Content-Encoding");
+    if (ServletRequestBodyExtractor.shouldMarkRequestForBodyCapture(
+        bodyCaptureConfig, contentType, contentEncoding)) {
+      accessor.setRequestAttribute(request, BodyCaptureHelper.REQUEST_BODY_MARKER_ATTRIBUTE, true);
+    }
   }
 
   protected Context addServletContextPath(Context context, REQUEST request) {
@@ -134,6 +145,20 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
     captureRequestParameters(serverSpan, request);
     captureUserName(serverSpan, request);
+    // When the request is handled asynchronously, the body can still be read after the servlet has
+    // returned: it is added when the span ends, and not here. For other requests it is added now,
+    // as the request might be recycled before the span ends.
+    if (!ServletAsyncContext.isAsyncListenerAttached(context)) {
+      captureRequestBody(serverSpan, request);
+    }
+  }
+
+  private void captureRequestBody(Span serverSpan, REQUEST request) {
+    // here we assume that when request body is present, then it should be captured as attribute
+    String body = extractRequestBody(accessor, request);
+    if (body != null) {
+      serverSpan.setAttribute(SPAN_BODY_ATTRIBUTE, body);
+    }
   }
 
   /**
@@ -189,5 +214,13 @@ public abstract class BaseServletHelper<REQUEST, RESPONSE> {
 
   private static boolean sameTrace(Span oneSpan, Span otherSpan) {
     return oneSpan.getSpanContext().getTraceId().equals(otherSpan.getSpanContext().getTraceId());
+  }
+
+  public int captureRequestBodyMaxSize() {
+    return servletConfig.getRequestBodyCaptureConfig().getMaxSize();
+  }
+
+  public boolean captureRequestBodyEnabled() {
+    return servletConfig.getRequestBodyCaptureConfig().isEnabled();
   }
 }

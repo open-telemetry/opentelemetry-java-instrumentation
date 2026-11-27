@@ -10,6 +10,7 @@ import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
 import jakarta.servlet.AsyncContext;
@@ -40,14 +41,18 @@ public final class Servlet5TelemetryFilter implements Filter {
       instrumenter;
   private final boolean addTraceIdRequestAttribute;
 
+  private final BodyCaptureConfig requestBodyCaptureConfig;
+
   public Servlet5TelemetryFilter(
       Instrumenter<
               ServletRequestContext<HttpServletRequest>,
               ServletResponseContext<HttpServletResponse>>
           instrumenter,
-      boolean addTraceIdRequestAttribute) {
+      boolean addTraceIdRequestAttribute,
+      BodyCaptureConfig requestBodyCaptureConfig) {
     this.instrumenter = instrumenter;
     this.addTraceIdRequestAttribute = addTraceIdRequestAttribute;
+    this.requestBodyCaptureConfig = requestBodyCaptureConfig;
   }
 
   @Override
@@ -72,21 +77,35 @@ public final class Servlet5TelemetryFilter implements Filter {
         new ServletResponseContext<>(httpResponse);
 
     if (!instrumenter.shouldStart(parentContext, requestContext)) {
-      filterChain.doFilter(request, response);
+      filterChain.doFilter(httpRequest, httpResponse);
       return;
     }
 
     Context context = instrumenter.start(parentContext, requestContext);
 
+    HttpServletRequest bodyCaptureRequest = null;
+    if (requestBodyCaptureConfig.isEnabled() && Span.fromContext(context).isRecording()) {
+      // only capture when enabled and span is being recorded
+      HttpServletRequest wrapped =
+          Servlet5BodyCaptureRequestWrapper.wrapIfNeeded(
+              httpRequest, requestBodyCaptureConfig.getMaxSize());
+      if (wrapped != httpRequest) {
+        // the request was not already wrapped by a previous filter invocation
+        bodyCaptureRequest = wrapped;
+      }
+      httpRequest = wrapped;
+    }
+
     if (addTraceIdRequestAttribute) {
       SpanContext spanContext = Span.fromContext(context).getSpanContext();
       // we do this e.g. so that servlet containers can use these values in their access logs
-      request.setAttribute("trace_id", spanContext.getTraceId());
-      request.setAttribute("span_id", spanContext.getSpanId());
+      httpRequest.setAttribute("trace_id", spanContext.getTraceId());
+      httpRequest.setAttribute("span_id", spanContext.getSpanId());
     }
 
     OtelHttpServletRequest otelRequest =
-        new OtelHttpServletRequest(httpRequest, context, requestContext, responseContext);
+        new OtelHttpServletRequest(
+            httpRequest, bodyCaptureRequest, context, requestContext, responseContext);
     Throwable error = null;
     try (Scope ignore = context.makeCurrent()) {
       filterChain.doFilter(otelRequest, httpResponse);
@@ -108,6 +127,8 @@ public final class Servlet5TelemetryFilter implements Filter {
   public void destroy() {}
 
   private class OtelHttpServletRequest extends HttpServletRequestWrapper {
+    // request that captures the body, null when body capture is not applied to this request
+    @Nullable private final HttpServletRequest bodyCaptureRequest;
     private final Context context;
     private final ServletRequestContext<HttpServletRequest> requestContext;
     private final ServletResponseContext<HttpServletResponse> responseContext;
@@ -116,10 +137,12 @@ public final class Servlet5TelemetryFilter implements Filter {
 
     OtelHttpServletRequest(
         HttpServletRequest request,
+        @Nullable HttpServletRequest bodyCaptureRequest,
         Context context,
         ServletRequestContext<HttpServletRequest> requestContext,
         ServletResponseContext<HttpServletResponse> responseContext) {
       super(request);
+      this.bodyCaptureRequest = bodyCaptureRequest;
       this.context = context;
       this.requestContext = requestContext;
       this.responseContext = responseContext;
@@ -193,7 +216,13 @@ public final class Servlet5TelemetryFilter implements Filter {
 
     @Override
     public ServletRequest getRequest() {
-      return delegate.getRequest();
+      ServletRequest request = delegate.getRequest();
+      if (otelRequest.bodyCaptureRequest != null && delegate.hasOriginalRequestAndResponse()) {
+        // The container returns the request it owns, which bypasses the wrapper that captures the
+        // body. This only applies when the application did not provide its own request.
+        return otelRequest.bodyCaptureRequest;
+      }
+      return request;
     }
 
     @Override

@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.servlet.common.internal;
 
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
+
 import com.google.errorprone.annotations.CanIgnoreReturnValue;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
@@ -31,6 +33,7 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
   private final ServletAccessor<REQUEST, RESPONSE> accessor;
   private final List<ContextCustomizer<? super ServletRequestContext<REQUEST>>> contextCustomizers =
       new ArrayList<>();
+  private BodyCaptureConfig requestBodyCaptureConfig = createDefault();
 
   private boolean propagateOperationListenersToOnEnd;
   private boolean captureExperimentalAttributes;
@@ -101,6 +104,13 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
     return this;
   }
 
+  @CanIgnoreReturnValue
+  public ServletInstrumenterBuilder<REQUEST, RESPONSE> setCaptureRequestBody(
+      BodyCaptureConfig bodyCaptureConfig) {
+    this.requestBodyCaptureConfig = bodyCaptureConfig;
+    return this;
+  }
+
   public Instrumenter<ServletRequestContext<REQUEST>, ServletResponseContext<RESPONSE>> build(
       SpanNameExtractor<ServletRequestContext<REQUEST>> spanNameExtractor) {
 
@@ -116,6 +126,11 @@ public final class ServletInstrumenterBuilder<REQUEST, RESPONSE> {
       for (ContextCustomizer<? super ServletRequestContext<REQUEST>> contextCustomizer :
           contextCustomizers) {
         builder.addContextCustomizer(contextCustomizer);
+      }
+
+      if (requestBodyCaptureConfig.isEnabled()) {
+        builder.addAttributesExtractor(
+            new ServletRequestBodyExtractor<>(accessor, requestBodyCaptureConfig));
       }
 
       if (propagateOperationListenersToOnEnd) {

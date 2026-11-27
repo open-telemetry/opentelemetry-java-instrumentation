@@ -1,0 +1,286 @@
+/*
+ * Copyright The OpenTelemetry Authors
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package io.opentelemetry.instrumentation.servlet.v5_0;
+
+import static io.opentelemetry.api.common.AttributeKey.stringKey;
+import static io.opentelemetry.instrumentation.servlet.common.internal.BodyCaptureConfig.createDefault;
+import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+
+import io.opentelemetry.api.common.AttributeKey;
+import io.opentelemetry.instrumentation.servlet.v5_0.internal.Experimental;
+import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
+import io.opentelemetry.sdk.trace.data.SpanData;
+import jakarta.servlet.AsyncContext;
+import jakarta.servlet.AsyncEvent;
+import jakarta.servlet.AsyncListener;
+import jakarta.servlet.Filter;
+import jakarta.servlet.ReadListener;
+import jakarta.servlet.ServletInputStream;
+import jakarta.servlet.ServletRequest;
+import jakarta.servlet.ServletResponse;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+import javax.annotation.Nullable;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
+
+class ServletBodyCaptureTest {
+
+  @RegisterExtension
+  static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  // TODO: to be replaced with semconv incubating attribute when available
+  private static final AttributeKey<String> BODY_ATTRIBUTE_KEY =
+      stringKey("http.request.body.content");
+
+  @Test
+  void capturesRequestBody_default() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    testCaptureRequestBody(builder, null);
+  }
+
+  @Test
+  void capturesRequestBody_enabled() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, createDefault().setEnabled(true));
+    testCaptureRequestBody(builder, "request-body");
+  }
+
+  @Test
+  void capturesRequestBody_disabledExplicitly() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, createDefault().setEnabled(false));
+    testCaptureRequestBody(builder, null);
+  }
+
+  @ParameterizedTest
+  @ValueSource(ints = {-1, 0})
+  void capturesRequestBody_invalidMaxSizeUsesDefault(int maxSize) throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(
+        builder, createDefault().setEnabled(true).setMaxSize(maxSize));
+    testCaptureRequestBody(builder, "request-body");
+  }
+
+  @Test
+  void capturesRequestBody_truncated() throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, createDefault().setEnabled(true).setMaxSize(7));
+    testCaptureRequestBody(builder, "request");
+  }
+
+  @Test
+  void capturesRequestBody_asyncContextRequestFromStartAsync() throws Exception {
+    // the async context returned by a no-arg startAsync() exposes the container request
+    String value =
+        captureAsync((req, async) -> {
+          AsyncContext context = req.startAsync();
+          assertThat(context.hasOriginalRequestAndResponse()).isTrue();
+          return () -> readRequestBody(context.getRequest(), BODY);
+        });
+
+    assertThat(value).isEqualTo("request-body");
+  }
+
+  @Test
+  void capturesRequestBody_asyncContextRequestFromGetAsyncContext() throws Exception {
+    String value =
+        captureAsync((req, async) -> {
+          req.startAsync();
+          AsyncContext context = req.getAsyncContext();
+          return () -> readRequestBody(context.getRequest(), BODY);
+        });
+
+    assertThat(value).isEqualTo("request-body");
+  }
+
+  @Test
+  void asyncContextKeepsRequestPassedByApplication() throws Exception {
+    AtomicReference<Boolean> sameRequest = new AtomicReference<>();
+    String value =
+        captureAsync((req, async) -> {
+          AsyncContext context = req.startAsync(req, mock(ServletResponse.class));
+          sameRequest.set(context.getRequest() == req);
+          assertThat(context.hasOriginalRequestAndResponse()).isFalse();
+          return () -> readRequestBody(context.getRequest(), BODY);
+        });
+
+    assertThat(sameRequest.get()).isTrue();
+    assertThat(value).isEqualTo("request-body");
+  }
+
+  private static final byte[] BODY = "request-body".getBytes(UTF_8);
+
+  /**
+   * Application code that runs in the filter chain, with the container async context mock. It
+   * returns the code that reads the request body after the filter has returned.
+   */
+  private interface AsyncApplication {
+    BodyRead run(HttpServletRequest request, AsyncContext containerAsyncContext) throws IOException;
+  }
+
+  private interface BodyRead {
+    void run() throws IOException;
+  }
+
+  @Nullable
+  private static String captureAsync(AsyncApplication application) throws Exception {
+    ServletTelemetryBuilder builder = ServletTelemetry.builder(testing.getOpenTelemetry());
+    Experimental.setCaptureRequestBody(builder, createDefault().setEnabled(true));
+    Filter filter = builder.build().createFilter();
+
+    HttpServletRequest request = requestWithBody(BODY, "text/plain");
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    // like a container, the async context refers to the request it has been started on, which is
+    // the container request and not the wrappers added by filters, unless the application
+    // explicitly provides its own request
+    List<AsyncListener> listeners = new ArrayList<>();
+    AsyncContext noArgContext = mock(AsyncContext.class);
+    when(noArgContext.getRequest()).thenReturn(request);
+    when(noArgContext.hasOriginalRequestAndResponse()).thenReturn(true);
+    doAnswer(
+            invocation -> {
+              listeners.add(invocation.getArgument(0));
+              return null;
+            })
+        .when(noArgContext)
+        .addListener(any());
+    when(request.getAsyncContext()).thenReturn(noArgContext);
+    // mock of startAsync() variants
+    when(request.startAsync()).thenReturn(noArgContext);
+    when(request.startAsync(any(), any()))
+        .thenAnswer(invocation -> {
+          AsyncContext context = mock(AsyncContext.class);
+          when(context.getRequest()).thenReturn(invocation.getArgument(0));
+          when(context.hasOriginalRequestAndResponse()).thenReturn(false);
+          doAnswer(
+                  listenerInvocation -> {
+                    listeners.add(listenerInvocation.getArgument(0));
+                    return null;
+                  })
+              .when(context)
+              .addListener(any());
+          return context;
+        });
+
+    AtomicReference<BodyRead> bodyRead = new AtomicReference<>();
+    filter.doFilter(
+        request,
+        response,
+        (req, res) -> bodyRead.set(application.run((HttpServletRequest) req, noArgContext)));
+
+    // the request body is read after the filter has returned, and before the async processing
+    // completes
+    bodyRead.get().run();
+
+    // the span ends when the async processing completes
+    for (AsyncListener listener : listeners) {
+      listener.onComplete(new AsyncEvent(noArgContext));
+    }
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+    return traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY);
+  }
+
+  private static void testCaptureRequestBody(
+      ServletTelemetryBuilder builder, @Nullable String expected) throws Exception {
+
+    String value = captureRequestBody(builder, "request-body".getBytes(UTF_8), "text/plain");
+    if (expected == null) {
+      assertThat(value).isNull();
+    } else {
+      assertThat(value).isEqualTo(expected);
+    }
+  }
+
+  @Nullable
+  private static String captureRequestBody(
+      ServletTelemetryBuilder builder, byte[] body, String contentType) throws Exception {
+    Filter filter = builder.build().createFilter();
+
+    HttpServletRequest request = requestWithBody(body, contentType);
+    HttpServletResponse response = mock(HttpServletResponse.class);
+
+    filter.doFilter(request, response, (req, res) -> readRequestBody(req, body));
+
+    List<List<SpanData>> traces = testing.waitForTraces(1);
+
+    return traces.get(0).get(0).getAttributes().get(BODY_ATTRIBUTE_KEY);
+  }
+
+  private static void readRequestBody(ServletRequest req, byte[] expected) throws IOException {
+    ServletInputStream input = req.getInputStream();
+    ByteArrayOutputStream content = new ByteArrayOutputStream();
+    int value;
+    while ((value = input.read()) != -1) {
+      content.write(value);
+    }
+    // the application must always see the full body, whatever is captured in the span
+    assertThat(content.toByteArray()).isEqualTo(expected);
+  }
+
+  private static HttpServletRequest requestWithBody(byte[] body, @Nullable String contentType)
+      throws IOException {
+    HttpServletRequest request = mock(HttpServletRequest.class);
+    // a mock does not keep attributes, so back them with a map
+    Map<String, Object> attributes = new HashMap<>();
+    doAnswer(invocation -> attributes.put(invocation.getArgument(0), invocation.getArgument(1)))
+        .when(request)
+        .setAttribute(anyString(), any());
+    when(request.getAttribute(anyString()))
+        .thenAnswer(invocation -> attributes.get((String) invocation.getArgument(0)));
+    when(request.getMethod()).thenReturn("POST");
+    when(request.getCharacterEncoding()).thenReturn("UTF-8");
+    when(request.getHeader("Content-Type")).thenReturn(contentType);
+    when(request.getInputStream())
+        .thenReturn(
+            new ServletInputStream() {
+              private final ByteArrayInputStream input = new ByteArrayInputStream(body);
+
+              @Override
+              public int read() {
+                return input.read();
+              }
+
+              @Override
+              public int read(byte[] b, int off, int len) {
+                return input.read(b, off, len);
+              }
+
+              @Override
+              public boolean isFinished() {
+                return input.available() == 0;
+              }
+
+              @Override
+              public boolean isReady() {
+                return true;
+              }
+
+              @Override
+              public void setReadListener(ReadListener readListener) {}
+            });
+    return request;
+  }
+}
