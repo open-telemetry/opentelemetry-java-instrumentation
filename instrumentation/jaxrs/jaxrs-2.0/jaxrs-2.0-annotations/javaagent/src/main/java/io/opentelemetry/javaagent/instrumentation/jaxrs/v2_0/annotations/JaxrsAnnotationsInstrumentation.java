@@ -27,7 +27,7 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.common.AsyncResponseData;
 import io.opentelemetry.javaagent.instrumentation.jaxrs.common.CompletionStageFinishCallback;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.common.Jaxrs2HandlerData;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.common.v2_0.Jaxrs2HandlerData;
 import java.lang.reflect.Method;
 import java.util.concurrent.CompletionStage;
 import javax.annotation.Nullable;
