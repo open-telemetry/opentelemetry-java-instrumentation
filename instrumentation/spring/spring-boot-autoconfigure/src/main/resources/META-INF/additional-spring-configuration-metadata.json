@@ -290,12 +290,6 @@
       "description": "Maps server addresses or configured targets to logical server service identities as comma-separated <code>target=service_name</code> pairs. Flat mappings cannot express namespaces or targets containing commas or equals signs; use declarative <code>server_service_mapping</code> for those."
     },
     {
-      "name": "otel.instrumentation.common.thread-details.enabled",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of thread details (thread id and thread name) as span attributes.",
-      "defaultValue": false
-    },
-    {
       "name": "otel.instrumentation.http.client.capture-request-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "List of HTTP request headers to capture in HTTP clients."
@@ -690,6 +684,12 @@
       "type": "java.lang.Integer",
       "description": "The maximum number of links per span.",
       "defaultValue": 128
+    },
+    {
+      "name": "otel.spring-starter.capture-thread-attributes",
+      "type": "java.lang.Boolean",
+      "description": "Enable the capture of thread details (thread id and thread name) as span attributes.",
+      "defaultValue": false
     },
     {
       "name": "otel.spring-starter.debug",
