@@ -7,7 +7,9 @@ package io.opentelemetry.instrumentation.spring.webflux.v5_3;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteGetter;
 import io.opentelemetry.instrumentation.reactor.v3_1.ContextPropagationOperator;
+import javax.annotation.Nullable;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.server.WebFilter;
 
@@ -16,6 +18,7 @@ public final class SpringWebfluxServerTelemetry {
   // We use ServerWebExchange (which holds both the request and response)
   // because we need it to get the HTTP route while instrumenting.
   private final Instrumenter<ServerWebExchange, ServerWebExchange> serverInstrumenter;
+  @Nullable private final HttpServerRouteGetter<ServerWebExchange> routeFallback;
 
   /** Returns a new instance configured with the given {@link OpenTelemetry} instance. */
   public static SpringWebfluxServerTelemetry create(OpenTelemetry openTelemetry) {
@@ -28,13 +31,15 @@ public final class SpringWebfluxServerTelemetry {
   }
 
   SpringWebfluxServerTelemetry(
-      Instrumenter<ServerWebExchange, ServerWebExchange> serverInstrumenter) {
+      Instrumenter<ServerWebExchange, ServerWebExchange> serverInstrumenter,
+      @Nullable HttpServerRouteGetter<ServerWebExchange> routeFallback) {
     this.serverInstrumenter = serverInstrumenter;
+    this.routeFallback = routeFallback;
   }
 
   /** Returns a {@link WebFilter} that instruments HTTP server requests. */
   public WebFilter createWebFilter() {
-    return new TelemetryProducingWebFilter(serverInstrumenter);
+    return new TelemetryProducingWebFilter(serverInstrumenter, routeFallback);
   }
 
   /**

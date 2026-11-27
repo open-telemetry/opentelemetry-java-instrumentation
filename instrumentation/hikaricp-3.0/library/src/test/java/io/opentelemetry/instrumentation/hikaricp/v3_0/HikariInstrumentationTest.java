@@ -25,7 +25,6 @@ class HikariInstrumentationTest extends AbstractHikariInstrumentationTest {
   @Override
   protected void configure(HikariConfig poolConfig, MetricsTrackerFactory userTracker) {
     poolConfig.setMetricsTrackerFactory(
-        HikariTelemetry.create(testing().getOpenTelemetry())
-            .createMetricsTrackerFactory(userTracker));
+        HikariTelemetry.create(testing().getOpenTelemetry()).instrument(userTracker));
   }
 }

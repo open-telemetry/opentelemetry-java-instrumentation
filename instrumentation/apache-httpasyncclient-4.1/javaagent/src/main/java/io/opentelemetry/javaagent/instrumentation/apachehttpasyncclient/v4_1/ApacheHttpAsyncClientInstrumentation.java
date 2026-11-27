@@ -16,7 +16,6 @@ import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
-import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.asm.Advice.AssignReturned;
@@ -146,8 +145,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   public static class WrappedFutureCallback<T> implements FutureCallback<T> {
 
-    private static final Logger logger = Logger.getLogger(WrappedFutureCallback.class.getName());
-
     private final Context parentContext;
     @Nullable private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
@@ -164,16 +161,16 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       this.delegate = delegate;
     }
 
+    private void endSpan(Exception exception) {
+      // context is null here when the span creation was suppressed
+      if (context != null) {
+        instrumenter().end(context, otelRequest, getResponseFromHttpContext(), exception);
+      }
+    }
+
     @Override
     public void completed(T result) {
-      if (context == null) {
-        // this is unexpected
-        logger.fine("context was never set");
-        completeDelegate(result);
-        return;
-      }
-
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
+      endSpan(null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         completeDelegate(result);
@@ -182,15 +179,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void failed(Exception ex) {
-      if (context == null) {
-        // this is unexpected
-        logger.fine("context was never set");
-        failDelegate(ex);
-        return;
-      }
-
-      // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), ex);
+      endSpan(ex);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         failDelegate(ex);
@@ -199,16 +188,9 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public void cancelled() {
-      if (context == null) {
-        // this is unexpected
-        logger.fine("context was never set");
-        cancelDelegate();
-        return;
-      }
-
       // TODO (trask) add "canceled" span attribute
       // end span before calling delegate
-      instrumenter().end(context, otelRequest, getResponseFromHttpContext(), null);
+      endSpan(null);
 
       try (Scope ignored = parentContext.makeCurrent()) {
         cancelDelegate();

@@ -29,6 +29,15 @@ testing.suites {
       implementation("org.apache.dubbo:dubbo:${baseVersion("2.7.14").orLatest()}")
     }
   }
+  if (!otelProps.testLatestDeps) {
+    // Dubbo 2.7.7's zone-aware cluster casts registry invokers to MockClusterInvoker.
+    register<JvmTestSuite>("testDubbo277") {
+      dependencies {
+        implementation(project())
+        implementation("org.apache.dubbo:dubbo:2.7.7")
+      }
+    }
+  }
 }
 
 tasks.withType<Test>().configureEach {

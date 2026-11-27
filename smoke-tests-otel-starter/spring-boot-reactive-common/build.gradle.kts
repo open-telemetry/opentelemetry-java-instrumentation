@@ -11,5 +11,6 @@ dependencies {
   compileOnly("org.springframework.boot:spring-boot-starter-webflux")
   compileOnly("org.springframework.boot:spring-boot-starter-test")
   compileOnly("org.springframework.boot:spring-boot-starter-data-r2dbc")
+  compileOnly("org.springframework.cloud:spring-cloud-starter-gateway:3.1.8")
   api(project(":smoke-tests-otel-starter:spring-smoke-testing"))
 }

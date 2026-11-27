@@ -40,22 +40,53 @@ testing.suites {
     dependencies {
       implementation(project(":instrumentation-api"))
       implementation(project(":instrumentation-api-incubator"))
-      implementation("org.apache.rocketmq:rocketmq-client-java:5.0.0")
+      implementation("org.apache.rocketmq:rocketmq-client-java:5.2.2")
+    }
+  }
+
+  register<JvmTestSuite>("rocketmq52Test") {
+    dependencies {
+      val rocketmqVersion = baseVersion("5.2.2").orLatest()
+      implementation("org.apache.rocketmq:rocketmq-client-java:$rocketmqVersion")
+      implementation("org.apache.rocketmq:rocketmq-tools:5.5.1")
+      implementation("org.testcontainers:testcontainers")
+    }
+  }
+
+  val disableWhenUnsafeDenied = Action<Test> {
+    if (otelProps.denyUnsafe) {
+      enabled = false
     }
   }
 
   executions("test") {
-    configureEach {
-      if (otelProps.denyUnsafe) {
-        enabled = false
-      }
-    }
+    configureEach(disableWhenUnsafeDenied)
 
     configureDefault {
       filter {
         excludeTestsMatching("RocketMqClientSuppressReceiveSpanTest")
       }
-      telemetryConfig("otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled", "true")
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+    }
+
+    if (!otelProps.testLatestDeps) {
+      // Verify that enabling experimental attributes works with a client lacking both getters.
+      register("Experimental") {
+        filter {
+          includeTestsMatching("RocketMqClientTest.testSendAndConsumeNormalMessage")
+        }
+        systemProperty(
+          "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+          "true",
+        )
+        systemProperty(
+          "otel.instrumentation.rocketmq-client.experimental-span-attributes",
+          "true",
+        )
+      }
     }
 
     register("ReceiveSpanDisabled") {
@@ -76,4 +107,23 @@ testing.suites {
       include("**/RocketMqSimpleConsumerTest.*")
     }
   }
+
+  executions("rocketmq52Test") {
+    configureEach(disableWhenUnsafeDenied)
+
+    register("Experimental") {
+      telemetryConfig(
+        "otel.instrumentation.rocketmq-client.experimental-span-attributes",
+        "true",
+      )
+      telemetryConfig(
+        "otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled",
+        "true",
+      )
+    }
+  }
+}
+
+tasks.check {
+  dependsOn(testing.suites)
 }

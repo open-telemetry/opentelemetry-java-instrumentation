@@ -9,7 +9,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.instrumentation.api.annotation.support.async.AsyncOperationEndStrategies;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.instrumentation.guava.v10_0.GuavaAsyncOperationEndStrategy;
 import io.opentelemetry.javaagent.bootstrap.executors.PropagatedContext;
 
 public class InstrumentationHelper {
@@ -20,11 +19,9 @@ public class InstrumentationHelper {
 
   static {
     asyncOperationEndStrategy =
-        GuavaAsyncOperationEndStrategy.builder()
-            .setCaptureExperimentalSpanAttributes(
-                DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "guava")
-                    .getBoolean("experimental_span_attributes/development", false))
-            .build();
+        new GuavaAsyncOperationEndStrategy(
+            DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "guava")
+                .getBoolean("experimental_span_attributes/development", false));
 
     registerAsyncSpanEndStrategy();
   }

@@ -10,12 +10,15 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import static java.util.Collections.singleton;
+import static java.util.Collections.singletonMap;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.stream.Collectors.toSet;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
+import io.opentelemetry.instrumentation.jmx.internal.Internal;
 import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
@@ -27,6 +30,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
@@ -57,6 +62,8 @@ class JmxTelemetryTest {
         .isInstanceOf(IllegalArgumentException.class);
     assertThatThrownBy(() -> builder.addRules((Path) null))
         .isInstanceOf(IllegalArgumentException.class);
+    assertThatThrownBy(() -> Internal.addRule(builder, null))
+        .isInstanceOf(IllegalArgumentException.class);
   }
 
   @Test
@@ -86,6 +93,39 @@ class JmxTelemetryTest {
 
     assertThat(getFilteredMetrics(telemetry.getMetrics(), builder.getRegisteredMetrics()))
         .containsExactlyInAnyOrderElementsOf(builder.getRegisteredMetrics());
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void ruleFromMapCanBeReused(boolean immutable) {
+    Map<String, Object> metricDefinition = new HashMap<>();
+    metricDefinition.put("metric", "custom.map.thread.count");
+    metricDefinition.put("type", "gauge");
+    metricDefinition.put("unit", "{thread}");
+    metricDefinition.put("desc", "Current number of threads.");
+
+    Map<String, Object> rule = new HashMap<>();
+    rule.put("bean", "java.lang:type=Threading");
+    rule.put(
+        "mapping",
+        singletonMap(
+            "ThreadCount", immutable ? unmodifiableMap(metricDefinition) : metricDefinition));
+    Map<String, Object> input = immutable ? unmodifiableMap(rule) : rule;
+
+    JmxTelemetryBuilder builder = JmxTelemetry.builder(testing.getOpenTelemetry());
+    JmxTelemetryBuilder anotherBuilder = JmxTelemetry.builder(OpenTelemetry.noop());
+    Internal.addRule(builder, input);
+    Internal.addRule(anotherBuilder, input);
+    assertThat(anotherBuilder.getRegisteredMetrics()).containsExactly("custom.map.thread.count");
+    cleanup.deferCleanup(builder.build().start());
+
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.jmx",
+        metric ->
+            metric
+                .hasName("custom.map.thread.count")
+                .hasUnit("{thread}")
+                .hasDescription("Current number of threads."));
   }
 
   private static Collection<String> getFilteredMetrics(

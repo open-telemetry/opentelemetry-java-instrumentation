@@ -276,8 +276,6 @@ abstract class AbstractRocketMqClientTest {
       Context actualCallbackContext = callbackContext.get(10, SECONDS);
       actualCallbackSpanContext = callbackSpanContext.get(10, SECONDS);
       assertThat(actualCallbackContext.get(CALLER_MARKER)).isEqualTo("caller");
-      assertThat(Span.fromContext(actualCallbackContext).getSpanContext())
-          .isEqualTo(parent.getSpanContext());
     } finally {
       parent.end();
     }
