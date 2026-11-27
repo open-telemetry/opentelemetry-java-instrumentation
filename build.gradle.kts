@@ -11,6 +11,7 @@ plugins {
   id("idea")
 
   id("io.github.gradle-nexus.publish-plugin")
+  id("otel.dsl-conventions")
   id("otel.spotless-conventions")
   id("otel.resolve-latest-dep-versions")
   /* workaround for
@@ -101,7 +102,7 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       }
 
       val partitionTasks = ArrayList<String>()
-      val testLatestDeps = providers.gradleProperty("testLatestDeps").orNull == "true"
+      val testLatestDeps = otelProps.testLatestDeps
       val smokeTestProjects = listOf(":smoke-tests", ":smoke-tests-osgi", ":smoke-tests-otel-starter")
       var testPartitionCounter = 0
       subprojects {
