@@ -151,21 +151,31 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void clearThreadState(Consumer<?, ?> consumer) {
-    // clean up the decorated interceptor first, it may close scopes made current after ours
+    ThreadState threadState = currentThreadState.get();
     try {
       if (decorated != null) {
+        // Close batch scopes above the delegate's setup scope, but stop if the delegate
+        // still has a scope open above ours from intercept().
+        if (threadState != null) {
+          endUnfinishedInvocations(threadState, true);
+        }
         decorated.clearThreadState(consumer);
       }
     } finally {
-      endUnfinishedInvocations();
+      if (threadState != null) {
+        endUnfinishedInvocations(threadState, false);
+        if (threadState.previous == null) {
+          currentThreadState.remove();
+        } else {
+          currentThreadState.set(threadState.previous);
+        }
+        // A physical poll can produce multiple partition sub-batches without another setup call.
+        nextSubBatch.set(true);
+      }
     }
   }
 
-  private void endUnfinishedInvocations() {
-    ThreadState threadState = currentThreadState.get();
-    if (threadState == null) {
-      return;
-    }
+  private void endUnfinishedInvocations(ThreadState threadState, boolean onlyCurrentScopes) {
     ProcessingInvocation<KafkaReceiveRequest> invocation;
     while ((invocation = currentInvocation.get()) != null
         && invocation != threadState.previousInvocation) {
@@ -173,16 +183,14 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
         // ended out of order, only remove it from the invocation chain
         pop(invocation);
       } else {
+        if (onlyCurrentScopes
+            && invocation.scope != null
+            && invocation.context != Context.current()) {
+          break;
+        }
         end(invocation, invocation.error);
       }
     }
-    if (threadState.previous == null) {
-      currentThreadState.remove();
-    } else {
-      currentThreadState.set(threadState.previous);
-    }
-    // A physical poll can produce multiple partition sub-batches without another setup call.
-    nextSubBatch.set(true);
   }
 
   private static class ThreadState {

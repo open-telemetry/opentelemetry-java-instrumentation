@@ -825,10 +825,11 @@ class SpringKafkaInterceptorTest {
             span -> span.hasName("listener").hasParent(trace.getSpan(2))));
   }
 
-  @Test
-  void clearThreadStateCleansUpDecoratedInterceptorBeforeEndingBatch() {
+  @ParameterizedTest
+  @ValueSource(booleans = {true, false})
+  void clearThreadStateClosesDecoratedInterceptorScopeInStackOrder(boolean attachInSetup) {
     assumeHasThreadStateHooks();
-    NestedScopeInterceptor decorated = new NestedScopeInterceptor(null);
+    NestedScopeInterceptor decorated = new NestedScopeInterceptor(attachInSetup, null);
     InstrumentedBatchInterceptor<String, String> interceptor =
         (InstrumentedBatchInterceptor<String, String>)
             telemetry.<String, String>createBatchInterceptor(decorated);
@@ -850,7 +851,7 @@ class SpringKafkaInterceptorTest {
   void clearThreadStateEndsBatchWhenDecoratedInterceptorThrows() {
     assumeHasThreadStateHooks();
     IllegalStateException failure = new IllegalStateException("clear failed");
-    NestedScopeInterceptor decorated = new NestedScopeInterceptor(failure);
+    NestedScopeInterceptor decorated = new NestedScopeInterceptor(false, failure);
     InstrumentedBatchInterceptor<String, String> interceptor =
         (InstrumentedBatchInterceptor<String, String>)
             telemetry.<String, String>createBatchInterceptor(decorated);
@@ -867,25 +868,37 @@ class SpringKafkaInterceptorTest {
         trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()));
   }
 
-  // clearThreadState is not declared in Spring Kafka 2.7, so it is not annotated with @Override
+  // The thread-state hooks are not declared in Spring Kafka 2.7, so omit @Override.
+  @SuppressWarnings("MissingOverride")
   private static class NestedScopeInterceptor implements BatchInterceptor<String, String> {
     static final ContextKey<String> KEY = ContextKey.named("nested");
 
+    private final boolean attachInSetup;
     private final RuntimeException clearFailure;
     private Scope scope;
 
-    NestedScopeInterceptor(RuntimeException clearFailure) {
+    NestedScopeInterceptor(boolean attachInSetup, RuntimeException clearFailure) {
+      this.attachInSetup = attachInSetup;
       this.clearFailure = clearFailure;
+    }
+
+    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod", "UnusedVariable"})
+    public void setupThreadState(Consumer<?, ?> consumer) {
+      if (attachInSetup) {
+        scope = Context.current().with(KEY, "nested").makeCurrent();
+      }
     }
 
     @Override
     public ConsumerRecords<String, String> intercept(
         ConsumerRecords<String, String> records, Consumer<String, String> consumer) {
-      scope = Context.current().with(KEY, "nested").makeCurrent();
+      if (!attachInSetup) {
+        scope = Context.current().with(KEY, "nested").makeCurrent();
+      }
       return records;
     }
 
-    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod", "UnusedVariable"}) // 2.8+ interface method
+    @SuppressWarnings({"EffectivelyPrivate", "UnusedMethod", "UnusedVariable"})
     public void clearThreadState(Consumer<?, ?> consumer) {
       scope.close();
       if (clearFailure != null) {

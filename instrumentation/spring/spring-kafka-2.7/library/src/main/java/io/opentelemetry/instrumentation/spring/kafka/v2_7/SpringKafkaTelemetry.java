@@ -83,6 +83,11 @@ public final class SpringKafkaTelemetry {
    * SpanKind#CONSUMER CONSUMER} span, and then delegates to a provided {@code
    * decoratedInterceptor}. Can be set on a {@link AbstractMessageListenerContainer} using the
    * {@link AbstractMessageListenerContainer#setBatchInterceptor(BatchInterceptor)} method.
+   *
+   * <p>On Spring Kafka 2.8 and later, if batch completion is skipped, a single {@code
+   * clearThreadState} callback cannot close delegate scopes both outside and inside the
+   * instrumentation's batch scope in stack order. Do not leave scopes from both {@code
+   * setupThreadState} and {@code intercept} open until that callback.
    */
   public <K, V> BatchInterceptor<K, V> createBatchInterceptor(
       @Nullable BatchInterceptor<K, V> decoratedInterceptor) {
