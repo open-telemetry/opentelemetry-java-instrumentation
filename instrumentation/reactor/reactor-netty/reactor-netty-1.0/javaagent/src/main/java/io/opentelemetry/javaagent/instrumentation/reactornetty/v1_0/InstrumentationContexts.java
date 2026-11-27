@@ -14,7 +14,6 @@ import io.opentelemetry.instrumentation.api.semconv.http.HttpClientRequestResend
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.atomic.AtomicReferenceFieldUpdater;
 import javax.annotation.Nullable;
 import reactor.netty.http.client.HttpClientRequest;
 import reactor.netty.http.client.HttpClientResponse;
@@ -23,26 +22,31 @@ final class InstrumentationContexts {
   private static final VirtualField<HttpClientRequest, Context> REQUEST_CONTEXT =
       VirtualField.find(HttpClientRequest.class, Context.class);
 
-  private static final AtomicReferenceFieldUpdater<InstrumentationContexts, Initialization>
-      initializationUpdater =
-          AtomicReferenceFieldUpdater.newUpdater(
-              InstrumentationContexts.class, Initialization.class, "initialization");
+  // The volatile parent context publishes the timer.
+  private Timer timer;
+  private volatile Context parentContext;
 
-  private volatile Initialization initialization;
   // on retries, reactor-netty starts the next resend attempt before it ends the previous one (i.e.
   // it calls the callback functions in that order); thus for a short moment there can be multiple
   // coexisting HTTP client spans
   private final Queue<RequestAndContext> clientContexts = new LinkedBlockingQueue<>();
 
   void initialize(Context parentContext) {
+    if (this.parentContext != null) {
+      return;
+    }
+
     Context parentContextWithResends = HttpClientRequestResendCount.initialize(parentContext);
-    // make sure initialization happens only once
-    initializationUpdater.compareAndSet(
-        this, null, new Initialization(parentContextWithResends, Timer.start()));
+    synchronized (this) {
+      if (this.parentContext == null) {
+        timer = Timer.start();
+        this.parentContext = parentContextWithResends;
+      }
+    }
   }
 
   Context getParentContext() {
-    return initialization.parentContext;
+    return parentContext;
   }
 
   @Nullable
@@ -53,7 +57,7 @@ final class InstrumentationContexts {
 
   @Nullable
   Context startClientSpan(HttpClientRequest request) {
-    Context parentContext = initialization.parentContext;
+    Context parentContext = this.parentContext;
     Context context = null;
     if (instrumenter().shouldStart(parentContext, request)) {
       context = instrumenter().start(parentContext, request);
@@ -82,22 +86,11 @@ final class InstrumentationContexts {
   }
 
   void startAndEndConnectionErrorSpan(HttpClientRequest request, Throwable error) {
-    Initialization initialization = this.initialization;
-    Context parentContext = initialization.parentContext;
+    Context parentContext = this.parentContext;
     if (instrumenter().shouldStart(parentContext, request)) {
-      Timer timer = initialization.timer;
+      Timer timer = this.timer;
       InstrumenterUtil.startAndEnd(
           instrumenter(), parentContext, request, null, error, timer.startTime(), timer.now());
-    }
-  }
-
-  private static final class Initialization {
-    private final Context parentContext;
-    private final Timer timer;
-
-    private Initialization(Context parentContext, Timer timer) {
-      this.parentContext = parentContext;
-      this.timer = timer;
     }
   }
 
