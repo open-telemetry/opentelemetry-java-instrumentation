@@ -1,5 +1,6 @@
 import io.opentelemetry.instrumentation.gradle.executions
 import io.opentelemetry.instrumentation.gradle.telemetryConfig
+import io.opentelemetry.instrumentation.gradle.unitTests
 
 plugins {
   id("otel.javaagent-instrumentation")
@@ -65,6 +66,12 @@ dependencies {
 }
 
 testing.suites {
+  unitTests {
+    dependencies {
+      implementation(project(":javaagent-extension-api"))
+      implementation("com.couchbase.client:java-client:2.5.0")
+    }
+  }
   register<JvmTestSuite>("version25Test") {
     dependencies {
       implementation(project(":instrumentation:couchbase:couchbase-common:testing"))

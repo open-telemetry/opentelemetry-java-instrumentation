@@ -11,11 +11,5 @@ dependencies {
 }
 
 testing.suites {
-  unitTests {
-    dependencies {
-      implementation(project(":javaagent-extension-api"))
-      implementation(project(":instrumentation:couchbase:couchbase-2.0:javaagent"))
-      implementation("com.couchbase.client:java-client:2.5.0")
-    }
-  }
+  unitTests()
 }
