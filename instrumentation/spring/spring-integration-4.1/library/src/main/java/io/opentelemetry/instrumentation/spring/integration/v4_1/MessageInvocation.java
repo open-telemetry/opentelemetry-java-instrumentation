@@ -27,9 +27,12 @@ final class MessageInvocation {
   private static final ContextKey<Identity> CURRENT_INVOCATION =
       ContextKey.named("opentelemetry-spring-integration-current-invocation");
 
-  // TracingChannelInterceptor pairs preSend with afterSendCompletion and beforeHandle with
-  // afterMessageHandled on the same thread. Duplicate registrations share an entry until the
-  // last completion, even when the send or handler fails.
+  // TracingChannelInterceptor removes entries in afterSendCompletion and afterMessageHandled,
+  // each on the same thread as its matching preSend or beforeHandle. Duplicate registrations
+  // for the same tracked invocation share an entry until the last completion. Propagation-only
+  // sends add one no-op entry per registration.
+  // If Spring skips completion, there is no fallback cleanup. Spring Integration 4.1.0 skips
+  // afterSendCompletion if postSend throws an Error.
   private static final ThreadLocal<Deque<Callback>> currentCallbacks = new ThreadLocal<>();
 
   private final Identity identity;

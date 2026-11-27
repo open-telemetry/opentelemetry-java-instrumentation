@@ -22,9 +22,11 @@ final class InstrumentedRecordInterceptor<K, V> implements RecordInterceptor<K, 
   private final Instrumenter<KafkaProcessRequest, Void> processInstrumenter;
   @Nullable private final RecordInterceptor<K, V> decorated;
 
-  // intercept hands the invocation to the same-thread completion callbacks. With no poll state,
-  // success or failure ends it; otherwise afterRecord does. A null result or an exception from
-  // intercept ends it immediately.
+  // intercept ends the invocation on a null result or exception. Otherwise it hands the
+  // invocation to same-thread completion callbacks. With poll state, afterRecord ends it.
+  // Without poll state, success or failure ends it, with no fallback if neither runs. On
+  // Spring Kafka 2.7 this can happen if transaction startup fails after early interception
+  // with interceptBeforeTx enabled.
   private final ThreadLocal<ProcessingInvocation<KafkaProcessRequest>> currentInvocation =
       new ThreadLocal<>();
 
