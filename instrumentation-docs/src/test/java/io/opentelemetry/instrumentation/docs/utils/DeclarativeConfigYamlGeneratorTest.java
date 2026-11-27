@@ -6,6 +6,8 @@
 package io.opentelemetry.instrumentation.docs.utils;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalArgumentException;
+import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
@@ -17,7 +19,11 @@ import java.io.StringWriter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.Arguments;
+import org.junit.jupiter.params.provider.MethodSource;
 import org.yaml.snakeyaml.Yaml;
 
 class DeclarativeConfigYamlGeneratorTest {
@@ -76,7 +82,112 @@ class DeclarativeConfigYamlGeneratorTest {
     // Two modules declaring the exact same declarative_name (as common configs typically do).
     String output = generate(List.of(module("mod-a", option), module("mod-b", option)));
 
-    assertThat(output).containsOnlyOnce("enabled:");
+    assertThat(output)
+        .containsOnlyOnce("enabled:")
+        .containsOnlyOnce("# Shared switch.")
+        .doesNotContain("mod-a", "mod-b");
+  }
+
+  @Test
+  void preservesDistinctDescriptionsWithModuleLabelsRegardlessOfModuleOrder() throws Exception {
+    ConfigurationOption grpc =
+        sharedOption("Captures gRPC attributes.", "false", ConfigurationType.BOOLEAN, null);
+    ConfigurationOption remoting =
+        sharedOption("Captures Remoting attributes.", "false", ConfigurationType.BOOLEAN, null);
+    InstrumentationModule grpcModule = module("rocketmq-5.0", grpc);
+    grpcModule.getMetadata().setDisplayName("RocketMQ - gRPC Protocol");
+    InstrumentationModule remotingModule = module("rocketmq-4.8", remoting);
+    remotingModule.getMetadata().setDisplayName("RocketMQ - Remoting Protocol");
+    // Modules without a display name fall back to their instrumentation name. Repeated
+    // descriptions retain all their sources without repeating the description itself.
+    InstrumentationModule otherModule = module("other-remoting", remoting);
+
+    String output = generate(List.of(grpcModule, remotingModule, otherModule));
+
+    assertThat(output)
+        .containsOnlyOnce("experimental_span_attributes/development:")
+        .containsOnlyOnce("# Captures gRPC attributes.")
+        .containsOnlyOnce("# Captures Remoting attributes.")
+        .contains("# RocketMQ - gRPC Protocol:\n      # Captures gRPC attributes.")
+        .contains(
+            "# RocketMQ - Remoting Protocol, other-remoting:\n      # Captures Remoting attributes.")
+        .isEqualTo(generate(List.of(otherModule, remotingModule, grpcModule)));
+    assertThat(navigate(parse(output), "instrumentation/development", "java", "rocketmq_client"))
+        .isEqualTo(Map.of("experimental_span_attributes/development", false));
+  }
+
+  @Test
+  void disambiguatesIdenticalDisplayNamesWithDifferentDescriptions() throws Exception {
+    InstrumentationModule oldModule =
+        module(
+            "client-1.0",
+            sharedOption("Old client attributes.", "false", ConfigurationType.BOOLEAN, null));
+    InstrumentationModule newModule =
+        module(
+            "client-2.0",
+            sharedOption("New client attributes.", "false", ConfigurationType.BOOLEAN, null));
+    oldModule.getMetadata().setDisplayName("Client");
+    newModule.getMetadata().setDisplayName("Client");
+
+    String output = generate(List.of(oldModule, newModule));
+
+    assertThat(output)
+        .contains("# Client (client-1.0):\n      # Old client attributes.")
+        .contains("# Client (client-2.0):\n      # New client attributes.")
+        .doesNotContain("# \n")
+        .isEqualTo(generate(List.of(newModule, oldModule)));
+  }
+
+  @ParameterizedTest
+  @MethodSource("conflictingOptions")
+  void rejectsConflictingModuleDefinitions(
+      ConfigurationOption original, ConfigurationOption conflicting) {
+    assertThatIllegalArgumentException()
+        .isThrownBy(
+            () -> generate(List.of(module("mod-a", original), module("mod-b", conflicting))))
+        .withMessageContaining("java.rocketmq_client.experimental_span_attributes/development")
+        .withMessageContaining("mod-a")
+        .withMessageContaining("mod-b");
+  }
+
+  private static Stream<Arguments> conflictingOptions() {
+    ConfigurationOption original =
+        sharedOption("Original.", "false", ConfigurationType.BOOLEAN, null);
+    DeclarativeSchema schema =
+        new DeclarativeSchema(
+            "object",
+            List.of(),
+            Map.of("target", new DeclarativeSchema.Property("string", "Target.", null, null)));
+    DeclarativeSchema otherSchema =
+        new DeclarativeSchema("object", List.of("target"), schema.properties());
+    return Stream.of(
+        argumentSet(
+            "different defaults",
+            original,
+            sharedOption("Different default.", "true", ConfigurationType.BOOLEAN, null)),
+        argumentSet(
+            "different types",
+            original,
+            sharedOption("Different type.", "false", ConfigurationType.STRING, null)),
+        argumentSet(
+            "different schemas",
+            sharedOption("Original schema.", "", ConfigurationType.STRUCTURED_LIST, schema),
+            sharedOption("Different schema.", "", ConfigurationType.STRUCTURED_LIST, otherSchema)));
+  }
+
+  private static ConfigurationOption sharedOption(
+      String description, String defaultValue, ConfigurationType type, DeclarativeSchema schema) {
+    return new ConfigurationOption(
+        "otel.instrumentation.rocketmq-client.experimental-span-attributes",
+        "java.rocketmq_client.experimental_span_attributes/development",
+        description,
+        defaultValue,
+        type,
+        null,
+        null,
+        schema,
+        null,
+        null);
   }
 
   @Test
