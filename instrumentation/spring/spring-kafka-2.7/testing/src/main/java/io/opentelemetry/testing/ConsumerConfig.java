@@ -6,6 +6,8 @@
 package io.opentelemetry.testing;
 
 import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringBootConfiguration;
 import org.springframework.boot.autoconfigure.EnableAutoConfiguration;
@@ -15,6 +17,7 @@ import org.springframework.kafka.config.ContainerCustomizer;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.listener.MessageListenerContainer;
 
 @SpringBootConfiguration
 @EnableAutoConfiguration
@@ -79,10 +82,16 @@ class ConsumerConfig {
     factory.setBatchListener(false);
     factory.setAutoStartup(true);
     try {
-      // available since spring 2.8
-      Class.forName("org.springframework.kafka.listener.CommonErrorHandler");
+      // handleOne is available since Spring Kafka 2.9
+      Class.forName("org.springframework.kafka.listener.CommonErrorHandler")
+          .getMethod(
+              "handleOne",
+              Exception.class,
+              ConsumerRecord.class,
+              Consumer.class,
+              MessageListenerContainer.class);
       ConsumerConfigUtil.addErrorHandler(factory);
-    } catch (ClassNotFoundException ignored) {
+    } catch (ClassNotFoundException | NoSuchMethodException ignored) {
       // ignore
     }
     customizerProvider.ifAvailable(factory::setContainerCustomizer);

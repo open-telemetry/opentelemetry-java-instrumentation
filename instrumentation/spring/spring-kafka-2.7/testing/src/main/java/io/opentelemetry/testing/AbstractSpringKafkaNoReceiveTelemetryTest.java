@@ -274,7 +274,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                             .hasAttributesSatisfyingExactly(withErrorType(processAttributes)),
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0))),
             trace -> {
-              if (isLibraryInstrumentationTest() && testLatestDeps()) {
+              if (isLibraryInstrumentationTest()) {
                 trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
               } else {
                 trace.hasSpansSatisfyingExactly(
@@ -290,7 +290,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
               }
             },
             trace -> {
-              if (isLibraryInstrumentationTest() && testLatestDeps()) {
+              if (isLibraryInstrumentationTest()) {
                 trace.hasSpansSatisfyingExactly(span -> span.hasName("consumer").hasNoParent());
               } else {
                 trace.hasSpansSatisfyingExactly(
@@ -304,7 +304,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
                     span -> span.hasName("consumer").hasParent(trace.getSpan(0)));
               }
             });
-    int failureCount = isLibraryInstrumentationTest() && testLatestDeps() ? 1 : 2;
+    int failureCount = isLibraryInstrumentationTest() ? 1 : 2;
     assertProcessDurationMetrics(
         testing(),
         "io.opentelemetry.spring-kafka-2.7",
@@ -313,7 +313,7 @@ public abstract class AbstractSpringKafkaNoReceiveTelemetryTest extends Abstract
         "0",
         failureCount,
         IllegalArgumentException.class.getName());
-    if (!isLibraryInstrumentationTest() || !testLatestDeps()) {
+    if (!isLibraryInstrumentationTest()) {
       assertProcessDurationMetrics(
           testing(),
           "io.opentelemetry.spring-kafka-2.7",

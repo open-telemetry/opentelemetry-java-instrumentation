@@ -444,7 +444,6 @@
 
 - The Spring Kafka standalone library now requires Spring Kafka 2.8.0 or later. Upgrade Spring Kafka
   or use the Java agent.
-
 - Rename `OkHttpTelemetry.createCallFactory(...)` to `instrument(...)`.
 - Remove the standalone Guava instrumentation library and its async operation end strategy APIs.
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
