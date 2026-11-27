@@ -294,9 +294,17 @@ tasks {
 }
 
 fun computeInstrumentationName(): String {
-  val name = when (projectDir.name) {
-    "javaagent", "library", "library-autoconfigure" -> projectDir.parentFile.name
-    else -> project.name
+  val name = when (project.path) {
+    ":instrumentation:jaxrs:jaxrs-annotations-1.0:javaagent" -> "jaxrs-1.0-annotations"
+
+    ":instrumentation:jaxrs:jaxrs-2.0:jaxrs-annotations-2.0:javaagent" -> "jaxrs-2.0-annotations"
+
+    ":instrumentation:jaxrs:jaxrs-3.0:jaxrs-annotations-3.0:javaagent" -> "jaxrs-3.0-annotations"
+
+    else -> when (projectDir.name) {
+      "javaagent", "library", "library-autoconfigure" -> projectDir.parentFile.name
+      else -> project.name
+    }
   }
   return "io.opentelemetry.$name"
 }
