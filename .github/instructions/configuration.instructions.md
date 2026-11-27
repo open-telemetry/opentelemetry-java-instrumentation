@@ -19,8 +19,7 @@ user-facing instrumentation configuration.
   Keep shared SDK and resource settings and upstream-defined names in their own namespaces,
   even when a distribution reads them.
 - Use `otel.instrumentation.*` for flat settings that control instrumentation behavior, including
-  settings shared across modules, regardless of which code reads them. For example, per-appender
-  log thread-attribute capture belongs here.
+  settings shared across modules, regardless of which code reads them.
 - Check both the flat property and declarative YAML form of an `otel.instrumentation.*` setting.
   Flat-property segments use kebab-case and YAML keys use snake_case, subject to the published
   names below.
