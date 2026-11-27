@@ -121,7 +121,7 @@ class TomcatHandlerTest extends AbstractHttpServerTest<Tomcat> {
           .isEqualTo("io.opentelemetry.tomcat-10.0");
       assertThat(trace.getSpan(0).getAttributes().get(USER_NAME))
           .isEqualTo(
-              Boolean.getBoolean("otel.instrumentation.common.user.name.enabled")
+              Boolean.getBoolean("otel.instrumentation.common.capture-user-name")
                   ? "test-user"
                   : null);
     });

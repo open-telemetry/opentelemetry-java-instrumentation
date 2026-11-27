@@ -41,7 +41,7 @@ testing.suites {
       }
       jvmArgs("--add-opens=java.base/java.util=ALL-UNNAMED")
       jvmArgs("-XX:+IgnoreUnrecognizedVMOptions")
-      telemetryConfig("otel.instrumentation.common.user.name.enabled", "true")
+      telemetryConfig("otel.instrumentation.common.capture-user-name", "true")
     }
 
     register("Experimental") {
