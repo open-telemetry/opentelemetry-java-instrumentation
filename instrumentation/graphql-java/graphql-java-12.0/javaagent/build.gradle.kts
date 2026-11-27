@@ -42,9 +42,10 @@ testing.suites {
       }
     }
     register("DeclarativeCaptureDocumentDisabled") {
-      jvmArgs(
-        "-Dotel.config.file=${project(":instrumentation:graphql-java:graphql-java-common-12.0:testing").projectDir}/src/main/resources/declarative-config.yaml"
-      )
+      val config =
+        rootProject.file("instrumentation/graphql-java/graphql-java-common-12.0/testing/src/main/resources/declarative-config.yaml")
+      inputs.file(config)
+      jvmArgs("-Dotel.config.file=$config")
       systemProperty("test.captureDocumentDisabled", "true")
       filter {
         includeTestsMatching("*.GraphqlTest.captureDocument")

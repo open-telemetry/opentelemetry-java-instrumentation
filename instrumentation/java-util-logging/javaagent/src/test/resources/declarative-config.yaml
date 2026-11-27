@@ -1,0 +1,5 @@
+file_format: "1.1"
+instrumentation/development:
+  java:
+    java_util_logging:
+      capture_thread_attributes: true

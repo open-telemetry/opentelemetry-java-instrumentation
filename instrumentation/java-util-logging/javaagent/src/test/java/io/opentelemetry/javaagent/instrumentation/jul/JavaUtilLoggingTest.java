@@ -41,7 +41,8 @@ class JavaUtilLoggingTest {
       AttributeKey.stringArrayKey("log.body.parameters");
 
   private static final boolean EXPERIMENTAL_ATTRIBUTES =
-      Boolean.getBoolean("otel.instrumentation.java-util-logging.capture-thread-attributes");
+      Boolean.getBoolean("otel.instrumentation.java-util-logging.capture-thread-attributes")
+          || Boolean.getBoolean("test.captureThreadAttributes");
   private static final boolean CAPTURE_TEMPLATE =
       Boolean.getBoolean("otel.instrumentation.java-util-logging.experimental.capture-template");
   private static final boolean CAPTURE_ARGUMENTS =
