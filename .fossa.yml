@@ -579,7 +579,7 @@ targets:
       target: ':instrumentation:javalin:javalin-7.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs:jaxrs-1.0-annotations:javaagent'
+      target: ':instrumentation:jaxrs:jaxrs-annotations-1.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-common:bootstrap'
@@ -1101,12 +1101,6 @@ targets:
       target: ':instrumentation:zio:zio-http-3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-annotations:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-common:javaagent'
-    - type: gradle
-      path: ./
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-cxf-3.2:javaagent'
     - type: gradle
       path: ./
@@ -1122,16 +1116,22 @@ targets:
       target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-common-3.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent'
+      target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-annotations-2.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-common:javaagent'
+      target: ':instrumentation:jaxrs:jaxrs-2.0:jaxrs-common-2.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-3.0-resteasy-6.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-annotations-3.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:jaxrs:jaxrs-3.0:jaxrs-common-3.0:javaagent'
     - type: gradle
       path: ./
       target: ':instrumentation:kafka:kafka-clients:kafka-clients-0.11:bootstrap'
