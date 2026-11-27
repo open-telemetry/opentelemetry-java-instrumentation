@@ -26,6 +26,11 @@ val camelTestApp = configurations.create("camelTestApp") {
   isCanBeResolved = true
 }
 
+val tomcatH2Driver = configurations.create("tomcatH2Driver") {
+  isCanBeConsumed = false
+  isCanBeResolved = true
+}
+
 dependencies {
   implementation("org.snakeyaml:snakeyaml-engine")
 
@@ -33,6 +38,7 @@ dependencies {
   jmxAgent(project(":instrumentation:jmx-metrics:javaagent", configuration = "shadow"))
   testWebApp(project(":instrumentation:jmx-metrics:testing-apps:testing-webapp", configuration = "testWebApp"))
   camelTestApp(project(":instrumentation:jmx-metrics:testing-apps:camel-testing-app", configuration = "camelTestApp"))
+  tomcatH2Driver("com.h2database:h2:2.4.240")
 
   testImplementation("io.opentelemetry.javaagent:opentelemetry-testing-common")
   testImplementation("org.testcontainers:testcontainers")
@@ -110,8 +116,19 @@ testing.suites {
     }
 
     containerTestClasses.forEach { testClass ->
-      register(testClass.substringAfterLast('.').removeSuffix("Test")) {
+      val testName = testClass.substringAfterLast('.').removeSuffix("Test")
+      register(testName) {
         filter.includeTestsMatching(testClass)
+        if (testName == "Tomcat") {
+          // H2 requires Java 11, so load it only inside Tomcat and keep it off the test JVM classpath.
+          inputs.files(tomcatH2Driver)
+            .withPropertyName("tomcatH2Driver")
+            .withNormalizer(ClasspathNormalizer::class)
+          val h2DriverPath = tomcatH2Driver.elements.map { it.single().asFile.absolutePath }
+          jvmArgumentProviders += CommandLineArgumentProvider {
+            listOf("-Dio.opentelemetry.tomcat.h2.path=${h2DriverPath.get()}")
+          }
+        }
       }
     }
   }

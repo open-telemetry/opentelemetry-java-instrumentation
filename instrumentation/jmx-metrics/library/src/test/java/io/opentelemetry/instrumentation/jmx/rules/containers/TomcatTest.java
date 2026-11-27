@@ -25,6 +25,8 @@ import org.junit.jupiter.params.provider.Arguments;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
+import org.testcontainers.containers.wait.strategy.WaitAllStrategy;
+import org.testcontainers.utility.MountableFile;
 
 class TomcatTest extends TargetSystemTest {
 
@@ -60,14 +62,34 @@ class TomcatTest extends TargetSystemTest {
             .withEnv("CATALINA_OPTS", String.join(" ", jvmArgs))
             .withStartupTimeout(Duration.ofMinutes(2))
             .withExposedPorts(8080)
-            .waitingFor(Wait.forListeningPorts(8080));
+            .waitingFor(
+                new WaitAllStrategy()
+                    .withStrategy(Wait.forHttp("/datasource.jsp").forPort(8080).forStatusCode(200))
+                    .withStrategy(
+                        Wait.forHttp("/other/datasource.jsp").forPort(8080).forStatusCode(200)));
 
     copyAgentToTarget(target);
     copyYamlFilesToTarget(target, yamlFiles);
+    target.withCopyFileToContainer(
+        MountableFile.forHostPath(getArtifactPath("io.opentelemetry.tomcat.h2.path")),
+        "/usr/local/tomcat/lib/h2.jar");
 
     // Deploy example web application to the tomcat to enable reporting tomcat.session.active.count
     // metric
     copyTestWebAppToTarget(target, "/usr/local/tomcat/webapps/ROOT.war");
+    copyTestWebAppToTarget(target, "/usr/local/tomcat/webapps/other.war");
+    target.withCopyFileToContainer(
+        MountableFile.forClasspathResource("tomcat-context.xml"),
+        "/usr/local/tomcat/conf/Catalina/localhost/ROOT.xml");
+    target.withCopyFileToContainer(
+        MountableFile.forClasspathResource("tomcat-jdbc-context.xml"),
+        "/usr/local/tomcat/conf/Catalina/localhost/other.xml");
+    target.withCopyFileToContainer(
+        MountableFile.forClasspathResource("datasource.jsp"),
+        "/usr/local/tomcat/webapps/ROOT/datasource.jsp");
+    target.withCopyFileToContainer(
+        MountableFile.forClasspathResource("datasource.jsp"),
+        "/usr/local/tomcat/webapps/other/datasource.jsp");
 
     startWeaverValidation(
         "tomcat.yaml",
@@ -86,14 +108,29 @@ class TomcatTest extends TargetSystemTest {
                         "tomcat.session.active.limit",
                         "tomcat.error.count",
                         "tomcat.request.duration.max",
-                        "tomcat.thread.limit"),
+                        "tomcat.thread.limit",
+                        "tomcat.session.duration.max",
+                        "tomcat.session.created",
+                        "tomcat.session.duration.mean",
+                        "tomcat.session.processing.duration.sum",
+                        "tomcat.session.active.max",
+                        "tomcat.session.expired",
+                        "tomcat.session.rejected",
+                        "tomcat.db.client.connection.initial",
+                        "tomcat.db.client.connection.count",
+                        "tomcat.db.client.connection.limit"),
                     emptyList())
                 .checkRegisteredAttributes(
                     "tomcat.",
                     asList(
                         "tomcat.request.processor.name",
                         "tomcat.context",
-                        "tomcat.thread.pool.name"),
+                        "tomcat.thread.pool.name",
+                        "tomcat.host"),
+                    emptyList())
+                .checkRegisteredAttributes(
+                    "db.client.",
+                    asList("db.client.connection.pool.name", "db.client.connection.state"),
                     emptyList()));
 
     startTarget(target);
@@ -106,8 +143,77 @@ class TomcatTest extends TargetSystemTest {
         attribute("tomcat.request.processor.name", "\"http-nio-8080\"");
     AttributeMatcher threadPoolNameAttribute =
         attribute("tomcat.thread.pool.name", "\"http-nio-8080\"");
+    AttributeMatcher dataSourcePoolNameAttribute =
+        attribute("db.client.connection.pool.name", "\"jdbc/TestDB\"");
+    AttributeMatcher dataSourceHostAttribute = attribute("tomcat.host", "localhost");
+    AttributeMatcher rootDataSourceContextAttribute = attribute("tomcat.context", "/");
+    AttributeMatcher otherDataSourceContextAttribute = attribute("tomcat.context", "/other");
+    AttributeMatcher usedConnectionStateAttribute = attribute("db.client.connection.state", "used");
+    AttributeMatcher idleConnectionStateAttribute = attribute("db.client.connection.state", "idle");
 
     return MetricsVerifier.create()
+        .add(
+            "tomcat.db.client.connection.initial",
+            metric ->
+                metric
+                    .hasDescription("The configured initial size of the JDBC connection pool.")
+                    .hasUnit("{connection}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            rootDataSourceContextAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            otherDataSourceContextAttribute)))
+        .add(
+            "tomcat.db.client.connection.count",
+            metric ->
+                metric
+                    .hasDescription("The number of JDBC connections.")
+                    .hasUnit("{connection}")
+                    .isUpDownCounter()
+                    // Only the Tomcat JDBC pool has an idle connection.
+                    .hasDataPointsWithIntValues(value -> value.isZero(), value -> value.isOne())
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            rootDataSourceContextAttribute,
+                            usedConnectionStateAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            otherDataSourceContextAttribute,
+                            usedConnectionStateAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            rootDataSourceContextAttribute,
+                            idleConnectionStateAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            otherDataSourceContextAttribute,
+                            idleConnectionStateAttribute)))
+        .add(
+            "tomcat.db.client.connection.limit",
+            metric ->
+                metric
+                    .hasDescription("The configured maximum size of the JDBC connection pool.")
+                    .hasUnit("{connection}")
+                    .isUpDownCounter()
+                    .hasDataPointsWithAttributes(
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            rootDataSourceContextAttribute),
+                        attributeGroup(
+                            dataSourcePoolNameAttribute,
+                            dataSourceHostAttribute,
+                            otherDataSourceContextAttribute)))
         .add(
             "tomcat.error.count",
             metric ->
@@ -170,6 +276,62 @@ class TomcatTest extends TargetSystemTest {
                     .hasUnit("{session}")
                     .isUpDownCounter()
                     .hasDataPointsWithIntValues(value -> value.isGreaterThanOrEqualTo(0))
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.duration.max",
+            metric ->
+                metric
+                    .hasDescription("The maximum observed session lifetime.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.created",
+            metric ->
+                metric
+                    .hasDescription("The number of sessions created.")
+                    .hasUnit("{session}")
+                    .isCounter()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.duration.mean",
+            metric ->
+                metric
+                    .hasDescription("The average observed session lifetime.")
+                    .hasUnit("s")
+                    .isGauge()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.processing.duration.sum",
+            metric ->
+                metric
+                    .hasDescription("The total time spent processing sessions.")
+                    .hasUnit("s")
+                    .isCounter()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.active.max",
+            metric ->
+                metric
+                    .hasDescription("The maximum number of concurrent active sessions observed.")
+                    .hasUnit("{session}")
+                    .isGauge()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.expired",
+            metric ->
+                metric
+                    .hasDescription("The number of expired sessions.")
+                    .hasUnit("{session}")
+                    .isCounter()
+                    .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
+        .add(
+            "tomcat.session.rejected",
+            metric ->
+                metric
+                    .hasDescription("The number of rejected sessions.")
+                    .hasUnit("{session}")
+                    .isCounter()
                     .hasDataPointsWithOneAttribute(attributeWithAnyValue("tomcat.context")))
         .add(
             "tomcat.thread.count",
