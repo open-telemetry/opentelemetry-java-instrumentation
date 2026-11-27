@@ -61,16 +61,12 @@ audits of existing code, and pull request reviews.
 ## Documentation
 
 - Document flat properties without repeating equivalent declarative configuration.
-  In changelog entries, omit one-to-one YAML key renames that mirror flat property renames.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
 - Hand-written changelog entries cover only deprecations and breaking changes, as specified in
   CONTRIBUTING.md. Other changes appear in the generated changelog. Deprecations of settings and
-  instrumentation enablement aliases have entries. Breaking changes use the appropriate stable or
-  non-stable heading. Entries are short and name a deprecated interface and its replacement
-  without repeating removal timing or obvious migration steps. They describe the released behavior
-  without referring to preview flags used to stage the change or mentioning unchanged behavior
-  unless it clarifies the change's scope.
+  instrumentation enablement aliases have entries. Follow the
+  [changelog instructions](instructions/changelog.instructions.md) for entry placement and wording.
 - When a change is breaking, add the `breaking change` label to its pull request, as described in
   CONTRIBUTING.md.
 - README and usage documentation should meet a concrete reader need: setup,
