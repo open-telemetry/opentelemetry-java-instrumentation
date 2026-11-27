@@ -18,6 +18,7 @@ import ch.qos.logback.core.read.ListAppender;
 import io.opentelemetry.api.trace.Span;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
 import org.junit.jupiter.api.extension.RegisterExtension;
@@ -39,6 +40,14 @@ class LogPatternTest {
       System.getProperty("otel.instrumentation.common.logging.trace-id-key", "trace_id");
   private static final String SPAN =
       System.getProperty("otel.instrumentation.common.logging.span-id-key", "span_id");
+
+  @BeforeAll
+  static void verifiesDefaultIgnoresAreEnabled() {
+    if (ENABLED) {
+      assertThat(System.getProperty("otel.javaagent.testing.additional-library-ignores.enabled"))
+          .isEqualTo("true");
+    }
+  }
 
   @Test
   void rendersCorrelationAndPreservesApplicationValues() {

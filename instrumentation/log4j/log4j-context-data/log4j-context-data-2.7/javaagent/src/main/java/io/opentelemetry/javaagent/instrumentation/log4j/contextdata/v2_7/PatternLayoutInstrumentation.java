@@ -73,7 +73,7 @@ class PatternLayoutInstrumentation implements TypeInstrumentation {
         @Advice.FieldValue("pattern") @Nullable String pattern,
         @Advice.FieldValue("patternSelector") @Nullable Object selector,
         @Advice.FieldValue("configuration") @Nullable Configuration configuration) {
-      if (!LogPatternInjection.isEnabled()) {
+      if (!LogPatternInjection.isEnabled() || LogPatternInjection.isStructuredLayout()) {
         return null;
       }
       Set<?> converterKeys =

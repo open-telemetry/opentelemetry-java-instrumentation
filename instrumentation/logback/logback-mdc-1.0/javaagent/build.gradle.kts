@@ -93,3 +93,14 @@ tasks {
     dependsOn(testing.suites)
   }
 }
+
+// Append after the javaagent-testing convention's default argument provider.
+afterEvaluate {
+  tasks.withType<Test>().configureEach {
+    if (name.startsWith("testPatternInjection")) {
+      jvmArgumentProviders.add(CommandLineArgumentProvider {
+        listOf("-Dotel.javaagent.testing.additional-library-ignores.enabled=true")
+      })
+    }
+  }
+}

@@ -32,6 +32,16 @@ public final class LogPatternInjection {
 
   private static final ScopedThreadValue<Injection> currentInjection = new ScopedThreadValue<>();
 
+  private static final ScopedThreadValue<Boolean> structuredLayout = new ScopedThreadValue<>();
+
+  public static ScopedThreadValue<Boolean> structuredLayout() {
+    return structuredLayout;
+  }
+
+  public static boolean isStructuredLayout() {
+    return Boolean.TRUE.equals(structuredLayout.get());
+  }
+
   public static boolean isEnabled() {
     return ENABLED;
   }

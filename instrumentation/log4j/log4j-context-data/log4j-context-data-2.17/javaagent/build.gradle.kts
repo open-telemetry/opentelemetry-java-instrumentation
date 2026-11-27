@@ -25,6 +25,13 @@ dependencies {
 }
 
 testing.suites {
+  register<JvmTestSuite>("structuredLayoutTest") {
+    sources.java.srcDir(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing").file("src/structuredLayoutTest/java"))
+    dependencies {
+      implementation("org.apache.logging.log4j:log4j-layout-template-json:2.17.0")
+    }
+  }
+
   register<JvmTestSuite>("testAddBaggage") {
     dependencies {
       implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
@@ -34,6 +41,12 @@ testing.suites {
   register<JvmTestSuite>("testLoggingKeys") {
     dependencies {
       implementation(project(":instrumentation:log4j:log4j-context-data:log4j-context-data-common:testing"))
+    }
+  }
+
+  executions("structuredLayoutTest") {
+    configureEach {
+      systemProperty("otel.instrumentation.logging.pattern-injection.enabled", "true")
     }
   }
 
@@ -82,5 +95,16 @@ tasks {
 
   named("check") {
     dependsOn(testing.suites)
+  }
+}
+
+// Append after the javaagent-testing convention's default argument provider.
+afterEvaluate {
+  tasks.withType<Test>().configureEach {
+    if (name == "structuredLayoutTest") {
+      jvmArgumentProviders.add(CommandLineArgumentProvider {
+        listOf("-Dotel.javaagent.testing.additional-library-ignores.enabled=true")
+      })
+    }
   }
 }
