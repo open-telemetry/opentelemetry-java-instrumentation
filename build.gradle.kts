@@ -101,14 +101,19 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       }
 
       val partitionTasks = ArrayList<String>()
+      val testLatestDeps = providers.gradleProperty("testLatestDeps").orNull == "true"
+      val smokeTestProjects = listOf(":smoke-tests", ":smoke-tests-osgi", ":smoke-tests-otel-starter")
       var testPartitionCounter = 0
       subprojects {
         // relying on predictable ordering of subprojects
         // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
         // since we are splitting these tasks across different github action jobs
         val enabled = testPartitionCounter++ % 4 == testPartition
-        if (enabled) {
-          val projectPath = this.path
+        val projectPath = path
+        val skipSmokeTests = testLatestDeps && smokeTestProjects.any {
+          projectPath == it || projectPath.startsWith("$it:")
+        }
+        if (enabled && !skipSmokeTests) {
           tasks.withType<Test>().configureEach {
             val taskPath = projectPath + ":" + this.name
             partitionTasks.add(taskPath)

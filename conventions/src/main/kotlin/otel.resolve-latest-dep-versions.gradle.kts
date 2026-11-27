@@ -109,16 +109,6 @@ tasks {
           }
       }
 
-      // Resolve Spring Boot catalog versions using a detached configuration.
-      // The subproject scan doesn't capture these because the Spring Boot Gradle plugin
-      // applies the BOM at an already-resolved version, not the original "3.+"/"4.+" range.
-      listOf("3.+", "4.+").forEach { range ->
-        val resolvedVersion = resolveStableVersion(project, "org.springframework.boot", "spring-boot-dependencies", range)
-        if (resolvedVersion != null) {
-          recordVersion("org.springframework.boot:spring-boot-dependencies#$range", resolvedVersion)
-        }
-      }
-
       // Resolve muzzle-only artifacts that don't appear in test classpaths.
       // muzzle pass/fail directives reference artifacts that resolveUpperBound() needs pinned,
       // but many of these are never pulled into a testLatestDeps configuration.
