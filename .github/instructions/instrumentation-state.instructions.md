@@ -194,13 +194,13 @@ javaagent instrumentation, not library-only code.
   storage, and skipped advice. Prefer library ordering or an existing operation context over a
   separate handoff protocol.
 
-- Publish related state as a unit. When state is initialized once, an existing volatile field
-  can publish the other fields without a separate holder. If several callers can initialize the
-  state, choose the writer before writing any of those fields. Write the other fields first, then
-  set the volatile field to its ready value. Readers must observe that value before reading the
-  other fields. Do not overwrite the published fields. If state can be replaced while readers
-  access it, safely publish immutable snapshots and have each reader use a single snapshot, or
-  protect reads and writes with the same short private lock.
+- Publish related state as a unit. When state is initialized once, prefer reusing an existing
+  volatile field that can signal readiness over allocating a holder solely for publication. If
+  several callers can initialize the state, choose the writer before writing any of its fields.
+  Write the other fields first, then set the volatile field to its ready value. Readers must
+  observe that value before reading the other fields. Do not overwrite the published fields. If
+  state can be replaced while readers access it, safely publish immutable snapshots and have each
+  reader use a single snapshot, or protect reads and writes with the same short private lock.
 
 - Give terminal work a single owner. Rely on the library's completion guarantee when it covers all
   supported paths. If completion can still race across threads, claim ownership atomically, such as
