@@ -5,14 +5,117 @@
 
 package io.opentelemetry.javaagent.bootstrap.servlet;
 
+import java.lang.ref.WeakReference;
+import javax.annotation.Nullable;
+
+// Shared by response wrappers for one response body, including async redispatch.
+// The stream's virtual field can outlive the request when the container recycles the stream.
 public final class InjectionState {
   private static final int HEAD_TAG_WRITTEN_FAKE_VALUE = -1;
   private static final int HEAD_TAG_PREFIX_LENGTH = "<head".length();
-  private final SnippetInjectingResponseWrapper wrapper;
+  private SnippetInjectingResponseWrapper wrapper;
+  private SnippetInjectingResponseWrapper contentLengthWrapper;
+  @Nullable private WeakReference<Object> contentLengthResponse;
   private int headTagBytesSeen = 0;
+  private long contentLength = -1;
+  private boolean contentLengthAdjusted;
+  private boolean writer;
+  private boolean forwardPending;
+  private long resetSequence;
 
   public InjectionState(SnippetInjectingResponseWrapper wrapper) {
     this.wrapper = wrapper;
+    contentLengthWrapper = wrapper;
+  }
+
+  public void setWrapper(SnippetInjectingResponseWrapper wrapper) {
+    this.wrapper = wrapper;
+  }
+
+  public void setContentLengthWrapper(SnippetInjectingResponseWrapper wrapper) {
+    contentLengthWrapper = wrapper;
+  }
+
+  public void setContentLengthResponse(Object response) {
+    contentLengthResponse = new WeakReference<>(response);
+  }
+
+  @Nullable
+  public Object getContentLengthResponse() {
+    return contentLengthResponse == null ? null : contentLengthResponse.get();
+  }
+
+  public void useWriter() {
+    writer = true;
+  }
+
+  public void beginForward() {
+    forwardPending = true;
+  }
+
+  public boolean shouldProcessStreamWrite() {
+    return !writer && shouldProcessWrite();
+  }
+
+  public void setContentLength(long contentLength) {
+    this.contentLength = contentLength;
+    contentLengthAdjusted = false;
+  }
+
+  public void markContentLengthAdjusted() {
+    contentLengthAdjusted = true;
+  }
+
+  public boolean isContentLengthAdjusted() {
+    return contentLengthAdjusted;
+  }
+
+  public long getContentLength() {
+    return contentLength;
+  }
+
+  public boolean hasContentLength() {
+    return contentLength != -1;
+  }
+
+  public void resetBuffer() {
+    contentLengthWrapper.resetContentLengthIfPreviouslyAdjusted();
+    headTagBytesSeen = 0;
+    if (forwardPending) {
+      forwardPending = false;
+      writer = false;
+    }
+    resetSequence++;
+  }
+
+  public void reset() {
+    headTagBytesSeen = 0;
+    contentLength = -1;
+    contentLengthAdjusted = false;
+    writer = false;
+    forwardPending = false;
+    resetSequence++;
+  }
+
+  public long getResetSequence() {
+    return resetSequence;
+  }
+
+  public void resetForForward() {
+    if (forwardPending) {
+      resetBuffer();
+    }
+  }
+
+  public void finishForward(boolean successful) {
+    if (!forwardPending) {
+      return;
+    }
+    if (successful) {
+      resetBuffer();
+    } else {
+      forwardPending = false;
+    }
   }
 
   // only used by tests
@@ -29,7 +132,7 @@ public final class InjectionState {
   }
 
   public boolean shouldProcessWrite() {
-    if (isHeadTagWritten()) {
+    if (isHeadTagWritten() || !isCurrentRequest()) {
       return false;
     }
     if (!wrapper.isContentTypeTextHtml()) {
@@ -89,5 +192,9 @@ public final class InjectionState {
 
   public SnippetInjectingResponseWrapper getWrapper() {
     return wrapper;
+  }
+
+  public SnippetInjectingResponseWrapper getContentLengthWrapper() {
+    return contentLengthWrapper;
   }
 }

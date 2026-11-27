@@ -7,11 +7,15 @@ package io.opentelemetry.javaagent.bootstrap.servlet;
 
 public interface SnippetInjectingResponseWrapper {
 
+  boolean isIncludeRequest();
+
   boolean isContentTypeTextHtml();
 
   boolean isCurrentRequest();
 
-  void updateContentLengthIfPreviouslySet();
+  boolean updateContentLengthIfPreviouslySet();
+
+  void resetContentLengthIfPreviouslyAdjusted();
 
   boolean isNotSafeToInject();
 

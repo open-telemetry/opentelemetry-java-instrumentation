@@ -25,15 +25,54 @@ import java.io.PrintWriter;
 import java.util.concurrent.CountDownLatch;
 import javax.servlet.AsyncContext;
 import javax.servlet.RequestDispatcher;
+import javax.servlet.ServletException;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpServletResponseWrapper;
 
 public class TestServlet3 {
+  private static final String CACHED_WRITER_RESPONSE_ATTRIBUTE =
+      TestServlet3.class.getName() + ".cachedWriterResponse";
+  private static final String ORIGINAL_RESPONSE_ATTRIBUTE =
+      TestServlet3.class.getName() + ".originalResponse";
+  private static final String CONTENT_LENGTH_SETTER_ATTRIBUTE =
+      TestServlet3.class.getName() + ".contentLengthSetter";
+  private static final String CONTENT_LENGTH_VALUE_ATTRIBUTE =
+      TestServlet3.class.getName() + ".contentLengthValue";
+  public static final String SNIPPET_RESET_REPLACEMENT_BODY =
+      "replacement response body without any head tag";
+
+  private static String replacementBody(int length) {
+    StringBuilder body = new StringBuilder(SNIPPET_RESET_REPLACEMENT_BODY);
+    while (body.length() < length) {
+      body.append('x');
+    }
+    return body.toString();
+  }
 
   private TestServlet3() {}
+
+  private static void setContentLength(HttpServletResponse response, String setter, int length) {
+    switch (setter) {
+      case "setHeader":
+        response.setHeader("Content-Length", String.valueOf(length));
+        break;
+      case "addHeader":
+        response.addHeader("Content-Length", String.valueOf(length));
+        break;
+      case "setIntHeader":
+        response.setIntHeader("Content-Length", length);
+        break;
+      case "addIntHeader":
+        response.addIntHeader("Content-Length", length);
+        break;
+      default:
+        response.setContentLength(length);
+    }
+  }
 
   @WebServlet
   public static class Sync extends HttpServlet {
@@ -111,6 +150,424 @@ public class TestServlet3 {
             }
             return null;
           });
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      String contentLength = req.getParameter("contentLength");
+      resp.setContentLength(contentLength == null ? 1000 : Integer.parseInt(contentLength));
+      resp.getOutputStream().write("<head>".getBytes(UTF_8));
+      if (resp.isCommitted()) {
+        throw new ServletException("Response committed before forward");
+      }
+      req.getRequestDispatcher(HTML_PRINT_WRITER.getPath()).forward(req, resp);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetCachedWriterForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      CachedWriterResponseWrapper response = new CachedWriterResponseWrapper(resp);
+      response.getWriter().write("discarded-prefix");
+      req.setAttribute(CACHED_WRITER_RESPONSE_ATTRIBUTE, response);
+      req.getRequestDispatcher("/snippetCachedWriterTarget").forward(req, response);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetCachedWriterTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      String body = HTML_PRINT_WRITER.getBody();
+      resp.setContentType("text/html");
+      resp.setContentLength(body.length());
+      resp.getOutputStream();
+      CachedWriterResponseWrapper response =
+          (CachedWriterResponseWrapper) req.getAttribute(CACHED_WRITER_RESPONSE_ATTRIBUTE);
+      response.getWriter().write(body);
+    }
+  }
+
+  private static class CachedWriterResponseWrapper extends HttpServletResponseWrapper {
+    private final PrintWriter writer;
+
+    CachedWriterResponseWrapper(HttpServletResponse response) throws IOException {
+      super(response);
+      writer = super.getWriter();
+    }
+
+    @Override
+    public PrintWriter getWriter() {
+      return writer;
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncContentLength extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(1000);
+      resp.getOutputStream().write("<he".getBytes(UTF_8));
+      AsyncContext context = req.startAsync();
+      context
+          .getResponse()
+          .setContentLength(
+              "clear".equals(req.getParameter("length"))
+                  ? -1
+                  : "<head>async response</head>".length());
+      context.dispatch("/snippetAsyncContentLengthTarget");
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncContentLengthTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.getOutputStream().write("ad>async response</head>".getBytes(UTF_8));
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncSameLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.getWriter().write("<head>");
+      AsyncContext context = req.startAsync();
+      HttpServletResponse rawResponse = (HttpServletResponse) context.getResponse();
+      int contentLength = Integer.parseInt(rawResponse.getHeader("Content-Length"));
+      rawResponse.setContentLength(contentLength);
+      rawResponse.resetBuffer();
+      rawResponse
+          .getWriter()
+          .write(replacementBody(Integer.parseInt(rawResponse.getHeader("Content-Length"))));
+      context.complete();
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeContentLengthSetter extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.getWriter().write("<head>");
+      req.setAttribute(CONTENT_LENGTH_SETTER_ATTRIBUTE, req.getParameter("setter"));
+      req.setAttribute(CONTENT_LENGTH_VALUE_ATTRIBUTE, req.getParameter("length"));
+      req.getRequestDispatcher("/snippetIncludeContentLengthSetterTarget").include(req, resp);
+      resp.resetBuffer();
+      int contentLength =
+          "setHeader".equals(req.getParameter("setter"))
+              ? Integer.parseInt(req.getParameter("length"))
+              : SNIPPET_RESET_REPLACEMENT_BODY.length();
+      resp.getWriter().write(replacementBody(contentLength));
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeContentLengthSetterTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      String setter = (String) req.getAttribute(CONTENT_LENGTH_SETTER_ATTRIBUTE);
+      String name = "org.eclipse.jetty.server.include.Content-Length";
+      String value = (String) req.getAttribute(CONTENT_LENGTH_VALUE_ATTRIBUTE);
+      switch (setter) {
+        case "setHeader":
+          resp.setHeader(name, value);
+          break;
+        case "addHeader":
+          resp.addHeader(name, value);
+          break;
+        case "setIntHeader":
+          resp.setIntHeader(name, Integer.parseInt(value));
+          break;
+        default:
+          resp.addIntHeader(name, Integer.parseInt(value));
+      }
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<head>");
+      AsyncContext context = req.startAsync();
+      context.getResponse().resetBuffer();
+      context.dispatch(HTML_PRINT_WRITER.getPath());
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<he");
+      AsyncContext context = req.startAsync();
+      req.getRequestDispatcher("/snippetIncludeResetTarget").include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<he");
+      req.getRequestDispatcher("/snippetIncludeResetTarget").include(req, resp);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.reset();
+      resp.getWriter().write("ad><title>included</title></head>");
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeRawReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<head>discarded-prefix");
+      AsyncContext context = req.startAsync();
+      req.setAttribute(ORIGINAL_RESPONSE_ATTRIBUTE, context.getResponse());
+      req.getRequestDispatcher("/snippetIncludeRawResetTarget").include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeDelegatedReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.getWriter().write("<head>discarded-prefix");
+      AsyncContext context = req.startAsync();
+      req.getRequestDispatcher("/snippetIncludeDelegatedResetTarget")
+          .include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeDelegatedResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.resetBuffer();
+      resp.getWriter().write(HTML_PRINT_WRITER.getBody());
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeRawResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      ((HttpServletResponse) req.getAttribute(ORIGINAL_RESPONSE_ATTRIBUTE)).resetBuffer();
+      resp.getWriter().write(HTML_PRINT_WRITER.getBody());
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeFixedLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.getWriter().write("<head>discarded-prefix");
+      AsyncContext context = req.startAsync();
+      req.setAttribute(ORIGINAL_RESPONSE_ATTRIBUTE, context.getResponse());
+      req.getRequestDispatcher("/snippetIncludeFixedLengthResetTarget")
+          .include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetSameLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(Integer.parseInt(req.getParameter("contentLength")));
+      resp.getWriter().write("<head>");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.resetBuffer();
+      resp.getWriter().write(SNIPPET_RESET_REPLACEMENT_BODY);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeFixedLengthResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      ((HttpServletResponse) req.getAttribute(ORIGINAL_RESPONSE_ATTRIBUTE)).resetBuffer();
+      resp.getWriter().write(SNIPPET_RESET_REPLACEMENT_BODY);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetAsyncIncludeSplitHeadFixedLength extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      String body = "<head><title>included</title></head>";
+      resp.setContentType("text/html");
+      String setter = req.getServletPath().substring(req.getServletPath().lastIndexOf('/') + 1);
+      setContentLength(resp, setter, body.length());
+      resp.getWriter().write("<he");
+      AsyncContext context = req.startAsync();
+      req.getRequestDispatcher("/snippetIncludeSplitHeadTarget")
+          .include(req, context.getResponse());
+      context.complete();
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeSplitHeadFixedLength extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength("<head><title>included</title></head>".length());
+      resp.getWriter().write("<he");
+      req.getRequestDispatcher("/snippetIncludeSplitHeadTarget").include(req, resp);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeSplitHeadTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setHeader("X-Included", "ignored");
+      resp.setHeader("org.eclipse.jetty.server.include.X-Included", "accepted");
+      resp.setHeader("Content-Length", "1");
+      resp.getWriter().write("ad><title>included</title></head>");
+    }
+  }
+
+  @WebServlet
+  public static class SnippetIncludeFixedLengthReset extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length());
+      resp.getWriter().write("<head>");
+      req.getRequestDispatcher("/snippetRegularIncludeFixedLengthResetTarget").include(req, resp);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetRegularIncludeFixedLengthResetTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.resetBuffer();
+      resp.getWriter().write(SNIPPET_RESET_REPLACEMENT_BODY);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetContentLengthRemoval extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setContentType("text/html");
+      resp.setContentLength(SNIPPET_RESET_REPLACEMENT_BODY.length() / 2);
+      resp.getWriter().write("<head>");
+      String setter = req.getServletPath().substring(req.getServletPath().lastIndexOf('/') + 1);
+      if ("setHeader".equals(setter)) {
+        resp.setHeader("Content-Length", null);
+      } else {
+        resp.setContentLength(-1);
+      }
+      resp.resetBuffer();
+      resp.getWriter().write(SNIPPET_RESET_REPLACEMENT_BODY);
+    }
+  }
+
+  @WebServlet
+  public static class SnippetHeaderForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      req.getRequestDispatcher("/snippetHeaderDispatchTarget").forward(req, resp);
+    }
+  }
+
+  @WebServlet(asyncSupported = true)
+  public static class SnippetHeaderAsyncDispatch extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) {
+      req.startAsync().dispatch("/snippetHeaderDispatchTarget");
+    }
+  }
+
+  @WebServlet
+  public static class SnippetHeaderDispatchTarget extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp) throws IOException {
+      resp.setHeader("X-Dispatch-Header", "accepted");
+      resp.setContentType("text/html");
+      resp.getWriter().write("<head>header dispatch target</head>");
+    }
+  }
+
+  @WebServlet
+  public static class SnippetRejectedForward extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      resp.setContentType("text/html");
+      ServletOutputStream output = resp.getOutputStream();
+      output.write("<head><title>before</title></head>".getBytes(UTF_8));
+      resp.flushBuffer();
+      try {
+        req.getRequestDispatcher(HTML_PRINT_WRITER.getPath()).forward(req, resp);
+      } catch (IllegalStateException expected) {
+        output.write("<head><title>after</title></head>".getBytes(UTF_8));
+        return;
+      }
+      throw new ServletException("Forward unexpectedly succeeded");
+    }
+  }
+
+  @WebServlet
+  public static class SnippetWriterAcquisitionFailure extends HttpServlet {
+    @Override
+    protected void service(HttpServletRequest req, HttpServletResponse resp)
+        throws ServletException, IOException {
+      String body = HTML_PRINT_WRITER.getBody();
+      resp.setContentType("text/html");
+      resp.setContentLength(body.length());
+      ServletOutputStream output = resp.getOutputStream();
+      try {
+        resp.getWriter();
+      } catch (IllegalStateException expected) {
+        output.write(body.getBytes(UTF_8));
+        return;
+      }
+      throw new ServletException("Writer acquisition unexpectedly succeeded");
     }
   }
 

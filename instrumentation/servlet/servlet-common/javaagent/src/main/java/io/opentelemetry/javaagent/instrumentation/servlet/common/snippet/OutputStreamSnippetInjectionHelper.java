@@ -37,7 +37,7 @@ public class OutputStreamSnippetInjectionHelper {
   public boolean handleWrite(
       InjectionState state, OutputStream out, byte[] original, int off, int length)
       throws IOException {
-    if (!state.shouldProcessWrite()) {
+    if (!state.shouldProcessStreamWrite()) {
       return false;
     }
     int endOfHeadTagPosition;
@@ -64,7 +64,9 @@ public class OutputStreamSnippetInjectionHelper {
       return false;
     }
     // updating Content-Length before any further writing in case that writing triggers a flush
-    state.getWrapper().updateContentLengthIfPreviouslySet();
+    if (!state.getContentLengthWrapper().updateContentLengthIfPreviouslySet()) {
+      return false;
+    }
     out.write(original, off, endOfHeadTagPosition - off + 1);
     out.write(snippetBytes);
     out.write(original, endOfHeadTagPosition + 1, endExclusive - endOfHeadTagPosition - 1);
@@ -72,7 +74,7 @@ public class OutputStreamSnippetInjectionHelper {
   }
 
   public boolean handleWrite(InjectionState state, OutputStream out, int b) throws IOException {
-    if (!state.shouldProcessWrite()) {
+    if (!state.shouldProcessStreamWrite()) {
       return false;
     }
     if (!state.processByte(b)) {
@@ -89,7 +91,9 @@ public class OutputStreamSnippetInjectionHelper {
       logger.log(FINE, "Failed getting snippet bytes", e);
       return false;
     }
-    state.getWrapper().updateContentLengthIfPreviouslySet();
+    if (!state.getContentLengthWrapper().updateContentLengthIfPreviouslySet()) {
+      return false;
+    }
     out.write(b);
 
     out.write(snippetBytes);
