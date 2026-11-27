@@ -12,6 +12,7 @@
 - [Manually instrumenting](#manually-instrumenting)
 - [Logger MDC auto-instrumentation](#logger-mdc-mapped-diagnostic-context-auto-instrumentation)
 - [Troubleshooting](#troubleshooting)
+- [Security](#security)
 - [Contributing](#contributing)
 
 ## About
@@ -124,6 +125,10 @@ To turn on the agent's internal debug logging:
 
 **Note**: These logs are extremely verbose. Enable debug logging only when needed.
 Debug logging negatively impacts the performance of your application.
+
+## Security
+
+See [SECURITY.md](SECURITY.md) for the security policy and instructions for reporting vulnerabilities.
 
 ## Contributing
 
