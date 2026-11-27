@@ -143,7 +143,15 @@ consumerFactory.addPostProcessor(
     consumer -> springKafkaTelemetry.instrument(kafkaTelemetry.instrument(consumer)));
 ```
 
+The Spring wrapper suppresses raw Kafka processing spans for every record from that consumer.
+Use it only for consumers whose processing is traced by Spring instrumentation; do not apply it to
+unrelated consumers through a shared factory.
+
 The wrapped listener's span covers the listener invocation, so batches that never reach the
-listener are not traced. Don't combine it with the batch interceptor on the same container, because
-each creates a span for the batch. Spring Kafka 2.8 and later notify the batch interceptor after
-every poll, so the batch interceptor doesn't have this limitation there.
+listener are not traced. A retry that reuses the most recently traced list or `ConsumerRecords`
+object on the same thread and wrapper does not get another processing span; redelivery with a
+different batch object can be traced separately. The wrapper preserves the Spring Kafka 2.7
+`ConsumerSeekAware` callbacks, but not every optional listener interface or later-only callbacks
+such as `onFirstPoll`. Don't combine it with the batch interceptor on the same container, because
+each creates a span for the batch. Prefer the batch interceptor with Spring Kafka 2.8 and later,
+which notify it after every poll.

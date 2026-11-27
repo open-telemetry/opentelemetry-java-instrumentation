@@ -90,16 +90,21 @@ public final class SpringKafkaTelemetry {
   }
 
   /**
-   * Returns a new {@link BatchMessageListener} that wraps each invocation of the provided batch
+   * Returns a new {@link BatchMessageListener} that wraps an invocation of the provided batch
    * {@code listener} in a {@link SpanKind#CONSUMER CONSUMER} span. The span is ended when the
-   * listener returns or throws. Can be set on a {@link AbstractMessageListenerContainer} using the
+   * listener returns or throws. A retry using the most recently traced list or {@link
+   * ConsumerRecords} object on the same thread and wrapper does not create another processing span;
+   * redelivery with a different batch object can be traced separately. Batches that never reach the
+   * listener are not traced. Can be set on a {@link AbstractMessageListenerContainer} using the
    * {@link AbstractMessageListenerContainer#setupMessageListener(Object)} method.
    *
    * <p>Use this instead of {@link #createBatchInterceptor()} with Spring Kafka 2.7, which does not
    * notify the batch interceptor when a batch does not complete, for example when the transaction
    * could not be started after the batch was intercepted. Do not use both for the same container,
    * because each of them creates a span for the batch. With Spring Kafka 2.8 and later, prefer
-   * {@link #createBatchInterceptor()}.
+   * {@link #createBatchInterceptor()}. The wrapper preserves the Spring Kafka 2.7 {@code
+   * ConsumerSeekAware} callbacks, but not every optional listener interface or later-only callbacks
+   * such as {@code onFirstPoll}.
    */
   public <K, V> BatchMessageListener<K, V> createBatchMessageListener(
       BatchMessageListener<K, V> listener) {
@@ -111,9 +116,10 @@ public final class SpringKafkaTelemetry {
    * Kafka.
    *
    * <p>Use this as a consumer-factory post-processor when the consumer is instrumented with {@code
-   * KafkaTelemetry}. It prevents Kafka's record iterator from emitting process spans before Spring
-   * invokes the batch listener. Spring's batch listener instrumentation remains responsible for
-   * those spans.
+   * KafkaTelemetry}. It suppresses raw Kafka processing spans for every record from the wrapped
+   * consumer, including during Spring's pre-listener batch conversion. Use it only for consumers
+   * whose processing is traced by Spring instrumentation, not unrelated consumers using a shared
+   * factory.
    */
   @SuppressWarnings("unchecked") // casting Proxy.newProxyInstance result
   public <K, V> Consumer<K, V> instrument(Consumer<K, V> consumer) {

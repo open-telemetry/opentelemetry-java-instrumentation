@@ -25,9 +25,13 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.ArgumentMatchers.same;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.api.trace.Span;
@@ -67,6 +71,8 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.kafka.listener.BatchConsumerAwareMessageListener;
 import org.springframework.kafka.listener.BatchInterceptor;
 import org.springframework.kafka.listener.BatchMessageListener;
+import org.springframework.kafka.listener.ConsumerSeekAware;
+import org.springframework.kafka.listener.ConsumerSeekAware.ConsumerSeekCallback;
 import org.springframework.kafka.listener.RecordInterceptor;
 import org.springframework.kafka.support.Acknowledgment;
 
@@ -94,6 +100,42 @@ class SpringKafkaInterceptorTest {
       SpringKafkaTelemetry.builder(testing.getOpenTelemetry())
           .setMessagingReceiveTelemetryEnabled(true)
           .build();
+
+  @Test
+  void batchListenerPreservesSeekAwareCallbacks() {
+    BatchMessageListener<String, String> delegate =
+        mock(BatchMessageListener.class, withSettings().extraInterfaces(ConsumerSeekAware.class));
+    ConsumerSeekAware seekAware = (ConsumerSeekAware) delegate;
+    BatchMessageListener<String, String> listener = telemetry.createBatchMessageListener(delegate);
+    assertThat(listener).isInstanceOf(ConsumerSeekAware.class);
+    ConsumerSeekAware wrapped = (ConsumerSeekAware) listener;
+    ConsumerSeekCallback registered = mock();
+    ConsumerSeekCallback assigned = mock();
+    ConsumerSeekCallback idle = mock();
+    Map<TopicPartition, Long> assignments = singletonMap(new TopicPartition("orders", 0), 42L);
+    Map<TopicPartition, Long> idleAssignments = singletonMap(new TopicPartition("orders", 1), 43L);
+    List<TopicPartition> revoked = singletonList(new TopicPartition("orders", 2));
+
+    wrapped.registerSeekCallback(registered);
+    wrapped.onPartitionsAssigned(assignments, assigned);
+    wrapped.onIdleContainer(idleAssignments, idle);
+    wrapped.onPartitionsRevoked(revoked);
+    wrapped.unregisterSeekCallback();
+
+    verify(seekAware).registerSeekCallback(same(registered));
+    verify(seekAware).onPartitionsAssigned(same(assignments), same(assigned));
+    verify(seekAware).onIdleContainer(same(idleAssignments), same(idle));
+    verify(seekAware).onPartitionsRevoked(same(revoked));
+    verify(seekAware).unregisterSeekCallback();
+    verifyNoMoreInteractions(seekAware);
+  }
+
+  @Test
+  void ordinaryBatchListenerDoesNotAdvertiseSeekAwareness() {
+    BatchMessageListener<String, String> listener = records -> {};
+    assertThat(telemetry.createBatchMessageListener(listener))
+        .isNotInstanceOf(ConsumerSeekAware.class);
+  }
 
   @Test
   void batchScopeSuppressesNestedRawProcessing() {
