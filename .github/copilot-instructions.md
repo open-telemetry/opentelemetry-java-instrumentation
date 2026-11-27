@@ -61,6 +61,7 @@ audits of existing code, and pull request reviews.
 ## Documentation
 
 - Document flat properties without repeating equivalent declarative configuration.
+  In changelog entries, omit one-to-one YAML key renames that mirror flat property renames.
   Include declarative configuration only when it has different behavior, requires a distinct
   migration, or supports configuration unavailable through flat properties.
 - Hand-written changelog entries cover only deprecations and breaking changes, as specified in
