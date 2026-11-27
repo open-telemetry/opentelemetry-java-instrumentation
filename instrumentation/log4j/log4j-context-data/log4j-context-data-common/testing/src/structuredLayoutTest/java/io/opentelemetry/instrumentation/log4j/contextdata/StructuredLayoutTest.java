@@ -38,13 +38,9 @@ class StructuredLayoutTest {
   void restoresTextInjectionAfterInvalidTemplate() {
     DefaultConfiguration configuration = new DefaultConfiguration();
     try {
-      assertThatThrownBy(
-              () ->
-                  JsonTemplateLayout.newBuilder()
-                      .setConfiguration(configuration)
-                      .setEventTemplate("{")
-                      .build())
-          .isInstanceOf(RuntimeException.class);
+      JsonTemplateLayout.Builder builder =
+          JsonTemplateLayout.newBuilder().setConfiguration(configuration).setEventTemplate("{");
+      assertThatThrownBy(builder::build).isInstanceOf(RuntimeException.class);
       PatternLayout text =
           PatternLayout.newBuilder().withConfiguration(configuration).withPattern("%m").build();
       testing.runWithSpan(
