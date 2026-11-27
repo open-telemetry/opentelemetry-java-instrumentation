@@ -11,7 +11,9 @@ import java.util.HashSet;
 import java.util.Set;
 import javax.annotation.Nullable;
 import net.bytebuddy.description.method.MethodDescription;
+import net.bytebuddy.description.method.ParameterList;
 import net.bytebuddy.description.type.TypeDefinition;
+import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.description.type.TypeList;
 import net.bytebuddy.matcher.ElementMatcher;
 
@@ -35,12 +37,17 @@ class HasSuperMethodMatcher<T extends MethodDescription>
     if (target.isConstructor() || target.isBridge()) {
       return false;
     }
-    TypeDefinition declaringType = target.getDeclaringType();
+    TypeDefinition targetType = target.getDeclaringType();
+    TypeDefinition declaringType = targetType;
     Set<TypeDefinition> checkedInterfaces = new HashSet<>(8);
 
     while (declaringType != null) {
+      boolean isTargetType = declaringType == targetType;
       for (MethodDescription methodDescription : declaringType.getDeclaredMethods()) {
-        if (hasMatchingSignature(target, methodDescription) && matcher.matches(methodDescription)) {
+        if ((isTargetType
+                ? hasMatchingSignature(target, methodDescription)
+                : isOverriddenBy(target, methodDescription))
+            && matcher.matches(methodDescription)) {
           return true;
         }
       }
@@ -59,8 +66,7 @@ class HasSuperMethodMatcher<T extends MethodDescription>
     for (TypeDefinition type : interfaces) {
       if (checkedInterfaces.add(type)) {
         for (MethodDescription methodDescription : type.getDeclaredMethods()) {
-          if (hasMatchingSignature(target, methodDescription)
-              && matcher.matches(methodDescription)) {
+          if (isOverriddenBy(target, methodDescription) && matcher.matches(methodDescription)) {
             return true;
           }
         }
@@ -70,6 +76,89 @@ class HasSuperMethodMatcher<T extends MethodDescription>
       }
     }
     return false;
+  }
+
+  private static boolean isOverriddenBy(MethodDescription target, MethodDescription candidate) {
+    if (!isOverridable(target)
+        || !isOverridable(candidate)
+        || !(candidate.isVisibleTo(target.getDeclaringType().asErasure())
+            || isOverriddenViaSamePackageClass(target, candidate))) {
+      return false;
+    }
+    return hasMatchingSignature(target, candidate) || isBridgedTo(target, candidate);
+  }
+
+  private static boolean isOverridable(MethodDescription method) {
+    return !method.isStatic() && !method.isPrivate() && !method.isBridge();
+  }
+
+  private static boolean isOverriddenViaSamePackageClass(
+      MethodDescription target, MethodDescription candidate) {
+    TypeDescription targetType = target.getDeclaringType().asErasure();
+    TypeDescription candidateType = candidate.getDeclaringType().asErasure();
+    for (TypeDefinition type = safeGetSuperClass(target.getDeclaringType());
+        type != null && !type.asErasure().equals(candidateType);
+        type = safeGetSuperClass(type)) {
+      if (type.asErasure().isSamePackage(candidateType)
+          && declaresVisibleOverride(type, target, targetType)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean declaresVisibleOverride(
+      TypeDefinition type, MethodDescription target, TypeDescription targetType) {
+    for (MethodDescription declared : type.getDeclaredMethods()) {
+      if (isOverridable(declared)
+          && declared.isVisibleTo(targetType)
+          && haveSameNameAndParameterTypes(declared, target)) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private static boolean isBridgedTo(MethodDescription target, MethodDescription candidate) {
+    if (!target.getInternalName().equals(candidate.getInternalName())) {
+      return false;
+    }
+    for (TypeDefinition type = target.getDeclaringType();
+        type != null;
+        type = safeGetSuperClass(type)) {
+      for (MethodDescription bridge : type.getDeclaredMethods()) {
+        if (bridge.isBridge()
+            && haveSameNameAndParameterTypes(bridge, candidate)
+            && areParametersAssignable(bridge.getParameters(), target.getParameters())) {
+          return true;
+        }
+      }
+    }
+    return false;
+  }
+
+  private static boolean areParametersAssignable(
+      ParameterList<?> bridgeParameters, ParameterList<?> targetParameters) {
+    if (bridgeParameters.size() != targetParameters.size()) {
+      return false;
+    }
+    for (int i = 0; i < targetParameters.size(); i++) {
+      TypeDescription bridgeType = bridgeParameters.get(i).getType().asErasure();
+      TypeDescription targetType = targetParameters.get(i).getType().asErasure();
+      if (!targetType.isAssignableTo(bridgeType)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  private static boolean haveSameNameAndParameterTypes(
+      MethodDescription first, MethodDescription second) {
+    return first.getInternalName().equals(second.getInternalName())
+        && first
+            .asSignatureToken()
+            .getParameterTypes()
+            .equals(second.asSignatureToken().getParameterTypes());
   }
 
   private static boolean hasMatchingSignature(
