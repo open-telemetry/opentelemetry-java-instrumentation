@@ -71,6 +71,12 @@ instrumentation/development:
       # `camel.kafka.key` and `camel.kafka.offset` span attributes.
       experimental_span_attributes/development: false
     common:
+      # Enables capturing the `user.name` identity attribute. Identity attributes are not
+      # captured by default.
+      capture_user_name: false
+      # Enables capturing the `user.roles` identity attribute. Identity attributes are not
+      # captured by default.
+      capture_user_roles: false
       controller_telemetry:
         # Enables the creation of experimental controller spans.
         enabled: false
@@ -203,15 +209,6 @@ instrumentation/development:
       # a span of the same semantic convention type, `span-kind` suppresses a span nested in a span
       # of the same span kind, and `none` disables suppression.
       span_suppression_strategy: semconv
-      user:
-        name:
-          # Enables capturing the `user.name` identity attribute. Identity attributes are not
-          # captured by default.
-          enabled: false
-        roles:
-          # Enables capturing the `user.roles` identity attribute. Identity attributes are not
-          # captured by default.
-          enabled: false
       view_telemetry:
         # Enables the creation of experimental view spans.
         enabled: false

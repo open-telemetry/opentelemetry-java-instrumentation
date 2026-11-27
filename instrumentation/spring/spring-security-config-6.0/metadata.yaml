@@ -4,8 +4,8 @@ description: >
   attributes, and is only enabled when at least one common identity configuration is enabled.
 library_link: https://spring.io/projects/spring-security
 configurations:
-  - ref: common.user.name.enabled
-  - ref: common.user.roles.enabled
+  - ref: common.capture-user-name
+  - ref: common.capture-user-roles
   - name: otel.instrumentation.spring-security.user.roles.granted-authority-prefix
     declarative_name: java.spring_security.user.roles.granted_authority_prefix
     description: Prefix of granted authorities identifying roles to capture in the `user.roles` semantic attribute.
