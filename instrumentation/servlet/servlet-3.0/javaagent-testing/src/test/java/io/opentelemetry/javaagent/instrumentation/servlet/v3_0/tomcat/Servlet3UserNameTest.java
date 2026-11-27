@@ -91,7 +91,7 @@ class Servlet3UserNameTest extends AbstractHttpServerUsingTest<Tomcat> {
           .isEqualTo("io.opentelemetry.servlet-3.0");
       assertThat(trace.getSpan(0).getAttributes().get(USER_NAME))
           .isEqualTo(
-              Boolean.getBoolean("otel.instrumentation.common.capture-user-name")
+              Boolean.getBoolean("otel.instrumentation.common.user.name.enabled")
                   ? "test-user"
                   : null);
     });

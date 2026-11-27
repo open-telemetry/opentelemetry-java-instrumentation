@@ -296,18 +296,6 @@
       "defaultValue": false
     },
     {
-      "name": "otel.instrumentation.common.capture-user-name",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of the user.name identity attribute.",
-      "defaultValue": false
-    },
-    {
-      "name": "otel.instrumentation.common.capture-user-roles",
-      "type": "java.lang.Boolean",
-      "description": "Enable the capture of the user.roles identity attribute.",
-      "defaultValue": false
-    },
-    {
       "name": "otel.instrumentation.http.client.capture-request-headers",
       "type": "java.util.List<java.lang.String>",
       "description": "List of HTTP request headers to capture in HTTP clients."

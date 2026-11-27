@@ -9,12 +9,6 @@
   `java.graphql.capture_document`. The GraphQL library builders' `setCaptureQuery` is now
   `setCaptureDocument`.
 
-- Rename `otel.instrumentation.common.user.name.enabled` and
-  `otel.instrumentation.common.user.roles.enabled` to
-  `otel.instrumentation.common.capture-user-name` and
-  `otel.instrumentation.common.capture-user-roles`. Their declarative equivalents are now
-  `java.common.capture_user_name` and `java.common.capture_user_roles`.
-
 - Rename `otel.instrumentation.resources.experimental.process-command-attributes.enabled` to
   `otel.instrumentation.resources.experimental.capture-process-command-attributes`.
 
@@ -335,8 +329,8 @@
   `user.roles` instead of `enduser.id` and comma-separated `enduser.role`. Replace
   `otel.instrumentation.common.enduser.id.enabled` and
   `otel.instrumentation.common.enduser.role.enabled` with
-  `otel.instrumentation.common.capture-user-name` and
-  `otel.instrumentation.common.capture-user-roles`. Replace
+  `otel.instrumentation.common.user.name.enabled` and
+  `otel.instrumentation.common.user.roles.enabled`. Replace
   `otel.instrumentation.spring-security.enduser.role.granted-authority-prefix` with
   `otel.instrumentation.spring-security.user.roles.granted-authority-prefix`.
   The `otel.instrumentation.common.enduser.scope.enabled` setting and `enduser.scope` capture are

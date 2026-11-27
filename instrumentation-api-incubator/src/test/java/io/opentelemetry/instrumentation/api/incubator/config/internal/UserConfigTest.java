@@ -19,8 +19,8 @@ class UserConfigTest {
   void readsUserConfig() {
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(commonConfig.getBoolean("capture_user_name", false)).thenReturn(true);
-    when(commonConfig.getBoolean("capture_user_roles", false)).thenReturn(false);
+    when(commonConfig.get("user").get("name").getBoolean("enabled", false)).thenReturn(true);
+    when(commonConfig.get("user").get("roles").getBoolean("enabled", false)).thenReturn(false);
 
     UserConfig userConfig = new UserConfig(commonConfig);
 

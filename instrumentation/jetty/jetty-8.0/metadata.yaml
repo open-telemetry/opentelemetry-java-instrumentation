@@ -11,4 +11,4 @@ configurations:
   - ref: http.server.capture-request-headers
   - ref: http.server.capture-response-headers
   - ref: http.server.emit-experimental-telemetry
-  - ref: common.capture-user-name
+  - ref: common.user.name.enabled

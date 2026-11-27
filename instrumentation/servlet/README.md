@@ -2,7 +2,7 @@
 
 When Servlet instrumentation observes a request principal, javaagent capture of its name as
 `user.name` is disabled by default. Enable it with
-`otel.instrumentation.common.capture-user-name=true`.
+`otel.instrumentation.common.user.name.enabled=true`.
 
 ## Settings
 
