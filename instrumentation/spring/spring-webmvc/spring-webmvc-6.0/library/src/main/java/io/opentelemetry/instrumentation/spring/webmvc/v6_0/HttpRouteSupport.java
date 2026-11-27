@@ -23,6 +23,7 @@ import org.springframework.web.context.support.WebApplicationContextUtils;
 import org.springframework.web.servlet.DispatcherServlet;
 import org.springframework.web.servlet.HandlerExecutionChain;
 import org.springframework.web.servlet.HandlerMapping;
+import org.springframework.web.servlet.function.HandlerFunction;
 import org.springframework.web.servlet.mvc.method.RequestMappingInfoHandlerMapping;
 import org.springframework.web.util.ServletRequestPathUtils;
 
@@ -61,7 +62,7 @@ final class HttpRouteSupport {
     }
   }
 
-  boolean hasMappings() {
+  private boolean hasMappings() {
     if (contextRefreshTriggered.compareAndSet(true, false)) {
       // reload the handler mappings only if the web app context was recently refreshed
       DispatcherServlet dispatcherServlet = this.dispatcherServlet;
@@ -102,6 +103,16 @@ final class HttpRouteSupport {
     if (request == null) {
       return null;
     }
+    // Spring MVC already matched the route. Re-evaluating its predicates can have side effects.
+    if (request.getAttribute(HandlerMapping.BEST_MATCHING_HANDLER_ATTRIBUTE)
+        instanceof HandlerFunction<?>) {
+      Object pattern = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
+      return pattern instanceof String ? prependContextPath(request, (String) pattern) : null;
+    }
+    if (!hasMappings()) {
+      return null;
+    }
+
     boolean parsePath = this.parseRequestPath;
     Object previousValue = null;
     if (parsePath) {
