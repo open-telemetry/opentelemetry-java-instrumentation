@@ -12,7 +12,7 @@ user-facing instrumentation configuration.
 
 - Use `otel.javaagent.*` for the Java agent and `otel.spring-starter.*` for the Spring Boot
   starter when a flat setting configures the distribution itself, the SDK components it installs,
-  or which instrumentation modules it enables. For example, `otel.javaagent.add-thread-details=true`
+  or which instrumentation modules it enables. For example, `otel.javaagent.capture-thread-attributes=true`
   installs an SDK span processor that can add thread attributes even to spans created by the
   application. The flat keys for whole-module enablement are exceptions to these prefixes
   (for backwards compatibility): `otel.instrumentation.common.default-enabled` for the default

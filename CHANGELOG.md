@@ -98,7 +98,9 @@
   `opentelemetry-instrumentation-annotations` selectors to control suspend function annotations.
 
 - The Java agent no longer captures thread details by default. Set
-  `otel.javaagent.add-thread-details=true` to capture `thread.id` and `thread.name` on spans.
+  `otel.javaagent.capture-thread-attributes=true` to capture `thread.id` and `thread.name` on spans.
+
+- Rename `otel.javaagent.add-thread-details` to `otel.javaagent.capture-thread-attributes`.
 
 - GenAI message events from AWS Bedrock Runtime and OpenAI leave the body unset when no fields
   remain, instead of emitting an empty object.
