@@ -112,7 +112,8 @@ public class Servlet3Advice {
         && !((HttpServletResponse) response)
             .containsHeader(Servlet3SnippetInjectingResponseWrapper.FAKE_SNIPPET_HEADER)) {
       response =
-          new Servlet3SnippetInjectingResponseWrapper((HttpServletResponse) response, snippet);
+          new Servlet3SnippetInjectingResponseWrapper(
+              (HttpServletRequest) request, (HttpServletResponse) response, snippet);
     }
     AdviceScope adviceScope =
         new AdviceScope(
