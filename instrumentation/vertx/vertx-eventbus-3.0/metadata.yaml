@@ -1,0 +1,11 @@
+display_name: Vert.x Event Bus
+description: >
+  This instrumentation enables messaging spans for messages sent through the Vert.x event bus, and
+  propagates context between the producer and the consumer. It stands down for a Vertx instance
+  that has a VertxTracer registered, such as the one from vertx-opentelemetry.
+library_link: https://vertx.io/docs/vertx-core/java/#event_bus
+semantic_conventions:
+  - MESSAGING_SPANS
+configurations:
+  - ref: messaging.headers.included
+  - ref: messaging.headers.excluded
