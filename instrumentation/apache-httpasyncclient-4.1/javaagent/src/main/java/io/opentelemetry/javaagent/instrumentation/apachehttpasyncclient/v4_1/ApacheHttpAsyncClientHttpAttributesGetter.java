@@ -9,6 +9,7 @@ import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v
 
 import io.opentelemetry.instrumentation.api.internal.HttpConstants;
 import io.opentelemetry.instrumentation.api.semconv.http.HttpClientAttributesGetter;
+import java.net.InetSocketAddress;
 import java.util.List;
 import javax.annotation.Nullable;
 import org.apache.http.HttpResponse;
@@ -61,6 +62,13 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
 
   @Override
   @Nullable
+  public InetSocketAddress getNetworkPeerSocketAddress(
+      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
+    return request.getNetworkPeer();
+  }
+
+  @Override
+  @Nullable
   public String getServerAddress(ApacheHttpClientRequest request) {
     return request.getServerAddress();
   }
@@ -69,19 +77,5 @@ final class ApacheHttpAsyncClientHttpAttributesGetter
   @Nullable
   public Integer getServerPort(ApacheHttpClientRequest request) {
     return HttpConstants.portOrDefaultFromScheme(request.getServerPort(), request.getScheme());
-  }
-
-  @Nullable
-  @Override
-  public String getNetworkPeerAddress(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.getNetworkPeerAddress();
-  }
-
-  @Nullable
-  @Override
-  public Integer getNetworkPeerPort(
-      ApacheHttpClientRequest request, @Nullable HttpResponse response) {
-    return request.getNetworkPeerPort();
   }
 }

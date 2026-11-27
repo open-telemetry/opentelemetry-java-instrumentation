@@ -9,6 +9,7 @@ import static java.util.Collections.emptyList;
 import static java.util.logging.Level.FINE;
 
 import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
@@ -17,8 +18,11 @@ import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
+import org.apache.http.HttpInetConnection;
 import org.apache.http.HttpRequest;
 import org.apache.http.ProtocolVersion;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.protocol.HttpCoreContext;
 
 class ApacheHttpClientRequest {
 
@@ -28,6 +32,8 @@ class ApacheHttpClientRequest {
 
   private final HttpRequest delegate;
   @Nullable private final HttpHost target;
+  @Nullable private volatile InetSocketAddress latestNetworkPeer;
+  @Nullable private InetSocketAddress networkPeer;
 
   ApacheHttpClientRequest(@Nullable HttpHost httpHost, HttpRequest httpRequest) {
     URI calculatedUri = getUri(httpRequest);
@@ -100,6 +106,40 @@ class ApacheHttpClientRequest {
     return null;
   }
 
+  void freezeNetworkPeer() {
+    // Both attribute getters must observe the same peer if cancellation races with capture.
+    networkPeer = latestNetworkPeer;
+  }
+
+  void setNetworkPeer(@Nullable InetSocketAddress peer) {
+    if (peer != null) {
+      latestNetworkPeer = peer;
+    }
+  }
+
+  @Nullable
+  InetSocketAddress getNetworkPeer() {
+    return networkPeer;
+  }
+
+  @Nullable
+  static InetSocketAddress captureNetworkPeer(HttpContext context) {
+    try {
+      Object value = context.getAttribute(HttpCoreContext.HTTP_CONNECTION);
+      if (!(value instanceof HttpInetConnection)) {
+        return null;
+      }
+      HttpInetConnection connection = (HttpInetConnection) value;
+      InetAddress address = connection.getRemoteAddress();
+      return address == null
+          ? null
+          : new InetSocketAddress(address, Math.max(connection.getRemotePort(), 0));
+    } catch (Throwable t) {
+      logger.log(FINE, "Unable to capture network peer", t);
+      return null;
+    }
+  }
+
   @Nullable
   String getScheme() {
     if (uri != null) {
@@ -145,23 +185,5 @@ class ApacheHttpClientRequest {
       logger.log(FINE, e.getMessage(), e);
       return null;
     }
-  }
-
-  @Nullable
-  String getNetworkPeerAddress() {
-    if (target == null) {
-      return null;
-    }
-    InetAddress inetAddress = target.getAddress();
-    return inetAddress == null ? null : inetAddress.getHostAddress();
-  }
-
-  @Nullable
-  Integer getNetworkPeerPort() {
-    if (target == null || target.getAddress() == null) {
-      return null;
-    }
-    int port = target.getPort();
-    return port > 0 ? port : null;
   }
 }

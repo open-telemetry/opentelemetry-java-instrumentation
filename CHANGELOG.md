@@ -4,6 +4,10 @@
 
 ### ⚠️ Breaking changes
 
+- Apache HttpAsyncClient instrumentation captures `network.peer.address` and
+  `network.peer.port` from the actual connection, including for pipelined requests,
+  and retains the last observed peer if a subsequent connection attempt fails.
+
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
   by method, protocol version, and URL scheme.

@@ -7,15 +7,17 @@ package io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
 import static io.opentelemetry.javaagent.instrumentation.apachehttpasyncclient.v4_1.ApacheHttpAsyncClientSingletons.instrumenter;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import java.io.IOException;
+import java.net.InetSocketAddress;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
@@ -34,6 +36,7 @@ import org.apache.http.nio.ContentEncoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
 import org.apache.http.nio.protocol.HttpAsyncResponseConsumer;
+import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 
 class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
@@ -53,10 +56,13 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("execute")
-            .and(takesArgument(0, named("org.apache.http.HttpHost")))
-            .and(takesArgument(1, named("java.util.List")))
-            .and(takesArgument(2, named("java.util.List")))
-            .and(takesArgument(4, named("org.apache.http.concurrent.FutureCallback"))),
+            .and(
+                takesArguments(
+                    named("org.apache.http.HttpHost"),
+                    is(List.class),
+                    is(List.class),
+                    named("org.apache.http.protocol.HttpContext"),
+                    named("org.apache.http.concurrent.FutureCallback"))),
         getClass().getName() + "$PipeliningClientAdvice");
   }
 
@@ -66,7 +72,8 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
     @AssignReturned.ToArguments({
       @ToArgument(value = 1, index = 0),
       @ToArgument(value = 2, index = 1),
-      @ToArgument(value = 4, index = 2)
+      @ToArgument(value = 3, index = 2),
+      @ToArgument(value = 4, index = 3)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
@@ -74,15 +81,17 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
         @Advice.Argument(1) @Nullable List<? extends HttpAsyncRequestProducer> requestProducers,
         @Advice.Argument(2) @Nullable
             List<? extends HttpAsyncResponseConsumer<?>> responseConsumers,
+        @Advice.Argument(3) @Nullable HttpContext httpContext,
         @Advice.Argument(4) @Nullable FutureCallback<?> futureCallback) {
       Context parentContext = Context.current();
 
       if (requestProducers == null
           || responseConsumers == null
           || requestProducers.size() != responseConsumers.size()) {
-        return new Object[] {requestProducers, responseConsumers, futureCallback};
+        return new Object[] {requestProducers, responseConsumers, httpContext, futureCallback};
       }
 
+      HttpContext requestContext = httpContext == null ? new BasicHttpContext() : httpContext;
       int size = requestProducers.size();
       List<HttpAsyncRequestProducer> modifiedRequestProducers = new ArrayList<>(size);
       List<HttpAsyncResponseConsumer<?>> modifiedResponseConsumers = new ArrayList<>(size);
@@ -92,18 +101,20 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
         HttpAsyncRequestProducer requestProducer = requestProducers.get(i);
         HttpAsyncResponseConsumer<?> responseConsumer = responseConsumers.get(i);
         if (requestProducer == null || responseConsumer == null) {
-          return new Object[] {requestProducers, responseConsumers, futureCallback};
+          return new Object[] {requestProducers, responseConsumers, httpContext, futureCallback};
         }
 
         PipeliningRequestState state = new PipeliningRequestState(parentContext, target);
         requestStates.add(state);
-        modifiedRequestProducers.add(new DelegatingRequestProducer(requestProducer, state));
+        modifiedRequestProducers.add(
+            new DelegatingRequestProducer(requestProducer, state, requestContext));
         modifiedResponseConsumers.add(new DelegatingResponseConsumer<>(responseConsumer, state));
       }
 
       return new Object[] {
         modifiedRequestProducers,
         modifiedResponseConsumers,
+        requestContext,
         new ContextPropagatingFutureCallback<>(parentContext, futureCallback, requestStates)
       };
     }
@@ -125,13 +136,14 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
       this.target = target;
     }
 
-    public synchronized void start(HttpRequest httpRequest) {
+    public synchronized void start(HttpRequest httpRequest, @Nullable InetSocketAddress peer) {
       if (started || ended) {
         return;
       }
       started = true;
 
       ApacheHttpClientRequest request = new ApacheHttpClientRequest(target, httpRequest);
+      request.setNetworkPeer(peer);
       if (instrumenter().shouldStart(parentContext, request)) {
         this.request = request;
         context = instrumenter().start(parentContext, request);
@@ -164,6 +176,7 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
       }
 
       if (context != null && request != null) {
+        request.freezeNetworkPeer();
         instrumenter().end(context, request, response, error);
       }
     }
@@ -172,11 +185,13 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
   public static class DelegatingRequestProducer implements HttpAsyncRequestProducer {
     private final HttpAsyncRequestProducer delegate;
     private final PipeliningRequestState state;
+    private final HttpContext httpContext;
 
     public DelegatingRequestProducer(
-        HttpAsyncRequestProducer delegate, PipeliningRequestState state) {
+        HttpAsyncRequestProducer delegate, PipeliningRequestState state, HttpContext httpContext) {
       this.delegate = delegate;
       this.state = state;
+      this.httpContext = httpContext;
     }
 
     @Override
@@ -186,9 +201,10 @@ class ApacheHttpPipeliningClientInstrumentation implements TypeInstrumentation {
 
     @Override
     public HttpRequest generateRequest() throws IOException, HttpException {
+      InetSocketAddress peer = ApacheHttpClientRequest.captureNetworkPeer(httpContext);
       HttpRequest request = delegate.generateRequest();
       if (request != null) {
-        state.start(request);
+        state.start(request, peer);
       }
       return request;
     }

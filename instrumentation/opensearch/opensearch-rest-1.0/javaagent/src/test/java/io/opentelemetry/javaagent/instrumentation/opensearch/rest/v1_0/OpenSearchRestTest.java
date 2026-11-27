@@ -34,6 +34,11 @@ class OpenSearchRestTest extends AbstractOpenSearchRestTest {
   }
 
   @Override
+  protected boolean hasHttpClientNetworkPeerAttributes() {
+    return true;
+  }
+
+  @Override
   protected RestClient buildRestClient(String... hostAddresses) throws Exception {
     CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
     credentialsProvider.setCredentials(

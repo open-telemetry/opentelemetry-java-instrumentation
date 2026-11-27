@@ -30,6 +30,7 @@ import org.apache.http.concurrent.FutureCallback;
 import org.apache.http.nio.ContentEncoder;
 import org.apache.http.nio.IOControl;
 import org.apache.http.nio.protocol.HttpAsyncRequestProducer;
+import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
 import org.apache.http.protocol.HttpCoreContext;
 
@@ -60,21 +61,25 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @AssignReturned.ToArguments({
       @ToArgument(value = 0, index = 0),
-      @ToArgument(value = 3, index = 1)
+      @ToArgument(value = 2, index = 1),
+      @ToArgument(value = 3, index = 2)
     })
     @Advice.OnMethodEnter(suppress = Throwable.class, inline = false)
     public static Object[] onEnter(
         @Advice.Argument(0) HttpAsyncRequestProducer requestProducer,
-        @Advice.Argument(2) HttpContext httpContext,
+        @Advice.Argument(2) @Nullable HttpContext httpContext,
         @Advice.Argument(3) FutureCallback<?> futureCallback) {
 
       Context parentContext = Context.current();
+      if (httpContext == null) {
+        httpContext = new BasicHttpContext();
+      }
 
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
       HttpAsyncRequestProducer modifiedRequestProducer =
           new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback);
-      return new Object[] {modifiedRequestProducer, wrappedFutureCallback};
+      return new Object[] {modifiedRequestProducer, httpContext, wrappedFutureCallback};
     }
   }
 
@@ -90,6 +95,14 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       this.parentContext = parentContext;
       this.delegate = delegate;
       this.wrappedFutureCallback = wrappedFutureCallback;
+    }
+
+    void captureNetworkPeer() {
+      ApacheHttpClientRequest request = wrappedFutureCallback.otelRequest;
+      if (request != null) {
+        request.setNetworkPeer(
+            ApacheHttpClientRequest.captureNetworkPeer(wrappedFutureCallback.httpContext));
+      }
     }
 
     @Override
@@ -146,26 +159,17 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
   public static class WrappedFutureCallback<T> implements FutureCallback<T> {
 
     private final Context parentContext;
-    @Nullable private final HttpContext httpContext;
+    private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
     @Nullable private volatile Context context;
     @Nullable private volatile ApacheHttpClientRequest otelRequest;
 
     public WrappedFutureCallback(
-        Context parentContext,
-        @Nullable HttpContext httpContext,
-        @Nullable FutureCallback<T> delegate) {
+        Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
       this.parentContext = parentContext;
       this.httpContext = httpContext;
       this.delegate = delegate;
-    }
-
-    private void endSpan(Exception exception) {
-      // context is null here when the span creation was suppressed
-      if (context != null) {
-        instrumenter().end(context, otelRequest, getResponseFromHttpContext(), exception);
-      }
     }
 
     @Override
@@ -197,6 +201,15 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       }
     }
 
+    private void endSpan(@Nullable Exception exception) {
+      // context is null here when the span creation was suppressed
+      if (context != null) {
+        ApacheHttpClientRequest request = otelRequest;
+        request.freezeNetworkPeer();
+        instrumenter().end(context, request, getResponseFromHttpContext(), exception);
+      }
+    }
+
     private void completeDelegate(T result) {
       if (delegate != null) {
         delegate.completed(result);
@@ -217,9 +230,6 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
     @Nullable
     private HttpResponse getResponseFromHttpContext() {
-      if (httpContext == null) {
-        return null;
-      }
       return (HttpResponse) httpContext.getAttribute(HttpCoreContext.HTTP_RESPONSE);
     }
   }
