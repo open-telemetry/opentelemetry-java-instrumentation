@@ -15,7 +15,7 @@ dependencies {
 testing.suites {
   executions("test") {
     register("Experimental") {
-      jvmArgs("-Dotel.instrumentation.java-util-logging.capture-thread-attributes=true")
+      jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
     }
     register("CaptureTemplateAndArguments") {
       jvmArgs(

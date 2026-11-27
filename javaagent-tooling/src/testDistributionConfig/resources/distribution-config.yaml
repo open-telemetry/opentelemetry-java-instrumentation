@@ -3,7 +3,7 @@ file_format: "1.1"
 distribution:
   javaagent:
     force_synchronous_agent_listeners/development: false
-    capture_thread_attributes: true
+    thread_details_enabled: true
     exclude_classes:
       - com.example.excluded.Class1
       - com.example.excluded.Class2

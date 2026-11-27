@@ -85,7 +85,7 @@ public class AgentDistributionConfig {
           Boolean forceSynchronousAgentListeners,
       @Nullable @JsonProperty("exclude_classes") List<String> excludeClasses,
       @Nullable @JsonProperty("exclude_class_loaders") List<String> excludeClassLoaders,
-      @Nullable @JsonProperty("capture_thread_attributes") Boolean threadDetailsEnabled,
+      @Nullable @JsonProperty("thread_details_enabled") Boolean threadDetailsEnabled,
       @Nullable @JsonProperty("instrumentation") InstrumentationConfig instrumentation) {
     this.forceSynchronousAgentListeners =
         forceSynchronousAgentListeners != null ? forceSynchronousAgentListeners : false;
