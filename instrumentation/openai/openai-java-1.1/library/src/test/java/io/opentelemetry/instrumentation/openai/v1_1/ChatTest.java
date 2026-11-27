@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.openai.v1_1;
 
+import static io.opentelemetry.instrumentation.api.internal.SemconvStability.emitPreviewGenAiSemconv;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.incubating.EventIncubatingAttributes.EVENT_NAME;
@@ -36,6 +37,7 @@ import com.openai.models.chat.completions.ChatCompletionChunk;
 import com.openai.models.chat.completions.ChatCompletionCreateParams;
 import com.openai.models.chat.completions.ChatCompletionMessageParam;
 import com.openai.models.chat.completions.ChatCompletionMessageToolCall;
+import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.api.common.KeyValue;
 import io.opentelemetry.api.common.Value;
 import io.opentelemetry.api.trace.SpanContext;
@@ -129,7 +131,10 @@ class ChatTest extends AbstractChatTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .hasHistogramPointsSatisfying(point ->
                         point
                             .hasSumGreaterThan(0.0)
@@ -222,7 +227,10 @@ class ChatTest extends AbstractChatTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .hasHistogramPointsSatisfying(point ->
                         point
                             .hasSumGreaterThan(0.0)
@@ -344,7 +352,10 @@ class ChatTest extends AbstractChatTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .hasHistogramPointsSatisfying(point ->
                         point
                             .hasSumGreaterThan(0.0)
@@ -458,7 +469,10 @@ class ChatTest extends AbstractChatTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .hasHistogramPointsSatisfying(point ->
                         point
                             .hasSumGreaterThan(0.0)
@@ -598,7 +612,10 @@ class ChatTest extends AbstractChatTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .hasHistogramPointsSatisfying(point ->
                         point
                             .hasSumGreaterThan(0.0)
@@ -687,7 +704,10 @@ class ChatTest extends AbstractChatTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .hasHistogramPointsSatisfying(point ->
                         point
                             .hasSumGreaterThan(0.0)
@@ -782,7 +802,10 @@ class ChatTest extends AbstractChatTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .hasHistogramPointsSatisfying(point ->
                         point
                             .hasSumGreaterThan(0.0)
@@ -877,7 +900,10 @@ class ChatTest extends AbstractChatTest {
             INSTRUMENTATION_NAME,
             metric ->
                 metric
-                    .hasName("gen_ai.client.operation.duration")
+                    .hasName(
+                        emitPreviewGenAiSemconv(OpenTelemetry.noop())
+                            ? "gen_ai.client.inference.duration"
+                            : "gen_ai.client.operation.duration")
                     .hasHistogramPointsSatisfying(point ->
                         point
                             .hasSumGreaterThan(0.0)

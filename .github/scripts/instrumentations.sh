@@ -209,6 +209,7 @@ readonly INSTRUMENTATIONS=(
   "okhttp:okhttp-3.0:javaagent:testExceptionSignalLogs"
   "openai:openai-java-1.1:javaagent:test"
   "openai:openai-java-1.1:javaagent:testExceptionSignalLogs"
+  "openai:openai-java-1.1:library:testPreviewSemconv"
   "opensearch:opensearch-java-3.0:javaagent:test"
   "opensearch:opensearch-rest-1.0:javaagent:test"
   "opensearch:opensearch-rest-3.0:javaagent:test"
