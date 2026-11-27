@@ -38,9 +38,9 @@ dependencies {
   testImplementation("javax.ws.rs:javax.ws.rs-api:2.0")
   testLibrary("org.apache.cxf:cxf-rt-transports-http:4.0.0")
   testLibrary("org.apache.cxf:cxf-rt-transports-http-jetty:4.0.0")
-  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxrs:4.+")
-  latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http:4.+")
-  latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http-jetty:4.+")
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-frontend-jaxrs:4.+") // documented limitation
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http:4.+") // documented limitation
+  latestDepTestLibrary("org.apache.cxf:cxf-rt-transports-http-jetty:4.+") // documented limitation
 }
 
 testing.suites {
