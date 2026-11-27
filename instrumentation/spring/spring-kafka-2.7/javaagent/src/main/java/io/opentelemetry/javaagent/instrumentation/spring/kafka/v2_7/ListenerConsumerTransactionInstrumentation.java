@@ -6,14 +6,15 @@
 package io.opentelemetry.javaagent.instrumentation.spring.kafka.v2_7;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.is;
 import static net.bytebuddy.matcher.ElementMatchers.named;
 import static net.bytebuddy.matcher.ElementMatchers.not;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
 
 import io.opentelemetry.instrumentation.spring.kafka.v2_7.internal.EarlyInterceptionCleanup;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
+import java.util.Iterator;
 import javax.annotation.Nullable;
 import net.bytebuddy.asm.Advice;
 import net.bytebuddy.description.type.TypeDescription;
@@ -42,9 +43,9 @@ class ListenerConsumerTransactionInstrumentation implements TypeInstrumentation 
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
         named("invokeInTransaction")
-            .and(takesArguments(2))
-            .and(takesArgument(0, named("java.util.Iterator")))
-            .and(takesArgument(1, named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
+            .and(
+                takesArguments(
+                    is(Iterator.class), named("org.apache.kafka.clients.consumer.ConsumerRecord"))),
         getClass().getName() + "$InvokeInTransactionAdvice");
   }
 

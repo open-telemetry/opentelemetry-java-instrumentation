@@ -12,15 +12,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
-import io.opentelemetry.api.trace.Span;
-import io.opentelemetry.api.trace.SpanContext;
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.MockConsumer;
@@ -69,7 +66,6 @@ class SpringKafkaTransactionStartFailureTest {
     AtomicInteger successCalls = new AtomicInteger();
     AtomicInteger failureCalls = new AtomicInteger();
     CountDownLatch afterRollback = new CountDownLatch(1);
-    AtomicReference<SpanContext> afterRollbackSpanContext = new AtomicReference<>();
 
     KafkaMessageListenerContainer<String, String> container =
         new KafkaMessageListenerContainer<>(factory, properties);
@@ -99,7 +95,7 @@ class SpringKafkaTransactionStartFailureTest {
     // runs on the consumer thread after the transaction failed to start
     container.setAfterRollbackProcessor(
         (records, kafkaConsumer, messageListenerContainer, exception, recoverable, eosMode) -> {
-          afterRollbackSpanContext.set(Span.current().getSpanContext());
+          testing.runWithSpan("after rollback", () -> {});
           afterRollback.countDown();
         });
     try {
@@ -109,14 +105,16 @@ class SpringKafkaTransactionStartFailureTest {
       container.stop();
     }
 
-    testing.waitAndAssertTraces(trace ->
-        trace.hasSpansSatisfyingExactly(span ->
-            span.hasName("process orders")
-                .hasKind(SpanKind.CONSUMER)
-                .hasNoParent()
-                .hasStatus(StatusData.error())
-                .hasException(error)));
-    assertThat(afterRollbackSpanContext.get().isValid()).isFalse();
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(span ->
+                span.hasName("process orders")
+                    .hasKind(SpanKind.CONSUMER)
+                    .hasNoParent()
+                    .hasStatus(StatusData.error())
+                    .hasException(error)),
+        trace ->
+            trace.hasSpansSatisfyingExactly(span -> span.hasName("after rollback").hasNoParent()));
     assertThat(interceptCalls.get()).isEqualTo(1);
     assertThat(listenerCalls.get()).isZero();
     assertThat(successCalls.get()).isZero();
