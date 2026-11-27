@@ -14,17 +14,8 @@ plugins {
   id("otel.dsl-conventions")
   id("otel.spotless-conventions")
   id("otel.resolve-latest-dep-versions")
-  /* workaround for
-  What went wrong:
-  Could not determine the dependencies of task ':smoke-tests-otel-starter:spring-boot-3.2:bootJar'.
-  > Could not create task ':smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata'.
-  > Cannot set the value of task ':smoke-tests-otel-starter:spring-boot-3.2:collectReachabilityMetadata' property 'metadataService' of type org.graalvm.buildtools.gradle.internal.GraalVMReachabilityMetadataService using a provider of type org.graalvm.buildtools.gradle.internal.GraalVMReachabilityMetadataService.
-
-  See https://github.com/gradle/gradle/issues/17559#issuecomment-1327991512
-
-  The plugin is conditionally applied in smoke-tests-otel-starter subprojects only when
-  nativeTest is in the requested task names (see reusable-native-tests.yml).
-   */
+  // Keep the native build tools on a shared classpath so subprojects can use the same metadata service.
+  // See https://github.com/gradle/gradle/issues/17559#issuecomment-1327991512.
   id("org.graalvm.buildtools.native") apply false
 }
 
