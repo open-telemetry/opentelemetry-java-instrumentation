@@ -102,19 +102,14 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
       }
 
       val partitionTasks = ArrayList<String>()
-      val testLatestDeps = otelProps.testLatestDeps
-      val smokeTestProjects = listOf(":smoke-tests", ":smoke-tests-osgi", ":smoke-tests-otel-starter")
       var testPartitionCounter = 0
       subprojects {
         // relying on predictable ordering of subprojects
         // (see https://docs.gradle.org/current/dsl/org.gradle.api.Project.html#N14CB4)
         // since we are splitting these tasks across different github action jobs
         val enabled = testPartitionCounter++ % 4 == testPartition
-        val projectPath = path
-        val skipSmokeTests = testLatestDeps && smokeTestProjects.any {
-          projectPath == it || projectPath.startsWith("$it:")
-        }
-        if (enabled && !skipSmokeTests) {
+        if (enabled) {
+          val projectPath = this.path
           tasks.withType<Test>().configureEach {
             val taskPath = projectPath + ":" + this.name
             partitionTasks.add(taskPath)
@@ -122,12 +117,16 @@ if (gradle.startParameter.taskNames.contains("listTestsInPartition")) {
         }
       }
 
+      val testLatestDeps = otelProps.testLatestDeps
+      val smokeTestProjects = setOf("smoke-tests", "smoke-tests-osgi", "smoke-tests-otel-starter")
       doLast {
         File("test-tasks.txt").printWriter().use { writer ->
           partitionTasks.forEach { taskPath ->
-            // smoke tests are run separately
+            val skipSmokeTest = testLatestDeps &&
+              taskPath.removePrefix(":").substringBefore(':') in smokeTestProjects
+            // :smoke-tests:test runs separately
             // :instrumentation:test runs all instrumentation tests
-            if (taskPath != ":smoke-tests:test" && taskPath != ":instrumentation:test") {
+            if (taskPath != ":smoke-tests:test" && taskPath != ":instrumentation:test" && !skipSmokeTest) {
               writer.println(taskPath)
             }
           }
