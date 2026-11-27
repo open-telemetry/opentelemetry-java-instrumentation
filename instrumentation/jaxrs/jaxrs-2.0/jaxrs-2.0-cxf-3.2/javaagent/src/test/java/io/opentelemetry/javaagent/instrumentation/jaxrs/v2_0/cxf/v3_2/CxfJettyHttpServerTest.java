@@ -7,7 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
 import static io.opentelemetry.instrumentation.testing.util.TestLatestDeps.testLatestDeps;
 
-import io.opentelemetry.instrumentation.jaxrs.v2_0.JaxRsJettyHttpServerTest;
+import io.opentelemetry.instrumentation.jaxrs.common.v2_0.JaxRsJettyHttpServerTest;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.http.HttpServerTestOptions;

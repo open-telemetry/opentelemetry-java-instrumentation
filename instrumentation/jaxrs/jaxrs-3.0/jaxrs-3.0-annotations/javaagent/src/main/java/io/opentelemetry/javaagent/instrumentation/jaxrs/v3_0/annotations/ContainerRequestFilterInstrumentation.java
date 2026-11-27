@@ -12,7 +12,7 @@ import static net.bytebuddy.matcher.ElementMatchers.named;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
-import io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsConstants;
+import io.opentelemetry.javaagent.instrumentation.jaxrs.JaxrsConstants;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import net.bytebuddy.asm.Advice;
