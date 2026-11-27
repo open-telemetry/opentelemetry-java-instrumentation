@@ -440,6 +440,19 @@
   `os.arch` value: `aarch64` becomes `arm64`, `x86_64` becomes `amd64`, `i386` becomes `x86`,
   `arm` becomes `arm32`, `ppc` becomes `ppc32`, and `ppc64le` becomes `ppc64`.
 
+- The Java agent and Spring Boot starter now detect `host.id` by default. If you use declarative
+  YAML, the `host` detector is still opt-in.
+
+  Remove `otel.resource.providers.host-id.enabled`; it no longer has any effect.
+  In the `otel.java.enabled.resource.providers` and `otel.java.disabled.resource.providers`
+  properties, replace
+  `io.opentelemetry.instrumentation.resources.HostIdResourceProvider` with
+  `io.opentelemetry.instrumentation.resources.HostResourceProvider`. Disabling that provider also
+  stops local `host.name` and `host.arch` detection. To omit only `host.id` from telemetry, add it
+  to `otel.resource.disabled.keys`. This does not stop local ID detection.
+  To override the locally detected `host.id`, give your custom resource provider an `order()`
+  greater than `-1`.
+
 ### ⚠️ Breaking changes to non-stable APIs
 
 - Rename `OkHttpTelemetry.createCallFactory(...)` to `instrument(...)`.
@@ -459,6 +472,9 @@
 - Rename `GrpcTelemetryBuilder.setClientRequestMetadata` and
   `GrpcTelemetryBuilder.setServerRequestMetadata` to their `RequestHeaders` forms. Remove
   `setCapturedClientRequestMetadata` and `setCapturedServerRequestMetadata`.
+- Remove `HostIdResource` and `HostIdResourceProvider` from `opentelemetry-resources`.
+  Replace `HostIdResource.get()` with `HostResource.create(true)`, which also returns
+  `host.name` and `host.arch` when available.
 - Rename public library instrumentation entrypoints from `wrap`/`wrapXxx` to `instrument`
   overloads, retaining distinct `instrumentXxx` names where required.
 - In `opentelemetry-instrumentation-api-incubator`, custom `RpcAttributesGetter` implementations
