@@ -7,7 +7,6 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
-import io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry.PulsarRequest;
 import javax.annotation.Nullable;
 import org.apache.pulsar.client.api.Consumer;
 import org.apache.pulsar.client.api.Message;
@@ -22,8 +21,12 @@ public class VirtualFieldStore {
       VirtualField.find(Producer.class, ProducerData.class);
   private static final VirtualField<Consumer<?>, String> CONSUMER_FIELD =
       VirtualField.find(Consumer.class, String.class);
-  private static final VirtualField<SendCallback, SendCallbackData> CALLBACK_FIELD =
-      VirtualField.find(SendCallback.class, SendCallbackData.class);
+  private static final VirtualField<SendCallback, SendCallbackData.CallbackAssociation>
+      CALLBACK_FIELD =
+          VirtualField.find(SendCallback.class, SendCallbackData.CallbackAssociation.class);
+  private static final VirtualField<Message<?>, SendCallbackData.MessageAssociation>
+      MESSAGE_SEND_CALLBACK_FIELD =
+          VirtualField.find(Message.class, SendCallbackData.MessageAssociation.class);
 
   private VirtualFieldStore() {}
 
@@ -35,9 +38,21 @@ public class VirtualFieldStore {
     CONSUMER_FIELD.set(instance, serviceUrl);
   }
 
-  public static void inject(SendCallback instance, Context context, PulsarRequest request) {
+  public static void inject(SendCallback instance, SendCallbackData data) {
     if (instance != null) {
-      CALLBACK_FIELD.set(instance, SendCallbackData.create(context, request));
+      CALLBACK_FIELD.set(instance, data.callbackAssociation());
+      Message<?> message = data.request.getMessage();
+      if (message != null) {
+        MESSAGE_SEND_CALLBACK_FIELD.set(message, data.messageAssociation());
+      }
+    }
+  }
+
+  static void clearSendCallbackData(SendCallbackData data) {
+    data.callbackAssociation().clear();
+    Message<?> message = data.request.getMessage();
+    if (message != null && MESSAGE_SEND_CALLBACK_FIELD.get(message) == data.messageAssociation()) {
+      MESSAGE_SEND_CALLBACK_FIELD.set(message, null);
     }
   }
 
@@ -81,9 +96,20 @@ public class VirtualFieldStore {
   }
 
   @Nullable
+  public static Context extractSendCallerContext(Message<?> instance) {
+    SendCallbackData.MessageAssociation association = MESSAGE_SEND_CALLBACK_FIELD.get(instance);
+    return association == null ? null : association.parentContext();
+  }
+
+  @Nullable
+  public static SendCallbackData extractSendCallbackData(SendCallback instance) {
+    SendCallbackData.CallbackAssociation association = CALLBACK_FIELD.get(instance);
+    return association == null ? null : association.get();
+  }
+
+  @Nullable
   public static SendCallbackData takeSendCallbackData(SendCallback instance) {
-    SendCallbackData callbackData = CALLBACK_FIELD.get(instance);
-    CALLBACK_FIELD.set(instance, null);
-    return callbackData;
+    SendCallbackData.CallbackAssociation association = CALLBACK_FIELD.get(instance);
+    return association == null ? null : association.take();
   }
 }
