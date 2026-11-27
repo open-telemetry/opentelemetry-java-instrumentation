@@ -194,7 +194,7 @@ javaagent instrumentation, not library-only code.
   storage, and skipped advice. Prefer library ordering or an existing operation context over a
   separate handoff protocol.
 
-- Publish related mutable state as a unit. For one-time initialization, an existing volatile field
+- Publish related state as a unit. When state is initialized once, an existing volatile field
   can publish the other fields without a separate holder. If several callers can initialize the
   state, choose the writer before writing any of those fields. Write the other fields first, then
   set the volatile field to its ready value. Readers must observe that value before reading the
@@ -209,10 +209,8 @@ javaagent instrumentation, not library-only code.
   hypothetical races.
 
   For example, Apache HttpAsyncClient relies on HttpCore's `BasicFuture` to mark the future done
-  before invoking the terminal callback. Cancelling the future concurrently or from a response
-  getter in the callback cannot deliver a second terminal callback. Calling the instrumentation
-  wrapper directly in a test bypasses the future and does not establish a supported double-completion
-  path. Verify separately that request state is ready when the callback reads it.
+  before invoking the terminal callback, so concurrent cancellation cannot deliver a second
+  terminal callback.
 
 - A complete old immutable snapshot of descriptive connection metadata may briefly be acceptable
   during client or pool reconfiguration. Refresh at a stable lifecycle boundary, publish safely,
