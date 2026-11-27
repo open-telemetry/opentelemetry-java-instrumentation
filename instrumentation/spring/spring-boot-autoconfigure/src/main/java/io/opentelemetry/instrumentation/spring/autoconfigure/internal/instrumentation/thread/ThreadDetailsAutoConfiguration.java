@@ -5,19 +5,40 @@
 
 package io.opentelemetry.instrumentation.spring.autoconfigure.internal.instrumentation.thread;
 
-import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
+import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.instrumentation.spring.autoconfigure.internal.OtelEnabled;
 import io.opentelemetry.instrumentation.thread.internal.ThreadDetailsSpanProcessor;
 import io.opentelemetry.sdk.autoconfigure.spi.AutoConfigurationCustomizerProvider;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnBean;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Condition;
+import org.springframework.context.annotation.ConditionContext;
+import org.springframework.context.annotation.Conditional;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.type.AnnotatedTypeMetadata;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
  * any time.
  */
-@ConditionalOnEnabledInstrumentation(module = "common.thread-details", enabledByDefault = false)
+@ConditionalOnBean(OpenTelemetry.class)
+@Conditional({OtelEnabled.class, ThreadDetailsAutoConfiguration.ThreadDetailsCaptureEnabled.class})
 @Configuration
 public class ThreadDetailsAutoConfiguration {
+
+  /**
+   * This class is internal and is hence not for public use. Its APIs are unstable and can change at
+   * any time.
+   */
+  public static class ThreadDetailsCaptureEnabled implements Condition {
+    @Override
+    public boolean matches(ConditionContext context, AnnotatedTypeMetadata metadata) {
+      return context
+          .getEnvironment()
+          .getProperty(
+              "otel.instrumentation.common.capture-thread-attributes", Boolean.class, false);
+    }
+  }
 
   @Bean
   public AutoConfigurationCustomizerProvider threadDetailOtelCustomizer() {

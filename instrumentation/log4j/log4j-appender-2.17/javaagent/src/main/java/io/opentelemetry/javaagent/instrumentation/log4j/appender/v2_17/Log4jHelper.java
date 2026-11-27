@@ -38,8 +38,7 @@ public class Log4jHelper {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "log4j_appender");
 
-    captureExperimentalAttributes =
-        config.getBoolean("experimental_log_attributes/development", false);
+    captureExperimentalAttributes = config.getBoolean("capture_thread_attributes", false);
     boolean captureCodeAttributes = config.getBoolean("capture_code_attributes/development", false);
     Predicate<String> mapMessageAttributes =
         LoggingConfig.resolveStructuredAttributes(GlobalOpenTelemetry.get());

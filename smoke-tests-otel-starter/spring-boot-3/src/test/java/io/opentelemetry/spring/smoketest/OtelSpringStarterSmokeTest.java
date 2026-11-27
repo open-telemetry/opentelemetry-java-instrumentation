@@ -28,7 +28,7 @@ import org.springframework.web.client.RestTemplate;
       "otel.instrumentation.runtime-telemetry.emit-experimental-metrics=true",
       "otel.instrumentation.runtime-telemetry.emit-experimental-jfr-metrics=true",
       "otel.instrumentation.runtime-telemetry.experimental.jfr-metrics.included=*",
-      "otel.instrumentation.common.thread_details.enabled=true",
+      "otel.instrumentation.common.capture-thread-attributes=true",
     })
 class OtelSpringStarterSmokeTest extends AbstractOtelSpringStarterSmokeTest {
 

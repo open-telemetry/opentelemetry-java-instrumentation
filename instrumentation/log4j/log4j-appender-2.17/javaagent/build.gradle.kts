@@ -53,8 +53,8 @@ testing.suites {
       )
     }
     configureEach {
-      // TODO run tests both with and without experimental log attributes
-      jvmArgs("-Dotel.instrumentation.log4j-appender.experimental-log-attributes=true")
+      // TODO run tests both with and without thread attributes
+      jvmArgs("-Dotel.instrumentation.log4j-appender.capture-thread-attributes=true")
       jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-code-attributes=true")
       jvmArgs("-Dotel.instrumentation.log4j-appender.experimental.capture-marker-attribute=true")
 

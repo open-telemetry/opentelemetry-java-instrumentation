@@ -49,8 +49,7 @@ public class JavaUtilLoggingHelper {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(
             GlobalOpenTelemetry.get(), "java_util_logging");
-    captureExperimentalAttributes =
-        config.getBoolean("experimental_log_attributes/development", false);
+    captureExperimentalAttributes = config.getBoolean("capture_thread_attributes", false);
     captureTemplate = config.getBoolean("capture_template/development", false);
     captureArguments = config.getBoolean("capture_arguments/development", false);
   }

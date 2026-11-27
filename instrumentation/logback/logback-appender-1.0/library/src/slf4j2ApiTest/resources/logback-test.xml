@@ -10,7 +10,7 @@
   </appender>
   <appender name="OpenTelemetry"
     class="io.opentelemetry.instrumentation.logback.appender.v1_0.OpenTelemetryAppender">
-    <captureExperimentalAttributes>false</captureExperimentalAttributes>
+    <captureThreadAttributes>false</captureThreadAttributes>
     <captureCodeAttributes>true</captureCodeAttributes>
     <captureMarkerAttribute>true</captureMarkerAttribute>
     <captureTemplate>true</captureTemplate>

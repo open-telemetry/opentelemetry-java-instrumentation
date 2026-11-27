@@ -5,10 +5,10 @@ library_link: https://logging.apache.org/log4j/1.2/
 features:
   - LOGGING_BRIDGE
 configurations:
-  - name: otel.instrumentation.log4j-appender.experimental-log-attributes
-    declarative_name: java.log4j_appender.experimental_log_attributes/development
+  - name: otel.instrumentation.log4j-appender.capture-thread-attributes
+    declarative_name: java.log4j_appender.capture_thread_attributes
     description: >
-      Enables the capture of experimental log attributes, including thread name and thread ID.
+      Enables the capture of thread name and thread ID log attributes.
     type: boolean
     default: false
   - name: otel.instrumentation.log4j-appender.experimental.mdc-attributes.included

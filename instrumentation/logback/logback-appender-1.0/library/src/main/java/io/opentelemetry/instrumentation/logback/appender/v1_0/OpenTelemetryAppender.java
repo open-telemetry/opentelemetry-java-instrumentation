@@ -277,13 +277,9 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
   }
 
-  /**
-   * Sets whether experimental attributes should be set to logs. These attributes may be changed or
-   * removed in the future, so only enable this if you know you do not require attributes filled by
-   * this instrumentation to be stable across versions.
-   */
-  public void setCaptureExperimentalAttributes(boolean captureExperimentalAttributes) {
-    this.captureExperimentalAttributes = captureExperimentalAttributes;
+  /** Sets whether the thread name should be set on logs. The thread ID is not captured. */
+  public void setCaptureThreadAttributes(boolean captureThreadAttributes) {
+    this.captureExperimentalAttributes = captureThreadAttributes;
   }
 
   /**
