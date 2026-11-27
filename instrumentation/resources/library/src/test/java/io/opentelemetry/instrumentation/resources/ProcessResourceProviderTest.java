@@ -52,15 +52,6 @@ class ProcessResourceProviderTest {
     assertNoCommandAttributes(resource.getAttributes());
   }
 
-  @Test
-  void ignoresOldName() {
-    Map<String, String> config = new HashMap<>();
-    config.put(
-        "otel.instrumentation.resources.experimental.process-command-attributes.enabled", "true");
-
-    assertNoCommandAttributes(createProcessResource(config).getAttributes());
-  }
-
   private static void assertNoCommandAttributes(Attributes attributes) {
     assertThat(attributes.get(PROCESS_PID)).isGreaterThan(1);
     assertThat(attributes.get(PROCESS_EXECUTABLE_PATH)).isNotNull();

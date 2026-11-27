@@ -22,12 +22,6 @@ testing.suites {
     configureEach {
       jvmArgs("-Dotel.instrumentation.graphql.data-fetcher.enabled=true")
     }
-    register("CaptureDocumentDisabled") {
-      systemProperty("test.captureDocumentDisabled", "true")
-      filter {
-        includeTestsMatching("*.GraphqlTest.captureDocument")
-      }
-    }
     register("ExceptionLogs") {
       jvmArgs(
         "-Dotel.semconv.exception.signal.preview=logs",

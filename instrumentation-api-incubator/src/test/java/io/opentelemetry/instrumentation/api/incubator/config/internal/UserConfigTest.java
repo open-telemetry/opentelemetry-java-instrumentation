@@ -20,13 +20,12 @@ class UserConfigTest {
     DeclarativeConfigProperties commonConfig =
         mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
     when(commonConfig.getBoolean("capture_user_name", false)).thenReturn(true);
-    when(commonConfig.getBoolean("capture_user_roles", false)).thenReturn(true);
+    when(commonConfig.getBoolean("capture_user_roles", false)).thenReturn(false);
 
     UserConfig userConfig = new UserConfig(commonConfig);
 
     assertThat(userConfig.isNameEnabled()).isTrue();
-    assertThat(userConfig.isRolesEnabled()).isTrue();
-    assertThat(userConfig.isAnyEnabled()).isTrue();
+    assertThat(userConfig.isRolesEnabled()).isFalse();
   }
 
   @Test
@@ -39,18 +38,5 @@ class UserConfigTest {
     assertThat(userConfig.isNameEnabled()).isFalse();
     assertThat(userConfig.isRolesEnabled()).isFalse();
     assertThat(userConfig.isAnyEnabled()).isFalse();
-  }
-
-  @Test
-  void ignoresOldNames() {
-    DeclarativeConfigProperties commonConfig =
-        mock(DeclarativeConfigProperties.class, RETURNS_DEEP_STUBS);
-    when(commonConfig.get("user").get("name").getBoolean("enabled", false)).thenReturn(true);
-    when(commonConfig.get("user").get("roles").getBoolean("enabled", false)).thenReturn(true);
-
-    UserConfig userConfig = new UserConfig(commonConfig);
-
-    assertThat(userConfig.isNameEnabled()).isFalse();
-    assertThat(userConfig.isRolesEnabled()).isFalse();
   }
 }

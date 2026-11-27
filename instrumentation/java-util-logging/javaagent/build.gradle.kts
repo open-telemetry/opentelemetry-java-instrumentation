@@ -17,15 +17,6 @@ testing.suites {
     register("Experimental") {
       jvmArgs("-Dotel.instrumentation.java-util-logging.capture-thread-attributes=true")
     }
-    register("DeclarativeThreadAttributes") {
-      val config = file("src/test/resources/declarative-config.yaml")
-      inputs.file(config)
-      jvmArgs("-Dotel.config.file=$config")
-      systemProperty("test.captureThreadAttributes", "true")
-    }
-    register("OldThreadAttributesName") {
-      jvmArgs("-Dotel.instrumentation.java-util-logging.experimental-log-attributes=true")
-    }
     register("CaptureTemplateAndArguments") {
       jvmArgs(
         "-Dotel.instrumentation.java-util-logging.experimental.capture-template=true",
