@@ -78,7 +78,6 @@ class CxfRequestContextInstrumentation implements TypeInstrumentation {
 
       MethodInvocationInfo invocationInfo = resourceInfoStack.peek();
       OperationResourceInfo operation = invocationInfo.getMethodInfo();
-      CxfSpanName.updateServerRoute(message, resourceInfoStack);
       Method method = operation.getMethodToInvoke();
       Class<?> resourceClass = invocationInfo.getRealClass();
       return AdviceScope.start(resourceClass, method, requestContext);

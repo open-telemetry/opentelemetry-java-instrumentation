@@ -17,6 +17,7 @@ import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
 import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import jakarta.ws.rs.GET;
+import jakarta.ws.rs.QueryParam;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
@@ -60,7 +61,7 @@ class CxfRouteTest {
         address,
         requestPath,
         route,
-        abort,
+        abort ? 403 : 200,
         factory -> {
           factory.setModelBeans(
               resource(ItemResource.class, resourcePath, "item", "GET", operationPath));
@@ -76,7 +77,7 @@ class CxfRouteTest {
         "/api",
         "/api/items/123/parts/456/detail",
         "/app/restcall/api/items/{id}/parts/{partId}/detail",
-        abort,
+        abort ? 403 : 200,
         factory -> {
           factory.setModelBeansWithServiceClass(
               asList(
@@ -97,7 +98,23 @@ class CxfRouteTest {
         "/api",
         "/api/items/123/detail",
         "/app/restcall/api/items/{id}/detail",
-        abort,
+        abort ? 403 : 200,
+        factory -> {
+          factory.setStaticSubresourceResolution(true);
+          factory.setServiceBean(new ReusedRoot());
+        });
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void recordsRouteWhenQueryParameterConversionFails(boolean nested, @TempDir Path tempDir)
+      throws Exception {
+    assertRoute(
+        tempDir,
+        "/api",
+        (nested ? "/api/items/123/detail" : "/api/items/detail") + "?limit=invalid",
+        nested ? "/app/restcall/api/items/{id}/detail" : "/app/restcall/api/items/detail",
+        404,
         factory -> {
           factory.setStaticSubresourceResolution(true);
           factory.setServiceBean(new ReusedRoot());
@@ -122,7 +139,7 @@ class CxfRouteTest {
       String address,
       String requestPath,
       String route,
-      boolean abort,
+      int status,
       Consumer<JAXRSServerFactoryBean> configureResource)
       throws Exception {
     Tomcat tomcat = new Tomcat();
@@ -142,7 +159,7 @@ class CxfRouteTest {
     factory.setBus(servlet.getBus());
     factory.setAddress(address);
     configureResource.accept(factory);
-    if (abort) {
+    if (status == 403) {
       factory.setProvider(
           (ContainerRequestFilter)
               request -> request.abortWith(Response.status(403).entity("blocked").build()));
@@ -155,8 +172,10 @@ class CxfRouteTest {
     var response =
         HttpClient.newHttpClient()
             .send(HttpRequest.newBuilder(uri).build(), HttpResponse.BodyHandlers.ofString());
-    assertThat(response.statusCode()).isEqualTo(abort ? 403 : 200);
-    assertThat(response.body()).isEqualTo(abort ? "blocked" : "item");
+    assertThat(response.statusCode()).isEqualTo(status);
+    if (status == 200 || status == 403) {
+      assertThat(response.body()).isEqualTo(status == 403 ? "blocked" : "item");
+    }
 
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(span ->
@@ -169,7 +188,7 @@ class CxfRouteTest {
                 .hasHistogramPointsSatisfying(point ->
                     point
                         .hasAttribute(HTTP_ROUTE, route)
-                        .hasAttribute(HTTP_RESPONSE_STATUS_CODE, abort ? 403L : 200L)
+                        .hasAttribute(HTTP_RESPONSE_STATUS_CODE, (long) status)
                         .hasCount(1)));
   }
 
@@ -238,7 +257,7 @@ class CxfRouteTest {
 
     @GET
     @jakarta.ws.rs.Path("/detail")
-    public String detail() {
+    public String detail(@QueryParam("limit") int limit) {
       return "item";
     }
   }

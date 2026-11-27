@@ -25,6 +25,6 @@ public class Cxf4InstrumentationModule extends InstrumentationModule {
         asList(
             new CxfRequestContextInstrumentation(),
             new CxfServletControllerInstrumentation(),
-            new CxfJaxRsInvokerInstrumentation()));
+            new CxfJaxRsUtilsInstrumentation()));
   }
 }
