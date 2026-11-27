@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseC
 import io.opentelemetry.instrumentation.servlet.v5_0.internal.Servlet5Accessor;
 import io.opentelemetry.javaagent.bootstrap.servlet.AppServerBridge;
 import io.opentelemetry.javaagent.instrumentation.jetty.common.v8_0.JettyHelper;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.AgentServletInstrumenterBuilder;
+import io.opentelemetry.javaagent.instrumentation.servlet.AgentServletInstrumenterBuilder;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 

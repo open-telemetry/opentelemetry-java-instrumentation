@@ -11,7 +11,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletAccessor;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletRequestContext;
 import io.opentelemetry.instrumentation.servlet.common.internal.ServletResponseContext;
-import io.opentelemetry.javaagent.instrumentation.servlet.common.ServletHelper;
+import io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper;
 import javax.annotation.Nullable;
 
 public class JettyHelper<REQUEST, RESPONSE> extends ServletHelper<REQUEST, RESPONSE> {

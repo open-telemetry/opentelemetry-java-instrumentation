@@ -29,6 +29,7 @@ import io.opentelemetry.instrumentation.testing.junit.http.ServerEndpoint;
 import io.opentelemetry.sdk.testing.assertj.SpanDataAssert;
 import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import io.opentelemetry.testing.internal.armeria.common.AggregatedHttpResponse;
 import java.util.EnumSet;
 import java.util.Locale;
 import javax.servlet.DispatcherType;
@@ -37,12 +38,24 @@ import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.servlet.FilterHolder;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHandler;
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 
 class JFinalTest extends AbstractHttpServerTest<Server> {
 
   @RegisterExtension
   static final InstrumentationExtension testing = HttpServerInstrumentationExtension.forAgent();
+
+  @Test
+  void excludesServletContextFromJson() {
+    AggregatedHttpResponse response =
+        client.get(h1Address.resolve("/json").toString()).aggregate().join();
+
+    assertThat(response.status().code()).isEqualTo(200);
+    assertThat(response.contentUtf8())
+        .contains("\"contextPresent\":true")
+        .doesNotContain("ServletHelper.Context");
+  }
 
   @Override
   protected void configure(HttpServerTestOptions options) {

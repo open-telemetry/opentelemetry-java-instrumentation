@@ -20,6 +20,16 @@ public class TestController extends Controller {
     runWithSpan("controller", () -> renderText(ServerEndpoint.SUCCESS.getBody()));
   }
 
+  public void json() {
+    setAttr(
+        "contextPresent",
+        getRequest()
+                .getAttribute(
+                    "io.opentelemetry.javaagent.instrumentation.servlet.ServletHelper.Context")
+            != null);
+    renderJson();
+  }
+
   public void redirect() {
     runWithSpan("controller", () -> redirect(ServerEndpoint.REDIRECT.getBody()));
   }

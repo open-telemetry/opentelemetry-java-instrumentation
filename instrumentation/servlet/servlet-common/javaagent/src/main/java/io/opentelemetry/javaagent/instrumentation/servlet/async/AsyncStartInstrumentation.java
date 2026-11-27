@@ -3,24 +3,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.common.async;
+package io.opentelemetry.javaagent.instrumentation.servlet.async;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasClassesNamed;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.implementsInterface;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 
 import io.opentelemetry.javaagent.extension.instrumentation.TypeInstrumentation;
 import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
-public class AsyncContextStartInstrumentation implements TypeInstrumentation {
+public class AsyncStartInstrumentation implements TypeInstrumentation {
   private final String basePackageName;
   private final String adviceClassName;
 
-  public AsyncContextStartInstrumentation(String basePackageName, String adviceClassName) {
+  public AsyncStartInstrumentation(String basePackageName, String adviceClassName) {
     this.basePackageName = basePackageName;
     this.adviceClassName = adviceClassName;
   }
@@ -32,12 +32,13 @@ public class AsyncContextStartInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return implementsInterface(named(basePackageName + ".AsyncContext"));
+    return implementsInterface(named(basePackageName + ".ServletRequest"));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
     transformer.applyAdviceToMethod(
-        named("start").and(takesArguments(Runnable.class)).and(isPublic()), adviceClassName);
+        named("startAsync").and(returns(named(basePackageName + ".AsyncContext"))).and(isPublic()),
+        adviceClassName);
   }
 }

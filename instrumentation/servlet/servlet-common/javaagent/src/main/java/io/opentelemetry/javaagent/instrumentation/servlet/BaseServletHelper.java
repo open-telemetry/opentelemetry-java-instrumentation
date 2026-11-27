@@ -3,7 +3,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-package io.opentelemetry.javaagent.instrumentation.servlet.common;
+package io.opentelemetry.javaagent.instrumentation.servlet;
 
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER;
 import static io.opentelemetry.instrumentation.api.semconv.http.HttpServerRouteSource.SERVER_FILTER;
