@@ -7,6 +7,7 @@ package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
 import static java.util.Collections.unmodifiableList;
 import static java.util.Comparator.comparingInt;
+import static java.util.logging.Level.WARNING;
 
 import io.micrometer.core.instrument.MeterRegistry;
 import io.opentelemetry.api.GlobalOpenTelemetry;
@@ -22,9 +23,11 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
 public class MicrometerSingletons {
+  private static final Logger logger = Logger.getLogger(MicrometerSingletons.class.getName());
 
   private static final MeterRegistry meterRegistry;
 
@@ -39,6 +42,25 @@ public class MicrometerSingletons {
         builder, TimeUnitParser.parseConfigValue(config.getString("base_time_unit", "s")));
     Experimental.setMicrometerHistogramGaugesEnabled(
         builder, config.get("histogram_gauges/development").getBoolean("enabled", false));
+    DeclarativeConfigProperties runtimeTelemetryConfig =
+        DeclarativeConfigUtil.getInstrumentationConfig(
+            GlobalOpenTelemetry.get(), "runtime_telemetry");
+    // deprecated opt-out, to be removed in 4.0
+    boolean jvmMetricsDeduplication =
+        config.get("jvm_metrics_deduplication/development").getBoolean("enabled", true);
+    if (!jvmMetricsDeduplication) {
+      logger.log(
+          WARNING,
+          "otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled is"
+              + " deprecated and will be removed in 4.0, after which standard Micrometer JVM"
+              + " metrics will always defer to runtime telemetry.");
+    }
+    if (jvmMetricsDeduplication && runtimeTelemetryConfig.getBoolean("enabled", true)) {
+      Experimental.setSuppressionPredicate(
+          builder,
+          new JvmMetricsDeduplication(
+              runtimeTelemetryConfig.getBoolean("emit_experimental_metrics/development", false)));
+    }
     meterRegistry = builder.build();
   }
 

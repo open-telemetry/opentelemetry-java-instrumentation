@@ -436,6 +436,12 @@
     `kafka.server.network.io` now have a `kafka.topic.name` attribute instead of a broker-wide value.
   - `kafka.server.isr.operations` is now a counter instead of an updowncounter.
 
+- The Micrometer bridge no longer bridges standard Micrometer JVM metrics that runtime telemetry
+  also reports, such as `jvm.memory.used`, `jvm.threads.live` and `jvm.gc.pause`; use the runtime
+  telemetry metrics instead. Set
+  `otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled=false` to keep
+  them.
+
 - The `host.arch` resource attribute now uses the semantic convention values instead of the raw
   `os.arch` value: `aarch64` becomes `arm64`, `x86_64` becomes `amd64`, `i386` becomes `x86`,
   `arm` becomes `arm32`, `ppc` becomes `ppc32`, and `ppc64le` becomes `ppc64`.
@@ -597,6 +603,8 @@
 - Deprecate both `Java8BytecodeBridge` classes in `javaagent-extension-api` and `testing-common`
   in favor of direct `Context`, `Span`, and `Baggage` APIs now that non-inline instrumentation
   is the default.
+- Deprecate `otel.instrumentation.micrometer.experimental.jvm-metrics-deduplication.enabled`; it
+  will be removed in 4.0.
 - Deprecate `SqlDialect.DOUBLE_QUOTES_ARE_STRING_LITERALS` in favor of `SqlDialect.UNKNOWN`, and
   `SqlDialect.DOUBLE_QUOTES_ARE_IDENTIFIERS` in favor of `SqlDialect.forDbSystemName(String)`
   or `SqlDialect.builder()`.
