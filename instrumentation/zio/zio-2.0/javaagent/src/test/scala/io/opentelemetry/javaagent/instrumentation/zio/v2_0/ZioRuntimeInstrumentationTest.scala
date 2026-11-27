@@ -156,7 +156,17 @@ class ZioRuntimeInstrumentationTest {
         withSpan("before", _ => ())
         Unsafe.unsafe { implicit unsafe =>
           zio.Runtime.default.unsafe
-            .run(ZIO.succeed("hello"))(Trace.empty, unsafe)
+            .run(
+              ZIO.succeed {
+                zio.Runtime.default.unsafe
+                  .run(
+                    childSpan("nested") {
+                      childSpan("nested_child")(ZIO.unit)
+                    }
+                  )(Trace.empty, unsafe)
+                  .getOrThrowFiberFailure()
+              }
+            )(Trace.empty, unsafe)
             .getOrThrowFiberFailure()
         }
         withSpan("after", _ => ())
@@ -168,6 +178,8 @@ class ZioRuntimeInstrumentationTest {
         trace.hasSpansSatisfyingExactly(
           assertSpan(_.hasName("parent").hasNoParent),
           assertSpan(_.hasName("before").hasParent(trace.getSpan(0))),
+          assertSpan(_.hasName("nested").hasParent(trace.getSpan(0))),
+          assertSpan(_.hasName("nested_child").hasParent(trace.getSpan(2))),
           assertSpan(_.hasName("after").hasParent(trace.getSpan(0)))
         )
       }

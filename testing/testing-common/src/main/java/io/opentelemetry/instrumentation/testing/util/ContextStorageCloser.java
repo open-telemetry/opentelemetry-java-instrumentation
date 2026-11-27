@@ -120,7 +120,7 @@ public class ContextStorageCloser {
       if (contextStorage == null) {
         return null;
       }
-      contextStorage = unwrapStrictContextStressor(contextStorage);
+      contextStorage = unwrapContextStorage(contextStorage);
       Class<?> contextStorageClass = contextStorage.getClass();
       if (contextStorageClass.getName().contains("StrictContextStorage")) {
         return contextStorage;
@@ -140,15 +140,26 @@ public class ContextStorageCloser {
       }
     }
 
-    private static Object unwrapStrictContextStressor(Object contextStorage)
+    private static Object unwrapContextStorage(Object contextStorage)
         throws NoSuchFieldException, IllegalAccessException {
-      Class<?> contextStorageClass = contextStorage.getClass();
-      if (contextStorageClass.getName().contains("StrictContextStressor")) {
-        Field field = contextStorageClass.getDeclaredField("contextStorage");
+      while (true) {
+        Class<?> contextStorageClass = contextStorage.getClass();
+        String className = contextStorageClass.getName();
+        if (className.contains("StrictContextStorage")) {
+          return contextStorage;
+        }
+        String fieldName;
+        if (className.contains("StrictContextStressor")) {
+          fieldName = "contextStorage";
+        } else if (className.equals("io.opentelemetry.javaagent.tooling.FiberContextStorage")) {
+          fieldName = "delegate";
+        } else {
+          return contextStorage;
+        }
+        Field field = contextStorageClass.getDeclaredField(fieldName);
         field.setAccessible(true);
-        return field.get(contextStorage);
+        contextStorage = field.get(contextStorage);
       }
-      return contextStorage;
     }
   }
 }
