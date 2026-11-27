@@ -10,16 +10,17 @@ user-facing instrumentation configuration.
 
 ## Names and stability
 
-- Use `otel.javaagent.*` for flat settings owned by the Java agent that control runtime, SDK
-  wiring, or module selection, and `otel.spring-starter.*` for those owned by the Spring Boot
-  starter. For example, `otel.javaagent.add-thread-details` enables the agent's thread-attribute
-  span processor. The flat keys for whole-module enablement are exceptions to these prefixes:
+- Use `otel.javaagent.*` for the Java agent and `otel.spring-starter.*` for the Spring Boot
+  starter when a flat setting configures the distribution itself, the SDK components it installs,
+  or which instrumentation modules it enables. For example, `otel.javaagent.add-thread-details=true`
+  installs an SDK span processor that can add thread attributes even to spans created by the
+  application. The flat keys for whole-module enablement are exceptions to these prefixes:
   `otel.instrumentation.common.default-enabled` for the default and
   `otel.instrumentation.<name>.enabled` for individual modules.
   Keep shared SDK and resource settings and upstream-defined names in their own namespaces,
   even when a distribution reads them.
-- Use `otel.instrumentation.*` for flat settings that control instrumentation behavior, including
-  settings shared across modules, regardless of which code reads them.
+- Use `otel.instrumentation.*` for flat settings that configure how one or more instrumentation
+  modules behave once enabled, even if a distribution reads the settings on their behalf.
 - Check both the flat property and declarative YAML form of an `otel.instrumentation.*` setting.
   Flat-property segments use kebab-case and YAML keys use snake_case, subject to the published
   names below.
