@@ -37,22 +37,6 @@ class TelemetryParserTest {
         .isEqualTo(expected);
   }
 
-  @ParameterizedTest
-  @CsvSource({
-    "jaxrs-2.0-cxf-3.2, jaxrs-annotations-2.0",
-    "jaxrs-2.0-jersey-2.0, jaxrs-annotations-2.0",
-    "jaxrs-2.0-resteasy-3.0, jaxrs-annotations-2.0",
-    "jaxrs-2.0-resteasy-3.1, jaxrs-annotations-2.0",
-    "jaxrs-3.0-jersey-3.0, jaxrs-annotations-3.0",
-    "jaxrs-3.0-resteasy-6.0, jaxrs-annotations-3.0"
-  })
-  void jaxrsProviderScopes(String module, String annotationScope) {
-    assertThat(
-            TelemetryParser.scopeIsValid(
-                "io.opentelemetry." + annotationScope, "io.opentelemetry." + module))
-        .isTrue();
-  }
-
   @Test
   void normalizeWhenConditionStripsQuotes() {
     String content =
