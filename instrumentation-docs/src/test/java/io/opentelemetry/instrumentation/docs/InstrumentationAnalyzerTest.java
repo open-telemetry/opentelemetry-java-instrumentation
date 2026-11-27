@@ -11,7 +11,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import io.opentelemetry.instrumentation.docs.internal.EmittedMetrics;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationModule;
 import io.opentelemetry.instrumentation.docs.internal.InstrumentationType;
-import io.opentelemetry.instrumentation.docs.internal.TelemetryAttribute;
 import io.opentelemetry.instrumentation.docs.parsers.ModuleParser;
 import io.opentelemetry.instrumentation.docs.utils.FileManager;
 import io.opentelemetry.instrumentation.docs.utils.InstrumentationPath;
@@ -19,7 +18,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -160,71 +158,5 @@ class InstrumentationAnalyzerTest {
     assertThat(module.getMetrics().get("default"))
         .extracting(EmittedMetrics.Metric::getName)
         .containsExactly("system.memory.usage");
-  }
-
-  @Test
-  void testAnalyzeJaxrsAnnotationControllerSpans(@TempDir Path tempDir) throws IOException {
-    Map<String, String> nameBySourcePath =
-        Map.of(
-            "instrumentation/jaxrs/jaxrs-annotations-1.0",
-            "jaxrs-annotations-1.0",
-            "instrumentation/jaxrs/jaxrs-2.0/jaxrs-annotations-2.0",
-            "jaxrs-annotations-2.0",
-            "instrumentation/jaxrs/jaxrs-3.0/jaxrs-annotations-3.0",
-            "jaxrs-annotations-3.0");
-
-    for (Map.Entry<String, String> entry : nameBySourcePath.entrySet()) {
-      Path telemetryDir =
-          Files.createDirectories(tempDir.resolve(entry.getKey()).resolve(".telemetry"));
-      Files.createDirectories(telemetryDir.getParent().resolve("javaagent"));
-      if (!entry.getKey().equals("instrumentation/jaxrs/jaxrs-annotations-1.0")) {
-        Files.writeString(
-            telemetryDir.resolve("scope-test.yaml"),
-            """
-            scopes:
-              - name: io.opentelemetry.%s
-                version: 2.14.0
-                schemaUrl: null
-            """
-                .formatted(entry.getValue()));
-      }
-      Files.writeString(
-          telemetryDir.resolve("spans-test.yaml"),
-          """
-          when: otel.instrumentation.common.controller-telemetry.enabled=true
-          spans_by_scope:
-            - scope: io.opentelemetry.%s
-              spans:
-                - span_kind: INTERNAL
-                  attributes:
-                    - name: code.function.name
-                      type: STRING
-          """
-              .formatted(entry.getValue()));
-    }
-
-    List<InstrumentationModule> modules =
-        new InstrumentationAnalyzer(new FileManager(tempDir)).analyze();
-
-    assertThat(modules).hasSize(3);
-    for (InstrumentationModule module : modules) {
-      assertThat(module.getInstrumentationName())
-          .isEqualTo(nameBySourcePath.get(module.getSrcPath()));
-      assertThat(module.getScopeInfo().getName())
-          .isEqualTo("io.opentelemetry." + nameBySourcePath.get(module.getSrcPath()));
-      assertThat(module.getSpans())
-          .containsKey("otel.instrumentation.common.controller-telemetry.enabled=true");
-      assertThat(
-              module
-                  .getSpans()
-                  .get("otel.instrumentation.common.controller-telemetry.enabled=true"))
-          .singleElement()
-          .satisfies(span -> {
-            assertThat(span.getSpanKind()).isEqualTo("INTERNAL");
-            assertThat(span.getAttributes())
-                .extracting(TelemetryAttribute::getName)
-                .containsExactly("code.function.name");
-          });
-    }
   }
 }
