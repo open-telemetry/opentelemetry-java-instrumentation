@@ -5,9 +5,10 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
+import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.takesArguments;
+import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isPublic;
 import static net.bytebuddy.matcher.ElementMatchers.named;
-import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
@@ -17,23 +18,30 @@ import io.opentelemetry.javaagent.extension.instrumentation.TypeTransformer;
 import javax.annotation.Nullable;
 import javax.servlet.http.HttpServletRequest;
 import net.bytebuddy.asm.Advice;
+import net.bytebuddy.description.method.MethodDescription;
 import net.bytebuddy.description.type.TypeDescription;
 import net.bytebuddy.matcher.ElementMatcher;
 
 class CxfServletControllerInstrumentation implements TypeInstrumentation {
 
+  private static final ElementMatcher.Junction<MethodDescription> INVOKE_DESTINATION =
+      isPublic()
+          .and(named("invokeDestination"))
+          .and(
+              takesArguments(
+                  named("javax.servlet.http.HttpServletRequest"),
+                  named("javax.servlet.http.HttpServletResponse"),
+                  named("org.apache.cxf.transport.http.AbstractHTTPDestination")));
+
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.cxf.transport.servlet.ServletController");
+    return named("org.apache.cxf.transport.servlet.ServletController")
+        .and(declaresMethod(INVOKE_DESTINATION));
   }
 
   @Override
   public void transform(TypeTransformer transformer) {
-    transformer.applyAdviceToMethod(
-        isPublic()
-            .and(named("invokeDestination"))
-            .and(takesArgument(0, named("javax.servlet.http.HttpServletRequest"))),
-        getClass().getName() + "$InvokeAdvice");
+    transformer.applyAdviceToMethod(INVOKE_DESTINATION, getClass().getName() + "$InvokeAdvice");
   }
 
   @SuppressWarnings("unused")

@@ -1,0 +1,10 @@
+display_name: Apache CXF JAX-RS 3.x
+description: >
+  This instrumentation enriches HTTP server spans with route information, and enables controller
+  spans for JAX-RS methods when using Apache CXF (controller spans are disabled by default).
+library_link: https://cxf.apache.org/
+features:
+  - HTTP_ROUTE
+  - CONTROLLER_SPANS
+configurations:
+  - ref: common.controller-telemetry.enabled

@@ -140,6 +140,8 @@ readonly INSTRUMENTATIONS=(
   "jaxrs:jaxrs-2.0:jaxrs-2.0-resteasy-3.1:javaagent:testExperimental"
   "jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent:test"
   "jaxrs:jaxrs-3.0:jaxrs-3.0-annotations:javaagent:testControllerTelemetry"
+  "jaxrs:jaxrs-3.0:jaxrs-3.0-cxf-4.0:javaagent:test"
+  "jaxrs:jaxrs-3.0:jaxrs-3.0-cxf-4.0:javaagent:testControllerTelemetry"
   "jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent:test"
   "jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent:testControllerTelemetry"
   "jaxrs:jaxrs-3.0:jaxrs-3.0-jersey-3.0:javaagent:testExperimental"

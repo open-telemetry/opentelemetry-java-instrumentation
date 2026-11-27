@@ -5,7 +5,9 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.v2_0.cxf.v3_2;
 
+import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.named;
+import static net.bytebuddy.matcher.ElementMatchers.returns;
 import static net.bytebuddy.matcher.ElementMatchers.takesArgument;
 
 import io.opentelemetry.context.Context;
@@ -22,7 +24,11 @@ class CxfJaxRsInvokerInstrumentation implements TypeInstrumentation {
 
   @Override
   public ElementMatcher<TypeDescription> typeMatcher() {
-    return named("org.apache.cxf.jaxrs.JAXRSInvoker");
+    // Both CXF 3 and 4 have this invoker class, including on mixed API classpaths.
+    return named("org.apache.cxf.jaxrs.JAXRSInvoker")
+        .and(
+            declaresMethod(
+                named("getTemplateValues").and(returns(named("javax.ws.rs.core.MultivaluedMap")))));
   }
 
   @Override
