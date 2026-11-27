@@ -194,20 +194,25 @@ javaagent instrumentation, not library-only code.
   storage, and skipped advice. Prefer library ordering or an existing operation context over a
   separate handoff protocol.
 
-- Publish related mutable state as a unit. If one writer publishes the state once, an existing
-  volatile field can signal publication without a holder allocation. Write the other fields first,
-  then write the volatile field. Readers must read the volatile field first and only use the other
-  fields after it signals publication. If writers can replace state while readers access it, use a
-  safely published immutable snapshot or protect the fields with one short private lock.
+- Publish related mutable state as a unit. For one-time initialization, an existing volatile field
+  can publish the other fields without a separate holder. If several callers can initialize the
+  state, choose the writer before writing any of those fields. Write the other fields first, then
+  set the volatile field to its ready value. Readers must observe that value before reading the
+  other fields. Do not overwrite the published fields. If state can be replaced while readers
+  access it, safely publish immutable snapshots and have each reader use a single snapshot, or
+  protect reads and writes with the same short private lock.
 
-- Use a once-claim CAS when supported cross-thread completion paths race. For same-thread reentrancy,
-  consuming state before invoking reentrant code may suffice. Do not add locks, generations,
-  reservations, or CAS loops for hypothetical races.
+- Give terminal work a single owner. Rely on the library's completion guarantee when it covers all
+  supported paths. If completion can still race across threads, claim ownership atomically, such as
+  with CAS or under an existing lock. For same-thread reentrancy, consuming state before invoking
+  reentrant code may suffice. Do not add locks, generations, reservations, or CAS loops for
+  hypothetical races.
 
-  For example, Apache HttpAsyncClient marks its future done before invoking the terminal callback.
-  Cancelling that future concurrently or from inside a response getter cannot deliver a second
-  terminal callback. Calling the instrumentation wrapper directly in a test bypasses the future
-  and does not establish a supported path that needs a guard.
+  For example, Apache HttpAsyncClient relies on HttpCore's `BasicFuture` to mark the future done
+  before invoking the terminal callback. Cancelling the future concurrently or from a response
+  getter in the callback cannot deliver a second terminal callback. Calling the instrumentation
+  wrapper directly in a test bypasses the future and does not establish a supported double-completion
+  path. Verify separately that request state is ready when the callback reads it.
 
 - A complete old immutable snapshot of descriptive connection metadata may briefly be acceptable
   during client or pool reconfiguration. Refresh at a stable lifecycle boundary, publish safely,
