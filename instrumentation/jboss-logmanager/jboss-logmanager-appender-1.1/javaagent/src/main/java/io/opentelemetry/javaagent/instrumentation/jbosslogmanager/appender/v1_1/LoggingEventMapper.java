@@ -50,8 +50,7 @@ public class LoggingEventMapper {
     DeclarativeConfigProperties config =
         DeclarativeConfigUtil.getInstrumentationConfig(
             GlobalOpenTelemetry.get(), "jboss_logmanager");
-    captureExperimentalAttributes =
-        config.getBoolean("capture_thread_attributes", false);
+    captureExperimentalAttributes = config.getBoolean("capture_thread_attributes", false);
     captureTemplate = config.getBoolean("capture_template/development", false);
     captureArguments = config.getBoolean("capture_arguments/development", false);
     mdcAttributes =

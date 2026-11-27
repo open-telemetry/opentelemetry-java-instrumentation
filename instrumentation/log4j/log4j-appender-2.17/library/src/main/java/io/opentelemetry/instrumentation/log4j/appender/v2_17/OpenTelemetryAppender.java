@@ -121,9 +121,7 @@ public class OpenTelemetryAppender extends AbstractAppender {
 
     @Nullable private OpenTelemetry openTelemetry;
 
-    /**
-     * Sets whether thread name and thread ID should be set on logs.
-     */
+    /** Sets whether thread name and thread ID should be set on logs. */
     @CanIgnoreReturnValue
     public B setCaptureThreadAttributes(boolean captureThreadAttributes) {
       this.captureThreadAttributes = captureThreadAttributes;

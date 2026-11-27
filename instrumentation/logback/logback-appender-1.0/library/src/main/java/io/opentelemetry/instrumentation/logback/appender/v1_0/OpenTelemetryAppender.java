@@ -277,9 +277,7 @@ public class OpenTelemetryAppender extends UnsynchronizedAppenderBase<ILoggingEv
     }
   }
 
-  /**
-   * Sets whether the thread name should be set on logs. The thread ID is not captured.
-   */
+  /** Sets whether the thread name should be set on logs. The thread ID is not captured. */
   public void setCaptureThreadAttributes(boolean captureThreadAttributes) {
     this.captureExperimentalAttributes = captureThreadAttributes;
   }

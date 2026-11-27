@@ -41,6 +41,15 @@ testing.suites {
         includeTestsMatching("*.GraphqlTest.captureDocument")
       }
     }
+    register("DeclarativeCaptureDocumentDisabled") {
+      jvmArgs(
+        "-Dotel.config.file=${project(":instrumentation:graphql-java:graphql-java-common-12.0:testing").projectDir}/src/main/resources/declarative-config.yaml"
+      )
+      systemProperty("test.captureDocumentDisabled", "true")
+      filter {
+        includeTestsMatching("*.GraphqlTest.captureDocument")
+      }
+    }
     register("CaptureQueryIgnored") {
       systemProperty("otel.instrumentation.graphql.capture-query", "false")
       filter {

@@ -1,0 +1,5 @@
+file_format: "1.1"
+instrumentation/development:
+  java:
+    graphql:
+      capture_document: false
