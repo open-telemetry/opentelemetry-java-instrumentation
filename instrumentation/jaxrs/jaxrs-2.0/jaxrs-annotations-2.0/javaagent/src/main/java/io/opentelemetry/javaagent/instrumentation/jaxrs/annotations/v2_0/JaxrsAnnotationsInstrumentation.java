@@ -7,9 +7,9 @@ package io.opentelemetry.javaagent.instrumentation.jaxrs.annotations.v2_0;
 
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperMethod;
 import static io.opentelemetry.javaagent.extension.matcher.AgentElementMatchers.hasSuperType;
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.annotations.v2_0.JaxrsAnnotationsSingletons.ASYNC_RESPONSE_DATA;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.annotations.v2_0.JaxrsAnnotationsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsServerSpanNaming.serverSpanName;
 import static net.bytebuddy.matcher.ElementMatchers.declaresMethod;
 import static net.bytebuddy.matcher.ElementMatchers.isAnnotatedWith;
 import static net.bytebuddy.matcher.ElementMatchers.isStatic;

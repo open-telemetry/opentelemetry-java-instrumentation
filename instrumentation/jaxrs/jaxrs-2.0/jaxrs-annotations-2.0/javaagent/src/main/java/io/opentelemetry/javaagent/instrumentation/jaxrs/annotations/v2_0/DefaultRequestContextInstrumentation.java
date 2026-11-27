@@ -5,8 +5,8 @@
 
 package io.opentelemetry.javaagent.instrumentation.jaxrs.annotations.v2_0;
 
-import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsServerSpanNaming.serverSpanName;
 import static io.opentelemetry.javaagent.instrumentation.jaxrs.annotations.v2_0.JaxrsAnnotationsSingletons.instrumenter;
+import static io.opentelemetry.javaagent.instrumentation.jaxrs.common.JaxrsServerSpanNaming.serverSpanName;
 
 import io.opentelemetry.context.Context;
 import io.opentelemetry.context.Scope;
