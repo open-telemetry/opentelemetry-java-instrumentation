@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.spring.kafka.v2_8;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_BATCH_MESSAGE_COUNT;
 import static io.opentelemetry.semconv.incubating.MessagingIncubatingAttributes.MESSAGING_DESTINATION_PARTITION_ID;
-import static java.util.Collections.singletonMap;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -26,7 +25,6 @@ import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.apache.kafka.clients.consumer.MockConsumer;
@@ -54,27 +52,6 @@ class SpringKafkaBatchCompletionSkippedTest {
       SpringKafkaTelemetry.create(testing.getOpenTelemetry());
 
   @Test
-  void batchInterceptorIsCleanedUpAfterPoll() throws InterruptedException {
-    runContainer();
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(span ->
-                span.hasName("process orders")
-                    .hasKind(SpanKind.CONSUMER)
-                    .hasNoParent()
-                    .hasAttributesSatisfying(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1))),
-        trace ->
-            trace.hasSpansSatisfyingExactly(
-                span ->
-                    span.hasName("process orders")
-                        .hasKind(SpanKind.CONSUMER)
-                        .hasNoParent()
-                        .hasAttributesSatisfying(equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1)),
-                span -> span.hasName("listener").hasParent(trace.getSpan(0))));
-  }
-
-  @Test
   @SuppressWarnings({"deprecation", "removal", "unchecked"})
   void skippedSecondSubBatchIsCleanedUpBeforeNextPoll() throws InterruptedException {
     TopicPartition first = new TopicPartition("orders", 0);
@@ -97,17 +74,20 @@ class SpringKafkaBatchCompletionSkippedTest {
     offsets.put(first, 0L);
     offsets.put(second, 0L);
     consumer.updateBeginningOffsets(offsets);
+    consumer.schedulePollTask(
+        () -> consumer.addRecord(new ConsumerRecord<>("orders", 0, 0, "key", "skipped")));
     consumer.schedulePollTask(() -> {
-      consumer.addRecord(new ConsumerRecord<>("orders", 0, 0, "key", "first"));
+      consumer.addRecord(new ConsumerRecord<>("orders", 0, 1, "key", "first"));
       consumer.addRecord(new ConsumerRecord<>("orders", 1, 0, "key", "second"));
     });
     consumer.schedulePollTask(
-        () -> consumer.addRecord(new ConsumerRecord<>("orders", 0, 1, "key", "next")));
+        () -> consumer.addRecord(new ConsumerRecord<>("orders", 0, 2, "key", "next")));
 
     ConsumerFactory<String, String> factory = mock();
     when(factory.createConsumer(any(), any(), any(), any())).thenReturn(consumer);
     PlatformTransactionManager transactionManager = mock();
     when(transactionManager.getTransaction(any()))
+        .thenThrow(new CannotCreateTransactionException("first batch"))
         .thenReturn(new SimpleTransactionStatus())
         .thenThrow(new CannotCreateTransactionException("second sub-batch"))
         .thenReturn(new SimpleTransactionStatus());
@@ -149,12 +129,13 @@ class SpringKafkaBatchCompletionSkippedTest {
       container.stop();
     }
 
-    assertThat(nonEmptyPollCounts).containsExactly(2, 1);
-    assertThat(partitions).hasSize(3);
-    assertThat(partitions.get(0)).isNotEqualTo(partitions.get(1));
-    assertThat(pollsBeforeIntercept).hasSize(3);
-    assertThat(pollsBeforeIntercept.get(1)).isEqualTo(pollsBeforeIntercept.get(0));
-    assertThat(pollsBeforeIntercept.get(2)).isGreaterThan(pollsBeforeIntercept.get(1));
+    assertThat(nonEmptyPollCounts).containsExactly(1, 2, 1);
+    assertThat(partitions).hasSize(4);
+    assertThat(partitions.get(1)).isNotEqualTo(partitions.get(2));
+    assertThat(pollsBeforeIntercept).hasSize(4);
+    assertThat(pollsBeforeIntercept.get(1)).isGreaterThan(pollsBeforeIntercept.get(0));
+    assertThat(pollsBeforeIntercept.get(2)).isEqualTo(pollsBeforeIntercept.get(1));
+    assertThat(pollsBeforeIntercept.get(3)).isGreaterThan(pollsBeforeIntercept.get(2));
     assertThat(pollContexts).allSatisfy(context -> assertThat(context).isSameAs(Context.root()));
 
     testing.waitAndAssertTraces(
@@ -168,8 +149,7 @@ class SpringKafkaBatchCompletionSkippedTest {
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
                             equalTo(
                                 MESSAGING_DESTINATION_PARTITION_ID, partitions.get(0).toString())),
-                span -> span.hasName("intercept 0").hasParent(trace.getSpan(0)),
-                span -> span.hasName("first listener").hasParent(trace.getSpan(0))),
+                span -> span.hasName("intercept 0").hasParent(trace.getSpan(0))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -180,7 +160,8 @@ class SpringKafkaBatchCompletionSkippedTest {
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
                             equalTo(
                                 MESSAGING_DESTINATION_PARTITION_ID, partitions.get(1).toString())),
-                span -> span.hasName("intercept 1").hasParent(trace.getSpan(0))),
+                span -> span.hasName("intercept 1").hasParent(trace.getSpan(0)),
+                span -> span.hasName("first listener").hasParent(trace.getSpan(0))),
         trace ->
             trace.hasSpansSatisfyingExactly(
                 span ->
@@ -191,63 +172,18 @@ class SpringKafkaBatchCompletionSkippedTest {
                             equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
                             equalTo(
                                 MESSAGING_DESTINATION_PARTITION_ID, partitions.get(2).toString())),
-                span -> span.hasName("intercept 2").hasParent(trace.getSpan(0)),
+                span -> span.hasName("intercept 2").hasParent(trace.getSpan(0))),
+        trace ->
+            trace.hasSpansSatisfyingExactly(
+                span ->
+                    span.hasName("process orders")
+                        .hasKind(SpanKind.CONSUMER)
+                        .hasNoParent()
+                        .hasAttributesSatisfying(
+                            equalTo(MESSAGING_BATCH_MESSAGE_COUNT, 1),
+                            equalTo(
+                                MESSAGING_DESTINATION_PARTITION_ID, partitions.get(3).toString())),
+                span -> span.hasName("intercept 3").hasParent(trace.getSpan(0)),
                 span -> span.hasName("next listener").hasParent(trace.getSpan(0))));
-  }
-
-  @SuppressWarnings({"deprecation", "removal", "unchecked"}) // setTransactionManager, generic mock
-  private void runContainer() throws InterruptedException {
-    TopicPartition partition = new TopicPartition("orders", 0);
-    List<Context> pollContexts = new CopyOnWriteArrayList<>();
-    MockConsumer<String, String> consumer =
-        new MockConsumer<String, String>(OffsetResetStrategy.EARLIEST) {
-          @Override
-          public synchronized ConsumerRecords<String, String> poll(Duration timeout) {
-            pollContexts.add(Context.current());
-            return super.poll(timeout);
-          }
-        };
-    consumer.updateBeginningOffsets(singletonMap(partition, 0L));
-    consumer.schedulePollTask(
-        () -> consumer.addRecord(new ConsumerRecord<>("orders", 0, 0, "key", "first")));
-    consumer.schedulePollTask(
-        () -> consumer.addRecord(new ConsumerRecord<>("orders", 0, 1, "key", "second")));
-
-    ConsumerFactory<String, String> factory = mock();
-    when(factory.createConsumer(any(), any(), any(), any())).thenReturn(consumer);
-
-    // the transaction can't be started for the first batch
-    PlatformTransactionManager transactionManager = mock();
-    when(transactionManager.getTransaction(any()))
-        .thenThrow(new CannotCreateTransactionException("first batch"))
-        .thenReturn(new SimpleTransactionStatus());
-
-    ContainerProperties properties = new ContainerProperties(new TopicPartitionOffset("orders", 0));
-    properties.setGroupId("group");
-    properties.setPollTimeout(10);
-    properties.setTransactionManager(transactionManager);
-    CountDownLatch processed = new CountDownLatch(1);
-    AtomicReference<Integer> pollsBeforeListener = new AtomicReference<>();
-    properties.setMessageListener(
-        (BatchMessageListener<String, String>)
-            records -> {
-              testing.runWithSpan("listener", () -> {});
-              pollsBeforeListener.set(pollContexts.size());
-              processed.countDown();
-            });
-    KafkaMessageListenerContainer<String, String> container =
-        new KafkaMessageListenerContainer<>(factory, properties);
-    container.setInterceptBeforeTx(true);
-    container.setBatchInterceptor(telemetry.<String, String>createBatchInterceptor());
-    try {
-      container.start();
-      assertThat(processed.await(10, SECONDS)).isTrue();
-    } finally {
-      container.stop();
-    }
-
-    // the span of the skipped batch is not current on the consumer thread during later polls
-    assertThat(pollsBeforeListener.get()).isGreaterThanOrEqualTo(2);
-    assertThat(pollContexts).allSatisfy(context -> assertThat(context).isSameAs(Context.root()));
   }
 }

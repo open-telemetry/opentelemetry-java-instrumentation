@@ -52,6 +52,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
@@ -469,14 +470,19 @@ class SpringKafkaInterceptorTest {
         records(new ConsumerRecord<>("orders", 0, 2, "skipped", "value"));
     ConsumerRecords<String, String> completed =
         records(new ConsumerRecord<>("orders", 0, 3, "completed", "value"));
+    ConsumerRecords<String, String> subBatch =
+        records(new ConsumerRecord<>("orders", 1, 4, "sub-batch", "value"));
     Context parentContext = Context.current();
     KafkaConsumerContextUtil.set(
         skipped, KafkaConsumerContextUtil.create(parentContext, null, null, null));
     KafkaConsumerContextUtil.set(
         completed, KafkaConsumerContextUtil.create(parentContext, null, null, null));
+    KafkaConsumerContextUtil.set(
+        subBatch, KafkaConsumerContextUtil.create(parentContext, null, null, null));
 
     interceptor.intercept(outer, null);
     Span outerSpan = Span.current();
+    Context enclosing = Context.current();
     try {
       // e.g. the transaction could not be started after the batch was intercepted
       interceptor.setupThreadState(null);
@@ -498,6 +504,13 @@ class SpringKafkaInterceptorTest {
         interceptor.clearThreadState(null);
       }
       assertThat(Span.current()).isSameAs(outerSpan);
+
+      // The next partition sub-batch has no setup before its skipped completion.
+      interceptor.intercept(subBatch, null);
+      assertThat(Span.current()).isNotSameAs(outerSpan);
+      interceptor.clearThreadState(null);
+      assertThat(Span.current()).isSameAs(outerSpan);
+      assertThat(Context.current()).isSameAs(enclosing);
     } finally {
       interceptor.success(outer, null);
     }
@@ -509,62 +522,10 @@ class SpringKafkaInterceptorTest {
         trace ->
             trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()),
         trace ->
-            trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()));
-    assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "0", 3, null);
-  }
-
-  @Test
-  void setupFreeSubBatchIsCleanedUpWithoutEndingEnclosingBatch() {
-    InstrumentedBatchInterceptor<String, String> interceptor =
-        (InstrumentedBatchInterceptor<String, String>)
-            telemetry.<String, String>createBatchInterceptor();
-    ConsumerRecords<String, String> outer =
-        records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
-    ConsumerRecords<String, String> first =
-        records(new ConsumerRecord<>("orders", 0, 2, "first", "value"));
-    ConsumerRecords<String, String> skipped =
-        records(new ConsumerRecord<>("orders", 1, 3, "skipped", "value"));
-    Context parent = Context.current();
-    KafkaConsumerContextUtil.set(first, KafkaConsumerContextUtil.create(parent, null, null, null));
-    KafkaConsumerContextUtil.set(
-        skipped, KafkaConsumerContextUtil.create(parent, null, null, null));
-
-    interceptor.intercept(outer, null);
-    Context enclosing = Context.current();
-    Context afterClear;
-    Context skippedContext;
-    try {
-      interceptor.setupThreadState(null);
-      try {
-        interceptor.intercept(first, null);
-        interceptor.success(first, null);
-      } finally {
-        interceptor.clearThreadState(null);
-      }
-      assertThat(Context.current()).isSameAs(enclosing);
-
-      // Spring clears after each sub-batch but sets up only before the original poll.
-      interceptor.intercept(skipped, null);
-      skippedContext = Context.current();
-      interceptor.clearThreadState(null);
-      afterClear = Context.current();
-      if (skippedContext != enclosing && afterClear == skippedContext) {
-        interceptor.success(skipped, null);
-      }
-    } finally {
-      interceptor.success(outer, null);
-    }
-    assertThat(skippedContext).isNotSameAs(enclosing);
-    assertThat(afterClear).isSameAs(enclosing);
-    assertThat(Context.current()).isSameAs(parent);
-
-    testing.waitAndAssertTraces(
-        trace ->
-            trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()),
-        trace ->
             trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()),
         trace ->
             trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "1", null).hasNoParent()));
+    assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "0", 3, null);
   }
 
   @Test
@@ -589,6 +550,43 @@ class SpringKafkaInterceptorTest {
 
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()));
+  }
+
+  @Test
+  void reentrantClearKeepsEnclosingBatchCheckpoint() {
+    ConsumerRecords<String, String> outer =
+        records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
+    ConsumerRecords<String, String> inner =
+        records(new ConsumerRecord<>("orders", 1, 2, "inner", "value"));
+    Context parent = Context.current();
+    KafkaConsumerContextUtil.set(inner, KafkaConsumerContextUtil.create(parent, null, null, null));
+    BatchInterceptor<String, String> decorated = mock();
+    when(decorated.intercept(any(), isNull())).thenAnswer(invocation -> invocation.getArgument(0));
+    BatchInterceptor<String, String> interceptor = telemetry.createBatchInterceptor(decorated);
+    AtomicBoolean reentered = new AtomicBoolean();
+    doAnswer(
+            invocation -> {
+              if (reentered.compareAndSet(false, true)) {
+                interceptor.intercept(inner, null);
+                interceptor.clearThreadState(null);
+              }
+              return null;
+            })
+        .when(decorated)
+        .clearThreadState(null);
+
+    interceptor.intercept(outer, null);
+    Context enclosing = Context.current();
+    interceptor.setupThreadState(null);
+    interceptor.clearThreadState(null);
+    assertThat(Context.current()).isSameAs(enclosing);
+    interceptor.success(outer, null);
+    assertThat(Context.current()).isSameAs(parent);
+    testing.waitAndAssertTraces(
+        trace ->
+            trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "0", null).hasNoParent()),
+        trace ->
+            trace.hasSpansSatisfyingExactly(s -> assertBatchSpan(s, 1, "1", null).hasNoParent()));
   }
 
   @ParameterizedTest

@@ -27,8 +27,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @Nullable private final BatchInterceptor<K, V> decorated;
   private final ThreadLocal<ProcessingInvocation<KafkaReceiveRequest>> currentInvocation =
       new ThreadLocal<>();
-  private final ThreadLocal<ThreadState> currentThreadState = new ThreadLocal<>();
-  private final ThreadLocal<Boolean> nextSubBatch = new ThreadLocal<>();
+  private final ThreadLocal<PollState> currentPoll = new ThreadLocal<>();
 
   InstrumentedBatchInterceptor(
       Instrumenter<KafkaReceiveRequest, Void> batchProcessInstrumenter,
@@ -39,9 +38,9 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   @Override
   public ConsumerRecords<K, V> intercept(ConsumerRecords<K, V> records, Consumer<K, V> consumer) {
-    if (Boolean.TRUE.equals(nextSubBatch.get())) {
-      nextSubBatch.remove();
-      currentThreadState.set(new ThreadState(currentThreadState.get(), currentInvocation.get()));
+    PollState poll = currentPoll.get();
+    if (poll != null && poll.cleared) {
+      currentPoll.set(new PollState(poll.previous, currentInvocation.get()));
     }
     Context parentContext = getParentContext(records);
 
@@ -108,39 +107,41 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     }
   }
 
-  private void end(
+  private boolean end(
       @Nullable ProcessingInvocation<KafkaReceiveRequest> invocation, @Nullable Throwable error) {
-    if (invocation == null || invocation.completed) {
-      return;
+    if (invocation == null) {
+      return false;
     }
+    boolean canClose =
+        currentInvocation.get() == invocation
+            && (invocation.scope == null || invocation.context == Context.current());
+    boolean wasCompleted = invocation.completed;
     invocation.completed = true;
-    if (currentInvocation.get() == invocation
-        && (invocation.scope == null || invocation.context == Context.current())) {
-      pop(invocation);
+    if (canClose) {
+      if (invocation.previous == null) {
+        currentInvocation.remove();
+      } else {
+        currentInvocation.set(invocation.previous);
+      }
+      if (invocation.scope != null) {
+        invocation.scope.close();
+      }
     }
-    if (invocation.scope != null && invocation.context == Context.current()) {
-      invocation.scope.close();
-    }
-    if (invocation.context != null) {
+    if (!wasCompleted && invocation.context != null) {
       batchProcessInstrumenter.end(invocation.context, invocation.request, null, error);
       lastProcessed.set(new WeakReference<>(invocation.request.getRecords()));
     }
-  }
-
-  private void pop(ProcessingInvocation<KafkaReceiveRequest> invocation) {
-    if (invocation.previous == null) {
-      currentInvocation.remove();
-    } else {
-      currentInvocation.set(invocation.previous);
-    }
+    return canClose;
   }
 
   // Spring Kafka 2.8+ calls this before each poll of a batch listener container
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void setupThreadState(Consumer<?, ?> consumer) {
-    nextSubBatch.remove();
-    currentThreadState.set(new ThreadState(currentThreadState.get(), currentInvocation.get()));
+    PollState poll = currentPoll.get();
+    currentPoll.set(
+        new PollState(
+            poll != null && poll.cleared ? poll.previous : poll, currentInvocation.get()));
     if (decorated != null) {
       decorated.setupThreadState(consumer);
     }
@@ -152,59 +153,51 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @NoMuzzle // method was added in 2.8.0
   @Override
   public void clearThreadState(Consumer<?, ?> consumer) {
-    ThreadState threadState = currentThreadState.get();
+    PollState poll = currentPoll.get();
+    if (poll != null && poll.cleared) {
+      poll = poll.previous;
+    }
+    // The delegate can reenter clearThreadState and change the poll state.
+    ProcessingInvocation<KafkaReceiveRequest> checkpoint =
+        poll == null ? null : poll.previousInvocation;
     try {
       if (decorated != null) {
         // Close batch scopes above the delegate's setup scope, but stop if the delegate
         // still has a scope open above ours from intercept().
-        if (threadState != null) {
-          endUnfinishedInvocations(threadState, true);
+        if (poll != null) {
+          endUnfinishedInvocations(checkpoint, true);
         }
         decorated.clearThreadState(consumer);
       }
     } finally {
-      if (threadState != null) {
-        endUnfinishedInvocations(threadState, false);
-        if (threadState.previous == null) {
-          currentThreadState.remove();
-        } else {
-          currentThreadState.set(threadState.previous);
-        }
+      if (poll != null) {
+        endUnfinishedInvocations(checkpoint, false);
         // A physical poll can produce multiple partition sub-batches without another setup call.
-        nextSubBatch.set(true);
+        poll.previousInvocation = null;
+        poll.cleared = true;
+        currentPoll.set(poll);
       }
     }
   }
 
-  private void endUnfinishedInvocations(ThreadState threadState, boolean onlyCurrentScopes) {
+  private void endUnfinishedInvocations(
+      @Nullable ProcessingInvocation<KafkaReceiveRequest> checkpoint, boolean onlyCurrentScopes) {
     ProcessingInvocation<KafkaReceiveRequest> invocation;
-    while ((invocation = currentInvocation.get()) != null
-        && invocation != threadState.previousInvocation) {
-      if (invocation.completed) {
-        if (invocation.scope != null && invocation.context != Context.current()) {
-          break;
-        }
-        pop(invocation);
-        if (invocation.scope != null) {
-          invocation.scope.close();
-        }
-      } else {
-        if (onlyCurrentScopes
-            && invocation.scope != null
-            && invocation.context != Context.current()) {
-          break;
-        }
-        end(invocation, invocation.error);
+    while ((invocation = currentInvocation.get()) != null && invocation != checkpoint) {
+      if ((onlyCurrentScopes && invocation.scope != null && invocation.context != Context.current())
+          || !end(invocation, invocation.error)) {
+        break;
       }
     }
   }
 
-  private static class ThreadState {
-    @Nullable final ThreadState previous;
-    @Nullable final ProcessingInvocation<KafkaReceiveRequest> previousInvocation;
+  private static class PollState {
+    @Nullable final PollState previous;
+    @Nullable ProcessingInvocation<KafkaReceiveRequest> previousInvocation;
+    boolean cleared;
 
-    ThreadState(
-        @Nullable ThreadState previous,
+    PollState(
+        @Nullable PollState previous,
         @Nullable ProcessingInvocation<KafkaReceiveRequest> previousInvocation) {
       this.previous = previous;
       this.previousInvocation = previousInvocation;
