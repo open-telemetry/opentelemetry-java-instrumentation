@@ -37,6 +37,9 @@ public class AnnotationInstrumentationModule extends InstrumentationModule {
 
   @Override
   public List<TypeInstrumentation> typeInstrumentations() {
-    return asList(new WithSpanInstrumentation(), new AddingSpanAttributesInstrumentation());
+    return asList(
+        new WithSpanInstrumentation(),
+        new AddingSpanAttributesInstrumentation(),
+        new CountedInstrumentation());
   }
 }
