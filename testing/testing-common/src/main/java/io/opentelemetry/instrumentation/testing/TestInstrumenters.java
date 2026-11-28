@@ -45,13 +45,14 @@ class TestInstrumenters {
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.HTTP_CLIENT))
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.KIND_CLIENT))
             .buildInstrumenter(SpanKindExtractor.alwaysClient());
+    HttpServerGetter httpServerGetter = new HttpServerGetter();
     httpServerInstrumenter =
         Instrumenter.<String, Void>builder(
-                openTelemetry, "test", HttpSpanNameExtractor.create(HttpServerGetter.INSTANCE))
+                openTelemetry, "test", HttpSpanNameExtractor.create(httpServerGetter))
             // cover both semconv and span-kind strategies
-            .addAttributesExtractor(HttpServerAttributesExtractor.create(HttpServerGetter.INSTANCE))
+            .addAttributesExtractor(HttpServerAttributesExtractor.create(httpServerGetter))
             .addAttributesExtractor(new SpanKeyAttributesExtractor(SpanKey.KIND_SERVER))
-            .addContextCustomizer(HttpServerRoute.create(HttpServerGetter.INSTANCE))
+            .addContextCustomizer(HttpServerRoute.create(httpServerGetter))
             .buildInstrumenter(SpanKindExtractor.alwaysServer());
   }
 
@@ -136,8 +137,7 @@ class TestInstrumenters {
     }
   }
 
-  private enum HttpServerGetter implements HttpServerAttributesGetter<String, Void> {
-    INSTANCE;
+  private static final class HttpServerGetter implements HttpServerAttributesGetter<String, Void> {
 
     @Override
     public String getHttpRequestMethod(String unused) {

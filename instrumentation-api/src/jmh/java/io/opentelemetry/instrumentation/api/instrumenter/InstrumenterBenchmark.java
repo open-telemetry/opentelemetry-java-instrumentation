@@ -37,14 +37,16 @@ public class InstrumenterBenchmark {
 
   private static final Object REQUEST = new Object();
 
-  private static final Instrumenter<Object, Void> instrumenter =
-      Instrumenter.<Object, Void>builder(
-              OpenTelemetry.noop(),
-              "benchmark",
-              HttpSpanNameExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
-          .addAttributesExtractor(
-              HttpClientAttributesExtractor.create(ConstantHttpAttributesGetter.INSTANCE))
-          .buildInstrumenter();
+  private static final Instrumenter<Object, Void> instrumenter;
+
+  static {
+    ConstantHttpAttributesGetter getter = new ConstantHttpAttributesGetter();
+    instrumenter =
+        Instrumenter.<Object, Void>builder(
+                OpenTelemetry.noop(), "benchmark", HttpSpanNameExtractor.create(getter))
+            .addAttributesExtractor(HttpClientAttributesExtractor.create(getter))
+            .buildInstrumenter();
+  }
 
   @Benchmark
   public Context start() {
@@ -58,9 +60,7 @@ public class InstrumenterBenchmark {
     return context;
   }
 
-  enum ConstantHttpAttributesGetter implements HttpClientAttributesGetter<Object, Void> {
-    INSTANCE;
-
+  static final class ConstantHttpAttributesGetter implements HttpClientAttributesGetter<Object, Void> {
     private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
 

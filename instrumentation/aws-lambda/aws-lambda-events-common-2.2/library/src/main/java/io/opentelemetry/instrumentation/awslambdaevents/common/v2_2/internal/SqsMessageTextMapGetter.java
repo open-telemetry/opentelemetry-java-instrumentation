@@ -33,5 +33,5 @@ final class SqsMessageTextMapGetter implements TextMapGetter<SQSMessage> {
     return attributes == null ? null : attributes.get(AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY);
   }
 
-  private SqsMessageTextMapGetter() {}
+  SqsMessageTextMapGetter() {}
 }

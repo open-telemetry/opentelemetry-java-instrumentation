@@ -8,8 +8,8 @@ package io.opentelemetry.javaagent.instrumentation.pulsar.v2_8.telemetry;
 import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 
-enum MessageTextMapGetter implements TextMapGetter<PulsarRequest> {
-  INSTANCE;
+final class MessageTextMapGetter implements TextMapGetter<PulsarRequest> {
+  static final MessageTextMapGetter INSTANCE = new MessageTextMapGetter();
 
   @Override
   public Iterable<String> keys(PulsarRequest request) {

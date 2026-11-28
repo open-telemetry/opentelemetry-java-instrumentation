@@ -80,7 +80,7 @@ public class JmsInstrumenterFactory {
     setMessagingReceiveExceptionEventExtractor(builder);
     builder.addSpanLinksExtractor(
         new PropagatorBasedSpanLinksExtractor<>(
-            openTelemetry.getPropagators().getTextMapPropagator(), MessagePropertyGetter.INSTANCE));
+            openTelemetry.getPropagators().getTextMapPropagator(), new MessagePropertyGetter()));
     return builder.buildInstrumenter(MessagingSpanKindExtractor.create(operationType));
   }
 
@@ -105,7 +105,7 @@ public class JmsInstrumenterFactory {
     return MessagingProcessInstrumenterFactory.create(
         builder,
         openTelemetry.getPropagators().getTextMapPropagator(),
-        MessagePropertyGetter.INSTANCE);
+        new MessagePropertyGetter());
   }
 
   private AttributesExtractor<MessageWithDestination, Void> createMessagingAttributesExtractor(

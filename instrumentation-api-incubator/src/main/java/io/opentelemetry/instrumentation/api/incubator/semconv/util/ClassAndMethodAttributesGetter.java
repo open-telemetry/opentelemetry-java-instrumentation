@@ -8,8 +8,7 @@ package io.opentelemetry.instrumentation.api.incubator.semconv.util;
 import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 import javax.annotation.Nullable;
 
-enum ClassAndMethodAttributesGetter implements CodeAttributesGetter<ClassAndMethod> {
-  INSTANCE;
+final class ClassAndMethodAttributesGetter implements CodeAttributesGetter<ClassAndMethod> {
 
   @Nullable
   @Override

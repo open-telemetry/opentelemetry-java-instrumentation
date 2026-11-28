@@ -68,7 +68,7 @@ final class CamelPropagationUtil {
   }
 
   static TextMapGetter<CamelRequest> messagingGetter() {
-    return CamelRequestGetter.INSTANCE;
+    return new CamelRequestGetter();
   }
 
   private static class CamelMessagingPropagator implements TextMapPropagator {
@@ -98,8 +98,7 @@ final class CamelPropagationUtil {
     }
   }
 
-  private enum CamelRequestGetter implements TextMapGetter<CamelRequest> {
-    INSTANCE;
+  private static final class CamelRequestGetter implements TextMapGetter<CamelRequest> {
 
     @Override
     public Iterable<String> keys(CamelRequest request) {

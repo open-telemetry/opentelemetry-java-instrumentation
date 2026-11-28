@@ -20,9 +20,9 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
 
-enum WebfluxServerHttpAttributesGetter
+final class WebfluxServerHttpAttributesGetter
     implements HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange> {
-  INSTANCE;
+  static final WebfluxServerHttpAttributesGetter INSTANCE = new WebfluxServerHttpAttributesGetter();
 
   @Nullable private static final MethodHandle GET_RAW_STATUS_CODE;
   @Nullable private static final MethodHandle GET_STATUS_CODE;

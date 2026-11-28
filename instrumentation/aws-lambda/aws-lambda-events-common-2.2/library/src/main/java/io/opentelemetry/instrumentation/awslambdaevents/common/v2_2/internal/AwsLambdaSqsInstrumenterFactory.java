@@ -81,7 +81,7 @@ public final class AwsLambdaSqsInstrumenterFactory {
     });
     setMessagingProcessExceptionEventExtractor(builder);
     return MessagingProcessInstrumenterFactory.create(
-        builder, AwsXrayPropagator.getInstance(), SqsMessageTextMapGetter.INSTANCE);
+        builder, AwsXrayPropagator.getInstance(), new SqsMessageTextMapGetter());
   }
 
   private AwsLambdaSqsInstrumenterFactory() {}
