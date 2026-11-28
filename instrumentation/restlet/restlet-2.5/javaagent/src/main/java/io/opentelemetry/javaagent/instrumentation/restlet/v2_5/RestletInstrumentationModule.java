@@ -19,12 +19,13 @@ import net.bytebuddy.matcher.ElementMatcher;
 public class RestletInstrumentationModule extends InstrumentationModule {
 
   public RestletInstrumentationModule() {
-    super("restlet-2.5", "restlet-2.0", "restlet");
+    super("restlet-2.5", "restlet");
   }
 
   @Override
   public ElementMatcher.Junction<ClassLoader> classLoaderMatcher() {
     return hasClassesNamed("org.restlet.Request")
+        // removed in 2.5.0
         .and(not(hasClassesNamed("org.restlet.engine.component.ComponentXmlParser")));
   }
 
