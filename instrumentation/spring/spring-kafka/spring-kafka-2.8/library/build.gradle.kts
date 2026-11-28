@@ -15,12 +15,10 @@ dependencies {
 
   implementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-common-0.11:library"))
 
-  compileOnly("org.springframework.kafka:spring-kafka:2.8.0")
+  library("org.springframework.kafka:spring-kafka:2.8.0")
 
   testImplementation(project(":instrumentation:spring:spring-kafka:spring-kafka-2.7:testing"))
   testImplementation(project(":instrumentation:kafka:kafka-clients:kafka-clients-2.6:library"))
-
-  testLibrary("org.springframework.kafka:spring-kafka:2.8.0")
 
   testLibrary("org.springframework.boot:spring-boot-starter-test:2.5.3")
   if (otelProps.testLatestDeps) {
