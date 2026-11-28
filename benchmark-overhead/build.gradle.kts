@@ -11,7 +11,7 @@ spotless {
   java {
     googleJavaFormat()
     licenseHeaderFile(rootProject.file("../buildscripts/spotless.license.java"), "(package|import|public)")
-    target("src/**/*.java")
+    target("src/**/*.java", "webflux/src/**/*.java")
   }
 }
 
@@ -53,7 +53,7 @@ tasks {
 }
 
 tasks.register<Test>("agentLoadBenchmark") {
-  description = "Measures Petclinic load with no agent, the latest release, and the dispatched revision."
+  description = "Measures Petclinic or WebFlux load with the supplied agents."
   group = "verification"
   dependsOn(tasks.testClasses)
   testClassesDirs = sourceSets.test.get().output.classesDirs
@@ -63,10 +63,23 @@ tasks.register<Test>("agentLoadBenchmark") {
   outputs.upToDateWhen { false }
   outputs.cacheIf { false }
   val agentDir = providers.gradleProperty("loadBenchmarkAgentDir").getOrElse("")
+  val workload = providers.gradleProperty("loadBenchmarkWorkload").getOrElse("petclinic")
+  val webfluxJar = providers.gradleProperty("loadBenchmarkWebFluxJar")
+    .getOrElse("webflux/build/libs/webflux-benchmark.jar")
   systemProperty("load.benchmark.agentDir", agentDir)
+  systemProperty("load.benchmark.workload", workload)
+  if (workload == "webflux") {
+    systemProperty("load.benchmark.webfluxJar", file(webfluxJar).absolutePath)
+  }
   doFirst {
     require(agentDir.isNotBlank()) {
       "Set -PloadBenchmarkAgentDir to the directory containing release-agent.jar and revision-agent.jar."
+    }
+    require(workload == "petclinic" || workload == "webflux") {
+      "Set -PloadBenchmarkWorkload to petclinic or webflux."
+    }
+    require(workload != "webflux" || file(webfluxJar).isFile) {
+      "Build the WebFlux fixture with ./gradlew -p webflux bootJar or set -PloadBenchmarkWebFluxJar."
     }
   }
 }

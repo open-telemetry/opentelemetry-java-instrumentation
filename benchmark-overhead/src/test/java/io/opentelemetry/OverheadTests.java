@@ -17,10 +17,12 @@ import io.opentelemetry.containers.CollectorContainer;
 import io.opentelemetry.containers.K6Container;
 import io.opentelemetry.containers.PetClinicRestContainer;
 import io.opentelemetry.containers.PostgresContainer;
+import io.opentelemetry.containers.WebFluxContainer;
 import io.opentelemetry.results.AppPerfResults;
 import io.opentelemetry.results.LoadBenchmarkReport;
 import io.opentelemetry.results.MainResultsPersister;
 import io.opentelemetry.results.ResultsCollector;
+import io.opentelemetry.results.WebFluxLoadReport;
 import io.opentelemetry.util.NamingConventions;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -44,9 +46,8 @@ public class OverheadTests {
 
   private static final Network NETWORK = Network.newNetwork();
   private static final String AGENT_DIR = System.getProperty("load.benchmark.agentDir");
+  private static final Path REPORTS = Path.of("build/reports/load-benchmark");
   private static GenericContainer<?> collector;
-  private final NamingConventions namingConventions = new NamingConventions();
-  private final Map<String, Long> runDurations = new HashMap<>();
 
   @BeforeAll
   static void setUp() {
@@ -68,85 +69,117 @@ public class OverheadTests {
   @TestFactory
   Stream<DynamicTest> runAllTestConfigurations() {
     Stream<TestConfig> configs =
-        AGENT_DIR == null ? Configs.all() : Stream.of(Configs.manualPetclinic(Path.of(AGENT_DIR)));
+        AGENT_DIR == null
+            ? Configs.all()
+            : switch (System.getProperty("load.benchmark.workload")) {
+              case "petclinic" -> Stream.of(Configs.manualPetclinic(Path.of(AGENT_DIR)));
+              case "webflux" -> Configs.manualWebFlux(Path.of(AGENT_DIR));
+              default ->
+                  throw new IllegalArgumentException("Expected Petclinic or WebFlux workload");
+            };
     return configs.map(config -> dynamicTest(config.getName(), () -> runTestConfig(config)));
   }
 
   void runTestConfig(TestConfig config) throws IOException {
-    runDurations.clear();
+    Path output =
+        config.isWebFlux() ? REPORTS.resolve("webflux").resolve(config.getName()) : REPORTS;
+    if (config.isWebFlux()) {
+      Files.createDirectories(output);
+    }
+    NamingConventions names =
+        config.isWebFlux()
+            ? new NamingConventions(output.toAbsolutePath().toString(), "webflux")
+            : new NamingConventions();
+    Map<String, Long> runDurations = new HashMap<>();
     config
         .getAgents()
         .forEach(agent -> {
           try {
-            runAppOnce(config, agent);
+            runDurations.put(agent.getName(), runAppOnce(config, agent, names));
           } catch (Exception e) {
             fail("Unhandled exception in " + config.getName(), e);
           }
         });
-    List<AppPerfResults> results =
-        new ResultsCollector(namingConventions.local, runDurations)
-            .collect(config, AGENT_DIR != null);
-    if (AGENT_DIR == null) {
-      new MainResultsPersister(config).write(results);
+    if (config.isWebFlux()) {
+      WebFluxLoadReport.write(output.resolve("summary.md"), config, names.local);
     } else {
-      LoadBenchmarkReport.write(
-          Path.of("build/reports/load-benchmark/summary.md"), config, results);
+      List<AppPerfResults> results =
+          new ResultsCollector(names.local, runDurations).collect(config, AGENT_DIR != null);
+      if (AGENT_DIR == null) {
+        new MainResultsPersister(config).write(results);
+      } else {
+        LoadBenchmarkReport.write(output.resolve("summary.md"), config, results);
+      }
     }
   }
 
-  void runAppOnce(TestConfig config, Agent agent) throws Exception {
+  long runAppOnce(TestConfig config, Agent agent, NamingConventions names) throws Exception {
     try (GenericContainer<?> postgres = new PostgresContainer(NETWORK).build()) {
       postgres.start();
 
-      try (GenericContainer<?> petclinic =
-          new PetClinicRestContainer(NETWORK, collector, agent, namingConventions).build()) {
+      try (GenericContainer<?> app =
+          config.isWebFlux()
+              ? WebFluxContainer.build(
+                  NETWORK,
+                  agent,
+                  config.webFluxMode(agent),
+                  Path.of(System.getProperty("load.benchmark.webfluxJar")),
+                  names)
+              : new PetClinicRestContainer(NETWORK, collector, agent, names).build()) {
         long start = System.currentTimeMillis();
-        petclinic.start();
-        writeStartupTimeFile(agent, start);
+        app.start();
+        writeStartupTimeFile(agent, start, names);
+        if (config.isWebFlux()) {
+          WebFluxContainer.verify(app, agent, config.webFluxMode(agent), names);
+        }
 
+        K6Container load = new K6Container(NETWORK, agent, config, names);
         if (config.getWarmupSeconds() > 0) {
-          doWarmupPhase(config, petclinic);
+          doWarmupPhase(config, app, load);
         }
 
         long testStart = System.currentTimeMillis();
-        startRecording(agent, petclinic);
+        startRecording(agent, app, names, config.isWebFlux() ? "webflux" : "petclinic");
 
-        try (GenericContainer<?> k6 =
-            new K6Container(NETWORK, agent, config, namingConventions).build()) {
-          k6.start();
-          runDurations.put(agent.getName(), System.currentTimeMillis() - testStart);
-
-          // Shut down the JVM gracefully so it writes the JFR recording.
-          var result = petclinic.execInContainer("kill", "1");
-          if (result.getExitCode() != 0) {
-            throw new IllegalStateException("Could not stop Petclinic: " + result);
-          }
-          while (petclinic.isRunning()) {
-            MILLISECONDS.sleep(500);
+        try (GenericContainer<?> k6 = load.build()) {
+          try {
+            k6.start();
+            return System.currentTimeMillis() - testStart;
+          } finally {
+            // Shut down the JVM gracefully so it writes the measuring JFR recording.
+            var result = app.execInContainer("kill", "1");
+            if (result.getExitCode() != 0) {
+              throw new IllegalStateException("Could not stop benchmark app: " + result);
+            }
+            while (app.isRunning()) {
+              MILLISECONDS.sleep(500);
+            }
           }
         }
       }
     }
   }
 
-  private void startRecording(Agent agent, GenericContainer<?> petclinic) throws Exception {
-    String outFile = namingConventions.container.jfrFile(agent);
+  private void startRecording(
+      Agent agent, GenericContainer<?> app, NamingConventions names, String recording)
+      throws Exception {
+    String outFile = names.container.jfrFile(agent);
     String[] command = {
       "jcmd",
       "1",
       "JFR.start",
       "settings=/app/overhead.jfc",
       "dumponexit=true",
-      "name=petclinic",
+      "name=" + recording,
       "filename=" + outFile
     };
-    var result = petclinic.execInContainer(command);
+    var result = app.execInContainer(command);
     if (result.getExitCode() != 0) {
       throw new IllegalStateException("Could not start JFR: " + result);
     }
   }
 
-  private void doWarmupPhase(TestConfig testConfig, GenericContainer<?> petclinic)
+  private void doWarmupPhase(TestConfig testConfig, GenericContainer<?> app, K6Container load)
       throws IOException, InterruptedException {
     System.out.println(
         "Performing startup warming phase for " + testConfig.getWarmupSeconds() + " seconds...");
@@ -162,27 +195,33 @@ public class OverheadTests {
       "name=warmup",
       "filename=warmup.jfr"
     };
-    var startResult = petclinic.execInContainer(startCommand);
+    var startResult = app.execInContainer(startCommand);
     if (startResult.getExitCode() != 0) {
       throw new IllegalStateException("Could not start warmup JFR: " + startResult);
     }
 
-    long deadline = System.currentTimeMillis() + SECONDS.toMillis(testConfig.getWarmupSeconds());
-    while (System.currentTimeMillis() < deadline) {
-      try (GenericContainer<?> k6 =
-          new GenericContainer<>(DockerImageName.parse("grafana/k6"))
-              .withNetwork(NETWORK)
-              .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
-              .withCommand("run", "-u", "5", "-i", "200", "/app/basic.js")
-              .withStartupCheckStrategy(
-                  new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)))) {
+    if (testConfig.isWebFlux()) {
+      try (GenericContainer<?> k6 = load.webFlux(testConfig.getWarmupSeconds())) {
         k6.start();
+      }
+    } else {
+      long deadline = System.currentTimeMillis() + SECONDS.toMillis(testConfig.getWarmupSeconds());
+      while (System.currentTimeMillis() < deadline) {
+        try (GenericContainer<?> k6 =
+            new GenericContainer<>(DockerImageName.parse("grafana/k6"))
+                .withNetwork(NETWORK)
+                .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
+                .withCommand("run", "-u", "5", "-i", "200", "/app/basic.js")
+                .withStartupCheckStrategy(
+                    new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)))) {
+          k6.start();
+        }
       }
     }
 
     System.out.println("Stopping disposable JFR warmup recording...");
     String[] stopCommand = {"jcmd", "1", "JFR.stop", "name=warmup"};
-    var stopResult = petclinic.execInContainer(stopCommand);
+    var stopResult = app.execInContainer(stopCommand);
     if (stopResult.getExitCode() != 0) {
       throw new IllegalStateException("Could not stop warmup JFR: " + stopResult);
     }
@@ -190,9 +229,10 @@ public class OverheadTests {
     System.out.println("Warmup complete.");
   }
 
-  private void writeStartupTimeFile(Agent agent, long start) throws IOException {
+  private void writeStartupTimeFile(Agent agent, long start, NamingConventions names)
+      throws IOException {
     long delta = System.currentTimeMillis() - start;
-    Path startupPath = Path.of(namingConventions.local.startupDurationFile(agent));
+    Path startupPath = Path.of(names.local.startupDurationFile(agent));
     Files.writeString(startupPath, String.valueOf(delta));
   }
 }

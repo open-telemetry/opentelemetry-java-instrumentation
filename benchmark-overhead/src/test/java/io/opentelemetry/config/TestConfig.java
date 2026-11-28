@@ -9,7 +9,9 @@ import io.opentelemetry.agents.Agent;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /** Defines a test config. */
 public class TestConfig {
@@ -25,6 +27,9 @@ public class TestConfig {
   private final int concurrentConnections;
   private final int totalIterations;
   private final int warmupSeconds;
+  private final Map<Agent, WebFluxMode> webFluxModes;
+
+  public record WebFluxMode(boolean reactor, boolean automatic) {}
 
   public TestConfig(Builder builder) {
     this.name = builder.name;
@@ -34,6 +39,7 @@ public class TestConfig {
     this.concurrentConnections = builder.concurrentConnections;
     this.totalIterations = builder.totalIterations;
     this.warmupSeconds = builder.warmupSeconds;
+    this.webFluxModes = Map.copyOf(builder.webFluxModes);
   }
 
   public String getName() {
@@ -64,6 +70,14 @@ public class TestConfig {
     return warmupSeconds;
   }
 
+  public boolean isWebFlux() {
+    return !webFluxModes.isEmpty();
+  }
+
+  public WebFluxMode webFluxMode(Agent agent) {
+    return webFluxModes.get(agent);
+  }
+
   public static Builder builder() {
     return new Builder();
   }
@@ -76,6 +90,7 @@ public class TestConfig {
     private int concurrentConnections = DEFAULT_CONCURRENT_CONNECTIONS;
     private int totalIterations = DEFAULT_TOTAL_ITERATIONS;
     public int warmupSeconds = 0;
+    private final Map<Agent, WebFluxMode> webFluxModes = new HashMap<>();
 
     Builder name(String name) {
       this.name = name;
@@ -89,6 +104,12 @@ public class TestConfig {
 
     Builder withAgents(Agent... agents) {
       this.agents.addAll(Arrays.asList(agents));
+      return this;
+    }
+
+    Builder withWebFlux(Agent agent, boolean reactor, boolean automatic) {
+      agents.add(agent);
+      webFluxModes.put(agent, new WebFluxMode(reactor, automatic));
       return this;
     }
 
