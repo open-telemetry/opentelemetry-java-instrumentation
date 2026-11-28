@@ -34,6 +34,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 
 /**
@@ -54,6 +55,8 @@ import javax.annotation.Nullable;
 public final class HostIdResource {
 
   private static final Logger logger = Logger.getLogger(HostIdResource.class.getName());
+
+  private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
   // copied from HostIncubatingAttributes
   private static final AttributeKey<String> HOST_ID = AttributeKey.stringKey("host.id");
@@ -201,7 +204,7 @@ public final class HostIdResource {
     for (String line : lines) {
       if (line.contains("MachineGuid")) {
         // line looks like: MachineGuid    REG_SZ    0123456789ABCDEF
-        String[] parts = line.trim().split("\\s+");
+        String[] parts = WHITESPACE.split(line.trim());
         if (parts.length == 3) {
           return Resource.create(Attributes.of(HOST_ID, parts[2]));
         }

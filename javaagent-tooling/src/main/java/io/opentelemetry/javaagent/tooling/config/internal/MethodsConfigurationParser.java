@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 
 /**
  * This class is internal and is hence not for public use. Its APIs are unstable and can change at
@@ -29,8 +30,8 @@ public final class MethodsConfigurationParser {
 
   private static final String PACKAGE_CLASS_NAME_REGEX = "[\\w.$]+";
   private static final String METHOD_LIST_REGEX = "(?:\\s*\\w+\\s*,)*+(?:\\s*\\w+)?\\s*";
-  private static final String CONFIG_FORMAT =
-      PACKAGE_CLASS_NAME_REGEX + "(?:\\[" + METHOD_LIST_REGEX + "])?";
+  private static final Pattern CONFIG_FORMAT =
+      Pattern.compile(PACKAGE_CLASS_NAME_REGEX + "(?:\\[" + METHOD_LIST_REGEX + "])?");
 
   /**
    * Parse exclude methods configuration from declarative config.
@@ -122,7 +123,7 @@ public final class MethodsConfigurationParser {
 
   private static boolean validateConfigString(String configString) {
     for (String segment : configString.split(";")) {
-      if (!segment.trim().matches(CONFIG_FORMAT)) {
+      if (!CONFIG_FORMAT.matcher(segment.trim()).matches()) {
         return false;
       }
     }

@@ -26,6 +26,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.FieldVisitor;
@@ -45,13 +46,15 @@ import org.objectweb.asm.tree.MethodNode;
 // - cast opcodes in method bodies
 final class ReferenceCollectingClassVisitor extends ClassVisitor {
 
+  private static final Pattern CLASS_NAME_SUFFIX = Pattern.compile("/[^/]+$");
+
   /**
    * Get the package of an internal class name.
    *
    * <p>foo/bar/Baz -> foo/bar/
    */
   private static String internalPackageName(String internalName) {
-    return internalName.replaceAll("/[^/]+$", "");
+    return CLASS_NAME_SUFFIX.matcher(internalName).replaceAll("");
   }
 
   /**
