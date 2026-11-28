@@ -76,9 +76,10 @@ public abstract class DubboRequest {
     String method = invocation.getMethodName();
     String originalFullMethodName = null;
     Object[] arguments = invocation.getArguments();
+    boolean genericDispatch = "$invoke".equals(method) || "$invokeAsync".equals(method);
     // GenericFilter has not necessarily converted the invocation yet.
     if (!GenericService.class.isAssignableFrom(service)
-        && ("$invoke".equals(method) || "$invokeAsync".equals(method))
+        && genericDispatch
         && arguments != null
         && arguments.length == 3
         && arguments[0] instanceof String) {
@@ -86,6 +87,11 @@ public abstract class DubboRequest {
       if (!serviceMethods.get(service).contains(method)) {
         originalFullMethodName = service.getName() + "/" + method;
       }
+    } else if (!GenericService.class.isAssignableFrom(service)
+        && !genericDispatch
+        && !"$echo".equals(method)
+        && !serviceMethods.get(service).contains(method)) {
+      originalFullMethodName = service.getName() + "/" + method;
     }
     return new AutoValue_DubboRequest(
         invocation,

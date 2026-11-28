@@ -10,6 +10,8 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.asser
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -39,12 +41,28 @@ import org.junit.jupiter.params.provider.ValueSource;
 
 public abstract class AbstractDubboAsyncTest {
 
-  @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+  @RegisterExtension protected final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
 
   protected abstract InstrumentationExtension testing();
 
   protected String instrumentationScopeName() {
     return "io.opentelemetry.apache-dubbo-2.7";
+  }
+
+  protected void instrumentService(ServiceConfig<?> service) {}
+
+  protected void instrumentReference(ReferenceConfig<?> reference) {}
+
+  protected void prepare() {}
+
+  protected void exportService(ServiceConfig<?> service, ProtocolConfig protocol) {
+    service.export();
+  }
+
+  protected void initializeReference(ReferenceConfig<?> reference) {}
+
+  protected String serverLocalAddress(ServiceConfig<?> service) {
+    return null;
   }
 
   @ParameterizedTest
@@ -54,6 +72,7 @@ public abstract class AbstractDubboAsyncTest {
     "deprecation" // Dubbo 2.7 configuration API
   })
   void delayedProviderCompletion(boolean fail) throws Exception {
+    prepare();
     int port = PortUtils.findOpenPort();
     DelayedServiceImpl provider = new DelayedServiceImpl();
     cleanup.deferCleanup(() -> provider.result.complete("cleanup"));
@@ -72,7 +91,8 @@ public abstract class AbstractDubboAsyncTest {
     service.setProtocol(protocol);
     service.setInterface(DelayedService.class);
     service.setRef(provider);
-    service.export();
+    instrumentService(service);
+    exportService(service, protocol);
 
     ReferenceConfig<DelayedService> reference = new ReferenceConfig<>();
     cleanup.deferCleanup(reference::destroy);
@@ -81,13 +101,16 @@ public abstract class AbstractDubboAsyncTest {
     reference.setUrl("dubbo://localhost:" + port + "/?timeout=30000");
     reference.setInjvm(false);
     reference.setRetries(0);
+    instrumentReference(reference);
+    initializeReference(reference);
     DelayedService client = reference.get();
+    String localAddress = serverLocalAddress(service);
 
     CompletableFuture<String> response = client.hello();
     Span serverSpan = provider.serverSpan.get(10, SECONDS);
     // With one provider thread, the barrier cannot run until hello's filter chain has returned.
     assertThat(client.barrier()).isEqualTo("barrier");
-    testing().waitAndAssertTraces(trace -> assertCall(trace, "barrier", false));
+    testing().waitAndAssertTraces(trace -> assertCall(trace, "barrier", false, port, localAddress));
     assertThat(response).isNotDone();
     assertThat(serverSpan.isRecording()).isTrue();
 
@@ -104,8 +127,8 @@ public abstract class AbstractDubboAsyncTest {
     testing()
         .waitAndAssertSortedTraces(
             Comparator.comparing(trace -> trace.get(0).getName()),
-            trace -> assertCall(trace, "barrier", false),
-            trace -> assertCall(trace, "hello", fail));
+            trace -> assertCall(trace, "barrier", false, port, localAddress),
+            trace -> assertCall(trace, "hello", fail, port, localAddress));
     assertThat(serverSpan.isRecording()).isFalse();
 
     testing()
@@ -141,26 +164,40 @@ public abstract class AbstractDubboAsyncTest {
                                         fail ? IllegalStateException.class.getName() : null))));
   }
 
-  private static void assertCall(TraceAssert trace, String method, boolean fail) {
+  private static void assertCall(
+      TraceAssert trace, String method, boolean fail, int serverPort, String localAddress) {
     trace.hasSpansSatisfyingExactly(
         span ->
             span.hasName(DelayedService.class.getName() + "/" + method)
                 .hasKind(SpanKind.CLIENT)
                 .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
                 .hasNoParent(),
-        span ->
-            span.hasName(DelayedService.class.getName() + "/" + method)
-                .hasKind(SpanKind.SERVER)
-                .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
-                .hasParent(trace.getSpan(0))
-                .hasStatus(fail ? StatusData.error() : StatusData.unset())
-                .hasAttributesSatisfyingExactly(
-                    equalTo(RPC_SYSTEM_NAME, "dubbo"),
-                    equalTo(RPC_METHOD, DelayedService.class.getName() + "/" + method),
-                    satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
-                    satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
-                    satisfies(NETWORK_TYPE, val -> val.isIn(null, "ipv4", "ipv6")),
-                    equalTo(ERROR_TYPE, fail ? IllegalStateException.class.getName() : null)));
+        span -> {
+          span.hasName(DelayedService.class.getName() + "/" + method)
+              .hasKind(SpanKind.SERVER)
+              .satisfies(hasScopeSchemaUrl(SchemaUrls.V1_45_0))
+              .hasParent(trace.getSpan(0))
+              .hasStatus(fail ? StatusData.error() : StatusData.unset());
+          if (localAddress == null) {
+            span.hasAttributesSatisfyingExactly(
+                equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                equalTo(RPC_METHOD, DelayedService.class.getName() + "/" + method),
+                satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                satisfies(NETWORK_TYPE, val -> val.isIn(null, "ipv4", "ipv6")),
+                equalTo(ERROR_TYPE, fail ? IllegalStateException.class.getName() : null));
+          } else {
+            span.hasAttributesSatisfyingExactly(
+                equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                equalTo(RPC_METHOD, DelayedService.class.getName() + "/" + method),
+                satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
+                satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)),
+                satisfies(NETWORK_TYPE, val -> val.isIn(null, "ipv4", "ipv6")),
+                equalTo(NETWORK_LOCAL_ADDRESS, localAddress),
+                equalTo(NETWORK_LOCAL_PORT, (long) serverPort),
+                equalTo(ERROR_TYPE, fail ? IllegalStateException.class.getName() : null));
+          }
+        });
   }
 
   public interface DelayedService {

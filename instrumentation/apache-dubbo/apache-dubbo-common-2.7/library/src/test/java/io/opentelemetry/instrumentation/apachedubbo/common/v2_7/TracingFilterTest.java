@@ -164,6 +164,8 @@ class TracingFilterTest {
     String staticMethod = ChildService.class.getName() + "/utility";
     return Stream.of(
         argumentSet(
+            "ordinary method", HelloService.class, "hello", new Object[] {"request"}, hello, null),
+        argumentSet(
             "generic invocation",
             HelloService.class,
             "$invoke",
@@ -206,6 +208,20 @@ class TracingFilterTest {
             inherited,
             null),
         argumentSet(
+            "ordinary inherited method",
+            ChildService.class,
+            "inherited",
+            new Object[0],
+            inherited,
+            null),
+        argumentSet(
+            "echo method",
+            HelloService.class,
+            "$echo",
+            new Object[] {"request"},
+            HelloService.class.getName() + "/$echo",
+            null),
+        argumentSet(
             "static method",
             ChildService.class,
             "$invoke",
@@ -231,8 +247,8 @@ class TracingFilterTest {
             HelloService.class,
             "missing",
             genericArgs("missing"),
-            missing,
-            null),
+            "_OTHER",
+            missing),
         argumentSet(
             "malformed generic arguments",
             HelloService.class,
