@@ -63,6 +63,10 @@ testing.suites {
   }
 }
 
+tasks.check {
+  dependsOn(testing.suites)
+}
+
 tasks.test {
   // required on jdk17
   jvmArgs("--add-opens=java.base/java.lang=ALL-UNNAMED")
