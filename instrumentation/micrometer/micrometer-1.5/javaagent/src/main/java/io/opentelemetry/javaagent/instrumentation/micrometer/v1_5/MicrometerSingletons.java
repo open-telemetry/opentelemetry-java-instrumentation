@@ -36,6 +36,7 @@ public class MicrometerSingletons {
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get());
     // The agent registry is shared by the global registry and potentially multiple Spring contexts.
     Internal.setCloseDisabled(builder, true);
+    Internal.setObservableCallbackRegistrar(builder, MicrometerCallbackRegistrar.INSTANCE);
     Experimental.setPrometheusMode(
         builder, config.get("prometheus_mode").getBoolean("enabled", false));
     Experimental.setBaseTimeUnit(

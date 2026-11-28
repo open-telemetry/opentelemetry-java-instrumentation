@@ -22,6 +22,10 @@ public final class Internal {
   @Nullable
   private static volatile BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean> setCloseDisabled;
 
+  @Nullable
+  private static volatile BiConsumer<OpenTelemetryMeterRegistryBuilder, ObservableCallbackRegistrar>
+      setObservableCallbackRegistrar;
+
   /**
    * Hides the registered meters from the meter registry search APIs, i.e. {@code getMeters()},
    * {@code find(String)} and {@code get(String)}. Meter registration, {@code
@@ -59,6 +63,19 @@ public final class Internal {
   public static void internalSetCloseDisabled(
       BiConsumer<OpenTelemetryMeterRegistryBuilder, Boolean> setCloseDisabled) {
     Internal.setCloseDisabled = setCloseDisabled;
+  }
+
+  public static void setObservableCallbackRegistrar(
+      OpenTelemetryMeterRegistryBuilder builder, ObservableCallbackRegistrar registrar) {
+    if (setObservableCallbackRegistrar != null) {
+      setObservableCallbackRegistrar.accept(builder, registrar);
+    }
+  }
+
+  public static void internalSetObservableCallbackRegistrar(
+      BiConsumer<OpenTelemetryMeterRegistryBuilder, ObservableCallbackRegistrar>
+          setObservableCallbackRegistrar) {
+    Internal.setObservableCallbackRegistrar = setObservableCallbackRegistrar;
   }
 
   private Internal() {}
