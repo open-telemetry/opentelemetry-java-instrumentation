@@ -137,13 +137,19 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
   @Override
   public void setupThreadState(Consumer<?, ?> consumer) {
     PollState poll = currentPoll.get();
-    currentPoll.set(
+    PollState setupPoll =
         new PollState(
-            poll != null && poll.cleared ? poll.previous : poll,
-            currentInvocation.get(),
-            consumer));
-    if (decorated != null) {
-      decorated.setupThreadState(consumer);
+            poll != null && poll.cleared ? poll.previous : poll, currentInvocation.get(), consumer);
+    currentPoll.set(setupPoll);
+    try {
+      if (decorated != null) {
+        decorated.setupThreadState(consumer);
+      }
+    } finally {
+      PollState nestedPoll = currentPoll.get();
+      if (nestedPoll != null && nestedPoll.cleared && nestedPoll.previous == setupPoll) {
+        currentPoll.set(setupPoll);
+      }
     }
   }
 

@@ -192,6 +192,73 @@ class SpringKafkaInterceptorTest {
 
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
+  void reentrantSetupRestoresBatchBoundary(boolean throwAfterNestedSetup) {
+    Consumer<String, String> outerConsumer = mock();
+    Consumer<String, String> innerConsumer = mock();
+    Consumer<String, String> nestedConsumer = mock();
+    ConsumerRecords<String, String> outer =
+        records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
+    ConsumerRecords<String, String> inner =
+        records(new ConsumerRecord<>("orders", 1, 2, "inner", "value"));
+    ConsumerRecords<String, String> nested =
+        records(new ConsumerRecord<>("orders", 2, 3, "nested", "value"));
+    BatchInterceptor<String, String> decorated = mock();
+    BatchInterceptor<String, String> interceptor = telemetry.createBatchInterceptor(decorated);
+    Context parent = Context.current();
+    IllegalStateException error = new IllegalStateException("decorated setup");
+    when(decorated.intercept(any(), any())).thenAnswer(invocation -> invocation.getArgument(0));
+    doAnswer(
+            invocation -> {
+              interceptor.setupThreadState(nestedConsumer);
+              interceptor.intercept(nested, nestedConsumer);
+              interceptor.success(nested, nestedConsumer);
+              interceptor.clearThreadState(nestedConsumer);
+              if (throwAfterNestedSetup) {
+                throw error;
+              }
+              return null;
+            })
+        .when(decorated)
+        .setupThreadState(innerConsumer);
+
+    interceptor.setupThreadState(outerConsumer);
+    interceptor.intercept(outer, outerConsumer);
+    Span outerSpan = Span.current();
+    Context outerContext = Context.current();
+    Context nestedParent = Context.root().with(Span.fromContext(outerContext));
+    KafkaConsumerContextUtil.set(
+        inner, KafkaConsumerContextUtil.create(nestedParent, null, null, null));
+    KafkaConsumerContextUtil.set(
+        nested, KafkaConsumerContextUtil.create(nestedParent, null, null, null));
+    if (throwAfterNestedSetup) {
+      assertThatThrownBy(() -> interceptor.setupThreadState(innerConsumer)).isSameAs(error);
+      interceptor.clearThreadState(innerConsumer);
+    } else {
+      interceptor.setupThreadState(innerConsumer);
+      interceptor.intercept(inner, innerConsumer);
+      interceptor.clearThreadState(innerConsumer);
+      assertThat(Context.current()).isSameAs(outerContext);
+    }
+    interceptor.clearThreadState(outerConsumer);
+    assertThat(Context.current()).isSameAs(parent);
+    assertThat(outerSpan.isRecording()).isFalse();
+
+    if (throwAfterNestedSetup) {
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
+              span -> assertBatchSpan(span, 1, "2", null).hasParent(trace.getSpan(0))));
+    } else {
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(
+              span -> assertBatchSpan(span, 1, "0", null).hasNoParent(),
+              span -> assertBatchSpan(span, 1, "2", null).hasParent(trace.getSpan(0)),
+              span -> assertBatchSpan(span, 1, "1", null).hasParent(trace.getSpan(0))));
+    }
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
   void unfinishedBatchClosesScopesInDelegateOrder(boolean scopeOpenedInIntercept) {
     Context parent = Context.current();
     Context delegateContext = parent.with(ContextKey.named("delegate"), true);
