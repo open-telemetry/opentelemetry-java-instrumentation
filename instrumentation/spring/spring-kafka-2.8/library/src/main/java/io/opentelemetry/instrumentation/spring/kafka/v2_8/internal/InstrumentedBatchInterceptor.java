@@ -40,7 +40,7 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     PollState poll = currentPoll.get();
     if (poll != null && poll.cleared) {
       // Partition sub-batches can follow clearThreadState without another physical poll.
-      currentPoll.set(new PollState(poll.previous, currentInvocation.get()));
+      currentPoll.set(new PollState(poll.previous, currentInvocation.get(), consumer));
     }
     Context parentContext = getParentContext(records);
 
@@ -139,7 +139,9 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     PollState poll = currentPoll.get();
     currentPoll.set(
         new PollState(
-            poll != null && poll.cleared ? poll.previous : poll, currentInvocation.get()));
+            poll != null && poll.cleared ? poll.previous : poll,
+            currentInvocation.get(),
+            consumer));
     if (decorated != null) {
       decorated.setupThreadState(consumer);
     }
@@ -150,6 +152,10 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
     PollState poll = currentPoll.get();
     if (poll != null && poll.cleared) {
       poll = poll.previous;
+    }
+    // A composite may clear a filtered sub-batch without calling this interceptor.
+    if (poll != null && (poll.cleared || poll.consumer.get() != consumer)) {
+      poll = null;
     }
     ProcessingInvocation<KafkaReceiveRequest> checkpoint =
         poll == null ? null : poll.previousInvocation;
@@ -170,6 +176,8 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
         // An early intercept can be followed by failed transaction startup without either
         // completion callback. A delegate's intercept scope must close before our scope.
         endUnfinishedInvocations(checkpoint, false);
+        // A cleared boundary can remain until the next partition or enclosing clear.
+        poll.previousInvocation = null;
         currentPoll.set(poll);
       }
     }
@@ -192,14 +200,17 @@ final class InstrumentedBatchInterceptor<K, V> implements BatchInterceptor<K, V>
 
   private static class PollState {
     @Nullable final PollState previous;
-    @Nullable final ProcessingInvocation<KafkaReceiveRequest> previousInvocation;
+    @Nullable ProcessingInvocation<KafkaReceiveRequest> previousInvocation;
+    final WeakReference<Consumer<?, ?>> consumer;
     boolean cleared;
 
     PollState(
         @Nullable PollState previous,
-        @Nullable ProcessingInvocation<KafkaReceiveRequest> previousInvocation) {
+        @Nullable ProcessingInvocation<KafkaReceiveRequest> previousInvocation,
+        @Nullable Consumer<?, ?> consumer) {
       this.previous = previous;
       this.previousInvocation = previousInvocation;
+      this.consumer = new WeakReference<>(consumer);
     }
   }
 }

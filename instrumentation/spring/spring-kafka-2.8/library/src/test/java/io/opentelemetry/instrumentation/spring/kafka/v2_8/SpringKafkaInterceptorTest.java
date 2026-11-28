@@ -61,6 +61,7 @@ import org.junit.jupiter.api.extension.RegisterExtension;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.kafka.listener.BatchInterceptor;
+import org.springframework.kafka.listener.CompositeBatchInterceptor;
 import org.springframework.kafka.listener.RecordInterceptor;
 
 @SuppressWarnings({"deprecation", "unchecked"}) // deprecated semconv and generic interceptor mocks
@@ -116,6 +117,77 @@ class SpringKafkaInterceptorTest {
             trace.hasSpansSatisfyingExactly(
                 span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
     assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "0", 2, null);
+  }
+
+  @ParameterizedTest
+  @ValueSource(booleans = {false, true})
+  void filteredNestedPartitionDoesNotClearOuterConsumer(boolean completeOuter) {
+    Consumer<String, String> outerConsumer = mock();
+    Consumer<String, String> innerConsumer = mock();
+    ConsumerRecords<String, String> outer =
+        records(new ConsumerRecord<>("orders", 0, 1, "outer", "value"));
+    ConsumerRecords<String, String> inner =
+        records(new ConsumerRecord<>("orders", 0, 2, "inner", "value"));
+    ConsumerRecords<String, String> filtered =
+        records(new ConsumerRecord<>("orders", 1, 3, "filtered", "value"));
+    ConsumerRecords<String, String> next =
+        records(new ConsumerRecord<>("orders", 2, 4, "next", "value"));
+    BatchInterceptor<String, String> filter =
+        (records, consumer) -> records == filtered ? null : records;
+    BatchInterceptor<String, String> interceptor =
+        new CompositeBatchInterceptor<>(filter, telemetry.createBatchInterceptor());
+    Context parent = Context.current();
+    KafkaConsumerContextUtil.set(inner, KafkaConsumerContextUtil.create(parent, null, null, null));
+    KafkaConsumerContextUtil.set(next, KafkaConsumerContextUtil.create(parent, null, null, null));
+
+    interceptor.setupThreadState(outerConsumer);
+    interceptor.intercept(outer, outerConsumer);
+    Context outerContext = Context.current();
+    Span outerSpan = Span.current();
+    interceptor.setupThreadState(innerConsumer);
+    interceptor.intercept(inner, innerConsumer);
+    interceptor.clearThreadState(innerConsumer);
+    assertThat(interceptor.intercept(filtered, innerConsumer)).isNull();
+    interceptor.clearThreadState(innerConsumer);
+    assertThat(Context.current()).isSameAs(outerContext);
+    assertThat(outerSpan.isRecording()).isTrue();
+
+    if (!completeOuter) {
+      interceptor.intercept(next, innerConsumer);
+      interceptor.clearThreadState(innerConsumer);
+      assertThat(Context.current()).isSameAs(outerContext);
+      assertThat(outerSpan.isRecording()).isTrue();
+    } else {
+      interceptor.success(outer, outerConsumer);
+    }
+    interceptor.clearThreadState(outerConsumer);
+    assertThat(Context.current()).isSameAs(parent);
+    assertThat(outerSpan.isRecording()).isFalse();
+
+    if (completeOuter) {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertBatchSpan(span, 1, "0", null).hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertBatchSpan(span, 1, "0", null).hasNoParent()));
+    } else {
+      testing.waitAndAssertTraces(
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertBatchSpan(span, 1, "0", null).hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertBatchSpan(span, 1, "0", null).hasNoParent()),
+          trace ->
+              trace.hasSpansSatisfyingExactly(
+                  span -> assertBatchSpan(span, 1, "2", null).hasNoParent()));
+    }
+    assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "0", 2, null);
+    if (!completeOuter) {
+      assertProcessDurationMetrics(testing, INSTRUMENTATION_NAME, "orders", null, "2", 1, null);
+    }
   }
 
   @ParameterizedTest
