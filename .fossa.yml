@@ -924,16 +924,10 @@ targets:
       target: ':instrumentation:redisson:redisson-metrics-common-2.3:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:restlet:restlet-1.1:javaagent'
+      target: ':instrumentation:restlet:restlet-2.5:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:restlet:restlet-1.1:library'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:restlet:restlet-2.0:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:restlet:restlet-2.0:library'
+      target: ':instrumentation:restlet:restlet-2.5:library'
     - type: gradle
       path: ./
       target: ':instrumentation:rocketmq:rocketmq-client-4.8:javaagent'
