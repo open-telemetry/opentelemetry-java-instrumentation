@@ -21,12 +21,31 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
 class SuppressionListAuditorTest {
+
+  @ParameterizedTest
+  @ValueSource(strings = {"\n", "\r\n", "\r"})
+  void parsesDisabledListInOrderWithDifferentLineEndings(String separator) {
+    String content =
+        String.join(
+            separator,
+            "# Instrumentations",
+            "| Library | Instrumentation name |",
+            "| First | `first` |",
+            "| Ignored | no code |",
+            "Not a table row",
+            "  | Second | `second` |");
+
+    assertThat(SuppressionListAuditor.parseDocumentationDisabledList(content))
+        .containsExactly("first", "second");
+  }
 
   @Test
   void testPerformAuditWithNoMissingItems() throws IOException, InterruptedException {

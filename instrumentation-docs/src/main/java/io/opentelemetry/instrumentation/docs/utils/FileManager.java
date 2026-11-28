@@ -16,12 +16,17 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 
 public record FileManager(Path rootDir) {
   private static final Logger logger = Logger.getLogger(FileManager.class.getName());
+  private static final Pattern JAVAAGENT_SEGMENT = Pattern.compile("/javaagent");
+  private static final Pattern EXCLUDED_PATH =
+      Pattern.compile(
+          ".*(/test/|/testing|/build/|-common/|-common-|common-|/compile-stub/|-testing|bootstrap/src|/src/).*");
 
   public List<InstrumentationPath> getInstrumentationPaths() throws IOException {
     Path instrumentationRoot = rootDir.resolve("instrumentation");
@@ -67,13 +72,12 @@ public record FileManager(Path rootDir) {
       return false;
     }
 
-    int javaagentCount = normalized.split("/javaagent", -1).length - 1;
+    int javaagentCount = JAVAAGENT_SEGMENT.split(normalized, -1).length - 1;
     if (javaagentCount > 1) {
       return false;
     }
 
-    if (normalized.matches(
-        ".*(/test/|/testing|/build/|-common/|-common-|common-|/compile-stub/|-testing|bootstrap/src|/src/).*")) {
+    if (EXCLUDED_PATH.matcher(normalized).matches()) {
       return false;
     }
 

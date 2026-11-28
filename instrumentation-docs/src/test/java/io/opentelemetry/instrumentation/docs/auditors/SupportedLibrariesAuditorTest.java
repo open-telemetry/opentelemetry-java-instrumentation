@@ -20,12 +20,49 @@ import java.net.http.HttpResponse;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
 class SupportedLibrariesAuditorTest {
+
+  @ParameterizedTest
+  @ValueSource(strings = {"\n", "\r\n", "\r"})
+  void parsesLineEndingsAndStopsAtNextSection(String separator)
+      throws IOException, InterruptedException {
+    String local =
+        String.join(
+            separator,
+            "## Libraries / Frameworks",
+            "| Library/Framework | Version |",
+            "| Alpha | 1 |",
+            "| Beta | 1 |",
+            "## Application Servers",
+            "| Local Server | 1 |");
+    String remote =
+        String.join(
+            separator,
+            "## Libraries and Frameworks",
+            "| Alpha | 1 |",
+            "## Application Servers",
+            "| Beta | 1 |");
+    HttpClient mockClient = mock(HttpClient.class);
+    HttpResponse<String> mockResponse = mock(HttpResponse.class);
+    when(mockClient.send(any(HttpRequest.class), eq(HttpResponse.BodyHandlers.ofString())))
+        .thenReturn(mockResponse);
+    when(mockResponse.statusCode()).thenReturn(200);
+    when(mockResponse.body()).thenReturn(remote);
+
+    try (MockedStatic<FileManager> fileManagerMock = mockStatic(FileManager.class)) {
+      fileManagerMock.when(() -> FileManager.readFileToString(any())).thenReturn(local);
+
+      assertThat(new SupportedLibrariesAuditor().performAudit(mockClient))
+          .contains("Missing Supported Libraries (1 item(s) missing from remote):\n  - Beta\n");
+    }
+  }
 
   @Test
   void testPerformAuditWithNoMissingItems() throws IOException, InterruptedException {
