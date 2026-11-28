@@ -43,6 +43,11 @@ final class TracingFilter implements Filter {
   private static final MethodHandle asyncResultFuture =
       findVirtual(AsyncRpcResult.class, "getResultFuture", CompletableFuture.class);
 
+  // Available in Dubbo 2.7.5 and newer.
+  @Nullable
+  private static final MethodHandle asyncResponseFuture =
+      findVirtual(AsyncRpcResult.class, "getResponseFuture", CompletableFuture.class);
+
   private final Instrumenter<DubboRequest, Result> instrumenter;
 
   private final boolean isClientSide;
@@ -113,6 +118,20 @@ final class TracingFilter implements Filter {
       Context context, DubboRequest request, AsyncRpcResult result) {
     BiConsumer<Result, Throwable> completion =
         (response, throwable) -> endProvider(context, request, response, throwable);
+    if (useInvoker && asyncResponseFuture != null) {
+      // The outer filter runs after Dubbo's context-cleanup listeners are registered.
+      try {
+        @SuppressWarnings(
+            "unchecked") // Dubbo declares getResponseFuture() as CompletableFuture<AppResponse>.
+        CompletableFuture<? extends Result> future =
+            (CompletableFuture<? extends Result>) asyncResponseFuture.invoke(result);
+        future.whenComplete(completion);
+        return true;
+      } catch (Throwable t) {
+        logger.log(FINE, "Failed to register Dubbo provider completion", t);
+        return false;
+      }
+    }
     if (resultWhenCompleteWithContext != null) {
       try {
         resultWhenCompleteWithContext.invoke(result, completion);

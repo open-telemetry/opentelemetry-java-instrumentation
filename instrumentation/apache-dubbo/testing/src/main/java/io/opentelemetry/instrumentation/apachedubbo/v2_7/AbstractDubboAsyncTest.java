@@ -65,6 +65,10 @@ public abstract class AbstractDubboAsyncTest {
     return null;
   }
 
+  protected void completeProvider(Runnable completion) throws Exception {
+    completion.run();
+  }
+
   @ParameterizedTest
   @ValueSource(booleans = {false, true})
   @SuppressWarnings({
@@ -115,12 +119,13 @@ public abstract class AbstractDubboAsyncTest {
     assertThat(serverSpan.isRecording()).isTrue();
 
     if (fail) {
-      provider.result.completeExceptionally(new IllegalStateException("delayed failure"));
+      completeProvider(() ->
+          provider.result.completeExceptionally(new IllegalStateException("delayed failure")));
       assertThatThrownBy(response::join)
           .hasCauseInstanceOf(IllegalStateException.class)
           .hasMessageContaining("delayed failure");
     } else {
-      provider.result.complete("hello");
+      completeProvider(() -> provider.result.complete("hello"));
       assertThat(response.get(10, SECONDS)).isEqualTo("hello");
     }
 

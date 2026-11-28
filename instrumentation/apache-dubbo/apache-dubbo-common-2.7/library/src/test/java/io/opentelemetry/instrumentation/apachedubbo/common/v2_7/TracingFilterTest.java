@@ -243,6 +243,13 @@ class TracingFilterTest {
             GenericService.class.getName() + "/$invokeAsync",
             null),
         argumentSet(
+            "generic provider unknown ordinary method",
+            GenericService.class,
+            "missing",
+            new Object[0],
+            "_OTHER",
+            GenericService.class.getName() + "/missing"),
+        argumentSet(
             "non-generic unknown method",
             HelloService.class,
             "missing",

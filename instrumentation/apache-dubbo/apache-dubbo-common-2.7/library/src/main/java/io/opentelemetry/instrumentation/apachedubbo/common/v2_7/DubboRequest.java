@@ -87,8 +87,7 @@ public abstract class DubboRequest {
       if (!serviceMethods.get(service).contains(method)) {
         originalFullMethodName = service.getName() + "/" + method;
       }
-    } else if (!GenericService.class.isAssignableFrom(service)
-        && !genericDispatch
+    } else if (!genericDispatch
         && !"$echo".equals(method)
         && !serviceMethods.get(service).contains(method)) {
       originalFullMethodName = service.getName() + "/" + method;
