@@ -33,10 +33,11 @@ class HttpClientResponseImplInstrumentation implements TypeInstrumentation {
   public static class ConstructorAdvice {
     @AssignReturned.ToReturned
     @Advice.OnMethodExit(suppress = Throwable.class, inline = false)
-    public static void setConnection(
+    public static void setPeerAddress(
         @Advice.This HttpClientResponse response,
         @Advice.FieldValue("conn") HttpConnection connection) {
-      VertxClientSingletons.setConnection(response, connection);
+      VertxClientSingletons.setPeerAddress(
+          response, connection == null ? null : connection.remoteAddress());
     }
   }
 }
