@@ -92,7 +92,8 @@ class ActuatorTest {
     app.setAdditionalProfiles("shutdown-test");
     ConfigurableApplicationContext context = app.run();
     cleanup.deferCleanup(context);
-    assertThat(context.getBean("otelMeterRegistry")).isInstanceOf(MeterRegistry.class);
+    MeterRegistry otelRegistry = context.getBean("otelMeterRegistry", MeterRegistry.class);
+    assertThat(Metrics.globalRegistry.getRegistries()).contains(otelRegistry);
     SimpleMeterRegistry springRegistry = context.getBean(SimpleMeterRegistry.class);
     cleanup.deferCleanup(() -> Metrics.removeRegistry(springRegistry));
     assertThat(Metrics.globalRegistry.getRegistries()).contains(springRegistry);
@@ -108,7 +109,11 @@ class ActuatorTest {
                     sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
 
     context.close();
+    assertThat(Metrics.globalRegistry.getRegistries()).contains(otelRegistry);
     assertThat(springRegistry.isClosed()).isTrue();
+    if (Boolean.getBoolean("testSpringBoot3516")) {
+      assertThat(Metrics.globalRegistry.getRegistries()).doesNotContain(springRegistry);
+    }
 
     existing.increment(2);
     testing.waitAndAssertMetrics(
