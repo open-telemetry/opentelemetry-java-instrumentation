@@ -9,7 +9,6 @@ import static io.opentelemetry.api.impl.InstrumentationUtil.suppressInstrumentat
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.SpanKind;
 import io.opentelemetry.context.Context;
@@ -141,8 +140,7 @@ class ApacheHttpAsyncClientTest {
                             return cancelled;
                           }
                         });
-                    await().atMost(Duration.ofSeconds(10)).until(cancellation::isDone);
-                    assertThat(cancellation.join()).isTrue();
+                    assertThat(cancellation).succeedsWithin(Duration.ofSeconds(10)).isEqualTo(true);
                   };
               if (cancelDuringStart) {
                 onInjection.set(cancel);
