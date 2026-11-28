@@ -35,6 +35,11 @@ public final class DubboInstrumenters {
     return new TracingFilter(serverInstrumenter, false);
   }
 
+  /** Returns a server filter that can run before Dubbo initializes the service context. */
+  public Filter newServerFilterWithInvoker() {
+    return new TracingFilter(serverInstrumenter, false, true);
+  }
+
   public Instrumenter<DubboRequest, Result> serverInstrumenter() {
     return serverInstrumenter;
   }

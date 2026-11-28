@@ -10,8 +10,10 @@ import io.opentelemetry.instrumentation.apachedubbo.common.v2_7.internal.DubboRe
 import java.net.InetSocketAddress;
 import javax.annotation.Nullable;
 import org.apache.dubbo.common.URL;
+import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcInvocation;
+import org.apache.dubbo.rpc.service.GenericService;
 
 @AutoValue
 public abstract class DubboRequest {
@@ -27,6 +29,31 @@ public abstract class DubboRequest {
         context.getRemoteAddress(),
         context.getLocalAddress(),
         DubboRegistryUtil.extractRegistryAddress(invocation),
+        null,
+        null);
+  }
+
+  static DubboRequest createForInvoker(
+      RpcInvocation invocation, RpcContext context, Invoker<?> invoker) {
+    URL url = invoker.getUrl();
+    String method = invocation.getMethodName();
+    Object[] arguments = invocation.getArguments();
+    // GenericFilter has not necessarily converted the invocation yet.
+    if (!GenericService.class.isAssignableFrom(invoker.getInterface())
+        && ("$invoke".equals(method) || "$invokeAsync".equals(method))
+        && arguments != null
+        && arguments.length == 3
+        && arguments[0] instanceof String) {
+      method = ((String) arguments[0]).trim();
+    }
+    return new AutoValue_DubboRequest(
+        invocation,
+        context,
+        url,
+        context.getRemoteAddress(),
+        context.getLocalAddress(),
+        DubboRegistryUtil.extractRegistryAddress(invocation),
+        invoker.getInterface().getName() + "/" + method,
         null);
   }
 
@@ -36,7 +63,7 @@ public abstract class DubboRequest {
       String originalFullMethodName,
       @Nullable InetSocketAddress remoteAddress) {
     return new AutoValue_DubboRequest(
-        invocation, null, null, remoteAddress, null, null, originalFullMethodName);
+        invocation, null, null, remoteAddress, null, null, null, originalFullMethodName);
   }
 
   abstract RpcInvocation invocation();
@@ -55,6 +82,9 @@ public abstract class DubboRequest {
 
   @Nullable
   public abstract String registryAddress();
+
+  @Nullable
+  abstract String rpcMethod();
 
   @Nullable
   abstract String originalFullMethodName();

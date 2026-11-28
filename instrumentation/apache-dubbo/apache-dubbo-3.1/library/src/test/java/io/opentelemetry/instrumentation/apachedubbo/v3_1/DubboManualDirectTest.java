@@ -6,6 +6,7 @@
 package io.opentelemetry.instrumentation.apachedubbo.v3_1;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
 
 import io.opentelemetry.api.trace.SpanKind;
@@ -21,6 +22,7 @@ import io.opentelemetry.sdk.OpenTelemetrySdk;
 import io.opentelemetry.sdk.testing.exporter.InMemorySpanExporter;
 import io.opentelemetry.sdk.trace.SdkTracerProvider;
 import io.opentelemetry.sdk.trace.data.SpanData;
+import io.opentelemetry.sdk.trace.data.StatusData;
 import io.opentelemetry.sdk.trace.export.SimpleSpanProcessor;
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -34,9 +36,12 @@ import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
+import org.apache.dubbo.rpc.RpcException;
 import org.apache.dubbo.rpc.model.FrameworkModel;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 class DubboManualDirectTest {
 
@@ -46,6 +51,75 @@ class DubboManualDirectTest {
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
 
   @RegisterExtension final AutoCleanupExtension cleanup = AutoCleanupExtension.create();
+
+  @ParameterizedTest
+  @ValueSource(strings = {"testSecond,default,testFirst", "testSecond,testFirst"})
+  void rejectedProviderCallsAreTraced(String filters) {
+    DubboTelemetry telemetry = DubboTelemetry.create(testing.getOpenTelemetry());
+    ServiceConfig<HelloService> service = new ServiceConfig<>();
+    service.setInterface(HelloService.class);
+    service.setRef(new HelloServiceImpl());
+    service.setGroup("instrumented");
+    service.setToken("provider-test-token");
+    service.setFilter(filters);
+    telemetry.instrument(service);
+    telemetry.instrument(service);
+    ServiceConfig<HelloService> uninstrumented = new ServiceConfig<>();
+    uninstrumented.setInterface(HelloService.class);
+    uninstrumented.setRef(new HelloServiceImpl());
+    uninstrumented.setGroup("uninstrumented");
+    uninstrumented.setToken("provider-test-token");
+    uninstrumented.setFilter(filters);
+    newBootstrap("rejected-provider")
+        .protocol(new ProtocolConfig("dubbo", PortUtils.findOpenPort()))
+        .service(service)
+        .service(uninstrumented)
+        .start();
+    ReferenceConfig<HelloService> reference = newReference(service, telemetry);
+    ReferenceConfig<HelloService> uninstrumentedReference = newReference(uninstrumented, telemetry);
+    reference.setRetries(0);
+    uninstrumentedReference.setRetries(0);
+    newBootstrap("rejected-consumer")
+        .reference(reference)
+        .reference(uninstrumentedReference)
+        .start();
+
+    assertThatThrownBy(() -> uninstrumentedReference.get().hello("rejected"))
+        .isInstanceOf(RpcException.class)
+        .hasMessageContaining("Invalid token!");
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(span -> span.hasKind(SpanKind.CLIENT).hasNoParent()));
+    testing.clearData();
+
+    filterCalls.clear();
+    assertThatThrownBy(() -> reference.get().hello("rejected"))
+        .isInstanceOf(RpcException.class)
+        .hasMessageContaining("Invalid token!");
+    assertThat(filterCalls)
+        .containsExactly(
+            filters.contains("default")
+                ? new String[] {"first", "second", "second"}
+                : new String[] {"first", "second", "first", "second"});
+    testing.waitAndAssertTraces(trace ->
+        trace.hasSpansSatisfyingExactly(
+            span -> span.hasKind(SpanKind.CLIENT).hasNoParent(),
+            span ->
+                span.hasName(HelloService.class.getName() + "/hello")
+                    .hasKind(SpanKind.SERVER)
+                    .hasParent(trace.getSpan(0))
+                    .hasStatus(StatusData.error())));
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.apache-dubbo-3.1",
+        "rpc.server.call.duration",
+        metrics ->
+            metrics
+                .singleElement()
+                .satisfies(metric -> {
+                  assertThat(metric.getHistogramData().getPoints())
+                      .singleElement()
+                      .satisfies(point -> assertThat(point.getCount()).isEqualTo(1));
+                }));
+  }
 
   @Test
   void directReferencesAndServicesUseTheirOwnSdk() {

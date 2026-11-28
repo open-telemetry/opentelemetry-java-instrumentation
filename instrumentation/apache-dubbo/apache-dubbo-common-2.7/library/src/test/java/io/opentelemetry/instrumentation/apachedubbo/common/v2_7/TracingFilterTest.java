@@ -7,7 +7,11 @@ package io.opentelemetry.instrumentation.apachedubbo.common.v2_7;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
+import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.SpanKind;
@@ -28,13 +32,56 @@ import org.apache.dubbo.rpc.Invoker;
 import org.apache.dubbo.rpc.Result;
 import org.apache.dubbo.rpc.RpcContext;
 import org.apache.dubbo.rpc.RpcInvocation;
+import org.apache.dubbo.rpc.service.GenericService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 
 class TracingFilterTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @ParameterizedTest
+  @CsvSource({
+    "$invoke, false, hello",
+    "$invokeAsync, false, hello",
+    "$invoke, true, $invoke",
+    "$invokeAsync, true, $invokeAsync",
+    "hello, false, hello"
+  })
+  @SuppressWarnings("deprecation") // RpcContext.removeContext()
+  void providerTracingBeforeContextAndGenericFilters(
+      String method, boolean genericProvider, String expectedMethod) {
+    Class<?> service = genericProvider ? GenericService.class : HelloService.class;
+    Invoker<?> invoker = mock(Invoker.class);
+    when(invoker.getUrl()).thenReturn(new URL("dubbo", "localhost", 20880, service.getName()));
+    when(invoker.getInterface()).thenAnswer(unused -> service);
+    RpcInvocation invocation = new RpcInvocation();
+    invocation.setMethodName(method);
+    invocation.setArguments(
+        new Object[] {" hello ", new String[] {String.class.getName()}, new Object[] {"request"}});
+    AppResponse result = new AppResponse("response");
+    when(invoker.invoke(invocation)).thenReturn(result);
+    Filter filter =
+        new DubboInstrumenterBuilder(
+                testing.getOpenTelemetry(), "io.opentelemetry.apache-dubbo-common-2.7")
+            .build()
+            .newServerFilterWithInvoker();
+    try {
+      assertThat(filter.invoke(invoker, invocation)).isSameAs(result);
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasName(service.getName() + "/" + expectedMethod)
+                  .hasKind(SpanKind.SERVER)
+                  .hasAttributesSatisfyingExactly(
+                      equalTo(RPC_SYSTEM_NAME, "dubbo"),
+                      equalTo(RPC_METHOD, service.getName() + "/" + expectedMethod))));
+    } finally {
+      RpcContext.removeContext();
+    }
+  }
 
   @Test
   void asyncProviderFailureAfterReturn() {

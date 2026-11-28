@@ -5,6 +5,7 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v3_1.internal;
 
+import org.apache.dubbo.common.extension.Activate;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
 import org.apache.dubbo.rpc.Invoker;
@@ -19,6 +20,8 @@ import org.apache.dubbo.rpc.model.ServiceModel;
  * <p>This class is internal and is hence not for public use. Its APIs are unstable and can change
  * at any time.
  */
+// No activation group: order explicit selections without activating on consumers or providers.
+@Activate(order = Integer.MIN_VALUE)
 public final class OpenTelemetryServerFilter implements Filter {
 
   public static final String NAME = "otelManualServer";

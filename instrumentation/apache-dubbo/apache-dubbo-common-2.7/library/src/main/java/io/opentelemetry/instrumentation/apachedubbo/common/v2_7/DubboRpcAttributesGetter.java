@@ -30,6 +30,9 @@ final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest
     if (request.isUnknownService()) {
       return UNKNOWN_METHOD_SPAN_NAME;
     }
+    if (request.rpcMethod() != null) {
+      return request.rpcMethod();
+    }
     String service = getService(request);
     String method = request.invocation().getMethodName();
     if (service != null && method != null) {

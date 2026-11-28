@@ -18,6 +18,7 @@ import java.util.concurrent.CompletionStage;
 import java.util.function.BiConsumer;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
+import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.AsyncRpcResult;
 import org.apache.dubbo.rpc.Filter;
 import org.apache.dubbo.rpc.Invocation;
@@ -45,10 +46,17 @@ final class TracingFilter implements Filter {
   private final Instrumenter<DubboRequest, Result> instrumenter;
 
   private final boolean isClientSide;
+  private final boolean useInvoker;
 
   TracingFilter(Instrumenter<DubboRequest, Result> instrumenter, boolean isClientSide) {
+    this(instrumenter, isClientSide, false);
+  }
+
+  TracingFilter(
+      Instrumenter<DubboRequest, Result> instrumenter, boolean isClientSide, boolean useInvoker) {
     this.instrumenter = instrumenter;
     this.isClientSide = isClientSide;
+    this.useInvoker = useInvoker;
   }
 
   @Override
@@ -59,12 +67,16 @@ final class TracingFilter implements Filter {
     }
 
     RpcContext rpcContext = RpcContext.getContext();
-    if (rpcContext.getUrl() == null || "injvm".equals(rpcContext.getUrl().getProtocol())) {
+    URL url = useInvoker ? invoker.getUrl() : rpcContext.getUrl();
+    if (url == null || "injvm".equals(url.getProtocol())) {
       return invoker.invoke(invocation);
     }
 
     Context parentContext = Context.current();
-    DubboRequest request = DubboRequest.create((RpcInvocation) invocation, rpcContext);
+    DubboRequest request =
+        useInvoker
+            ? DubboRequest.createForInvoker((RpcInvocation) invocation, rpcContext, invoker)
+            : DubboRequest.create((RpcInvocation) invocation, rpcContext);
 
     if (!instrumenter.shouldStart(parentContext, request)) {
       return invoker.invoke(invocation);
