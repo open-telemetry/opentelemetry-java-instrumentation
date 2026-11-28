@@ -29,14 +29,13 @@ public class ResultsCollector {
     this.runDurations = runDurations;
   }
 
-  public List<AppPerfResults> collect(TestConfig config, boolean verifyIterations) {
+  public List<AppPerfResults> collect(TestConfig config, boolean manualRun) {
     return config.getAgents().stream()
-        .map(agent -> readAgentResults(agent, config, verifyIterations))
+        .map(agent -> readAgentResults(agent, config, manualRun))
         .collect(toList());
   }
 
-  private AppPerfResults readAgentResults(
-      Agent agent, TestConfig config, boolean verifyIterations) {
+  private AppPerfResults readAgentResults(Agent agent, TestConfig config, boolean manualRun) {
     try {
       AppPerfResults.Builder builder =
           AppPerfResults.builder()
@@ -45,8 +44,8 @@ public class ResultsCollector {
               .config(config);
 
       builder = addStartupTime(builder, agent);
-      builder = addK6Results(builder, agent, config, verifyIterations);
-      builder = addJfrResults(builder, agent);
+      builder = addK6Results(builder, agent, config, manualRun);
+      builder = addJfrResults(builder, agent, manualRun);
 
       return builder.build();
     } catch (IOException e) {
@@ -94,8 +93,8 @@ public class ResultsCollector {
     return result.doubleValue();
   }
 
-  private AppPerfResults.Builder addJfrResults(AppPerfResults.Builder builder, Agent agent)
-      throws IOException {
+  private AppPerfResults.Builder addJfrResults(
+      AppPerfResults.Builder builder, Agent agent, boolean manualRun) throws IOException {
     Path jfrFile = Path.of(namingConvention.jfrFile(agent));
     return builder
         .totalGCTime(readTotalGCTime(jfrFile))
@@ -108,7 +107,10 @@ public class ResultsCollector {
         .averageJvmUserCpu(computeAverageJvmUserCpu(jfrFile))
         .maxJvmUserCpu(computeMaxJvmUserCpu(jfrFile))
         .averageMachineCpuTotal(computeAverageMachineCpuTotal(jfrFile))
-        .totalGcPauseNanos(computeTotalGcPauseNanos(jfrFile));
+        .totalGcPauseNanos(
+            manualRun
+                ? JFRUtils.sumEventDurationNanos(jfrFile, "jdk.GCPhasePause")
+                : computeTotalGcPauseNanos(jfrFile));
   }
 
   private long readTotalGCTime(Path jfrFile) throws IOException {
