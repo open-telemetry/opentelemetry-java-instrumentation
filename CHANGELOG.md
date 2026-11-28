@@ -372,6 +372,11 @@
 
 ### ⚠️ Breaking changes to non-stable APIs
 
+- Apache Dubbo standalone instrumentation now requires Dubbo 3.1+. Replace
+  `opentelemetry-apache-dubbo-2.7` with `opentelemetry-apache-dubbo-3.1-autoconfigure` for
+  automatic instrumentation, or `opentelemetry-apache-dubbo-3.1` and
+  `io.opentelemetry.instrumentation.apachedubbo.v3_1` for programmatic instrumentation.
+  The Java agent still supports Dubbo 2.7+.
 - Java agent Logback MDC capture exports only application-owned MDC values, not agent-added trace,
   resource, or baggage values.
 - Logback library appenders and the Spring Boot starter capture only application-owned MDC values,
