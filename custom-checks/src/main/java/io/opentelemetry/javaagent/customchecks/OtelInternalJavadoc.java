@@ -35,6 +35,8 @@ public class OtelInternalJavadoc extends BugChecker implements BugChecker.ClassT
 
   private static final Pattern INTERNAL_PACKAGE_PATTERN = Pattern.compile("\\binternal\\b");
 
+  private static final Pattern WHITESPACE_PATTERN = Pattern.compile("\\s+");
+
   private static final Pattern EXCLUDE_PACKAGE_PATTERN =
       Pattern.compile("^io\\.opentelemetry\\.javaagent\\.instrumentation\\.internal\\.");
 
@@ -83,6 +85,8 @@ public class OtelInternalJavadoc extends BugChecker implements BugChecker.ClassT
     if (docCommentTree == null) {
       return null;
     }
-    return docCommentTree.toString().replace("\n", " ").replace(" * ", " ").replaceAll("\\s+", " ");
+    return WHITESPACE_PATTERN
+        .matcher(docCommentTree.toString().replace("\n", " ").replace(" * ", " "))
+        .replaceAll(" ");
   }
 }
