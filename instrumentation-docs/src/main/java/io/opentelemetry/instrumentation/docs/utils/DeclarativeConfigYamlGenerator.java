@@ -23,7 +23,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -36,8 +35,6 @@ public class DeclarativeConfigYamlGenerator {
 
   /** Maximum line length for YAML output including indentation. */
   private static final int MAX_LINE_LENGTH = 100;
-
-  private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
   /**
    * Wrapper class to hold a value, its description, and (for structured lists) the schema of a
@@ -474,7 +471,7 @@ public class DeclarativeConfigYamlGenerator {
     }
 
     // Wrap at word boundaries
-    String[] words = WHITESPACE.split(text);
+    String[] words = text.split("\\s+");
     StringBuilder currentLine = new StringBuilder();
 
     for (String word : words) {

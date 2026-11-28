@@ -41,7 +41,6 @@ public class EmittedScopeParser {
   private static final Logger logger = Logger.getLogger(EmittedScopeParser.class.getName());
   private static final Pattern SCHEMA_VERSION =
       Pattern.compile("^https://opentelemetry\\.io/schemas/(\\d+)\\.(\\d+)\\.(\\d+)$");
-  private static final Pattern TRAILING_VERSION = Pattern.compile("-\\d+(\\.\\d+)*$");
 
   @Nullable
   public static InstrumentationScopeInfo getScope(
@@ -133,7 +132,7 @@ public class EmittedScopeParser {
    * scope name. Returns the input unchanged if it has no such suffix.
    */
   private static String stripTrailingVersion(String scopeName) {
-    return TRAILING_VERSION.matcher(scopeName).replaceFirst("");
+    return scopeName.replaceFirst("-\\d+(\\.\\d+)*$", "");
   }
 
   /**
