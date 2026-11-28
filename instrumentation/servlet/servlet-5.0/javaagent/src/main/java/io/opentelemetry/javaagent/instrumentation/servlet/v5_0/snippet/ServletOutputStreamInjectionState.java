@@ -8,24 +8,37 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import jakarta.servlet.ServletOutputStream;
+import java.lang.ref.WeakReference;
 import javax.annotation.Nullable;
 
 public class ServletOutputStreamInjectionState {
-  private static final VirtualField<ServletOutputStream, InjectionState> VIRTUAL_FIELD =
-      VirtualField.find(ServletOutputStream.class, InjectionState.class);
+  // The fallback map has weak stream keys and strong values, so a strong InjectionState could
+  // reach its stream through the response wrapper and keep the key alive. The request attribute
+  // strongly owns the state for the request lifetime, including async writes.
+  private static final VirtualField<ServletOutputStream, WeakReference<InjectionState>>
+      VIRTUAL_FIELD = VirtualField.find(ServletOutputStream.class, WeakReference.class);
 
   public static void initializeInjectionStateIfNeeded(
-      ServletOutputStream servletOutputStream, Servlet5SnippetInjectingResponseWrapper wrapper) {
-    InjectionState state = VIRTUAL_FIELD.get(servletOutputStream);
-    if (state == null || state.getWrapper() != wrapper) {
-      state = new InjectionState(wrapper);
-      VIRTUAL_FIELD.set(servletOutputStream, state);
+      ServletOutputStream servletOutputStream, InjectionState state) {
+    WeakReference<InjectionState> reference = VIRTUAL_FIELD.get(servletOutputStream);
+    if (reference != null && reference.get() == state) {
+      return;
     }
+    VIRTUAL_FIELD.set(servletOutputStream, new WeakReference<>(state));
   }
 
   @Nullable
   public static InjectionState getInjectionState(ServletOutputStream servletOutputStream) {
-    return VIRTUAL_FIELD.get(servletOutputStream);
+    WeakReference<InjectionState> reference = VIRTUAL_FIELD.get(servletOutputStream);
+    if (reference == null) {
+      return null;
+    }
+    InjectionState state = reference.get();
+    if (state == null || (!state.isHeadTagWritten() && !state.isCurrentRequest())) {
+      VIRTUAL_FIELD.set(servletOutputStream, null);
+      return null;
+    }
+    return state;
   }
 
   private ServletOutputStreamInjectionState() {}

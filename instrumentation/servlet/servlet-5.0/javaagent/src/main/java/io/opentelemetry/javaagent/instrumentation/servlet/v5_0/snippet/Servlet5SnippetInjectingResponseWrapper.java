@@ -8,9 +8,12 @@ package io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet;
 import static io.opentelemetry.javaagent.instrumentation.servlet.v5_0.snippet.ServletOutputStreamInjectionState.initializeInjectionStateIfNeeded;
 import static java.util.logging.Level.FINE;
 
+import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
+import io.opentelemetry.javaagent.bootstrap.servlet.StreamStates;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
 import jakarta.servlet.ServletOutputStream;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
@@ -37,17 +40,41 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   public static final String FAKE_SNIPPET_HEADER = "FAKE_SNIPPET_HEADER";
 
   private static final int UNSET = -1;
+  private static final String REQUEST_LIFETIME_ATTRIBUTE =
+      Servlet5SnippetInjectingResponseWrapper.class.getName() + ".request";
+  private static final String STREAM_STATE_ATTRIBUTE =
+      Servlet5SnippetInjectingResponseWrapper.class.getName() + ".streamState";
   private final String snippet;
   private final int snippetLength;
 
+  @Nullable private final HttpServletRequest request;
+  @Nullable private final Object requestToken;
+  @Nullable private InjectionState streamInjectionState;
   private long contentLength = UNSET;
 
   @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
 
   public Servlet5SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
+    this(null, response, snippet);
+  }
+
+  public Servlet5SnippetInjectingResponseWrapper(
+      @Nullable HttpServletRequest request, HttpServletResponse response, String snippet) {
     super(response);
+    this.request = request;
     this.snippet = snippet;
     snippetLength = snippet.length();
+
+    Object token = null;
+    if (request != null) {
+      token = request.getAttribute(REQUEST_LIFETIME_ATTRIBUTE);
+      if (token == null) {
+        token = new Object();
+        request.setAttribute(REQUEST_LIFETIME_ATTRIBUTE, token);
+        request.removeAttribute(STREAM_STATE_ATTRIBUTE);
+      }
+    }
+    requestToken = token;
   }
 
   @Override
@@ -118,7 +145,20 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   @Override
   public ServletOutputStream getOutputStream() throws IOException {
     ServletOutputStream output = super.getOutputStream();
-    initializeInjectionStateIfNeeded(output, this);
+    InjectionState state = streamInjectionState;
+    if (state == null) {
+      state = new InjectionState(this);
+      streamInjectionState = state;
+    }
+    if (request != null) {
+      StreamStates states = (StreamStates) request.getAttribute(STREAM_STATE_ATTRIBUTE);
+      if (states == null) {
+        states = new StreamStates();
+        request.setAttribute(STREAM_STATE_ATTRIBUTE, states);
+      }
+      states.put(output, state);
+    }
+    initializeInjectionStateIfNeeded(output, state);
     return output;
   }
 
@@ -139,6 +179,11 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
     }
     return contentType != null
         && (contentType.startsWith("text/html") || contentType.startsWith("application/xhtml+xml"));
+  }
+
+  @Override
+  public boolean isCurrentRequest() {
+    return request == null || request.getAttribute(REQUEST_LIFETIME_ATTRIBUTE) == requestToken;
   }
 
   @Override
