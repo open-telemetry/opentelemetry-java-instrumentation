@@ -23,6 +23,7 @@ final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
     implements FunctionCounter, RemovableMeter, OpenTelemetryInstrument {
 
   private final ObservableDoubleCounter observableCount;
+  private boolean removed;
 
   OpenTelemetryFunctionCounter(
       Id id,
@@ -59,6 +60,12 @@ final class OpenTelemetryFunctionCounter<T> extends AbstractMeter
 
   @Override
   public void onRemove() {
+    synchronized (this) {
+      if (removed) {
+        return;
+      }
+      removed = true;
+    }
     observableCount.close();
   }
 }

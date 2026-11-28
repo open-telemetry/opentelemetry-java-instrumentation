@@ -11,6 +11,7 @@ import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equal
 
 import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.Metrics;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 import io.opentelemetry.instrumentation.testing.internal.AutoCleanupExtension;
@@ -23,6 +24,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.RegisterExtension;
 import org.springframework.boot.SpringApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 class ActuatorTest {
 
@@ -80,6 +84,60 @@ class ActuatorTest {
 
     composite.remove(added);
     assertThat(registries).hasSize(registryCount);
+  }
+
+  @Test
+  void closingContextDoesNotCloseGlobalRegistry() {
+    SpringApplication app = new SpringApplication(SpringApp.class, TestRegistryConfiguration.class);
+    app.setAdditionalProfiles("shutdown-test");
+    ConfigurableApplicationContext context = app.run();
+    cleanup.deferCleanup(context);
+    assertThat(context.getBean("otelMeterRegistry")).isInstanceOf(MeterRegistry.class);
+    SimpleMeterRegistry springRegistry = context.getBean(SimpleMeterRegistry.class);
+    cleanup.deferCleanup(() -> Metrics.removeRegistry(springRegistry));
+    assertThat(Metrics.globalRegistry.getRegistries()).contains(springRegistry);
+    Counter existing = Metrics.counter("test.global.existing");
+    cleanup.deferCleanup(() -> Metrics.globalRegistry.remove(existing));
+    existing.increment();
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.micrometer-1.5",
+        metric ->
+            metric
+                .hasName("test.global.existing")
+                .hasDoubleSumSatisfying(
+                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(1))));
+
+    context.close();
+    assertThat(springRegistry.isClosed()).isTrue();
+
+    existing.increment(2);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.micrometer-1.5",
+        metric ->
+            metric
+                .hasName("test.global.existing")
+                .hasDoubleSumSatisfying(
+                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(2))));
+
+    Counter added = Metrics.counter("test.global.new");
+    cleanup.deferCleanup(() -> Metrics.globalRegistry.remove(added));
+    added.increment(4);
+    testing.waitAndAssertMetrics(
+        "io.opentelemetry.micrometer-1.5",
+        metric ->
+            metric
+                .hasName("test.global.new")
+                .hasDoubleSumSatisfying(
+                    sum -> sum.hasPointsSatisfying(point -> point.hasValue(4))));
+  }
+
+  @Configuration
+  @Profile("shutdown-test")
+  static class TestRegistryConfiguration {
+    @Bean
+    SimpleMeterRegistry testMeterRegistry() {
+      return new SimpleMeterRegistry();
+    }
   }
 
   private static void assertOtelMeterRegistryIsLast(Set<MeterRegistry> registries) {

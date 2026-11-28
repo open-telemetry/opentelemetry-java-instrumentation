@@ -33,6 +33,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
         (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
     Internal.internalSetMetersHiddenFromSearch(
         (builder, hidden) -> builder.metersHiddenFromSearch = hidden);
+    Internal.internalSetCloseDisabled((builder, disabled) -> builder.closeDisabled = disabled);
   }
 
   private final OpenTelemetry openTelemetry;
@@ -41,6 +42,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
   private boolean metersHiddenFromSearch = false;
+  private boolean closeDisabled = false;
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -78,6 +80,7 @@ public final class OpenTelemetryMeterRegistryBuilder {
         namingConvention,
         modifier,
         metersHiddenFromSearch,
+        closeDisabled,
         meterBuilder.build());
   }
 }

@@ -17,11 +17,18 @@ import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.ArrayList;
 import java.util.List;
+import javax.annotation.Nullable;
 
 final class OpenTelemetryMeter extends AbstractMeter
     implements Meter, RemovableMeter, OpenTelemetryInstrument {
 
   private final List<AutoCloseable> observableInstruments;
+
+  @SuppressWarnings("UnusedVariable")
+  @Nullable
+  private List<Measurement> measurements;
+
+  private boolean removed;
 
   OpenTelemetryMeter(
       Id id,
@@ -33,7 +40,9 @@ final class OpenTelemetryMeter extends AbstractMeter
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
     List<AutoCloseable> observableInstruments = new ArrayList<>();
+    List<Measurement> measurementReferences = new ArrayList<>();
     for (Measurement measurement : measurements) {
+      measurementReferences.add(measurement);
       String name =
           bridging.statisticInstrumentName(id, measurement.getStatistic(), namingConvention);
       String description = bridging.description(name, id);
@@ -80,6 +89,7 @@ final class OpenTelemetryMeter extends AbstractMeter
       }
     }
     this.observableInstruments = observableInstruments;
+    this.measurements = measurementReferences;
   }
 
   @Override
@@ -91,6 +101,13 @@ final class OpenTelemetryMeter extends AbstractMeter
   @Override
   public void onRemove() {
     try {
+      synchronized (this) {
+        if (removed) {
+          return;
+        }
+        removed = true;
+        measurements = null;
+      }
       for (AutoCloseable observableInstrument : observableInstruments) {
         observableInstrument.close();
       }

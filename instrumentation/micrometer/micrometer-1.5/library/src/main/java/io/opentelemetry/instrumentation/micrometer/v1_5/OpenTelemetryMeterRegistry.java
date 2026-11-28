@@ -17,13 +17,16 @@ import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.TimeGauge;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
+import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.OpenTelemetry;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
@@ -60,6 +63,7 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   private final TimeUnit baseTimeUnit;
   private final DistributionStatisticConfigModifier distributionStatisticConfigModifier;
   private final boolean metersHiddenFromSearch;
+  private final boolean closeDisabled;
   private final io.opentelemetry.api.metrics.Meter otelMeter;
 
   OpenTelemetryMeterRegistry(
@@ -68,12 +72,14 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
       NamingConvention namingConvention,
       DistributionStatisticConfigModifier distributionStatisticConfigModifier,
       boolean metersHiddenFromSearch,
+      boolean closeDisabled,
       io.opentelemetry.api.metrics.Meter otelMeter) {
     super(clock);
     this.bridging = new Bridging();
     this.baseTimeUnit = baseTimeUnit;
     this.distributionStatisticConfigModifier = distributionStatisticConfigModifier;
     this.metersHiddenFromSearch = metersHiddenFromSearch;
+    this.closeDisabled = closeDisabled;
     this.otelMeter = otelMeter;
 
     this.config()
@@ -99,6 +105,25 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   protected <T> Gauge newGauge(Meter.Id id, @Nullable T obj, ToDoubleFunction<T> valueFunction) {
     return new OpenTelemetryGauge<>(
         id, config().namingConvention(), obj, valueFunction, otelMeter, bridging);
+  }
+
+  @Override
+  protected <T> TimeGauge newTimeGauge(
+      Meter.Id id, T obj, TimeUnit timeFunctionUnit, ToDoubleFunction<T> valueFunction) {
+    TimeUnit baseTimeUnit = getBaseTimeUnit();
+    Meter.Id idWithBaseUnit = id.withBaseUnit(baseTimeUnit.toString().toLowerCase(Locale.ROOT));
+    ToDoubleFunction<T> convertedFunction =
+        value ->
+            TimeUtils.convert(valueFunction.applyAsDouble(value), timeFunctionUnit, baseTimeUnit);
+    OpenTelemetryGauge<T> gauge =
+        new OpenTelemetryGauge<>(
+            idWithBaseUnit,
+            config().namingConvention(),
+            obj,
+            convertedFunction,
+            otelMeter,
+            bridging);
+    return new OpenTelemetryTimeGauge(gauge, baseTimeUnit);
   }
 
   @Override
@@ -210,6 +235,20 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
   private static void onMeterRemoved(Meter meter) {
     if (meter instanceof RemovableMeter) {
       ((RemovableMeter) meter).onRemove();
+    }
+  }
+
+  @Override
+  public void close() {
+    if (closeDisabled) {
+      return;
+    }
+    try {
+      super.close();
+    } finally {
+      for (Meter meter : super.getMeters()) {
+        onMeterRemoved(meter);
+      }
     }
   }
 }
