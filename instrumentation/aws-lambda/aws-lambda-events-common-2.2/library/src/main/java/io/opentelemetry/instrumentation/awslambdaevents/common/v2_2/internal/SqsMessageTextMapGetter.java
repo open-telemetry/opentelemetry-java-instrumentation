@@ -13,8 +13,6 @@ import java.util.Map;
 import javax.annotation.Nullable;
 
 final class SqsMessageTextMapGetter implements TextMapGetter<SQSMessage> {
-  static final SqsMessageTextMapGetter INSTANCE = new SqsMessageTextMapGetter();
-
   private static final String AWS_TRACE_HEADER_SQS_ATTRIBUTE_KEY = "AWSTraceHeader";
   private static final String AWS_TRACE_HEADER_PROPAGATOR_KEY = "x-amzn-trace-id";
 

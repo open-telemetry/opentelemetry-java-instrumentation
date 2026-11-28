@@ -9,8 +9,6 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import javax.annotation.Nullable;
 
 final class MessageTextMapGetter implements TextMapGetter<PulsarRequest> {
-  static final MessageTextMapGetter INSTANCE = new MessageTextMapGetter();
-
   @Override
   public Iterable<String> keys(PulsarRequest request) {
     return request.getMessage().getProperties().keySet();

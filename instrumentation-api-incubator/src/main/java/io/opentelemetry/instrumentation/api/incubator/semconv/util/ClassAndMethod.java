@@ -12,7 +12,7 @@ import io.opentelemetry.instrumentation.api.semconv.code.CodeAttributesGetter;
 public abstract class ClassAndMethod {
 
   public static CodeAttributesGetter<ClassAndMethod> codeAttributesGetter() {
-    return new ClassAndMethodAttributesGetter();
+    return ClassAndMethodAttributesGetter.INSTANCE;
   }
 
   public static ClassAndMethod create(Class<?> declaringClass, String methodName) {
