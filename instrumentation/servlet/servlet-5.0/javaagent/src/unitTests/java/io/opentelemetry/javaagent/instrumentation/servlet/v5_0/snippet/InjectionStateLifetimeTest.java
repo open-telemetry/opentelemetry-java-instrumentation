@@ -29,6 +29,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -144,7 +145,30 @@ class InjectionStateLifetimeTest {
     assertThat(ServletOutputStreamInjectionState.getInjectionState(stream)).isSameAs(secondState);
     assertThat(INJECTION_STATE.get(stream)).isNotSameAs(firstReference);
     assertThat(fixture.requestStreamState()).isSameAs(secondState);
-    assertThat(fixture.streamStateAttributeUpdates).isEqualTo(2);
+    assertThat(fixture.requestStreamStates()).hasSize(1).doesNotContainValue(firstReference.get());
+    assertThat(fixture.streamStateAttributeUpdates).isEqualTo(1);
+  }
+
+  @Test
+  void distinctStreamsRemainOwnedAcrossWrappers() throws IOException {
+    Fixture fixture = new Fixture();
+    fixture.contentType = "text/html";
+    ServletOutputStream firstStream = fixture.wrap().getOutputStream();
+    InjectionState firstState = fixture.requestStreamState();
+
+    ServletOutputStream secondStream = mock(ServletOutputStream.class);
+    when(fixture.response.getOutputStream()).thenReturn(secondStream);
+    assertThat(fixture.wrap().getOutputStream()).isSameAs(secondStream);
+    InjectionState secondState = ServletOutputStreamInjectionState.getInjectionState(secondStream);
+
+    assertThat(fixture.requestStreamStates())
+        .hasSize(2)
+        .containsEntry(firstStream, firstState)
+        .containsEntry(secondStream, secondState);
+    assertThat(fixture.streamStateAttributeUpdates).isEqualTo(1);
+    firstStream.write(HTML.getBytes(UTF_8));
+    assertThat(fixture.content()).isEqualTo(INJECTED);
+    assertThat(fixture.content()).containsOnlyOnce(SNIPPET);
   }
 
   @Test
@@ -292,8 +316,19 @@ class InjectionStateLifetimeTest {
     }
 
     InjectionState requestStreamState() {
-      return (InjectionState)
-          attributes.get(Servlet5SnippetInjectingResponseWrapper.class.getName() + ".streamState");
+      Servlet5SnippetInjectingResponseWrapper.StreamStates states =
+          (Servlet5SnippetInjectingResponseWrapper.StreamStates)
+              attributes.get(
+                  Servlet5SnippetInjectingResponseWrapper.class.getName() + ".streamState");
+      return states == null ? null : states.states.get(stream);
+    }
+
+    IdentityHashMap<ServletOutputStream, InjectionState> requestStreamStates() {
+      Servlet5SnippetInjectingResponseWrapper.StreamStates states =
+          (Servlet5SnippetInjectingResponseWrapper.StreamStates)
+              attributes.get(
+                  Servlet5SnippetInjectingResponseWrapper.class.getName() + ".streamState");
+      return requireNonNull(states).states;
     }
 
     String content() {

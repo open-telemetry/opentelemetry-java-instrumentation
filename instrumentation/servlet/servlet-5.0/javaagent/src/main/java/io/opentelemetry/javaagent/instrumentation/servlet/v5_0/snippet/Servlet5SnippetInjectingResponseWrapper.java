@@ -17,6 +17,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpServletResponseWrapper;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.IdentityHashMap;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
@@ -52,6 +53,10 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
   private long contentLength = UNSET;
 
   @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
+
+  static final class StreamStates {
+    final IdentityHashMap<ServletOutputStream, InjectionState> states = new IdentityHashMap<>();
+  }
 
   public Servlet5SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     this(null, response, snippet);
@@ -150,9 +155,12 @@ public class Servlet5SnippetInjectingResponseWrapper extends HttpServletResponse
       streamInjectionState = state;
     }
     if (request != null) {
-      if (request.getAttribute(STREAM_STATE_ATTRIBUTE) != state) {
-        request.setAttribute(STREAM_STATE_ATTRIBUTE, state);
+      StreamStates states = (StreamStates) request.getAttribute(STREAM_STATE_ATTRIBUTE);
+      if (states == null) {
+        states = new StreamStates();
+        request.setAttribute(STREAM_STATE_ATTRIBUTE, states);
       }
+      states.states.put(output, state);
     }
     initializeInjectionStateIfNeeded(output, state);
     return output;
