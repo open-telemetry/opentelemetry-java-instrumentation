@@ -55,8 +55,13 @@ instrumentation/development:
       # Flush timeout in milliseconds.
       flush_timeout: 10000
     aws_sdk:
+      # AWS SDK (aws-sdk-1.11):
       # Enables the experimental span attributes `aws.agent`, `aws.queue.name`,
       # `aws.lambda.function.arn` and `aws.lambda.function.name` for AWS SDK instrumentation.
+      #
+      # AWS SDK (aws-sdk-2.2):
+      # Enables experimental span attributes `aws.agent`, `aws.lambda.function.arn` and
+      # `aws.lambda.function.name` for AWS SDK instrumentation.
       experimental_span_attributes/development: false
 
       # Determines whether errors returned by each individual HTTP request should be recorded as
@@ -86,15 +91,34 @@ instrumentation/development:
           # adverse impact on database performance.
           enabled: false
       gen_ai:
+        # AWS SDK:
+        # Determines whether Generative AI events include full content of user and assistant
+        # messages. Note that full content can have data privacy and size concerns and care should
+        # be taken when enabling this
+        #
+        # OpenAI Java SDK:
+        # Enables including the full content of user and assistant messages in emitted log events.
+        # Note that full content can have data privacy and size concerns, and care should be taken
+        # when enabling this.
+        #
+        # Spring AI:
         # Enables including the full content of system, user, assistant, and tool messages in
         # emitted log events. Note that full content can have data privacy and size concerns, and
         # care should be taken when enabling this.
         capture_message_content: false
       http:
         client:
+          # Akka HTTP, Apache HttpAsyncClient, Apache HttpClient, Armeria, AsyncHttpClient, Eclipse
+          # Jetty HTTP Client, Google HTTP Client, HttpURLConnection, Java HTTP Client, Jodd HTTP,
+          # Ktor, Kubernetes Client, Netty HTTP codec, OkHttp, Pekko HTTP, Play WS, Ratpack, Reactor
+          # Netty, Vert.x HTTP Client:
           # Enable the capture of experimental HTTP client telemetry. Adds the
           # `http.request.body.size` and `http.response.body.size` attributes to spans, and records
           # `http.client.request.body.size` and `http.client.response.body.size` metrics.
+          #
+          # Spring Web:
+          # Enables the capture of experimental HTTP client telemetry, including URL template as the
+          # span name.
           emit_experimental_telemetry/development: false
 
           # Rules for deriving low-cardinality URL templates (routes) from HTTP client request URLs.
@@ -216,10 +240,35 @@ instrumentation/development:
         # Enables the creation of experimental view spans.
         enabled: false
     couchbase:
+      # Couchbase Client (couchbase-2.0):
       # Enables experimental span attributes for Couchbase 2.x. For Couchbase 3.x, also enables the
       # request_encoding and dispatch_to_server internal spans emitted by the SDK.
+      #
+      # Couchbase Client (couchbase-3.0), Couchbase Client (couchbase-3.1), Couchbase Client
+      # (couchbase-3.2):
+      # Enables experimental span attributes and the request_encoding and dispatch_to_server
+      # internal spans emitted by the Couchbase SDK.
       emit_experimental_telemetry/development: false
     elasticsearch:
+      # Elasticsearch Transport Client (elasticsearch-transport-5.0):
+      # Enable the capture of the experimental span attributes `elasticsearch.action`,
+      # `elasticsearch.id`, `elasticsearch.request`, `elasticsearch.request.indices`,
+      # `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`,
+      # `elasticsearch.response.status`, `elasticsearch.shard.replication.failed`,
+      # `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`,
+      # `elasticsearch.type`, and `elasticsearch.version`.
+      #
+      # Elasticsearch Transport Client (elasticsearch-transport-5.3):
+      # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
+      # `elasticsearch.request.indices`, `elasticsearch.request.search.types`,
+      # `elasticsearch.request.write.routing`, `elasticsearch.request.write.type`,
+      # `elasticsearch.request.write.version`, `elasticsearch.response.status`,
+      # `elasticsearch.shard.broadcast.failed`, `elasticsearch.shard.broadcast.successful`,
+      # `elasticsearch.shard.broadcast.total`, `elasticsearch.shard.replication.failed`,
+      # `elasticsearch.shard.replication.successful`, `elasticsearch.shard.replication.total`,
+      # `elasticsearch.type`, and `elasticsearch.version` experimental span attributes.
+      #
+      # Elasticsearch Transport Client (elasticsearch-transport-6.0):
       # Enable the capture of `elasticsearch.action`, `elasticsearch.id`, `elasticsearch.request`,
       # `elasticsearch.request.indices`, `elasticsearch.request.write.type`,
       # `elasticsearch.request.write.version`, `elasticsearch.response.status`,
@@ -374,12 +423,31 @@ instrumentation/development:
         # matches any number of characters and "?" matches one character. All metrics are collected
         # unless included or excluded patterns are configured.
         included: []
+
+      # Inline JMX metric definitions, using the same rule syntax as JMX metric definition YAML
+      # files. These rules are added to any rules loaded from files.
+      # Each list entry is an object with the following properties:
+      #   bean (string): MBean ObjectName or pattern to match.
+      #   mapping (object): MBean attribute names mapped to metric definitions.
+      # Example:
+      #   rules:
+      #     - bean: java.lang:type=Threading
+      #       mapping: {ThreadCount: {metric: app.thread.count, type: updowncounter, desc: The current number of threads, unit: '1'}}
+      rules: []
     jsp:
       # Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`,
       # and `jsp.classFQCN`.
       experimental_span_attributes/development: false
     kafka:
+      # Apache Kafka Client, Apache Kafka Streams, Vert.x Kafka Client:
       # Enables the capture of the experimental consumer attributes `kafka.record.queue_time_ms` and
+      # `kafka.bootstrap.servers`.
+      #
+      # Reactor Kafka:
+      # Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms`.
+      #
+      # Spring Kafka:
+      # Enables the capture of the experimental consumer attribute `kafka.record.queue_time_ms` and
       # `kafka.bootstrap.servers`.
       experimental_span_attributes/development: false
       producer_propagation:
@@ -394,6 +462,10 @@ instrumentation/development:
         # Enables connection telemetry spans for Redis connections.
         enabled: false
 
+      # Lettuce (lettuce-4.0):
+      # Enables experimental span attribute `lettuce.command.cancelled`.
+      #
+      # Lettuce (lettuce-5.0):
       # Enables experimental span attributes `lettuce.command.cancelled` and
       # `lettuce.command.results.count`.
       experimental_span_attributes/development: false
@@ -414,6 +486,13 @@ instrumentation/development:
       # Enables the capture of experimental log attributes, including thread name and thread ID.
       experimental_log_attributes/development: false
       mdc_attributes/development:
+        # Log4j (log4j-appender-1.2):
+        # Comma-separated list of case-sensitive glob patterns for MDC keys not to capture as log
+        # attributes. "*" matches any number of characters and "?" matches one character. Excluded
+        # patterns take precedence over included patterns. If only excluded patterns are configured,
+        # all other MDC attributes are captured, which may expose sensitive information.
+        #
+        # Log4j (log4j-appender-2.17):
         # Comma-separated list of case-sensitive glob patterns for context data keys not to capture
         # as log attributes. "*" matches any number of characters and "?" matches one character.
         # Excluded patterns take precedence over included patterns. If only excluded patterns are
@@ -421,6 +500,14 @@ instrumentation/development:
         # information.
         excluded: []
 
+        # Log4j (log4j-appender-1.2):
+        # Comma-separated list of case-sensitive glob patterns for MDC keys to capture as log
+        # attributes. "*" matches any number of characters and "?" matches one character. No MDC
+        # attributes are captured unless included or excluded patterns, or the deprecated
+        # otel.instrumentation.log4j-appender.experimental.capture-mdc-attributes setting, are
+        # configured. "*" captures all MDC attributes.
+        #
+        # Log4j (log4j-appender-2.17):
         # Comma-separated list of case-sensitive glob patterns for context data keys to capture as
         # log attributes. "*" matches any number of characters and "?" matches one character. No
         # context data attributes are captured unless included or excluded patterns, or the
@@ -478,7 +565,15 @@ instrumentation/development:
       # Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
       add_baggage: false
     methods:
-      # Semicolon-separated list of fully qualified class and method patterns to instrument.
+      # Selects the classes and methods to instrument.
+      # Each list entry is an object with the following properties:
+      #   class (string, required): Fully qualified class name to instrument.
+      #   methods (array, required): Method objects with a required name and an optional span_kind
+      #     (default INTERNAL).
+      # Example:
+      #   include:
+      #     - class: com.example.MyClass
+      #       methods: [{name: method1, span_kind: INTERNAL}]
       include: []
     micrometer:
       # Sets the base time unit for the OpenTelemetry MeterRegistry. Supported values: ns, us, ms,
@@ -511,6 +606,10 @@ instrumentation/development:
       # `scheduling.powerjob.job.type`.
       experimental_span_attributes/development: false
     pulsar:
+      # Apache Pulsar Client:
+      # Enables the experimental span attribute `pulsar.message.type` for producer spans.
+      #
+      # Spring Pulsar:
       # Enables capturing experimental span attribute `pulsar.message.type` on PRODUCER spans.
       experimental_span_attributes/development: false
     quartz:
@@ -530,9 +629,14 @@ instrumentation/development:
         # Enables the creation of Connect and DNS spans.
         enabled: false
     rocketmq_client:
+      # Apache RocketMQ Client - Remoting Protocol:
       # Enables capturing experimental span attributes `rocketmq.message.tag`,
       # `rocketmq.broker_address`, `rocketmq.send_result`, `rocketmq.queue_id`, and
       # `rocketmq.queue_offset`.
+      #
+      # Apache RocketMQ Client - gRPC Protocol:
+      # Enables capturing experimental attributes `rocketmq.message.lite_topic` and
+      # `rocketmq.message.priority` on messaging spans and receive-span links.
       experimental_span_attributes/development: false
     runtime_telemetry:
       # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.
@@ -569,6 +673,14 @@ instrumentation/development:
       # `<head>` tag.
       javascript_snippet/development: ''
       request_parameters/development:
+        # Apache Tomcat, Liberty:
+        # A comma-separated list of case-sensitive request parameter name patterns to exclude from
+        # span attributes. `?` matches one character and `*` matches zero or more characters.
+        # Excluded patterns take precedence over included patterns. If only excluded patterns are
+        # configured, all other request parameters are captured, which may expose sensitive
+        # information.
+        #
+        # Servlet:
         # A comma-separated list of case-sensitive request parameter name patterns to exclude from
         # span attributes under `servlet.request.parameter.<name>`, preserving the original
         # parameter-name casing. `?` matches one character and `*` matches zero or more characters.
@@ -577,6 +689,13 @@ instrumentation/development:
         # information.
         excluded: []
 
+        # Apache Tomcat, Liberty:
+        # A comma-separated list of case-sensitive request parameter name patterns to capture as
+        # span attributes. `?` matches one character and `*` matches zero or more characters. No
+        # request parameters are captured unless included or excluded patterns are configured. `*`
+        # captures all request parameters.
+        #
+        # Servlet:
         # A comma-separated list of case-sensitive request parameter name patterns to capture as
         # span attributes under `servlet.request.parameter.<name>`, preserving the original
         # parameter-name casing. `?` matches one character and `*` matches zero or more characters.

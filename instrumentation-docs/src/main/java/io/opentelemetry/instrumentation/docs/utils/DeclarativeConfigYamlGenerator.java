@@ -8,6 +8,7 @@ package io.opentelemetry.instrumentation.docs.utils;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationOption;
 import io.opentelemetry.instrumentation.docs.internal.ConfigurationType;
@@ -18,11 +19,14 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
+import java.util.TreeSet;
 import javax.annotation.Nullable;
 import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
@@ -93,26 +97,37 @@ public class DeclarativeConfigYamlGenerator {
    */
   private static Map<String, Object> buildConfigTree(
       List<InstrumentationModule> modules, List<ConfigurationOption> globalConfigurations) {
-    Map<String, Object> tree = new TreeMap<>();
-    Set<String> seenConfigs = new HashSet<>();
-
+    Map<String, List<SourcedConfig>> configs = new TreeMap<>();
     for (ConfigurationOption config : globalConfigurations) {
-      addConfig(tree, seenConfigs, config);
+      addConfig(configs, config, "Global configuration", "global");
     }
+    // Global definitions are authoritative, including their descriptions and defaults.
+    Set<String> globalNames = new HashSet<>(configs.keySet());
     for (InstrumentationModule module : modules) {
+      String displayName = module.getMetadata().getDisplayName();
+      String source =
+          displayName == null || displayName.isBlank()
+              ? module.getInstrumentationName()
+              : displayName;
       for (ConfigurationOption config : module.getMetadata().getConfigurations()) {
-        addConfig(tree, seenConfigs, config);
+        if (!globalNames.contains(config.declarativeName())) {
+          addConfig(configs, config, source, module.getInstrumentationName());
+        }
       }
     }
 
+    Map<String, Object> tree = new TreeMap<>();
+    configs.forEach((name, entries) ->
+        insertIntoTree(tree, "instrumentation/development." + name, mergeConfigs(name, entries)));
     return tree;
   }
 
   private static void addConfig(
-      Map<String, Object> tree, Set<String> seenConfigs, ConfigurationOption config) {
+      Map<String, List<SourcedConfig>> configs,
+      ConfigurationOption config,
+      String source,
+      String moduleName) {
     String declarativeName = config.declarativeName();
-
-    // Skip configurations that don't declare a declarative config name.
     if (declarativeName == null || declarativeName.isBlank()) {
       return;
     }
@@ -123,16 +138,62 @@ public class DeclarativeConfigYamlGenerator {
     if (config.isDeprecated() || config.defaultValue() == null) {
       return;
     }
+    configs
+        .computeIfAbsent(declarativeName, unused -> new ArrayList<>())
+        .add(new SourcedConfig(source, moduleName, config));
+  }
 
-    // Skip duplicates (e.g. common configurations shared across many modules).
-    if (!seenConfigs.add(declarativeName)) {
-      return;
+  private static ConfigValue mergeConfigs(String name, List<SourcedConfig> entries) {
+    entries.sort(
+        Comparator.comparing(SourcedConfig::source).thenComparing(SourcedConfig::moduleName));
+    ConfigurationOption first = entries.get(0).config();
+    Object value = convertValue(first);
+    Map<String, Set<String>> descriptionsBySource = new TreeMap<>();
+    for (SourcedConfig entry : entries) {
+      descriptionsBySource
+          .computeIfAbsent(entry.source(), unused -> new TreeSet<>())
+          .add(entry.config().description().strip());
     }
+    Map<String, Set<String>> sourcesByDescription = new TreeMap<>();
+    for (SourcedConfig entry : entries) {
+      ConfigurationOption config = entry.config();
+      if (declarativeType(first) != declarativeType(config)
+          || !value.equals(convertValue(config))
+          || !Objects.equals(first.declarativeSchema(), config.declarativeSchema())) {
+        throw new IllegalArgumentException(
+            "Conflicting defaults, declarative types, or schemas for "
+                + name
+                + " in "
+                + entries.get(0).moduleName()
+                + " and "
+                + entry.moduleName());
+      }
+      String source = entry.source();
+      // Several versions of a library can have the same display name but different behavior.
+      if (requireNonNull(descriptionsBySource.get(source)).size() > 1) {
+        source += " (" + entry.moduleName() + ")";
+      }
+      sourcesByDescription
+          .computeIfAbsent(config.description().strip(), unused -> new TreeSet<>())
+          .add(source);
+    }
+    String description;
+    if (sourcesByDescription.size() == 1) {
+      description = sourcesByDescription.keySet().iterator().next();
+    } else {
+      // Keep each distinct description once, qualified by all modules to which it applies.
+      List<String> descriptions = new ArrayList<>();
+      sourcesByDescription.forEach(
+          (text, sources) -> descriptions.add(String.join(", ", sources) + ":\n" + text));
+      Collections.sort(descriptions);
+      description = String.join("\n\n", descriptions);
+    }
+    return new ConfigValue(
+        value, description, isStructuredList(first) ? first.declarativeSchema() : null);
+  }
 
-    // declarative_name is relative to the "instrumentation" config node (e.g.
-    // "java.grpc.emit_message_events" or "general.http.client.request_captured_headers"),
-    // so nest it under "instrumentation" to form a complete declarative config path.
-    insertIntoTree(tree, "instrumentation/development." + declarativeName, config);
+  private static ConfigurationType declarativeType(ConfigurationOption config) {
+    return config.declarativeType() != null ? config.declarativeType() : config.type();
   }
 
   /**
@@ -140,11 +201,11 @@ public class DeclarativeConfigYamlGenerator {
    *
    * @param tree the tree to insert into
    * @param path the declarative path (e.g., "instrumentation.java.grpc.emit_message_events")
-   * @param config the configuration option
+   * @param configValue the merged configuration value and description
    */
   @SuppressWarnings("unchecked")
   private static void insertIntoTree(
-      Map<String, Object> tree, String path, ConfigurationOption config) {
+      Map<String, Object> tree, String path, ConfigValue configValue) {
 
     // Split path by dots (but not /development suffix)
     String[] parts = path.split("\\.");
@@ -180,12 +241,6 @@ public class DeclarativeConfigYamlGenerator {
 
     // Insert the final key with its value and description
     String lastPart = filteredParts.get(filteredParts.size() - 1);
-    Object value = convertValue(config);
-    ConfigValue configValue =
-        new ConfigValue(
-            value,
-            config.description(),
-            isStructuredList(config) ? config.declarativeSchema() : null);
     current.put(lastPart, configValue);
   }
 
@@ -213,8 +268,7 @@ public class DeclarativeConfigYamlGenerator {
     String defaultValue = config.defaultValue();
     // the flat type describes the system property, so prefer declarative_type when the declarative
     // form has a different shape (e.g. a comma-separated string for a flat list property)
-    ConfigurationType type =
-        config.declarativeType() != null ? config.declarativeType() : config.type();
+    ConfigurationType type = declarativeType(config);
 
     // A structured list always defaults to an empty list; the shape of an entry is documented in
     // the comment block written above the key rather than emitted as (non-default) sample config.
@@ -321,8 +375,11 @@ public class DeclarativeConfigYamlGenerator {
         }
         for (String commentLine : commentLines) {
           writer.write("  ".repeat(indent));
-          writer.write("# ");
-          writer.write(commentLine);
+          writer.write("#");
+          if (!commentLine.isEmpty()) {
+            writer.write(" ");
+            writer.write(commentLine);
+          }
           writer.write("\n");
         }
       }
@@ -529,6 +586,8 @@ public class DeclarativeConfigYamlGenerator {
     }
     return String.valueOf(value);
   }
+
+  private record SourcedConfig(String source, String moduleName, ConfigurationOption config) {}
 
   private DeclarativeConfigYamlGenerator() {}
 }
