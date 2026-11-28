@@ -16,7 +16,6 @@ import static io.opentelemetry.semconv.ServerAttributes.SERVER_PORT;
 import static io.opentelemetry.semconv.incubating.DbIncubatingAttributes.DbSystemNameIncubatingValues.REDIS;
 import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.awaitility.Awaitility.await;
 
 import com.lambdaworks.redis.ClientOptions;
 import com.lambdaworks.redis.RedisClient;
@@ -29,6 +28,7 @@ import io.opentelemetry.instrumentation.testing.junit.AgentInstrumentationExtens
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
@@ -406,7 +406,7 @@ class LettuceReactiveClientTest {
                             .subscribe(future::complete, future::completeExceptionally),
                     future::completeExceptionally));
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("1"));
+    assertThat(future).succeedsWithin(Duration.ofSeconds(10)).isEqualTo("1");
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(
             span -> span.hasName("test-parent").hasTotalAttributeCount(0),
@@ -454,7 +454,7 @@ class LettuceReactiveClientTest {
                             .subscribe(future::complete, future::completeExceptionally),
                     future::completeExceptionally));
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("1"));
+    assertThat(future).succeedsWithin(Duration.ofSeconds(10)).isEqualTo("1");
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(
             span -> span.hasName("test-parent").hasTotalAttributeCount(0),

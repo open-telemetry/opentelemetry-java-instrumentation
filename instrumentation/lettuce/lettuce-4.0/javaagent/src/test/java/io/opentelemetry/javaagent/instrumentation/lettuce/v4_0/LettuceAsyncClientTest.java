@@ -28,7 +28,6 @@ import static java.util.concurrent.TimeUnit.SECONDS;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchException;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.awaitility.Awaitility.await;
 import static org.junit.jupiter.params.provider.Arguments.argumentSet;
 
 import com.google.common.collect.ImmutableMap;
@@ -53,6 +52,7 @@ import io.opentelemetry.sdk.trace.data.SpanData;
 import io.opentelemetry.sdk.trace.data.StatusData;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -422,7 +422,7 @@ class LettuceAsyncClientTest {
           redisFuture.thenAccept(consumer);
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue("TESTVAL"));
+    assertThat(future).succeedsWithin(Duration.ofSeconds(10)).isEqualTo("TESTVAL");
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(
             span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -480,11 +480,9 @@ class LettuceAsyncClientTest {
           redisFuture.handle(firstStage).thenApply(secondStage);
         });
 
-    await()
-        .untilAsserted(() -> {
-          assertThat(future1).isCompletedWithValue(null);
-          assertThat(future2).isCompletedWithValue(successStr);
-        });
+    assertThat(CompletableFuture.allOf(future1, future2)).succeedsWithin(Duration.ofSeconds(10));
+    assertThat(future1).isCompletedWithValue(null);
+    assertThat(future2).isCompletedWithValue(successStr);
 
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(
@@ -526,7 +524,7 @@ class LettuceAsyncClientTest {
           redisFuture.whenCompleteAsync(biConsumer);
         });
 
-    await().untilAsserted(() -> assertThat(future).isCompleted());
+    assertThat(future).succeedsWithin(Duration.ofSeconds(10));
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(
             span -> span.hasName("parent").hasKind(SpanKind.INTERNAL).hasNoParent(),
@@ -571,7 +569,7 @@ class LettuceAsyncClientTest {
       return null;
     });
 
-    await().untilAsserted(() -> assertThat(future).isCompletedWithValue(TEST_HASH_MAP));
+    assertThat(future).succeedsWithin(Duration.ofSeconds(10)).isEqualTo(TEST_HASH_MAP);
 
     testing.waitAndAssertTraces(
         trace ->
