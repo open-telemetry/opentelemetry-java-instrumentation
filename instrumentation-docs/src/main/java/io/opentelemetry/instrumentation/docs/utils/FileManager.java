@@ -23,7 +23,6 @@ import javax.annotation.Nullable;
 
 public record FileManager(Path rootDir) {
   private static final Logger logger = Logger.getLogger(FileManager.class.getName());
-  private static final Pattern JAVAAGENT_SEGMENT = Pattern.compile("/javaagent");
   private static final Pattern EXCLUDED_PATH =
       Pattern.compile(
           ".*(/test/|/testing|/build/|-common/|-common-|common-|/compile-stub/|-testing|bootstrap/src|/src/).*");
@@ -72,8 +71,7 @@ public record FileManager(Path rootDir) {
       return false;
     }
 
-    int javaagentCount = JAVAAGENT_SEGMENT.split(normalized, -1).length - 1;
-    if (javaagentCount > 1) {
+    if (normalized.indexOf("/javaagent") != normalized.lastIndexOf("/javaagent")) {
       return false;
     }
 

@@ -38,13 +38,13 @@ class SuppressionListAuditorTest {
             separator,
             "# Instrumentations",
             "| Library | Instrumentation name |",
-            "| First | `first` |",
+            "| First | `zeta` |",
             "| Ignored | no code |",
             "Not a table row",
-            "  | Second | `second` |");
+            "  | Second | `alpha` |");
 
     assertThat(SuppressionListAuditor.parseDocumentationDisabledList(content))
-        .containsExactly("first", "second");
+        .containsExactly("zeta", "alpha");
   }
 
   @Test
@@ -95,41 +95,6 @@ class SuppressionListAuditorTest {
   void testGetAuditorName() {
     SuppressionListAuditor auditor = new SuppressionListAuditor();
     assertThat(auditor.getAuditorName()).isEqualTo("Suppression List Auditor");
-  }
-
-  @Test
-  void testParseDocumentationDisabledList() {
-    String testFile =
-"""
-## Enable manual instrumentation only
-
-You can suppress all auto instrumentations but have support for manual
-instrumentation with `@WithSpan` and normal API interactions by using
-`-Dotel.instrumentation.common.default-enabled=false -Dotel.instrumentation.opentelemetry-api.enabled=true -Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true`
-
-## Suppressing specific agent instrumentation
-
-You can suppress agent instrumentation of specific libraries.
-
-{{% config_option name="otel.instrumentation.[name].enabled" %}} Set to `false`
-to suppress agent instrumentation of specific libraries, where [name] is the
-corresponding instrumentation name: {{% /config_option %}}
-
-| Library/Framework                                | Instrumentation name                        |
-| ------------------------------------------------ | ------------------------------------------- |
-| Additional methods tracing                       | `methods`                                   |
-| Additional tracing annotations                   | `external-annotations`                      |
-| Akka Actor                                       | `akka-actor`                                |
-| Akka HTTP                                        | `akka-http`                                 |
-| Apache Axis2                                     | `axis2`                                     |
-| Apache Camel                                     | `camel`                                     |
-""";
-
-    var result = SuppressionListAuditor.parseDocumentationDisabledList(testFile);
-    assertThat(result).hasSize(6);
-    assertThat(result)
-        .containsExactlyInAnyOrder(
-            "methods", "external-annotations", "akka-actor", "akka-http", "axis2", "camel");
   }
 
   @Test

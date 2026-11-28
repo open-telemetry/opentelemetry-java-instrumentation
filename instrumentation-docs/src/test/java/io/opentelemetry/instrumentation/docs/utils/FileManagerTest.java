@@ -84,6 +84,14 @@ class FileManagerTest {
     assertThat(
             FileManager.isValidInstrumentationPath("/instrumentation/my-instrumentation/javaagent"))
         .isTrue();
+    assertThat(FileManager.isValidInstrumentationPath("instrumentation/example/library")).isTrue();
+    assertThat(
+            FileManager.isValidInstrumentationPath("instrumentation/javaagent-extension/library"))
+        .isTrue();
+    assertThat(
+            FileManager.isValidInstrumentationPath(
+                "instrumentation\\javaagent-extension\\javaagent"))
+        .isFalse();
     assertThat(FileManager.isValidInstrumentationPath("invalid/test/javaagent")).isFalse();
     assertThat(FileManager.isValidInstrumentationPath("/instrumentation/test/javaagent")).isFalse();
     assertThat(
