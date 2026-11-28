@@ -7,7 +7,11 @@ package io.opentelemetry.instrumentation.apachedubbo.common.v2_7;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.apachedubbo.common.v2_7.internal.DubboRegistryUtil;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
+import java.util.HashSet;
+import java.util.Set;
 import javax.annotation.Nullable;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.rpc.Invoker;
@@ -17,6 +21,20 @@ import org.apache.dubbo.rpc.service.GenericService;
 
 @AutoValue
 public abstract class DubboRequest {
+
+  private static final ClassValue<Set<String>> serviceMethods =
+      new ClassValue<Set<String>>() {
+        @Override
+        protected Set<String> computeValue(Class<?> service) {
+          Set<String> names = new HashSet<>();
+          for (Method method : service.getMethods()) {
+            if (!Modifier.isStatic(method.getModifiers())) {
+              names.add(method.getName());
+            }
+          }
+          return names;
+        }
+      };
 
   @SuppressWarnings("deprecation") // RpcContext.getContext()
   static DubboRequest create(RpcInvocation invocation, RpcContext context) {
@@ -36,15 +54,20 @@ public abstract class DubboRequest {
   static DubboRequest createForInvoker(
       RpcInvocation invocation, RpcContext context, Invoker<?> invoker) {
     URL url = invoker.getUrl();
+    Class<?> service = invoker.getInterface();
     String method = invocation.getMethodName();
+    String originalFullMethodName = null;
     Object[] arguments = invocation.getArguments();
     // GenericFilter has not necessarily converted the invocation yet.
-    if (!GenericService.class.isAssignableFrom(invoker.getInterface())
+    if (!GenericService.class.isAssignableFrom(service)
         && ("$invoke".equals(method) || "$invokeAsync".equals(method))
         && arguments != null
         && arguments.length == 3
         && arguments[0] instanceof String) {
       method = ((String) arguments[0]).trim();
+      if (!serviceMethods.get(service).contains(method)) {
+        originalFullMethodName = service.getName() + "/" + method;
+      }
     }
     return new AutoValue_DubboRequest(
         invocation,
@@ -53,8 +76,10 @@ public abstract class DubboRequest {
         context.getRemoteAddress(),
         context.getLocalAddress(),
         DubboRegistryUtil.extractRegistryAddress(invocation),
-        invoker.getInterface().getName() + "/" + method,
-        null);
+        originalFullMethodName == null
+            ? service.getName() + "/" + method
+            : DubboRpcAttributesGetter.UNKNOWN_METHOD_SPAN_NAME,
+        originalFullMethodName);
   }
 
   /** Creates a request for javaagent instrumentation when no service invoker is available. */
@@ -90,6 +115,6 @@ public abstract class DubboRequest {
   abstract String originalFullMethodName();
 
   boolean isUnknownService() {
-    return originalFullMethodName() != null;
+    return originalFullMethodName() != null && rpcMethod() == null;
   }
 }

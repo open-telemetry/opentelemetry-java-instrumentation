@@ -11,7 +11,7 @@ import org.apache.dubbo.rpc.Result;
 
 final class DubboRpcAttributesGetter implements RpcAttributesGetter<DubboRequest, Result> {
 
-  private static final String UNKNOWN_METHOD_SPAN_NAME = "_OTHER";
+  static final String UNKNOWN_METHOD_SPAN_NAME = "_OTHER";
 
   private final boolean isClient;
 
