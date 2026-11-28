@@ -102,9 +102,45 @@ release, and the agent built from the selected revision. Each variant runs 5,000
 five virtual users after a 60-second warmup. This compares a fixed amount of work, not a fixed
 request rate.
 
-The workflow summary shows request p95, JVM user CPU, and JVM GC pause time. Download
+The Petclinic summary shows request p95, JVM user CPU, and JVM GC pause time. Download
 `load-benchmark-results-*` for the revision, release tag, checksums, k6 summaries, and JFR
 recordings. Manual runs do not write to `gh-pages`.
+
+### WebFlux load
+
+Select `webflux` instead of `petclinic` in the manual workflow to run two comparisons:
+
+- **Standard:** no agent, the latest release, and the selected revision. The application uses
+  automatic context propagation in all three variants.
+- **Reactor:** the same selected revision agent in all four variants, crossing
+  `otel.instrumentation.reactor.enabled` with the application's
+  `Hooks.enableAutomaticContextPropagation()` switch.
+
+The fixture serves one seeded owner per HTTP request using Spring WebFlux and PostgreSQL via
+R2DBC. It carries a request ID in Reactor Context across a scheduler boundary and registers one
+Micrometer `ThreadLocalAccessor` for that ID. A separate probe before warmup checks both
+ThreadLocal restoration and the presence of the agent's Reactor hook. Each load request checks
+the database values and the echoed request ID regardless of propagation mode. With an agent, the
+JVM exports traces to the same OTLP collector and disables metric and log export in all variants.
+
+k6 offers 600 requests/s, one request per iteration, for a 60-second warmup and a 120-second
+measurement per variant. The run fails if a variant drops iterations, completes fewer than 72,000
+requests, or fails an HTTP or correctness check. The report shows the offered rate, requests
+completed, errors, drops, request p95, and average app JVM CPU in cores. CPU comes from the
+change in JVM process CPU time divided by the time between k6's before/after snapshots. Those
+requests do not count toward the load totals or latency. The app uses JDK 25, a 1 GiB heap, and a
+JVM active processor count of eight. Artifacts keep the two comparisons under `webflux/standard`
+and `webflux/reactor`, separate from Petclinic.
+
+To run both WebFlux comparisons locally with JDK 25 and Docker, supply a directory containing
+`release-agent.jar` and `revision-agent.jar`:
+
+```sh
+cd benchmark-overhead
+./gradlew -p webflux bootJar
+./gradlew agentLoadBenchmark -PloadBenchmarkWorkload=webflux \
+  -PloadBenchmarkAgentDir=/absolute/path/to/agent-jars
+```
 
 ## Setup and Usage
 

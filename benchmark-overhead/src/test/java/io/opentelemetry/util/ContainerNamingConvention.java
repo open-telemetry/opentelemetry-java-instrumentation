@@ -9,9 +9,11 @@ import io.opentelemetry.agents.Agent;
 
 public class ContainerNamingConvention implements NamingConvention {
   private final String dir;
+  private final String workload;
 
-  public ContainerNamingConvention(String dir) {
+  public ContainerNamingConvention(String dir, String workload) {
     this.dir = dir;
+    this.workload = workload;
   }
 
   public String k6Results(Agent agent) {
@@ -20,7 +22,7 @@ public class ContainerNamingConvention implements NamingConvention {
   }
 
   public String jfrFile(Agent agent) {
-    return String.join("/", dir, "petclinic-" + agent.getName() + ".jfr");
+    return String.join("/", dir, workload + "-" + agent.getName() + ".jfr");
   }
 
   public String startupDurationFile(Agent agent) {

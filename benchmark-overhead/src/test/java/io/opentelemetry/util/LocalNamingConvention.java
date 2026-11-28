@@ -10,9 +10,11 @@ import java.nio.file.Paths;
 
 public class LocalNamingConvention implements NamingConvention {
   private final String dir;
+  private final String workload;
 
-  public LocalNamingConvention(String dir) {
+  public LocalNamingConvention(String dir, String workload) {
     this.dir = dir;
+    this.workload = workload;
   }
 
   public String k6Results(Agent agent) {
@@ -20,7 +22,7 @@ public class LocalNamingConvention implements NamingConvention {
   }
 
   public String jfrFile(Agent agent) {
-    return Paths.get(dir, "petclinic-" + agent.getName() + ".jfr").toString();
+    return Paths.get(dir, workload + "-" + agent.getName() + ".jfr").toString();
   }
 
   public String startupDurationFile(Agent agent) {

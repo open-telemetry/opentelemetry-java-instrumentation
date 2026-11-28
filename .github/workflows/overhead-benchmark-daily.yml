@@ -4,6 +4,14 @@ on:
     # daily at 5:00 UTC
     - cron: "0 5 * * *"
   workflow_dispatch:
+    inputs:
+      workload:
+        description: Application to benchmark (WebFlux includes the four-way Reactor experiment)
+        type: choice
+        default: petclinic
+        options:
+          - petclinic
+          - webflux
 
 permissions:
   contents: read
@@ -102,9 +110,15 @@ jobs:
       - name: Build agent from dispatched revision
         run: ./gradlew :javaagent:shadowJar -PremoveJarVersionNumbers=true "-Dorg.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g" --max-workers=2
 
+      - name: Build WebFlux fixture
+        if: inputs.workload == 'webflux'
+        working-directory: benchmark-overhead
+        run: ./gradlew -p webflux bootJar
+
       - name: Package benchmark inputs
         env:
           GH_TOKEN: ${{ github.token }}
+          BENCHMARK_WORKLOAD: ${{ inputs.workload }}
         run: |
           set -euo pipefail
           inputs="$RUNNER_TEMP/load-benchmark-inputs"
@@ -118,7 +132,12 @@ jobs:
           printf '%s\n' "$release" > "$inputs/release.txt"
           git archive --format=tar HEAD benchmark-overhead .java-version buildscripts/spotless.license.java \
             | gzip -n > "$inputs/harness.tar.gz"
-          (cd "$inputs" && sha256sum revision-agent.jar release-agent.jar revision.txt release.txt harness.tar.gz > sha256.txt)
+          files=(revision-agent.jar release-agent.jar revision.txt release.txt harness.tar.gz)
+          if [[ "$BENCHMARK_WORKLOAD" == webflux ]]; then
+            cp benchmark-overhead/webflux/build/libs/webflux-benchmark.jar "$inputs/"
+            files+=(webflux-benchmark.jar)
+          fi
+          (cd "$inputs" && sha256sum "${files[@]}" > sha256.txt)
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         with:
@@ -133,6 +152,8 @@ jobs:
     permissions: {}
     runs-on: oracle-bare-metal-64cpu-1024gb-x86-64-ubuntu-24
     timeout-minutes: 45
+    env:
+      BENCHMARK_WORKLOAD: ${{ inputs.workload || 'petclinic' }}
     steps:
       - name: Isolate this attempt under runner temporary storage
         working-directory: ${{ runner.temp }}
@@ -157,23 +178,39 @@ jobs:
           distribution: temurin
           java-version-file: ${{ env.BENCHMARK_ROOT }}/.java-version
 
-      - name: Measure Petclinic load
+      - name: Measure application load
         working-directory: ${{ env.BENCHMARK_ROOT }}/benchmark-overhead
         run: |
-          mkdir -p "$BENCHMARK_ROOT/tmp" build/reports/load-benchmark
+          reports=build/reports/load-benchmark
+          images=(grafana/k6 otel/opentelemetry-collector-contrib:latest)
+          if [[ "$BENCHMARK_WORKLOAD" == webflux ]]; then
+            reports="$reports/webflux"
+            images=(grafana/k6@sha256:a5ad6bc089a08d77c3ec49f3db8c6fa7a148e4073efcac44c675dbaf3568d8e1
+                    otel/opentelemetry-collector-contrib:latest
+                    eclipse-temurin:25-jdk@sha256:ce2ef9d2d67a68de5e196d4de9d743327c44a10b57fe02ec39f572c652cacfd3)
+          fi
+          mkdir -p "$BENCHMARK_ROOT/tmp" "$reports"
           export TMPDIR="$BENCHMARK_ROOT/tmp" TMP="$BENCHMARK_ROOT/tmp" TEMP="$BENCHMARK_ROOT/tmp"
-          cp "$BENCHMARK_ROOT/"{revision.txt,release.txt,sha256.txt} build/reports/load-benchmark/
+          cp "$BENCHMARK_ROOT/"{revision.txt,release.txt,sha256.txt} "$reports/"
           printf '%s/%s/actions/runs/%s/attempts/%s\nref=%s\nrunner=%s\n' \
             "$GITHUB_SERVER_URL" "$GITHUB_REPOSITORY" "$GITHUB_RUN_ID" "$GITHUB_RUN_ATTEMPT" "$GITHUB_REF" "$RUNNER_NAME" \
-            > build/reports/load-benchmark/workflow.txt
-          { uname -smr; lscpu; java -version; docker version; } > build/reports/load-benchmark/host.txt 2>&1
-          ./gradlew --no-daemon agentLoadBenchmark "-PloadBenchmarkAgentDir=$BENCHMARK_ROOT"
+            > "$reports/workflow.txt"
+          { uname -smr; lscpu; java -version; docker version; } > "$reports/host.txt" 2>&1
+          ./gradlew --no-daemon agentLoadBenchmark "-PloadBenchmarkAgentDir=$BENCHMARK_ROOT" \
+            "-PloadBenchmarkWorkload=$BENCHMARK_WORKLOAD" \
+            "-PloadBenchmarkWebFluxJar=$BENCHMARK_ROOT/webflux-benchmark.jar"
           docker image inspect --format '{{json .RepoTags}} {{json .RepoDigests}} {{.Id}}' \
-            grafana/k6 otel/opentelemetry-collector-contrib:latest > build/reports/load-benchmark/images.txt
+            "${images[@]}" > "$reports/images.txt"
 
       - name: Publish summary
         working-directory: ${{ env.BENCHMARK_ROOT }}/benchmark-overhead
-        run: cat build/reports/load-benchmark/summary.md >> "$GITHUB_STEP_SUMMARY"
+        run: |
+          cd build/reports/load-benchmark
+          if [[ "$BENCHMARK_WORKLOAD" == webflux ]]; then
+            cat webflux/standard/summary.md webflux/reactor/summary.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            cat summary.md >> "$GITHUB_STEP_SUMMARY"
+          fi
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() && env.BENCHMARK_ROOT != '' }}
