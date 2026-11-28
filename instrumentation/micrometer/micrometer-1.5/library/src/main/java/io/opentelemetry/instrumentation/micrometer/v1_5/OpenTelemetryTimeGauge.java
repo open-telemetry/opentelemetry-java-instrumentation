@@ -7,9 +7,11 @@ package io.opentelemetry.instrumentation.micrometer.v1_5;
 
 import io.micrometer.core.instrument.AbstractMeter;
 import io.micrometer.core.instrument.TimeGauge;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.TimeUnit;
 
-final class OpenTelemetryTimeGauge extends AbstractMeter implements TimeGauge, RemovableMeter {
+final class OpenTelemetryTimeGauge extends AbstractMeter
+    implements TimeGauge, RemovableMeter, OpenTelemetryInstrument {
 
   private final OpenTelemetryGauge<?> gauge;
   private final TimeUnit baseTimeUnit;
