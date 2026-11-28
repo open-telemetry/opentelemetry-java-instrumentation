@@ -19,8 +19,6 @@ final class RocketMqProducerExperimentalAttributeExtractor
   private static final AttributeKey<String> ROCKETMQ_MESSAGE_TAG =
       AttributeKey.stringKey("rocketmq.message.tag");
 
-  private static final AttributeKey<String> ROCKETMQ_BROKER_ADDRESS =
-      AttributeKey.stringKey("rocketmq.broker_address");
   private static final AttributeKey<String> ROCKETMQ_SEND_RESULT =
       AttributeKey.stringKey("rocketmq.send_result");
 
@@ -31,7 +29,6 @@ final class RocketMqProducerExperimentalAttributeExtractor
         && !RocketMqBatchSendSpanLinksExtractor.isBatchRequest(request)) {
       attributes.put(ROCKETMQ_MESSAGE_TAG, request.getMessage().getTags());
     }
-    attributes.put(ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
   }
 
   @Override
@@ -41,7 +38,6 @@ final class RocketMqProducerExperimentalAttributeExtractor
       SendMessageContext request,
       @Nullable Void unused,
       @Nullable Throwable error) {
-    attributes.put(ROCKETMQ_BROKER_ADDRESS, request.getBrokerAddr());
     if (request.getSendResult() != null) {
       attributes.put(ROCKETMQ_SEND_RESULT, request.getSendResult().getSendStatus().name());
     }

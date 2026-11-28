@@ -5,10 +5,14 @@
 
 package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
+import static java.util.Objects.requireNonNull;
+
 import io.opentelemetry.api.OpenTelemetry;
+import io.opentelemetry.api.common.Attributes;
 import io.opentelemetry.context.propagation.TextMapPropagator;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.api.instrumenter.Instrumenter;
+import org.apache.rocketmq.client.ClientConfig;
 import org.apache.rocketmq.client.hook.ConsumeMessageHook;
 import org.apache.rocketmq.client.hook.SendMessageContext;
 import org.apache.rocketmq.client.hook.SendMessageHook;
@@ -49,9 +53,25 @@ public final class RocketMqTelemetry {
   /**
    * Returns a new {@link ConsumeMessageHook} for use with methods like {@link
    * org.apache.rocketmq.client.impl.consumer.DefaultMQPullConsumerImpl#registerConsumeMessageHook(ConsumeMessageHook)}.
+   *
+   * <p>Use {@link #createConsumeMessageHook(ClientConfig)} to capture configured NameServer
+   * endpoints.
    */
   public ConsumeMessageHook createConsumeMessageHook() {
-    return new TracingConsumeMessageHookImpl(rocketMqConsumerInstrumenter);
+    return new TracingConsumeMessageHookImpl(rocketMqConsumerInstrumenter, Attributes.empty());
+  }
+
+  /**
+   * Returns a consume hook using the client's configured NameServer endpoints.
+   *
+   * <p>Configure the client before calling this method. The hook captures a snapshot of the
+   * configuration and should be registered on that client.
+   */
+  public ConsumeMessageHook createConsumeMessageHook(ClientConfig clientConfig) {
+    requireNonNull(clientConfig, "clientConfig");
+    return new TracingConsumeMessageHookImpl(
+        rocketMqConsumerInstrumenter,
+        RocketMqServerAttributesHelper.createAttributes(clientConfig.getNamesrvAddr()));
   }
 
   /**

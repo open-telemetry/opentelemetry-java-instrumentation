@@ -7,6 +7,7 @@ package io.opentelemetry.instrumentation.rocketmqclient.v4_8;
 
 import static java.util.Collections.singletonList;
 
+import io.opentelemetry.api.common.Attributes;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -21,6 +22,7 @@ final class RocketMqConsumerRequest {
   private final String consumerGroup;
   private final int batchSize;
   @Nullable private final String namespace;
+  private Attributes serverAttributes = Attributes.empty();
   private boolean destinationInitialized;
   @Nullable private String destination;
   private boolean messageIdInitialized;
@@ -49,6 +51,14 @@ final class RocketMqConsumerRequest {
     this.consumerGroup = RocketMqNamespaceUtil.withoutNamespace(consumerGroup, namespace);
     this.batchSize = batchSize;
     this.namespace = namespace;
+  }
+
+  Attributes getServerAttributes() {
+    return serverAttributes;
+  }
+
+  void setServerAttributes(Attributes serverAttributes) {
+    this.serverAttributes = serverAttributes;
   }
 
   MessageExt getMessage() {

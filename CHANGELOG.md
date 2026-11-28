@@ -4,6 +4,11 @@
 
 ### ⚠️ Breaking changes
 
+- RocketMQ Remoting instrumentation replaces `rocketmq.broker_address` with
+  `network.peer.address` and `network.peer.port` on send spans, removes it from process spans without
+  a replacement, and captures configured NameServer endpoints, including their ports, in
+  `server.address` by default.
+
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
   by method, protocol version, and URL scheme.

@@ -46,11 +46,15 @@ producer.send(messages);
 producer.shutdown();
 ```
 
-Register a consume hook on the consumer implementation:
+Send-span broker peer attributes use the SDK send-hook address and may differ from the final
+connection peer after retries.
+
+Configure the consumer before creating its consume hook. The hook captures a snapshot of the
+configured NameServer endpoints:
 
 ```java
 pushConsumer.getDefaultMQPushConsumerImpl()
-    .registerConsumeMessageHook(telemetry.createConsumeMessageHook());
+    .registerConsumeMessageHook(telemetry.createConsumeMessageHook(pushConsumer));
 ```
 
 ## Reported errors
