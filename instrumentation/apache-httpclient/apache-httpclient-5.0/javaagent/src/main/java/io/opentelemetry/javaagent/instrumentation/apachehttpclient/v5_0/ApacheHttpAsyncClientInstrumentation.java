@@ -79,7 +79,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       WrappedFutureCallback<?> wrappedFutureCallback =
           new WrappedFutureCallback<>(parentContext, httpContext, futureCallback);
       return new Object[] {
-        new DelegatingRequestProducer(parentContext, requestProducer, wrappedFutureCallback),
+        new DelegatingRequestProducer(requestProducer, wrappedFutureCallback),
         httpContext,
         wrappedFutureCallback
       };
@@ -87,15 +87,11 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
   }
 
   public static class DelegatingRequestProducer implements AsyncRequestProducer {
-    private final Context parentContext;
     private final AsyncRequestProducer delegate;
     private final WrappedFutureCallback<?> wrappedFutureCallback;
 
     public DelegatingRequestProducer(
-        Context parentContext,
-        AsyncRequestProducer delegate,
-        WrappedFutureCallback<?> wrappedFutureCallback) {
-      this.parentContext = parentContext;
+        AsyncRequestProducer delegate, WrappedFutureCallback<?> wrappedFutureCallback) {
       this.delegate = delegate;
       this.wrappedFutureCallback = wrappedFutureCallback;
     }
@@ -109,7 +105,7 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     public void sendRequest(RequestChannel channel, HttpContext context)
         throws HttpException, IOException {
       DelegatingRequestChannel requestChannel =
-          new DelegatingRequestChannel(channel, parentContext, wrappedFutureCallback);
+          new DelegatingRequestChannel(channel, wrappedFutureCallback);
       delegate.sendRequest(requestChannel, context);
     }
 
@@ -136,25 +132,18 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
 
   public static class DelegatingRequestChannel implements RequestChannel {
     private final RequestChannel delegate;
-    private final Context parentContext;
     private final WrappedFutureCallback<?> wrappedFutureCallback;
 
     public DelegatingRequestChannel(
-        RequestChannel requestChannel,
-        Context parentContext,
-        WrappedFutureCallback<?> wrappedFutureCallback) {
+        RequestChannel requestChannel, WrappedFutureCallback<?> wrappedFutureCallback) {
       this.delegate = requestChannel;
-      this.parentContext = parentContext;
       this.wrappedFutureCallback = wrappedFutureCallback;
     }
 
     @Override
     public void sendRequest(HttpRequest request, EntityDetails entityDetails, HttpContext context)
         throws HttpException, IOException {
-      if (instrumenter().shouldStart(parentContext, request)) {
-        wrappedFutureCallback.context = instrumenter().start(parentContext, request);
-        wrappedFutureCallback.httpRequest = request;
-      }
+      wrappedFutureCallback.startSpan(request);
 
       delegate.sendRequest(request, entityDetails, context);
     }
@@ -166,8 +155,14 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
     private final HttpContext httpContext;
     @Nullable private final FutureCallback<T> delegate;
 
-    @Nullable private volatile Context context;
-    @Nullable private volatile HttpRequest httpRequest;
+    private final Object lock = new Object();
+    // Guarded by lock. Terminal delivery may precede or overlap span creation.
+    private boolean startClaimed;
+    private boolean completed;
+    @Nullable private Context context;
+    @Nullable private HttpRequest httpRequest;
+    @Nullable private HttpResponse terminalResponse;
+    @Nullable private Exception terminalException;
 
     public WrappedFutureCallback(
         Context parentContext, HttpContext httpContext, @Nullable FutureCallback<T> delegate) {
@@ -177,10 +172,49 @@ class ApacheHttpAsyncClientInstrumentation implements TypeInstrumentation {
       this.delegate = delegate;
     }
 
-    private void endSpan(Exception exception) {
-      // context is null here when the span creation was suppressed
-      if (context != null) {
-        instrumenter().end(context, httpRequest, getResponseFromHttpContext(), exception);
+    private void startSpan(HttpRequest request) {
+      synchronized (lock) {
+        if (completed || startClaimed) {
+          return;
+        }
+        startClaimed = true;
+      }
+
+      if (!instrumenter().shouldStart(parentContext, request)) {
+        return;
+      }
+      Context startedContext = instrumenter().start(parentContext, request);
+      HttpResponse response;
+      Exception exception;
+      synchronized (lock) {
+        if (!completed) {
+          context = startedContext;
+          httpRequest = request;
+          return;
+        }
+        response = terminalResponse;
+        exception = terminalException;
+      }
+      // Completion cannot wait for start: the starter owns ending an unpublished span.
+      instrumenter().end(startedContext, request, response, exception);
+    }
+
+    private void endSpan(@Nullable Exception exception) {
+      HttpResponse response = getResponseFromHttpContext();
+      Context startedContext;
+      HttpRequest request;
+      synchronized (lock) {
+        completed = true;
+        terminalResponse = response;
+        terminalException = exception;
+        startedContext = context;
+        request = httpRequest;
+        context = null;
+        httpRequest = null;
+      }
+      // context is null here when suppressed, not yet claimed, or still being started.
+      if (startedContext != null) {
+        instrumenter().end(startedContext, request, response, exception);
       }
     }
 
