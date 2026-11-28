@@ -5,9 +5,12 @@
 
 package io.opentelemetry.javaagent.instrumentation.micrometer.v1_5;
 
+import static java.util.concurrent.TimeUnit.MILLISECONDS;
+
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.Metrics;
+import io.micrometer.core.instrument.TimeGauge;
 import java.util.concurrent.atomic.AtomicLong;
 
 public final class GaugeRegistrar {
@@ -21,6 +24,11 @@ public final class GaugeRegistrar {
             ? Metrics.globalRegistry
             : Metrics.globalRegistry.getRegistries().iterator().next();
     Gauge.builder(metricName, VALUE, AtomicLong::doubleValue).register(registry);
+  }
+
+  public static void registerTimeGauge(String metricName) {
+    MeterRegistry registry = Metrics.globalRegistry.getRegistries().iterator().next();
+    TimeGauge.builder(metricName, VALUE, MILLISECONDS, AtomicLong::doubleValue).register(registry);
   }
 
   private GaugeRegistrar() {}

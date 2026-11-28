@@ -17,14 +17,17 @@ import io.micrometer.core.instrument.LongTaskTimer;
 import io.micrometer.core.instrument.Measurement;
 import io.micrometer.core.instrument.Meter;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.TimeGauge;
 import io.micrometer.core.instrument.Timer;
 import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.distribution.HistogramGauges;
 import io.micrometer.core.instrument.distribution.pause.PauseDetector;
+import io.micrometer.core.instrument.util.TimeUtils;
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.ObservableCallbackRegistrar;
 import java.util.List;
+import java.util.Locale;
 import java.util.concurrent.TimeUnit;
 import java.util.function.ToDoubleFunction;
 import java.util.function.ToLongFunction;
@@ -109,9 +112,31 @@ public final class OpenTelemetryMeterRegistry extends MeterRegistry {
         config().namingConvention(),
         obj,
         valueFunction,
+        valueFunction.getClass(),
         otelMeter,
         bridging,
         observableCallbackRegistrar);
+  }
+
+  @Override
+  protected <T> TimeGauge newTimeGauge(
+      Meter.Id id, T obj, TimeUnit timeFunctionUnit, ToDoubleFunction<T> valueFunction) {
+    TimeUnit baseTimeUnit = getBaseTimeUnit();
+    Meter.Id idWithBaseUnit = id.withBaseUnit(baseTimeUnit.toString().toLowerCase(Locale.ROOT));
+    ToDoubleFunction<T> convertedFunction =
+        value ->
+            TimeUtils.convert(valueFunction.applyAsDouble(value), timeFunctionUnit, baseTimeUnit);
+    OpenTelemetryGauge<T> gauge =
+        new OpenTelemetryGauge<>(
+            idWithBaseUnit,
+            config().namingConvention(),
+            obj,
+            convertedFunction,
+            valueFunction.getClass(),
+            otelMeter,
+            bridging,
+            observableCallbackRegistrar);
+    return new OpenTelemetryTimeGauge(gauge, baseTimeUnit);
   }
 
   @Override

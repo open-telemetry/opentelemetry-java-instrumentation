@@ -55,6 +55,21 @@ class MicrometerCallbackGcCloseTest {
     }
   }
 
+  @Test
+  void timeGaugeCallbackDoesNotRetainPluginWhenMicrometerStaysLoaded() throws Exception {
+    String metricName = "test.micrometer.shared.time-gauge.gc.close";
+    try (URLClassLoader micrometerLoader = newMicrometerClassLoader()) {
+      WeakReference<ClassLoader> pluginLoader =
+          registerTimeGaugeAndAssert(metricName, micrometerLoader);
+
+      GcUtils.awaitGc(pluginLoader, Duration.ofSeconds(10));
+
+      testing.clearData();
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME, metricName, AbstractIterableAssert::isEmpty);
+    }
+  }
+
   private static LoaderReferences registerGaugeInDisposableMicrometer(String metricName)
       throws Exception {
     try (URLClassLoader micrometerLoader = newMicrometerClassLoader()) {
@@ -100,6 +115,40 @@ class MicrometerCallbackGcCloseTest {
                   .hasName(metricName)
                   .hasDoubleGaugeSatisfying(
                       gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(42))));
+
+      return new WeakReference<>(pluginLoader);
+    }
+  }
+
+  private static WeakReference<ClassLoader> registerTimeGaugeAndAssert(
+      String metricName, ClassLoader micrometerLoader) throws Exception {
+    URL testClasses = GaugeRegistrar.class.getProtectionDomain().getCodeSource().getLocation();
+    try (URLClassLoader pluginLoader =
+        new ChildFirstGaugeClassLoader(new URL[] {testClasses}, micrometerLoader)) {
+      Class<?> registrar = pluginLoader.loadClass(GaugeRegistrar.class.getName());
+      assertThat(registrar.getClassLoader()).isSameAs(pluginLoader);
+      assertThat(
+              Class.forName("io.micrometer.core.instrument.Metrics", false, pluginLoader)
+                  .getClassLoader())
+          .isSameAs(micrometerLoader);
+
+      Thread thread = Thread.currentThread();
+      ClassLoader originalContextClassLoader = thread.getContextClassLoader();
+      try {
+        thread.setContextClassLoader(null);
+        registrar.getMethod("registerTimeGauge", String.class).invoke(null, metricName);
+      } finally {
+        thread.setContextClassLoader(originalContextClassLoader);
+      }
+
+      testing.waitAndAssertMetrics(
+          INSTRUMENTATION_NAME,
+          metric ->
+              metric
+                  .hasName(metricName)
+                  .hasUnit("seconds")
+                  .hasDoubleGaugeSatisfying(
+                      gauge -> gauge.hasPointsSatisfying(point -> point.hasValue(0.042))));
 
       return new WeakReference<>(pluginLoader);
     }
