@@ -7,7 +7,6 @@ plugins {
 testing.suites {
   unitTests {
     dependencies {
-      implementation(project(":javaagent-bootstrap"))
       implementation(project(":javaagent-extension-api"))
       implementation(project(":muzzle"))
     }
@@ -18,7 +17,7 @@ muzzle {
   pass {
     group.set("org.restlet")
     module.set("org.restlet")
-    versions.set("[2.5.0,3.0.0-m1)")
+    versions.set("[2.5.0,)")
     assertInverse.set(true)
   }
 }

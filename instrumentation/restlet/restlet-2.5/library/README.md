@@ -1,4 +1,4 @@
-# Library Instrumentation for Restlet 2.5.0 and later 2.x releases
+# Library Instrumentation for Restlet 2.5.0 and later releases
 
 Provides OpenTelemetry instrumentation for [Restlet](https://restlet.github.io/), enabling HTTP
 server spans and metrics.
