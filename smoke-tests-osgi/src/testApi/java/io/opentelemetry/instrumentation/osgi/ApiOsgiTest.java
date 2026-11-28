@@ -37,7 +37,7 @@ class ApiOsgiTest {
     SpanNameExtractor<String> nameExtractor = request -> request;
     Instrumenter<String, String> instrumenter =
         Instrumenter.<String, String>builder(OpenTelemetry.noop(), "test", nameExtractor)
-            .buildServerInstrumenter(NoopGetter.INSTANCE);
+            .buildServerInstrumenter(new NoopGetter());
     assertNotNull(instrumenter);
   }
 
@@ -46,8 +46,7 @@ class ApiOsgiTest {
     assertEquals("io.opentelemetry.instrumentation.annotations.WithSpan", WithSpan.class.getName());
   }
 
-  private enum NoopGetter implements TextMapGetter<String> {
-    INSTANCE;
+  private static final class NoopGetter implements TextMapGetter<String> {
 
     @Override
     public Iterable<String> keys(String carrier) {

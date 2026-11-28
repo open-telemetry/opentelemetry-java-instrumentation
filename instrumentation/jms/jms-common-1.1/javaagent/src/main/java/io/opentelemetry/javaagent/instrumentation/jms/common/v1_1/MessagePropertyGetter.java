@@ -12,9 +12,7 @@ import io.opentelemetry.context.propagation.TextMapGetter;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 
-enum MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
-  INSTANCE;
-
+final class MessagePropertyGetter implements TextMapGetter<MessageWithDestination> {
   private static final Logger logger = Logger.getLogger(MessagePropertyGetter.class.getName());
 
   @Override
