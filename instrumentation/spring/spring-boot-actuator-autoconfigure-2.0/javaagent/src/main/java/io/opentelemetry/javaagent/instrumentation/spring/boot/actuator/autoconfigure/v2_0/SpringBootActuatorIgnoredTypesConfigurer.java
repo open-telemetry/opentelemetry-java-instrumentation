@@ -15,5 +15,11 @@ public class SpringBootActuatorIgnoredTypesConfigurer implements IgnoredTypesCon
   @Override
   public void configure(IgnoredTypesBuilder builder) {
     builder.allowClass("org.springframework.boot.autoconfigure.AutoConfigurationImportSelector");
+    builder.allowClass(
+        "org.springframework.boot.actuate.autoconfigure.metrics.MetricsAutoConfiguration$MeterRegistryCloser");
+    builder.allowClass(
+        "org.springframework.boot.micrometer.metrics.autoconfigure.MetricsAutoConfiguration$MeterRegistryCloser");
+    builder.allowClass(
+        "org.springframework.boot.micrometer.metrics.autoconfigure.MeterRegistryCloser");
   }
 }

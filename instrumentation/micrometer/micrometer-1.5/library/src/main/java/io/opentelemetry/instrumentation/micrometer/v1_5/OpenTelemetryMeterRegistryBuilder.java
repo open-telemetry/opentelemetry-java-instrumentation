@@ -16,6 +16,7 @@ import io.opentelemetry.api.metrics.MeterBuilder;
 import io.opentelemetry.instrumentation.api.internal.EmbeddedInstrumentationProperties;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Internal;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.ObservableCallbackRegistrar;
 import java.util.concurrent.TimeUnit;
 
 /** A builder of {@link OpenTelemetryMeterRegistry}. */
@@ -33,6 +34,9 @@ public final class OpenTelemetryMeterRegistryBuilder {
         (builder, enabled) -> builder.histogramGaugesEnabled = enabled);
     Internal.internalSetMetersHiddenFromSearch(
         (builder, hidden) -> builder.metersHiddenFromSearch = hidden);
+    Internal.internalSetCloseDisabled((builder, disabled) -> builder.closeDisabled = disabled);
+    Internal.internalSetObservableCallbackRegistrar(
+        (builder, registrar) -> builder.observableCallbackRegistrar = registrar);
   }
 
   private final OpenTelemetry openTelemetry;
@@ -41,6 +45,9 @@ public final class OpenTelemetryMeterRegistryBuilder {
   private boolean prometheusMode = false;
   private boolean histogramGaugesEnabled = false;
   private boolean metersHiddenFromSearch = false;
+  private boolean closeDisabled = false;
+  private ObservableCallbackRegistrar observableCallbackRegistrar =
+      ObservableCallbackRegistrar.direct();
 
   OpenTelemetryMeterRegistryBuilder(OpenTelemetry openTelemetry) {
     this.openTelemetry = openTelemetry;
@@ -78,6 +85,8 @@ public final class OpenTelemetryMeterRegistryBuilder {
         namingConvention,
         modifier,
         metersHiddenFromSearch,
+        closeDisabled,
+        observableCallbackRegistrar,
         meterBuilder.build());
   }
 }
