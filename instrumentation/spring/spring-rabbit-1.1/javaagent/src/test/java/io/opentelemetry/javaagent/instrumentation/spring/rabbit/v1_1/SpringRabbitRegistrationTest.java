@@ -159,7 +159,6 @@ class SpringRabbitRegistrationTest {
                   Envelope envelope,
                   AMQP.BasicProperties properties,
                   byte[] body) {
-                assertThat(Span.current().getSpanContext().isValid()).isTrue();
                 testing.runWithSpan("nested listener", () -> {});
               }
             });

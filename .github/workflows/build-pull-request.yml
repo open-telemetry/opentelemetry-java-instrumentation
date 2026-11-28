@@ -62,6 +62,7 @@ jobs:
           native_files=$(grep -Ev '^instrumentation/spring/.+/javaagent/' <<<"$files" || true)
           native='^instrumentation/logback/logback-appender-1\.0/library/'
           native+='|^instrumentation/jdbc/library/'
+          native+='|^instrumentation/runtime-telemetry/library/'
           native+='|^instrumentation/spring/'
           native+='|^smoke-tests-otel-starter/'
           native+='|^conventions/'

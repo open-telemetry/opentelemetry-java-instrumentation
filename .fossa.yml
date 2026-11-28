@@ -138,9 +138,6 @@ targets:
       target: ':instrumentation:guava-10.0:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:guava-10.0:library'
-    - type: gradle
-      path: ./
       target: ':instrumentation:gwt-2.0:javaagent'
     - type: gradle
       path: ./
@@ -1191,7 +1188,13 @@ targets:
       target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-2.0:javaagent'
     - type: gradle
       path: ./
+      target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-3.0:library'
+    - type: gradle
+      path: ./
       target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-common:library'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-cloud-gateway:spring-cloud-gateway-webmvc-4.3:javaagent'

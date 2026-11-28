@@ -151,9 +151,9 @@ public final class GrpcTelemetryBuilder {
    *
    * <p>Header keys and selector patterns are matched case-insensitively. {@code ?} matches any
    * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No headers are captured unless a selector is
-   * configured; a selector with only excluded patterns captures every ASCII header key that it does
-   * not exclude.
+   * patterns take precedence over included patterns. No request headers are captured unless
+   * included or excluded patterns are configured, and {@code *} captures all ASCII request headers.
+   * If only excluded patterns are configured, all other ASCII request headers are captured.
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setClientRequestHeaders(IncludeExclude clientRequestHeaders) {
@@ -166,9 +166,9 @@ public final class GrpcTelemetryBuilder {
    *
    * <p>Header keys and selector patterns are matched case-insensitively. {@code ?} matches any
    * single character and {@code *} matches any number of characters, including none. Excluded
-   * patterns take precedence over included patterns. No headers are captured unless a selector is
-   * configured; a selector with only excluded patterns captures every ASCII header key that it does
-   * not exclude.
+   * patterns take precedence over included patterns. No request headers are captured unless
+   * included or excluded patterns are configured, and {@code *} captures all ASCII request headers.
+   * If only excluded patterns are configured, all other ASCII request headers are captured.
    */
   @CanIgnoreReturnValue
   public GrpcTelemetryBuilder setServerRequestHeaders(IncludeExclude serverRequestHeaders) {

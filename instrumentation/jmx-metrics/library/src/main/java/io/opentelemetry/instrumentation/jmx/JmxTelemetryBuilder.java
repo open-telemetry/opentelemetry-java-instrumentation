@@ -14,6 +14,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.common.ComponentLoader;
 import io.opentelemetry.instrumentation.api.config.IncludeExclude;
 import io.opentelemetry.instrumentation.jmx.internal.ExperimentalJmxMetricHandler;
+import io.opentelemetry.instrumentation.jmx.internal.Internal;
 import io.opentelemetry.instrumentation.jmx.internal.InternalMetricsDefinitions;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricConfiguration;
 import io.opentelemetry.instrumentation.jmx.internal.engine.MetricDef;
@@ -28,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
@@ -39,6 +41,10 @@ public final class JmxTelemetryBuilder {
       IncludeExclude.builder().setExcluded("*").build();
 
   private static final Logger logger = Logger.getLogger(JmxTelemetryBuilder.class.getName());
+
+  static {
+    Internal.internalSetAddRule(JmxTelemetryBuilder::addRule);
+  }
 
   private final OpenTelemetry openTelemetry;
   private final List<MetricDef> userMetricDefs = new ArrayList<>();
@@ -115,6 +121,16 @@ public final class JmxTelemetryBuilder {
     } catch (IOException e) {
       throw new IllegalArgumentException("Unable to load JMX rules from: " + path, e);
     }
+  }
+
+  private void addRule(Map<String, Object> rule) {
+    if (rule == null) {
+      throw new IllegalArgumentException("missing JMX rule");
+    }
+    MetricDef metricDef = RuleParser.get().createMetricDef(rule);
+    userMetricDefs.add(metricDef);
+    registeredMetrics.addAll(metricDef.getMetricNames());
+    registeredHandlers.addAll(metricDef.getHandlerNames());
   }
 
   /**
