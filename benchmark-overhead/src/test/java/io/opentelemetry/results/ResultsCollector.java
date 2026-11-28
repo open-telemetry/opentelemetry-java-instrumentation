@@ -29,11 +29,13 @@ public class ResultsCollector {
     this.runDurations = runDurations;
   }
 
-  public List<AppPerfResults> collect(TestConfig config) {
-    return config.getAgents().stream().map(a -> readAgentResults(a, config)).collect(toList());
+  public List<AppPerfResults> collect(TestConfig config, boolean manualRun) {
+    return config.getAgents().stream()
+        .map(agent -> readAgentResults(agent, config, manualRun))
+        .collect(toList());
   }
 
-  private AppPerfResults readAgentResults(Agent agent, TestConfig config) {
+  private AppPerfResults readAgentResults(Agent agent, TestConfig config, boolean manualRun) {
     try {
       AppPerfResults.Builder builder =
           AppPerfResults.builder()
@@ -42,8 +44,8 @@ public class ResultsCollector {
               .config(config);
 
       builder = addStartupTime(builder, agent);
-      builder = addK6Results(builder, agent);
-      builder = addJfrResults(builder, agent);
+      builder = addK6Results(builder, agent, config, manualRun);
+      builder = addJfrResults(builder, agent, manualRun);
 
       return builder.build();
     } catch (IOException e) {
@@ -58,10 +60,14 @@ public class ResultsCollector {
     return builder.startupDurationMs(startupDuration);
   }
 
-  private AppPerfResults.Builder addK6Results(AppPerfResults.Builder builder, Agent agent)
+  private AppPerfResults.Builder addK6Results(
+      AppPerfResults.Builder builder, Agent agent, TestConfig config, boolean verifyIterations)
       throws IOException {
     Path k6File = Path.of(namingConvention.k6Results(agent));
     String json = new String(Files.readAllBytes(k6File));
+    if (verifyIterations) {
+      verifyIterations(json, config.getTotalIterations(), agent.getName());
+    }
     double iterationAvg = read(json, "$.metrics.iteration_duration.avg");
     double iterationP95 = read(json, "$.metrics.iteration_duration['p(95)']");
     double requestAvg = read(json, "$.metrics.http_req_duration.avg");
@@ -73,14 +79,22 @@ public class ResultsCollector {
         .requestP95(requestP95);
   }
 
+  static void verifyIterations(String json, int expected, String agent) {
+    double completed = read(json, "$.metrics.iterations.count");
+    if (completed != expected) {
+      throw new IllegalStateException(
+          agent + " completed " + completed + " of " + expected + " k6 iterations");
+    }
+  }
+
   private static double read(String json, String jsonPath) {
     // JsonPath.read returns either Double or BigDecimal
     Number result = JsonPath.read(json, jsonPath);
     return result.doubleValue();
   }
 
-  private AppPerfResults.Builder addJfrResults(AppPerfResults.Builder builder, Agent agent)
-      throws IOException {
+  private AppPerfResults.Builder addJfrResults(
+      AppPerfResults.Builder builder, Agent agent, boolean manualRun) throws IOException {
     Path jfrFile = Path.of(namingConvention.jfrFile(agent));
     return builder
         .totalGCTime(readTotalGCTime(jfrFile))
@@ -93,7 +107,10 @@ public class ResultsCollector {
         .averageJvmUserCpu(computeAverageJvmUserCpu(jfrFile))
         .maxJvmUserCpu(computeMaxJvmUserCpu(jfrFile))
         .averageMachineCpuTotal(computeAverageMachineCpuTotal(jfrFile))
-        .totalGcPauseNanos(computeTotalGcPauseNanos(jfrFile));
+        .totalGcPauseNanos(
+            manualRun
+                ? JFRUtils.sumEventDurationNanos(jfrFile, "jdk.GCPhasePause")
+                : computeTotalGcPauseNanos(jfrFile));
   }
 
   private long readTotalGCTime(Path jfrFile) throws IOException {
