@@ -374,6 +374,17 @@ instrumentation/development:
         # matches any number of characters and "?" matches one character. All metrics are collected
         # unless included or excluded patterns are configured.
         included: []
+
+      # Inline JMX metric definitions, using the same rule syntax as JMX metric definition YAML
+      # files. These rules are added to any rules loaded from files.
+      # Each list entry is an object with the following properties:
+      #   bean (string): MBean ObjectName or pattern to match.
+      #   mapping (object): MBean attribute names mapped to metric definitions.
+      # Example:
+      #   rules:
+      #     - bean: java.lang:type=Threading
+      #       mapping: {ThreadCount: {metric: app.thread.count, type: updowncounter, desc: The current number of threads, unit: '1'}}
+      rules: []
     jsp:
       # Enables experimental span attributes `jsp.forwardOrigin`, `jsp.requestURL`, `jsp.compiler`,
       # and `jsp.classFQCN`.
@@ -478,7 +489,15 @@ instrumentation/development:
       # Enables adding baggage entries to the Logback MDC, prefixed with "baggage.".
       add_baggage: false
     methods:
-      # Semicolon-separated list of fully qualified class and method patterns to instrument.
+      # Selects the classes and methods to instrument.
+      # Each list entry is an object with the following properties:
+      #   class (string, required): Fully qualified class name to instrument.
+      #   methods (array, required): Method objects with a required name and an optional span_kind
+      #     (default INTERNAL).
+      # Example:
+      #   include:
+      #     - class: com.example.MyClass
+      #       methods: [{name: method1, span_kind: INTERNAL}]
       include: []
     micrometer:
       # Sets the base time unit for the OpenTelemetry MeterRegistry. Supported values: ns, us, ms,
@@ -530,9 +549,8 @@ instrumentation/development:
         # Enables the creation of Connect and DNS spans.
         enabled: false
     rocketmq_client:
-      # Enables capturing experimental span attributes `rocketmq.message.tag`,
-      # `rocketmq.broker_address`, `rocketmq.send_result`, `rocketmq.queue_id`, and
-      # `rocketmq.queue_offset`.
+      # Enables capturing experimental attributes `rocketmq.message.lite_topic` and
+      # `rocketmq.message.priority` on messaging spans and receive-span links.
       experimental_span_attributes/development: false
     runtime_telemetry:
       # Enables the capture of experimental JFR-based JVM runtime metrics on Java 17+.

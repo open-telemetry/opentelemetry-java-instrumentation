@@ -168,6 +168,29 @@ definitions:
             type: boolean
             description: Whether this rule overrides an already-applied template.
             default: false
+    java.jmx.rules:
+      declarative_name: java.jmx.rules
+      description: |
+        Inline JMX metric definitions, using the same rule syntax as JMX metric definition YAML files. These rules are added to any rules loaded from files.
+      type: list
+      default: ''
+      declarative_type: structured_list
+      declarative_schema:
+        type: object
+        properties:
+          bean:
+            type: string
+            description: MBean ObjectName or pattern to match.
+            example: java.lang:type=Threading
+          mapping:
+            type: object
+            description: MBean attribute names mapped to metric definitions.
+            example:
+              ThreadCount:
+                metric: app.thread.count
+                type: updowncounter
+                desc: The current number of threads
+                unit: '1'
     messaging.batch-send.message-creation-spans.enabled:
       name: otel.instrumentation.common.messaging.message-create-spans.enabled
       declarative_name: java.common.messaging.message_create_spans.enabled
@@ -948,13 +971,30 @@ definitions:
     otel.instrumentation.methods.include:
       name: otel.instrumentation.methods.include
       declarative_name: java.methods.include
-      description: Semicolon-separated list of fully qualified class and method patterns
-        to instrument.
+      description: Selects the classes and methods to instrument.
       type: list
       default: ''
       examples:
       - com.example.MyClass[method1]
       - com.example.MyClass[method1,method2];com.example.OtherClass[call]
+      declarative_type: structured_list
+      declarative_schema:
+        type: object
+        required:
+        - class
+        - methods
+        properties:
+          class:
+            type: string
+            description: Fully qualified class name to instrument.
+            example: com.example.MyClass
+          methods:
+            type: array
+            description: Method objects with a required name and an optional span_kind
+              (default INTERNAL).
+            example:
+            - name: method1
+              span_kind: INTERNAL
     otel.instrumentation.micrometer.base-time-unit:
       name: otel.instrumentation.micrometer.base-time-unit
       declarative_name: java.micrometer.base_time_unit
@@ -1094,7 +1134,14 @@ definitions:
         Enables collection of process command-line resource attributes. These attributes are not collected by default because they may contain sensitive information.
       type: boolean
       default: false
-    otel.instrumentation.rocketmq-client.experimental-span-attributes:
+    otel.instrumentation.rocketmq-client.experimental-span-attributes-a6045195:
+      name: otel.instrumentation.rocketmq-client.experimental-span-attributes
+      declarative_name: java.rocketmq_client.experimental_span_attributes/development
+      description: |
+        Enables capturing experimental attributes `rocketmq.message.lite_topic` and `rocketmq.message.priority` on messaging spans and receive-span links.
+      type: boolean
+      default: false
+    otel.instrumentation.rocketmq-client.experimental-span-attributes-b26c1ae6:
       name: otel.instrumentation.rocketmq-client.experimental-span-attributes
       declarative_name: java.rocketmq_client.experimental_span_attributes/development
       description: |
@@ -4828,6 +4875,23 @@ definitions:
         type: STRING
       - name: messaging.system.name
         type: STRING
+    messaging.client.consumed.messages-5bf75d06:
+      name: messaging.client.consumed.messages
+      description: Number of messages that were delivered to the application.
+      instrument: counter
+      data_type: LONG_SUM
+      unit: '{message}'
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
     messaging.client.consumed.messages-6b078de2:
       name: messaging.client.consumed.messages
       description: Number of messages that were delivered to the application.
@@ -5061,6 +5125,24 @@ definitions:
         type: STRING
       - name: server.port
         type: LONG
+    messaging.client.operation.duration-b7b278fe:
+      name: messaging.client.operation.duration
+      description: Duration of messaging operation initiated by a producer or consumer
+        client.
+      instrument: histogram
+      data_type: HISTOGRAM
+      unit: s
+      attributes:
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
     messaging.client.operation.duration-c10d75e0:
       name: messaging.client.operation.duration
       description: Duration of messaging operation initiated by a producer or consumer
@@ -16423,7 +16505,7 @@ libraries:
   - messaging.batch-send.message-creation-spans.enabled
   - messaging.headers.excluded
   - messaging.headers.included
-  - otel.instrumentation.rocketmq-client.experimental-span-attributes
+  - otel.instrumentation.rocketmq-client.experimental-span-attributes-b26c1ae6
   - otel.instrumentation.rocketmq-client.message-create-spans.enabled
   telemetry:
   - when: default
@@ -16567,7 +16649,71 @@ libraries:
   - messaging.headers.excluded
   - messaging.headers.included
   - otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled
+  - otel.instrumentation.rocketmq-client.experimental-span-attributes-a6045195
   telemetry:
+  - when: default
+    metric_refs:
+    - messaging.client.consumed.messages-5bf75d06
+    - messaging.client.operation.duration-b7b278fe
+    - messaging.client.sent.messages-95b151d6
+    - messaging.process.duration-3cf05733
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
+      - name: rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: rocketmq.message.tag
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
+      - name: rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: rocketmq.message.tag
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
+      - name: rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: rocketmq.message.tag
+        type: STRING
+      - name: rocketmq.message.type
+        type: STRING
   - when: otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
     metric_refs:
     - messaging.client.consumed.messages-40b17dc4
@@ -16643,6 +16789,81 @@ libraries:
         type: STRING
       - name: rocketmq.message.keys
         type: STRING_ARRAY
+      - name: rocketmq.message.tag
+        type: STRING
+      - name: rocketmq.message.type
+        type: STRING
+  - when: otel.instrumentation.rocketmq-client.experimental-span-attributes=true,otel.instrumentation.common.messaging.experimental.receive-telemetry.enabled=true
+    metric_refs:
+    - messaging.client.consumed.messages-40b17dc4
+    - messaging.client.operation.duration-b7b278fe
+    - messaging.client.sent.messages-95b151d6
+    - messaging.process.duration-3cf05733
+    spans:
+    - span_kind: CLIENT
+      attributes:
+      - name: messaging.batch.message_count
+        type: LONG
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
+      - name: rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: rocketmq.message.lite_topic
+        type: STRING
+      - name: rocketmq.message.priority
+        type: LONG
+      - name: rocketmq.message.tag
+        type: STRING
+    - span_kind: CONSUMER
+      attributes:
+      - name: error.type
+        type: STRING
+      - name: messaging.consumer.group.name
+        type: STRING
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
+      - name: rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: rocketmq.message.lite_topic
+        type: STRING
+      - name: rocketmq.message.priority
+        type: LONG
+      - name: rocketmq.message.tag
+        type: STRING
+    - span_kind: PRODUCER
+      attributes:
+      - name: messaging.destination.name
+        type: STRING
+      - name: messaging.message.id
+        type: STRING
+      - name: messaging.operation.name
+        type: STRING
+      - name: messaging.operation.type
+        type: STRING
+      - name: messaging.system.name
+        type: STRING
+      - name: rocketmq.message.keys
+        type: STRING_ARRAY
+      - name: rocketmq.message.lite_topic
+        type: STRING
+      - name: rocketmq.message.priority
+        type: LONG
       - name: rocketmq.message.tag
         type: STRING
       - name: rocketmq.message.type
@@ -19359,6 +19580,7 @@ custom:
   has_standalone_library: true
   has_javaagent: true
   configuration_refs:
+  - java.jmx.rules
   - otel.jmx.config
   - otel.jmx.discovery.delay
   - otel.jmx.metrics.excluded
