@@ -121,6 +121,7 @@ public final class DubboInstrumenterBuilder {
             .setSchemaUrl(RpcSchemaUrls.SCHEMA_URL)
             .addAttributesExtractor(RpcServerAttributesExtractor.create(serverRpcAttributesGetter))
             .addAttributesExtractor(NetworkAttributesExtractor.create(netServerAttributesGetter))
+            .addAttributesExtractor(netServerAttributesGetter)
             .addAttributesExtractors(attributesExtractors)
             .setSpanStatusExtractor(new DubboRpcSpanStatusExtractor(false))
             .addOperationMetrics(RpcServerMetrics.get());

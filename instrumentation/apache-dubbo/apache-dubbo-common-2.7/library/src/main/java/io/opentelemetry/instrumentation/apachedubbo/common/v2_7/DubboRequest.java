@@ -10,6 +10,7 @@ import static org.apache.dubbo.common.Constants.BIND_PORT_KEY;
 
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.apachedubbo.common.v2_7.internal.DubboRegistryUtil;
+import io.opentelemetry.instrumentation.api.incubator.semconv.net.internal.ServerEndpointUtil;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.net.InetSocketAddress;
@@ -59,10 +60,17 @@ public abstract class DubboRequest {
     URL url = invoker.getUrl();
     InetSocketAddress localAddress = context.getLocalAddress();
     if (localAddress == null) {
-      localAddress =
-          new InetSocketAddress(
-              url.getParameter(BIND_IP_KEY, url.getHost()),
-              url.getParameter(BIND_PORT_KEY, url.getPort()));
+      String host = url.getParameter(BIND_IP_KEY, url.getHost());
+      int port = url.getParameter(BIND_PORT_KEY, url.getPort());
+      String literal =
+          host.startsWith("[") && host.endsWith("]") ? host.substring(1, host.length() - 1) : host;
+      // Only pass validated, unscoped numeric literals to the resolving constructor.
+      if (ServerEndpointUtil.isIpv4Literal(literal)
+          || (literal.indexOf('%') < 0 && ServerEndpointUtil.isIpv6Literal(literal))) {
+        localAddress = new InetSocketAddress(literal, port);
+      } else {
+        localAddress = InetSocketAddress.createUnresolved(host, port);
+      }
     }
     Class<?> service = invoker.getInterface();
     String method = invocation.getMethodName();

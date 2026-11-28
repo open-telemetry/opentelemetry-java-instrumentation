@@ -54,11 +54,14 @@ class TracingFilterTest {
   @ParameterizedTest
   @MethodSource("localEndpoints")
   @SuppressWarnings("deprecation") // RpcContext.getContext() and removeContext()
-  void providerLocalEndpoint(boolean contextAddress, String expectedAddress, long expectedPort) {
+  void providerLocalEndpoint(
+      String bindHost, boolean contextAddress, String expectedAddress, long expectedPort) {
     URL url =
         new URL("dubbo", "192.0.2.1", 20880, HelloService.class.getName())
-            .addParameter("bind.ip", "127.0.0.1")
             .addParameter("bind.port", 20881);
+    if (bindHost != null) {
+      url = url.addParameter("bind.ip", bindHost);
+    }
     Invoker<?> invoker = mock(Invoker.class);
     when(invoker.getUrl()).thenReturn(url);
     when(invoker.getInterface()).thenAnswer(unused -> HelloService.class);
@@ -75,6 +78,13 @@ class TracingFilterTest {
       if (contextAddress) {
         RpcContext.getContext().setLocalAddress(new InetSocketAddress("127.0.0.2", 20882));
       }
+      if ("localhost".equals(bindHost) && !contextAddress) {
+        assertThat(
+                DubboRequest.createForInvoker(invocation, RpcContext.getContext(), invoker)
+                    .localAddress())
+            .isNotNull()
+            .satisfies(address -> assertThat(address.isUnresolved()).isTrue());
+      }
       assertThat(filter.invoke(invoker, invocation)).isSameAs(result);
       testing.waitAndAssertTraces(trace ->
           trace.hasSpansSatisfyingExactly(span ->
@@ -89,8 +99,14 @@ class TracingFilterTest {
 
   private static Stream<Arguments> localEndpoints() {
     return Stream.of(
-        argumentSet("bind endpoint", false, "127.0.0.1", 20881L),
-        argumentSet("context endpoint", true, "127.0.0.2", 20882L));
+        argumentSet("IPv4 bind endpoint", "127.0.0.1", false, "127.0.0.1", 20881L),
+        argumentSet("IPv6 bind endpoint", "2001:db8::1", false, "2001:db8:0:0:0:0:0:1", 20881L),
+        argumentSet(
+            "bracketed IPv6 bind endpoint", "[2001:db8::1]", false, "2001:db8:0:0:0:0:0:1", 20881L),
+        argumentSet("hostname bind endpoint", "localhost", false, null, 20881L),
+        argumentSet("invalid numeric bind endpoint", "999.1.1.1", false, null, 20881L),
+        argumentSet("advertised endpoint without bind IP", null, false, "192.0.2.1", 20881L),
+        argumentSet("context endpoint", "localhost", true, "127.0.0.2", 20882L));
   }
 
   @ParameterizedTest
