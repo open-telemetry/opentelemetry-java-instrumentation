@@ -35,4 +35,5 @@ loads the tracing execution interceptor automatically.
 See the [AWS SDK instrumentation settings](../../README.md) for configuration.
 
 Autoconfigure does not wrap SQS or asynchronous Bedrock Runtime clients. For SQS message processing
-or Bedrock streaming telemetry, use the [manual library setup](../library/README.md) instead.
+or Bedrock streaming telemetry,
+[wrap the client after building it](../library/README.md#wrap-sqs-and-asynchronous-bedrock-runtime-clients).
