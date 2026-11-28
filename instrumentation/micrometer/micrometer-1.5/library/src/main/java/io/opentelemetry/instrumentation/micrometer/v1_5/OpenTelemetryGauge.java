@@ -24,6 +24,7 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
     implements Gauge, RemovableMeter, OpenTelemetryInstrument {
 
   private final ObservableDoubleGauge observableGauge;
+  private boolean removed;
 
   OpenTelemetryGauge(
       Id id,
@@ -59,6 +60,12 @@ final class OpenTelemetryGauge<T> extends AbstractMeter
 
   @Override
   public void onRemove() {
+    synchronized (this) {
+      if (removed) {
+        return;
+      }
+      removed = true;
+    }
     observableGauge.close();
   }
 }

@@ -26,6 +26,7 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
   private final TimeUnit baseTimeUnit;
   private final ObservableLongCounter observableCount;
   private final ObservableDoubleCounter observableTotalTime;
+  private boolean removed;
 
   OpenTelemetryFunctionTimer(
       Id id,
@@ -98,6 +99,12 @@ final class OpenTelemetryFunctionTimer<T> extends AbstractMeter
 
   @Override
   public void onRemove() {
+    synchronized (this) {
+      if (removed) {
+        return;
+      }
+      removed = true;
+    }
     observableCount.close();
     observableTotalTime.close();
   }

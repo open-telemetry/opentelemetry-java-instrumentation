@@ -53,7 +53,9 @@ public class SpringBootActuatorInstrumentationModule extends InstrumentationModu
   public List<TypeInstrumentation> typeInstrumentations() {
     return asList(
         new AutoConfigurationImportSelectorInstrumentation(),
-        new CompositeMeterRegistryInstrumentation());
+        new CompositeMeterRegistryInstrumentation(),
+        new NestedMeterRegistryCloserInstrumentation(),
+        new MeterRegistryCloserInstrumentation());
   }
 
   @Override

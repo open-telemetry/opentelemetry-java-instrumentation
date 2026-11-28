@@ -15,6 +15,7 @@ import io.opentelemetry.instrumentation.api.incubator.config.internal.Declarativ
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistry;
 import io.opentelemetry.instrumentation.micrometer.v1_5.OpenTelemetryMeterRegistryBuilder;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Experimental;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.Internal;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.AbstractSet;
 import java.util.ArrayList;
@@ -33,6 +34,8 @@ public class MicrometerSingletons {
         DeclarativeConfigUtil.getInstrumentationConfig(GlobalOpenTelemetry.get(), "micrometer");
     OpenTelemetryMeterRegistryBuilder builder =
         OpenTelemetryMeterRegistry.builder(GlobalOpenTelemetry.get());
+    // The agent registry is shared by the global registry and potentially multiple Spring contexts.
+    Internal.setCloseDisabled(builder, true);
     Experimental.setPrometheusMode(
         builder, config.get("prometheus_mode").getBoolean("enabled", false));
     Experimental.setBaseTimeUnit(

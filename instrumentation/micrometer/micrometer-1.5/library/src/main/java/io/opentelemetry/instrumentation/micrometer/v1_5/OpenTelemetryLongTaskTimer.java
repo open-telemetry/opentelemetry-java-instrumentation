@@ -27,6 +27,7 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
   private final DistributionStatisticConfig distributionStatisticConfig;
   private final ObservableLongUpDownCounter observableActiveTasks;
   private final ObservableDoubleUpDownCounter observableDuration;
+  private boolean removed;
 
   OpenTelemetryLongTaskTimer(
       Id id,
@@ -69,6 +70,12 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
 
   @Override
   public void onRemove() {
+    synchronized (this) {
+      if (removed) {
+        return;
+      }
+      removed = true;
+    }
     observableActiveTasks.close();
     observableDuration.close();
   }
