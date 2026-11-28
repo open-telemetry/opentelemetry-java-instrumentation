@@ -12,8 +12,12 @@ import static java.util.Map.entry;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.annotation.Nullable;
 
 class TelemetryParser {
+
+  private static final String SPRING_KAFKA_SCOPE = "io.opentelemetry.spring-kafka-2.8";
+  private static final String SPRING_KAFKA_AGENT_SCOPE = "io.opentelemetry.spring-kafka-2.7";
 
   // Attributes that only exist because of how the tests are written, and should not be documented
   // as telemetry the instrumentation emits.
@@ -71,6 +75,9 @@ class TelemetryParser {
             entry("io.opentelemetry.couchbase-3.2", singleton("com.couchbase.client.jvm")),
             // servlet-5.0 tests use jetty-12.0 instrumentation
             entry("io.opentelemetry.servlet-5.0", singleton("io.opentelemetry.jetty-12.0")),
+            // The renamed Spring Kafka module retains the agent's 2.7 scope.
+            entry(SPRING_KAFKA_SCOPE, singleton(SPRING_KAFKA_AGENT_SCOPE)),
+            entry(SPRING_KAFKA_AGENT_SCOPE, singleton(SPRING_KAFKA_SCOPE)),
             // runtime-telemetry library tests use a meter named "test"
             entry("io.opentelemetry.runtime-telemetry", singleton("test")));
   }
@@ -90,6 +97,11 @@ class TelemetryParser {
   static boolean scopeIsValid(String telemetryScope, String moduleScope) {
     return telemetryScope.equals(moduleScope)
         || scopeAllowList.getOrDefault(moduleScope, emptySet()).contains(telemetryScope);
+  }
+
+  @Nullable
+  static String legacyScope(String moduleScope) {
+    return SPRING_KAFKA_SCOPE.equals(moduleScope) ? SPRING_KAFKA_AGENT_SCOPE : null;
   }
 
   /**
