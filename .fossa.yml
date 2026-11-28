@@ -1020,10 +1020,10 @@ targets:
       target: ':instrumentation:spring:spring-integration-4.1:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-kafka-2.7:javaagent'
+      target: ':instrumentation:spring:spring-kafka-2.8:javaagent'
     - type: gradle
       path: ./
-      target: ':instrumentation:spring:spring-kafka-2.7:library'
+      target: ':instrumentation:spring:spring-kafka-2.8:library'
     - type: gradle
       path: ./
       target: ':instrumentation:spring:spring-pulsar-1.0:javaagent'
