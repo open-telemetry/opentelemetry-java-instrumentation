@@ -12,6 +12,7 @@ readonly INSTRUMENTATIONS=(
   "apache-commons-pool-2.0:javaagent:test"
   "apache-dbcp-2.0:javaagent:test"
   "apache-dubbo:apache-dubbo-2.7:javaagent:testDubbo"
+  "apache-dubbo:apache-dubbo-3.1:library:test"
   "apache-dubbo:apache-dubbo-3.1:library-autoconfigure:test"
   "apache-elasticjob-3.0:javaagent:test"
   "apache-elasticjob-3.0:javaagent:testExperimental"

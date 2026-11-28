@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.common.v2_7;
 
+import static org.apache.dubbo.common.Constants.BIND_IP_KEY;
+import static org.apache.dubbo.common.Constants.BIND_PORT_KEY;
+
 import com.google.auto.value.AutoValue;
 import io.opentelemetry.instrumentation.apachedubbo.common.v2_7.internal.DubboRegistryUtil;
 import java.lang.reflect.Method;
@@ -56,7 +59,10 @@ public abstract class DubboRequest {
     URL url = invoker.getUrl();
     InetSocketAddress localAddress = context.getLocalAddress();
     if (localAddress == null) {
-      localAddress = new InetSocketAddress(url.getHost(), url.getPort());
+      localAddress =
+          new InetSocketAddress(
+              url.getParameter(BIND_IP_KEY, url.getHost()),
+              url.getParameter(BIND_PORT_KEY, url.getPort()));
     }
     Class<?> service = invoker.getInterface();
     String method = invocation.getMethodName();

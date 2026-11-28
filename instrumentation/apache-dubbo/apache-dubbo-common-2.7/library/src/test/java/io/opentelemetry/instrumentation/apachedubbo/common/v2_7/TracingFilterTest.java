@@ -26,6 +26,7 @@ import io.opentelemetry.instrumentation.api.instrumenter.AttributesExtractor;
 import io.opentelemetry.instrumentation.testing.junit.InstrumentationExtension;
 import io.opentelemetry.instrumentation.testing.junit.LibraryInstrumentationExtension;
 import io.opentelemetry.sdk.trace.data.StatusData;
+import java.net.InetSocketAddress;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
@@ -49,6 +50,48 @@ class TracingFilterTest {
 
   @RegisterExtension
   static final InstrumentationExtension testing = LibraryInstrumentationExtension.create();
+
+  @ParameterizedTest
+  @MethodSource("localEndpoints")
+  @SuppressWarnings("deprecation") // RpcContext.getContext() and removeContext()
+  void providerLocalEndpoint(boolean contextAddress, String expectedAddress, long expectedPort) {
+    URL url =
+        new URL("dubbo", "192.0.2.1", 20880, HelloService.class.getName())
+            .addParameter("bind.ip", "127.0.0.1")
+            .addParameter("bind.port", 20881);
+    Invoker<?> invoker = mock(Invoker.class);
+    when(invoker.getUrl()).thenReturn(url);
+    when(invoker.getInterface()).thenAnswer(unused -> HelloService.class);
+    RpcInvocation invocation = new RpcInvocation();
+    invocation.setMethodName("hello");
+    AppResponse result = new AppResponse("response");
+    when(invoker.invoke(invocation)).thenReturn(result);
+    Filter filter =
+        new DubboInstrumenterBuilder(
+                testing.getOpenTelemetry(), "io.opentelemetry.apache-dubbo-common-2.7")
+            .build()
+            .newServerFilterWithInvoker();
+    try {
+      if (contextAddress) {
+        RpcContext.getContext().setLocalAddress(new InetSocketAddress("127.0.0.2", 20882));
+      }
+      assertThat(filter.invoke(invoker, invocation)).isSameAs(result);
+      testing.waitAndAssertTraces(trace ->
+          trace.hasSpansSatisfyingExactly(span ->
+              span.hasKind(SpanKind.SERVER)
+                  .hasAttributesSatisfying(
+                      equalTo(NETWORK_LOCAL_ADDRESS, expectedAddress),
+                      equalTo(NETWORK_LOCAL_PORT, expectedPort))));
+    } finally {
+      RpcContext.removeContext();
+    }
+  }
+
+  private static Stream<Arguments> localEndpoints() {
+    return Stream.of(
+        argumentSet("bind endpoint", false, "127.0.0.1", 20881L),
+        argumentSet("context endpoint", true, "127.0.0.2", 20882L));
+  }
 
   @ParameterizedTest
   @MethodSource("providerMethods")
