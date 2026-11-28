@@ -22,14 +22,11 @@ public final class SpringIntegrationHandoff {
   private static final Class<?> AMQP_INBOUND_CHANNEL_ADAPTER_CLASS =
       getAmqpInboundChannelAdapterClass();
 
-  // AMQP listener advice supplies the processing context for the channel callbacks. The advice
-  // restores the previous context on listener exit, even if no channel callback runs.
   private static final ScopedThreadValue<Context> currentLowerProcessing =
       new ScopedThreadValue<>();
 
-  // MessageProducerSupport send advice supplies the message identity for the channel callbacks.
-  // Message-history advice forwards the identity if it replaces the message. The send advice
-  // restores the previous identity on exit, even if no channel callback runs.
+  // Message-history advice can replace the tracked message, but send advice still restores the
+  // previous identity on exit, even if no channel callback runs.
   private static final ScopedThreadValue<Message<?>> currentMessage = new ScopedThreadValue<>();
 
   @Nullable

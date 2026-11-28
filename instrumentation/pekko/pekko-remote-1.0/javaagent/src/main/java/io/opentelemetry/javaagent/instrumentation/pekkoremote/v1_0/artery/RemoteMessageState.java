@@ -20,8 +20,6 @@ import org.apache.pekko.remote.artery.InboundEnvelope;
  */
 public final class RemoteMessageState {
 
-  // RemoteInstrumentsSerializationInstrumentation sets these for OtelRemoteInstrument's metadata
-  // callbacks. Each advice clears its field on exit, even if the callback never runs.
   private static final ThreadLocal<Context> OUTBOUND_CONTEXT = new ThreadLocal<>();
   private static final ThreadLocal<InboundEnvelope> INBOUND_ENVELOPE = new ThreadLocal<>();
 
