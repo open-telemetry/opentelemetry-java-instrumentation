@@ -15,7 +15,6 @@ import org.apache.pulsar.client.api.Message;
 final class PulsarBatchRequestSpanLinksExtractor implements SpanLinksExtractor<PulsarBatchRequest> {
 
   private final TextMapPropagator propagator;
-  private final MessageTextMapGetter getter = new MessageTextMapGetter();
 
   PulsarBatchRequestSpanLinksExtractor(TextMapPropagator propagator) {
     this.propagator = propagator;
@@ -29,7 +28,8 @@ final class PulsarBatchRequestSpanLinksExtractor implements SpanLinksExtractor<P
     for (Message<?> message : request.getMessages()) {
       PulsarRequest messageRequest =
           PulsarRequest.create(message, request.getUrlData(), request.getSubscription());
-      Context extracted = propagator.extract(Context.root(), messageRequest, getter);
+      Context extracted =
+          propagator.extract(Context.root(), messageRequest, MessageTextMapGetter.INSTANCE);
       spanLinks.addLink(
           Span.fromContext(extracted).getSpanContext(),
           batchRecordAttributes.getLinkAttributes(messageRequest));

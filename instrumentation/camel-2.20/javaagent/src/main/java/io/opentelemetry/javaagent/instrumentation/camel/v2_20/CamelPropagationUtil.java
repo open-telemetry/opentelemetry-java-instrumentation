@@ -67,6 +67,10 @@ final class CamelPropagationUtil {
     return messagingPropagator;
   }
 
+  static TextMapGetter<CamelRequest> messagingGetter() {
+    return CamelRequestGetter.INSTANCE;
+  }
+
   private static class CamelMessagingPropagator implements TextMapPropagator {
 
     @Override
@@ -91,6 +95,27 @@ final class CamelPropagationUtil {
       return GlobalOpenTelemetry.getPropagators()
           .getTextMapPropagator()
           .extract(context, carrier, getter);
+    }
+  }
+
+  private enum CamelRequestGetter implements TextMapGetter<CamelRequest> {
+    INSTANCE;
+
+    @Override
+    public Iterable<String> keys(CamelRequest request) {
+      return request.getExchange().getIn().getHeaders().keySet();
+    }
+
+    @Override
+    @Nullable
+    public String get(@Nullable CamelRequest request, String key) {
+      if (request == null) {
+        return null;
+      }
+      Map<String, Object> headers = request.getExchange().getIn().getHeaders();
+      Object value =
+          key.equals("X-Amzn-Trace-Id") ? headers.get("AWSTraceHeader") : headers.get(key);
+      return value == null ? null : value.toString();
     }
   }
 

@@ -109,7 +109,7 @@ public class PulsarSingletons {
 
     return instrumenterBuilder
         .addSpanLinksExtractor(
-            new PropagatorBasedSpanLinksExtractor<>(propagator, new MessageTextMapGetter()))
+            new PropagatorBasedSpanLinksExtractor<>(propagator, MessageTextMapGetter.INSTANCE))
         .buildInstrumenter(MessagingSpanKindExtractor.create(MessagingOperationType.RECEIVE));
   }
 
@@ -156,7 +156,7 @@ public class PulsarSingletons {
     setMessagingProcessExceptionEventExtractor(instrumenterBuilder);
 
     return MessagingProcessInstrumenterFactory.create(
-        instrumenterBuilder, propagator, new MessageTextMapGetter());
+        instrumenterBuilder, propagator, MessageTextMapGetter.INSTANCE);
   }
 
   private static Instrumenter<PulsarRequest, Void> createProducerInstrumenter() {

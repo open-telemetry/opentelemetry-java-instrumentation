@@ -20,8 +20,10 @@ import org.springframework.web.reactive.HandlerMapping;
 import org.springframework.web.server.ServerWebExchange;
 import org.springframework.web.util.pattern.PathPattern;
 
-final class WebfluxServerHttpAttributesGetter
+enum WebfluxServerHttpAttributesGetter
     implements HttpServerAttributesGetter<ServerWebExchange, ServerWebExchange> {
+  INSTANCE;
+
   @Nullable private static final MethodHandle GET_RAW_STATUS_CODE;
   @Nullable private static final MethodHandle GET_STATUS_CODE;
   @Nullable private static final MethodHandle STATUS_CODE_VALUE;
@@ -146,11 +148,6 @@ final class WebfluxServerHttpAttributesGetter
   @Nullable
   @Override
   public String getHttpRoute(ServerWebExchange request) {
-    return getRoute(request);
-  }
-
-  @Nullable
-  static String getRoute(ServerWebExchange request) {
     Object bestPatternObj = request.getAttribute(HandlerMapping.BEST_MATCHING_PATTERN_ATTRIBUTE);
     if (bestPatternObj == null) {
       return null;

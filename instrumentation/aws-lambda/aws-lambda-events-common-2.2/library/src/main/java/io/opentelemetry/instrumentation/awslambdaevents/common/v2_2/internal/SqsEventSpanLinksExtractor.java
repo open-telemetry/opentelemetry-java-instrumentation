@@ -17,8 +17,6 @@ import java.util.List;
 
 class SqsEventSpanLinksExtractor implements SpanLinksExtractor<SQSEvent> {
 
-  private final SqsMessageTextMapGetter getter = new SqsMessageTextMapGetter();
-
   @Override
   public void extract(SpanLinksBuilder spanLinks, Context parentContext, SQSEvent event) {
     List<SQSMessage> records = event.getRecords();
@@ -33,9 +31,10 @@ class SqsEventSpanLinksExtractor implements SpanLinksExtractor<SQSEvent> {
     }
   }
 
-  private SpanContext creationSpanContext(SQSMessage record) {
+  private static SpanContext creationSpanContext(SQSMessage record) {
     Context creationContext =
-        AwsXrayPropagator.getInstance().extract(Context.root(), record, getter);
+        AwsXrayPropagator.getInstance()
+            .extract(Context.root(), record, SqsMessageTextMapGetter.INSTANCE);
     return Span.fromContext(creationContext).getSpanContext();
   }
 }

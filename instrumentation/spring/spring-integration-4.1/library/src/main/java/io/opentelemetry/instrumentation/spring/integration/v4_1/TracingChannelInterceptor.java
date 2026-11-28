@@ -134,7 +134,6 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
   }
 
   private final ContextPropagators propagators;
-  private final MessageHeadersGetter getter = new MessageHeadersGetter();
   private final Instrumenter<MessageWithChannel, Void> consumerInstrumenter;
   private final Instrumenter<MessageWithChannel, Void> producerInstrumenter;
   private final boolean producerSpanEnabled;
@@ -250,7 +249,9 @@ final class TracingChannelInterceptor implements ExecutorChannelInterceptor {
     MessageWithChannel messageWithChannel = MessageWithChannel.create(message, channel);
     Context ambientContext = Context.current();
     Context parentContext =
-        propagators.getTextMapPropagator().extract(ambientContext, messageWithChannel, getter);
+        propagators
+            .getTextMapPropagator()
+            .extract(ambientContext, messageWithChannel, MessageHeadersGetter.INSTANCE);
 
     Context context = parentContext;
     Context telemetryContext = null;

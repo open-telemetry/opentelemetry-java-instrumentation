@@ -17,7 +17,6 @@ import io.opentelemetry.api.GlobalOpenTelemetry;
 import io.opentelemetry.api.common.AttributesBuilder;
 import io.opentelemetry.api.trace.StatusCode;
 import io.opentelemetry.context.Context;
-import io.opentelemetry.context.propagation.TextMapGetter;
 import io.opentelemetry.instrumentation.api.incubator.semconv.db.internal.DbSchemaUrls;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesExtractor;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.MessagingAttributesGetter;
@@ -37,7 +36,6 @@ import io.opentelemetry.instrumentation.api.instrumenter.SpanStatusExtractor;
 import io.opentelemetry.instrumentation.api.semconv.http.internal.HttpSchemaUrls;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.DecoratorRegistry;
 import io.opentelemetry.javaagent.instrumentation.camel.v2_20.decorators.HttpSpanDecorator;
-import java.util.Map;
 import javax.annotation.Nullable;
 import org.apache.camel.Endpoint;
 import org.apache.camel.util.StringHelper;
@@ -108,7 +106,9 @@ class CamelSingletons {
               : context);
       builder.addOperationMetrics(MessagingConsumerMetrics.getConsumedMessages());
       return MessagingProcessInstrumenterFactory.create(
-          builder, CamelPropagationUtil.messagingPropagator(), new CamelRequestGetter());
+          builder,
+          CamelPropagationUtil.messagingPropagator(),
+          CamelPropagationUtil.messagingGetter());
     }
     return builder.buildInstrumenter(
         MessagingSpanKindExtractor.create(
@@ -158,26 +158,6 @@ class CamelSingletons {
       component = splitUri[0];
     }
     return registry.forComponent(component);
-  }
-
-  private static final class CamelRequestGetter implements TextMapGetter<CamelRequest> {
-
-    @Override
-    public Iterable<String> keys(CamelRequest request) {
-      return request.getExchange().getIn().getHeaders().keySet();
-    }
-
-    @Override
-    @Nullable
-    public String get(@Nullable CamelRequest request, String key) {
-      if (request == null) {
-        return null;
-      }
-      Map<String, Object> headers = request.getExchange().getIn().getHeaders();
-      Object value =
-          key.equals("X-Amzn-Trace-Id") ? headers.get("AWSTraceHeader") : headers.get(key);
-      return value == null ? null : value.toString();
-    }
   }
 
   private static class CamelAttributesExtractor implements AttributesExtractor<CamelRequest, Void> {
