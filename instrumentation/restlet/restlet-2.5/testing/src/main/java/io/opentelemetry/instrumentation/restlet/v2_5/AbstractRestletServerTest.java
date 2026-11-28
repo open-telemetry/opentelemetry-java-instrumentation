@@ -45,11 +45,12 @@ public class AbstractRestletServerTest extends AbstractHttpServerTest<Component>
     assertThat(client.execute(request(SUCCESS, "GET")).aggregate().join().status().code())
         .isEqualTo(SUCCESS.getStatus());
 
-    testing().waitAndAssertTraces(trace -> {
-      InstrumentationScopeInfo scope = trace.getSpan(0).getInstrumentationScopeInfo();
-      assertThat(scope.getName()).isEqualTo("io.opentelemetry.restlet-2.5");
-      assertThat(scope.getVersion()).isNotBlank();
-    });
+    testing()
+        .waitAndAssertTraces(trace -> {
+          InstrumentationScopeInfo scope = trace.getSpan(0).getInstrumentationScopeInfo();
+          assertThat(scope.getName()).isEqualTo("io.opentelemetry.restlet-2.5");
+          assertThat(scope.getVersion()).isNotBlank();
+        });
   }
 
   @Override

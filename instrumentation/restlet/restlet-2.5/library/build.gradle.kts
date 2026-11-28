@@ -11,6 +11,4 @@ dependencies {
     // The JDK connector in Restlet 2.5 times out in the shared high-concurrency server tests.
     testRuntimeOnly("org.restlet:org.restlet.ext.jetty:2.5.0")
   }
-  latestDepTestLibrary("org.restlet:org.restlet:2.+")
-  latestDepTestLibrary("org.restlet:org.restlet.ext.spring:2.+")
 }
