@@ -1,16 +1,5 @@
-import io.opentelemetry.instrumentation.gradle.unitTests
-
 plugins {
   id("otel.javaagent-instrumentation")
-}
-
-testing.suites {
-  unitTests {
-    dependencies {
-      implementation(project(":javaagent-extension-api"))
-      implementation(project(":muzzle"))
-    }
-  }
 }
 
 muzzle {
