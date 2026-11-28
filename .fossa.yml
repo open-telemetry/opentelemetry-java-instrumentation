@@ -78,12 +78,6 @@ targets:
       target: ':instrumentation:apache-dbcp-2.0:library'
     - type: gradle
       path: ./
-      target: ':instrumentation:apache-dubbo-2.7:javaagent'
-    - type: gradle
-      path: ./
-      target: ':instrumentation:apache-dubbo-2.7:library-autoconfigure'
-    - type: gradle
-      path: ./
       target: ':instrumentation:apache-elasticjob-3.0:javaagent'
     - type: gradle
       path: ./
@@ -346,6 +340,18 @@ targets:
     - type: gradle
       path: ./
       target: ':instrumentation:akka:akka-http-10.0:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-dubbo:apache-dubbo-2.7:javaagent'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-dubbo:apache-dubbo-3.1:library'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-dubbo:apache-dubbo-3.1:library-autoconfigure'
+    - type: gradle
+      path: ./
+      target: ':instrumentation:apache-dubbo:apache-dubbo-common-2.7:library'
     - type: gradle
       path: ./
       target: ':instrumentation:apache-httpclient:apache-httpclient-2.0:javaagent'

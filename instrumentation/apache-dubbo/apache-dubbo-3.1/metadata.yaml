@@ -1,0 +1,9 @@
+display_name: Apache Dubbo
+description: >
+  Standalone instrumentation provides RPC client and server spans and metrics for Apache Dubbo.
+semantic_conventions:
+  - RPC_CLIENT_SPANS
+  - RPC_CLIENT_METRICS
+  - RPC_SERVER_SPANS
+  - RPC_SERVER_METRICS
+library_link: https://github.com/apache/dubbo/

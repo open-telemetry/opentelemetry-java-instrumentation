@@ -1,0 +1,2 @@
+io.opentelemetry.instrumentation.apachedubbo.v3_1.autoconfigure.OpenTelemetryClientFilter
+io.opentelemetry.instrumentation.apachedubbo.v3_1.autoconfigure.OpenTelemetryServerFilter
