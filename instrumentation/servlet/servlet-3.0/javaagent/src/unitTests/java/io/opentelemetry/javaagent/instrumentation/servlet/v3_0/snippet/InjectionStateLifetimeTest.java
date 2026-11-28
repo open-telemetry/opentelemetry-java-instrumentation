@@ -18,6 +18,7 @@ import static org.mockito.Mockito.when;
 
 import io.opentelemetry.instrumentation.api.util.VirtualField;
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
+import io.opentelemetry.javaagent.bootstrap.servlet.StreamStates;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.OutputStreamSnippetInjectionHelper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -25,7 +26,6 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Map;
 import javax.servlet.ServletOutputStream;
 import javax.servlet.http.HttpServletRequest;
@@ -144,7 +144,7 @@ class InjectionStateLifetimeTest {
     assertThat(ServletOutputStreamInjectionState.getInjectionState(stream)).isSameAs(secondState);
     assertThat(INJECTION_STATE.get(stream)).isNotSameAs(firstReference);
     assertThat(fixture.requestStreamState()).isSameAs(secondState);
-    assertThat(fixture.requestStreamStates()).hasSize(1).doesNotContainValue(firstReference.get());
+    assertThat(fixture.requestStreamStates().size()).isEqualTo(1);
     assertThat(fixture.streamStateAttributeUpdates).isEqualTo(1);
   }
 
@@ -160,10 +160,9 @@ class InjectionStateLifetimeTest {
     assertThat(fixture.wrap().getOutputStream()).isSameAs(secondStream);
     InjectionState secondState = ServletOutputStreamInjectionState.getInjectionState(secondStream);
 
-    assertThat(fixture.requestStreamStates())
-        .hasSize(2)
-        .containsEntry(firstStream, firstState)
-        .containsEntry(secondStream, secondState);
+    assertThat(fixture.requestStreamStates().size()).isEqualTo(2);
+    assertThat(fixture.requestStreamStates().get(firstStream)).isSameAs(firstState);
+    assertThat(fixture.requestStreamStates().get(secondStream)).isSameAs(secondState);
     assertThat(fixture.streamStateAttributeUpdates).isEqualTo(1);
     firstStream.write(HTML.getBytes(UTF_8));
     assertThat(fixture.content()).isEqualTo(INJECTED);
@@ -307,19 +306,19 @@ class InjectionStateLifetimeTest {
     }
 
     InjectionState requestStreamState() {
-      Servlet3SnippetInjectingResponseWrapper.StreamStates states =
-          (Servlet3SnippetInjectingResponseWrapper.StreamStates)
+      StreamStates states =
+          (StreamStates)
               attributes.get(
                   Servlet3SnippetInjectingResponseWrapper.class.getName() + ".streamState");
-      return states == null ? null : states.states.get(stream);
+      return states == null ? null : states.get(stream);
     }
 
-    IdentityHashMap<ServletOutputStream, InjectionState> requestStreamStates() {
-      Servlet3SnippetInjectingResponseWrapper.StreamStates states =
-          (Servlet3SnippetInjectingResponseWrapper.StreamStates)
+    StreamStates requestStreamStates() {
+      StreamStates states =
+          (StreamStates)
               attributes.get(
                   Servlet3SnippetInjectingResponseWrapper.class.getName() + ".streamState");
-      return requireNonNull(states).states;
+      return requireNonNull(states);
     }
 
     String content() {

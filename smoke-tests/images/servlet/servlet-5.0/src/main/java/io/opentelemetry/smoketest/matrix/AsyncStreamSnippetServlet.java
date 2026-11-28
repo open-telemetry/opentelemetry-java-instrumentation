@@ -34,7 +34,27 @@ public class AsyncStreamSnippetServlet extends HttpServlet {
       return;
     }
 
-    ServletOutputStream stream = (ServletOutputStream) request.getAttribute(STREAM_ATTRIBUTE);
+    ServletOutputStream stream;
+    if ("/reacquire".equals(request.getPathInfo())) {
+      Class<?> initialWrapper =
+          (Class<?>) request.getAttribute(AsyncStreamDispatchFilter.WRAPPER_CLASS_ATTRIBUTE);
+      if (!initialWrapper.getName().equals(response.getClass().getName())
+          || initialWrapper.getClassLoader() == response.getClass().getClassLoader()) {
+        throw new IllegalStateException(
+            "Expected snippet wrappers from different class loaders: "
+                + initialWrapper
+                + " ("
+                + initialWrapper.getClassLoader()
+                + "), "
+                + response.getClass()
+                + " ("
+                + response.getClass().getClassLoader()
+                + ")");
+      }
+      stream = response.getOutputStream();
+    } else {
+      stream = (ServletOutputStream) request.getAttribute(STREAM_ATTRIBUTE);
+    }
     stream.write(BODY);
     stream.flush();
   }

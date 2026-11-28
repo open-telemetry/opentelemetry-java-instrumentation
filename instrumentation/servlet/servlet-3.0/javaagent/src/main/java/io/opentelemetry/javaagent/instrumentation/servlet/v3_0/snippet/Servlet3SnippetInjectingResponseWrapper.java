@@ -10,13 +10,13 @@ import static java.util.logging.Level.FINE;
 
 import io.opentelemetry.javaagent.bootstrap.servlet.InjectionState;
 import io.opentelemetry.javaagent.bootstrap.servlet.SnippetInjectingResponseWrapper;
+import io.opentelemetry.javaagent.bootstrap.servlet.StreamStates;
 import io.opentelemetry.javaagent.instrumentation.servlet.common.snippet.SnippetInjectingPrintWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
-import java.util.IdentityHashMap;
 import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.servlet.ServletOutputStream;
@@ -61,10 +61,6 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
   private long contentLength = UNSET;
 
   @Nullable private SnippetInjectingPrintWriter snippetInjectingPrintWriter = null;
-
-  static final class StreamStates {
-    final IdentityHashMap<ServletOutputStream, InjectionState> states = new IdentityHashMap<>();
-  }
 
   public Servlet3SnippetInjectingResponseWrapper(HttpServletResponse response, String snippet) {
     this(null, response, snippet);
@@ -201,7 +197,7 @@ public class Servlet3SnippetInjectingResponseWrapper extends HttpServletResponse
         states = new StreamStates();
         request.setAttribute(STREAM_STATE_ATTRIBUTE, states);
       }
-      states.states.put(output, state);
+      states.put(output, state);
     }
     initializeInjectionStateIfNeeded(output, state);
     return output;
