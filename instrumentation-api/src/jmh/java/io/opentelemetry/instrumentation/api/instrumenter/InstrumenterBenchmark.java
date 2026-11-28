@@ -60,7 +60,8 @@ public class InstrumenterBenchmark {
     return context;
   }
 
-  static final class ConstantHttpAttributesGetter implements HttpClientAttributesGetter<Object, Void> {
+  static final class ConstantHttpAttributesGetter
+      implements HttpClientAttributesGetter<Object, Void> {
     private static final InetSocketAddress PEER_ADDRESS =
         InetSocketAddress.createUnresolved("localhost", 8080);
 
