@@ -81,6 +81,14 @@ public class EmittedScopeParser {
       return exactMatch;
     }
 
+    String legacyScope = TelemetryParser.legacyScope(defaultScopeName);
+    if (legacyScope != null) {
+      EmittedScope.Scope legacyMatch = findScopeByName(scopes, legacyScope);
+      if (legacyMatch != null) {
+        return legacyMatch;
+      }
+    }
+
     String baseScopeName = stripTrailingVersion(defaultScopeName);
     if (!baseScopeName.equals(defaultScopeName)) {
       return findScopeByName(scopes, baseScopeName);

@@ -4,6 +4,11 @@
 
 ### ⚠️ Breaking changes
 
+- Require Spring Kafka 2.8.0 or later for Java agent and standalone instrumentation.
+  Replace `opentelemetry-spring-kafka-2.7` with `opentelemetry-spring-kafka-2.8` and imports
+  from `io.opentelemetry.instrumentation.spring.kafka.v2_7` with `v2_8`; the standalone
+  instrumentation scope is now `io.opentelemetry.spring-kafka-2.8`.
+
 - Pekko HTTP 2.x parsing-error spans now use the recognized HTTP method instead of `HTTP` as
   their name. Rejected requests can now be split across `http.server.request.duration` series
   by method, protocol version, and URL scheme.

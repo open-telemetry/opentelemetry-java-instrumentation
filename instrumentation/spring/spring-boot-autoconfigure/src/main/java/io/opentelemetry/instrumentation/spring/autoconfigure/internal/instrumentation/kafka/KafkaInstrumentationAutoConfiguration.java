@@ -9,7 +9,7 @@ import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.api.incubator.config.internal.DeclarativeConfigUtil;
 import io.opentelemetry.instrumentation.api.incubator.semconv.messaging.internal.MessagingConfig;
 import io.opentelemetry.instrumentation.spring.autoconfigure.internal.ConditionalOnEnabledInstrumentation;
-import io.opentelemetry.instrumentation.spring.kafka.v2_7.SpringKafkaTelemetry;
+import io.opentelemetry.instrumentation.spring.kafka.v2_8.SpringKafkaTelemetry;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -23,10 +23,9 @@ import org.springframework.kafka.core.KafkaTemplate;
  * any time.
  */
 @ConditionalOnEnabledInstrumentation(module = "kafka")
-@ConditionalOnClass({
-  KafkaTemplate.class,
-  ConcurrentKafkaListenerContainerFactory.class,
-})
+@ConditionalOnClass(
+    value = {KafkaTemplate.class, ConcurrentKafkaListenerContainerFactory.class},
+    name = "org.springframework.kafka.listener.ThreadStateProcessor")
 @Configuration
 public class KafkaInstrumentationAutoConfiguration {
 
