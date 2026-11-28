@@ -15,11 +15,13 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 import org.yaml.snakeyaml.Yaml;
 
 /**
@@ -27,6 +29,8 @@ import org.yaml.snakeyaml.Yaml;
  * includes all instrumentations that should be documented.
  */
 public class SuppressionListAuditor implements DocumentationAuditor {
+
+  private static final Pattern VERSION_SUFFIX = Pattern.compile("-[0-9].*$");
 
   private static final String DOCUMENTATION_DISABLE_LIST =
       "https://raw.githubusercontent.com/open-telemetry/opentelemetry.io/refs/heads/main/content/en/docs/zero-code/java/agent/disable.md";
@@ -132,7 +136,7 @@ public class SuppressionListAuditor implements DocumentationAuditor {
 
     Set<String> sanitizedInstrumentationItems = new TreeSet<>();
     for (String item : instrumentationList) {
-      sanitizedInstrumentationItems.add(item.replaceFirst("-[0-9].*$", ""));
+      sanitizedInstrumentationItems.add(VERSION_SUFFIX.matcher(item).replaceFirst(""));
     }
 
     List<String> missingItems = new ArrayList<>();
@@ -164,8 +168,9 @@ public class SuppressionListAuditor implements DocumentationAuditor {
    */
   public static List<String> parseDocumentationDisabledList(String fileContent) {
     List<String> instrumentationList = new ArrayList<>();
-    String[] lines = fileContent.split("\\R");
-    for (String line : lines) {
+    Iterator<String> lines = fileContent.lines().iterator();
+    while (lines.hasNext()) {
+      String line = lines.next();
       if (line.trim().startsWith("|")) {
         String[] parts = line.split("\\|");
         if (parts.length > 2) {

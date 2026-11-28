@@ -15,17 +15,21 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.regex.Pattern;
 
 /**
  * Audits the supported libraries list on the OpenTelemetry.io documentation site to ensure it
  * matches the local supported-libraries.md file.
  */
 public class SupportedLibrariesAuditor implements DocumentationAuditor {
+
+  private static final Pattern WHITESPACE = Pattern.compile("\\s+");
 
   private static final String REMOTE_SUPPORTED_LIBRARIES_URL =
       "https://raw.githubusercontent.com/open-telemetry/opentelemetry.io/refs/heads/main/content/en/docs/zero-code/java/agent/supported-libraries.md";
@@ -98,10 +102,11 @@ public class SupportedLibrariesAuditor implements DocumentationAuditor {
    */
   private static List<String> parseLibraryMarkdownTable(String content) {
     List<String> libraries = new ArrayList<>();
-    String[] lines = content.split("\\R");
+    Iterator<String> lines = content.lines().iterator();
 
     boolean inLibrariesSection = false;
-    for (String line : lines) {
+    while (lines.hasNext()) {
+      String line = lines.next();
       // Look for the start of the Libraries/Frameworks section (handle both formats)
       if (line.contains("## Libraries / Frameworks")
           || line.contains("## Libraries and Frameworks")) {
@@ -187,6 +192,6 @@ public class SupportedLibrariesAuditor implements DocumentationAuditor {
    * @return normalized library name
    */
   private static String normalizeLibraryName(String libraryName) {
-    return libraryName.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+    return WHITESPACE.matcher(libraryName.trim().toLowerCase(Locale.ROOT)).replaceAll(" ");
   }
 }

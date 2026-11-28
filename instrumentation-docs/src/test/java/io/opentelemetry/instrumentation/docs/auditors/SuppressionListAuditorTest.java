@@ -21,12 +21,31 @@ import java.util.List;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 @ExtendWith(MockitoExtension.class)
 @SuppressWarnings("unchecked")
 class SuppressionListAuditorTest {
+
+  @ParameterizedTest
+  @ValueSource(strings = {"\n", "\r\n", "\r"})
+  void parsesDisabledListInOrderWithDifferentLineEndings(String separator) {
+    String content =
+        String.join(
+            separator,
+            "# Instrumentations",
+            "| Library | Instrumentation name |",
+            "| First | `zeta` |",
+            "| Ignored | no code |",
+            "Not a table row",
+            "  | Second | `alpha` |");
+
+    assertThat(SuppressionListAuditor.parseDocumentationDisabledList(content))
+        .containsExactly("zeta", "alpha");
+  }
 
   @Test
   void testPerformAuditWithNoMissingItems() throws IOException, InterruptedException {
@@ -76,41 +95,6 @@ class SuppressionListAuditorTest {
   void testGetAuditorName() {
     SuppressionListAuditor auditor = new SuppressionListAuditor();
     assertThat(auditor.getAuditorName()).isEqualTo("Suppression List Auditor");
-  }
-
-  @Test
-  void testParseDocumentationDisabledList() {
-    String testFile =
-"""
-## Enable manual instrumentation only
-
-You can suppress all auto instrumentations but have support for manual
-instrumentation with `@WithSpan` and normal API interactions by using
-`-Dotel.instrumentation.common.default-enabled=false -Dotel.instrumentation.opentelemetry-api.enabled=true -Dotel.instrumentation.opentelemetry-instrumentation-annotations.enabled=true`
-
-## Suppressing specific agent instrumentation
-
-You can suppress agent instrumentation of specific libraries.
-
-{{% config_option name="otel.instrumentation.[name].enabled" %}} Set to `false`
-to suppress agent instrumentation of specific libraries, where [name] is the
-corresponding instrumentation name: {{% /config_option %}}
-
-| Library/Framework                                | Instrumentation name                        |
-| ------------------------------------------------ | ------------------------------------------- |
-| Additional methods tracing                       | `methods`                                   |
-| Additional tracing annotations                   | `external-annotations`                      |
-| Akka Actor                                       | `akka-actor`                                |
-| Akka HTTP                                        | `akka-http`                                 |
-| Apache Axis2                                     | `axis2`                                     |
-| Apache Camel                                     | `camel`                                     |
-""";
-
-    var result = SuppressionListAuditor.parseDocumentationDisabledList(testFile);
-    assertThat(result).hasSize(6);
-    assertThat(result)
-        .containsExactlyInAnyOrder(
-            "methods", "external-annotations", "akka-actor", "akka-http", "axis2", "camel");
   }
 
   @Test
