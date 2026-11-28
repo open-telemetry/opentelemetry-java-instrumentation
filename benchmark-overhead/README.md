@@ -95,6 +95,17 @@ the relevant agent jar for an `Agent` definition.
 The tests are run nightly via github actions. The results are collected and appended to
 a CSV file, which is published to the `gh-pages` branch in the versioned results directory.
 
+To compare a branch on bare metal, manually run the
+[Overhead benchmark (daily)](https://github.com/open-telemetry/opentelemetry-java-instrumentation/actions/workflows/overhead-benchmark-daily.yml)
+workflow and select that branch. It runs the same Petclinic workload with no agent, the latest
+release, and the agent built from the selected revision. Each variant runs 5,000 iterations with
+five virtual users after a 60-second warmup. This compares a fixed amount of work, not a fixed
+request rate.
+
+The workflow summary shows request p95, JVM user CPU, and JVM GC pause time. Download
+`load-benchmark-results-*` for the revision, release tag, checksums, k6 summaries, and JFR
+recordings. Manual runs do not write to `gh-pages`.
+
 ## Setup and Usage
 
 The tests require docker to be running. Simply run `OverheadTests` in your IDE.

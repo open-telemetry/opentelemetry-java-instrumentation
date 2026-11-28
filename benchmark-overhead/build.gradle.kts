@@ -52,6 +52,19 @@ tasks {
   }
 }
 
+tasks.register<Test>("agentLoadBenchmark") {
+  description = "Measures Petclinic load with no agent, the latest release, and the dispatched revision."
+  group = "verification"
+  dependsOn(tasks.testClasses)
+  testClassesDirs = sourceSets.test.get().output.classesDirs
+  classpath = sourceSets.test.get().runtimeClasspath
+  useJUnitPlatform()
+  include("**/OverheadTests.class")
+  outputs.upToDateWhen { false }
+  outputs.cacheIf { false }
+  systemProperty("load.benchmark.agentDir", providers.gradleProperty("loadBenchmarkAgentDir").get())
+}
+
 val compileStartupRecorder = tasks.register<JavaCompile>("compileStartupRecorder") {
   source("src/test/java/io/opentelemetry/startup/StartupRecorder.java")
   classpath = files()

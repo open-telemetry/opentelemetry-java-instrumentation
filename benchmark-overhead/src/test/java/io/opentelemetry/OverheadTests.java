@@ -18,6 +18,7 @@ import io.opentelemetry.containers.K6Container;
 import io.opentelemetry.containers.PetClinicRestContainer;
 import io.opentelemetry.containers.PostgresContainer;
 import io.opentelemetry.results.AppPerfResults;
+import io.opentelemetry.results.LoadBenchmarkReport;
 import io.opentelemetry.results.MainResultsPersister;
 import io.opentelemetry.results.ResultsCollector;
 import io.opentelemetry.util.NamingConventions;
@@ -42,6 +43,7 @@ import org.testcontainers.utility.MountableFile;
 public class OverheadTests {
 
   private static final Network NETWORK = Network.newNetwork();
+  private static final String AGENT_DIR = System.getProperty("load.benchmark.agentDir");
   private static GenericContainer<?> collector;
   private final NamingConventions namingConventions = new NamingConventions();
   private final Map<String, Long> runDurations = new HashMap<>();
@@ -54,15 +56,23 @@ public class OverheadTests {
 
   @AfterAll
   static void tearDown() {
-    collector.close();
+    try {
+      if (collector != null) {
+        collector.close();
+      }
+    } finally {
+      NETWORK.close();
+    }
   }
 
   @TestFactory
   Stream<DynamicTest> runAllTestConfigurations() {
-    return Configs.all().map(config -> dynamicTest(config.getName(), () -> runTestConfig(config)));
+    Stream<TestConfig> configs =
+        AGENT_DIR == null ? Configs.all() : Stream.of(Configs.manualPetclinic(Path.of(AGENT_DIR)));
+    return configs.map(config -> dynamicTest(config.getName(), () -> runTestConfig(config)));
   }
 
-  void runTestConfig(TestConfig config) {
+  void runTestConfig(TestConfig config) throws IOException {
     runDurations.clear();
     config
         .getAgents()
@@ -74,8 +84,14 @@ public class OverheadTests {
           }
         });
     List<AppPerfResults> results =
-        new ResultsCollector(namingConventions.local, runDurations).collect(config);
-    new MainResultsPersister(config).write(results);
+        new ResultsCollector(namingConventions.local, runDurations)
+            .collect(config, AGENT_DIR != null);
+    if (AGENT_DIR == null) {
+      new MainResultsPersister(config).write(results);
+    } else {
+      LoadBenchmarkReport.write(
+          Path.of("build/reports/load-benchmark/summary.md"), config, results);
+    }
   }
 
   void runAppOnce(TestConfig config, Agent agent) throws Exception {
@@ -95,18 +111,19 @@ public class OverheadTests {
         long testStart = System.currentTimeMillis();
         startRecording(agent, petclinic);
 
-        GenericContainer<?> k6 = new K6Container(NETWORK, agent, config, namingConventions).build();
-        k6.start();
+        try (GenericContainer<?> k6 =
+            new K6Container(NETWORK, agent, config, namingConventions).build()) {
+          k6.start();
+          runDurations.put(agent.getName(), System.currentTimeMillis() - testStart);
 
-        long runDuration = System.currentTimeMillis() - testStart;
-        runDurations.put(agent.getName(), runDuration);
-
-        // This is required to get a graceful exit of the VM before testcontainers kills it
-        // forcibly.
-        // Without it, our jfr file will be empty.
-        petclinic.execInContainer("kill", "1");
-        while (petclinic.isRunning()) {
-          MILLISECONDS.sleep(500);
+          // Shut down the JVM gracefully so it writes the JFR recording.
+          var result = petclinic.execInContainer("kill", "1");
+          if (result.getExitCode() != 0) {
+            throw new IllegalStateException("Could not stop Petclinic: " + result);
+          }
+          while (petclinic.isRunning()) {
+            MILLISECONDS.sleep(500);
+          }
         }
       }
     }
@@ -152,14 +169,15 @@ public class OverheadTests {
 
     long deadline = System.currentTimeMillis() + SECONDS.toMillis(testConfig.getWarmupSeconds());
     while (System.currentTimeMillis() < deadline) {
-      GenericContainer<?> k6 =
+      try (GenericContainer<?> k6 =
           new GenericContainer<>(DockerImageName.parse("grafana/k6"))
               .withNetwork(NETWORK)
               .withCopyFileToContainer(MountableFile.forHostPath("./k6"), "/app")
               .withCommand("run", "-u", "5", "-i", "200", "/app/basic.js")
               .withStartupCheckStrategy(
-                  new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)));
-      k6.start();
+                  new OneShotStartupCheckStrategy().withTimeout(Duration.ofMinutes(5)))) {
+        k6.start();
+      }
     }
 
     System.out.println("Stopping disposable JFR warmup recording...");
