@@ -5,6 +5,9 @@
 
 package io.opentelemetry.instrumentation.jmx.internal.engine;
 
+import static java.util.Collections.unmodifiableList;
+
+import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.Nullable;
 
@@ -36,7 +39,7 @@ public class MetricExtractor {
       List<MetricAttribute> attributes) {
     this.attributeExtractor = attributeExtractor;
     this.metricInfo = metricInfo;
-    this.attributes = attributes;
+    this.attributes = unmodifiableList(new ArrayList<>(attributes));
   }
 
   MetricInfo getInfo() {
