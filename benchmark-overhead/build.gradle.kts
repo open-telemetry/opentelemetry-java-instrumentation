@@ -62,7 +62,13 @@ tasks.register<Test>("agentLoadBenchmark") {
   include("**/OverheadTests.class")
   outputs.upToDateWhen { false }
   outputs.cacheIf { false }
-  systemProperty("load.benchmark.agentDir", providers.gradleProperty("loadBenchmarkAgentDir").get())
+  val agentDir = providers.gradleProperty("loadBenchmarkAgentDir").getOrElse("")
+  systemProperty("load.benchmark.agentDir", agentDir)
+  doFirst {
+    require(agentDir.isNotBlank()) {
+      "Set -PloadBenchmarkAgentDir to the directory containing release-agent.jar and revision-agent.jar."
+    }
+  }
 }
 
 val compileStartupRecorder = tasks.register<JavaCompile>("compileStartupRecorder") {
