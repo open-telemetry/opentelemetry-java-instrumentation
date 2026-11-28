@@ -9,7 +9,6 @@ import static io.opentelemetry.containers.K6Container.WEBFLUX_RATE;
 import static io.opentelemetry.containers.K6Container.WEBFLUX_SECONDS;
 
 import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.PathNotFoundException;
 import io.opentelemetry.agents.Agent;
 import io.opentelemetry.config.TestConfig;
 import io.opentelemetry.util.NamingConvention;
@@ -64,19 +63,17 @@ public final class WebFluxLoadReport {
   static Measurement read(String json, long expected, String variant) {
     var metrics = JsonPath.parse(json);
     Number completed = metrics.read("$.metrics['http_reqs{phase:workload}'].values.count");
+    Number iterations = metrics.read("$.metrics.iterations.values.count");
     Number errors = metrics.read("$.metrics['http_req_failed{phase:workload}'].values.passes");
+    Number passedChecks = metrics.read("$.metrics.checks.values.passes");
     Number failedChecks = metrics.read("$.metrics.checks.values.fails");
+    Number dropped = metrics.read("$.metrics.dropped_iterations.values.count");
     Number p95 = metrics.read("$.metrics['http_req_duration{phase:workload}'].values['p(95)']");
     Number cpu = metrics.read("$.metrics.app_cpu_cores.values.value");
-    Number dropped;
-    try {
-      dropped = metrics.read("$.metrics.dropped_iterations.values.count");
-    } catch (PathNotFoundException e) {
-      // k6 does not emit a dropped_iterations metric if it never drops an iteration.
-      dropped = 0;
-    }
-    if (completed.longValue() != expected
+    if (Math.abs(completed.longValue() - expected) > 1
+        || iterations.longValue() != completed.longValue()
         || errors.longValue() != 0
+        || passedChecks.longValue() != completed.longValue()
         || failedChecks.longValue() != 0
         || dropped.longValue() != 0
         || !Double.isFinite(p95.doubleValue())
@@ -86,11 +83,14 @@ public final class WebFluxLoadReport {
       throw new IllegalStateException(
           String.format(
               Locale.ROOT,
-              "%s: %d of %d completed, %d HTTP errors, %d failed checks, %d drops, %s ms p95, %s JVM cores",
+              "%s: %d requests (target %d), %d iterations, %d HTTP errors, %d passed checks, "
+                  + "%d failed checks, %d drops, %s ms p95, %s JVM cores",
               variant,
               completed.longValue(),
               expected,
+              iterations.longValue(),
               errors.longValue(),
+              passedChecks.longValue(),
               failedChecks.longValue(),
               dropped.longValue(),
               p95,

@@ -5,6 +5,9 @@ import { Gauge } from "k6/metrics";
 
 const baseUrl = "http://webflux:8080";
 const cpuCores = new Gauge("app_cpu_cores");
+const rate = Number(__ENV.BENCHMARK_RATE);
+const seconds = Number(__ENV.BENCHMARK_SECONDS);
+const target = rate * seconds;
 const seed = [
     ["George", "Franklin"],
     ["Betty", "Davis"],
@@ -23,15 +26,16 @@ export const options = {
     scenarios: {
         workload: {
             executor: "constant-arrival-rate",
-            rate: Number(__ENV.BENCHMARK_RATE),
+            rate,
             timeUnit: "1s",
-            duration: `${__ENV.BENCHMARK_SECONDS}s`,
+            duration: `${seconds}s`,
             preAllocatedVUs: 128,
             gracefulStop: "10s",
         },
     },
     thresholds: {
-        "http_reqs{phase:workload}": [`count==${Number(__ENV.BENCHMARK_RATE) * Number(__ENV.BENCHMARK_SECONDS)}`],
+        // k6 can schedule one extra iteration at the end of the arrival window.
+        "http_reqs{phase:workload}": [`count>=${target - 1}`, `count<=${target + 1}`],
         "http_req_duration{phase:workload}": ["p(95)>=0"],
         "http_req_failed{phase:workload}": ["rate==0"],
         dropped_iterations: ["count==0"],
@@ -60,7 +64,7 @@ export function teardown(before) {
         const after = cpuSnapshot();
         const elapsedMs = after.uptimeMillis - before.uptimeMillis;
         const cpuNanos = after.processCpuNanos - before.processCpuNanos;
-        if (elapsedMs < Number(__ENV.BENCHMARK_SECONDS) * 1000 || cpuNanos <= 0) {
+        if (elapsedMs < seconds * 1000 || cpuNanos <= 0) {
             throw new Error(`Invalid CPU interval: ${elapsedMs} ms, ${cpuNanos} CPU ns`);
         }
         cpuCores.add(cpuNanos / (elapsedMs * 1e6));

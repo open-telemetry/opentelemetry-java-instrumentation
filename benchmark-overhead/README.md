@@ -124,8 +124,8 @@ the database values and the echoed request ID regardless of propagation mode. Wi
 JVM exports traces to the same OTLP collector and disables metric and log export in all variants.
 
 k6 offers 600 requests/s, one request per iteration, for a 60-second warmup and a 120-second
-measurement per variant. The run fails if a variant drops iterations, completes fewer than 72,000
-requests, or fails an HTTP or correctness check. The report shows the offered rate, requests
+measurement per variant. The run fails if a variant drops iterations, misses the 72,000-request
+target by more than one request, or fails an HTTP or correctness check. The report shows the offered rate, requests
 completed, errors, drops, request p95, and average app JVM CPU in cores. CPU comes from the
 change in JVM process CPU time divided by the time between k6's before/after snapshots. Those
 requests do not count toward the load totals or latency. The app uses JDK 25, a 1 GiB heap, and a
