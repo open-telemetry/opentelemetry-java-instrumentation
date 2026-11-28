@@ -1,0 +1,1 @@
+otel=io.opentelemetry.instrumentation.apachedubbo.v3_1.internal.OpenTelemetryFilterChainBuilder

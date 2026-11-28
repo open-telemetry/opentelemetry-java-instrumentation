@@ -8,7 +8,6 @@ package io.opentelemetry.instrumentation.apachedubbo.v3_1;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import io.opentelemetry.api.OpenTelemetry;
-import io.opentelemetry.instrumentation.apachedubbo.v3_1.internal.OpenTelemetryServerFilter;
 import java.util.List;
 import org.apache.dubbo.common.URL;
 import org.apache.dubbo.common.extension.ExtensionLoader;
@@ -31,7 +30,7 @@ class DubboManualConfigurationTest {
         "-default,testSecond,testFirst",
         "testSecond,-token,default,testFirst"
       })
-  void serverTracingPrecedesDefaultsWithoutChangingOtherFilters(String filters) {
+  void serverInstrumentationDoesNotChangeConfiguredFilters(String filters) {
     FrameworkModel framework = new FrameworkModel();
     try {
       ExtensionLoader<Filter> loader =
@@ -46,23 +45,14 @@ class DubboManualConfigurationTest {
       service.setFilter(filters);
       DubboTelemetry telemetry = DubboTelemetry.create(OpenTelemetry.noop());
       telemetry.instrument(service);
-      String instrumentedFilters = service.getFilter();
       telemetry.instrument(service);
-      assertThat(service.getFilter()).isEqualTo(instrumentedFilters);
+      assertThat(service.getFilter()).isEqualTo(filters);
       List<Filter> instrumented =
           loader.getActivateExtension(
-              url.addParameter("service.filter", service.getFilter()),
+              filters == null ? url : url.addParameter("service.filter", filters),
               "service.filter",
               "provider");
-      Filter tracing = loader.getExtension(OpenTelemetryServerFilter.NAME);
-      assertThat(instrumented).containsOnlyOnce(tracing);
-      Filter token = loader.getExtension("token");
-      if (original.contains(token)) {
-        assertThat(instrumented.indexOf(tracing)).isLessThan(instrumented.indexOf(token));
-      }
-      assertThat(instrumented)
-          .filteredOn(filter -> filter != tracing)
-          .containsExactlyElementsOf(original);
+      assertThat(instrumented).containsExactlyElementsOf(original);
     } finally {
       framework.destroy();
     }

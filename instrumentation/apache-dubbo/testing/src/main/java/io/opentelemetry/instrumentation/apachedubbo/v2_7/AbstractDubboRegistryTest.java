@@ -10,6 +10,8 @@ import static io.opentelemetry.instrumentation.testing.util.InstrumentationScope
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.assertThat;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.satisfies;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_ADDRESS;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_PEER_PORT;
 import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
@@ -59,6 +61,10 @@ public abstract class AbstractDubboRegistryTest {
   protected void configureService(ServiceConfig<?> service) {}
 
   protected void configureReference(ReferenceConfig<?> referenceConfig) {}
+
+  protected boolean usesEarlyServerTracing() {
+    return false;
+  }
 
   @BeforeAll
   static void setUp() throws Exception {
@@ -153,6 +159,8 @@ public abstract class AbstractDubboRegistryTest {
     String expectedServiceTarget =
         HelloService.class.getName() + ":" + SERVICE_VERSION + ":" + SERVICE_GROUP;
     String expectedServerAddress = zkAddr + "/" + expectedServiceTarget;
+    String localAddress =
+        InetAddress.getByName(service.getExportedUrls().get(0).getHost()).getHostAddress();
 
     testing()
         .waitAndAssertTraces(trace ->
@@ -186,6 +194,16 @@ public abstract class AbstractDubboRegistryTest {
                             equalTo(
                                 RPC_METHOD,
                                 "io.opentelemetry.instrumentation.apachedubbo.v2_7.api.HelloService/hello"),
+                            equalTo(
+                                NETWORK_LOCAL_ADDRESS,
+                                usesEarlyServerTracing() ? localAddress : null),
+                            equalTo(
+                                NETWORK_LOCAL_PORT, usesEarlyServerTracing() ? (long) port : null),
+                            satisfies(
+                                NETWORK_TYPE,
+                                val ->
+                                    AbstractDubboTest.assertNetworkType(
+                                        val, usesEarlyServerTracing())),
                             satisfies(NETWORK_PEER_ADDRESS, val -> val.isInstanceOf(String.class)),
                             satisfies(NETWORK_PEER_PORT, val -> val.isInstanceOf(Long.class)))));
   }

@@ -5,15 +5,12 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v3_1;
 
-import static java.util.Arrays.asList;
 import static java.util.Objects.requireNonNull;
 
 import io.opentelemetry.api.OpenTelemetry;
 import io.opentelemetry.instrumentation.apachedubbo.common.v2_7.DubboInstrumenters;
 import io.opentelemetry.instrumentation.apachedubbo.v3_1.internal.OpenTelemetryClientFilter;
-import io.opentelemetry.instrumentation.apachedubbo.v3_1.internal.OpenTelemetryServerFilter;
-import java.util.ArrayList;
-import java.util.List;
+import io.opentelemetry.instrumentation.apachedubbo.v3_1.internal.OpenTelemetryFilterChainBuilder;
 import javax.annotation.Nullable;
 import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.ServiceConfig;
@@ -53,14 +50,14 @@ public final class DubboTelemetry {
 
   /**
    * Enables tracing for this service. Call before exporting the service. Repeated calls replace the
-   * binding without adding another filter.
+   * binding.
    */
   public void instrument(ServiceConfig<?> serviceConfig) {
     requireNonNull(serviceConfig, "serviceConfig");
-    serviceConfig.setFilter(prependServerFilter(serviceConfig.getFilter()));
     serviceConfig
         .getServiceMetadata()
-        .addAttribute(OpenTelemetryServerFilter.KEY, instrumenters.newServerFilterWithInvoker());
+        .addAttribute(
+            OpenTelemetryFilterChainBuilder.KEY, instrumenters.newServerFilterWithInvoker());
   }
 
   /** Returns a new Dubbo client {@link Filter} that traces RPC invocations. */
@@ -83,15 +80,5 @@ public final class DubboTelemetry {
       }
     }
     return filters + "," + name;
-  }
-
-  private static String prependServerFilter(@Nullable String filters) {
-    List<String> names = new ArrayList<>();
-    if (filters != null && !filters.trim().isEmpty()) {
-      names.addAll(asList(filters.split(",")));
-    }
-    names.removeIf(name -> name.trim().equals(OpenTelemetryServerFilter.NAME));
-    names.add(0, OpenTelemetryServerFilter.NAME);
-    return String.join(",", names);
   }
 }

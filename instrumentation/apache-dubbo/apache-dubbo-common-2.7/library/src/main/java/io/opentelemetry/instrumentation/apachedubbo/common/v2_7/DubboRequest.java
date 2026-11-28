@@ -54,6 +54,10 @@ public abstract class DubboRequest {
   static DubboRequest createForInvoker(
       RpcInvocation invocation, RpcContext context, Invoker<?> invoker) {
     URL url = invoker.getUrl();
+    InetSocketAddress localAddress = context.getLocalAddress();
+    if (localAddress == null) {
+      localAddress = new InetSocketAddress(url.getHost(), url.getPort());
+    }
     Class<?> service = invoker.getInterface();
     String method = invocation.getMethodName();
     String originalFullMethodName = null;
@@ -74,7 +78,7 @@ public abstract class DubboRequest {
         context,
         url,
         context.getRemoteAddress(),
-        context.getLocalAddress(),
+        localAddress,
         DubboRegistryUtil.extractRegistryAddress(invocation),
         originalFullMethodName == null
             ? service.getName() + "/" + method

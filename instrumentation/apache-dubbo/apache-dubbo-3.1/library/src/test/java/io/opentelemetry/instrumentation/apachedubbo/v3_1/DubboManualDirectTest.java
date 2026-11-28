@@ -5,6 +5,8 @@
 
 package io.opentelemetry.instrumentation.apachedubbo.v3_1;
 
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.awaitility.Awaitility.await;
@@ -28,6 +30,7 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import org.apache.dubbo.config.ApplicationConfig;
 import org.apache.dubbo.config.ProtocolConfig;
+import org.apache.dubbo.config.ProviderConfig;
 import org.apache.dubbo.config.ReferenceConfig;
 import org.apache.dubbo.config.RegistryConfig;
 import org.apache.dubbo.config.ServiceConfig;
@@ -55,12 +58,26 @@ class DubboManualDirectTest {
   @ParameterizedTest
   @ValueSource(strings = {"testSecond,default,testFirst", "testSecond,testFirst"})
   void rejectedProviderCallsAreTraced(String filters) {
+    assertRejectedProviderCallsAreTraced(filters, false);
+  }
+
+  @Test
+  void inheritedProviderDefaultRejectionIsTraced() {
+    assertRejectedProviderCallsAreTraced("testSecond,default,testFirst", true);
+  }
+
+  private void assertRejectedProviderCallsAreTraced(String filters, boolean inheritedDefault) {
     DubboTelemetry telemetry = DubboTelemetry.create(testing.getOpenTelemetry());
+    ProviderConfig provider = new ProviderConfig();
+    if (inheritedDefault) {
+      provider.setFilter("default");
+    }
     ServiceConfig<HelloService> service = new ServiceConfig<>();
     service.setInterface(HelloService.class);
     service.setRef(new HelloServiceImpl());
     service.setGroup("instrumented");
     service.setToken("provider-test-token");
+    service.setProvider(provider);
     service.setFilter(filters);
     telemetry.instrument(service);
     telemetry.instrument(service);
@@ -69,6 +86,7 @@ class DubboManualDirectTest {
     uninstrumented.setRef(new HelloServiceImpl());
     uninstrumented.setGroup("uninstrumented");
     uninstrumented.setToken("provider-test-token");
+    uninstrumented.setProvider(provider);
     uninstrumented.setFilter(filters);
     newBootstrap("rejected-provider")
         .protocol(new ProtocolConfig("dubbo", PortUtils.findOpenPort()))
@@ -97,9 +115,11 @@ class DubboManualDirectTest {
         .hasMessageContaining("Invalid token!");
     assertThat(filterCalls)
         .containsExactly(
-            filters.contains("default")
-                ? new String[] {"first", "second", "second"}
-                : new String[] {"first", "second", "first", "second"});
+            inheritedDefault
+                ? new String[] {"first", "second"}
+                : filters.contains("default")
+                    ? new String[] {"first", "second", "second"}
+                    : new String[] {"first", "second", "first", "second"});
     testing.waitAndAssertTraces(trace ->
         trace.hasSpansSatisfyingExactly(
             span -> span.hasKind(SpanKind.CLIENT).hasNoParent(),
@@ -166,7 +186,12 @@ class DubboManualDirectTest {
             span ->
                 span.hasName(HelloService.class.getName() + "/hello")
                     .hasKind(SpanKind.SERVER)
-                    .hasParent(trace.getSpan(0))));
+                    .hasParent(trace.getSpan(0))
+                    .hasAttribute(
+                        NETWORK_LOCAL_ADDRESS, firstService.getExportedUrls().get(0).getHost())
+                    .hasAttribute(
+                        NETWORK_LOCAL_PORT,
+                        (long) firstService.getExportedUrls().get(0).getPort())));
     await()
         .untilAsserted(() ->
             assertThat(exporter.getFinishedSpanItems())

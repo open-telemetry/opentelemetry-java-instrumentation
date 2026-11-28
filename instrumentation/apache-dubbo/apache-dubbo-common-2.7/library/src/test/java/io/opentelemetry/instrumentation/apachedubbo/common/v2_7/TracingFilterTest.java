@@ -7,6 +7,9 @@ package io.opentelemetry.instrumentation.apachedubbo.common.v2_7;
 
 import static io.opentelemetry.sdk.testing.assertj.OpenTelemetryAssertions.equalTo;
 import static io.opentelemetry.semconv.ErrorAttributes.ERROR_TYPE;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_ADDRESS;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_LOCAL_PORT;
+import static io.opentelemetry.semconv.NetworkAttributes.NETWORK_TYPE;
 import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD;
 import static io.opentelemetry.semconv.RpcAttributes.RPC_METHOD_ORIGINAL;
 import static io.opentelemetry.semconv.RpcAttributes.RPC_SYSTEM_NAME;
@@ -53,7 +56,7 @@ class TracingFilterTest {
   void providerTracingBeforeContextAndGenericFilters(
       Class<?> service, String method, Object[] arguments, String expectedMethod, String original) {
     Invoker<?> invoker = mock(Invoker.class);
-    when(invoker.getUrl()).thenReturn(new URL("dubbo", "localhost", 20880, service.getName()));
+    when(invoker.getUrl()).thenReturn(new URL("dubbo", "127.0.0.1", 20880, service.getName()));
     when(invoker.getInterface()).thenAnswer(unused -> service);
     RpcInvocation invocation = new RpcInvocation();
     invocation.setMethodName(method);
@@ -78,7 +81,10 @@ class TracingFilterTest {
                   .hasAttributesSatisfyingExactly(
                       equalTo(RPC_SYSTEM_NAME, "dubbo"),
                       equalTo(RPC_METHOD, expectedMethod),
-                      equalTo(RPC_METHOD_ORIGINAL, original))));
+                      equalTo(RPC_METHOD_ORIGINAL, original),
+                      equalTo(NETWORK_LOCAL_ADDRESS, "127.0.0.1"),
+                      equalTo(NETWORK_LOCAL_PORT, 20880L),
+                      equalTo(NETWORK_TYPE, "ipv4"))));
       testing.waitAndAssertMetrics(
           "io.opentelemetry.apache-dubbo-common-2.7",
           metric ->

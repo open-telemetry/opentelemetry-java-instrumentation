@@ -64,6 +64,11 @@ class DubboManualRegistryTest extends AbstractDubboRegistryTest {
   }
 
   @Override
+  protected boolean usesEarlyServerTracing() {
+    return true;
+  }
+
+  @Override
   protected void configureService(ServiceConfig<?> service) {
     telemetry.instrument(service);
     telemetry.instrument(service);
