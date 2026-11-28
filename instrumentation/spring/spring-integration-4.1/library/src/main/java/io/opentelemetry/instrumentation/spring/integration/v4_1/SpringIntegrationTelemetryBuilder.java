@@ -132,7 +132,7 @@ public final class SpringIntegrationTelemetryBuilder {
         MessagingProcessInstrumenterFactory.create(
             consumerBuilder,
             openTelemetry.getPropagators().getTextMapPropagator(),
-            MessageHeadersGetter.INSTANCE);
+            new MessageHeadersGetter());
 
     SpringMessagingAttributesGetter producerGetter = new SpringMessagingAttributesGetter();
     InstrumenterBuilder<MessageWithChannel, Void> producerBuilder =

@@ -18,9 +18,7 @@ import org.springframework.messaging.support.NativeMessageHeaderAccessor;
 // see https://github.com/spring-cloud/spring-cloud-sleuth/issues/716 for more details
 // Native headers logic inspired by
 // https://github.com/spring-cloud/spring-cloud-sleuth/blob/main/spring-cloud-sleuth-instrumentation/src/main/java/org/springframework/cloud/sleuth/instrument/messaging/MessageHeaderPropagatorGetter.java
-enum MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
-  INSTANCE;
-
+final class MessageHeadersGetter implements TextMapGetter<MessageWithChannel> {
   @Override
   public Iterable<String> keys(MessageWithChannel carrier) {
     MessageHeaders headers = carrier.getMessage().getHeaders();
