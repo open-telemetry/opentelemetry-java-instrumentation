@@ -15,9 +15,12 @@ import io.micrometer.core.instrument.config.NamingConvention;
 import io.micrometer.core.instrument.distribution.DistributionStatisticConfig;
 import io.micrometer.core.instrument.internal.DefaultLongTaskTimer;
 import io.opentelemetry.api.common.Attributes;
+import io.opentelemetry.api.metrics.DoubleUpDownCounterBuilder;
+import io.opentelemetry.api.metrics.LongUpDownCounterBuilder;
 import io.opentelemetry.api.metrics.Meter;
 import io.opentelemetry.api.metrics.ObservableDoubleUpDownCounter;
 import io.opentelemetry.api.metrics.ObservableLongUpDownCounter;
+import io.opentelemetry.instrumentation.micrometer.v1_5.internal.ObservableCallbackRegistrar;
 import io.opentelemetry.instrumentation.micrometer.v1_5.internal.OpenTelemetryInstrument;
 import java.util.concurrent.TimeUnit;
 
@@ -25,8 +28,10 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
     implements RemovableMeter, OpenTelemetryInstrument {
 
   private final DistributionStatisticConfig distributionStatisticConfig;
-  private final ObservableLongUpDownCounter observableActiveTasks;
-  private final ObservableDoubleUpDownCounter observableDuration;
+  private final ObservableCallbackRegistrar.Registration<ObservableLongUpDownCounter>
+      observableActiveTasks;
+  private final ObservableCallbackRegistrar.Registration<ObservableDoubleUpDownCounter>
+      observableDuration;
   private boolean removed;
 
   OpenTelemetryLongTaskTimer(
@@ -36,7 +41,8 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
       TimeUnit baseTimeUnit,
       DistributionStatisticConfig distributionStatisticConfig,
       Meter otelMeter,
-      Bridging bridging) {
+      Bridging bridging,
+      ObservableCallbackRegistrar callbackRegistrar) {
     super(id, clock, baseTimeUnit, distributionStatisticConfig, false);
 
     this.distributionStatisticConfig = distributionStatisticConfig;
@@ -44,22 +50,28 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
     String name = name(id, namingConvention);
     Attributes attributes = tagsAsAttributes(id, namingConvention);
 
-    this.observableActiveTasks =
+    LongUpDownCounterBuilder activeTasksBuilder =
         otelMeter
             .upDownCounterBuilder(name + ".active")
             .setDescription(bridging.description(name + ".active", id))
-            .setUnit("{tasks}")
-            .buildWithCallback(
-                new LongMeasurementRecorder<>(this, DefaultLongTaskTimer::activeTasks, attributes));
-    this.observableDuration =
+            .setUnit("{tasks}");
+    LongMeasurementRecorder<OpenTelemetryLongTaskTimer> activeTasksCallback =
+        new LongMeasurementRecorder<>(this, DefaultLongTaskTimer::activeTasks, attributes);
+    observableActiveTasks =
+        callbackRegistrar.register(
+            activeTasksCallback, id.getClass(), activeTasksBuilder::buildWithCallback);
+
+    DoubleUpDownCounterBuilder durationBuilder =
         otelMeter
             .upDownCounterBuilder(name + ".duration")
             .ofDoubles()
             .setDescription(bridging.description(name + ".duration", id))
-            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit))
-            .buildWithCallback(
-                new DoubleMeasurementRecorder<>(
-                    this, t -> t.duration(t.baseTimeUnit()), attributes));
+            .setUnit(TimeUnitHelper.getUnitString(baseTimeUnit));
+    DoubleMeasurementRecorder<OpenTelemetryLongTaskTimer> durationCallback =
+        new DoubleMeasurementRecorder<>(this, t -> t.duration(t.baseTimeUnit()), attributes);
+    observableDuration =
+        callbackRegistrar.register(
+            durationCallback, id.getClass(), durationBuilder::buildWithCallback);
   }
 
   @Override
@@ -76,8 +88,8 @@ final class OpenTelemetryLongTaskTimer extends DefaultLongTaskTimer
       }
       removed = true;
     }
-    observableActiveTasks.close();
-    observableDuration.close();
+    observableActiveTasks.close(ObservableLongUpDownCounter::close);
+    observableDuration.close(ObservableDoubleUpDownCounter::close);
   }
 
   boolean isUsingMicrometerHistograms() {
